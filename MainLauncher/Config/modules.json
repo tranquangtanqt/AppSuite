@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "ModuleA",
+    "Description": "Application quan ly A",
+    "Path": ".\\Modules\\ModuleA\\ModuleA.exe",
+    "Arguments": "",
+    "AutoStart": true
+  },
+  {
+    "Name": "ModuleB",
+    "Description": "Application quan ly B",
+    "Path": ".\\Modules\\ModuleB\\ModuleB.exe",
+    "Arguments": "--mode=test",
+    "AutoStart": false
+  }
+]

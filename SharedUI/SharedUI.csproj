@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>SharedUI</RootNamespace>
+    <AssemblyName>SharedUI</AssemblyName>
+    <UseWinUI>true</UseWinUI>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!--
+    Reusable WinUI 3 controls adapted from the Microsoft WinUI Gallery sample
+    (https://github.com/microsoft/WinUI-Gallery), Controls/ folder. Only the controls that are
+    self-contained (no dependency on the Gallery's sample-browsing/documentation infrastructure -
+    ColorCode syntax highlighting, sample .txt loading, favorites, GitHub source links) were ported;
+    see README.md for the full list and why a few were intentionally left out.
+
+    MainLauncher and any Module can ProjectReference this without depending on MainLauncher itself,
+    so referencing SharedUI never breaks a module's independence.
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
+  </ItemGroup>
+
+</Project>

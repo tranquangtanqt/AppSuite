@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ModuleB.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ModuleB"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Module B">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <StackPanel Padding="32" Spacing="12" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <TextBlock Text="Module B" Style="{StaticResource TitleLargeTextBlockStyle}" HorizontalAlignment="Center" />
+        <TextBlock Text="Ung dung quan ly B - chay doc lap voi MainLauncher" Opacity="0.7" HorizontalAlignment="Center" />
+        <TextBlock x:Name="ProcessIdText" HorizontalAlignment="Center" />
+        <TextBlock x:Name="ArgumentsText" HorizontalAlignment="Center" TextWrapping="Wrap" MaxWidth="420" TextAlignment="Center" />
+    </StackPanel>
+</Window>

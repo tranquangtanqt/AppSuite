@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "ModuleA": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MainLauncher.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <StackPanel Padding="24" Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+        <TextBlock Text="Settings" Style="{StaticResource TitleLargeTextBlockStyle}" />
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Base directory" FontWeight="SemiBold" />
+            <TextBlock Text="{x:Bind ViewModel.BaseDirectory}" TextWrapping="Wrap" Opacity="0.8" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+            <TextBlock Text="Modules configuration file" FontWeight="SemiBold" />
+            <TextBlock Text="{x:Bind ViewModel.ModulesConfigPath}" TextWrapping="Wrap" Opacity="0.8" />
+        </StackPanel>
+
+        <Button Content="Reload modules.json" Command="{x:Bind ViewModel.ReloadModulesCommand}" />
+    </StackPanel>
+</Page>
