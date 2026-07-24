@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -55,11 +56,19 @@ public partial class ModuleListViewModel : ObservableObject
         IsLoading = true;
         try
         {
+            try
+            {
+                await _moduleService.LoadAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to load module configuration");
+                return;
+            }
+
             foreach (var existing in Modules)
                 existing.Dispose();
             Modules.Clear();
-
-            await _moduleService.LoadAsync();
 
             foreach (var config in _moduleService.Modules)
                 Modules.Add(new ModuleViewModel(config, _processManager));
