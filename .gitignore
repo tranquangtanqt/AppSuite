@@ -6,6 +6,7 @@
 *.user
 *.userosscache
 *.sln.docstates
+*.pubxml.user
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -30,7 +31,9 @@ msbuild.wrn
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
-build/
+
+# Publish output (see build/Publish-AppSuite.ps1)
+/Application/
 
 # Visual Studio profiler
 *.psess
