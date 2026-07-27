@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ModuleC.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ModuleC"
+    xmlns:models="using:ModuleC.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Tim kiem">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Spacing="2">
+                <TextBlock Text="Tim kiem" Style="{StaticResource TitleLargeTextBlockStyle}" />
+                <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Opacity="0.6" Style="{StaticResource CaptionTextBlockStyle}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
+                <Button Content="Huong dan su dung" Style="{StaticResource AccentButtonStyle}" />
+                <Button Content="Tim kiem ten bang" Style="{StaticResource AccentButtonStyle}"
+                        Click="OpenTableNameSearch_Click" />
+            </StackPanel>
+        </Grid>
+
+        <!-- Body -->
+        <Grid Grid.Row="1" ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1.15*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: search criteria -->
+            <Grid Grid.Column="0" RowSpacing="12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <ItemsControl Grid.Row="0" ItemsSource="{x:Bind ViewModel.AliasRows, Mode=OneWay}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="models:AliasRow">
+                            <Grid Margin="0,0,0,8" ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="90" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{x:Bind TableName, Mode=TwoWay}" PlaceholderText="Ten bang (VD: MST_XFR_INST_SEND_IF)" />
+                                <TextBox Grid.Column="1" Text="{x:Bind Alias, Mode=TwoWay}" PlaceholderText="Alias (VD: SS1)" />
+                                <Button Grid.Column="2" Width="32" Height="32" Padding="0"
+                                        Background="{ThemeResource SystemFillColorCriticalBrush}"
+                                        Click="RemoveRowButton_Click">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="White" />
+                                </Button>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Button Grid.Row="1" Width="32" Height="32" Padding="0" HorizontalAlignment="Right"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Command="{x:Bind ViewModel.AddRowCommand}">
+                    <FontIcon Glyph="&#xE710;" FontSize="14" />
+                </Button>
+
+                <TextBlock Grid.Row="2" Text="Nhap danh sach cot (tieng Nhat)" Margin="0,8,0,0" />
+
+                <TextBox Grid.Row="3" Margin="0,4,0,0"
+                         Text="{x:Bind ViewModel.ColumnListText, Mode=TwoWay}"
+                         PlaceholderText="Moi dong mot cot, dang Alias.NhanTiengNhat&#x0a;VD: SS1.基準単位数量"
+                         AcceptsReturn="True" TextWrapping="Wrap"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VerticalContentAlignment="Top" />
+
+                <Button Grid.Row="4" Content="Tim kiem" Margin="0,12,0,0"
+                        Style="{StaticResource AccentButtonStyle}"
+                        Command="{x:Bind ViewModel.SearchCommand}" />
+            </Grid>
+
+            <!-- Right: results -->
+            <Border Grid.Column="1" BorderThickness="1" CornerRadius="4"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    Padding="16">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Button Grid.Row="0" Content="Copy" HorizontalAlignment="Right"
+                            Style="{StaticResource AccentButtonStyle}"
+                            Command="{x:Bind ViewModel.CopyResultsCommand}" />
+
+                    <Grid Grid.Row="1" ColumnSpacing="8" Padding="4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="48" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="STT" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="Ten bang" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="2" Text="Ten cot" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="3" Text="Chu thich ten cot" FontWeight="SemiBold" />
+                    </Grid>
+
+                    <ListView Grid.Row="2" ItemsSource="{x:Bind ViewModel.Results, Mode=OneWay}"
+                              SelectionMode="None" IsItemClickEnabled="False">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:SearchResultRow">
+                                <Border BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Padding="4,8">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="48" />
+                                            <ColumnDefinition Width="1.2*" />
+                                            <ColumnDefinition Width="1*" />
+                                            <ColumnDefinition Width="2*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind Stt}" IsTextSelectionEnabled="True" />
+                                        <TextBlock Grid.Column="1" Text="{x:Bind TableName}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                        <TextBlock Grid.Column="2" Text="{x:Bind ColumnName}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                        <TextBlock Grid.Column="3" Text="{x:Bind Comment}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- "Tim kiem ten bang" dialog -->
+        <ContentDialog x:Name="TableNameSearchDialog"
+                       CloseButtonText="Dong"
+                       DefaultButton="Close">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">1100</x:Double>
+                <x:Double x:Key="ContentDialogMinWidth">1000</x:Double>
+            </ContentDialog.Resources>
+            <ContentDialog.Title>
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="Tim kiem ten bang (tieng Anh)" VerticalAlignment="Center" />
+                    <Button Grid.Column="1" Background="Transparent" BorderThickness="0" Padding="8"
+                            Click="CloseTableNameSearchDialog_Click">
+                        <FontIcon Glyph="&#xE8BB;" FontSize="12" />
+                    </Button>
+                </Grid>
+            </ContentDialog.Title>
+
+            <Grid ColumnSpacing="24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1.3*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="8">
+                    <TextBlock Text="Ten bang (tieng Anh hoac tieng Nhat)" />
+                    <TextBox Text="{x:Bind TableNameSearchViewModel.Query, Mode=TwoWay}" />
+                    <Button Content="Tim kiem" Style="{StaticResource AccentButtonStyle}"
+                            Command="{x:Bind TableNameSearchViewModel.SearchCommand}" />
+                </StackPanel>
+
+                <Grid Grid.Column="1" RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Ket qua tim kiem" FontWeight="SemiBold" />
+
+                    <Grid Grid.Row="1" ColumnSpacing="8" Padding="4,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="48" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="1.5*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="STT" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="Ten bang" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="2" Text="Chu thich ten bang" FontWeight="SemiBold" />
+                    </Grid>
+
+                    <ListView Grid.Row="2" MaxHeight="320"
+                              ItemsSource="{x:Bind TableNameSearchViewModel.Results, Mode=OneWay}"
+                              SelectionMode="None" IsItemClickEnabled="False">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Padding" Value="0" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="models:TableNameResult">
+                                <Border BorderThickness="0,0,0,1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Padding="4,8">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="48" />
+                                            <ColumnDefinition Width="1.2*" />
+                                            <ColumnDefinition Width="1.5*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="{x:Bind Stt}" IsTextSelectionEnabled="True" />
+                                        <TextBlock Grid.Column="1" Text="{x:Bind TableName}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                        <TextBlock Grid.Column="2" Text="{x:Bind CommentTable}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Grid>
+        </ContentDialog>
+    </Grid>
+</Window>

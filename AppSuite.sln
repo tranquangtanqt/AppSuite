@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleA", "Modules\ModuleA\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleB", "Modules\ModuleB\ModuleB.csproj", "{97DB167A-F1B0-4BBA-95EB-195EE3B65841}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleC", "Modules\ModuleC\ModuleC.csproj", "{29D848B4-9213-46B3-8362-644AAC9D3500}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -83,6 +85,18 @@ Global
 		{C88C1B89-E6E9-4001-8050-05192C197F64}.Release|x64.Build.0 = Release|x64
 		{C88C1B89-E6E9-4001-8050-05192C197F64}.Release|x86.ActiveCfg = Release|x86
 		{C88C1B89-E6E9-4001-8050-05192C197F64}.Release|x86.Build.0 = Release|x86
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Debug|ARM64.Build.0 = Debug|ARM64
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Debug|x64.ActiveCfg = Debug|x64
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Debug|x64.Build.0 = Debug|x64
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Debug|x86.ActiveCfg = Debug|x86
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Debug|x86.Build.0 = Debug|x86
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Release|ARM64.ActiveCfg = Release|ARM64
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Release|ARM64.Build.0 = Release|ARM64
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Release|x64.ActiveCfg = Release|x64
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Release|x64.Build.0 = Release|x64
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Release|x86.ActiveCfg = Release|x86
+		{29D848B4-9213-46B3-8362-644AAC9D3500}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

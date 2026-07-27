@@ -12,5 +12,12 @@
     "Path": ".\\Modules\\ModuleB\\ModuleB.exe",
     "Arguments": "--mode=test",
     "AutoStart": false
+  },
+  {
+    "Name": "ModuleC",
+    "Description": "Tim kiem ten bang/cot theo tu dien du lieu",
+    "Path": ".\\Modules\\ModuleC\\ModuleC.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]

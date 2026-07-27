@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Dev convenience script: builds MainLauncher + ModuleA/ModuleB and copies each module's output
+    Dev convenience script: builds MainLauncher + every Module and copies each module's output
     next to MainLauncher's own build output, so modules.json's relative paths
     (".\Modules\ModuleA\ModuleA.exe") resolve when you press F5 on MainLauncher.
 
@@ -43,7 +43,7 @@ function Build-AndLocate {
 Write-Host "Building MainLauncher..." -ForegroundColor Cyan
 $launcherOutDir = Build-AndLocate -ProjectPath (Join-Path $root "MainLauncher\MainLauncher.csproj") -ExeName "MainLauncher.exe"
 
-foreach ($module in @("ModuleA", "ModuleB")) {
+foreach ($module in @("ModuleA", "ModuleB", "ModuleC")) {
     Write-Host "Building $module..." -ForegroundColor Cyan
     $moduleOutDir = Build-AndLocate -ProjectPath (Join-Path $root "Modules\$module\$module.csproj") -ExeName "$module.exe"
 
