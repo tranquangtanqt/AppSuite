@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="ModuleB.SettingsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ModuleB"
+    xmlns:models="using:ModuleB.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Cai dat"
+    PrimaryButtonText="OK"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <Grid Width="520" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Document Folder" FontWeight="SemiBold" Margin="0,0,0,4" />
+
+        <Grid Grid.Row="1" ColumnSpacing="8" Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="PathTextBox" Grid.Column="0" Text="{x:Bind ViewModel.CurrentPath, Mode=TwoWay}" />
+            <Button Grid.Column="1" Content="..." ToolTipService.ToolTip="Browse thu muc" Click="BrowseButton_Click" />
+            <Button Grid.Column="2" Content="Luu" Click="SaveButton_Click" />
+        </Grid>
+
+        <TextBlock Grid.Row="2" Text="DANH SACH FOLDER DA LUU" FontWeight="SemiBold" Margin="0,0,0,4" />
+
+        <Grid Grid.Row="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0" ColumnSpacing="12" Padding="8,4" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="160" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Ten thu muc" FontWeight="SemiBold" Opacity="0.8" />
+                <TextBlock Grid.Column="1" Text="Duong dan" FontWeight="SemiBold" Opacity="0.8" />
+            </Grid>
+
+            <ListView x:Name="SavedFoldersListView" Grid.Row="1" MaxHeight="240"
+                      ItemsSource="{x:Bind ViewModel.SavedFolders}" SelectionMode="Single"
+                      SelectionChanged="SavedFoldersListView_SelectionChanged">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:SavedFolder">
+                        <Grid ColumnSpacing="12" Padding="8,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="160" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{x:Bind Name}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind Path}" TextTrimming="CharacterEllipsis" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+    </Grid>
+</ContentDialog>
