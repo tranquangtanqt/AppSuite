@@ -8,6 +8,7 @@
         |-- Modules\ModuleB\ModuleB.exe
         |-- Modules\ModuleC\ModuleC.exe
         |-- Modules\ModuleD\ModuleD.exe
+        |-- Modules\ModuleE\ModuleE.exe
         `-- Config\modules.json
 
 .DESCRIPTION
@@ -51,5 +52,6 @@ Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleA\ModuleA.csproj") 
 Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleB\ModuleB.csproj") -DestSubfolder "Modules\ModuleB"
 Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleC\ModuleC.csproj") -DestSubfolder "Modules\ModuleC"
 Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleD\ModuleD.csproj") -DestSubfolder "Modules\ModuleD"
+Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleE\ModuleE.csproj") -DestSubfolder "Modules\ModuleE"
 
 Write-Host "Done. Deployment output at $OutputDir" -ForegroundColor Green

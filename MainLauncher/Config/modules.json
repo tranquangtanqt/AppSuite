@@ -22,8 +22,15 @@
   },
   {
     "Name": "ModuleD",
-    "Description": "Form nhap lieu don gian",
+    "Description": "Tu dien du lieu tu Excel (DBDef) -> SQLite -> HTML",
     "Path": ".\\Modules\\ModuleD\\ModuleD.exe",
+    "Arguments": "",
+    "AutoStart": false
+  },
+  {
+    "Name": "ModuleE",
+    "Description": "Tu dien du lieu tu PostgreSQL -> SQLite -> HTML",
+    "Path": ".\\Modules\\ModuleE\\ModuleE.exe",
     "Arguments": "",
     "AutoStart": false
   }

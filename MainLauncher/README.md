@@ -76,6 +76,6 @@ dotnet build MainLauncher\MainLauncher.csproj -p:Platform=x64
 ```
 
 Trước khi F5 trong Visual Studio, chạy `..\build\Sync-Modules-Dev.ps1` một lần để copy build output
-của ModuleA/ModuleB vào đúng vị trí `modules.json` trỏ tới (xem README gốc). Nếu không, các nút
+của mọi module vào đúng vị trí `modules.json` trỏ tới (xem README gốc). Nếu không, các nút
 Start trên trang Module List sẽ set trạng thái `Error` với lý do "Executable not found" - đây là xử
 lý lỗi mong đợi (không throw, không crash launcher), không phải bug.

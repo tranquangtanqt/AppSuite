@@ -9,7 +9,10 @@ MainLauncher.exe
     |
     |-- Modules\ModuleA\ModuleA.exe
     |-- Modules\ModuleB\ModuleB.exe
-    |-- ... (them ModuleC theo cung mot khuon mau)
+    |-- Modules\ModuleC\ModuleC.exe
+    |-- Modules\ModuleD\ModuleD.exe
+    |-- Modules\ModuleE\ModuleE.exe
+    |-- ... (them Module moi theo cung mot khuon mau)
 ```
 
 ## Cấu trúc solution
@@ -40,7 +43,10 @@ AppSuite.sln
 |
 |-- Modules/
 |   |-- ModuleA/                WinUI 3 app doc lap - vi du "Module A"
-|   `-- ModuleB/                WinUI 3 app doc lap - vi du "Module B"
+|   |-- ModuleB/                WinUI 3 app doc lap - vi du "Module B"
+|   |-- ModuleC/                Tra cuu ten bang/cot theo tu dien du lieu (JSON)
+|   |-- ModuleD/                Tu dien du lieu tu Excel (DBDef) -> SQLite -> HTML
+|   `-- ModuleE/                Tu dien du lieu tu PostgreSQL/Oracle -> SQLite -> HTML
 |
 `-- build/
     |-- Sync-Modules-Dev.ps1    Tien ich cho F5/debug local (xem ben duoi)
@@ -75,9 +81,9 @@ Yêu cầu: Visual Studio 2022 17.14+ với workload ".NET Desktop Development" 
 .\build\Sync-Modules-Dev.ps1
 ```
 
-Script này build MainLauncher + ModuleA + ModuleB (cấu hình Debug mặc định) và copy output của
-từng module vào đúng thư mục `Modules\<Tên module>\` bên cạnh `MainLauncher.exe` (giống layout lúc
-deploy), để `modules.json` (đường dẫn tương đối `.\Modules\ModuleA\ModuleA.exe`) resolve đúng.
+Script này build MainLauncher + mọi Module (cấu hình Debug mặc định) và copy output của từng module
+vào đúng thư mục `Modules\<Tên module>\` bên cạnh `MainLauncher.exe` (giống layout lúc deploy), để
+`modules.json` (đường dẫn tương đối `.\Modules\ModuleA\ModuleA.exe`) resolve đúng.
 Sau đó mở solution trong Visual Studio, đặt **MainLauncher** làm Startup Project và nhấn F5.
 
 > Đây chỉ là tiện ích cho local dev - **không** phải điều kiện bắt buộc để build. Mỗi module vẫn
@@ -102,6 +108,9 @@ Application\
 |-- MainLauncher.exe
 |-- Modules\ModuleA\ModuleA.exe
 |-- Modules\ModuleB\ModuleB.exe
+|-- Modules\ModuleC\ModuleC.exe
+|-- Modules\ModuleD\ModuleD.exe
+|-- Modules\ModuleE\ModuleE.exe
 `-- Config\modules.json, appsettings.json
 ```
 
@@ -147,11 +156,12 @@ xong - không cần sửa gì trong MainLauncher.
 - Dependency Injection với `Microsoft.Extensions.DependencyInjection`, đăng ký trong `App.xaml.cs`.
 - Nullable reference types bật (`<Nullable>enable</Nullable>`) trên mọi project.
 - Không viết logic nghiệp vụ trong code-behind của View - View chỉ bind tới ViewModel qua `x:Bind`.
-- Mỗi project (`Common`, `MainLauncher`, `Modules\ModuleA`, `Modules\ModuleB`) có README riêng.
+- Mỗi project (`Common`, `MainLauncher`, `Modules\ModuleA`...`ModuleE`,...) có README riêng.
 
 ## Đã kiểm thử
 
-- `dotnet build AppSuite.sln` - build thành công cả 5 project (Common, SharedUI, MainLauncher, ModuleA, ModuleB).
+- `dotnet build AppSuite.sln` - build thành công cả 8 project (Common, SharedUI, MainLauncher,
+  ModuleA, ModuleB, ModuleC, ModuleD, ModuleE).
 - Chạy `MainLauncher.exe` thực tế: load `modules.json`, tự auto-start `ModuleA` (do `AutoStart: true`),
   ghi log ra file và hiển thị trên UI - xem `MainLauncher/README.md` để biết chi tiết log mẫu.
 - Chạy `MainLauncher.exe` sau khi merge `SharedUI/Themes/Generic.xaml` - không phát sinh lỗi runtime
