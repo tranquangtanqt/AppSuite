@@ -13,21 +13,38 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <ScrollViewer HorizontalAlignment="Center" VerticalAlignment="Center">
-        <StackPanel Padding="32" Spacing="12" Width="360">
-            <TextBlock Text="Module D" Style="{StaticResource TitleLargeTextBlockStyle}" HorizontalAlignment="Center" />
-            <TextBlock Text="Form nhap lieu" Opacity="0.7" HorizontalAlignment="Center" Margin="0,0,0,12" />
+    <Grid Padding="24" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-            <TextBox x:Name="NameBox" Header="Ho ten" PlaceholderText="Nhap ho ten" />
-            <TextBox x:Name="EmailBox" Header="Email" PlaceholderText="Nhap email" />
-            <TextBox x:Name="NoteBox" Header="Ghi chu" PlaceholderText="Nhap ghi chu" AcceptsReturn="True" TextWrapping="Wrap" Height="80" />
-
-            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,8,0,0">
-                <Button x:Name="ClearButton" Content="Xoa" Click="ClearButton_Click" />
-                <Button x:Name="SubmitButton" Content="Luu" Style="{StaticResource AccentButtonStyle}" Click="SubmitButton_Click" />
-            </StackPanel>
-
-            <InfoBar x:Name="ResultInfoBar" IsOpen="False" />
+        <StackPanel Grid.Row="0" Spacing="2">
+            <TextBlock Text="Module D - Tu dien du lieu (DB Definition)" Style="{StaticResource TitleLargeTextBlockStyle}" />
+            <TextBlock Text="Doc Data\Excel\*.xlsm -> luu Data\Database\ModuleD.db -> xuat Data\Database\ModuleD.html" Opacity="0.7" />
         </StackPanel>
-    </ScrollViewer>
+
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
+            <Button Content="1. Doc Excel -> SQLite" Command="{x:Bind ViewModel.ImportExcelCommand}" Style="{StaticResource AccentButtonStyle}" />
+            <Button Content="2. Xuat HTML" Command="{x:Bind ViewModel.ExportHtmlCommand}" />
+            <Button Content="Mo file HTML" Command="{x:Bind ViewModel.OpenHtmlCommand}" />
+        </StackPanel>
+
+        <ProgressBar Grid.Row="2" IsIndeterminate="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+
+        <TextBlock Grid.Row="3" Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" TextWrapping="Wrap" />
+
+        <Border Grid.Row="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="4">
+            <ListView ItemsSource="{x:Bind ViewModel.LogLines}" SelectionMode="None">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Border>
+    </Grid>
 </Window>

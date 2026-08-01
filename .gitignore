@@ -35,6 +35,9 @@ msbuild.wrn
 # Publish output (see build/Publish-AppSuite.ps1)
 /Application/
 
+# ModuleD source workbooks (large, internal DBDef data - not meant to be committed)
+/Modules/ModuleD/Data/Excel/*.xlsm
+
 # Visual Studio profiler
 *.psess
 *.vsp
