@@ -23,10 +23,17 @@ hoặc mở `ModuleD.csproj` riêng trong Visual Studio, đặt Startup Project,
 3. **"Mo file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định.
 
 Log/tiến trình import (file đang đọc, cảnh báo bảng/cột không đọc được) hiện trong khung log ở dưới
-cùng cửa sổ. Trang HTML xuất ra có menu trái (danh sách bảng + ô tìm kiếm) và nội dung phải: 説明,
-管理タイプ, danh sách cột cần lưu ý khi thay đổi, 改廃, rồi tới bảng cột của bảng đang chọn; tìm kiếm
-khớp trên tên bảng, tên tiếng Nhật, và tên/nhãn cột. Mỗi dòng cột có màu nền phân biệt: vàng nhạt =
-khóa chính (`Level == 0`), xanh nhạt = cột dùng chung được mở rộng từ `$...$` group (xem bên dưới).
+cùng cửa sổ. Trang HTML xuất ra có menu trái (danh sách bảng, lọc theo ô "Ten bang") và nội dung phải:
+説明, 管理タイプ, danh sách cột cần lưu ý khi thay đổi, 改廃, rồi tới bảng cột của bảng đang chọn. Mỗi
+dòng cột có màu nền phân biệt: vàng nhạt = khóa chính (`Level == 0`), xanh nhạt = cột dùng chung được
+mở rộng từ `$...$` group (xem bên dưới).
+
+Ô "Ten cot" (tùy chọn, tách riêng với "Ten bang") kết hợp cho 3 kiểu tra cứu khi bấm "Tim kiem"
+(hoặc gõ trực tiếp, hoặc chọn bảng ở menu trái):
+- Chỉ "Ten bang": hiện toàn bộ cấu trúc bảng đó (như hiện tại).
+- Cả hai: chỉ hiện (những) dòng cột khớp "Ten cot" trong đúng bảng đã nhập.
+- Chỉ "Ten cot": tìm tất cả bảng có cột khớp, kết quả nhóm theo từng bảng (mỗi bảng 1 khối riêng,
+  chỉ liệt kê các cột khớp) - dùng khi không nhớ cột đó thuộc bảng nào.
 Ngay dưới đó là bảng "Khóa ngoại (FOREIGN)" liệt kê các quan hệ FK của bảng đang chọn; tên bảng tham
 chiếu là link `#table=TÊN_BẢNG` trỏ vào chính file HTML này, mở bằng `target="_blank"` nên bấm vào sẽ
 mở **tab trình duyệt mới** đã chọn sẵn bảng đó (nếu bảng đó có trong dữ liệu đã đọc) - có thể mở

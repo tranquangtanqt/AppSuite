@@ -104,8 +104,8 @@ public sealed class HtmlReportGenerator
           * { box-sizing: border-box; }
           body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; display: flex; height: 100vh; }
           #sidebar { width: 340px; min-width: 260px; border-right: 1px solid #8884; display: flex; flex-direction: column; }
-          #searchArea { padding: 10px; display: flex; gap: 6px; border-bottom: 1px solid #8884; }
-          #searchBox { flex: 1; padding: 6px 8px; font-size: 14px; }
+          #searchArea { padding: 10px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid #8884; }
+          #searchArea input { width: 100%; padding: 6px 8px; font-size: 14px; }
           #searchButton { padding: 6px 12px; cursor: pointer; }
           #summary { padding: 6px 10px; font-size: 12px; opacity: .7; }
           #tableList { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
@@ -131,19 +131,24 @@ public sealed class HtmlReportGenerator
           .legend .swatch.common { background: rgba(66, 133, 244, .4); }
           .fk-link { color: #4a90d9; text-decoration: none; font-family: Consolas, monospace; }
           .fk-link:hover { text-decoration: underline; }
+          .groupBlock { border: 1px solid #8886; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
+          .groupBlock h2 { font-size: 15px; font-family: Consolas, monospace; margin: 0 0 8px; }
         </style>
         </head>
         <body>
         <div id="sidebar">
           <div id="searchArea">
-            <input id="searchBox" type="text" placeholder="Tim ten bang / ten cot..." />
+            <input id="searchBox" type="text" placeholder="Ten bang..." />
+            <input id="columnBox" type="text" placeholder="Ten cot (tuy chon)..." />
             <button id="searchButton">Tim kiem</button>
           </div>
           <div id="summary"></div>
           <ul id="tableList"></ul>
         </div>
         <div id="content">
-          <p>Chon 1 bang o menu ben trai, hoac go tu khoa tim kiem (ten bang, ten tieng Nhat, hoac ten cot).</p>
+          <p>Chon 1 bang o menu ben trai, hoac nhap Ten bang va/hoac Ten cot roi bam Tim kiem.<br>
+          Chi Ten bang: hien toan bo cau truc bang. Ca hai: hien dong cot do trong bang. Chi Ten cot:
+          tim tat ca cac bang co cot do, ket qua nhom theo tung bang.</p>
         </div>
         <script id="app-data" type="application/json">%%DATA_JSON%%</script>
         <script>
@@ -153,6 +158,7 @@ public sealed class HtmlReportGenerator
           var listEl = document.getElementById('tableList');
           var contentEl = document.getElementById('content');
           var searchBox = document.getElementById('searchBox');
+          var columnBox = document.getElementById('columnBox');
           var searchButton = document.getElementById('searchButton');
           var summaryEl = document.getElementById('summary');
 
@@ -162,27 +168,37 @@ public sealed class HtmlReportGenerator
           var tablesByName = {};
           tables.forEach(function (t) { tablesByName[t.name] = t; });
 
-          function matches(table, query) {
+          function tableNameMatches(t, query) {
             if (!query) return true;
-            if (table.name.toLowerCase().indexOf(query) >= 0) return true;
-            if (table.japaneseName.toLowerCase().indexOf(query) >= 0) return true;
-            for (var i = 0; i < table.columns.length; i++) {
-              var c = table.columns[i];
-              if (c.name.toLowerCase().indexOf(query) >= 0) return true;
-              if (c.japaneseName.toLowerCase().indexOf(query) >= 0) return true;
-            }
-            return false;
+            return t.name.toLowerCase().indexOf(query) >= 0 || t.japaneseName.toLowerCase().indexOf(query) >= 0;
+          }
+
+          function columnMatches(c, query) {
+            return c.name.toLowerCase().indexOf(query) >= 0 || c.japaneseName.toLowerCase().indexOf(query) >= 0;
+          }
+
+          function findListItem(name) {
+            return Array.prototype.find.call(listEl.children, function (item) {
+              return item.querySelector('.tname').textContent === name;
+            });
           }
 
           function renderList() {
             var query = searchBox.value.trim().toLowerCase();
             listEl.innerHTML = '';
-            tables.filter(function (t) { return matches(t, query); }).forEach(function (t) {
+            tables.filter(function (t) { return tableNameMatches(t, query); }).forEach(function (t) {
               var li = document.createElement('li');
               li.innerHTML = '<div class="tname"></div><div class="jname"></div>';
               li.querySelector('.tname').textContent = t.name;
               li.querySelector('.jname').textContent = t.japaneseName || t.alias || '';
-              li.addEventListener('click', function () { selectTable(t, li); });
+              li.addEventListener('click', function () {
+                var columnQuery = columnBox.value.trim().toLowerCase();
+                if (columnQuery) {
+                  showTableColumnMatches(t, li, columnQuery);
+                } else {
+                  showFullTable(t, li);
+                }
+              });
               listEl.appendChild(li);
             });
           }
@@ -190,6 +206,45 @@ public sealed class HtmlReportGenerator
           function renderSection(label, text) {
             if (!text) return '';
             return '<div class="meta"><div class="metaLabel">' + escapeHtml(label) + '</div>' + escapeHtml(text) + '</div>';
+          }
+
+          function legendHtml() {
+            return '<div class="legend" style="margin-top:12px">' +
+              '<span><span class="swatch pk"></span>Khoa chinh (level 0)</span>' +
+              '<span><span class="swatch common"></span>Cot dung chung ($...$ group)</span>' +
+              '</div>';
+          }
+
+          function buildColumnsTableHtml(columns) {
+            var html = '<table class="cols"><thead><tr>' +
+              '<th>Level</th><th>Ten cot</th><th>Kieu</th><th>Xac dinh</th><th>Null</th>' +
+              '<th>Ten tieng Nhat</th><th>Mo ta</th></tr></thead><tbody>';
+            columns.forEach(function (c) {
+              var rowClasses = [];
+              if (c.level === 0) rowClasses.push('pk');
+              if (c.isCommon) rowClasses.push('common');
+              html += '<tr class="' + rowClasses.join(' ') + '">' +
+                '<td>' + (c.level === null || c.level === undefined ? '' : c.level) + '</td>' +
+                '<td>' + escapeHtml(c.name) + '</td>' +
+                '<td>' + escapeHtml(c.dataType) + '</td>' +
+                '<td>' + escapeHtml(c.length) + '</td>' +
+                '<td>' + escapeHtml(c.nullable) + '</td>' +
+                '<td>' + escapeHtml(c.japaneseName) + '</td>' +
+                '<td>' + escapeHtml(c.description) + '</td>' +
+                '</tr>';
+            });
+            html += '</tbody></table>';
+            return html;
+          }
+
+          function renderColumnGroups(headingHtml, groups) {
+            var html = headingHtml + legendHtml();
+            groups.forEach(function (g) {
+              html += '<div class="groupBlock"><h2>' + escapeHtml(g.table.name) +
+                (g.table.japaneseName ? ' - ' + escapeHtml(g.table.japaneseName) : '') + '</h2>' +
+                buildColumnsTableHtml(g.columns) + '</div>';
+            });
+            contentEl.innerHTML = html;
           }
 
           function renderForeignKeys(fks) {
@@ -212,20 +267,15 @@ public sealed class HtmlReportGenerator
               '<tbody>' + rows + '</tbody></table>';
           }
 
-          function selectTableByName(name) {
-            var target = tablesByName[name];
-            if (!target) return;
-            searchBox.value = name;
-            renderList();
-            var li = Array.prototype.find.call(listEl.children, function (item) {
-              return item.querySelector('.tname').textContent === name;
-            });
-            selectTable(target, li);
-          }
-
           function applyHash() {
             var match = /^#table=(.+)$/.exec(location.hash);
-            if (match) selectTableByName(decodeURIComponent(match[1]));
+            if (match) {
+              var name = decodeURIComponent(match[1]);
+              columnBox.value = '';
+              searchBox.value = name;
+              renderList();
+              showFullTable(tablesByName[name], findListItem(name));
+            }
           }
 
           function renderColumnsTable(t) {
@@ -237,37 +287,75 @@ public sealed class HtmlReportGenerator
             html += renderSection('Muc can luu y khi thay doi (運用後の変更に注意が必要な項目)', t.cautionItems);
             html += renderSection('Cai cach / bai bo (改廃)', t.revisionHistory);
             html += renderForeignKeys(t.foreignKeys);
-            html += '<div class="legend" style="margin-top:12px">' +
-              '<span><span class="swatch pk"></span>Khoa chinh (level 0)</span>' +
-              '<span><span class="swatch common"></span>Cot dung chung ($...$ group)</span>' +
-              '</div>';
-            html += '<table class="cols"><thead><tr>' +
-              '<th>Level</th><th>Ten cot</th><th>Kieu</th><th>Xac dinh</th><th>Null</th>' +
-              '<th>Ten tieng Nhat</th><th>Mo ta</th></tr></thead><tbody>';
-            t.columns.forEach(function (c) {
-              var rowClasses = [];
-              if (c.level === 0) rowClasses.push('pk');
-              if (c.isCommon) rowClasses.push('common');
-              html += '<tr class="' + rowClasses.join(' ') + '">' +
-                '<td>' + (c.level === null || c.level === undefined ? '' : c.level) + '</td>' +
-                '<td>' + escapeHtml(c.name) + '</td>' +
-                '<td>' + escapeHtml(c.dataType) + '</td>' +
-                '<td>' + escapeHtml(c.length) + '</td>' +
-                '<td>' + escapeHtml(c.nullable) + '</td>' +
-                '<td>' + escapeHtml(c.japaneseName) + '</td>' +
-                '<td>' + escapeHtml(c.description) + '</td>' +
-                '</tr>';
-            });
-            html += '</tbody></table>';
+            html += legendHtml();
+            html += buildColumnsTableHtml(t.columns);
             contentEl.innerHTML = html;
           }
 
-          function selectTable(t, li) {
+          function setActiveListItem(li) {
             var current = listEl.querySelector('li.active');
             if (current) current.classList.remove('active');
             if (li) li.classList.add('active');
+          }
+
+          // Dieu kien 1: chi Ten bang (Ten cot de trong) -> hien toan bo cau truc bang.
+          function showFullTable(t, li) {
+            if (!t) return;
+            setActiveListItem(li);
             renderColumnsTable(t);
             document.title = 'CSDL - ' + t.name;
+          }
+
+          // Dieu kien 2: ca Ten bang va Ten cot -> chi hien dong cot do trong bang nay.
+          function showTableColumnMatches(t, li, columnQuery) {
+            setActiveListItem(li);
+            var matchedCols = t.columns.filter(function (c) { return columnMatches(c, columnQuery); });
+            var heading = '<h1>' + escapeHtml(t.name) + (t.alias ? ' (' + escapeHtml(t.alias) + ')' : '') + '</h1>' +
+              '<div class="meta">Cot khop "' + escapeHtml(columnQuery) + '": ' + matchedCols.length + ' / ' + t.columns.length + '</div>';
+            renderColumnGroups(heading, [{ table: t, columns: matchedCols }]);
+            document.title = 'CSDL - ' + t.name + ' (cot: ' + columnQuery + ')';
+          }
+
+          // Dieu kien 3: chi Ten cot (Ten bang de trong) -> tim tat ca bang co cot do, nhom theo bang.
+          function showColumnSearchAcrossTables(candidateTables, columnQuery) {
+            setActiveListItem(null);
+            var groups = [];
+            candidateTables.forEach(function (t) {
+              var matchedCols = t.columns.filter(function (c) { return columnMatches(c, columnQuery); });
+              if (matchedCols.length) groups.push({ table: t, columns: matchedCols });
+            });
+            if (!groups.length) {
+              contentEl.innerHTML = '<p>Khong tim thay cot nao khop "' + escapeHtml(columnQuery) + '".</p>';
+              document.title = 'CSDL';
+              return;
+            }
+            var heading = '<h1>Ket qua tim cot "' + escapeHtml(columnQuery) + '"</h1>' +
+              '<div class="meta">' + groups.length + ' bang co cot khop.</div>';
+            renderColumnGroups(heading, groups);
+            document.title = 'CSDL - cot ' + columnQuery + ' (' + groups.length + ' bang)';
+          }
+
+          function performSearch() {
+            renderList();
+
+            var tableQuery = searchBox.value.trim().toLowerCase();
+            var columnQuery = columnBox.value.trim().toLowerCase();
+
+            if (!columnQuery) {
+              if (!tableQuery) return;
+              var exact = tables.find(function (t) { return t.name.toLowerCase() === tableQuery; });
+              var candidates = tables.filter(function (t) { return tableNameMatches(t, tableQuery); });
+              var target = exact || (candidates.length === 1 ? candidates[0] : null);
+              if (target) showFullTable(target, findListItem(target.name));
+              return;
+            }
+
+            var candidateTables = tableQuery ? tables.filter(function (t) { return tableNameMatches(t, tableQuery); }) : tables;
+            if (candidateTables.length === 1) {
+              showTableColumnMatches(candidateTables[0], findListItem(candidateTables[0].name), columnQuery);
+            } else {
+              showColumnSearchAcrossTables(candidateTables, columnQuery);
+            }
           }
 
           function escapeHtml(s) {
@@ -278,11 +366,13 @@ public sealed class HtmlReportGenerator
 
           window.addEventListener('hashchange', applyHash);
 
-          searchButton.addEventListener('click', renderList);
-          searchBox.addEventListener('keyup', function (e) { if (e.key === 'Enter') renderList(); });
-          searchBox.addEventListener('input', renderList);
+          searchButton.addEventListener('click', performSearch);
+          searchBox.addEventListener('keyup', function (e) { if (e.key === 'Enter') performSearch(); });
+          searchBox.addEventListener('input', performSearch);
+          columnBox.addEventListener('keyup', function (e) { if (e.key === 'Enter') performSearch(); });
+          columnBox.addEventListener('input', performSearch);
 
-          renderList();
+          performSearch();
           applyHash();
         })();
         </script>
