@@ -19,5 +19,12 @@
     "Path": ".\\Modules\\ModuleC\\ModuleC.exe",
     "Arguments": "",
     "AutoStart": false
+  },
+  {
+    "Name": "ModuleD",
+    "Description": "Form nhap lieu don gian",
+    "Path": ".\\Modules\\ModuleD\\ModuleD.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]

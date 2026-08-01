@@ -6,6 +6,8 @@
         |-- MainLauncher.exe
         |-- Modules\ModuleA\ModuleA.exe
         |-- Modules\ModuleB\ModuleB.exe
+        |-- Modules\ModuleC\ModuleC.exe
+        |-- Modules\ModuleD\ModuleD.exe
         `-- Config\modules.json
 
 .DESCRIPTION
@@ -47,5 +49,7 @@ New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 Publish-Project -ProjectPath (Join-Path $root "MainLauncher\MainLauncher.csproj") -DestSubfolder "."
 Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleA\ModuleA.csproj") -DestSubfolder "Modules\ModuleA"
 Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleB\ModuleB.csproj") -DestSubfolder "Modules\ModuleB"
+Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleC\ModuleC.csproj") -DestSubfolder "Modules\ModuleC"
+Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleD\ModuleD.csproj") -DestSubfolder "Modules\ModuleD"
 
 Write-Host "Done. Deployment output at $OutputDir" -ForegroundColor Green
