@@ -76,6 +76,22 @@ AppSuite là "Application Hub" WinUI 3: `MainLauncher` khởi động/điều kh
    port riêng lẻ và bỏ phụ thuộc Gallery-specific (theo cách `ColorPageExample` đã làm — thay
    `GalleryBackgroundBrush`/`GalleryBorderBrush` bằng brush chuẩn WinUI).
 
+## Tài liệu thiết kế mỗi module (`PLAN.md`)
+
+Mỗi thư mục `Modules\<Tên>\` có 2 file tài liệu, mục đích khác nhau:
+
+- **`README.md`** - hướng dẫn sử dụng: cách chạy, chức năng hiện tại, vì sao độc lập với
+  `MainLauncher`. Luôn cập nhật theo trạng thái mới nhất của code.
+- **`PLAN.md`** - quyết định thiết kế: bối cảnh/lý do ra đời, các đánh đổi kỹ thuật đã chọn và vì sao
+  (không chỉ mô tả "làm gì" mà cả "tại sao làm vậy" và "đã cân nhắc gì"), cộng danh sách kiểm chứng
+  lúc code xong. Viết 1 lần khi module được thiết kế/lập plan (plan mode), không bắt buộc cập nhật
+  theo mọi thay đổi nhỏ sau này như README - nhưng nếu module có 1 quyết định kiến trúc lớn mới, thêm
+  1 mục vào `PLAN.md` thay vì chỉ sửa README.
+
+Khi tạo module mới theo hướng dẫn ở trên: sau khi lập plan (plan mode) và được duyệt, lưu chính nội
+dung plan đó vào `Modules\<TênMới>\PLAN.md` (giữ cấu trúc Bối cảnh / Thiết kế / Kiểm chứng) thay vì để
+nó chỉ tồn tại dưới dạng file plan tạm của Claude Code.
+
 ## Coding convention (áp dụng toàn solution)
 
 - MVVM với CommunityToolkit.Mvvm (`ObservableObject`, `[ObservableProperty]`, `[RelayCommand]`).
