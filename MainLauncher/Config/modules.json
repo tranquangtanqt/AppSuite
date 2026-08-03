@@ -33,5 +33,12 @@
     "Path": ".\\Modules\\ModuleE\\ModuleE.exe",
     "Arguments": "",
     "AutoStart": false
+  },
+  {
+    "Name": "ModuleF",
+    "Description": "CSV/TSV editor",
+    "Path": ".\\Modules\\ModuleF\\ModuleF.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]

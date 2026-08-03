@@ -1,0 +1,61 @@
+using System.Collections.ObjectModel;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using ModuleF.Models;
+using ModuleF.ViewModels;
+
+namespace ModuleF.Views;
+
+public sealed partial class FilterDialog : ContentDialog
+{
+    public FilterDialog(IReadOnlyList<CsvColumn> columns, FilterExpression? existing)
+    {
+        InitializeComponent();
+        ColumnNames = columns.Select(c => c.Name).ToList();
+
+        if (existing is not null)
+        {
+            JoinComboBox.SelectedIndex = existing.Join == FilterJoin.Or ? 1 : 0;
+            foreach (var condition in existing.Conditions)
+            {
+                Conditions.Add(new FilterConditionRow
+                {
+                    ColumnIndex = condition.ColumnIndex,
+                    OperatorIndex = (int)condition.Operator,
+                    Value = condition.Value,
+                    Negate = condition.Negate,
+                });
+            }
+        }
+
+        if (Conditions.Count == 0)
+        {
+            Conditions.Add(new FilterConditionRow());
+        }
+    }
+
+    public List<string> ColumnNames { get; }
+
+    public ObservableCollection<FilterConditionRow> Conditions { get; } = new();
+
+    public FilterExpression BuildExpression()
+    {
+        var expression = new FilterExpression { Join = JoinComboBox.SelectedIndex == 1 ? FilterJoin.Or : FilterJoin.And };
+        foreach (var row in Conditions.Where(r => !string.IsNullOrWhiteSpace(r.Value) || r.OperatorIndex is (int)FilterOperator.Regex))
+        {
+            expression.Conditions.Add(row.ToCondition());
+        }
+
+        return expression;
+    }
+
+    private void AddConditionButton_Click(object sender, RoutedEventArgs e) => Conditions.Add(new FilterConditionRow());
+
+    private void RemoveConditionButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: FilterConditionRow row })
+        {
+            Conditions.Remove(row);
+        }
+    }
+}
