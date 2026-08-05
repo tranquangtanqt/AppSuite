@@ -24,7 +24,8 @@ internal static class OverviewSheetParser
     };
 
     public static bool TryRender(
-        SheetGridContext context, int minRow, int maxRow, StringBuilder searchText, Action<string> log, out string html)
+        SheetGridContext context, int minRow, int maxRow, StringBuilder searchText, Action<string> log,
+        string? screenImageHtml, out string html)
     {
         var sheet = context.Sheet;
         var minCol = context.MinCol;
@@ -126,6 +127,16 @@ internal static class OverviewSheetParser
             }
 
             sb.Append("</div>");
+
+            // 画面イメージ (the sheet's own screenshot) is spliced in right after 【説明】 closes - not
+            // as its own top-level sheet section further down the page - so a reader sees what the
+            // screen looks like immediately after reading what it does, before the more technical
+            // sections (処理関連図, オペレーション一覧, ...). Pre-rendered by ScreenDocImporter, since
+            // 画面イメージ is a separate sheet that may come before or after 概要 in the workbook.
+            if (markerText == "【説明】" && !string.IsNullOrEmpty(screenImageHtml))
+            {
+                sb.Append("<div class=\"ov-section\"><h3>画面イメージ</h3>").Append(screenImageHtml).Append("</div>");
+            }
         }
 
         sb.Append("</div>");

@@ -62,6 +62,12 @@ public sealed class ScreenDocImporter
     /// header chips (see <see cref="HtmlTemplates.ScreenPage"/>).</summary>
     private static readonly HashSet<string> SkippedSheetNames = new() { "表紙", "変更来歴" };
 
+    /// <summary>"画面イメージ" (the screen's own screenshot) isn't skipped like the sheets above - it
+    /// still contributes its HTML/search text - but it's rendered up front and spliced into 概要's
+    /// 【説明】 section (see OverviewSheetParser) rather than getting its own top-level sheet section/
+    /// nav entry further down the page, so a reader sees the screenshot right after the description.</summary>
+    private const string ScreenImageSheetName = "画面イメージ";
+
     private static ScreenRecord ImportOneFile(string file, string htmlOutputDir, HashSet<string> seenHtmlFileNames, Action<string> log)
     {
         var parsed = ScreenCodeParser.Parse(Path.GetFileNameWithoutExtension(file));
@@ -77,20 +83,51 @@ public sealed class ScreenDocImporter
 
         using (var package = new ExcelPackage(new FileInfo(file)))
         {
+            // Rendered before the main loop below (whatever its actual tab order in the workbook is)
+            // so it's ready to hand to 概要's renderer when that sheet comes up.
+            var screenImageSheet = package.Workbook.Worksheets.FirstOrDefault(s => s.Name == ScreenImageSheetName);
+            var screenImageHtml = screenImageSheet?.Dimension is not null
+                ? ExcelSheetHtmlRenderer.RenderSheet(screenImageSheet, imagesOutputDir, imagesRelativeUrl, searchText, log)
+                : null;
+            var screenImageSpliced = false;
+
             foreach (var sheet in package.Workbook.Worksheets)
             {
-                if (sheet.Dimension is null || SkippedSheetNames.Contains(sheet.Name))
+                if (sheet.Dimension is null || SkippedSheetNames.Contains(sheet.Name) || sheet.Name == ScreenImageSheetName)
                 {
                     continue;
                 }
 
                 sheetIndex++;
                 var anchorId = $"sheet-{sheetIndex}";
-                var sheetHtml = ExcelSheetHtmlRenderer.RenderSheet(sheet, imagesOutputDir, imagesRelativeUrl, searchText, log);
+                string sheetHtml;
+                if (sheet.Name == "概要")
+                {
+                    sheetHtml = ExcelSheetHtmlRenderer.RenderSheet(sheet, imagesOutputDir, imagesRelativeUrl, searchText, log, screenImageHtml);
+                    screenImageSpliced = true;
+                }
+                else
+                {
+                    sheetHtml = ExcelSheetHtmlRenderer.RenderSheet(sheet, imagesOutputDir, imagesRelativeUrl, searchText, log);
+                }
+
                 sections.Append("<section class=\"sheet\" id=\"").Append(anchorId).Append("\"><h2>")
                     .Append(HtmlTemplates.Escape(sheet.Name)).Append("</h2>")
                     .Append(sheetHtml).Append("</section>");
                 nav.Append("<a href=\"#").Append(anchorId).Append("\">").Append(HtmlTemplates.Escape(sheet.Name)).Append("</a>");
+            }
+
+            // No 概要 sheet to splice into (unexpected, but this codebase never silently drops content
+            // over an assumption about layout) - fall back to a top-level section of its own instead
+            // of losing the screenshot entirely.
+            if (!screenImageSpliced && !string.IsNullOrEmpty(screenImageHtml))
+            {
+                sheetIndex++;
+                var anchorId = $"sheet-{sheetIndex}";
+                sections.Append("<section class=\"sheet\" id=\"").Append(anchorId).Append("\"><h2>")
+                    .Append(HtmlTemplates.Escape(ScreenImageSheetName)).Append("</h2>")
+                    .Append(screenImageHtml).Append("</section>");
+                nav.Append("<a href=\"#").Append(anchorId).Append("\">").Append(HtmlTemplates.Escape(ScreenImageSheetName)).Append("</a>");
             }
         }
 

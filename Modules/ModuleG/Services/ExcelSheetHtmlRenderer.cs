@@ -32,7 +32,8 @@ public static class ExcelSheetHtmlRenderer
         string imagesOutputDir,
         string imagesRelativeUrl,
         StringBuilder searchText,
-        Action<string> log)
+        Action<string> log,
+        string? screenImageHtml = null)
     {
         var dimension = sheet.Dimension;
         if (dimension is null)
@@ -65,13 +66,22 @@ public static class ExcelSheetHtmlRenderer
 
         var semanticHtml = sheet.Name switch
         {
-            "概要" => OverviewSheetParser.TryRender(context, minRow, maxRow, searchText, log, out var overviewHtml) ? overviewHtml : null,
+            "概要" => OverviewSheetParser.TryRender(context, minRow, maxRow, searchText, log, screenImageHtml, out var overviewHtml) ? overviewHtml : null,
             "画面遷移" => ScreenDiagramSheetParser.TryRender(context, minRow, maxRow, searchText, out var diagramHtml) ? diagramHtml : null,
             "項目説明" => ItemExplanationSheetParser.TryRender(context, minRow, maxRow, searchText, out var itemHtml) ? itemHtml : null,
             _ => null,
         };
 
         var html = new StringBuilder(semanticHtml ?? RenderGridRange(context, minRow, maxRow, searchText));
+
+        // OverviewSheetParser only splices screenImageHtml into its own 【説明】 section - if 概要
+        // didn't parse semantically at all (fell back to the grid above), that splice never happened
+        // and the screenshot would otherwise vanish silently instead of just landing in a less ideal
+        // spot.
+        if (semanticHtml is null && !string.IsNullOrEmpty(screenImageHtml))
+        {
+            html.Append("<div class=\"ov-section\"><h3>画面イメージ</h3>").Append(screenImageHtml).Append("</div>");
+        }
 
         // Any image anchored outside the print-area crop (rare - e.g. a logo placed in the margin)
         // would otherwise be silently dropped; append it at the end instead of losing it entirely.
