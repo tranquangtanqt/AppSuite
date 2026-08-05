@@ -66,36 +66,26 @@ thành 1 khối `<img>` trước dòng chứa ô neo của ảnh. Việc luôn c
 là 1 file có layout khác lạ vẫn hiển thị đúng nội dung (chỉ kém đẹp hơn) thay vì mất dữ liệu. Kết quả
 vẫn **không pixel-perfect** so với bản Excel gốc.
 
-### `【処理関連図/サービス関連図】` - chụp ảnh qua Excel COM Interop thay vì dựng lưới
+### `【処理関連図/サービス関連図】` - tự đọc XML + vẽ lại bằng SkiaSharp, không cần Excel
 
-Section này trong `概要` là 1 sơ đồ box+mũi tên vẽ bằng **shape/connector nổi của Excel**, không phải
-ảnh nhúng (`ExcelPicture`) và cũng không nằm gọn trong border ô lưới - EPPlus không đọc được shape/
-connector nên bộ dịch generic sẽ mất hết mũi tên nối các box. `ExcelDiagramCapture` (COM Interop, late-
-bound qua `Type.GetTypeFromProgID("Excel.Application")` - không cần PIA/COM reference trong `.csproj`)
-mở lại đúng file bằng Excel thật rồi xuất PNG theo 2 bước:
+Section này trong `概要` là 1 sơ đồ box+mũi tên vẽ bằng **shape/connector nổi của Excel** (`xdr:sp`/
+`xdr:cxnSp`), không phải ảnh nhúng (`ExcelPicture`) và cũng không nằm gọn trong border ô lưới - EPPlus
+đọc được box (`ExcelShape`) nhưng **không** đọc được gì cho connector ngoài bounding box, nên bộ dịch
+generic sẽ mất hết mũi tên nối các box.
 
-1. Đặt `PageSetup.PrintArea` = đúng vùng cần chụp, `FitToPagesWide/Tall = 1` + margin = 0, rồi gọi
-   `Worksheet.ExportAsFixedFormat(xlTypePDF, ...)` ra 1 file PDF tạm.
-2. Render trang PDF đó thành PNG bằng `Windows.Data.Pdf.PdfDocument` (API WinRT có sẵn trong Windows,
-   không cần thêm NuGet nào trên TFM `net8.0-windows`).
-
-**Đã thử `Range.CopyPicture` → dán vào `Chart` tạm → `Chart.Export` trước** (tránh đụng Windows
-Clipboard qua .NET) nhưng bỏ vì luôn báo lỗi COM `Unable to get the CopyPicture property of the Range
-class` - lỗi này gắn liền với việc cửa sổ Excel phải thực sự **visible + focus cấp OS** (không chỉ
-`Window.Activate()` nội bộ của Excel) mới render được, rất khó đảm bảo ổn định khi tự động hoá từ 1 app
-khác đang giữ foreground. `ExportAsFixedFormat` là API in-nền thuần tuý, không cần cửa sổ visible hay
-focus gì cả nên tránh được hẳn nhóm lỗi này.
-
-Range chụp dùng `SheetGridContext.UntrimmedMinCol/MaxCol` (biên cột **trước** khi `TrimTrailingEmpty`
-cắt) vì các cột chỉ có mũi tên đi qua (không có text/màu nền ô) sẽ bị hàm cắt lề nhầm là "trống" và cắt
-mất, sau đó tự thu hẹp lại theo đúng nội dung/border trong chính các dòng của section đó
-(`OverviewSheetParser.FindLocalMaxCol`) để không kéo theo phần định dạng thừa ở tít bên phải sheet.
-
-1 instance `ExcelDiagramCapture` được tạo 1 lần cho **cả batch** trong `ScreenDocImporter.ImportDirectory`
-(khởi động Excel ~1-2s, không đáng chạy lại cho từng file trong hàng trăm file) rồi mở/đóng riêng từng
-workbook. **Cần cài Excel thật trên máy chạy import** - nếu không có, `TryStart` fail 1 lần duy nhất
-(cache lại, không thử lại mỗi file), log cảnh báo, và mọi section này tự động rơi về render lưới như
-trước (không làm hỏng cả batch).
+Thay vì tự động hoá Excel thật (đã thử `Range.CopyPicture`/`ExportAsFixedFormat` qua COM Interop - xem
+lịch sử git nếu muốn xem lại - nhưng luôn phải cài Excel trên máy chạy import và chậm hơn nhiều với
+hàng trăm file), `DiagramXmlReader` đọc thẳng `ExcelDrawings.DrawingXml`/`NameSpaceManager` mà EPPlus
+đã tự dựng sẵn (không cần mở lại file lần 2) bằng XPath, lấy toạ độ tuyệt đối theo EMU
+(`a:xfrm/a:off`+`a:ext` - nhất quán cho cả box lẫn connector, khỏi phải tự quy đổi row-height/column-
+width sang pixel), màu nền/border (`a:srgbClr` hoặc `a:sysClr/@lastClr`), text (gộp `a:r/a:t`, coi
+`a:br`/đổi `a:p` là xuống dòng), và với connector là `a:prstGeom/@prst` + `adj1` (điểm gấp khúc, theo
+公式 DrawingML chuẩn cho `bentConnectorN`, ECMA-376 §20.1.9.18). `DiagramRenderer` vẽ toàn bộ box/
+connector đã đọc được lên 1 canvas SkiaSharp rồi xuất PNG - `straightConnector1` là đường thẳng,
+`bentConnectorN` là đường gấp khúc ngang-dọc-ngang tại điểm `adj1`, preset lạ nào khác rơi về đường
+thẳng thay vì đoán sai. Không pixel-perfect 100% (glyph riêng của từng loại flowchart-shape không được
+tái hiện, chỉ vẽ hình chữ nhật chung) nhưng đủ để đọc hiểu sơ đồ, và **không cần Excel cài trên máy
+chạy import** - chạy được trên bất kỳ máy Windows nào có .NET, nhanh hơn hẳn phương án Interop.
 
 ## Vì sao 01_画面説明書.html nhúng JSON thay vì `fetch()` manifest.json
 

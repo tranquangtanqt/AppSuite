@@ -77,7 +77,7 @@ public sealed partial class ModuleGViewModel : ObservableObject
         {
             var htmlOutputDir = Path.Combine(AppContext.BaseDirectory, "Data", "Database", "Html");
             var folder = SourceFolder;
-            var screens = await RunOnStaThreadAsync(() => _importer.ImportDirectory(folder, htmlOutputDir, AppendLog));
+            var screens = await Task.Run(() => _importer.ImportDirectory(folder, htmlOutputDir, AppendLog));
 
             StatusText = $"Dang luu {screens.Count} man hinh vao SQLite...";
             await _database.ReplaceAllAsync(screens);
@@ -130,32 +130,6 @@ public sealed partial class ModuleGViewModel : ObservableObject
         }
 
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_htmlPath) { UseShellExecute = true });
-    }
-
-    /// <summary>Runs <paramref name="work"/> on a dedicated STA thread instead of the default
-    /// ThreadPool (MTA). ImportDirectory drives Excel COM Interop (<see cref="Services.ExcelDiagramCapture"/>)
-    /// to rasterize the 処理関連図/サービス関連図 diagram - Excel.Application is an STA-only COM server,
-    /// and automating it from an MTA ThreadPool thread is a well-known source of silent/flaky
-    /// CO_E_SERVER_EXEC_FAILURE-style failures, so this keeps the whole import on 1 STA thread rather
-    /// than risk that.</summary>
-    private static Task<List<ScreenRecord>> RunOnStaThreadAsync(Func<List<ScreenRecord>> work)
-    {
-        var tcs = new TaskCompletionSource<List<ScreenRecord>>();
-        var thread = new Thread(() =>
-        {
-            try
-            {
-                tcs.SetResult(work());
-            }
-            catch (Exception ex)
-            {
-                tcs.SetException(ex);
-            }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.IsBackground = true;
-        thread.Start();
-        return tcs.Task;
     }
 
     private bool CanRunImport() => !IsBusy && CanImport;

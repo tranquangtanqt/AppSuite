@@ -31,21 +31,6 @@ public sealed class ScreenDocImporter
         log($"Tim thay {files.Count} file .xlsx.");
         Directory.CreateDirectory(htmlOutputDir);
 
-        // One Excel COM instance for the whole batch (see ExcelDiagramCapture) - rasterizes the
-        // 処理関連図/サービス関連図 diagram on the 概要 sheet, which EPPlus can't read (floating
-        // shapes/connectors, not an embedded picture or plain cell grid). Best-effort: if Excel isn't
-        // installed on this machine, every file just falls back to the plain grid render for that
-        // section instead - the whole import never fails because of this.
-        using var diagramCapture = new ExcelDiagramCapture();
-        if (diagramCapture.TryStart(out var startError))
-        {
-            log("Excel COM san sang - se chup anh so do (処理関連図/サービス関連図).");
-        }
-        else
-        {
-            log($"Khong khoi dong duoc Excel ({startError}) - so do se hien thi dang bang thay vi anh.");
-        }
-
         var seenHtmlFileNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var processed = 0;
 
@@ -54,7 +39,7 @@ public sealed class ScreenDocImporter
             processed++;
             try
             {
-                var record = ImportOneFile(file, htmlOutputDir, seenHtmlFileNames, diagramCapture, log);
+                var record = ImportOneFile(file, htmlOutputDir, seenHtmlFileNames, log);
                 records.Add(record);
                 if (processed % 25 == 0 || processed == files.Count)
                 {
@@ -77,8 +62,7 @@ public sealed class ScreenDocImporter
     /// header chips (see <see cref="HtmlTemplates.ScreenPage"/>).</summary>
     private static readonly HashSet<string> SkippedSheetNames = new() { "表紙", "変更来歴" };
 
-    private static ScreenRecord ImportOneFile(
-        string file, string htmlOutputDir, HashSet<string> seenHtmlFileNames, ExcelDiagramCapture diagramCapture, Action<string> log)
+    private static ScreenRecord ImportOneFile(string file, string htmlOutputDir, HashSet<string> seenHtmlFileNames, Action<string> log)
     {
         var parsed = ScreenCodeParser.Parse(Path.GetFileNameWithoutExtension(file));
         var htmlFileName = MakeUniqueHtmlFileName(parsed.ScreenCode, seenHtmlFileNames);
@@ -102,7 +86,7 @@ public sealed class ScreenDocImporter
 
                 sheetIndex++;
                 var anchorId = $"sheet-{sheetIndex}";
-                var sheetHtml = ExcelSheetHtmlRenderer.RenderSheet(sheet, imagesOutputDir, imagesRelativeUrl, searchText, diagramCapture, file, log);
+                var sheetHtml = ExcelSheetHtmlRenderer.RenderSheet(sheet, imagesOutputDir, imagesRelativeUrl, searchText, log);
                 sections.Append("<section class=\"sheet\" id=\"").Append(anchorId).Append("\"><h2>")
                     .Append(HtmlTemplates.Escape(sheet.Name)).Append("</h2>")
                     .Append(sheetHtml).Append("</section>");

@@ -12,15 +12,9 @@ internal sealed class SheetGridContext
     public int MinCol { get; }
     public int MaxCol { get; }
 
-    /// <summary>Column bounds before <see cref="ExcelSheetHtmlRenderer.RenderSheet"/> trimmed trailing
-    /// visually-empty columns. Floating shapes/connectors (e.g. the 処理関連図/サービス関連図 diagram)
-    /// often sit over cells with no text/fill of their own, so the trimmed <see cref="MaxCol"/> can cut
-    /// off part of a diagram's width - <see cref="OverviewSheetParser"/>'s diagram-image capture uses
-    /// these untrimmed bounds instead, since a plain <c>print area</c> range is authored wide enough to
-    /// fit whatever the sheet actually prints, diagram included.</summary>
-    public int UntrimmedMinCol { get; }
-    public int UntrimmedMaxCol { get; }
-
+    /// <summary>Needed by <see cref="OverviewSheetParser"/> to name/place the 処理関連図/サービス関連図
+    /// diagram PNG it rasterizes from the sheet's own shapes (see DiagramRenderer) - same folder/URL
+    /// convention as every other embedded image.</summary>
     public string ImagesOutputDir { get; }
     public string ImagesRelativeUrl { get; }
 
@@ -30,15 +24,11 @@ internal sealed class SheetGridContext
     /// <summary>Relative image URLs anchored at each 1-based row (already written to disk).</summary>
     public Dictionary<int, List<string>> ImagesByAnchorRow { get; }
 
-    public SheetGridContext(
-        ExcelWorksheet sheet, int minCol, int maxCol, int untrimmedMinCol, int untrimmedMaxCol,
-        string imagesOutputDir, string imagesRelativeUrl)
+    public SheetGridContext(ExcelWorksheet sheet, int minCol, int maxCol, string imagesOutputDir, string imagesRelativeUrl)
     {
         Sheet = sheet;
         MinCol = minCol;
         MaxCol = maxCol;
-        UntrimmedMinCol = untrimmedMinCol;
-        UntrimmedMaxCol = untrimmedMaxCol;
         ImagesOutputDir = imagesOutputDir;
         ImagesRelativeUrl = imagesRelativeUrl;
         (SpanByTopLeft, Covered) = ExcelSheetHtmlRenderer.IndexMergedCells(sheet);
