@@ -3,8 +3,9 @@ using ModuleG.Models;
 
 namespace ModuleG.Services;
 
-/// <summary>Persists the imported screen list into a local SQLite file at Data\Database\ModuleG.db,
-/// next to the module executable - same ADO.NET-only pattern as ModuleDDatabase/ModuleEDatabase.</summary>
+/// <summary>Persists the imported screen list into a local SQLite file at
+/// Data\Database\01_画面説明書.db, next to the module executable - same ADO.NET-only pattern as
+/// ModuleDDatabase/ModuleEDatabase.</summary>
 public sealed class ModuleGDatabase
 {
     private readonly string _connectionString;
@@ -15,7 +16,7 @@ public sealed class ModuleGDatabase
     {
         var dataDirectory = Path.Combine(AppContext.BaseDirectory, "Data", "Database");
         Directory.CreateDirectory(dataDirectory);
-        DatabasePath = Path.Combine(dataDirectory, "ModuleG.db");
+        DatabasePath = Path.Combine(dataDirectory, "01_画面説明書.db");
         _connectionString = $"Data Source={DatabasePath}";
     }
 

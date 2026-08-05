@@ -25,7 +25,7 @@
 
         <StackPanel Grid.Row="0" Spacing="2">
             <TextBlock Text="Module G - Tai lieu man hinh (画面説明書)" Style="{StaticResource TitleLargeTextBlockStyle}" />
-            <TextBlock Text="Doc toan bo *.xlsx trong thu muc nguon -&gt; luu Data\Database\ModuleG.db -&gt; xuat Data\Database\Html\index.html + 1 file/man hinh" Opacity="0.7" TextWrapping="Wrap" />
+            <TextBlock Text="Doc toan bo *.xlsx trong thu muc nguon -&gt; luu Data\Database\01_画面説明書.db -&gt; xuat Data\Database\Html\01_画面説明書.html + 1 file/man hinh" Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnSpacing="8">

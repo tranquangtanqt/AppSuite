@@ -2,7 +2,7 @@
 
 Ứng dụng WinUI 3 độc lập - module "G": công cụ tra cứu tài liệu đặc tả màn hình (画面説明書), đọc
 toàn bộ workbook Excel trong 1 thư mục nguồn, lưu vào SQLite, rồi xuất thành 1 site HTML tĩnh duyệt
-được (1 file `index.html` + 1 file HTML riêng cho từng màn hình). Không có bất kỳ tham chiếu nào tới
+được (1 file `01_画面説明書.html` + 1 file HTML riêng cho từng màn hình). Không có bất kỳ tham chiếu nào tới
 `MainLauncher`; chỉ `ProjectReference` tới `..\..\Common\Common.csproj`.
 
 ## Chạy độc lập (không cần MainLauncher)
@@ -23,13 +23,13 @@ hoặc mở `ModuleG.csproj` riêng trong Visual Studio, đặt Startup Project,
    dựng HTML cho từng sheet bằng bộ dịch **generic** (`Services\ExcelSheetHtmlRenderer`, xem bên dưới),
    ghi ngay ra `Data\Database\Html\{ScreenCode}.html` + ảnh nhúng vào
    `Data\Database\Html\Images\{ScreenCode}\`, rồi lưu metadata (mã/tên/số văn bản/revision/đường dẫn
-   nguồn/toàn bộ text để tìm kiếm) vào SQLite (`Data\Database\ModuleG.db`, bảng `Screens`).
-3. **"2. Xuat HTML"** - đọc bảng `Screens`, sinh `Data\Database\Html\index.html` (nhúng sẵn danh mục
+   nguồn/toàn bộ text để tìm kiếm) vào SQLite (`Data\Database\01_画面説明書.db`, bảng `Screens`).
+3. **"2. Xuat HTML"** - đọc bảng `Screens`, sinh `Data\Database\Html\01_画面説明書.html` (nhúng sẵn danh mục
    dạng JSON, không `fetch()` file ngoài - xem "Vì sao nhúng JSON" bên dưới) + `manifest.json` (bản
-   sao JSON thuần, không phải thứ `index.html` đọc, chỉ để tiện dùng ngoài nếu cần).
-4. **"Mo file HTML"** - mở `index.html` bằng trình duyệt mặc định.
+   sao JSON thuần, không phải thứ `01_画面説明書.html` đọc, chỉ để tiện dùng ngoài nếu cần).
+4. **"Mo file HTML"** - mở `01_画面説明書.html` bằng trình duyệt mặc định.
 
-## Giao diện `index.html`
+## Giao diện `01_画面説明書.html`
 
 Cột trái có **2 ô tìm kiếm** kết hợp `AND`:
 - **"Ma man hinh / ten man hinh..."** - lọc theo mã màn hình hoặc tên màn hình (substring, không phân
@@ -66,11 +66,42 @@ thành 1 khối `<img>` trước dòng chứa ô neo của ảnh. Việc luôn c
 là 1 file có layout khác lạ vẫn hiển thị đúng nội dung (chỉ kém đẹp hơn) thay vì mất dữ liệu. Kết quả
 vẫn **không pixel-perfect** so với bản Excel gốc.
 
-## Vì sao index.html nhúng JSON thay vì `fetch()` manifest.json
+### `【処理関連図/サービス関連図】` - chụp ảnh qua Excel COM Interop thay vì dựng lưới
 
-Mở `index.html` qua `file://` (double-click hoặc "Mo file HTML") rồi gọi `fetch()`/`XMLHttpRequest`
+Section này trong `概要` là 1 sơ đồ box+mũi tên vẽ bằng **shape/connector nổi của Excel**, không phải
+ảnh nhúng (`ExcelPicture`) và cũng không nằm gọn trong border ô lưới - EPPlus không đọc được shape/
+connector nên bộ dịch generic sẽ mất hết mũi tên nối các box. `ExcelDiagramCapture` (COM Interop, late-
+bound qua `Type.GetTypeFromProgID("Excel.Application")` - không cần PIA/COM reference trong `.csproj`)
+mở lại đúng file bằng Excel thật rồi xuất PNG theo 2 bước:
+
+1. Đặt `PageSetup.PrintArea` = đúng vùng cần chụp, `FitToPagesWide/Tall = 1` + margin = 0, rồi gọi
+   `Worksheet.ExportAsFixedFormat(xlTypePDF, ...)` ra 1 file PDF tạm.
+2. Render trang PDF đó thành PNG bằng `Windows.Data.Pdf.PdfDocument` (API WinRT có sẵn trong Windows,
+   không cần thêm NuGet nào trên TFM `net8.0-windows`).
+
+**Đã thử `Range.CopyPicture` → dán vào `Chart` tạm → `Chart.Export` trước** (tránh đụng Windows
+Clipboard qua .NET) nhưng bỏ vì luôn báo lỗi COM `Unable to get the CopyPicture property of the Range
+class` - lỗi này gắn liền với việc cửa sổ Excel phải thực sự **visible + focus cấp OS** (không chỉ
+`Window.Activate()` nội bộ của Excel) mới render được, rất khó đảm bảo ổn định khi tự động hoá từ 1 app
+khác đang giữ foreground. `ExportAsFixedFormat` là API in-nền thuần tuý, không cần cửa sổ visible hay
+focus gì cả nên tránh được hẳn nhóm lỗi này.
+
+Range chụp dùng `SheetGridContext.UntrimmedMinCol/MaxCol` (biên cột **trước** khi `TrimTrailingEmpty`
+cắt) vì các cột chỉ có mũi tên đi qua (không có text/màu nền ô) sẽ bị hàm cắt lề nhầm là "trống" và cắt
+mất, sau đó tự thu hẹp lại theo đúng nội dung/border trong chính các dòng của section đó
+(`OverviewSheetParser.FindLocalMaxCol`) để không kéo theo phần định dạng thừa ở tít bên phải sheet.
+
+1 instance `ExcelDiagramCapture` được tạo 1 lần cho **cả batch** trong `ScreenDocImporter.ImportDirectory`
+(khởi động Excel ~1-2s, không đáng chạy lại cho từng file trong hàng trăm file) rồi mở/đóng riêng từng
+workbook. **Cần cài Excel thật trên máy chạy import** - nếu không có, `TryStart` fail 1 lần duy nhất
+(cache lại, không thử lại mỗi file), log cảnh báo, và mọi section này tự động rơi về render lưới như
+trước (không làm hỏng cả batch).
+
+## Vì sao 01_画面説明書.html nhúng JSON thay vì `fetch()` manifest.json
+
+Mở `01_画面説明書.html` qua `file://` (double-click hoặc "Mo file HTML") rồi gọi `fetch()`/`XMLHttpRequest`
 tới 1 file JSON khác trên đĩa bị **CORS chặn** trên các trình duyệt Chromium (Edge/Chrome mặc định) -
-đây là hành vi trình duyệt, không sửa được từ phía HTML/JS. Do đó `index.html` nhúng thẳng cùng dữ
+đây là hành vi trình duyệt, không sửa được từ phía HTML/JS. Do đó `01_画面説明書.html` nhúng thẳng cùng dữ
 liệu dạng JSON vào 1 thẻ `<script type="application/json">` (giống cách ModuleD/E đã làm), giống nhau
 về ý tưởng "1 file tự chứa" nhưng **chỉ áp dụng cho danh mục nhẹ** (mã/tên/số văn bản/revision/text
 tìm kiếm) - không nhúng HTML/ảnh của từng màn hình (phần đó vẫn là file riêng, theo đúng quyết định đã
@@ -81,5 +112,5 @@ chốt để tránh 1 file khổng lồ).
 - Không `ProjectReference` tới `MainLauncher.csproj`.
 - Không đọc `modules.json` hay bất kỳ cấu hình nào của launcher.
 - Đường dẫn dữ liệu resolve theo `AppContext.BaseDirectory` của chính tiến trình ModuleG (giống
-  ModuleD/E) - `Data\Config\config.xml`, `Data\Database\ModuleG.db`, `Data\Database\Html\` tự tạo lúc
+  ModuleD/E) - `Data\Config\config.xml`, `Data\Database\01_画面説明書.db`, `Data\Database\Html\` tự tạo lúc
   chạy, không phụ thuộc ai khởi động tiến trình.

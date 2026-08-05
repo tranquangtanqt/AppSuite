@@ -101,7 +101,7 @@ internal static class HtmlTemplates
         <body>
         <div class="page">
         <header>
-          <a class="back-link" href="index.html" target="_parent">&larr; Quay lai danh sach</a>
+          <a class="back-link" href="01_画面説明書.html" target="_parent">&larr; Quay lai danh sach</a>
           <h1>%%TITLE%%</h1>
           <div class="doc-meta">
             <span class="chip">Van ban: %%DOC_NUMBER%%</span>

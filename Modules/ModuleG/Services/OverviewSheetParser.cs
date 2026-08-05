@@ -1,5 +1,6 @@
 using System.Text;
 using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace ModuleG.Services;
 
@@ -23,7 +24,9 @@ internal static class OverviewSheetParser
         "【説明】", "【目的】", "【オペレーション一覧】", "【SQLID一覧】", "【ソート順】", "【データアクセスコントロール】", "【自由記述】",
     };
 
-    public static bool TryRender(SheetGridContext context, int minRow, int maxRow, StringBuilder searchText, out string html)
+    public static bool TryRender(
+        SheetGridContext context, int minRow, int maxRow, StringBuilder searchText,
+        ExcelDiagramCapture? diagramCapture, string sourceFilePath, Action<string> log, out string html)
     {
         var sheet = context.Sheet;
         var minCol = context.MinCol;
@@ -108,9 +111,19 @@ internal static class OverviewSheetParser
 
                 default:
                     // Unrecognized marker (e.g. 【処理関連図/サービス関連図】, which the reference app
-                    // doesn't handle either - it's diagram/image content, not a data list) - grid
-                    // fallback keeps whatever is there (including any embedded diagram image) visible.
-                    sb.Append(ExcelSheetHtmlRenderer.RenderGridRange(context, contentStartRow, sectionEndRow, searchText));
+                    // doesn't handle either - it's diagram/image content, not a data list). Markers
+                    // whose text names an actual diagram ("図") get rasterized via Excel COM Interop
+                    // (see ExcelDiagramCapture) instead of the grid fallback, since the box/arrow
+                    // flowchart there is drawn with floating shapes/connectors that EPPlus can't read
+                    // and the cell grid alone would show as an empty or meaningless table. Any other
+                    // unrecognized marker, or a diagram marker when Excel Interop capture fails/isn't
+                    // available on this machine, still falls back to the grid so content is never lost.
+                    if (!markerText.Contains('図') ||
+                        !TryAppendDiagramImage(sb, context, diagramCapture, sourceFilePath, markerText, markerRow, contentStartRow, sectionEndRow, log))
+                    {
+                        sb.Append(ExcelSheetHtmlRenderer.RenderGridRange(context, contentStartRow, sectionEndRow, searchText));
+                    }
+
                     break;
             }
 
@@ -120,6 +133,68 @@ internal static class OverviewSheetParser
         sb.Append("</div>");
         html = sb.ToString();
         return true;
+    }
+
+    /// <summary>Best-effort: exports <paramref name="contentStartRow"/>..<paramref name="sectionEndRow"/>
+    /// (using <see cref="SheetGridContext.UntrimmedMinCol"/>/<see cref="SheetGridContext.UntrimmedMaxCol"/>,
+    /// since the diagram's shapes routinely sit over columns with no cell text/fill of their own and
+    /// the trimmed grid bounds would clip it) as a PNG via Excel Interop and appends an &lt;img&gt;.
+    /// Returns false - appending nothing - on any failure so the caller falls back to the grid.</summary>
+    private static bool TryAppendDiagramImage(
+        StringBuilder sb, SheetGridContext context, ExcelDiagramCapture? diagramCapture, string sourceFilePath,
+        string markerText, int markerRow, int contentStartRow, int sectionEndRow, Action<string> log)
+    {
+        if (diagramCapture is null)
+        {
+            return false;
+        }
+
+        var sheet = context.Sheet;
+        var maxCol = FindLocalMaxCol(sheet, contentStartRow, sectionEndRow, context.UntrimmedMinCol, context.UntrimmedMaxCol);
+        var rangeAddress = sheet.Cells[contentStartRow, context.UntrimmedMinCol, sectionEndRow, maxCol].Address;
+        var imageFileName = $"{ExcelSheetHtmlRenderer.SanitizeFileNamePart(sheet.Name)}_diagram_{markerRow}.png";
+        var outputPath = Path.Combine(context.ImagesOutputDir, imageFileName);
+
+        if (!diagramCapture.TryCaptureRange(sourceFilePath, sheet.Name, rangeAddress, outputPath, out var error))
+        {
+            log($"[{Path.GetFileName(sourceFilePath)}] Chup anh so do '{markerText}' ({sheet.Name}!{rangeAddress}) that bai: {error}");
+            return false;
+        }
+
+        sb.Append("<div class=\"sheet-image\"><img src=\"")
+            .Append(ExcelSheetHtmlRenderer.Escape($"{context.ImagesRelativeUrl}/{imageFileName}"))
+            .Append("\" alt=\"").Append(ExcelSheetHtmlRenderer.Escape(markerText)).Append("\" loading=\"lazy\"></div>");
+        return true;
+    }
+
+    /// <summary>Scans just this section's own rows (not the whole sheet, unlike
+    /// <see cref="SheetGridContext.UntrimmedMaxCol"/>) for the rightmost column carrying a box border,
+    /// fill or text, +2 columns of slack for a connector-arrow shape poking slightly past the last box.
+    /// Without this, a diagram spanning ~15 columns can end up captured 5x too wide because some
+    /// unrelated section elsewhere on the same sheet happens to use far-right columns.</summary>
+    private static int FindLocalMaxCol(ExcelWorksheet sheet, int minRow, int maxRow, int minCol, int maxColLimit)
+    {
+        var lastNonEmptyCol = minCol - 1;
+        for (var row = minRow; row <= maxRow; row++)
+        {
+            for (var col = minCol; col <= maxColLimit; col++)
+            {
+                var cell = sheet.Cells[row, col];
+                var hasContent = !string.IsNullOrWhiteSpace(cell.Text)
+                    || cell.Style.Fill.PatternType != ExcelFillStyle.None
+                    || cell.Style.Border.Top.Style != ExcelBorderStyle.None
+                    || cell.Style.Border.Bottom.Style != ExcelBorderStyle.None
+                    || cell.Style.Border.Left.Style != ExcelBorderStyle.None
+                    || cell.Style.Border.Right.Style != ExcelBorderStyle.None;
+
+                if (hasContent)
+                {
+                    lastNonEmptyCol = Math.Max(lastNonEmptyCol, col);
+                }
+            }
+        }
+
+        return lastNonEmptyCol >= minCol ? Math.Min(lastNonEmptyCol + 2, maxColLimit) : maxColLimit;
     }
 
     private static void AppendTableOrFallback(

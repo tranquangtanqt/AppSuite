@@ -6,13 +6,13 @@ using ModuleG.Models;
 namespace ModuleG.Services;
 
 /// <summary>
-/// Renders Data\Database\Html\index.html: a lightweight manifest (code/name/docNumber/revision/
+/// Renders Data\Database\Html\01_画面説明書.html: a lightweight manifest (code/name/docNumber/revision/
 /// searchText/htmlFile per screen - no sheet HTML, no images) embedded inline as JSON, exactly like
 /// ModuleD/E's single-file report. It must be embedded rather than fetched at runtime - opening a
 /// local file via file:// and calling fetch()/XHR on another local file is blocked by CORS in
 /// Chromium-based browsers, which is the browser MainLauncher users will have as their default.
 /// A manifest.json is also written alongside as a plain byproduct for external tooling/debugging,
-/// but index.html itself never reads it.
+/// but 01_画面説明書.html itself never reads it.
 /// </summary>
 public sealed class HtmlIndexGenerator
 {
@@ -45,7 +45,7 @@ public sealed class HtmlIndexGenerator
             .Replace("%%GENERATED_AT%%", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), StringComparison.Ordinal)
             .Replace("%%DATA_JSON%%", json, StringComparison.Ordinal);
 
-        var indexPath = Path.Combine(htmlOutputDir, "index.html");
+        var indexPath = Path.Combine(htmlOutputDir, "01_画面説明書.html");
         File.WriteAllText(indexPath, html);
         return indexPath;
     }

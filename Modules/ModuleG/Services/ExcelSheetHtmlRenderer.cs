@@ -31,7 +31,10 @@ public static class ExcelSheetHtmlRenderer
         ExcelWorksheet sheet,
         string imagesOutputDir,
         string imagesRelativeUrl,
-        StringBuilder searchText)
+        StringBuilder searchText,
+        ExcelDiagramCapture? diagramCapture,
+        string sourceFilePath,
+        Action<string> log)
     {
         var dimension = sheet.Dimension;
         if (dimension is null)
@@ -48,6 +51,8 @@ public static class ExcelSheetHtmlRenderer
         var maxRow = printArea?.End.Row ?? dimension.End.Row;
         var minCol = printArea?.Start.Column ?? dimension.Start.Column;
         var maxCol = printArea?.End.Column ?? dimension.End.Column;
+        var untrimmedMinCol = minCol;
+        var untrimmedMaxCol = maxCol;
 
         // The print area itself is usually still wider/taller than the actual content (authors
         // leave slack for future rows, or the block just doesn't reach the printable page edge) -
@@ -60,11 +65,11 @@ public static class ExcelSheetHtmlRenderer
         // or whether it ends up on the semantic or generic-grid path below.
         minRow = SkipDocumentHeaderBlock(sheet, minRow, maxRow, minCol, maxCol, sheet.Name);
 
-        var context = new SheetGridContext(sheet, minCol, maxCol, imagesOutputDir, imagesRelativeUrl);
+        var context = new SheetGridContext(sheet, minCol, maxCol, untrimmedMinCol, untrimmedMaxCol, imagesOutputDir, imagesRelativeUrl);
 
         var semanticHtml = sheet.Name switch
         {
-            "概要" => OverviewSheetParser.TryRender(context, minRow, maxRow, searchText, out var overviewHtml) ? overviewHtml : null,
+            "概要" => OverviewSheetParser.TryRender(context, minRow, maxRow, searchText, diagramCapture, sourceFilePath, log, out var overviewHtml) ? overviewHtml : null,
             "画面遷移" => ScreenDiagramSheetParser.TryRender(context, minRow, maxRow, searchText, out var diagramHtml) ? diagramHtml : null,
             "項目説明" => ItemExplanationSheetParser.TryRender(context, minRow, maxRow, searchText, out var itemHtml) ? itemHtml : null,
             _ => null,
