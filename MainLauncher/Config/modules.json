@@ -47,5 +47,12 @@
     "Path": ".\\Modules\\ModuleG\\ModuleG.exe",
     "Arguments": "",
     "AutoStart": false
+  },
+  {
+    "Name": "ModuleH",
+    "Description": "CRUD図 tu Excel -> SQLite -> HTML",
+    "Path": ".\\Modules\\ModuleH\\ModuleH.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]
