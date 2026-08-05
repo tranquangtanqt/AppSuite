@@ -13,6 +13,7 @@ MainLauncher.exe
     |-- Modules\ModuleD\ModuleD.exe
     |-- Modules\ModuleE\ModuleE.exe
     |-- Modules\ModuleF\ModuleF.exe
+    |-- Modules\ModuleG\ModuleG.exe
     |-- ... (them Module moi theo cung mot khuon mau)
 ```
 
@@ -48,7 +49,8 @@ AppSuite.sln
 |   |-- ModuleC/                Tra cuu ten bang/cot theo tu dien du lieu (JSON)
 |   |-- ModuleD/                Tu dien du lieu tu Excel (DBDef) -> SQLite -> HTML
 |   |-- ModuleE/                Tu dien du lieu tu PostgreSQL/Oracle -> SQLite -> HTML
-|   `-- ModuleF/                CSV/TSV editor
+|   |-- ModuleF/                CSV/TSV editor
+|   `-- ModuleG/                Tai lieu man hinh (画面説明書) tu Excel -> SQLite -> HTML
 |
 `-- build/
     |-- Sync-Modules-Dev.ps1    Tien ich cho F5/debug local (xem ben duoi)
@@ -114,6 +116,7 @@ Application\
 |-- Modules\ModuleD\ModuleD.exe
 |-- Modules\ModuleE\ModuleE.exe
 |-- Modules\ModuleF\ModuleF.exe
+|-- Modules\ModuleG\ModuleG.exe
 `-- Config\modules.json, appsettings.json
 ```
 
@@ -159,12 +162,12 @@ xong - không cần sửa gì trong MainLauncher.
 - Dependency Injection với `Microsoft.Extensions.DependencyInjection`, đăng ký trong `App.xaml.cs`.
 - Nullable reference types bật (`<Nullable>enable</Nullable>`) trên mọi project.
 - Không viết logic nghiệp vụ trong code-behind của View - View chỉ bind tới ViewModel qua `x:Bind`.
-- Mỗi project (`Common`, `MainLauncher`, `Modules\ModuleA`...`ModuleF`,...) có README riêng.
+- Mỗi project (`Common`, `MainLauncher`, `Modules\ModuleA`...`ModuleG`,...) có README riêng.
 
 ## Đã kiểm thử
 
-- `dotnet build AppSuite.sln` - build thành công cả 9 project (Common, SharedUI, MainLauncher,
-  ModuleA, ModuleB, ModuleC, ModuleD, ModuleE, ModuleF).
+- `dotnet build AppSuite.sln` - build thành công cả 10 project (Common, SharedUI, MainLauncher,
+  ModuleA, ModuleB, ModuleC, ModuleD, ModuleE, ModuleF, ModuleG).
 - Chạy `MainLauncher.exe` thực tế: load `modules.json`, tự auto-start `ModuleA` (do `AutoStart: true`),
   ghi log ra file và hiển thị trên UI - xem `MainLauncher/README.md` để biết chi tiết log mẫu.
 - Chạy `MainLauncher.exe` sau khi merge `SharedUI/Themes/Generic.xaml` - không phát sinh lỗi runtime

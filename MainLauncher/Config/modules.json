@@ -40,5 +40,12 @@
     "Path": ".\\Modules\\ModuleF\\ModuleF.exe",
     "Arguments": "",
     "AutoStart": false
+  },
+  {
+    "Name": "ModuleG",
+    "Description": "Tai lieu man hinh (画面説明書) Excel -> SQLite -> HTML",
+    "Path": ".\\Modules\\ModuleG\\ModuleG.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]

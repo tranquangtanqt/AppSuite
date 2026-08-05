@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleE", "Modules\ModuleE\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleF", "Modules\ModuleF\ModuleF.csproj", "{34DBF542-F78F-4E48-8C17-40626EF024CF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleG", "Modules\ModuleG\ModuleG.csproj", "{CD7F9D17-7D24-4D4B-9D54-925281ECC461}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -139,6 +141,18 @@ Global
 		{34DBF542-F78F-4E48-8C17-40626EF024CF}.Release|x64.Build.0 = Release|x64
 		{34DBF542-F78F-4E48-8C17-40626EF024CF}.Release|x86.ActiveCfg = Release|x86
 		{34DBF542-F78F-4E48-8C17-40626EF024CF}.Release|x86.Build.0 = Release|x86
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Debug|ARM64.Build.0 = Debug|ARM64
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Debug|x64.ActiveCfg = Debug|x64
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Debug|x64.Build.0 = Debug|x64
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Debug|x86.ActiveCfg = Debug|x86
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Debug|x86.Build.0 = Debug|x86
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Release|ARM64.ActiveCfg = Release|ARM64
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Release|ARM64.Build.0 = Release|ARM64
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Release|x64.ActiveCfg = Release|x64
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Release|x64.Build.0 = Release|x64
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Release|x86.ActiveCfg = Release|x86
+		{CD7F9D17-7D24-4D4B-9D54-925281ECC461}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -43,7 +43,7 @@ function Build-AndLocate {
 Write-Host "Building MainLauncher..." -ForegroundColor Cyan
 $launcherOutDir = Build-AndLocate -ProjectPath (Join-Path $root "MainLauncher\MainLauncher.csproj") -ExeName "MainLauncher.exe"
 
-foreach ($module in @("ModuleA", "ModuleB", "ModuleC", "ModuleD", "ModuleE", "ModuleF")) {
+foreach ($module in @("ModuleA", "ModuleB", "ModuleC", "ModuleD", "ModuleE", "ModuleF", "ModuleG")) {
     Write-Host "Building $module..." -ForegroundColor Cyan
     $moduleOutDir = Build-AndLocate -ProjectPath (Join-Path $root "Modules\$module\$module.csproj") -ExeName "$module.exe"
 

@@ -1,0 +1,183 @@
+# Module F - CSV/TSV Editor cho WinUI 3 (.NET 8)
+Hãy xây dựng Module F
+## Mục tiêu
+Tạo một module cho phép người dùng:
+- Mở file CSV/TSV
+- Hiển thị dữ liệu dạng bảng
+- Chỉnh sửa trực tiếp
+- Thêm/Xóa dòng
+- Thêm/Xóa cột
+- Đổi tên cột
+- Tìm kiếm
+- Lọc dữ liệu
+- Sắp xếp
+- Undo/Redo
+- Lưu lại file
+----------------------------------
+UI
+----------------------------------
+Thiết kế giao diện WinUI 3 hiện đại.
+Toolbar gồm:
+[Open]
+[Save]
+[Save As]
+[Undo]
+[Redo]
+[Add Row]
+[Delete Row]
+[Add Column]
+[Delete Column]
+[Rename Column]
+[Find]
+[Replace]
+[Filter]
+[Sort]
+[Statistics]
+Bên dưới là DataGrid.
+Yêu cầu:
+- DataGrid tự sinh cột theo Header
+- Cho phép chỉnh sửa trực tiếp từng ô
+- Có Row Number
+- Highlight ô đang sửa
+- Cho phép chọn nhiều dòng
+- Context Menu:
+    Copy
+    Paste
+    Delete
+    Insert Row
+    Duplicate Row
+----------------------------------
+Đọc File
+----------------------------------
+Hỗ trợ
+CSV
+TSV
+Delimiter:
+,
+\t
+;
+|
+Tự nhận diện delimiter.
+Hỗ trợ:
+UTF-8
+UTF-8 BOM
+UTF-16
+Encoding tùy chọn.
+----------------------------------
+API
+OpenAsync()
+SaveAsync()
+SaveAsAsync()
+GetRows()
+GetColumns()
+GetCell()
+SetCell()
+AddRow()
+RemoveRow()
+AddColumn()
+RemoveColumn()
+RenameColumn()
+----------------------------------
+Tìm kiếm
+Theo:
+Contains
+Equals
+StartsWith
+EndsWith
+Regex
+Highlight kết quả.
+----------------------------------
+Filter
+Điều kiện:
+==
+!=
+>
+<
+>=
+<=
+Contains
+Regex
+AND
+OR
+NOT
+----------------------------------
+Sort
+Ascending
+Descending
+Multi-column
+----------------------------------
+Statistics
+Row Count
+Column Count
+Empty Cell
+Duplicate
+Unique
+Min
+Max
+Average
+Sum
+----------------------------------
+Validation
+Hiển thị lỗi nếu:
+Thiếu cột
+Sai delimiter
+Encoding lỗi
+Dòng bị lỗi
+Cột thiếu dữ liệu
+----------------------------------
+Undo / Redo
+Mọi thao tác chỉnh sửa phải hỗ trợ:
+Undo
+Redo
+Sử dụng Command Pattern.
+----------------------------------
+Hiệu năng
+Hỗ trợ file lớn (>1GB)
+Không load toàn bộ nếu không cần.
+Virtualization.
+Incremental Loading.
+Async IO.
+CancellationToken.
+----------------------------------
+WinUI
+Sử dụng:
+CommunityToolkit.Mvvm
+ObservableObject
+RelayCommand
+AsyncRelayCommand
+ObservableCollection
+DispatcherQueue
+FileOpenPicker
+FileSavePicker
+----------------------------------
+Yêu cầu giao diện
+Theme sáng/tối.
+Responsive.
+Fluent Design.
+Icon Segoe Fluent.
+Thanh trạng thái dưới cùng hiển thị:
+Tên file
+Encoding
+Delimiter
+Số dòng
+Số cột
+Trạng thái Save
+----------------------------------
+Unit Test
+Test:
+Open
+Save
+Search
+Sort
+Filter
+Statistics
+Undo
+Redo
+----------------------------------
+Code
+- Clean Architecture
+- SOLID
+- Comment XML
+- Async/Await
+- Nullable Enable
+- Dependency Injection
