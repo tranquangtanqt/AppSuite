@@ -4,9 +4,9 @@ using OfficeOpenXml;
 namespace ModuleH.Services;
 
 /// <summary>Renders a parsed <see cref="CrudSheetModel"/> into the page body HTML for 1 logic sheet -
-/// 1 continuous `&lt;table&gt;`, 1 `&lt;tr&gt;` per source row (including blank spacer rows between
-/// blocks), matching the exact row layout of the original Excel sheet rather than splitting each
-/// block into its own separate table/card.</summary>
+/// 1 continuous `&lt;table&gt;`, 1 `&lt;tr&gt;` per source row (blank spacer rows between blocks are
+/// skipped), matching the row layout of the original Excel sheet rather than splitting each block
+/// into its own separate table/card.</summary>
 internal static class CrudHtmlRenderer
 {
     /// <summary><paramref name="screenCodeIndex"/> maps every known sheet's own code (e.g.
@@ -37,6 +37,11 @@ internal static class CrudHtmlRenderer
 
         foreach (var row in model.Rows)
         {
+            if (IsEmptyRow(row))
+            {
+                continue;
+            }
+
             var isBlockHeader = !string.IsNullOrWhiteSpace(row.Id);
             var anchor = isBlockHeader ? $" id=\"blk-{HtmlTemplates.Escape(row.Id)}\"" : string.Empty;
             sb.Append(isBlockHeader ? $"<tr class=\"crud-block-row\"{anchor}>" : "<tr>")
@@ -55,6 +60,19 @@ internal static class CrudHtmlRenderer
         sb.Append("</tbody></table></div>");
         return sb.ToString();
     }
+
+    /// <summary>A row with every cell blank is a spacer row from the source sheet's layout - skip it
+    /// so the rendered table doesn't carry empty gaps.</summary>
+    private static bool IsEmptyRow(CrudTableRow row) =>
+        string.IsNullOrWhiteSpace(row.Id) &&
+        string.IsNullOrWhiteSpace(row.Name) &&
+        string.IsNullOrWhiteSpace(row.UsedObject) &&
+        string.IsNullOrWhiteSpace(row.Create) &&
+        string.IsNullOrWhiteSpace(row.Read) &&
+        string.IsNullOrWhiteSpace(row.Update) &&
+        string.IsNullOrWhiteSpace(row.Delete) &&
+        string.IsNullOrWhiteSpace(row.Kind) &&
+        string.IsNullOrWhiteSpace(row.Remark);
 
     /// <summary>"MSBBL6020.Slo_Chk03" -&gt; link to blk-Slo_Chk03 inside MSBBL6020's page, only when
     /// "MSBBL6020" is a sheet we actually imported; otherwise (no dot, or an unknown prefix - e.g. a

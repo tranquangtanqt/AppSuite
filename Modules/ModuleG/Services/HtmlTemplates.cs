@@ -76,6 +76,7 @@ internal static class HtmlTemplates
           nav.toc {
             position: sticky; top: 0; z-index: 10; background: Canvas; padding: 10px 0;
             border-bottom: 1px solid #8884; margin-bottom: 22px; display: flex; flex-wrap: wrap; gap: 6px 10px;
+            max-height: 160px; overflow-y: auto;
           }
           nav.toc a {
             font-size: 13px; text-decoration: none; padding: 4px 12px; border-radius: 14px;

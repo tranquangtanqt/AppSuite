@@ -16,7 +16,9 @@ namespace ModuleG.Services;
 /// Every other
 /// sheet - and any of these 3 whose layout doesn't match the expected structure - falls back to the
 /// original generic grid renderer (<see cref="RenderGridRange"/>): rebuild the Excel grid faithfully
-/// (merged cells, background fill, bold, alignment, embedded screenshots) without parsing meaning.
+/// (merged cells, background fill, bold, alignment) without parsing meaning - embedded pictures
+/// (small legend icons, decorative shapes) are not rendered on this path, since they're anchored by
+/// row/col only and don't map cleanly onto arbitrary merged-cell layouts.
 /// This fallback is what makes the approach safe across many files with unpredictable layout (see
 /// PLAN.md) while still giving the highest-value sheets a much more readable rendering.
 /// </summary>
@@ -83,22 +85,6 @@ public static class ExcelSheetHtmlRenderer
             html.Append("<div class=\"ov-section\"><h3>画面イメージ</h3>").Append(screenImageHtml).Append("</div>");
         }
 
-        // Any image anchored outside the print-area crop (rare - e.g. a logo placed in the margin)
-        // would otherwise be silently dropped; append it at the end instead of losing it entirely.
-        // Applies uniformly whether the sheet went through the semantic path or the generic grid.
-        foreach (var (anchorRow, images) in context.ImagesByAnchorRow)
-        {
-            if (anchorRow >= minRow && anchorRow <= maxRow)
-            {
-                continue;
-            }
-
-            foreach (var imageUrl in images)
-            {
-                html.Append("<div class=\"sheet-image\"><img src=\"").Append(Escape(imageUrl)).Append("\" loading=\"lazy\"></div>");
-            }
-        }
-
         return html.ToString();
     }
 
@@ -118,30 +104,8 @@ public static class ExcelSheetHtmlRenderer
         html.Append("<div class=\"table-scroll\"><table class=\"sheet-grid\">");
         AppendColGroup(html, sheet, minCol, maxCol);
 
-        var tableOpen = true;
         for (var row = minRow; row <= maxRow; row++)
         {
-            if (context.ImagesByAnchorRow.TryGetValue(row, out var images))
-            {
-                if (tableOpen)
-                {
-                    html.Append("</table></div>");
-                    tableOpen = false;
-                }
-
-                foreach (var imageUrl in images)
-                {
-                    html.Append("<div class=\"sheet-image\"><img src=\"").Append(Escape(imageUrl)).Append("\" loading=\"lazy\"></div>");
-                }
-            }
-
-            if (!tableOpen)
-            {
-                html.Append("<div class=\"table-scroll\"><table class=\"sheet-grid\">");
-                AppendColGroup(html, sheet, minCol, maxCol);
-                tableOpen = true;
-            }
-
             html.Append("<tr>");
             for (var col = minCol; col <= maxCol; col++)
             {
@@ -170,10 +134,7 @@ public static class ExcelSheetHtmlRenderer
             html.Append("</tr>");
         }
 
-        if (tableOpen)
-        {
-            html.Append("</table></div>");
-        }
+        html.Append("</table></div>");
 
         return html.ToString();
     }
@@ -343,10 +304,11 @@ public static class ExcelSheetHtmlRenderer
         return rgb[^6..];
     }
 
-    internal static (Dictionary<(int Row, int Col), (int RowSpan, int ColSpan)> SpanByTopLeft, HashSet<(int Row, int Col)> Covered) IndexMergedCells(ExcelWorksheet sheet)
+    internal static (Dictionary<(int Row, int Col), (int RowSpan, int ColSpan)> SpanByTopLeft, HashSet<(int Row, int Col)> Covered, Dictionary<(int Row, int Col), (int Row, int Col)> CoveredToTopLeft) IndexMergedCells(ExcelWorksheet sheet)
     {
         var spanByTopLeft = new Dictionary<(int, int), (int, int)>();
         var covered = new HashSet<(int, int)>();
+        var coveredToTopLeft = new Dictionary<(int, int), (int, int)>();
 
         foreach (var address in sheet.MergedCells)
         {
@@ -358,7 +320,8 @@ public static class ExcelSheetHtmlRenderer
                 continue;
             }
 
-            spanByTopLeft[(range.Start.Row, range.Start.Column)] = (rowSpan, colSpan);
+            var topLeft = (range.Start.Row, range.Start.Column);
+            spanByTopLeft[topLeft] = (rowSpan, colSpan);
             for (var r = range.Start.Row; r <= range.End.Row; r++)
             {
                 for (var c = range.Start.Column; c <= range.End.Column; c++)
@@ -369,19 +332,21 @@ public static class ExcelSheetHtmlRenderer
                     }
 
                     covered.Add((r, c));
+                    coveredToTopLeft[(r, c)] = topLeft;
                 }
             }
         }
 
-        return (spanByTopLeft, covered);
+        return (spanByTopLeft, covered, coveredToTopLeft);
     }
 
     /// <summary>Writes every embedded picture to disk and groups the resulting relative URLs by their
-    /// anchor row (1-based, matching cell row numbers) so the caller can interleave them with the
-    /// table rows in roughly the right place - not a pixel-accurate overlay (see type doc comment).</summary>
-    internal static Dictionary<int, List<string>> ExtractImages(ExcelWorksheet sheet, string imagesOutputDir, string imagesRelativeUrl)
+    /// anchor cell (1-based row/col, matching cell coordinates) so the caller can place each icon in
+    /// the actual &lt;td&gt; it was anchored to in Excel - not a pixel-accurate overlay (see type doc
+    /// comment).</summary>
+    internal static Dictionary<(int Row, int Col), List<string>> ExtractImages(ExcelWorksheet sheet, string imagesOutputDir, string imagesRelativeUrl)
     {
-        var result = new Dictionary<int, List<string>>();
+        var result = new Dictionary<(int, int), List<string>>();
         var index = 0;
 
         foreach (var drawing in sheet.Drawings)
@@ -405,11 +370,11 @@ public static class ExcelSheetHtmlRenderer
                 picture.Image.Save(stream, format);
             }
 
-            var anchorRow = picture.From.Row + 1;
-            if (!result.TryGetValue(anchorRow, out var list))
+            var anchor = (Row: picture.From.Row + 1, Col: picture.From.Column + 1);
+            if (!result.TryGetValue(anchor, out var list))
             {
                 list = new List<string>();
-                result[anchorRow] = list;
+                result[anchor] = list;
             }
 
             list.Add($"{imagesRelativeUrl}/{fileName}");

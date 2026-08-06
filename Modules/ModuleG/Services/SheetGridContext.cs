@@ -1,3 +1,4 @@
+using System.Linq;
 using OfficeOpenXml;
 
 namespace ModuleG.Services;
@@ -21,8 +22,17 @@ internal sealed class SheetGridContext
     public Dictionary<(int Row, int Col), (int RowSpan, int ColSpan)> SpanByTopLeft { get; }
     public HashSet<(int Row, int Col)> Covered { get; }
 
-    /// <summary>Relative image URLs anchored at each 1-based row (already written to disk).</summary>
-    public Dictionary<int, List<string>> ImagesByAnchorRow { get; }
+    /// <summary>Relative image URLs anchored at each 1-based (row, col) cell (already written to disk).
+    /// An icon anchored inside a merged cell that isn't the merge's top-left is remapped to that
+    /// top-left, since that's the only cell of the merge that actually gets a &lt;td&gt; rendered.</summary>
+    public Dictionary<(int Row, int Col), List<string>> ImagesByAnchorCell { get; }
+
+    /// <summary>Same images grouped by row only, for callers that don't render a literal cell grid
+    /// (semantic section blocks) and just need "roughly this row range".</summary>
+    public IEnumerable<(int Row, List<string> Images)> ImagesByAnchorRow =>
+        ImagesByAnchorCell
+            .GroupBy(kvp => kvp.Key.Row)
+            .Select(g => (g.Key, g.SelectMany(kvp => kvp.Value).ToList()));
 
     public SheetGridContext(ExcelWorksheet sheet, int minCol, int maxCol, string imagesOutputDir, string imagesRelativeUrl)
     {
@@ -31,7 +41,19 @@ internal sealed class SheetGridContext
         MaxCol = maxCol;
         ImagesOutputDir = imagesOutputDir;
         ImagesRelativeUrl = imagesRelativeUrl;
-        (SpanByTopLeft, Covered) = ExcelSheetHtmlRenderer.IndexMergedCells(sheet);
-        ImagesByAnchorRow = ExcelSheetHtmlRenderer.ExtractImages(sheet, imagesOutputDir, imagesRelativeUrl);
+        (SpanByTopLeft, Covered, var coveredToTopLeft) = ExcelSheetHtmlRenderer.IndexMergedCells(sheet);
+
+        ImagesByAnchorCell = new Dictionary<(int, int), List<string>>();
+        foreach (var (anchor, images) in ExcelSheetHtmlRenderer.ExtractImages(sheet, imagesOutputDir, imagesRelativeUrl))
+        {
+            var target = coveredToTopLeft.TryGetValue(anchor, out var topLeft) ? topLeft : anchor;
+            if (!ImagesByAnchorCell.TryGetValue(target, out var list))
+            {
+                list = new List<string>();
+                ImagesByAnchorCell[target] = list;
+            }
+
+            list.AddRange(images);
+        }
     }
 }
