@@ -19,8 +19,9 @@ public sealed class ExcelDbDefImporter
     private const string IndexSheetName = "テーブル・ビュー一覧";
 
     /// <summary>Sheet names known to hold shared "$XXX$" column-group definitions (排他制御用カラム
-    /// etc.) - named differently across the 23 workbooks ("制御用" in most, "EXCTRL" in MGDBDef).</summary>
-    private static readonly string[] CommonColumnSheetNames = ["制御用", "EXCTRL"];
+    /// etc.) - named differently across the 23 workbooks ("制御用" in most, "EXCTRL" in MGDBDef,
+    /// "オーダ関連ベース項目" in MSBCDBDef where it holds "$ITM_ORDER_COLS$").</summary>
+    private static readonly string[] CommonColumnSheetNames = ["制御用", "EXCTRL", "オーダ関連ベース項目"];
 
     private static readonly Dictionary<string, List<DbColumnRecord>> EmptyCommonGroups = new(StringComparer.Ordinal);
 
