@@ -25,8 +25,17 @@ internal static class DiagramRenderer
     private const float Padding = 16f;
     private const float FontSizePx = 12f;
 
-    public static bool TryRender(IReadOnlyList<DiagramShape> shapes, string outputPngPath, out string? error)
+    public static bool TryRender(IReadOnlyList<DiagramShape> shapes, string outputPngPath, out string? error, out IReadOnlyList<string> texts)
     {
+        // Collected in the same top-to-bottom, left-to-right order boxes are drawn in, so the caller's
+        // "text index" table below the image reads in roughly the same order as the diagram itself.
+        texts = shapes
+            .Where(s => !s.IsConnector && !string.IsNullOrWhiteSpace(s.Text))
+            .OrderBy(s => s.Y).ThenBy(s => s.X)
+            .Select(s => s.Text!.Replace('\n', ' ').Trim())
+            .Distinct()
+            .ToArray();
+
         if (shapes.Count == 0)
         {
             error = "Khong tim thay shape nao trong vung nay (co the la marker khong co so do that su).";

@@ -118,7 +118,7 @@ internal static class OverviewSheetParser
                     // diagram marker with no shapes actually in range, still falls back to the grid so
                     // content is never silently lost.
                     if (!markerText.Contains('図') ||
-                        !TryAppendDiagramImage(sb, context, markerText, markerRow, contentStartRow, sectionEndRow, log))
+                        !TryAppendDiagramImage(sb, context, markerText, markerRow, contentStartRow, sectionEndRow, searchText, log))
                     {
                         sb.Append(ExcelSheetHtmlRenderer.RenderGridRange(context, contentStartRow, sectionEndRow, searchText));
                     }
@@ -150,7 +150,8 @@ internal static class OverviewSheetParser
     /// <see cref="DiagramRenderer"/>, and appends an &lt;img&gt;. Returns false - appending nothing -
     /// on any failure (including "no shapes found") so the caller falls back to the grid.</summary>
     private static bool TryAppendDiagramImage(
-        StringBuilder sb, SheetGridContext context, string markerText, int markerRow, int contentStartRow, int sectionEndRow, Action<string> log)
+        StringBuilder sb, SheetGridContext context, string markerText, int markerRow, int contentStartRow, int sectionEndRow,
+        StringBuilder searchText, Action<string> log)
     {
         var sheet = context.Sheet;
         var drawings = sheet.Drawings;
@@ -162,7 +163,7 @@ internal static class OverviewSheetParser
         var imageFileName = $"{ExcelSheetHtmlRenderer.SanitizeFileNamePart(sheet.Name)}_diagram_{markerRow}.png";
         var outputPath = Path.Combine(context.ImagesOutputDir, imageFileName);
 
-        if (!DiagramRenderer.TryRender(shapes, outputPath, out var error))
+        if (!DiagramRenderer.TryRender(shapes, outputPath, out var error, out var texts))
         {
             log($"[{sheet.Name}] Ve so do '{markerText}' (dong {contentStartRow}-{sectionEndRow}) that bai: {error}");
             return false;
@@ -171,7 +172,29 @@ internal static class OverviewSheetParser
         sb.Append("<div class=\"sheet-image\"><img src=\"")
             .Append(ExcelSheetHtmlRenderer.Escape($"{context.ImagesRelativeUrl}/{imageFileName}"))
             .Append("\" alt=\"").Append(ExcelSheetHtmlRenderer.Escape(markerText)).Append("\" loading=\"lazy\"></div>");
+
+        AppendDiagramTextTable(sb, texts, searchText);
         return true;
+    }
+
+    /// <summary>Lists every box's text right below its rasterized diagram image, in a plain table -
+    /// the PNG itself has no selectable/searchable text, so without this a diagram's content is
+    /// invisible to Ctrl+F and to <see cref="ExcelSheetHtmlRenderer"/>'s own search index.</summary>
+    private static void AppendDiagramTextTable(StringBuilder sb, IReadOnlyList<string> texts, StringBuilder searchText)
+    {
+        if (texts.Count == 0)
+        {
+            return;
+        }
+
+        sb.Append("<div class=\"table-scroll\"><table class=\"ov-table diagram-text-table\"><thead><tr><th>図中のテキスト</th></tr></thead><tbody>");
+        foreach (var text in texts)
+        {
+            searchText.Append(text).Append(' ');
+            sb.Append("<tr><td>").Append(ExcelSheetHtmlRenderer.Escape(text)).Append("</td></tr>");
+        }
+
+        sb.Append("</tbody></table></div>");
     }
 
     private static void AppendTableOrFallback(
