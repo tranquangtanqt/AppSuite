@@ -80,7 +80,8 @@ public sealed class ModuleDDatabase
                   Description      TEXT,
                   FullName         TEXT,
                   ValueRestriction TEXT,
-                  IsCommon         INTEGER NOT NULL DEFAULT 0
+                  IsCommon         INTEGER NOT NULL DEFAULT 0,
+                  GroupName        TEXT
                 );
 
                 CREATE INDEX idx_columns_tablename ON Columns(TableName);
@@ -141,9 +142,9 @@ public sealed class ModuleDDatabase
             insertColumn.Transaction = transaction;
             insertColumn.CommandText =
                 "INSERT INTO Columns (TableName, OrdinalPosition, Level, ColumnName, Meta, DataType, Length, " +
-                "Nullable, DefaultValue, JapaneseName, Description, FullName, ValueRestriction, IsCommon) " +
+                "Nullable, DefaultValue, JapaneseName, Description, FullName, ValueRestriction, IsCommon, GroupName) " +
                 "VALUES ($tableName, $ordinal, $level, $columnName, $meta, $dataType, $length, " +
-                "$nullable, $defaultValue, $japaneseName, $description, $fullName, $restriction, $isCommon)";
+                "$nullable, $defaultValue, $japaneseName, $description, $fullName, $restriction, $isCommon, $groupName)";
             var pTableName = insertColumn.Parameters.Add("$tableName", SqliteType.Text);
             var pOrdinal = insertColumn.Parameters.Add("$ordinal", SqliteType.Integer);
             var pLevel = insertColumn.Parameters.Add("$level", SqliteType.Integer);
@@ -158,6 +159,7 @@ public sealed class ModuleDDatabase
             var pFullName = insertColumn.Parameters.Add("$fullName", SqliteType.Text);
             var pRestriction = insertColumn.Parameters.Add("$restriction", SqliteType.Text);
             var pIsCommon = insertColumn.Parameters.Add("$isCommon", SqliteType.Integer);
+            var pGroupName = insertColumn.Parameters.Add("$groupName", SqliteType.Text);
 
             foreach (var column in columns)
             {
@@ -175,6 +177,7 @@ public sealed class ModuleDDatabase
                 pFullName.Value = column.FullName;
                 pRestriction.Value = column.ValueRestriction;
                 pIsCommon.Value = column.IsCommon ? 1 : 0;
+                pGroupName.Value = column.GroupName;
                 await insertColumn.ExecuteNonQueryAsync();
             }
         }
@@ -243,7 +246,7 @@ public sealed class ModuleDDatabase
         using var command = connection.CreateCommand();
         command.CommandText =
             "SELECT TableName, OrdinalPosition, Level, ColumnName, Meta, DataType, Length, Nullable, " +
-            "DefaultValue, JapaneseName, Description, FullName, ValueRestriction, IsCommon " +
+            "DefaultValue, JapaneseName, Description, FullName, ValueRestriction, IsCommon, GroupName " +
             "FROM Columns ORDER BY TableName, OrdinalPosition";
 
         var result = new List<DbColumnRecord>();
@@ -266,6 +269,7 @@ public sealed class ModuleDDatabase
                 FullName = reader.GetString(11),
                 ValueRestriction = reader.GetString(12),
                 IsCommon = reader.GetInt32(13) != 0,
+                GroupName = reader.IsDBNull(14) ? string.Empty : reader.GetString(14),
             });
         }
 

@@ -66,6 +66,7 @@ public sealed class HtmlReportGenerator
                         valueRestriction = c.ValueRestriction,
                         meta = c.Meta,
                         isCommon = c.IsCommon,
+                        groupName = c.GroupName,
                     }),
                 foreignKeys = (foreignKeysByTable.TryGetValue(t.TableName, out var fks) ? fks : [])
                     .Select(f => new
@@ -218,7 +219,7 @@ public sealed class HtmlReportGenerator
           function buildColumnsTableHtml(columns) {
             var html = '<table class="cols"><thead><tr>' +
               '<th>Level</th><th>Ten cot</th><th>Kieu</th><th>Xac dinh</th><th>Null</th>' +
-              '<th>Ten tieng Nhat</th><th>Mo ta</th></tr></thead><tbody>';
+              '<th>Ten tieng Nhat</th><th>Mo ta</th><th>Nhom dung chung</th></tr></thead><tbody>';
             columns.forEach(function (c) {
               var rowClasses = [];
               if (c.level === 0) rowClasses.push('pk');
@@ -231,6 +232,7 @@ public sealed class HtmlReportGenerator
                 '<td>' + escapeHtml(c.nullable) + '</td>' +
                 '<td>' + escapeHtml(c.japaneseName) + '</td>' +
                 '<td>' + escapeHtml(c.description) + '</td>' +
+                '<td>' + escapeHtml(c.groupName) + '</td>' +
                 '</tr>';
             });
             html += '</tbody></table>';

@@ -20,4 +20,8 @@ public sealed class DbColumnRecord
     /// <summary>True when this row is expanded from a shared column-group ($EXCTRL_COLS$ etc.)
     /// defined on the workbook's "制御用"/"EXCTRL" sheet, rather than declared directly on the table.</summary>
     public bool IsCommon { get; init; }
+
+    /// <summary>The "$GROUP_NAME$" this column was spliced in from, when <see cref="IsCommon"/> is
+    /// true; empty otherwise.</summary>
+    public string GroupName { get; init; } = string.Empty;
 }

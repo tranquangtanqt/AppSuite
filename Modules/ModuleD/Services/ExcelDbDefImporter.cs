@@ -18,11 +18,6 @@ public sealed class ExcelDbDefImporter
 {
     private const string IndexSheetName = "テーブル・ビュー一覧";
 
-    /// <summary>Sheet names known to hold shared "$XXX$" column-group definitions (排他制御用カラム
-    /// etc.) - named differently across the 23 workbooks ("制御用" in most, "EXCTRL" in MGDBDef,
-    /// "オーダ関連ベース項目" in MSBCDBDef where it holds "$ITM_ORDER_COLS$").</summary>
-    private static readonly string[] CommonColumnSheetNames = ["制御用", "EXCTRL", "オーダ関連ベース項目"];
-
     private static readonly Dictionary<string, List<DbColumnRecord>> EmptyCommonGroups = new(StringComparer.Ordinal);
 
     private sealed record IndexEntry(string TableName, string JapaneseName, string Kind, string Note);
@@ -223,24 +218,27 @@ public sealed class ExcelDbDefImporter
         return result;
     }
 
-    /// <summary>Parses the "制御用"/"EXCTRL" sheet (if present) into a lookup of "$GROUP_NAME$" ->
+    /// <summary>Scans every sheet in the workbook (except the index sheet) for "$GROUP_NAME$" ->
     /// its member columns, so table blocks that reference a group by that name (a level-88 row whose
-    /// item name is the group name) can have the real columns spliced in instead of being dropped.</summary>
+    /// item name is the group name) can have the real columns spliced in instead of being dropped.
+    /// Group-definition blocks aren't confined to a fixed set of sheet names ("制御用"/"EXCTRL"/
+    /// "オーダ関連ベース項目" cover most of the 23 workbooks, but not all - some define "$..$" groups
+    /// on other sheets), so every sheet is scanned rather than a known-name allowlist.</summary>
     private static Dictionary<string, List<DbColumnRecord>> LoadCommonColumnGroups(ExcelPackage package)
     {
         var result = new Dictionary<string, List<DbColumnRecord>>(StringComparer.Ordinal);
 
-        foreach (var sheetName in CommonColumnSheetNames)
+        foreach (var sheet in package.Workbook.Worksheets)
         {
-            var sheet = package.Workbook.Worksheets.FirstOrDefault(s => s.Name.Trim() == sheetName);
-            if (sheet is null)
+            if (sheet.Name.Trim() == IndexSheetName)
             {
                 continue;
             }
 
-            // The group-definition sheet itself never references other groups, so it's parsed with an
-            // empty lookup; keepGroupPlaceholders:true keeps the "$..$"-named blocks that ParseBlocks
-            // otherwise treats as non-tables and skips - here they ARE the payload we want.
+            // A sheet's own blocks never reference groups defined on another sheet before this pass
+            // runs, so each sheet is parsed with an empty lookup; keepGroupPlaceholders:true keeps the
+            // "$..$"-named blocks that ParseBlocks otherwise treats as non-tables and skips - here they
+            // ARE the payload we want.
             foreach (var block in ParseBlocks(sheet, EmptyCommonGroups, keepGroupPlaceholders: true))
             {
                 if (block.TableName.StartsWith('$'))
@@ -517,6 +515,7 @@ public sealed class ExcelDbDefImporter
                             FullName = groupColumn.FullName,
                             ValueRestriction = groupColumn.ValueRestriction,
                             IsCommon = true,
+                            GroupName = itemName,
                         });
                     }
                 }
