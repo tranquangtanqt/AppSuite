@@ -53,7 +53,8 @@
 
             <ListView x:Name="SavedFoldersListView" Grid.Row="1" MaxHeight="240"
                       ItemsSource="{x:Bind ViewModel.SavedFolders}" SelectionMode="Single"
-                      SelectionChanged="SavedFoldersListView_SelectionChanged">
+                      SelectionChanged="SavedFoldersListView_SelectionChanged"
+                      DoubleTapped="SavedFoldersListView_DoubleTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="models:SavedFolder">
                         <Grid ColumnSpacing="12" Padding="8,6">

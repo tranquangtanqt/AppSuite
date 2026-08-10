@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -24,5 +25,25 @@ public static class QueryMatcher
             .Select(term => term.Trim())
             .Where(term => term.Length > 0)
             .All(term => candidate.Contains(term, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    /// <summary>
+    /// Flattens a query like "10.PD AND ban hang OR 20.PG" into its individual terms, ignoring the
+    /// AND/OR grouping - used to highlight which cells contain any searched word, since a single
+    /// AND group's terms can legitimately live in different cells of the same file.
+    /// </summary>
+    public static List<string> ExtractTerms(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return new List<string>();
+        }
+
+        return OrSplit.Split(query)
+            .SelectMany(group => AndSplit.Split(group))
+            .Select(term => term.Trim())
+            .Where(term => term.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 }

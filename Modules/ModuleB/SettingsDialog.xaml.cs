@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using ModuleB.Models;
 using ModuleB.Services;
 using ModuleB.ViewModels;
@@ -15,6 +16,11 @@ public sealed partial class SettingsDialog : ContentDialog
     public SettingsViewModel ViewModel { get; }
 
     public string? SelectedPath => ViewModel.CurrentPath;
+
+    // Set when a saved folder is double-tapped, since Hide() alone always resolves
+    // ShowAsync() with ContentDialogResult.None - the caller checks this flag alongside
+    // the result to treat a double-tap the same as clicking the built-in OK button.
+    public bool ConfirmedByDoubleTap { get; private set; }
 
     public SettingsDialog(Window ownerWindow, string? initialPath)
     {
@@ -52,5 +58,17 @@ public sealed partial class SettingsDialog : ContentDialog
         {
             ViewModel.CurrentPath = folder.Path;
         }
+    }
+
+    private void SavedFoldersListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (SavedFoldersListView.SelectedItem is not SavedFolder folder)
+        {
+            return;
+        }
+
+        ViewModel.CurrentPath = folder.Path;
+        ConfirmedByDoubleTap = true;
+        Hide();
     }
 }

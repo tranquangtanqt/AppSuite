@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -12,7 +10,7 @@ namespace ModuleB.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    private readonly OfficeTextSearchService _textSearchService = new();
+    private readonly ExcelIndexService _indexService = new();
 
     [ObservableProperty]
     private string? rootPath;
@@ -26,7 +24,27 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private bool isSearching;
 
+    [ObservableProperty]
+    private bool isIndexing;
+
     public ObservableCollection<SearchResultItem> Results { get; } = new();
+
+    /// <summary>
+    /// Scans the folder's .xlsx/.xlsm files and (re)saves their extracted text into SQLite, so
+    /// subsequent searches read cached content instead of re-parsing every workbook.
+    /// </summary>
+    public async Task IndexRootAsync(string path)
+    {
+        IsIndexing = true;
+        try
+        {
+            await _indexService.IndexFolderAsync(path);
+        }
+        finally
+        {
+            IsIndexing = false;
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(CanSearch))]
     private async Task SearchAsync()
@@ -42,11 +60,11 @@ public partial class MainViewModel : ObservableObject
         var keyword = KeywordQuery;
         try
         {
-            var found = await Task.Run(() => FindMatches(root, group, keyword));
+            var found = await Task.Run(() => _indexService.Search(root, group, keyword));
             Results.Clear();
-            foreach (var item in found)
+            foreach (var (matchGroup, fullPath) in found)
             {
-                Results.Add(item);
+                Results.Add(SearchResultItem.FromFile(matchGroup, fullPath));
             }
         }
         finally
@@ -55,7 +73,10 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private bool CanSearch() => !string.IsNullOrEmpty(RootPath) && !IsSearching;
+    private bool CanSearch() => !string.IsNullOrEmpty(RootPath) && !IsSearching && !IsIndexing;
+
+    /// <summary>Cells of an indexed file matching the current keyword, for FileMatchesDialog.</summary>
+    public List<CellMatchItem> GetMatchingCells(string fullPath) => _indexService.GetMatchingCells(fullPath, KeywordQuery);
 
     [RelayCommand]
     private void Clear()
@@ -69,33 +90,5 @@ public partial class MainViewModel : ObservableObject
 
     partial void OnIsSearchingChanged(bool value) => SearchCommand.NotifyCanExecuteChanged();
 
-    private List<SearchResultItem> FindMatches(string root, string groupFilter, string keywordQuery)
-    {
-        var results = new List<SearchResultItem>();
-
-        foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
-        {
-            var relative = Path.GetRelativePath(root, file);
-            var segments = relative.Split(Path.DirectorySeparatorChar);
-            var group = segments.Length > 1 ? segments[0] : "(root)";
-
-            if (!QueryMatcher.Matches(group, groupFilter))
-            {
-                continue;
-            }
-
-            var content = _textSearchService.ExtractText(file) ?? Path.GetFileNameWithoutExtension(file);
-            if (!QueryMatcher.Matches(content, keywordQuery))
-            {
-                continue;
-            }
-
-            results.Add(SearchResultItem.FromFile(group, file));
-        }
-
-        return results
-            .OrderBy(r => r.GroupName)
-            .ThenBy(r => r.FileName)
-            .ToList();
-    }
+    partial void OnIsIndexingChanged(bool value) => SearchCommand.NotifyCanExecuteChanged();
 }

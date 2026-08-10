@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -7,8 +9,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using ModuleB.Models;
 using ModuleB.ViewModels;
-using Windows.Storage.Pickers;
-using WinRT.Interop;
 
 namespace ModuleB;
 
@@ -26,45 +26,6 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-    }
-
-    private async void BrowseButton_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            var picker = new FolderPicker
-            {
-                SuggestedStartLocation = PickerLocationId.ComputerFolder,
-            };
-            picker.FileTypeFilter.Add("*");
-
-            var hwnd = WindowNative.GetWindowHandle(this);
-            InitializeWithWindow.Initialize(picker, hwnd);
-
-            var folder = await picker.PickSingleFolderAsync();
-            if (folder is null)
-            {
-                return;
-            }
-
-            LoadRoot(folder.Path);
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("Khong the mo thu muc", ex.Message);
-        }
-    }
-
-    private async Task ShowErrorAsync(string title, string message)
-    {
-        var dialog = new ContentDialog
-        {
-            Title = title,
-            Content = message,
-            CloseButtonText = "Dong",
-            XamlRoot = Content.XamlRoot,
-        };
-        await dialog.ShowAsync();
     }
 
     private void LoadRoot(string path)
@@ -163,9 +124,55 @@ public sealed partial class MainWindow : Window
         };
 
         var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+        if ((result == ContentDialogResult.Primary || dialog.ConfirmedByDoubleTap) && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
         {
             LoadRoot(dialog.SelectedPath);
+            await ViewModel.IndexRootAsync(dialog.SelectedPath);
         }
+    }
+
+    private async void ResultsListView_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not SearchResultItem item)
+        {
+            return;
+        }
+
+        var matches = await Task.Run(() => ViewModel.GetMatchingCells(item.FullPath));
+
+        var dialog = new FileMatchesDialog(item.FileName, matches)
+        {
+            XamlRoot = Content.XamlRoot,
+        };
+        await dialog.ShowAsync();
+    }
+
+    private async void OpenFileMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not MenuFlyoutItem { Tag: string path })
+        {
+            return;
+        }
+
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is Win32Exception or FileNotFoundException)
+        {
+            await ShowErrorAsync("Khong the mo file", ex.Message);
+        }
+    }
+
+    private async Task ShowErrorAsync(string title, string message)
+    {
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            CloseButtonText = "Dong",
+            XamlRoot = Content.XamlRoot,
+        };
+        await dialog.ShowAsync();
     }
 }
