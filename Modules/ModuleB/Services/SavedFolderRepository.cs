@@ -21,15 +21,8 @@ public sealed class SavedFolderRepository
         var dbPath = Path.Combine(dataDirectory, "DataFromExcel.db");
         _connectionString = $"Data Source={dbPath}";
 
-        EnsureSchema();
-    }
-
-    private void EnsureSchema()
-    {
         using var connection = OpenConnection();
-        using var command = connection.CreateCommand();
-        command.CommandText = SchemaSql.CreateTablesAndTriggers;
-        command.ExecuteNonQuery();
+        SchemaSql.EnsureSchema(connection);
     }
 
     private SqliteConnection OpenConnection()

@@ -22,45 +22,8 @@ public sealed class FileIndexRepository
         var dbPath = Path.Combine(dataDirectory, "DataFromExcel.db");
         _connectionString = $"Data Source={dbPath}";
 
-        EnsureSchema();
-    }
-
-    private void EnsureSchema()
-    {
         using var connection = OpenConnection();
-        using var command = connection.CreateCommand();
-        command.CommandText = SchemaSql.CreateTablesAndTriggers;
-        command.ExecuteNonQuery();
-
-        // IndexVersion was added after IndexedFiles already shipped, so existing databases need a
-        // migration rather than relying on CREATE TABLE IF NOT EXISTS. Tracking a version number
-        // (bumped in ExcelIndexService whenever extraction logic changes) rather than reusing the
-        // LastWriteTimeUtc/HasCells checks means a logic change alone re-triggers indexing even when
-        // the file on disk hasn't changed - the earlier HasCells-only check silently stopped
-        // backfilling any file that already had at least one cell row.
-        if (!ColumnExists(connection, "IndexedFiles", "IndexVersion"))
-        {
-            using var alterCommand = connection.CreateCommand();
-            alterCommand.CommandText = "ALTER TABLE IndexedFiles ADD COLUMN IndexVersion INTEGER NOT NULL DEFAULT 0";
-            alterCommand.ExecuteNonQuery();
-        }
-    }
-
-    private static bool ColumnExists(SqliteConnection connection, string table, string column)
-    {
-        using var command = connection.CreateCommand();
-        command.CommandText = $"PRAGMA table_info({table})";
-
-        using var reader = command.ExecuteReader();
-        while (reader.Read())
-        {
-            if (string.Equals(reader.GetString(1), column, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        SchemaSql.EnsureSchema(connection);
     }
 
     private SqliteConnection OpenConnection()
@@ -151,17 +114,29 @@ public sealed class FileIndexRepository
         }
     }
 
-    /// <summary>Replaces all cells stored for a file - simpler and cheap enough than diffing per cell.</summary>
+    /// <summary>Replaces all cells stored for a file - simpler and cheap enough than diffing per cell.
+    /// Called right after <see cref="Upsert"/> for the same fullPath, so its IndexedFiles row is
+    /// guaranteed to exist.</summary>
     public void ReplaceCells(string fullPath, IEnumerable<ExcelCellMatch> cells)
     {
         using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
 
+        object indexedFileId;
+        using (var select = connection.CreateCommand())
+        {
+            select.Transaction = transaction;
+            select.CommandText = "SELECT Id FROM IndexedFiles WHERE FullPath = $path";
+            select.Parameters.AddWithValue("$path", fullPath);
+            indexedFileId = select.ExecuteScalar() ?? throw new InvalidOperationException(
+                $"No IndexedFiles row for '{fullPath}' - Upsert must run before ReplaceCells.");
+        }
+
         using (var delete = connection.CreateCommand())
         {
             delete.Transaction = transaction;
-            delete.CommandText = "DELETE FROM IndexedCells WHERE FullPath = $path";
-            delete.Parameters.AddWithValue("$path", fullPath);
+            delete.CommandText = "DELETE FROM IndexedCells WHERE IndexedFileId = $id";
+            delete.Parameters.AddWithValue("$id", indexedFileId);
             delete.ExecuteNonQuery();
         }
 
@@ -169,9 +144,9 @@ public sealed class FileIndexRepository
         {
             insert.Transaction = transaction;
             insert.CommandText =
-                "INSERT INTO IndexedCells (FullPath, SheetName, CellReference, RowIndex, ColumnIndex, Text) " +
-                "VALUES ($path, $sheet, $reference, $row, $column, $text)";
-            var pathParam = insert.Parameters.Add("$path", SqliteType.Text);
+                "INSERT INTO IndexedCells (IndexedFileId, SheetName, CellReference, RowIndex, ColumnIndex, Text) " +
+                "VALUES ($id, $sheet, $reference, $row, $column, $text)";
+            var idParam = insert.Parameters.Add("$id", SqliteType.Integer);
             var sheetParam = insert.Parameters.Add("$sheet", SqliteType.Text);
             var referenceParam = insert.Parameters.Add("$reference", SqliteType.Text);
             var rowParam = insert.Parameters.Add("$row", SqliteType.Integer);
@@ -180,7 +155,7 @@ public sealed class FileIndexRepository
 
             foreach (var cell in cells)
             {
-                pathParam.Value = fullPath;
+                idParam.Value = indexedFileId;
                 sheetParam.Value = cell.SheetName;
                 referenceParam.Value = cell.CellReference;
                 rowParam.Value = cell.RowIndex;
@@ -198,7 +173,9 @@ public sealed class FileIndexRepository
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
         command.CommandText =
-            "SELECT SheetName, CellReference, RowIndex, ColumnIndex, Text FROM IndexedCells WHERE FullPath = $path";
+            "SELECT c.SheetName, c.CellReference, c.RowIndex, c.ColumnIndex, c.Text " +
+            "FROM IndexedCells c JOIN IndexedFiles f ON f.Id = c.IndexedFileId " +
+            "WHERE f.FullPath = $path";
         command.Parameters.AddWithValue("$path", fullPath);
 
         var result = new List<ExcelCellMatch>();

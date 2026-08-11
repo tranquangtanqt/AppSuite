@@ -46,7 +46,20 @@ public sealed class ExcelIndexService
             var segments = relative.Split(Path.DirectorySeparatorChar);
             var group = segments.Length > 1 ? segments[0] : "(root)";
 
-            var cells = ExcelCellExtractor.ExtractCells(file);
+            List<ExcelCellMatch> cells;
+            try
+            {
+                cells = ExcelCellExtractor.ExtractCells(file);
+            }
+            catch (Exception ex)
+            {
+                // A single unreadable workbook (locked by Excel, mid-save, corrupt zip/XML, etc.)
+                // must not abort indexing for every other file under this root - skip it and retry
+                // next time IndexFolder runs, since its LastWriteTimeUtc was never recorded here.
+                System.Diagnostics.Debug.WriteLine($"Skipping {file}: {ex}");
+                continue;
+            }
+
             var content = string.Join('\n', cells.Select(c => c.Text));
 
             _repository.Upsert(rootPath, group, file, Path.GetFileName(file), content, lastWriteUtc, CurrentIndexVersion);
