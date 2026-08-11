@@ -1,8 +1,11 @@
+using System.ComponentModel;
 using CommunityToolkit.WinUI.UI.Controls;
+using CommunityToolkit.WinUI.UI.Controls.Primitives;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using ModuleF.Models;
 using ModuleF.Services;
 using ModuleF.ViewModels;
@@ -11,6 +14,18 @@ using Windows.Storage.Pickers;
 using WinRT.Interop;
 
 namespace ModuleF;
+
+/// <summary>Used by MainWindow.xaml's FilterHeaderTemplate to only show the filter TextBox's clear
+/// button once there is text to clear. A top-level public class (not nested in MainWindow) because
+/// XAML's "local:" resource reference needs an instantiable, resolvable type.</summary>
+public sealed class EmptyStringToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        string.IsNullOrEmpty(value as string) ? Visibility.Collapsed : Visibility.Visible;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
 
 /// <summary>
 /// Owns every dialog/picker interaction (View responsibility) and wires DataGrid events to plain
@@ -51,21 +66,152 @@ public sealed partial class MainWindow : Window
 
     // ----- DataGrid column/row wiring -----
 
+    /// <summary>Backs each column header: a name label plus a "Filter" TextBox (with an inline clear
+    /// button, see ClearFilterButton_Click) stacked underneath, rendered by the "FilterHeaderStyle"/
+    /// "FilterHeaderTemplate" resources declared on the DataGrid in MainWindow.xaml. Implements
+    /// INotifyPropertyChanged so the clear button setting FilterText back to "" pushes that back into
+    /// the TextBox's TwoWay-bound Text (not just into the ViewModel) - without it, WinUI's binding
+    /// engine has no way to know the source changed and the TextBox would keep showing the old text.</summary>
+    private sealed class FilterHeaderItem : INotifyPropertyChanged
+    {
+        private readonly Action<string> _onFilterChanged;
+        private string _filterText = string.Empty;
+
+        public FilterHeaderItem(string columnName, Action<string> onFilterChanged)
+        {
+            ColumnName = columnName;
+            _onFilterChanged = onFilterChanged;
+        }
+
+        public string ColumnName { get; }
+
+        public string FilterText
+        {
+            get => _filterText;
+            set
+            {
+                _filterText = value;
+                _onFilterChanged(value);
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FilterText)));
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+    }
+
+    /// <summary>Rebuilds the DataGrid's columns and their filter headers together, index-for-index.
+    /// Width is a fixed pixel value computed once (EstimateColumnWidth), not SizeToCells/Auto: those
+    /// resize the column to whatever rows the DataGrid currently has *realized* (it virtualizes rows),
+    /// so as the user scrolled or typed - which re-realizes rows - the column could suddenly shrink to
+    /// fit only short values momentarily on screen, clipping the header/filter box with it. A one-time
+    /// fixed width sidesteps that entirely, at the cost of not re-fitting itself if a cell is later
+    /// edited to much longer text (already an accepted trade-off - see HeaderStyle comment in
+    /// MainWindow.xaml for why the native drag-to-resize is also gone).</summary>
     private void RebuildColumns()
     {
         Grid.Columns.Clear();
+        ViewModel.ClearQuickFilters();
+
+        var filterHeaderStyle = (Style)Grid.Resources["FilterHeaderStyle"];
         var columns = ViewModel.Columns;
         for (var i = 0; i < columns.Count; i++)
         {
+            var columnIndex = i;
+
             Grid.Columns.Add(new DataGridTextColumn
             {
-                Header = columns[i].Name,
+                Header = new FilterHeaderItem(columns[i].Name, text => ViewModel.SetQuickFilter(columnIndex, text)),
+                HeaderStyle = filterHeaderStyle,
+                Width = new DataGridLength(EstimateColumnWidth(columnIndex, columns[i].Name), DataGridLengthUnitType.Pixel),
                 Binding = new Binding
                 {
                     Path = new PropertyPath($"[{i}]"),
                     Mode = BindingMode.OneWay,
                 },
             });
+        }
+    }
+
+    /// <summary>Widest of the column name and a sample of its cell values (measured the same way their
+    /// TextBlocks would render, so plain character counts don't mislead), clamped to a sane range so
+    /// one long outlier cell or a one-letter header can't make the grid unusable.</summary>
+    private double EstimateColumnWidth(int columnIndex, string headerName)
+    {
+        var maxWidth = EstimateTextWidth(headerName);
+        var sampled = 0;
+        foreach (var row in ViewModel.ViewRows)
+        {
+            if (sampled++ >= 100)
+            {
+                break;
+            }
+
+            var cellWidth = EstimateTextWidth(row.GetCell(columnIndex));
+            if (cellWidth > maxWidth)
+            {
+                maxWidth = cellWidth;
+            }
+        }
+
+        return Math.Clamp(maxWidth + 24, 100, 400);
+    }
+
+    private static double EstimateTextWidth(string text)
+    {
+        var measuring = new TextBlock { Text = text };
+        measuring.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+        return measuring.DesiredSize.Width;
+    }
+
+    /// <summary>The header's own template does not stretch the filter TextBox to the column's full
+    /// width (see comment in MainWindow.xaml), so this sets it directly from the realized
+    /// DataGridColumnHeader ancestor's ActualWidth, and keeps tracking it via SizeChanged in case the
+    /// header is re-measured after this TextBox's own Loaded already fired (e.g. window resize).</summary>
+    private void FilterTextBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        var textBox = (TextBox)sender;
+        if (FindAncestor<DataGridColumnHeader>(textBox) is not { } header)
+        {
+            return;
+        }
+
+        SetFilterBoxWidth(textBox, header.ActualWidth);
+        header.SizeChanged += (_, args) => SetFilterBoxWidth(textBox, args.NewSize.Width);
+    }
+
+    private static void SetFilterBoxWidth(TextBox textBox, double headerWidth) =>
+        textBox.Width = Math.Max(0, headerWidth - 4);
+
+    private static T? FindAncestor<T>(DependencyObject element) where T : DependencyObject
+    {
+        var parent = VisualTreeHelper.GetParent(element);
+        while (parent is not null && parent is not T)
+        {
+            parent = VisualTreeHelper.GetParent(parent);
+        }
+
+        return parent as T;
+    }
+
+    /// <summary>The clear button's DataContext is the same FilterHeaderItem as its sibling TextBox
+    /// (both come from the same DataTemplate instance) - setting FilterText here clears both the
+    /// ViewModel-side filter and, via FilterHeaderItem's PropertyChanged, the TextBox's own text.</summary>
+    private void ClearFilterButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).DataContext is FilterHeaderItem item)
+        {
+            item.FilterText = string.Empty;
+        }
+    }
+
+    private void ClearAllFiltersButton_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var column in Grid.Columns)
+        {
+            if (column.Header is FilterHeaderItem item)
+            {
+                item.FilterText = string.Empty;
+            }
         }
     }
 

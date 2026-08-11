@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ModuleF"
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:primitives="using:CommunityToolkit.WinUI.UI.Controls.Primitives"
     xmlns:models="using:ModuleF.Models"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -98,7 +99,14 @@
             </ListView>
         </Expander>
 
-        <!-- Data grid -->
+        <!-- Data grid. The filter box lives inside each column's own header (HeaderStyle below) rather
+             than as a synced external row or a real DataGridRow (both tried and reverted) - only the
+             native header is both pinned during vertical scroll and directly typable with no
+             double-click/F2 gesture, for free, since it's a plain TextBox rather than a DataGrid cell.
+             DataGridColumn has no HeaderTemplate shortcut, so the template is applied per column via
+             HeaderStyle's ContentTemplate setter instead (DataGridColumn.Header itself rejects a raw
+             UIElement - "Content does not support UIElement; use ContentTemplate instead"). Declared
+             here (compile-time XAML) because DataTemplate has no public code-only constructor. -->
         <controls:DataGrid
             x:Name="Grid"
             Grid.Row="2"
@@ -111,6 +119,35 @@
             CanUserSortColumns="False"
             LoadingRow="Grid_LoadingRow"
             CellEditEnding="Grid_CellEditEnding">
+            <controls:DataGrid.Resources>
+                <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
+                <DataTemplate x:Key="FilterHeaderTemplate">
+                    <StackPanel Spacing="4" Padding="0,2,0,4" HorizontalAlignment="Stretch">
+                        <TextBlock Text="{Binding ColumnName}" />
+                        <!-- HorizontalAlignment=Stretch alone does not fill the column: the header's own
+                             default template does not stretch its ContentPresenter to the header's full
+                             width regardless of HorizontalContentAlignment, so this is sized explicitly
+                             instead (see FilterTextBox_Loaded). The clear button overlays the TextBox's
+                             right edge rather than sizing the Grid itself, since the Grid has nothing
+                             else dictating its width beyond the TextBox's own explicit Width. -->
+                        <Grid HorizontalAlignment="Left">
+                            <TextBox Text="{Binding FilterText, Mode=TwoWay}" PlaceholderText="Filter"
+                                     HorizontalAlignment="Left" Loaded="FilterTextBox_Loaded" />
+                            <Button Padding="4" Margin="0,0,4,0" Background="Transparent" BorderThickness="0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Click="ClearFilterButton_Click" ToolTipService.ToolTip="Xóa filter"
+                                    Visibility="{Binding FilterText, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+                                <FontIcon Glyph="&#xE10A;" FontSize="10" />
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </DataTemplate>
+                <Style x:Key="FilterHeaderStyle" TargetType="primitives:DataGridColumnHeader">
+                    <Setter Property="ContentTemplate" Value="{StaticResource FilterHeaderTemplate}" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Padding" Value="8,8" />
+                </Style>
+            </controls:DataGrid.Resources>
             <controls:DataGrid.ContextFlyout>
                 <MenuFlyout>
                     <MenuFlyoutItem Text="Copy" Click="CopyMenuItem_Click" />
@@ -122,6 +159,21 @@
                 </MenuFlyout>
             </controls:DataGrid.ContextFlyout>
         </controls:DataGrid>
+
+        <!-- Overlaid on the DataGrid's empty top-left corner cell (same Grid.Row, added after so it
+             draws on top) - the DataGrid has no public API for that corner's content (only an internal
+             template part), so this floats a real Button there instead rather than trying to inject
+             into the DataGrid itself. Width matches RowHeaderWidth="48" above. Top margin is a manual
+             estimate of where the filter TextBox row starts within the header (header Padding top=8 +
+             column-name TextBlock line + StackPanel Spacing=4), to line up with it vertically instead
+             of the column-name row above it - there's no exact height to read since the header's own
+             height is Auto or the built-in resize grip would be tracked instead. -->
+        <Button Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                Width="48" Margin="0,32,0,0" Padding="0" Height="32"
+                Background="Transparent" BorderThickness="0"
+                Click="ClearAllFiltersButton_Click" ToolTipService.ToolTip="Xóa tất cả filter">
+            <FontIcon Glyph="&#xE10A;" FontSize="12" />
+        </Button>
 
         <!-- Status bar -->
         <Grid Grid.Row="3" ColumnSpacing="16">

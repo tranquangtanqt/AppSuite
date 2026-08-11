@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.UI.Xaml;
 
 namespace ModuleF;
@@ -12,6 +13,11 @@ public partial class App : Application
 
     public App()
     {
+        // .NET has dropped legacy code pages (Shift-JIS/932 included) from its default Encoding
+        // table - GetEncoding(932) throws NotSupportedException without this. Must run before
+        // EncodingPickerDialog ever resolves Shift-JIS.
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
         InitializeComponent();
     }
 

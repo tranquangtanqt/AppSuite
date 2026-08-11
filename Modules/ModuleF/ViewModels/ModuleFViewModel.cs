@@ -23,6 +23,7 @@ public sealed partial class ModuleFViewModel : ObservableObject
     private readonly StatisticsService _statisticsService = new();
 
     private FilterExpression? _activeFilter;
+    private readonly Dictionary<int, string> _quickFilters = new();
     private List<(int ColumnIndex, bool Descending)> _activeSort = new();
     private List<CellRef> _currentMatches = new();
     private int _currentMatchIndex = -1;
@@ -258,6 +259,30 @@ public sealed partial class ModuleFViewModel : ObservableObject
         RebuildView();
     }
 
+    /// <summary>Per-column "contains" filter typed directly into the DataGrid's column header row
+    /// (see MainWindow.RebuildColumns), combined with AND across columns and with <see cref="ApplyFilter"/>'s
+    /// advanced expression. Kept separate from <see cref="_activeFilter"/> since it is reset whenever
+    /// the column list changes (RebuildColumns creates fresh, empty filter TextBoxes) while the
+    /// advanced filter is not.</summary>
+    public void SetQuickFilter(int columnIndex, string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            _quickFilters.Remove(columnIndex);
+        }
+        else
+        {
+            _quickFilters[columnIndex] = value;
+        }
+
+        RebuildView();
+    }
+
+    public void ClearQuickFilters()
+    {
+        _quickFilters.Clear();
+    }
+
     public void ApplySort(List<(int ColumnIndex, bool Descending)> sortSpec)
     {
         _activeSort = sortSpec;
@@ -329,6 +354,11 @@ public sealed partial class ModuleFViewModel : ObservableObject
         if (_activeFilter is not null)
         {
             query = query.Where(_filterService.Compile(_activeFilter));
+        }
+
+        foreach (var (columnIndex, text) in _quickFilters)
+        {
+            query = query.Where(row => row.GetCell(columnIndex).Contains(text, StringComparison.OrdinalIgnoreCase));
         }
 
         if (_activeSort.Count > 0)

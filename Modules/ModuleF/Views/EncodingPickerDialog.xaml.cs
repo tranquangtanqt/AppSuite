@@ -16,6 +16,7 @@ public sealed partial class EncodingPickerDialog : ContentDialog
         "utf8bom" => new UTF8Encoding(true),
         "utf16le" => Encoding.Unicode,
         "utf16be" => Encoding.BigEndianUnicode,
+        "shiftjis" => Encoding.GetEncoding(932),
         _ => new UTF8Encoding(false),
     };
 

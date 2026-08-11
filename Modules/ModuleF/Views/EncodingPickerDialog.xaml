@@ -20,6 +20,7 @@
             <ComboBoxItem Content="UTF-8 BOM" Tag="utf8bom" />
             <ComboBoxItem Content="UTF-16 LE" Tag="utf16le" />
             <ComboBoxItem Content="UTF-16 BE" Tag="utf16be" />
+            <ComboBoxItem Content="Shift-JIS" Tag="shiftjis" />
         </ComboBox>
 
         <ComboBox x:Name="DelimiterComboBox" Header="Delimiter" HorizontalAlignment="Stretch" SelectedIndex="0">
