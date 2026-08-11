@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ModuleB.Models;
@@ -8,6 +9,10 @@ namespace ModuleB.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly SavedFolderRepository _repository;
+
+    /// <summary>Raised with the deleted folder's path so MainWindow can clear its Explorer tree
+    /// when the folder currently loaded there was the one just deleted.</summary>
+    public event Action<string>? FolderDeleted;
 
     [ObservableProperty]
     private string? currentPath;
@@ -58,6 +63,7 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         Reload();
+        FolderDeleted?.Invoke(folder.Path);
     }
 
     private void Reload()

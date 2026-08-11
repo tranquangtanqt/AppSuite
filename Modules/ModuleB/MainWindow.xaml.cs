@@ -123,12 +123,32 @@ public sealed partial class MainWindow : Window
             XamlRoot = Content.XamlRoot,
         };
 
+        // A folder deleted from the saved-folders list may be the one currently loaded in the
+        // Explorer tree - if so, the tree/search results are now stale and must be cleared too.
+        dialog.ViewModel.FolderDeleted += path =>
+        {
+            if (string.Equals(path, ViewModel.RootPath, StringComparison.OrdinalIgnoreCase))
+            {
+                ClearRoot();
+            }
+        };
+
         var result = await dialog.ShowAsync();
         if ((result == ContentDialogResult.Primary || dialog.ConfirmedByDoubleTap) && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
         {
             LoadRoot(dialog.SelectedPath);
             await ViewModel.IndexRootAsync(dialog.SelectedPath);
         }
+    }
+
+    private void ClearRoot()
+    {
+        ViewModel.RootPath = null;
+        ViewModel.GroupFilter = string.Empty;
+        ViewModel.Results.Clear();
+
+        FolderTreeView.RootNodes.Clear();
+        _folderByNode.Clear();
     }
 
     private async void ResultsListView_ItemClick(object sender, ItemClickEventArgs e)

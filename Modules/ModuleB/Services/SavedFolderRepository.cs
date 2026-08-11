@@ -87,9 +87,20 @@ public sealed class SavedFolderRepository
     public void Delete(int id)
     {
         using var connection = OpenConnection();
-        using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM SavedFolders WHERE Id = $id";
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "DELETE FROM SavedFolders WHERE Id = $id";
+            command.Parameters.AddWithValue("$id", id);
+            command.ExecuteNonQuery();
+        }
+
+        // Deleting a saved folder cascades to every IndexedFiles/IndexedCells row under it, which
+        // can free a large chunk of the database at once - DELETE alone never shrinks the file (freed
+        // pages just sit on SQLite's internal freelist), so reclaim the space right away.
+        using (var vacuum = connection.CreateCommand())
+        {
+            vacuum.CommandText = "VACUUM";
+            vacuum.ExecuteNonQuery();
+        }
     }
 }
