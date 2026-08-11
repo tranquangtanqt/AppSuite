@@ -46,6 +46,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="160" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="72" />
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0" Text="Ten thu muc" FontWeight="SemiBold" Opacity="0.8" />
                 <TextBlock Grid.Column="1" Text="Duong dan" FontWeight="SemiBold" Opacity="0.8" />
@@ -61,9 +62,20 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="160" />
                                 <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="72" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Grid.Column="0" Text="{x:Bind Name}" />
                             <TextBlock Grid.Column="1" Text="{x:Bind Path}" TextTrimming="CharacterEllipsis" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                                <Button Padding="4" ToolTipService.ToolTip="Sua"
+                                        Tag="{x:Bind}" Click="EditFolderButton_Click">
+                                    <FontIcon Glyph="&#xE70F;" FontSize="14" />
+                                </Button>
+                                <Button Padding="4" ToolTipService.ToolTip="Xoa"
+                                        Tag="{x:Bind}" Click="DeleteFolderButton_Click">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                                </Button>
+                            </StackPanel>
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>

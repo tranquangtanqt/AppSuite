@@ -71,4 +71,20 @@ public sealed partial class SettingsDialog : ContentDialog
         ConfirmedByDoubleTap = true;
         Hide();
     }
+
+    private void EditFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: SavedFolder folder })
+        {
+            ViewModel.BeginEdit(folder);
+        }
+    }
+
+    private void DeleteFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: SavedFolder folder })
+        {
+            ViewModel.DeleteFolder(folder);
+        }
+    }
 }

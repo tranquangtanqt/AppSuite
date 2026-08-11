@@ -29,25 +29,7 @@ public sealed class FileIndexRepository
     {
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText =
-            "CREATE TABLE IF NOT EXISTS IndexedFiles (" +
-            "Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            "RootPath TEXT NOT NULL, " +
-            "GroupName TEXT NOT NULL, " +
-            "FullPath TEXT NOT NULL UNIQUE, " +
-            "FileName TEXT NOT NULL, " +
-            "Content TEXT NOT NULL, " +
-            "LastWriteTimeUtcTicks INTEGER NOT NULL); " +
-            "CREATE INDEX IF NOT EXISTS IX_IndexedFiles_RootPath ON IndexedFiles(RootPath); " +
-            "CREATE TABLE IF NOT EXISTS IndexedCells (" +
-            "Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            "FullPath TEXT NOT NULL, " +
-            "SheetName TEXT NOT NULL, " +
-            "CellReference TEXT NOT NULL, " +
-            "RowIndex INTEGER NOT NULL, " +
-            "ColumnIndex INTEGER NOT NULL, " +
-            "Text TEXT NOT NULL); " +
-            "CREATE INDEX IF NOT EXISTS IX_IndexedCells_FullPath ON IndexedCells(FullPath)";
+        command.CommandText = SchemaSql.CreateTablesAndTriggers;
         command.ExecuteNonQuery();
 
         // IndexVersion was added after IndexedFiles already shipped, so existing databases need a
@@ -162,16 +144,10 @@ public sealed class FileIndexRepository
         deleteFiles.CommandText = "DELETE FROM IndexedFiles WHERE FullPath = $path";
         var filesPathParam = deleteFiles.Parameters.Add("$path", SqliteType.Text);
 
-        using var deleteCells = connection.CreateCommand();
-        deleteCells.CommandText = "DELETE FROM IndexedCells WHERE FullPath = $path";
-        var cellsPathParam = deleteCells.Parameters.Add("$path", SqliteType.Text);
-
         foreach (var path in toDelete)
         {
             filesPathParam.Value = path;
             deleteFiles.ExecuteNonQuery();
-            cellsPathParam.Value = path;
-            deleteCells.ExecuteNonQuery();
         }
     }
 

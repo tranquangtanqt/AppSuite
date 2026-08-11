@@ -12,6 +12,8 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string? currentPath;
 
+    private int? _editingFolderId;
+
     public ObservableCollection<SavedFolder> SavedFolders { get; } = new();
 
     public SettingsViewModel(SavedFolderRepository repository, string? initialPath)
@@ -28,7 +30,33 @@ public partial class SettingsViewModel : ObservableObject
             return;
         }
 
-        _repository.Add(CurrentPath);
+        if (_editingFolderId is int id)
+        {
+            _repository.Update(id, CurrentPath);
+            _editingFolderId = null;
+        }
+        else
+        {
+            _repository.Add(CurrentPath);
+        }
+
+        Reload();
+    }
+
+    public void BeginEdit(SavedFolder folder)
+    {
+        _editingFolderId = folder.Id;
+        CurrentPath = folder.Path;
+    }
+
+    public void DeleteFolder(SavedFolder folder)
+    {
+        _repository.Delete(folder.Id);
+        if (_editingFolderId == folder.Id)
+        {
+            _editingFolderId = null;
+        }
+
         Reload();
     }
 

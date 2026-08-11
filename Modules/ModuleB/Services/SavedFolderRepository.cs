@@ -28,10 +28,7 @@ public sealed class SavedFolderRepository
     {
         using var connection = OpenConnection();
         using var command = connection.CreateCommand();
-        command.CommandText =
-            "CREATE TABLE IF NOT EXISTS SavedFolders (" +
-            "Id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-            "Path TEXT NOT NULL UNIQUE)";
+        command.CommandText = SchemaSql.CreateTablesAndTriggers;
         command.ExecuteNonQuery();
     }
 
@@ -75,5 +72,24 @@ public sealed class SavedFolderRepository
         var id = Convert.ToInt32(select.ExecuteScalar());
 
         return new SavedFolder(id, path);
+    }
+
+    public void Update(int id, string path)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE SavedFolders SET Path = $path WHERE Id = $id";
+        command.Parameters.AddWithValue("$path", path);
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
+    }
+
+    public void Delete(int id)
+    {
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM SavedFolders WHERE Id = $id";
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
     }
 }
