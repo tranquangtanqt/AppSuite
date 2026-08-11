@@ -11,6 +11,8 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <!-- Default styles for SharedUI's custom controls (CopyButton, OpacityMaskView) -->
                 <ResourceDictionary Source="ms-appx:///SharedUI/Themes/Generic.xaml" />
+                <!-- Compact sizing (Button/TextBox/ComboBox/TextBlock/...) applied suite-wide -->
+                <ResourceDictionary Source="ms-appx:///SharedUI/Themes/CompactStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <converters:ModuleStatusToBrushConverter x:Key="ModuleStatusToBrushConverter" />
             <converters:ModuleNameToAccentBrushConverter x:Key="ModuleNameToAccentBrushConverter" />

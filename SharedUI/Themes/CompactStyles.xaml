@@ -1,0 +1,74 @@
+<!--
+  Denser sizing for stock WinUI controls across the whole AppSuite (MainLauncher + every Module),
+  replacing the touch-friendly Fluent defaults from XamlControlsResources with a tighter business-form
+  look. Implicit styles (no x:Key) so they apply to every plain <Button>, <TextBox>, etc. automatically
+  once merged - each BasedOn the real WinUI default style key so the full template/visual states
+  (hover, pressed, focus) are preserved; only Padding/FontSize/MinHeight are overridden here.
+
+  Consuming apps must explicitly merge this file in App.xaml, after <XamlControlsResources/> so these
+  implicit styles win over the stock ones (same convention as Generic.xaml - see its header comment):
+
+    <ResourceDictionary.MergedDictionaries>
+        <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+        <ResourceDictionary Source="ms-appx:///SharedUI/Themes/CompactStyles.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+  First-pass values - expect to tune Padding/FontSize/MinHeight further after a visual check, this is
+  a style sheet, not a redesign of any control's behavior.
+
+  A StaticResource reference inside a merged ResourceDictionary file only resolves against that same
+  file's own scope (itself + whatever IT merges) - NOT against sibling dictionaries in the consuming
+  App.xaml's MergedDictionaries list, even though both end up merged into the same app. So the
+  BasedOn="{StaticResource Default...Style}" references below need XamlControlsResources merged right
+  here too, or they fail at runtime with "Cannot find a Resource with the Name/Key Default...Style"
+  even though the XAML compiles cleanly (this is a load-time resource lookup, not a compile-time one).
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ResourceDictionary.MergedDictionaries>
+        <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <!-- TextBlock isn't a templated Control (no ControlTemplate/DefaultStyleKey) - it has no
+         "DefaultTextBlockStyle" resource to BasedOn at all, unlike the templated controls below where
+         BasedOn is what preserves their Template/visual states. -->
+    <Style TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style TargetType="PasswordBox" BasedOn="{StaticResource DefaultPasswordBoxStyle}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="8,4" />
+        <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style TargetType="ComboBox" BasedOn="{StaticResource DefaultComboBoxStyle}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style TargetType="CheckBox" BasedOn="{StaticResource DefaultCheckBoxStyle}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="MinHeight" Value="24" />
+    </Style>
+
+    <Style TargetType="RadioButton" BasedOn="{StaticResource DefaultRadioButtonStyle}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="MinHeight" Value="24" />
+    </Style>
+</ResourceDictionary>
