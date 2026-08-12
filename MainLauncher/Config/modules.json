@@ -4,7 +4,7 @@
     "Description": "Application quan ly A",
     "Path": ".\\Modules\\ModuleA\\ModuleA.exe",
     "Arguments": "",
-    "AutoStart": true
+    "AutoStart": false
   },
   {
     "Name": "ModuleB",
