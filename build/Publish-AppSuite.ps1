@@ -11,6 +11,7 @@
         |-- Modules\ModuleE\ModuleE.exe
         |-- Modules\ModuleF\ModuleF.exe
         |-- Modules\ModuleG\ModuleG.exe
+        |-- Modules\ModuleH\ModuleH.exe
         `-- Config\modules.json
 
 .DESCRIPTION
@@ -21,6 +22,14 @@
 .EXAMPLE
     .\build\Publish-AppSuite.ps1
     .\build\Publish-AppSuite.ps1 -Configuration Release -Runtime win-x64 -OutputDir .\Application
+
+.NOTES
+    If PowerShell refuses to run this script with an error like "cannot be loaded because
+    running scripts is disabled on this system", either:
+    - Run it once with a bypassed policy for just this invocation:
+        powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configuration Release -Runtime win-x64
+    - Or allow locally-authored scripts for your user going forward:
+        Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 #>
 param(
     [string]$Configuration = "Release",
@@ -57,5 +66,6 @@ Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleD\ModuleD.csproj") 
 Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleE\ModuleE.csproj") -DestSubfolder "Modules\ModuleE"
 Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleF\ModuleF.csproj") -DestSubfolder "Modules\ModuleF"
 Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleG\ModuleG.csproj") -DestSubfolder "Modules\ModuleG"
+Publish-Project -ProjectPath (Join-Path $root "Modules\ModuleH\ModuleH.csproj") -DestSubfolder "Modules\ModuleH"
 
 Write-Host "Done. Deployment output at $OutputDir" -ForegroundColor Green

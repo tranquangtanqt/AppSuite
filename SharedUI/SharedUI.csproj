@@ -5,6 +5,7 @@
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>SharedUI</RootNamespace>
     <AssemblyName>SharedUI</AssemblyName>
+    <Platforms>x86;x64;ARM64</Platforms>
     <UseWinUI>true</UseWinUI>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

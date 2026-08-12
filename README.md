@@ -107,6 +107,17 @@ khi MainLauncher truyền qua trường `Arguments` trong `modules.json`).
 .\build\Publish-AppSuite.ps1 -Configuration Release -Runtime win-x64
 ```
 
+Nếu PowerShell báo lỗi kiểu "cannot be loaded because running scripts is disabled on this system"
+(execution policy), dùng 1 trong 2 cách:
+
+```powershell
+# Chỉ bỏ qua policy cho lần chạy này
+powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configuration Release -Runtime win-x64
+
+# Hoặc cho phép lâu dài với user hiện tại
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
 Kết quả nằm ở `Application\`:
 
 ```
