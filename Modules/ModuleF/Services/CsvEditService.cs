@@ -28,15 +28,15 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        UndoRedo.Do(new SetCellCommand(row, columnIndex, oldValue, value));
         Document.IsDirty = true;
+        UndoRedo.Do(new SetCellCommand(row, columnIndex, oldValue, value));
     }
 
     public void AddRow(int index)
     {
         var blankRow = new CsvRow(Enumerable.Repeat(string.Empty, Document.Columns.Count));
-        UndoRedo.Do(new AddRowCommand(Document, index, blankRow));
         Document.IsDirty = true;
+        UndoRedo.Do(new AddRowCommand(Document, index, blankRow));
     }
 
     public void DuplicateRow(int index)
@@ -46,8 +46,8 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        UndoRedo.Do(new DuplicateRowCommand(Document, index, Document.Rows[index]));
         Document.IsDirty = true;
+        UndoRedo.Do(new DuplicateRowCommand(Document, index, Document.Rows[index]));
     }
 
     public void RemoveRow(int index)
@@ -57,14 +57,14 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        UndoRedo.Do(new RemoveRowCommand(Document, index));
         Document.IsDirty = true;
+        UndoRedo.Do(new RemoveRowCommand(Document, index));
     }
 
     public void AddColumn(int index, string name)
     {
-        UndoRedo.Do(new AddColumnCommand(Document, index, name));
         Document.IsDirty = true;
+        UndoRedo.Do(new AddColumnCommand(Document, index, name));
     }
 
     public void RemoveColumn(int index)
@@ -74,8 +74,8 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        UndoRedo.Do(new RemoveColumnCommand(Document, index));
         Document.IsDirty = true;
+        UndoRedo.Do(new RemoveColumnCommand(Document, index));
     }
 
     public void RenameColumn(int index, string newName)
@@ -91,8 +91,8 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        UndoRedo.Do(new RenameColumnCommand(Document, column, newName));
         Document.IsDirty = true;
+        UndoRedo.Do(new RenameColumnCommand(Document, column, newName));
     }
 
     public void PasteBlock(IReadOnlyList<CsvRow> targetRows, int startColumnIndex, IReadOnlyList<IReadOnlyList<string>> block)
@@ -124,7 +124,7 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        UndoRedo.Do(new PasteCommand(subCommands));
         Document.IsDirty = true;
+        UndoRedo.Do(new PasteCommand(subCommands));
     }
 }
