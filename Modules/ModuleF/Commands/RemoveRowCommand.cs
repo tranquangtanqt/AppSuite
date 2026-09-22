@@ -18,6 +18,8 @@ public sealed class RemoveRowCommand : IEditCommand
 
     public string Description => $"Xóa dòng {_index + 1}";
 
+    public bool ChangesStructure => true;
+
     public void Execute()
     {
         _removedSnapshot = _document.Rows[_index].Clone();

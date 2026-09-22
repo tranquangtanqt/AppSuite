@@ -720,7 +720,9 @@ public sealed partial class MainWindow : Window
 
     private async void SortButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new SortDialog(ViewModel.Columns, new List<(int, bool)>()) { XamlRoot = Content.XamlRoot };
+        // Passes the currently applied sort (not an empty list) so re-opening the dialog shows the
+        // spec that's actually active right now, instead of always starting from a blank row.
+        var dialog = new SortDialog(ViewModel.Columns, ViewModel.ActiveSort.ToList()) { XamlRoot = Content.XamlRoot };
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
@@ -731,6 +733,11 @@ public sealed partial class MainWindow : Window
             ViewModel.ApplySort(new List<(int, bool)>());
         }
     }
+
+    /// <summary>Clears the active sort without opening the dialog - same fast path as
+    /// <see cref="ClearActiveFilterButton_Click"/>, for the same reason (the dialog closes as soon as
+    /// you apply a sort).</summary>
+    private void ClearActiveSortButton_Click(object sender, RoutedEventArgs e) => ViewModel.ApplySort(new List<(int, bool)>());
 
     private async void StatisticsButton_Click(object sender, RoutedEventArgs e)
     {

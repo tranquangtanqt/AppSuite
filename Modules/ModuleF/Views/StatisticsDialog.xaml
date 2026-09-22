@@ -11,7 +11,15 @@
     CloseButtonText="Đóng"
     DefaultButton="Close">
 
-    <StackPanel Spacing="10" MinWidth="640" MaxHeight="520">
+    <!-- ContentDialog's default Fluent style caps its content at ~548px wide (ThemeResource
+         "ContentDialogMaxWidth") - the 7-column stats grid below needs about 780px (its fixed column
+         widths plus spacing), so without this override the last couple of columns were pushed off the
+         visible edge and Min/Max got clipped mid-value (e.g. "5001" showing as "50"). -->
+    <ContentDialog.Resources>
+        <x:Double x:Key="ContentDialogMaxWidth">880</x:Double>
+    </ContentDialog.Resources>
+
+    <StackPanel Spacing="10" MinWidth="780" MaxHeight="520">
         <StackPanel Orientation="Horizontal" Spacing="20">
             <TextBlock x:Name="RowCountText" />
             <TextBlock x:Name="ColumnCountText" />

@@ -21,6 +21,8 @@ public sealed class AddColumnCommand : IEditCommand
 
     public string Description => $"Thêm cột '{_columnName}'";
 
+    public bool ChangesStructure => true;
+
     public void Execute()
     {
         _document.Columns.Insert(_index, new CsvColumn(_columnName));

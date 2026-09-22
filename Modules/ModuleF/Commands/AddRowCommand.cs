@@ -17,6 +17,8 @@ public class AddRowCommand : IEditCommand
 
     public virtual string Description => $"Thêm dòng {Index + 1}";
 
+    public bool ChangesStructure => true;
+
     public virtual void Execute() => Document.Rows.Insert(Index, NewRow);
 
     public virtual void Undo() => Document.Rows.RemoveAt(Index);

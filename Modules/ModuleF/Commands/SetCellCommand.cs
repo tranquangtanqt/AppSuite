@@ -19,6 +19,8 @@ public sealed class SetCellCommand : IEditCommand
 
     public string Description => $"Sửa ô (cột {_columnIndex + 1})";
 
+    public bool ChangesStructure => false;
+
     public void Execute() => _row.SetCell(_columnIndex, _newValue);
 
     public void Undo() => _row.SetCell(_columnIndex, _oldValue);

@@ -20,7 +20,8 @@
 
         <Button Content="+ Thêm cột sắp xếp" Click="AddColumnButton_Click" HorizontalAlignment="Left" />
 
-        <ListView x:Name="ColumnsListView" ItemsSource="{x:Bind SortColumns}" MaxHeight="280" SelectionMode="None">
+        <ListView x:Name="ColumnsListView" ItemsSource="{x:Bind SortColumns}" MaxHeight="280" SelectionMode="None"
+                  ContainerContentChanging="ColumnsListView_ContainerContentChanging">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:SortColumnRow">
                     <Grid ColumnSpacing="6" Margin="0,4">
@@ -32,7 +33,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <ComboBox Grid.Column="0" ItemsSource="{Binding ColumnNames, ElementName=Root}"
+                        <ComboBox x:Name="ColumnComboBox" Grid.Column="0"
                                   SelectedIndex="{x:Bind ColumnIndex, Mode=TwoWay}" HorizontalAlignment="Stretch" />
                         <CheckBox Grid.Column="1" Content="Giảm dần" IsChecked="{x:Bind Descending, Mode=TwoWay}" />
                         <Button Grid.Column="2" Content="↑" Click="MoveUpButton_Click" Tag="{x:Bind}" />

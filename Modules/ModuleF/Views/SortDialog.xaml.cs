@@ -31,6 +31,18 @@ public sealed partial class SortDialog : ContentDialog
     public List<(int ColumnIndex, bool Descending)> BuildSortSpec() =>
         SortColumns.Select(r => (r.ColumnIndex, r.Descending)).ToList();
 
+    /// <summary>Sets each row's column ComboBox.ItemsSource directly, same fix as FilterDialog's
+    /// ConditionsListView_ContainerContentChanging - an ElementName binding declared inside a ListView's
+    /// DataTemplate does not reliably resolve back to a named element outside the template in WinUI,
+    /// which left this combobox empty.</summary>
+    private void ColumnsListView_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (args.ItemContainer?.ContentTemplateRoot is FrameworkElement root && root.FindName("ColumnComboBox") is ComboBox comboBox)
+        {
+            comboBox.ItemsSource = ColumnNames;
+        }
+    }
+
     private void AddColumnButton_Click(object sender, RoutedEventArgs e) => SortColumns.Add(new SortColumnRow());
 
     private void RemoveColumnButton_Click(object sender, RoutedEventArgs e)

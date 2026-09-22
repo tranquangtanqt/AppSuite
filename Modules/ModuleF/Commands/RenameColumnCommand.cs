@@ -19,6 +19,11 @@ public sealed class RenameColumnCommand : IEditCommand
 
     public string Description => $"Đổi tên cột '{_oldName}' → '{_newName}'";
 
+    /// <summary>Doesn't change row/column count, but still needs the DataGrid's column headers
+    /// rebuilt (they show the old name otherwise) - reuses the same "structural" refresh gate rather
+    /// than adding a third granularity just for this one case.</summary>
+    public bool ChangesStructure => true;
+
     public void Execute()
     {
         _column.Name = _newName;

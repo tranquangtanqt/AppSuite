@@ -36,30 +36,36 @@ public sealed class UndoRedoStack
         StateChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    public void Undo()
+    /// <summary>Returns the command that was undone (null if there was nothing to undo) so the caller
+    /// can check <see cref="IEditCommand.ChangesStructure"/> and only pay for a full view rebuild when
+    /// the undone command actually needs one.</summary>
+    public IEditCommand? Undo()
     {
         if (!CanUndo)
         {
-            return;
+            return null;
         }
 
         var command = _undo.Pop();
         command.Undo();
         _redo.Push(command);
         StateChanged?.Invoke(this, EventArgs.Empty);
+        return command;
     }
 
-    public void Redo()
+    /// <summary>Same contract as <see cref="Undo"/>, for Redo.</summary>
+    public IEditCommand? Redo()
     {
         if (!CanRedo)
         {
-            return;
+            return null;
         }
 
         var command = _redo.Pop();
         command.Execute();
         _undo.Push(command);
         StateChanged?.Invoke(this, EventArgs.Empty);
+        return command;
     }
 
     public void Clear()

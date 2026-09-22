@@ -20,6 +20,8 @@ public sealed class RemoveColumnCommand : IEditCommand
 
     public string Description => $"Xóa cột '{_document.Columns[_index].Name}'";
 
+    public bool ChangesStructure => true;
+
     public void Execute()
     {
         _removedColumn = _document.Columns[_index];

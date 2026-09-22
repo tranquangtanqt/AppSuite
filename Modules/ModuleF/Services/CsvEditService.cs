@@ -90,7 +90,7 @@ public sealed class CsvEditService : ICsvEditService
 
     public void PasteBlock(IReadOnlyList<CsvRow> targetRows, int startColumnIndex, IReadOnlyList<IReadOnlyList<string>> block)
     {
-        var subCommands = new List<SetCellCommand>();
+        var subCommands = new List<IEditCommand>();
         for (var r = 0; r < block.Count && r < targetRows.Count; r++)
         {
             var row = targetRows[r];
@@ -117,6 +117,29 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        UndoRedo.Do(new PasteCommand(subCommands));
+        UndoRedo.Do(new CompositeEditCommand(subCommands, $"Dán {subCommands.Count} ô"));
+    }
+
+    /// <summary>Batches an arbitrary set of cell writes (not necessarily a contiguous block - Find &
+    /// Replace All's matches can land anywhere) into one undoable command, the same way
+    /// <see cref="PasteBlock"/> does.</summary>
+    public void ReplaceCells(IReadOnlyList<(CsvRow Row, int ColumnIndex, string Value)> replacements)
+    {
+        var subCommands = new List<IEditCommand>();
+        foreach (var (row, columnIndex, value) in replacements)
+        {
+            var oldValue = row.GetCell(columnIndex);
+            if (oldValue != value)
+            {
+                subCommands.Add(new SetCellCommand(row, columnIndex, oldValue, value));
+            }
+        }
+
+        if (subCommands.Count == 0)
+        {
+            return;
+        }
+
+        UndoRedo.Do(new CompositeEditCommand(subCommands, $"Thay thế {subCommands.Count} ô"));
     }
 }

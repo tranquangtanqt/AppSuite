@@ -31,4 +31,5 @@ public interface ICsvEditService
     void RemoveColumn(int index);
     void RenameColumn(int index, string newName);
     void PasteBlock(IReadOnlyList<CsvRow> targetRows, int startColumnIndex, IReadOnlyList<IReadOnlyList<string>> block);
+    void ReplaceCells(IReadOnlyList<(CsvRow Row, int ColumnIndex, string Value)> replacements);
 }

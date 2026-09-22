@@ -21,6 +21,7 @@ public sealed partial class ModuleFViewModel : ObservableObject
     private readonly FilterService _filterService = new();
     private readonly SortService _sortService = new();
     private readonly StatisticsService _statisticsService = new();
+    private readonly IValidationService _validationService = new ValidationService();
 
     private FilterExpression? _activeFilter;
     private readonly Dictionary<int, string> _quickFilters = new();
@@ -174,11 +175,50 @@ public sealed partial class ModuleFViewModel : ObservableObject
         }
     }
 
+    /// <summary>Undo/Redo only mutate <see cref="ICsvEditService.Document"/> directly (see
+    /// UndoRedoStack.Undo/Redo) - a plain cell edit's Undo is cheap (the CsvRow raises its own
+    /// PropertyChanged, the DataGrid updates just that cell), but Undo/Redo of a row/column
+    /// add/remove/rename needs <see cref="RebuildView"/> and a DataGrid column rebuild to not go stale,
+    /// same as the forward action already does. Gated on IEditCommand.ChangesStructure rather than
+    /// unconditionally refreshing after every Undo/Redo, which would make even undoing a single cell
+    /// edit pay for a full RebuildView/RevalidateColumns pass (O(rows) or worse) on a large file.</summary>
     [RelayCommand(CanExecute = nameof(CanUndo))]
-    private void Undo() => _editService.UndoRedo.Undo();
+    private void Undo()
+    {
+        if (_editService.UndoRedo.Undo() is { ChangesStructure: true })
+        {
+            RefreshAfterStructuralChange();
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(CanRedo))]
-    private void Redo() => _editService.UndoRedo.Redo();
+    private void Redo()
+    {
+        if (_editService.UndoRedo.Redo() is { ChangesStructure: true })
+        {
+            RefreshAfterStructuralChange();
+        }
+    }
+
+    /// <summary>For Add/Remove/Rename Column - also rebuilds the DataGrid's columns, unlike
+    /// <see cref="RefreshAfterRowsChanged"/>.</summary>
+    private void RefreshAfterStructuralChange()
+    {
+        RefreshAfterRowsChanged();
+        ColumnCount = _editService.Document.Columns.Count;
+        ColumnsChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>For Add/Duplicate/Remove Row - deliberately does not raise <see cref="ColumnsChanged"/>:
+    /// that would make MainWindow.RebuildColumns() run on every row add/delete, which also resets the
+    /// per-column quick filter textboxes (see RebuildColumns' ClearQuickFilters call) - an unwanted
+    /// reset for an operation that never touches columns.</summary>
+    private void RefreshAfterRowsChanged()
+    {
+        RebuildView();
+        RowCount = _editService.Document.Rows.Count;
+        RevalidateColumns();
+    }
 
     /// <summary>viewRowIndex is a plain O(1) index into <see cref="ViewRows"/> (the DataGrid already
     /// knows the row's index from its container) - no need to search the document for it.</summary>
@@ -195,8 +235,7 @@ public sealed partial class ModuleFViewModel : ObservableObject
         var insertIndex = ResolveDocumentInsertIndex(afterViewRowIndex);
         _editService.AddRow(insertIndex);
         var newRow = _editService.Document.Rows[insertIndex];
-        RebuildView();
-        RowCount = _editService.Document.Rows.Count;
+        RefreshAfterRowsChanged();
         return newRow;
     }
 
@@ -211,8 +250,7 @@ public sealed partial class ModuleFViewModel : ObservableObject
 
         _editService.DuplicateRow(documentIndex);
         var newRow = _editService.Document.Rows[documentIndex + 1];
-        RebuildView();
-        RowCount = _editService.Document.Rows.Count;
+        RefreshAfterRowsChanged();
         return newRow;
     }
 
@@ -239,8 +277,7 @@ public sealed partial class ModuleFViewModel : ObservableObject
             _editService.RemoveRow(index);
         }
 
-        RebuildView();
-        RowCount = _editService.Document.Rows.Count;
+        RefreshAfterRowsChanged();
 
         var rows = _editService.Document.Rows;
         if (rows.Count == 0)
@@ -254,23 +291,19 @@ public sealed partial class ModuleFViewModel : ObservableObject
     public void AddColumn(int index, string name)
     {
         _editService.AddColumn(index, name);
-        ColumnCount = _editService.Document.Columns.Count;
-        ColumnsChanged?.Invoke(this, EventArgs.Empty);
-        RebuildView();
+        RefreshAfterStructuralChange();
     }
 
     public void RemoveColumn(int index)
     {
         _editService.RemoveColumn(index);
-        ColumnCount = _editService.Document.Columns.Count;
-        ColumnsChanged?.Invoke(this, EventArgs.Empty);
-        RebuildView();
+        RefreshAfterStructuralChange();
     }
 
     public void RenameColumn(int index, string newName)
     {
         _editService.RenameColumn(index, newName);
-        ColumnsChanged?.Invoke(this, EventArgs.Empty);
+        RefreshAfterStructuralChange();
     }
 
     public void PasteBlock(int viewRowIndex, int columnIndex, IReadOnlyList<IReadOnlyList<string>> block)
@@ -318,10 +351,18 @@ public sealed partial class ModuleFViewModel : ObservableObject
         _quickFilters.Clear();
     }
 
+    /// <summary>So MainWindow can re-open the sort dialog pre-filled with the currently applied sort
+    /// spec, instead of always starting from a blank row.</summary>
+    public IReadOnlyList<(int ColumnIndex, bool Descending)> ActiveSort => _activeSort;
+
+    public bool IsSortActive => _activeSort.Count > 0;
+
     public void ApplySort(List<(int ColumnIndex, bool Descending)> sortSpec)
     {
         _activeSort = sortSpec;
         RebuildView();
+        OnPropertyChanged(nameof(ActiveSort));
+        OnPropertyChanged(nameof(IsSortActive));
     }
 
     public void Find(string query, SearchMode mode, bool caseSensitive)
@@ -359,6 +400,9 @@ public sealed partial class ModuleFViewModel : ObservableObject
         return CurrentMatch;
     }
 
+    /// <summary>Routed through <see cref="ICsvEditService.ReplaceCells"/> rather than calling
+    /// <see cref="SetCell"/> per match, so replacing N matches is one undoable command instead of N -
+    /// otherwise undoing a "Replace All" of 50 matches took 50 presses of Ctrl+Z.</summary>
     public int ReplaceAllMatches(string replacement)
     {
         if (_currentMatches.Count == 0)
@@ -366,10 +410,10 @@ public sealed partial class ModuleFViewModel : ObservableObject
             return 0;
         }
 
-        foreach (var match in _currentMatches)
-        {
-            SetCell(match.RowIndex, match.ColumnIndex, replacement);
-        }
+        var replacements = _currentMatches
+            .Select(match => (ViewRows[match.RowIndex], match.ColumnIndex, replacement))
+            .ToList();
+        _editService.ReplaceCells(replacements);
 
         var count = _currentMatches.Count;
         _currentMatches.Clear();
@@ -405,6 +449,28 @@ public sealed partial class ModuleFViewModel : ObservableObject
         foreach (var row in query)
         {
             ViewRows.Add(row);
+        }
+    }
+
+    /// <summary>Re-runs the "column looks suspiciously empty" check (<see cref="IValidationService.ValidateColumns"/>)
+    /// after a row/column count changes - it was only ever computed once, right after Open, so deleting
+    /// (or adding) rows never updated the "Cảnh báo" warnings even though the empty-cell ratio they're
+    /// based on had changed. Only replaces that specific kind of issue (ColumnIndex set, RowIndex not) -
+    /// leaves alone the per-row parse warnings and encoding/delimiter warnings from Open, which aren't
+    /// affected by in-place edits the same way.</summary>
+    private void RevalidateColumns()
+    {
+        for (var i = Issues.Count - 1; i >= 0; i--)
+        {
+            if (Issues[i].ColumnIndex is not null && Issues[i].RowIndex is null)
+            {
+                Issues.RemoveAt(i);
+            }
+        }
+
+        foreach (var issue in _validationService.ValidateColumns(_editService.Document))
+        {
+            Issues.Add(issue);
         }
     }
 
