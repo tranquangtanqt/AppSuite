@@ -64,6 +64,9 @@
                 <Button Click="DeleteRowButton_Click" ToolTipService.ToolTip="Xóa dòng đang chọn">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE738;" FontSize="14" /><TextBlock Text="Delete Row" /></StackPanel>
                 </Button>
+                <Button Click="DuplicateRowButton_Click" ToolTipService.ToolTip="Sao chép dòng đang chọn">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy Row" /></StackPanel>
+                </Button>
                 <Button Click="AddColumnButton_Click" ToolTipService.ToolTip="Thêm cột">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE711;" FontSize="14" /><TextBlock Text="Add Column" /></StackPanel>
                 </Button>

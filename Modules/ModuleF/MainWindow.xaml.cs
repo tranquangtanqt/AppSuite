@@ -335,6 +335,14 @@ public sealed partial class MainWindow : Window
 
     private void DeleteRowButton_Click(object sender, RoutedEventArgs e) => DeleteSelectedRows();
 
+    private void DuplicateRowButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (Grid.SelectedIndex >= 0)
+        {
+            ViewModel.DuplicateRow(Grid.SelectedIndex);
+        }
+    }
+
     private void DeleteSelectedRows()
     {
         var indexes = Grid.SelectedItems.Cast<CsvRow>().Select(row => ViewModel.ViewRows.IndexOf(row)).Where(i => i >= 0).ToList();
@@ -520,13 +528,7 @@ public sealed partial class MainWindow : Window
         ViewModel.AddRow(anchor);
     }
 
-    private void DuplicateRowMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        if (Grid.SelectedIndex >= 0)
-        {
-            ViewModel.DuplicateRow(Grid.SelectedIndex);
-        }
-    }
+    private void DuplicateRowMenuItem_Click(object sender, RoutedEventArgs e) => DuplicateRowButton_Click(sender, e);
 
     private void IssuesListView_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
     {
