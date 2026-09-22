@@ -330,7 +330,7 @@ public sealed partial class MainWindow : Window
     private void AddRowButton_Click(object sender, RoutedEventArgs e)
     {
         int? anchor = Grid.SelectedIndex >= 0 ? Grid.SelectedIndex : null;
-        ViewModel.AddRow(anchor);
+        SelectRow(ViewModel.AddRow(anchor));
     }
 
     private void DeleteRowButton_Click(object sender, RoutedEventArgs e) => DeleteSelectedRows();
@@ -339,7 +339,7 @@ public sealed partial class MainWindow : Window
     {
         if (Grid.SelectedIndex >= 0)
         {
-            ViewModel.DuplicateRow(Grid.SelectedIndex);
+            SelectRow(ViewModel.DuplicateRow(Grid.SelectedIndex));
         }
     }
 
@@ -348,8 +348,29 @@ public sealed partial class MainWindow : Window
         var indexes = Grid.SelectedItems.Cast<CsvRow>().Select(row => ViewModel.ViewRows.IndexOf(row)).Where(i => i >= 0).ToList();
         if (indexes.Count > 0)
         {
-            ViewModel.RemoveRows(indexes);
+            SelectRow(ViewModel.RemoveRows(indexes));
         }
+    }
+
+    /// <summary>RebuildView() (called by AddRow/DuplicateRow/RemoveRows) clears and repopulates
+    /// ViewRows, which drops the DataGrid's selection/focus - this puts it back on the row the
+    /// operation cares about (the new row, the duplicate, or whatever slid into a deleted row's
+    /// place) so the user doesn't lose their place after every edit.</summary>
+    private void SelectRow(CsvRow? row)
+    {
+        if (row is null)
+        {
+            return;
+        }
+
+        var index = ViewModel.ViewRows.IndexOf(row);
+        if (index < 0)
+        {
+            return;
+        }
+
+        Grid.SelectedIndex = index;
+        Grid.ScrollIntoView(row, null);
     }
 
     private async void AddColumnButton_Click(object sender, RoutedEventArgs e)
@@ -522,11 +543,7 @@ public sealed partial class MainWindow : Window
 
     private void DeleteRowsMenuItem_Click(object sender, RoutedEventArgs e) => DeleteSelectedRows();
 
-    private void InsertRowMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        int? anchor = Grid.SelectedIndex >= 0 ? Grid.SelectedIndex : null;
-        ViewModel.AddRow(anchor);
-    }
+    private void InsertRowMenuItem_Click(object sender, RoutedEventArgs e) => AddRowButton_Click(sender, e);
 
     private void DuplicateRowMenuItem_Click(object sender, RoutedEventArgs e) => DuplicateRowButton_Click(sender, e);
 

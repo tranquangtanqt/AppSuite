@@ -188,34 +188,51 @@ public sealed partial class ModuleFViewModel : ObservableObject
         _editService.SetCell(row, columnIndex, value);
     }
 
-    public void AddRow(int? afterViewRowIndex)
+    /// <summary>Returns the newly inserted row so the View can restore the DataGrid's selection to it -
+    /// RebuildView() below clears and repopulates ViewRows, which drops the DataGrid's selection.</summary>
+    public CsvRow AddRow(int? afterViewRowIndex)
     {
         var insertIndex = ResolveDocumentInsertIndex(afterViewRowIndex);
         _editService.AddRow(insertIndex);
+        var newRow = _editService.Document.Rows[insertIndex];
         RebuildView();
         RowCount = _editService.Document.Rows.Count;
+        return newRow;
     }
 
-    public void DuplicateRow(int viewRowIndex)
+    /// <summary>Returns the duplicate row, for the same reason as <see cref="AddRow"/>.</summary>
+    public CsvRow? DuplicateRow(int viewRowIndex)
     {
         var documentIndex = _editService.Document.Rows.IndexOf(ViewRows[viewRowIndex]);
         if (documentIndex < 0)
         {
-            return;
+            return null;
         }
 
         _editService.DuplicateRow(documentIndex);
+        var newRow = _editService.Document.Rows[documentIndex + 1];
         RebuildView();
         RowCount = _editService.Document.Rows.Count;
+        return newRow;
     }
 
-    public void RemoveRows(IReadOnlyList<int> viewRowIndexes)
+    /// <summary>Returns the row that should become the new selection (the row that slid into the first
+    /// removed row's place, or the new last row if the removal reached the end), for the same reason as
+    /// <see cref="AddRow"/>.</summary>
+    public CsvRow? RemoveRows(IReadOnlyList<int> viewRowIndexes)
     {
         var documentIndexes = viewRowIndexes
             .Select(i => _editService.Document.Rows.IndexOf(ViewRows[i]))
             .Where(i => i >= 0)
             .OrderByDescending(i => i)
             .ToList();
+
+        if (documentIndexes.Count == 0)
+        {
+            return null;
+        }
+
+        var firstRemovedIndex = documentIndexes[^1];
 
         foreach (var index in documentIndexes)
         {
@@ -224,6 +241,14 @@ public sealed partial class ModuleFViewModel : ObservableObject
 
         RebuildView();
         RowCount = _editService.Document.Rows.Count;
+
+        var rows = _editService.Document.Rows;
+        if (rows.Count == 0)
+        {
+            return null;
+        }
+
+        return rows[Math.Min(firstRemovedIndex, rows.Count - 1)];
     }
 
     public void AddColumn(int index, string name)
