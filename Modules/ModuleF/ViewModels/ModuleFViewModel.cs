@@ -149,6 +149,7 @@ public sealed partial class ModuleFViewModel : ObservableObject
             await _fileService.SaveAsync(_editService.Document, progress, cancellationToken);
             _editService.UndoRedo.MarkClean();
             IsDirty = _editService.UndoRedo.IsDirty;
+            RevalidateColumns();
             StatusMessage = $"Đã lưu {_editService.Document.FileName}.";
         }
         finally
@@ -167,6 +168,7 @@ public sealed partial class ModuleFViewModel : ObservableObject
             FileName = _editService.Document.FileName;
             _editService.UndoRedo.MarkClean();
             IsDirty = _editService.UndoRedo.IsDirty;
+            RevalidateColumns();
             StatusMessage = $"Đã lưu {_editService.Document.FileName}.";
         }
         finally
@@ -452,23 +454,29 @@ public sealed partial class ModuleFViewModel : ObservableObject
         }
     }
 
-    /// <summary>Re-runs the "column looks suspiciously empty" check (<see cref="IValidationService.ValidateColumns"/>)
-    /// after a row/column count changes - it was only ever computed once, right after Open, so deleting
-    /// (or adding) rows never updated the "Cảnh báo" warnings even though the empty-cell ratio they're
-    /// based on had changed. Only replaces that specific kind of issue (ColumnIndex set, RowIndex not) -
-    /// leaves alone the per-row parse warnings and encoding/delimiter warnings from Open, which aren't
-    /// affected by in-place edits the same way.</summary>
+    /// <summary>Re-runs the checks that can be re-derived from the current in-memory document - "column
+    /// looks suspiciously empty" and "row's field count doesn't match the header" - after a structural
+    /// edit or a Save. These were only ever computed once, right after Open, so neither deleting rows
+    /// nor fixing a malformed row (typing into its missing trailing cells) ever updated the "Cảnh báo"
+    /// list. Only discards issues marked <see cref="ValidationIssue.IsRecomputable"/> - leaves alone the
+    /// encoding/delimiter warnings and unclosed-quote errors from Open, which describe the original file
+    /// text and can't be re-derived from parsed rows.</summary>
     private void RevalidateColumns()
     {
         for (var i = Issues.Count - 1; i >= 0; i--)
         {
-            if (Issues[i].ColumnIndex is not null && Issues[i].RowIndex is null)
+            if (Issues[i].IsRecomputable)
             {
                 Issues.RemoveAt(i);
             }
         }
 
         foreach (var issue in _validationService.ValidateColumns(_editService.Document))
+        {
+            Issues.Add(issue);
+        }
+
+        foreach (var issue in _validationService.ValidateFieldCounts(_editService.Document))
         {
             Issues.Add(issue);
         }

@@ -138,6 +138,7 @@ public sealed class CsvFileService : ICsvFileService
                         Severity = ValidationSeverity.Warning,
                         Message = $"Dòng {rowIndex + 1}: có {fields.Length} field, header có {columns.Count} cột.",
                         RowIndex = rowIndex,
+                        IsRecomputable = true,
                     });
                 }
 
