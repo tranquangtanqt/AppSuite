@@ -76,7 +76,6 @@ public sealed class CsvFileService : ICsvFileService
         document.FilePath = filePath;
         document.Encoding = encodingResult.Encoding;
         document.Delimiter = delimiterResult.Delimiter;
-        document.IsDirty = false;
 
         issues.AddRange(_validationService.ValidateColumns(document));
 
@@ -103,7 +102,6 @@ public sealed class CsvFileService : ICsvFileService
 
         progress?.Report(100);
         document.FilePath = filePath;
-        document.IsDirty = false;
     }
 
     private static CsvDocument ParseDocument(

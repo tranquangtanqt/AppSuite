@@ -7,10 +7,24 @@ public sealed class UndoRedoStack
     private readonly Stack<IEditCommand> _undo = new();
     private readonly Stack<IEditCommand> _redo = new();
 
+    /// <summary>The undo-stack top at the moment of the last Save (or Open/Clear), null when that
+    /// moment was an empty stack. Comparing it by reference against the current top is what lets
+    /// <see cref="IsDirty"/> answer correctly after an Undo/Redo, not just after a fresh edit: content
+    /// is back to the saved state iff we are back at the exact same position in the linear command
+    /// history, and reference identity of the top command is a reliable stand-in for that position
+    /// (Do() after an Undo discards the old redo instances, so identities never get reused across
+    /// diverging timelines).</summary>
+    private IEditCommand? _cleanMarker;
+    private bool _cleanMarkerIsEmptyStack = true;
+
     public bool CanUndo => _undo.Count > 0;
     public bool CanRedo => _redo.Count > 0;
     public string? UndoDescription => _undo.Count > 0 ? _undo.Peek().Description : null;
     public string? RedoDescription => _redo.Count > 0 ? _redo.Peek().Description : null;
+
+    public bool IsDirty => _cleanMarkerIsEmptyStack
+        ? _undo.Count > 0
+        : _undo.Count == 0 || !ReferenceEquals(_undo.Peek(), _cleanMarker);
 
     public event EventHandler? StateChanged;
 
@@ -52,6 +66,15 @@ public sealed class UndoRedoStack
     {
         _undo.Clear();
         _redo.Clear();
+        MarkClean();
         StateChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Call after a successful Save/Save As so <see cref="IsDirty"/> tracks the document's
+    /// position in the undo history relative to right now, instead of a one-shot boolean.</summary>
+    public void MarkClean()
+    {
+        _cleanMarkerIsEmptyStack = _undo.Count == 0;
+        _cleanMarker = _cleanMarkerIsEmptyStack ? null : _undo.Peek();
     }
 }

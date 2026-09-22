@@ -38,7 +38,7 @@ public sealed partial class ModuleFViewModel : ObservableObject
             OnPropertyChanged(nameof(CanRedo));
             OnPropertyChanged(nameof(UndoDescription));
             OnPropertyChanged(nameof(RedoDescription));
-            IsDirty = _editService.Document.IsDirty;
+            IsDirty = _editService.UndoRedo.IsDirty;
         };
     }
 
@@ -126,7 +126,6 @@ public sealed partial class ModuleFViewModel : ObservableObject
             DelimiterLabel = DescribeDelimiter(result.DelimiterResult.Delimiter);
             RowCount = result.Document.Rows.Count;
             ColumnCount = result.Document.Columns.Count;
-            IsDirty = false;
             StatusMessage = $"Đã mở {result.Document.FileName} - {RowCount:N0} dòng, {ColumnCount:N0} cột.";
             ColumnsChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -147,7 +146,8 @@ public sealed partial class ModuleFViewModel : ObservableObject
         {
             var progress = new Progress<int>(p => ProgressPercent = p);
             await _fileService.SaveAsync(_editService.Document, progress, cancellationToken);
-            IsDirty = false;
+            _editService.UndoRedo.MarkClean();
+            IsDirty = _editService.UndoRedo.IsDirty;
             StatusMessage = $"Đã lưu {_editService.Document.FileName}.";
         }
         finally
@@ -164,7 +164,8 @@ public sealed partial class ModuleFViewModel : ObservableObject
             var progress = new Progress<int>(p => ProgressPercent = p);
             await _fileService.SaveAsAsync(_editService.Document, filePath, progress, cancellationToken);
             FileName = _editService.Document.FileName;
-            IsDirty = false;
+            _editService.UndoRedo.MarkClean();
+            IsDirty = _editService.UndoRedo.IsDirty;
             StatusMessage = $"Đã lưu {_editService.Document.FileName}.";
         }
         finally

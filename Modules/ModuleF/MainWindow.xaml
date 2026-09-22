@@ -30,8 +30,11 @@
                 <Button x:Name="OpenButton" Click="OpenButton_Click" ToolTipService.ToolTip="Mở file CSV/TSV">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Open" /></StackPanel>
                 </Button>
-                <Button x:Name="SaveButton" Click="SaveButton_Click" IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" ToolTipService.ToolTip="Lưu">
+                <Button x:Name="SaveButton" Click="SaveButton_Click" IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" ToolTipService.ToolTip="Lưu (Ctrl+S)">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Save" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="S" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
                 </Button>
                 <Button x:Name="SaveAsButton" Click="SaveAsButton_Click" ToolTipService.ToolTip="Lưu thành file khác">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE792;" FontSize="14" /><TextBlock Text="Save As" /></StackPanel>
@@ -41,9 +44,16 @@
 
                 <Button Command="{x:Bind ViewModel.UndoCommand}" ToolTipService.ToolTip="{x:Bind ViewModel.UndoDescription, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE7A7;" FontSize="14" /><TextBlock Text="Undo" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Z" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
                 </Button>
                 <Button Command="{x:Bind ViewModel.RedoCommand}" ToolTipService.ToolTip="{x:Bind ViewModel.RedoDescription, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE7A6;" FontSize="14" /><TextBlock Text="Redo" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Y" Modifiers="Control" />
+                        <KeyboardAccelerator Key="Z" Modifiers="Control,Shift" />
+                    </Button.KeyboardAccelerators>
                 </Button>
 
                 <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
@@ -66,11 +76,17 @@
 
                 <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                <Button Click="FindButton_Click" ToolTipService.ToolTip="Tìm kiếm">
+                <Button Click="FindButton_Click" ToolTipService.ToolTip="Tìm kiếm (Ctrl+F)">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE721;" FontSize="14" /><TextBlock Text="Find" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
                 </Button>
-                <Button Click="ReplaceButton_Click" ToolTipService.ToolTip="Tìm và thay thế">
+                <Button Click="ReplaceButton_Click" ToolTipService.ToolTip="Tìm và thay thế (Ctrl+H)">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8AC;" FontSize="14" /><TextBlock Text="Replace" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="H" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
                 </Button>
                 <Button Click="FilterButton_Click" ToolTipService.ToolTip="Lọc dữ liệu">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><TextBlock Text="Filter" /></StackPanel>

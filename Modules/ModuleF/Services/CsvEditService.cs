@@ -28,14 +28,12 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        Document.IsDirty = true;
         UndoRedo.Do(new SetCellCommand(row, columnIndex, oldValue, value));
     }
 
     public void AddRow(int index)
     {
         var blankRow = new CsvRow(Enumerable.Repeat(string.Empty, Document.Columns.Count));
-        Document.IsDirty = true;
         UndoRedo.Do(new AddRowCommand(Document, index, blankRow));
     }
 
@@ -46,7 +44,6 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        Document.IsDirty = true;
         UndoRedo.Do(new DuplicateRowCommand(Document, index, Document.Rows[index]));
     }
 
@@ -57,13 +54,11 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        Document.IsDirty = true;
         UndoRedo.Do(new RemoveRowCommand(Document, index));
     }
 
     public void AddColumn(int index, string name)
     {
-        Document.IsDirty = true;
         UndoRedo.Do(new AddColumnCommand(Document, index, name));
     }
 
@@ -74,7 +69,6 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        Document.IsDirty = true;
         UndoRedo.Do(new RemoveColumnCommand(Document, index));
     }
 
@@ -91,7 +85,6 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        Document.IsDirty = true;
         UndoRedo.Do(new RenameColumnCommand(Document, column, newName));
     }
 
@@ -124,7 +117,6 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        Document.IsDirty = true;
         UndoRedo.Do(new PasteCommand(subCommands));
     }
 }

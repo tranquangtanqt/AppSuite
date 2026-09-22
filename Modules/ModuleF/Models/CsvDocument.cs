@@ -21,7 +21,6 @@ public sealed class CsvDocument
     public string FileName => string.IsNullOrEmpty(FilePath) ? "(chưa lưu)" : Path.GetFileName(FilePath);
     public Encoding Encoding { get; set; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
     public char Delimiter { get; set; } = ',';
-    public bool IsDirty { get; set; }
 
     /// <summary>Raised once after Columns/Rows are replaced wholesale (Open, or Undo/Redo of a
     /// structural command). Subscribers should rebuild DataGrid columns and reset ItemsSource.</summary>
