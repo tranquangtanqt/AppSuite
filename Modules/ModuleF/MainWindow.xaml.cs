@@ -699,7 +699,9 @@ public sealed partial class MainWindow : Window
 
     private async void FilterButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new FilterDialog(ViewModel.Columns, null) { XamlRoot = Content.XamlRoot };
+        // Passes the currently applied filter (not null) so re-opening the dialog shows the conditions
+        // that are actually active right now, instead of always starting from a blank row.
+        var dialog = new FilterDialog(ViewModel.Columns, ViewModel.ActiveFilter) { XamlRoot = Content.XamlRoot };
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
         {
@@ -710,6 +712,11 @@ public sealed partial class MainWindow : Window
             ViewModel.ApplyFilter(null);
         }
     }
+
+    /// <summary>Clears the active advanced filter without opening the dialog - the dialog itself closes
+    /// as soon as you apply a filter, so this is the fast path to undo it afterwards instead of
+    /// reopening the dialog just to press "Bỏ lọc" again.</summary>
+    private void ClearActiveFilterButton_Click(object sender, RoutedEventArgs e) => ViewModel.ApplyFilter(null);
 
     private async void SortButton_Click(object sender, RoutedEventArgs e)
     {

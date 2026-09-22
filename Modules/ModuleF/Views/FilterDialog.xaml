@@ -14,7 +14,16 @@
     CloseButtonText="Hủy"
     DefaultButton="Primary">
 
-    <StackPanel Spacing="10" MinWidth="520" MaxHeight="480">
+    <!-- ContentDialog's default Fluent style caps its content at ~548px wide (ThemeResource
+         "ContentDialogMaxWidth") - barely enough for this row's two 150px-ish comboboxes plus the NOT
+         checkbox and delete button, so the Value TextBox's "*" column (whatever's left over) was being
+         squeezed down to a sliver instead of a usable text field. Overriding the resource here widens
+         the whole dialog so that column actually has room. -->
+    <ContentDialog.Resources>
+        <x:Double x:Key="ContentDialogMaxWidth">720</x:Double>
+    </ContentDialog.Resources>
+
+    <StackPanel Spacing="10" MinWidth="680" MaxHeight="480">
         <ComboBox x:Name="JoinComboBox" Header="Kết hợp các điều kiện" SelectedIndex="0" HorizontalAlignment="Left">
             <ComboBoxItem Content="AND (thỏa mãn tất cả)" />
             <ComboBoxItem Content="OR (thỏa mãn 1 trong các điều kiện)" />
@@ -22,20 +31,20 @@
 
         <Button Content="+ Thêm điều kiện" Click="AddConditionButton_Click" HorizontalAlignment="Left" />
 
-        <ListView x:Name="ConditionsListView" ItemsSource="{x:Bind Conditions}" MaxHeight="320" SelectionMode="None">
+        <ListView x:Name="ConditionsListView" ItemsSource="{x:Bind Conditions}" MaxHeight="320" SelectionMode="None"
+                  ContainerContentChanging="ConditionsListView_ContainerContentChanging">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:FilterConditionRow">
                     <Grid ColumnSpacing="6" Margin="0,4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="160" />
                             <ColumnDefinition Width="150" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" MinWidth="140" />
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <ComboBox Grid.Column="0" ItemsSource="{Binding ColumnNames, ElementName=Root}"
-                                  SelectedIndex="{x:Bind ColumnIndex, Mode=TwoWay}" />
+                        <ComboBox x:Name="ColumnComboBox" Grid.Column="0" SelectedIndex="{x:Bind ColumnIndex, Mode=TwoWay}" />
 
                         <ComboBox Grid.Column="1" SelectedIndex="{x:Bind OperatorIndex, Mode=TwoWay}">
                             <ComboBoxItem Content="=" />

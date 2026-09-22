@@ -94,6 +94,10 @@
                 <Button Click="FilterButton_Click" ToolTipService.ToolTip="Lọc dữ liệu">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><TextBlock Text="Filter" /></StackPanel>
                 </Button>
+                <Button Click="ClearActiveFilterButton_Click" IsEnabled="{x:Bind ViewModel.IsFilterActive, Mode=OneWay}"
+                        ToolTipService.ToolTip="Bỏ lọc đang áp dụng">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><FontIcon Glyph="&#xE10A;" FontSize="10" /><TextBlock Text="Bỏ lọc" /></StackPanel>
+                </Button>
                 <Button Click="SortButton_Click" ToolTipService.ToolTip="Sắp xếp">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8CB;" FontSize="14" /><TextBlock Text="Sort" /></StackPanel>
                 </Button>

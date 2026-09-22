@@ -279,10 +279,19 @@ public sealed partial class ModuleFViewModel : ObservableObject
         _editService.PasteBlock(targetRows, columnIndex, block);
     }
 
+    /// <summary>The advanced filter dialog's own state, so MainWindow can re-open it pre-filled with
+    /// the currently applied conditions, and so toolbar buttons can show/enable a quick "clear" action
+    /// without the dialog being open.</summary>
+    public FilterExpression? ActiveFilter => _activeFilter;
+
+    public bool IsFilterActive => _activeFilter is not null;
+
     public void ApplyFilter(FilterExpression? filter)
     {
         _activeFilter = filter is { Conditions.Count: > 0 } ? filter : null;
         RebuildView();
+        OnPropertyChanged(nameof(ActiveFilter));
+        OnPropertyChanged(nameof(IsFilterActive));
     }
 
     /// <summary>Per-column "contains" filter typed directly into the DataGrid's column header row

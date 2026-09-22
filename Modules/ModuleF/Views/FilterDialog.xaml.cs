@@ -49,6 +49,20 @@ public sealed partial class FilterDialog : ContentDialog
         return expression;
     }
 
+    /// <summary>Sets each row's column ComboBox.ItemsSource directly, rather than
+    /// "{Binding ColumnNames, ElementName=Root}" in the DataTemplate (tried and reverted) - an
+    /// ElementName binding declared inside a ListView's DataTemplate does not reliably resolve back to
+    /// a named element outside the template in WinUI, which left the combobox empty. This fires as each
+    /// row's container is (re)used, including on virtualized recycling, so it always has the list by
+    /// the time the row's TwoWay ColumnIndex binding tries to apply a selection.</summary>
+    private void ConditionsListView_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (args.ItemContainer?.ContentTemplateRoot is FrameworkElement root && root.FindName("ColumnComboBox") is ComboBox comboBox)
+        {
+            comboBox.ItemsSource = ColumnNames;
+        }
+    }
+
     private void AddConditionButton_Click(object sender, RoutedEventArgs e) => Conditions.Add(new FilterConditionRow());
 
     private void RemoveConditionButton_Click(object sender, RoutedEventArgs e)
