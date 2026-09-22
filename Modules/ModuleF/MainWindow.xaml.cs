@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Numerics;
 using CommunityToolkit.WinUI.UI.Controls;
 using CommunityToolkit.WinUI.UI.Controls.Primitives;
 using Microsoft.UI.Xaml;
@@ -10,6 +11,7 @@ using ModuleF.Models;
 using ModuleF.Services;
 using ModuleF.ViewModels;
 using ModuleF.Views;
+using Windows.Foundation;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 
@@ -38,6 +40,14 @@ public sealed partial class MainWindow : Window
 {
     private CancellationTokenSource? _currentOperationCts;
     private string? _currentFilePath;
+
+    // ----- Fill handle drag state (see FillHandleLayer in MainWindow.xaml) -----
+    private ScrollViewer? _gridScrollViewer;
+    private bool _isFillDragging;
+    private int _fillSourceRowIndex = -1;
+    private int _fillSourceColumnIndex = -1;
+    private string _fillSourceValue = string.Empty;
+    private int _fillTargetRowIndex = -1;
 
     public MainWindow()
     {
@@ -236,6 +246,237 @@ public sealed partial class MainWindow : Window
         var columnIndex = Grid.Columns.IndexOf(e.Column);
         ViewModel.SetCell(viewRowIndex, columnIndex, textBox.Text);
     }
+
+    // ----- Fill handle (Excel-style drag-to-fill) -----
+
+    private void Grid_Loaded(object sender, RoutedEventArgs e)
+    {
+        _gridScrollViewer ??= FindDescendants<ScrollViewer>(Grid).FirstOrDefault();
+        if (_gridScrollViewer is not null)
+        {
+            _gridScrollViewer.ViewChanged += (_, _) => UpdateFillHandlePosition();
+        }
+    }
+
+    private void Grid_CurrentCellChanged(object? sender, object e) => UpdateFillHandlePosition();
+
+    private void Grid_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateFillHandlePosition();
+
+    /// <summary>Repositions the handle onto the bottom-right corner of the current cell, or hides it
+    /// when there is no valid current cell or its row isn't realized on screen right now (DataGrid
+    /// virtualizes rows, so <see cref="DataGrid.GetRowFromItem"/> returns null once a row scrolls out
+    /// of view).</summary>
+    private void UpdateFillHandlePosition()
+    {
+        if (_isFillDragging)
+        {
+            return;
+        }
+
+        FillHandle.Visibility = Visibility.Collapsed;
+
+        var rowIndex = Grid.SelectedIndex;
+        var column = Grid.CurrentColumn;
+        if (rowIndex < 0 || rowIndex >= ViewModel.ViewRows.Count || column is null)
+        {
+            return;
+        }
+
+        if (GetCellRect(rowIndex, column) is not { } rect || rect.Bottom < 0 || rect.Top > FillHandleLayer.ActualHeight)
+        {
+            return;
+        }
+
+        Canvas.SetLeft(FillHandle, rect.Right - (FillHandle.Width / 2));
+        Canvas.SetTop(FillHandle, rect.Bottom - (FillHandle.Height / 2));
+        FillHandle.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>The realized cell's bounds, translated into <see cref="FillHandleLayer"/>'s coordinate
+    /// space - null if the row isn't currently realized (scrolled out of view). Height comes from the
+    /// row container, not the cell's content element (a TextBlock/TextBox that's normally vertically
+    /// centered and shorter than the row) - using the content element's own height would put the
+    /// corner mid-cell instead of on the actual gridline. Width/X still come from the content element:
+    /// unlike <see cref="DataGridColumn.ActualWidth"/>, that matches what's actually rendered.</summary>
+    private Rect? GetCellRect(int viewRowIndex, DataGridColumn column)
+    {
+        if (viewRowIndex < 0 || viewRowIndex >= ViewModel.ViewRows.Count)
+        {
+            return null;
+        }
+
+        if (FindRowContainer(viewRowIndex) is not { } container || column.GetCellContent(container) is not FrameworkElement cellContent)
+        {
+            return null;
+        }
+
+        var rowTop = container.TransformToVisual(FillHandleLayer).TransformPoint(new Point(0, 0)).Y;
+        var cellTopLeft = cellContent.TransformToVisual(FillHandleLayer).TransformPoint(new Point(0, 0));
+        return new Rect(cellTopLeft.X, rowTop, cellContent.ActualWidth, container.ActualHeight);
+    }
+
+    /// <summary>Finds the realized <see cref="DataGridRow"/> for a view-row index by walking the visual
+    /// tree rather than going through the item (the DataGrid virtualizes rows, so only realized ones
+    /// exist as containers at all) - null if that row is currently scrolled out of view.</summary>
+    private DataGridRow? FindRowContainer(int viewRowIndex) =>
+        FindDescendants<DataGridRow>(Grid).FirstOrDefault(row => row.GetIndex() == viewRowIndex);
+
+    private void FillHandle_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        var rowIndex = Grid.SelectedIndex;
+        var column = Grid.CurrentColumn;
+        if (rowIndex < 0 || rowIndex >= ViewModel.ViewRows.Count || column is null)
+        {
+            return;
+        }
+
+        _isFillDragging = true;
+        _fillSourceRowIndex = rowIndex;
+        _fillSourceColumnIndex = Grid.Columns.IndexOf(column);
+        _fillSourceValue = ViewModel.ViewRows[rowIndex].GetCell(_fillSourceColumnIndex);
+        _fillTargetRowIndex = rowIndex;
+
+        FillHandle.CapturePointer(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void FillHandle_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isFillDragging)
+        {
+            return;
+        }
+
+        // FindElementsInHostCoordinates needs the point in the *window's* coordinate space, not the
+        // Grid's - GetCurrentPoint(null) is what returns that (GetCurrentPoint(Grid) would silently
+        // hit-test the wrong location and this drag would never register a target row).
+        var position = e.GetCurrentPoint(null).Position;
+        if (FindRowIndexAtPoint(position) is { } hoveredRowIndex)
+        {
+            _fillTargetRowIndex = Math.Max(_fillSourceRowIndex, hoveredRowIndex);
+            UpdateFillPreview();
+        }
+
+        e.Handled = true;
+    }
+
+    private void FillHandle_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_isFillDragging)
+        {
+            return;
+        }
+
+        // Order matters: ReleasePointerCapture() synchronously raises PointerCaptureLost, whose handler
+        // resets all the drag state below - calling it first would wipe out the source/target indices
+        // before CompleteFillDrag gets to read them.
+        CompleteFillDrag(e.KeyModifiers.HasFlag(Windows.System.VirtualKeyModifiers.Control));
+        FillHandle.ReleasePointerCapture(e.Pointer);
+        e.Handled = true;
+    }
+
+    private void FillHandle_PointerCaptureLost(object sender, PointerRoutedEventArgs e)
+    {
+        if (_isFillDragging)
+        {
+            ResetFillDragState();
+        }
+    }
+
+    /// <summary>Hit-tests for the <see cref="DataGridRow"/> under a point (in the app window's
+    /// coordinate space - see the caller) rather than computing a row index from pixel offsets: robust
+    /// regardless of per-row height and unaffected by virtualization/scroll position, since it only
+    /// asks about whatever is actually rendered at that point right now.</summary>
+    private int? FindRowIndexAtPoint(Point pointInWindow)
+    {
+        foreach (var element in VisualTreeHelper.FindElementsInHostCoordinates(pointInWindow, Grid))
+        {
+            if (FindAncestorOrSelf<DataGridRow>(element) is { } row)
+            {
+                return row.GetIndex();
+            }
+        }
+
+        return null;
+    }
+
+    private void UpdateFillPreview()
+    {
+        var column = Grid.Columns[_fillSourceColumnIndex];
+        if (GetCellRect(_fillSourceRowIndex, column) is not { } start || GetCellRect(_fillTargetRowIndex, column) is not { } end)
+        {
+            FillPreviewBorder.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        Canvas.SetLeft(FillPreviewBorder, start.X);
+        Canvas.SetTop(FillPreviewBorder, start.Y);
+        FillPreviewBorder.Width = start.Width;
+        FillPreviewBorder.Height = Math.Max(0, end.Bottom - start.Top);
+        FillPreviewBorder.Visibility = Visibility.Visible;
+    }
+
+    /// <summary>Applies the drag: rows below the source get the source cell's value, or - holding Ctrl,
+    /// and only when that value parses as an integer - the value plus their offset from the source row
+    /// (5001, 5002, 5003, ...). Routed through <see cref="ModuleFViewModel.PasteBlock"/> so the whole
+    /// fill is one undoable command, same as an actual paste.</summary>
+    private void CompleteFillDrag(bool incrementNumeric)
+    {
+        var sourceRowIndex = _fillSourceRowIndex;
+        var columnIndex = _fillSourceColumnIndex;
+        var targetRowIndex = _fillTargetRowIndex;
+        var sourceValue = _fillSourceValue;
+
+        ResetFillDragState();
+
+        if (targetRowIndex <= sourceRowIndex)
+        {
+            return;
+        }
+
+        var baseNumber = BigInteger.Zero;
+        var canIncrement = incrementNumeric && BigInteger.TryParse(sourceValue, out baseNumber);
+        var rowCount = targetRowIndex - sourceRowIndex;
+        var block = new List<IReadOnlyList<string>>(rowCount);
+        for (var offset = 1; offset <= rowCount; offset++)
+        {
+            block.Add(new[] { canIncrement ? (baseNumber + offset).ToString() : sourceValue });
+        }
+
+        ViewModel.PasteBlock(sourceRowIndex + 1, columnIndex, block);
+    }
+
+    private void ResetFillDragState()
+    {
+        _isFillDragging = false;
+        _fillSourceRowIndex = -1;
+        _fillSourceColumnIndex = -1;
+        _fillSourceValue = string.Empty;
+        _fillTargetRowIndex = -1;
+        FillPreviewBorder.Visibility = Visibility.Collapsed;
+        UpdateFillHandlePosition();
+    }
+
+    private static IEnumerable<T> FindDescendants<T>(DependencyObject root) where T : DependencyObject
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match)
+            {
+                yield return match;
+            }
+
+            foreach (var nested in FindDescendants<T>(child))
+            {
+                yield return nested;
+            }
+        }
+    }
+
+    private static T? FindAncestorOrSelf<T>(DependencyObject element) where T : DependencyObject =>
+        element as T ?? FindAncestor<T>(element);
 
     // ----- Toolbar: Open/Save -----
 

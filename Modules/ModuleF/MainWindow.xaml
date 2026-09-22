@@ -137,7 +137,10 @@
             CanUserReorderColumns="False"
             CanUserSortColumns="False"
             LoadingRow="Grid_LoadingRow"
-            CellEditEnding="Grid_CellEditEnding">
+            CellEditEnding="Grid_CellEditEnding"
+            Loaded="Grid_Loaded"
+            CurrentCellChanged="Grid_CurrentCellChanged"
+            SelectionChanged="Grid_SelectionChanged">
             <controls:DataGrid.Resources>
                 <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
                 <DataTemplate x:Key="FilterHeaderTemplate">
@@ -178,6 +181,34 @@
                 </MenuFlyout>
             </controls:DataGrid.ContextFlyout>
         </controls:DataGrid>
+
+        <!-- Excel-like "fill handle": a small square glued to the bottom-right corner of the current
+             cell (see UpdateFillHandlePosition) - dragging it down copies the cell's value into the
+             rows below, or (holding Ctrl) auto-increments a numeric value by 1 per row instead of
+             copying it verbatim. A transparent Canvas overlaid on the DataGrid, same trick as the
+             corner button below: it has no Background of its own, so pointer hit-testing falls
+             through to the grid everywhere except the handle/preview, which do have one. -->
+        <Canvas x:Name="FillHandleLayer" Grid.Row="2">
+            <Border x:Name="FillPreviewBorder"
+                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1.5"
+                    Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.15"
+                    Visibility="Collapsed" IsHitTestVisible="False" />
+            <!-- The clickable hit area (16x16, Background=Transparent so it still participates in hit
+                 testing) is deliberately bigger than the 8x8 dot drawn inside it - an 8px target is
+                 hard to land a mouse on precisely, and both are centered on the same point so this
+                 doesn't change where the handle visually sits. -->
+            <Border x:Name="FillHandle" Width="16" Height="16" Background="Transparent"
+                    Visibility="Collapsed"
+                    PointerPressed="FillHandle_PointerPressed"
+                    PointerMoved="FillHandle_PointerMoved"
+                    PointerReleased="FillHandle_PointerReleased"
+                    PointerCaptureLost="FillHandle_PointerCaptureLost"
+                    ToolTipService.ToolTip="Kéo để điền giá trị xuống các dòng dưới (giữ Ctrl để tự tăng số)">
+                <Border Width="8" Height="8" Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        BorderBrush="White" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        IsHitTestVisible="False" />
+            </Border>
+        </Canvas>
 
         <!-- Overlaid on the DataGrid's empty top-left corner cell (same Grid.Row, added after so it
              draws on top) - the DataGrid has no public API for that corner's content (only an internal
