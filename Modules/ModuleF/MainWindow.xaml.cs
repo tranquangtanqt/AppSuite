@@ -682,15 +682,19 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        // CommunityToolkit.WinUI.UI.Controls.DataGrid 7.1.2 has no public ScrollIntoView(item, column)
-        // overload - selecting the row/column is enough to highlight the match; the grid does not
-        // reliably auto-scroll to it for very large result sets (documented limitation in PLAN.md).
         var row = ViewModel.ViewRows[cell.RowIndex];
         Grid.SelectedItem = row;
-        if (cell.ColumnIndex < Grid.Columns.Count)
+
+        var column = cell.ColumnIndex >= 0 && cell.ColumnIndex < Grid.Columns.Count ? Grid.Columns[cell.ColumnIndex] : null;
+        if (column is not null)
         {
-            Grid.CurrentColumn = Grid.Columns[cell.ColumnIndex];
+            Grid.CurrentColumn = column;
         }
+
+        // Scrolls both vertically (to the row) and horizontally (to the column) so the match is
+        // actually visible, not just selected - ScrollIntoView(item, column) does exist here despite
+        // what an earlier comment claimed (it's used the same way in SelectRow above).
+        Grid.ScrollIntoView(row, column);
     }
 
     private async void FilterButton_Click(object sender, RoutedEventArgs e)

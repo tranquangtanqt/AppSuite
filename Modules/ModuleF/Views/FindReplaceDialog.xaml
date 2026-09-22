@@ -13,7 +13,7 @@
     <StackPanel Spacing="10" MinWidth="360">
         <TextBox x:Name="FindTextBox" Header="Tìm" TextChanged="FindTextBox_TextChanged" />
 
-        <ComboBox x:Name="ModeComboBox" Header="Kiểu tìm" HorizontalAlignment="Stretch" SelectedIndex="0"
+        <ComboBox x:Name="ModeComboBox" Header="Kiểu tìm" HorizontalAlignment="Stretch"
                   SelectionChanged="ModeComboBox_SelectionChanged">
             <ComboBoxItem Content="Chứa (Contains)" />
             <ComboBoxItem Content="Khớp toàn bộ (Equals)" />

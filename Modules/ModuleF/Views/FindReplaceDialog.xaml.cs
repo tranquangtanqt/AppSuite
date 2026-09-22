@@ -20,8 +20,12 @@ public sealed partial class FindReplaceDialog : ContentDialog
 
     public FindReplaceDialog(ModuleFViewModel viewModel)
     {
-        InitializeComponent();
+        // Assigned before InitializeComponent(): ModeComboBox's XAML-declared SelectedIndex="0" fires
+        // ModeComboBox_SelectionChanged synchronously while InitializeComponent() runs, which calls
+        // RunFind() - with _viewModel still null at that point, that threw a NullReferenceException on
+        // the UI thread and crashed the app every time this dialog opened.
         _viewModel = viewModel;
+        InitializeComponent();
 
         _debounceTimer = DispatcherQueue.GetForCurrentThread().CreateTimer();
         _debounceTimer.Interval = TimeSpan.FromMilliseconds(300);
@@ -31,6 +35,11 @@ public sealed partial class FindReplaceDialog : ContentDialog
             _debounceTimer.Stop();
             RunFind();
         };
+
+        // Set after InitializeComponent() has fully returned (all named elements connected), not as a
+        // XAML-declared SelectedIndex="0" - that would fire ModeComboBox_SelectionChanged mid-parse,
+        // while later-declared elements like MatchStatusText aren't wired up yet.
+        ModeComboBox.SelectedIndex = 0;
     }
 
     private void FindTextBox_TextChanged(object sender, Microsoft.UI.Xaml.Controls.TextChangedEventArgs e)
