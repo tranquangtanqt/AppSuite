@@ -101,6 +101,41 @@ Mở `Modules\ModuleA\ModuleA.csproj` (double-click hoặc "Open Project" trong 
 Project, F5. Cửa sổ hiện PID và tham số dòng lệnh nhận được (rỗng khi chạy trực tiếp, có giá trị
 khi MainLauncher truyền qua trường `Arguments` trong `modules.json`).
 
+### Copy riêng một Module ra chạy ở nơi khác
+
+Mỗi Module `ProjectReference` tới `Common` (bắt buộc) và có thể tới `SharedUI` bằng đường dẫn tương
+đối (`..\..\Common\Common.csproj`, `..\..\SharedUI\SharedUI.csproj`) - nên chỉ copy đúng thư mục
+`Modules\<Tên module>\` sẽ thiếu 2 project này và báo lỗi "Unable to find project ...". Muốn chạy
+module độc lập ở thư mục/máy khác (không đụng tới phần còn lại của solution), làm theo các bước sau:
+
+1. Tạo thư mục gốc mới, ví dụ `D:\tantq\src\<TênModule>`, rồi copy đúng cấu trúc thư mục tương đối
+   mà `.csproj` của module đang dùng:
+   ```
+   D:\tantq\src\<TênModule>\
+   |-- Common\              (copy nguyên thư mục Common/ từ AppSuite)
+   |-- SharedUI\             (copy nguyên thư mục SharedUI/ từ AppSuite, bỏ qua nếu module không dùng)
+   `-- Modules\<TênModule>\  (copy nguyên thư mục Modules\<TênModule>/ từ AppSuite)
+   ```
+   Không cần copy `MainLauncher`, `build/`, hay các Module khác.
+2. Xoá các thư mục `bin\` và `obj\` trong 3 thư mục vừa copy (nếu có) để tránh dính output/cache cũ
+   của máy nguồn.
+3. Tạo 1 file `.sln` mới ngay trong thư mục gốc để Visual Studio có đủ ngữ cảnh solution (mở thẳng
+   `.csproj` rời không có `.sln` sẽ báo "Unable to find project information ... run a restore from
+   the command-line"):
+   ```powershell
+   cd D:\tantq\src\<TênModule>
+   dotnet new sln -n <TênModule>
+   dotnet sln <TênModule>.sln add Common\Common.csproj SharedUI\SharedUI.csproj Modules\<TênModule>\<TênModule>.csproj
+   dotnet restore <TênModule>.sln
+   ```
+   (bỏ `SharedUI\SharedUI.csproj` khỏi lệnh `add` nếu module không tham chiếu `SharedUI`).
+4. Mở `<TênModule>.sln` bằng Visual Studio, đặt module làm Startup Project, F5 - hoặc chạy thẳng
+   bằng CLI: `dotnet run --project Modules\<TênModule>\<TênModule>.csproj`.
+
+> Nếu chỉ cần đưa file thực thi cho người khác chạy (không cần sửa code), dùng
+> `.\build\Publish-AppSuite.ps1 -Targets <TênModule>` rồi copy thư mục `Application\Modules\<TênModule>\`
+> đi - không cần `Common`/`SharedUI` source vì đã được đóng gói sẵn vào output publish.
+
 ### Đóng gói để triển khai
 
 ```powershell
