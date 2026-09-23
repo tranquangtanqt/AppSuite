@@ -1,3 +1,4 @@
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -41,6 +42,13 @@ public sealed partial class EditorWindow : Window
                 StatusText.Text = _viewModel.StatusText;
             }
         };
+
+        // Mở full màn hình (maximize) cho dễ chỉnh sửa - ảnh chụp thường lớn hơn kích thước cửa sổ
+        // mặc định, ScrollViewer bao Canvas xử lý phần còn lại nếu ảnh vẫn lớn hơn cả màn hình.
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.Maximize();
+        }
 
         Canvas.Width = bitmap.Width;
         Canvas.Height = bitmap.Height;

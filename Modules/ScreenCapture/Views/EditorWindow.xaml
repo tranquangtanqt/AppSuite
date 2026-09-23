@@ -34,13 +34,16 @@
             <Button Content="Copy" Click="CopyButton_Click" />
         </StackPanel>
 
-        <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top">
-            <skia:SKXamlCanvas x:Name="Canvas"
-                                PaintSurface="Canvas_PaintSurface"
-                                PointerPressed="Canvas_PointerPressed"
-                                PointerMoved="Canvas_PointerMoved"
-                                PointerReleased="Canvas_PointerReleased" />
-        </Border>
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      HorizontalContentAlignment="Left" VerticalContentAlignment="Top">
+            <Border BorderBrush="Gray" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top">
+                <skia:SKXamlCanvas x:Name="Canvas"
+                                    PaintSurface="Canvas_PaintSurface"
+                                    PointerPressed="Canvas_PointerPressed"
+                                    PointerMoved="Canvas_PointerMoved"
+                                    PointerReleased="Canvas_PointerReleased" />
+            </Border>
+        </ScrollViewer>
 
         <TextBlock x:Name="StatusText" Grid.Row="2" Opacity="0.7" />
     </Grid>
