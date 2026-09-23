@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ScreenCapture.Views.CaptureLauncherWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ScreenCapture.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="ScreenCapture">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <StackPanel Padding="16" Spacing="8" MinWidth="260">
+        <TextBlock Text="Chụp màn hình" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8" />
+        <Button x:Name="FullScreenButton" Content="Toàn màn hình" HorizontalAlignment="Stretch"
+                Click="FullScreenButton_Click" />
+        <Button x:Name="WindowButton" Content="Cửa sổ hiện tại" HorizontalAlignment="Stretch"
+                Click="WindowButton_Click" />
+        <Button x:Name="RegionButton" Content="Vùng chọn" HorizontalAlignment="Stretch"
+                Click="RegionButton_Click" />
+        <Button x:Name="FixedRegionButton" Content="Vùng cố định" HorizontalAlignment="Stretch"
+                Click="FixedRegionButton_Click" />
+        <Button Content="Cuộn trang (sắp có)" HorizontalAlignment="Stretch" IsEnabled="False" />
+        <TextBlock x:Name="StatusText" Text="" Opacity="0.7" Margin="0,8,0,0" TextWrapping="Wrap" />
+    </StackPanel>
+</Window>
