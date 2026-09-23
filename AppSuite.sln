@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcf.Screen.HtmlGenerator", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcf.CrudDiagram.HtmlGenerator", "Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.csproj", "{8C3D4E5F-6A7B-4890-BB1C-3E4F5A6B7C8D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenCapture", "Modules\ScreenCapture\ScreenCapture.csproj", "{A3B74150-2FFB-40EE-9125-928813118BB9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -167,6 +169,18 @@ Global
 		{8C3D4E5F-6A7B-4890-BB1C-3E4F5A6B7C8D}.Release|x64.Build.0 = Release|x64
 		{8C3D4E5F-6A7B-4890-BB1C-3E4F5A6B7C8D}.Release|x86.ActiveCfg = Release|x86
 		{8C3D4E5F-6A7B-4890-BB1C-3E4F5A6B7C8D}.Release|x86.Build.0 = Release|x86
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Debug|ARM64.Build.0 = Debug|ARM64
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Debug|x64.ActiveCfg = Debug|x64
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Debug|x64.Build.0 = Debug|x64
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Debug|x86.ActiveCfg = Debug|x86
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Debug|x86.Build.0 = Debug|x86
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Release|ARM64.ActiveCfg = Release|ARM64
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Release|ARM64.Build.0 = Release|ARM64
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Release|x64.ActiveCfg = Release|x64
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Release|x64.Build.0 = Release|x64
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Release|x86.ActiveCfg = Release|x86
+		{A3B74150-2FFB-40EE-9125-928813118BB9}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

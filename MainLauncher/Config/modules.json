@@ -54,5 +54,12 @@
     "Path": ".\\Modules\\Mcf.CrudDiagram.HtmlGenerator\\Mcf.CrudDiagram.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
+  },
+  {
+    "Name": "ScreenCapture",
+    "Description": "Chup man hinh va chinh sua anh (PicPick-like)",
+    "Path": ".\\Modules\\ScreenCapture\\ScreenCapture.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]
