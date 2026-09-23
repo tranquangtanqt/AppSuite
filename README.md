@@ -10,11 +10,11 @@ MainLauncher.exe
     |-- Modules\ModuleA\ModuleA.exe
     |-- Modules\ModuleB\ModuleB.exe
     |-- Modules\ModuleC\ModuleC.exe
-    |-- Modules\ModuleD\ModuleD.exe
-    |-- Modules\ModuleE\ModuleE.exe
-    |-- Modules\ModuleF\ModuleF.exe
-    |-- Modules\ModuleG\ModuleG.exe
-    |-- Modules\ModuleH\ModuleH.exe
+    |-- Modules\Mcf.DbDef.HtmlGenerator\Mcf.DbDef.HtmlGenerator.exe
+    |-- Modules\Rdbms.HtmlGenerator\Rdbms.HtmlGenerator.exe
+    |-- Modules\CsvEditor\CsvEditor.exe
+    |-- Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.exe
+    |-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
     |-- ... (them Module moi theo cung mot khuon mau)
 ```
 
@@ -48,11 +48,11 @@ AppSuite.sln
 |   |-- ModuleA/                WinUI 3 app doc lap - vi du "Module A"
 |   |-- ModuleB/                WinUI 3 app doc lap - vi du "Module B"
 |   |-- ModuleC/                Tra cuu ten bang/cot theo tu dien du lieu (JSON)
-|   |-- ModuleD/                Tu dien du lieu tu Excel (DBDef) -> SQLite -> HTML
-|   |-- ModuleE/                Tu dien du lieu tu PostgreSQL/Oracle -> SQLite -> HTML
-|   |-- ModuleF/                CSV/TSV editor
-|   |-- ModuleG/                Tai lieu man hinh (画面説明書) tu Excel -> SQLite -> HTML
-|   `-- ModuleH/                CRUD図 tu Excel -> SQLite -> HTML
+|   |-- Mcf.DbDef.HtmlGenerator/ Tu dien du lieu tu Excel (DBDef) -> SQLite -> HTML
+|   |-- Rdbms.HtmlGenerator/                Tu dien du lieu tu PostgreSQL/Oracle -> SQLite -> HTML
+|   |-- CsvEditor/                CSV/TSV editor
+|   |-- Mcf.Screen.HtmlGenerator/                Tai lieu man hinh (画面説明書) tu Excel -> SQLite -> HTML
+|   `-- Mcf.CrudDiagram.HtmlGenerator/                CRUD図 tu Excel -> SQLite -> HTML
 |
 `-- build/
     |-- Sync-Modules-Dev.ps1    Tien ich cho F5/debug local (xem ben duoi)
@@ -157,12 +157,13 @@ Publish cả 9 project (MainLauncher + 8 module) khá mất thời gian. Khi ch�
 `-Targets` để publish riêng project đó thay vì chờ build hết:
 
 ```powershell
-.\build\Publish-AppSuite.ps1 -Targets ModuleD
-.\build\Publish-AppSuite.ps1 -Targets ModuleD,ModuleE,MainLauncher
+.\build\Publish-AppSuite.ps1 -Targets Mcf.DbDef.HtmlGenerator
+.\build\Publish-AppSuite.ps1 -Targets Mcf.DbDef.HtmlGenerator,Rdbms.HtmlGenerator,MainLauncher
 ```
 
-Tên hợp lệ: `MainLauncher`, `ModuleA`..`ModuleH` (không phân biệt hoa/thường). Bỏ qua `-Targets` để
-publish toàn bộ như trước.
+Tên hợp lệ: `MainLauncher`, `ModuleA`, `ModuleB`, `ModuleC`, `Mcf.DbDef.HtmlGenerator`, `Rdbms.HtmlGenerator`,
+`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator` (không phân biệt hoa/thường). Bỏ qua `-Targets` để publish toàn bộ
+như trước.
 
 Kết quả nằm ở `Application\`:
 
@@ -172,11 +173,11 @@ Application\
 |-- Modules\ModuleA\ModuleA.exe
 |-- Modules\ModuleB\ModuleB.exe
 |-- Modules\ModuleC\ModuleC.exe
-|-- Modules\ModuleD\ModuleD.exe
-|-- Modules\ModuleE\ModuleE.exe
-|-- Modules\ModuleF\ModuleF.exe
-|-- Modules\ModuleG\ModuleG.exe
-|-- Modules\ModuleH\ModuleH.exe
+|-- Modules\Mcf.DbDef.HtmlGenerator\Mcf.DbDef.HtmlGenerator.exe
+|-- Modules\Rdbms.HtmlGenerator\Rdbms.HtmlGenerator.exe
+|-- Modules\CsvEditor\CsvEditor.exe
+|-- Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.exe
+|-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
 `-- Config\modules.json, appsettings.json
 ```
 
@@ -202,9 +203,23 @@ Application\
 ```
 
 `Path` được resolve tương đối với thư mục chứa `MainLauncher.exe` (`ModuleConfig.ResolveExecutablePath`).
-Muốn thêm `ModuleC`: tạo project WinUI 3 mới trong `Modules\ModuleC` theo đúng khuôn của ModuleA/ModuleB
-(`ProjectReference` tới `Common`, không reference `MainLauncher`), thêm một entry vào `modules.json`,
-xong - không cần sửa gì trong MainLauncher.
+Muốn thêm module mới: tạo project WinUI 3 mới trong `Modules\<TênModule>` theo đúng khuôn của module
+hiện có (`ProjectReference` tới `Common`, không reference `MainLauncher`), thêm một entry vào
+`modules.json`, xong - không cần sửa gì trong MainLauncher.
+
+### Quy ước đặt tên module
+
+Đặt tên module theo chức năng (không theo thứ tự chữ cái ModuleA/B/C... như quy ước cũ):
+
+- **Editor/tool thuần** (không gắn với một nguồn dữ liệu cụ thể): PascalCase đơn, ví dụ `CsvEditor`,
+  `JsonEditor`.
+- **Generator gắn với một nguồn dữ liệu cụ thể** (mcframe, RDBMS,...): namespace phân cấp bằng dấu
+  chấm `<Nguồn>.<Loại>.<LoạiOutput>`, ví dụ `Mcf.DbDef.HtmlGenerator`, `Rdbms.HtmlGenerator`,
+  `Mcf.Screen.HtmlGenerator`. Dấu chấm trong tên thư mục/file/`RootNamespace`/`AssemblyName` hợp lệ
+  trên Windows/git và trong C# (namespace phân cấp, tương tự `Microsoft.Extensions.Logging`).
+
+Áp dụng tên đã chọn xuyên suốt: tên thư mục `Modules\<Tên>`, tên file `.csproj`, `RootNamespace`,
+`AssemblyName`, và `Name`/`Path` trong `modules.json`.
 
 ## Chức năng MainLauncher
 
@@ -222,12 +237,12 @@ xong - không cần sửa gì trong MainLauncher.
 - Dependency Injection với `Microsoft.Extensions.DependencyInjection`, đăng ký trong `App.xaml.cs`.
 - Nullable reference types bật (`<Nullable>enable</Nullable>`) trên mọi project.
 - Không viết logic nghiệp vụ trong code-behind của View - View chỉ bind tới ViewModel qua `x:Bind`.
-- Mỗi project (`Common`, `MainLauncher`, `Modules\ModuleA`...`ModuleH`,...) có README riêng.
+- Mỗi project (`Common`, `MainLauncher`, `Modules\ModuleA`...`Mcf.CrudDiagram.HtmlGenerator`,...) có README riêng.
 
 ## Đã kiểm thử
 
 - `dotnet build AppSuite.sln` - build thành công cả 11 project (Common, SharedUI, MainLauncher,
-  ModuleA, ModuleB, ModuleC, ModuleD, ModuleE, ModuleF, ModuleG, ModuleH).
+  ModuleA, ModuleB, ModuleC, Mcf.DbDef.HtmlGenerator, Rdbms.HtmlGenerator, CsvEditor, Mcf.Screen.HtmlGenerator, Mcf.CrudDiagram.HtmlGenerator).
 - Chạy `MainLauncher.exe` thực tế: load `modules.json`, tự auto-start `ModuleA` (do `AutoStart: true`),
   ghi log ra file và hiển thị trên UI - xem `MainLauncher/README.md` để biết chi tiết log mẫu.
 - Chạy `MainLauncher.exe` sau khi merge `SharedUI/Themes/Generic.xaml` - không phát sinh lỗi runtime

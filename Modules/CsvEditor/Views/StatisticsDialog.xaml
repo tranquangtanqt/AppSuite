@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="CsvEditor.Views.StatisticsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:CsvEditor.Models"
+    mc:Ignorable="d"
+    Title="Thống kê"
+    CloseButtonText="Đóng"
+    DefaultButton="Close">
+
+    <!-- ContentDialog's default Fluent style caps its content at ~548px wide (ThemeResource
+         "ContentDialogMaxWidth") - the 7-column stats grid below needs about 780px (its fixed column
+         widths plus spacing), so without this override the last couple of columns were pushed off the
+         visible edge and Min/Max got clipped mid-value (e.g. "5001" showing as "50"). -->
+    <ContentDialog.Resources>
+        <x:Double x:Key="ContentDialogMaxWidth">880</x:Double>
+    </ContentDialog.Resources>
+
+    <StackPanel Spacing="10" MinWidth="780" MaxHeight="520">
+        <StackPanel Orientation="Horizontal" Spacing="20">
+            <TextBlock x:Name="RowCountText" />
+            <TextBlock x:Name="ColumnCountText" />
+            <TextBlock x:Name="DuplicateCountText" />
+        </StackPanel>
+
+        <Grid Padding="8,6" ColumnSpacing="10" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="160" />
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="100" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Cột" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="1" Text="Rỗng" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="2" Text="Duy nhất" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="3" Text="Min" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="4" Text="Max" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="5" Text="Trung bình" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="6" Text="Tổng" FontWeight="SemiBold" />
+        </Grid>
+
+        <ListView x:Name="ColumnsListView" MaxHeight="380" SelectionMode="None">
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="models:ColumnStatistics">
+                    <Grid ColumnSpacing="10" Padding="8,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="100" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{x:Bind ColumnName}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind EmptyCount}" />
+                        <TextBlock Grid.Column="2" Text="{x:Bind UniqueCount}" />
+                        <TextBlock Grid.Column="3" Text="{x:Bind Min}" />
+                        <TextBlock Grid.Column="4" Text="{x:Bind Max}" />
+                        <TextBlock Grid.Column="5" Text="{x:Bind Average}" />
+                        <TextBlock Grid.Column="6" Text="{x:Bind Sum}" />
+                    </Grid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+    </StackPanel>
+</ContentDialog>

@@ -10,7 +10,7 @@ namespace ModuleB.Services;
 /// <summary>
 /// Reads text out of drawing shapes (xdr:sp/xdr:txBody) anchored on a worksheet - separate XML from
 /// &lt;sheetData&gt;, so ExcelCellExtractor's Cell walk never sees it. Mirrors
-/// ModuleG.Services.DiagramXmlReader.ReadText's paragraph/run/line-break flattening, but through the
+/// Mcf.Screen.HtmlGenerator.Services.DiagramXmlReader.ReadText's paragraph/run/line-break flattening, but through the
 /// strongly-typed OpenXml SDK objects (ModuleB references DocumentFormat.OpenXml, not EPPlus).
 /// A shape has no cell of its own, so its text is attributed to the cell nearest its top-left anchor
 /// (xdr:from row/col) - close enough to open Excel and land next to the shape.

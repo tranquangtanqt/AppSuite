@@ -15,15 +15,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleB", "Modules\ModuleB\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleC", "Modules\ModuleC\ModuleC.csproj", "{29D848B4-9213-46B3-8362-644AAC9D3500}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleD", "Modules\ModuleD\ModuleD.csproj", "{5A1B2C3D-4E5F-4678-9A0B-1C2D3E4F5A6B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcf.DbDef.HtmlGenerator", "Modules\Mcf.DbDef.HtmlGenerator\Mcf.DbDef.HtmlGenerator.csproj", "{5A1B2C3D-4E5F-4678-9A0B-1C2D3E4F5A6B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleE", "Modules\ModuleE\ModuleE.csproj", "{6B2C3D4E-5F60-4789-AA0B-2D3E4F5A6B7C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rdbms.HtmlGenerator", "Modules\Rdbms.HtmlGenerator\Rdbms.HtmlGenerator.csproj", "{6B2C3D4E-5F60-4789-AA0B-2D3E4F5A6B7C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleF", "Modules\ModuleF\ModuleF.csproj", "{34DBF542-F78F-4E48-8C17-40626EF024CF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvEditor", "Modules\CsvEditor\CsvEditor.csproj", "{34DBF542-F78F-4E48-8C17-40626EF024CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleG", "Modules\ModuleG\ModuleG.csproj", "{CD7F9D17-7D24-4D4B-9D54-925281ECC461}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcf.Screen.HtmlGenerator", "Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.csproj", "{CD7F9D17-7D24-4D4B-9D54-925281ECC461}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModuleH", "Modules\ModuleH\ModuleH.csproj", "{8C3D4E5F-6A7B-4890-BB1C-3E4F5A6B7C8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mcf.CrudDiagram.HtmlGenerator", "Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.csproj", "{8C3D4E5F-6A7B-4890-BB1C-3E4F5A6B7C8D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

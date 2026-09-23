@@ -12,7 +12,7 @@ lại là 1 UI tra cứu nhanh, không cần ghi/sửa dữ liệu.
 
 - **Dữ liệu**: `Data\table_columns.json` (~103k dòng, `CopyToOutputDirectory=PreserveNewest`) là bản
   chuyển mã UTF-8 một lần của file gốc CP932 - chọn nạp phẳng 1 file JSON duy nhất vào bộ nhớ thay vì
-  SQLite (khác ModuleD/ModuleE) vì dữ liệu chỉ đọc, không có quan hệ cần join, và 103k dòng nạp 1 lần
+  SQLite (khác Mcf.DbDef.HtmlGenerator/Rdbms.HtmlGenerator) vì dữ liệu chỉ đọc, không có quan hệ cần join, và 103k dòng nạp 1 lần
   lúc khởi động là đủ nhanh cho 1 tool nội bộ.
 - **`Services\TableColumnCatalog.cs`** - nạp JSON 1 lần (`SearchViewModel.InitializeAsync`), lập chỉ
   mục `Dictionary<tableName, List<TableColumnEntry>>` (`OrdinalIgnoreCase`) để tra theo bảng là

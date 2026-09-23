@@ -21,37 +21,37 @@
     "AutoStart": false
   },
   {
-    "Name": "ModuleD",
+    "Name": "Mcf.DbDef.HtmlGenerator",
     "Description": "Tu dien du lieu tu Excel (DBDef) -> SQLite -> HTML",
-    "Path": ".\\Modules\\ModuleD\\ModuleD.exe",
+    "Path": ".\\Modules\\Mcf.DbDef.HtmlGenerator\\Mcf.DbDef.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
-    "Name": "ModuleE",
+    "Name": "Rdbms.HtmlGenerator",
     "Description": "Tu dien du lieu tu PostgreSQL -> SQLite -> HTML",
-    "Path": ".\\Modules\\ModuleE\\ModuleE.exe",
+    "Path": ".\\Modules\\Rdbms.HtmlGenerator\\Rdbms.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
-    "Name": "ModuleF",
+    "Name": "CsvEditor",
     "Description": "CSV/TSV editor",
-    "Path": ".\\Modules\\ModuleF\\ModuleF.exe",
+    "Path": ".\\Modules\\CsvEditor\\CsvEditor.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
-    "Name": "ModuleG",
+    "Name": "Mcf.Screen.HtmlGenerator",
     "Description": "Tai lieu man hinh (画面説明書) Excel -> SQLite -> HTML",
-    "Path": ".\\Modules\\ModuleG\\ModuleG.exe",
+    "Path": ".\\Modules\\Mcf.Screen.HtmlGenerator\\Mcf.Screen.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
-    "Name": "ModuleH",
+    "Name": "Mcf.CrudDiagram.HtmlGenerator",
     "Description": "CRUD図 tu Excel -> SQLite -> HTML",
-    "Path": ".\\Modules\\ModuleH\\ModuleH.exe",
+    "Path": ".\\Modules\\Mcf.CrudDiagram.HtmlGenerator\\Mcf.CrudDiagram.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
   }

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="CsvEditor.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:CsvEditor"
+    xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
+    xmlns:primitives="using:CommunityToolkit.WinUI.UI.Controls.Primitives"
+    xmlns:models="using:CsvEditor.Models"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Module F - CSV/TSV Editor">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid Padding="12" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar -->
+        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,16">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <Button x:Name="OpenButton" Click="OpenButton_Click" ToolTipService.ToolTip="Mở file CSV/TSV">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Open" /></StackPanel>
+                </Button>
+                <Button x:Name="SaveButton" Click="SaveButton_Click" IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" ToolTipService.ToolTip="Lưu (Ctrl+S)">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Save" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="S" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+                <Button x:Name="SaveAsButton" Click="SaveAsButton_Click" ToolTipService.ToolTip="Lưu thành file khác">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE792;" FontSize="14" /><TextBlock Text="Save As" /></StackPanel>
+                </Button>
+
+                <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                <Button Command="{x:Bind ViewModel.UndoCommand}" ToolTipService.ToolTip="{x:Bind ViewModel.UndoDescription, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE7A7;" FontSize="14" /><TextBlock Text="Undo" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Z" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+                <Button Command="{x:Bind ViewModel.RedoCommand}" ToolTipService.ToolTip="{x:Bind ViewModel.RedoDescription, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE7A6;" FontSize="14" /><TextBlock Text="Redo" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Y" Modifiers="Control" />
+                        <KeyboardAccelerator Key="Z" Modifiers="Control,Shift" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+
+                <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                <Button Click="AddRowButton_Click" ToolTipService.ToolTip="Thêm dòng">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE710;" FontSize="14" /><TextBlock Text="Add Row" /></StackPanel>
+                </Button>
+                <Button Click="DeleteRowButton_Click" ToolTipService.ToolTip="Xóa dòng đang chọn">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE738;" FontSize="14" /><TextBlock Text="Delete Row" /></StackPanel>
+                </Button>
+                <Button Click="DuplicateRowButton_Click" ToolTipService.ToolTip="Sao chép dòng đang chọn">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy Row" /></StackPanel>
+                </Button>
+                <Button Click="AddColumnButton_Click" ToolTipService.ToolTip="Thêm cột">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE711;" FontSize="14" /><TextBlock Text="Add Column" /></StackPanel>
+                </Button>
+                <Button Click="DeleteColumnButton_Click" ToolTipService.ToolTip="Xóa cột đang chọn">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE738;" FontSize="14" /><TextBlock Text="Delete Column" /></StackPanel>
+                </Button>
+                <Button Click="RenameColumnButton_Click" ToolTipService.ToolTip="Đổi tên cột đang chọn">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE70F;" FontSize="14" /><TextBlock Text="Rename Column" /></StackPanel>
+                </Button>
+
+                <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                <Button Click="FindButton_Click" ToolTipService.ToolTip="Tìm kiếm (Ctrl+F)">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE721;" FontSize="14" /><TextBlock Text="Find" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+                <Button Click="ReplaceButton_Click" ToolTipService.ToolTip="Tìm và thay thế (Ctrl+H)">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8AC;" FontSize="14" /><TextBlock Text="Replace" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="H" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+                <Button Click="FilterButton_Click" ToolTipService.ToolTip="Lọc dữ liệu">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><TextBlock Text="Filter" /></StackPanel>
+                </Button>
+                <Button Click="ClearActiveFilterButton_Click" IsEnabled="{x:Bind ViewModel.IsFilterActive, Mode=OneWay}"
+                        ToolTipService.ToolTip="Bỏ lọc đang áp dụng">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><FontIcon Glyph="&#xE10A;" FontSize="10" /><TextBlock Text="Clear Filter" /></StackPanel>
+                </Button>
+                <Button Click="SortButton_Click" ToolTipService.ToolTip="Sắp xếp">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8CB;" FontSize="14" /><TextBlock Text="Sort" /></StackPanel>
+                </Button>
+                <Button Click="ClearActiveSortButton_Click" IsEnabled="{x:Bind ViewModel.IsSortActive, Mode=OneWay}"
+                        ToolTipService.ToolTip="Bỏ sắp xếp đang áp dụng">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8CB;" FontSize="14" /><FontIcon Glyph="&#xE10A;" FontSize="10" /><TextBlock Text="Clear Sort" /></StackPanel>
+                </Button>
+                <Button Click="StatisticsButton_Click" ToolTipService.ToolTip="Thống kê">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE9D9;" FontSize="14" /><TextBlock Text="Statistics" /></StackPanel>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Validation issues -->
+        <Expander Grid.Row="1" Header="{x:Bind IssuesHeader, Mode=OneWay}" IsExpanded="False"
+                  Visibility="{x:Bind HasIssuesVisibility, Mode=OneWay}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+            <ListView x:Name="IssuesListView" ItemsSource="{x:Bind ViewModel.Issues}" MaxHeight="160" DoubleTapped="IssuesListView_DoubleTapped">
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ValidationIssue">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE7BA;" FontSize="12" Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                            <TextBlock Text="{x:Bind Message}" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Expander>
+
+        <!-- Data grid. The filter box lives inside each column's own header (HeaderStyle below) rather
+             than as a synced external row or a real DataGridRow (both tried and reverted) - only the
+             native header is both pinned during vertical scroll and directly typable with no
+             double-click/F2 gesture, for free, since it's a plain TextBox rather than a DataGrid cell.
+             DataGridColumn has no HeaderTemplate shortcut, so the template is applied per column via
+             HeaderStyle's ContentTemplate setter instead (DataGridColumn.Header itself rejects a raw
+             UIElement - "Content does not support UIElement; use ContentTemplate instead"). Declared
+             here (compile-time XAML) because DataTemplate has no public code-only constructor. -->
+        <controls:DataGrid
+            x:Name="Grid"
+            Grid.Row="2"
+            ItemsSource="{x:Bind ViewModel.ViewRows, Mode=OneWay}"
+            AutoGenerateColumns="False"
+            HeadersVisibility="All"
+            SelectionMode="Extended"
+            RowHeaderWidth="48"
+            CanUserReorderColumns="False"
+            CanUserSortColumns="False"
+            LoadingRow="Grid_LoadingRow"
+            CellEditEnding="Grid_CellEditEnding"
+            Loaded="Grid_Loaded"
+            CurrentCellChanged="Grid_CurrentCellChanged"
+            SelectionChanged="Grid_SelectionChanged">
+            <controls:DataGrid.Resources>
+                <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
+                <DataTemplate x:Key="FilterHeaderTemplate">
+                    <StackPanel Spacing="4" Padding="0,2,0,4" HorizontalAlignment="Stretch">
+                        <TextBlock Text="{Binding ColumnName}" />
+                        <!-- HorizontalAlignment=Stretch alone does not fill the column: the header's own
+                             default template does not stretch its ContentPresenter to the header's full
+                             width regardless of HorizontalContentAlignment, so this is sized explicitly
+                             instead (see FilterTextBox_Loaded). The clear button overlays the TextBox's
+                             right edge rather than sizing the Grid itself, since the Grid has nothing
+                             else dictating its width beyond the TextBox's own explicit Width. -->
+                        <Grid HorizontalAlignment="Left">
+                            <TextBox Text="{Binding FilterText, Mode=TwoWay}" PlaceholderText="Filter"
+                                     HorizontalAlignment="Left" Loaded="FilterTextBox_Loaded" />
+                            <Button Padding="4" Margin="0,0,4,0" Background="Transparent" BorderThickness="0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    Click="ClearFilterButton_Click" ToolTipService.ToolTip="Xóa filter"
+                                    Visibility="{Binding FilterText, Converter={StaticResource EmptyStringToVisibilityConverter}}">
+                                <FontIcon Glyph="&#xE10A;" FontSize="10" />
+                            </Button>
+                        </Grid>
+                    </StackPanel>
+                </DataTemplate>
+                <Style x:Key="FilterHeaderStyle" TargetType="primitives:DataGridColumnHeader">
+                    <Setter Property="ContentTemplate" Value="{StaticResource FilterHeaderTemplate}" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    <Setter Property="Padding" Value="8,8" />
+                </Style>
+            </controls:DataGrid.Resources>
+            <controls:DataGrid.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Text="Copy" Click="CopyMenuItem_Click" />
+                    <MenuFlyoutItem Text="Paste" Click="PasteMenuItem_Click" />
+                    <MenuFlyoutItem Text="Delete" Click="DeleteRowsMenuItem_Click" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Text="Insert Row" Click="InsertRowMenuItem_Click" />
+                    <MenuFlyoutItem Text="Duplicate Row" Click="DuplicateRowMenuItem_Click" />
+                </MenuFlyout>
+            </controls:DataGrid.ContextFlyout>
+        </controls:DataGrid>
+
+        <!-- Excel-like "fill handle": a small square glued to the bottom-right corner of the current
+             cell (see UpdateFillHandlePosition) - dragging it down copies the cell's value into the
+             rows below, or (holding Ctrl) auto-increments a numeric value by 1 per row instead of
+             copying it verbatim. A transparent Canvas overlaid on the DataGrid, same trick as the
+             corner button below: it has no Background of its own, so pointer hit-testing falls
+             through to the grid everywhere except the handle/preview, which do have one. -->
+        <Canvas x:Name="FillHandleLayer" Grid.Row="2">
+            <Border x:Name="FillPreviewBorder"
+                    BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1.5"
+                    Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.15"
+                    Visibility="Collapsed" IsHitTestVisible="False" />
+            <!-- The clickable hit area (16x16, Background=Transparent so it still participates in hit
+                 testing) is deliberately bigger than the 8x8 dot drawn inside it - an 8px target is
+                 hard to land a mouse on precisely, and both are centered on the same point so this
+                 doesn't change where the handle visually sits. -->
+            <Border x:Name="FillHandle" Width="16" Height="16" Background="Transparent"
+                    Visibility="Collapsed"
+                    PointerPressed="FillHandle_PointerPressed"
+                    PointerMoved="FillHandle_PointerMoved"
+                    PointerReleased="FillHandle_PointerReleased"
+                    PointerCaptureLost="FillHandle_PointerCaptureLost"
+                    ToolTipService.ToolTip="Kéo để điền giá trị xuống các dòng dưới (giữ Ctrl để tự tăng số)">
+                <Border Width="8" Height="8" Background="{ThemeResource AccentFillColorDefaultBrush}"
+                        BorderBrush="White" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        IsHitTestVisible="False" />
+            </Border>
+        </Canvas>
+
+        <!-- Overlaid on the DataGrid's empty top-left corner cell (same Grid.Row, added after so it
+             draws on top) - the DataGrid has no public API for that corner's content (only an internal
+             template part), so this floats a real Button there instead rather than trying to inject
+             into the DataGrid itself. Width matches RowHeaderWidth="48" above. Top margin is a manual
+             estimate of where the filter TextBox row starts within the header (header Padding top=8 +
+             column-name TextBlock line + StackPanel Spacing=4), to line up with it vertically instead
+             of the column-name row above it - there's no exact height to read since the header's own
+             height is Auto or the built-in resize grip would be tracked instead. -->
+        <Button Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Top"
+                Width="48" Margin="0,32,0,0" Padding="0" Height="32"
+                Background="Transparent" BorderThickness="0"
+                Click="ClearAllFiltersButton_Click" ToolTipService.ToolTip="Xóa tất cả filter">
+            <FontIcon Glyph="&#xE10A;" FontSize="12" />
+        </Button>
+
+        <!-- Status bar -->
+        <Grid Grid.Row="3" ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16">
+                <TextBlock Text="{x:Bind ViewModel.FileName, Mode=OneWay}" />
+                <TextBlock Text="{x:Bind ViewModel.EncodingLabel, Mode=OneWay}" Opacity="0.8"
+                           IsTapEnabled="True" Tapped="EncodingLabel_Tapped" ToolTipService.ToolTip="Bấm để đổi encoding/delimiter" />
+                <TextBlock Text="{x:Bind ViewModel.DelimiterLabel, Mode=OneWay}" Opacity="0.8"
+                           IsTapEnabled="True" Tapped="EncodingLabel_Tapped" ToolTipService.ToolTip="Bấm để đổi encoding/delimiter" />
+                <TextBlock Opacity="0.8"><Run Text="Dòng:" /><Run Text="{x:Bind ViewModel.RowCount, Mode=OneWay}" /></TextBlock>
+                <TextBlock Opacity="0.8"><Run Text="Cột:" /><Run Text="{x:Bind ViewModel.ColumnCount, Mode=OneWay}" /></TextBlock>
+                <TextBlock Text="{x:Bind SaveStateText, Mode=OneWay}" Opacity="0.8" />
+                <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Opacity="0.6" />
+            </StackPanel>
+
+            <ProgressBar Grid.Column="1" Width="140" VerticalAlignment="Center"
+                         Visibility="{x:Bind IsBusyVisibility, Mode=OneWay}"
+                         Value="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}" Maximum="100" />
+
+            <Button Grid.Column="2" Content="Hủy" Click="CancelButton_Click" Visibility="{x:Bind IsBusyVisibility, Mode=OneWay}" />
+        </Grid>
+    </Grid>
+</Window>

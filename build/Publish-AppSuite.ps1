@@ -7,11 +7,11 @@
         |-- Modules\ModuleA\ModuleA.exe
         |-- Modules\ModuleB\ModuleB.exe
         |-- Modules\ModuleC\ModuleC.exe
-        |-- Modules\ModuleD\ModuleD.exe
-        |-- Modules\ModuleE\ModuleE.exe
-        |-- Modules\ModuleF\ModuleF.exe
-        |-- Modules\ModuleG\ModuleG.exe
-        |-- Modules\ModuleH\ModuleH.exe
+        |-- Modules\Mcf.DbDef.HtmlGenerator\Mcf.DbDef.HtmlGenerator.exe
+        |-- Modules\Rdbms.HtmlGenerator\Rdbms.HtmlGenerator.exe
+        |-- Modules\CsvEditor\CsvEditor.exe
+        |-- Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.exe
+        |-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
         `-- Config\modules.json
 
 .DESCRIPTION
@@ -20,18 +20,18 @@
     MSBuild - is what ties the three executables into one deployable folder.
 
     Use -Targets to publish only a subset (faster than rebuilding everything while iterating on
-    one module). Names are matched case-insensitively; "MainLauncher" and "ModuleA".."ModuleH" are
+    one module). Names are matched case-insensitively; "MainLauncher" and "ModuleA".."Mcf.CrudDiagram.HtmlGenerator" are
     valid. Omit -Targets to publish everything, same as before.
 
 .EXAMPLE
     .\build\Publish-AppSuite.ps1
     .\build\Publish-AppSuite.ps1 -Configuration Release -Runtime win-x64 -OutputDir .\Application
-    .\build\Publish-AppSuite.ps1 -Targets ModuleD
-    .\build\Publish-AppSuite.ps1 -Targets ModuleD,ModuleE,MainLauncher
+    .\build\Publish-AppSuite.ps1 -Targets Mcf.DbDef.HtmlGenerator
+    .\build\Publish-AppSuite.ps1 -Targets Mcf.DbDef.HtmlGenerator,Rdbms.HtmlGenerator,MainLauncher
 
 .NOTES
     Publishing all 9 projects takes a while - pass -Targets to publish only the project(s) you're
-    iterating on (e.g. -Targets ModuleD) instead of waiting on a full run every time.
+    iterating on (e.g. -Targets Mcf.DbDef.HtmlGenerator) instead of waiting on a full run every time.
 
     If PowerShell refuses to run this script with an error like "cannot be loaded because
     running scripts is disabled on this system", either:
@@ -58,11 +58,11 @@ $allProjects = [ordered]@{
     "ModuleA"      = @{ ProjectPath = "Modules\ModuleA\ModuleA.csproj"; DestSubfolder = "Modules\ModuleA" }
     "ModuleB"      = @{ ProjectPath = "Modules\ModuleB\ModuleB.csproj"; DestSubfolder = "Modules\ModuleB" }
     "ModuleC"      = @{ ProjectPath = "Modules\ModuleC\ModuleC.csproj"; DestSubfolder = "Modules\ModuleC" }
-    "ModuleD"      = @{ ProjectPath = "Modules\ModuleD\ModuleD.csproj"; DestSubfolder = "Modules\ModuleD" }
-    "ModuleE"      = @{ ProjectPath = "Modules\ModuleE\ModuleE.csproj"; DestSubfolder = "Modules\ModuleE" }
-    "ModuleF"      = @{ ProjectPath = "Modules\ModuleF\ModuleF.csproj"; DestSubfolder = "Modules\ModuleF" }
-    "ModuleG"      = @{ ProjectPath = "Modules\ModuleG\ModuleG.csproj"; DestSubfolder = "Modules\ModuleG" }
-    "ModuleH"      = @{ ProjectPath = "Modules\ModuleH\ModuleH.csproj"; DestSubfolder = "Modules\ModuleH" }
+    "Mcf.DbDef.HtmlGenerator"      = @{ ProjectPath = "Modules\Mcf.DbDef.HtmlGenerator\Mcf.DbDef.HtmlGenerator.csproj"; DestSubfolder = "Modules\Mcf.DbDef.HtmlGenerator" }
+    "Rdbms.HtmlGenerator"      = @{ ProjectPath = "Modules\Rdbms.HtmlGenerator\Rdbms.HtmlGenerator.csproj"; DestSubfolder = "Modules\Rdbms.HtmlGenerator" }
+    "CsvEditor"      = @{ ProjectPath = "Modules\CsvEditor\CsvEditor.csproj"; DestSubfolder = "Modules\CsvEditor" }
+    "Mcf.Screen.HtmlGenerator"      = @{ ProjectPath = "Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.csproj"; DestSubfolder = "Modules\Mcf.Screen.HtmlGenerator" }
+    "Mcf.CrudDiagram.HtmlGenerator"      = @{ ProjectPath = "Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.csproj"; DestSubfolder = "Modules\Mcf.CrudDiagram.HtmlGenerator" }
 }
 
 function Publish-Project {
