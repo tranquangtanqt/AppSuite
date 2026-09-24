@@ -7,11 +7,13 @@ namespace ScreenCapture.Services;
 
 public sealed class ImageFileService : IImageFileService
 {
-    public async Task<string?> SaveAsPngAsync(SKBitmap bitmap, IntPtr ownerHwnd)
+    public async Task<string?> SaveAsPngAsync(SKBitmap bitmap, IntPtr ownerHwnd, string? suggestedName = null)
     {
         var picker = new FileSavePicker { SuggestedStartLocation = PickerLocationId.PicturesLibrary };
         picker.FileTypeChoices.Add("PNG", new List<string> { ".png" });
-        picker.SuggestedFileName = $"screenshot-{DateTime.Now:yyyyMMdd-HHmmss}";
+        picker.SuggestedFileName = string.IsNullOrWhiteSpace(suggestedName)
+            ? $"screenshot-{DateTime.Now:yyyyMMdd-HHmmss}"
+            : SanitizeFileName(suggestedName);
         InitializeWithWindow.Initialize(picker, ownerHwnd);
 
         StorageFile? file = await picker.PickSaveFileAsync();
@@ -39,12 +41,18 @@ public sealed class ImageFileService : IImageFileService
         return folder?.Path;
     }
 
-    public string SavePngToFolder(SKBitmap bitmap, string folder, string baseName)
+    private static string SanitizeFileName(string name)
     {
         foreach (var c in Path.GetInvalidFileNameChars())
         {
-            baseName = baseName.Replace(c, '_');
+            name = name.Replace(c, '_');
         }
+        return name;
+    }
+
+    public string SavePngToFolder(SKBitmap bitmap, string folder, string baseName)
+    {
+        baseName = SanitizeFileName(baseName);
         var path = Path.Combine(folder, baseName + ".png");
         for (int i = 2; File.Exists(path); i++)
         {

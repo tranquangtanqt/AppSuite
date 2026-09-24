@@ -132,7 +132,8 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   đang chọn 1 shape sẽ áp luôn cho shape đó.
 - **Cỡ nét** — slider 1-20px, cũng áp cho shape đang chọn.
 
-**Tab "Tệp"** — *Lưu PNG*, *Copy* ảnh (đã gộp mọi shape) vào clipboard, *Cài đặt*, *Đóng* cửa sổ.
+**Tab "Tệp"** — *Lưu PNG* (hộp thoại điền sẵn tên file = tên tab, vd `2026-09-24 15 31 59.png`),
+*Copy* ảnh (đã gộp mọi shape) vào clipboard, *Cài đặt*, *Đóng* cửa sổ.
 
 **Tab "Vùng chọn"** (contextual) — tự hiện khi dùng *Select* chọn 1 vùng, tự ẩn khi bỏ chọn:
 

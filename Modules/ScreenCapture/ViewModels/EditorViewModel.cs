@@ -290,7 +290,8 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>Hỏi đường dẫn và lưu PNG. Trả false nếu người dùng huỷ hộp thoại lưu.</summary>
     public async Task<bool> SaveToFileAsync()
     {
-        var path = await _fileService.SaveAsPngAsync(RenderComposited(), _ownerHwnd);
+        // Điền sẵn tên tab (thời điểm chụp, vd "2026-09-24 15 31 59") làm tên file.
+        var path = await _fileService.SaveAsPngAsync(RenderComposited(), _ownerHwnd, Title);
         if (path is null)
         {
             StatusText = "Đã huỷ lưu.";
