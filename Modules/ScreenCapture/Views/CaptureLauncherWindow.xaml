@@ -154,9 +154,9 @@
                 </Grid>
             </Button>
 
-            <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CaptureCardStyle}"
-                    IsEnabled="False">
-                <Grid ColumnSpacing="14" Opacity="0.6">
+            <Button x:Name="ScrollButton" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CaptureCardStyle}"
+                    Click="ScrollButton_Click">
+                <Grid ColumnSpacing="14">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -167,12 +167,12 @@
                     </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
                         <TextBlock Text="Cuộn trang" Style="{StaticResource CardTitleStyle}" />
-                        <TextBlock Text="Chụp nội dung dài bằng cách cuộn tự động." Style="{StaticResource CardDescriptionStyle}" />
+                        <TextBlock Text="Chọn vùng nội dung, app tự cuộn và ghép thành 1 ảnh dài (trang web, tài liệu...)." Style="{StaticResource CardDescriptionStyle}" />
                     </StackPanel>
                     <Border Grid.Column="2" VerticalAlignment="Center" Padding="10,3" CornerRadius="10"
                             Background="{ThemeResource ControlFillColorSecondaryBrush}"
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                        <TextBlock Text="Sắp có" FontSize="11" />
+                        <TextBlock Text="Esc để dừng" FontSize="11" />
                     </Border>
                 </Grid>
             </Button>

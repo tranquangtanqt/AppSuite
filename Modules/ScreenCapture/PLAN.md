@@ -325,6 +325,32 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   - **Phát hiện khi test**: PrtSc đơn lẻ không tới app dù `RegisterHotKey` thành công — Snipping Tool
     (Windows 11, "Print screen key opens screen capture") bắt phím bằng hook cấp thấp trước. Không phát
     hiện được bằng API → ghi chú trong trang Phím tắt + README.
+- **Chụp cuộn trang** (`Services/ScrollCaptureService.cs`):
+  - Luồng: overlay chọn vùng (như Vùng chọn, có dòng hướng dẫn riêng) → đưa cửa sổ dưới tâm vùng lên
+    foreground (`WindowFromPoint` + `GetAncestor(GA_ROOT)` — gọi từ khay/phím tắt thì foreground đang
+    là taskbar/launcher ẩn) → chụp khung đầu khi màn hình đã đứng yên (2 lần chụp liên tiếp giống nhau)
+    → lặp: `SendInput` lăn chuột (số nấc = cao vùng / 300, 1–5) tại tâm vùng, chờ 450ms, chụp, ghép.
+  - Ghép: mỗi dòng pixel hash FNV-1a (cả dòng + 16 khối ngang). Chỉ tính **cột động** (khác nhau giữa
+    2 khung ở cùng vị trí) — bỏ viền / khung focus / lề đứng yên. Đầu/chân trang cố định = dải dòng
+    giống hệt ở cùng vị trí. Dò độ dịch s: dòng khớp nếu ≥ 12/16 khối giống (chịu được con trượt thanh
+    cuộn lọt vào vùng); chọn s đạt ≥ 90% dòng khớp với nhiều dòng "có nội dung" khớp nhất.
+  - Dừng: khung không đổi sau 2 lần lăn thử lại (tới cuối), Esc (`GetAsyncKeyState`), 80 bước / 30.000px,
+    hoặc không ghép được sau 1 lần chụp lại (giữ phần đã ghép). Dải mới lưu dạng bitmap nhỏ, không giữ
+    mọi khung đầy đủ trong RAM.
+  - Nối vào: thẻ Cuộn trang (bỏ "Sắp có"), `HotkeyAction.ScrollCapture` (mặc định `Ctrl+Alt+PrtSc`;
+    `SettingsStore.Load` bổ sung phím cho file cài đặt cũ thiếu action mới), menu khay.
+  - **Bug "chụp cuộn từ khay không hoạt động"** (người dùng báo): lệnh từ khay/phím tắt chạy
+    `_ = Task` → exception bị nuốt, không báo gì. Đổi sang `RunInBackground` (bắt lỗi → InfoBar +
+    crash.log) + đưa cửa sổ đích lên foreground trước khi lăn chuột.
+  - **Kiểm thử tự động (cô lập)**: `SessionService.Folder` đổi được qua biến môi trường
+    `SCREENCAPTURE_SESSION_DIR`; `SCREENCAPTURE_SCROLL_DEBUG_DIR` lưu từng khung + `shift.log`. Test trên
+    form WinForms 300 dòng (script trong scratchpad, không đụng thư mục phiên thật — kiểm tra trước/sau).
+    Qua 4 vòng sửa theo lỗi tìm được (cửa sổ vẽ lại sau khi kích hoạt; cột viền/khung focus; 1 lần lăn
+    chuột bị lỡ → dừng sớm; con trượt thanh cuộn làm 10% dòng lệch) → vòng cuối **12/12 lần thành
+    công** (9 qua nút, 3 qua đường nền như khay), ảnh 47 khung ~650×7820px, đủ Dong 001–300, không lặp.
+  - **Sự cố trong lúc test (2026-09-24)**: lệnh "sao lưu" `Copy-Item -LiteralPath dir\*` không chép gì
+    (LiteralPath không hiểu `*`) rồi thư mục phiên thật bị xoá → mất 3 tab chưa lưu của người dùng. Từ
+    đó mọi test dùng thư mục phiên riêng qua `SCREENCAPTURE_SESSION_DIR`.
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 
@@ -359,7 +385,7 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
 
 ## Chưa làm (fast-follow)
 
-- Scroll capture (tự cuộn + ghép ảnh dài/rộng) — `CaptureMode.Scroll` đã có sẵn làm điểm mở rộng.
+- Scroll capture theo chiều ngang (hiện chỉ cuộn dọc).
 - Editor: Blur/Mosaic (khác Fill — làm mờ/che chứ không đổi màu), Freehand pen, crop không phá huỷ.
   (Resize shape qua 4 handle góc và đổi hướng/độ dài Line/Arrow qua 2 handle đầu mút **đã làm**.)
 - Fixed Region: lưu vị trí/kích thước qua lần restart app (hiện chỉ session-only, mất khi đóng app).

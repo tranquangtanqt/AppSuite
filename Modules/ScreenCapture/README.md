@@ -16,7 +16,13 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
 - **Vùng chọn** — kéo-thả chọn 1 vùng màn hình, thả chuột là chụp ngay.
 - **Vùng cố định** — chọn vùng, chỉnh lại kích thước qua 4 handle góc, nhấn Enter để chụp (Escape
   để huỷ). Vị trí/kích thước lần chụp gần nhất được nhớ lại trong phiên làm việc hiện tại.
-- **Cuộn trang** — chưa làm (thẻ bị disable, nhãn "Sắp có"), xem `PLAN.md` mục "Chưa làm".
+- **Cuộn trang** (phím tắt mặc định `Ctrl+Alt+PrtSc`, hoặc menu khay) — kéo chọn vùng nội dung cần
+  cuộn (trang web, tài liệu, danh sách...; nên bỏ thanh menu cố định ra ngoài vùng). App đưa cửa sổ đó
+  lên, tự lăn chuột trong vùng, chụp từng khung và ghép thành 1 ảnh dài. Dừng khi tới cuối trang, khi
+  bấm **Esc**, hoặc chạm giới hạn 80 lần cuộn / cao 30.000px. Đầu/chân trang cố định trong vùng chỉ giữ
+  1 lần; viền, khung focus, thanh cuộn lọt vào vùng chọn không làm hỏng việc ghép. Thanh trạng thái
+  Editor ghi số khung, kích thước và lý do dừng. Nội dung tự thay đổi (video, ảnh động, trang tự tải
+  thêm khi cuộn) có thể làm dừng sớm — app giữ phần đã ghép được.
 
 ### Cài đặt (`SettingsWindow`)
 
@@ -29,9 +35,10 @@ tuỳ chọn về ban đầu.
 | Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard; chạy ngầm ở khay hệ thống; khởi động cùng Windows |
 | Tự động lưu | Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên = thời điểm chụp; ảnh đã tự lưu đóng tab không hỏi lại |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
-| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
+| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn trang / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
 
-- Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`.
+- Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`,
+  `Ctrl+Alt+PrtSc` (chụp cuộn).
 - Dùng được cả khi app đang thu nhỏ, ẩn ở khay hệ thống hoặc đang ở app khác. Chụp bằng phím tắt
   khi cửa sổ chính đang thu nhỏ / ẩn thì chụp xong nó vẫn giữ nguyên, không bật lên.
 - Phím đã bị app khác giữ (vd PicPick đang chạy) → đánh dấu ⚠ trong trang Phím tắt + thông báo ở

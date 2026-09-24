@@ -122,7 +122,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll }
 
     private void ShowTrayMenu()
     {
@@ -133,6 +133,7 @@ public sealed partial class CaptureLauncherWindow : Window
             ((int)TrayCommand.ActiveWindow, "Chụp cửa sổ hiện tại", true),
             ((int)TrayCommand.Region, "Chụp vùng chọn", true),
             ((int)TrayCommand.FixedRegion, "Chụp vùng cố định", true),
+            ((int)TrayCommand.Scroll, "Chụp cuộn trang", true),
             (0, null, true),
             ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
             ((int)TrayCommand.OpenEditor, "Mở Editor", canOpenEditor),
@@ -143,10 +144,11 @@ public sealed partial class CaptureLauncherWindow : Window
 
         switch (command)
         {
-            case TrayCommand.FullScreen: _ = CaptureFullScreenAsync(); break;
-            case TrayCommand.ActiveWindow: _ = CaptureActiveWindowAsync(); break;
-            case TrayCommand.Region: _ = CaptureRegionAsync(isFixed: false); break;
-            case TrayCommand.FixedRegion: _ = CaptureRegionAsync(isFixed: true); break;
+            case TrayCommand.FullScreen: RunInBackground(CaptureFullScreenAsync); break;
+            case TrayCommand.ActiveWindow: RunInBackground(CaptureActiveWindowAsync); break;
+            case TrayCommand.Region: RunInBackground(() => CaptureRegionAsync(isFixed: false)); break;
+            case TrayCommand.FixedRegion: RunInBackground(() => CaptureRegionAsync(isFixed: true)); break;
+            case TrayCommand.Scroll: RunInBackground(CaptureScrollAsync); break;
             case TrayCommand.OpenLauncher: ShowLauncher(); break;
             case TrayCommand.OpenEditor: OpenExistingEditor(); break;
             case TrayCommand.Settings: OpenSettings(); break;
@@ -251,23 +253,93 @@ public sealed partial class CaptureLauncherWindow : Window
 
     // ---- Chụp ----
 
-    private void Hotkeys_Pressed(object? sender, HotkeyAction action)
+    private void Hotkeys_Pressed(object? sender, HotkeyAction action) => RunInBackground(action switch
     {
-        _ = action switch
+        HotkeyAction.FullScreen => CaptureFullScreenAsync,
+        HotkeyAction.ActiveWindow => CaptureActiveWindowAsync,
+        HotkeyAction.Region => () => CaptureRegionAsync(isFixed: false),
+        HotkeyAction.FixedRegion => () => CaptureRegionAsync(isFixed: true),
+        HotkeyAction.RepeatLast => RepeatLastCaptureAsync,
+        HotkeyAction.ScrollCapture => CaptureScrollAsync,
+        _ => () => Task.CompletedTask,
+    });
+
+    /// <summary>Chạy 1 thao tác chụp gọi từ phím tắt / menu khay (không có ai await). Trước đây dùng
+    /// <c>_ = Task</c> nên exception bị nuốt mất - người dùng chỉ thấy "không hoạt động". Giờ bắt lỗi,
+    /// hiện lên cửa sổ chính và ghi crash.log.</summary>
+    private async void RunInBackground(Func<Task> capture)
+    {
+        try
         {
-            HotkeyAction.FullScreen => CaptureFullScreenAsync(),
-            HotkeyAction.ActiveWindow => CaptureActiveWindowAsync(),
-            HotkeyAction.Region => CaptureRegionAsync(isFixed: false),
-            HotkeyAction.FixedRegion => CaptureRegionAsync(isFixed: true),
-            HotkeyAction.RepeatLast => RepeatLastCaptureAsync(),
-            _ => Task.CompletedTask,
-        };
+            await capture();
+        }
+        catch (Exception ex)
+        {
+            _isCapturing = false;
+            RestoreLauncherAfterCapture();
+            RestoreEditorAfterCancel();
+            ShowLauncher();
+            ShowStatus($"Chụp thất bại: {ex.Message}", InfoBarSeverity.Error);
+            try
+            {
+                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "crash.log"),
+                    $"{DateTime.Now:O}{Environment.NewLine}{ex}{Environment.NewLine}{Environment.NewLine}");
+            }
+            catch
+            {
+                // Không để việc ghi log làm lỗi tiếp.
+            }
+        }
     }
 
     private async void FullScreenButton_Click(object sender, RoutedEventArgs e) => await CaptureFullScreenAsync();
     private async void WindowButton_Click(object sender, RoutedEventArgs e) => await CaptureActiveWindowAsync();
     private async void RegionButton_Click(object sender, RoutedEventArgs e) => await CaptureRegionAsync(isFixed: false);
     private async void FixedRegionButton_Click(object sender, RoutedEventArgs e) => await CaptureRegionAsync(isFixed: true);
+    private async void ScrollButton_Click(object sender, RoutedEventArgs e) => await CaptureScrollAsync();
+
+    /// <summary>Chụp cuộn: chọn vùng nội dung trên ảnh màn hình đứng yên (overlay như Vùng chọn) → overlay
+    /// đóng → ScrollCaptureService lăn chuột trong vùng đó, chụp + ghép tới cuối trang / Esc / giới hạn.</summary>
+    private async Task CaptureScrollAsync()
+    {
+        if (!await BeginCaptureAsync())
+        {
+            return;
+        }
+        try
+        {
+            var virtualRect = _captureService.GetVirtualScreenRect();
+            var frozenScreen = _captureService.CaptureRect(virtualRect);
+            var overlay = new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: false, null,
+                "Chụp cuộn: kéo chọn vùng nội dung cần cuộn (bỏ thanh menu cố định) — thả chuột để bắt đầu. Trong lúc cuộn bấm Esc để dừng.");
+            var selection = await overlay.SelectRegionAsync();
+            if (selection is null)
+            {
+                CancelCapture("Đã huỷ chụp cuộn.");
+                return;
+            }
+
+            await Task.Delay(250); // chờ overlay đóng hẳn, cửa sổ bên dưới vẽ lại
+            var result = await new ScrollCaptureService(_captureService).CaptureAsync(selection.Value);
+            await FinishCaptureAsync(result.Image);
+
+            string reason = result.Reason switch
+            {
+                ScrollStopReason.ReachedEnd => "đã tới cuối",
+                ScrollStopReason.Cancelled => "dừng bằng Esc",
+                ScrollStopReason.LimitReached => $"chạm giới hạn ({ScrollCaptureService.MaxSteps} lần cuộn / {ScrollCaptureService.MaxHeight}px)",
+                _ => "không ghép tiếp được (nội dung thay đổi hoặc cuộn quá xa) - đã giữ phần ghép được",
+            };
+            if (_editor?.CurrentDocument is { } document)
+            {
+                document.StatusText = $"Chụp cuộn: {result.Frames} khung, {result.Image.Width} × {result.Image.Height} px — {reason}.";
+            }
+        }
+        finally
+        {
+            _isCapturing = false;
+        }
+    }
 
     private async Task CaptureFullScreenAsync()
     {

@@ -38,7 +38,12 @@ public sealed class SessionService
     public static long CurrentSizeBytes() =>
         Directory.Exists(Folder) ? Directory.EnumerateFiles(Folder).Sum(f => new FileInfo(f).Length) : 0;
 
-    public static string Folder { get; } = Path.Combine(Path.GetTempPath(), "AppSuite", "ScreenCapture", "Session");
+    /// <summary>Biến môi trường <c>SCREENCAPTURE_SESSION_DIR</c> đổi sang thư mục khác - dùng khi chạy
+    /// thử/tự động hoá để KHÔNG đụng vào các tab thật của người dùng trong thư mục mặc định.</summary>
+    public static string Folder { get; } =
+        Environment.GetEnvironmentVariable("SCREENCAPTURE_SESSION_DIR") is { Length: > 0 } overrideDir
+            ? overrideDir
+            : Path.Combine(Path.GetTempPath(), "AppSuite", "ScreenCapture", "Session");
 
     /// <summary>Bitmap nào đã ghi ra file nào - bỏ qua encode PNG lại cho ảnh không đổi (bitmap trong
     /// app là bất biến: mọi thao tác sửa pixel đều tạo bitmap mới).</summary>

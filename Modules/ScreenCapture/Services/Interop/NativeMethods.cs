@@ -80,6 +80,50 @@ internal static partial class NativeMethods
     [LibraryImport("comctl32.dll")]
     public static partial IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
+    // ---- Chụp cuộn (Services/ScrollCaptureService.cs): cuộn chuột giả lập + phím Esc để dừng ----
+    public const uint INPUT_MOUSE = 0;
+    public const uint MOUSEEVENTF_WHEEL = 0x0800;
+    public const int VK_ESCAPE = 0x1B;
+    public const int WHEEL_DELTA = 120;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MOUSEINPUT
+    {
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint dwFlags;
+        public uint time;
+        public IntPtr dwExtraInfo;
+    }
+
+    /// <summary>INPUT chỉ khai báo nhánh chuột của union (MOUSEINPUT là thành viên lớn nhất nên kích
+    /// thước struct vẫn đúng cho SendInput).</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    public struct INPUT
+    {
+        public uint type;
+        public MOUSEINPUT mi;
+    }
+
+    [LibraryImport("user32.dll")]
+    public static unsafe partial uint SendInput(uint cInputs, INPUT* pInputs, int cbSize);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetCursorPos(int x, int y);
+
+    [LibraryImport("user32.dll")]
+    public static partial short GetAsyncKeyState(int vKey);
+
+    public const uint GA_ROOT = 2;
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr WindowFromPoint(POINT point);
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr GetAncestor(IntPtr hwnd, uint gaFlags);
+
     // ---- Icon khay hệ thống (Services/TrayIconService.cs) ----
     public const uint WM_APP = 0x8000;
     public const uint WM_NULL = 0x0000;

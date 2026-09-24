@@ -38,6 +38,7 @@ public sealed class AppSettings
         new() { Action = HotkeyAction.ActiveWindow, Alt = true, Key = "PrintScreen" },
         new() { Action = HotkeyAction.Region, Shift = true, Key = "PrintScreen" },
         new() { Action = HotkeyAction.FixedRegion, Shift = true, Ctrl = true, Key = "PrintScreen" },
+        new() { Action = HotkeyAction.ScrollCapture, Ctrl = true, Alt = true, Key = "PrintScreen" },
         new() { Action = HotkeyAction.RepeatLast, Key = HotkeyBinding.NoKey },
     ];
 
@@ -68,6 +69,7 @@ public enum HotkeyAction
     Region,
     FixedRegion,
     RepeatLast,
+    ScrollCapture,
 }
 
 public sealed class HotkeyBinding

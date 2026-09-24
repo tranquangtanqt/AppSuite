@@ -45,9 +45,14 @@ public sealed partial class RegionOverlayWindow : Window
     private Point _dragStart;
     private Rect _selectionLogical; // logical (XAML-space) pixels, converted to device px on confirm
 
-    public RegionOverlayWindow(SKBitmap frozenScreen, RECT virtualRect, bool isFixed, RECT? initialFixedRegion)
+    /// <param name="hint">Dòng hướng dẫn thay cho mặc định "Kéo chuột để chọn vùng" (vd chụp cuộn).</param>
+    public RegionOverlayWindow(SKBitmap frozenScreen, RECT virtualRect, bool isFixed, RECT? initialFixedRegion, string? hint = null)
     {
         InitializeComponent();
+        if (hint is not null)
+        {
+            HintText.Text = hint;
+        }
         _frozenScreen = frozenScreen;
         _virtualRect = virtualRect;
         _isFixed = isFixed;

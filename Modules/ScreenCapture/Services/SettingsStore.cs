@@ -23,7 +23,13 @@ public sealed class SettingsStore
         {
             if (File.Exists(ConfigPath))
             {
-                return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(ConfigPath), JsonOptions) ?? new AppSettings();
+                var settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(ConfigPath), JsonOptions) ?? new AppSettings();
+                // File lưu từ bản cũ thiếu phím tắt của thao tác mới (vd Chụp cuộn) → bổ sung mặc định.
+                foreach (var action in Enum.GetValues<HotkeyAction>())
+                {
+                    settings.GetHotkey(action);
+                }
+                return settings;
             }
         }
         catch
