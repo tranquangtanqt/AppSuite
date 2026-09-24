@@ -11,6 +11,13 @@ public sealed class AppSettings
     /// <summary>Chụp xong tự copy ảnh vào clipboard (ngoài việc mở trong Editor).</summary>
     public bool CopyToClipboardAfterCapture { get; set; }
 
+    /// <summary>Hiện icon ở khay hệ thống; bấm X ở cửa sổ chính thì ẩn xuống khay (phím tắt vẫn chạy)
+    /// thay vì thoát. Thoát hẳn qua menu chuột phải của icon.</summary>
+    public bool RunInTray { get; set; } = true;
+
+    /// <summary>Tự chạy khi đăng nhập Windows (HKCU\...\Run, tham số --tray: chạy ngầm ở khay luôn).</summary>
+    public bool StartWithWindows { get; set; }
+
     // ---- Tự động lưu ----
     public bool AutoSave { get; set; }
     public string AutoSaveFolder { get; set; } =

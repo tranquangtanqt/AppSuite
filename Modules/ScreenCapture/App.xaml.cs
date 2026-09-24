@@ -35,7 +35,13 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = new CaptureLauncherWindow();
-        _window.Activate();
+        // "Khởi động cùng Windows" chạy exe với --tray → chỉ hiện icon ở khay, không bật cửa sổ chính.
+        bool startInTray = Environment.GetCommandLineArgs().Contains(Services.StartupRegistration.TrayArgument);
+        var launcher = new CaptureLauncherWindow(startInTray);
+        _window = launcher;
+        if (!launcher.StartHidden)
+        {
+            launcher.Activate();
+        }
     }
 }

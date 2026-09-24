@@ -108,7 +108,7 @@ public sealed partial class EditorWindow : Window
             if (!_forceClose)
             {
                 args.Cancel = true;
-                await TryCloseWindowAsync();
+                await RequestCloseAsync();
             }
         };
 
@@ -438,13 +438,22 @@ public sealed partial class EditorWindow : Window
 
     /// <summary>Đóng cả cửa sổ (nút X hoặc nút Đóng ở tab Tệp): lưu tạm mọi tab vào thư mục phiên để lần
     /// mở sau khôi phục lại - không cần hỏi. Chỉ khi lưu tạm lỗi mà còn ảnh chưa lưu mới hỏi xác nhận.</summary>
-    private async Task TryCloseWindowAsync()
+    /// Launcher cũng gọi hàm này khi Thoát từ menu khay. Trả false nếu người dùng bấm Huỷ.</summary>
+    public async Task<bool> RequestCloseAsync()
     {
         int unsaved = DocumentTabs.TabItems.OfType<TabViewItem>().Count(t => t.Tag is EditorViewModel { NeedsSave: true });
         bool saved = TrySaveSession(); // tắt "nhớ tab" thì lần ghi này chỉ dọn sạch thư mục tạm
         bool persisted = saved && _session.Enabled;
         if (!persisted && unsaved > 0)
         {
+            // Thoát từ khay khi Editor đang thu nhỏ → mở lên cho người dùng thấy hộp thoại.
+            var hwnd = WindowNative.GetWindowHandle(this);
+            if (Services.Interop.NativeMethods.IsIconic(hwnd))
+            {
+                Services.Interop.NativeMethods.ShowWindow(hwnd, Services.Interop.NativeMethods.SW_RESTORE);
+            }
+            Activate();
+
             var dialog = new ContentDialog
             {
                 XamlRoot = Content.XamlRoot,
@@ -458,11 +467,12 @@ public sealed partial class EditorWindow : Window
             };
             if (await dialog.ShowAsync() != ContentDialogResult.Primary)
             {
-                return;
+                return false;
             }
         }
         _forceClose = true;
         Close();
+        return true;
     }
 
     private static Windows.UI.Color ToWindowsColor(SKColor c) => Windows.UI.Color.FromArgb(c.Alpha, c.Red, c.Green, c.Blue);
@@ -1493,7 +1503,7 @@ public sealed partial class EditorWindow : Window
     private void RedoButton_Click(object sender, RoutedEventArgs e) => _viewModel.RedoCommand.Execute(null);
     private void SaveButton_Click(object sender, RoutedEventArgs e) => _viewModel.SaveCommand.Execute(null);
     private void CopyButton_Click(object sender, RoutedEventArgs e) => _viewModel.CopyToClipboardCommand.Execute(null);
-    private async void CloseButton_Click(object sender, RoutedEventArgs e) => await TryCloseWindowAsync();
+    private async void CloseButton_Click(object sender, RoutedEventArgs e) => await RequestCloseAsync();
 
     private enum RibbonTab { Home, File, NumberStamp, Region }
 

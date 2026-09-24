@@ -80,6 +80,75 @@ internal static partial class NativeMethods
     [LibraryImport("comctl32.dll")]
     public static partial IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
 
+    // ---- Icon khay hệ thống (Services/TrayIconService.cs) ----
+    public const uint WM_APP = 0x8000;
+    public const uint WM_NULL = 0x0000;
+    public const uint WM_LBUTTONUP = 0x0202;
+    public const uint WM_LBUTTONDBLCLK = 0x0203;
+    public const uint WM_RBUTTONUP = 0x0205;
+    public const uint NIM_ADD = 0, NIM_MODIFY = 1, NIM_DELETE = 2;
+    public const uint NIF_MESSAGE = 0x01, NIF_ICON = 0x02, NIF_TIP = 0x04, NIF_INFO = 0x10;
+    public const uint NIIF_INFO = 0x01;
+    public const uint MF_STRING = 0x0000, MF_GRAYED = 0x0001, MF_SEPARATOR = 0x0800;
+    public const uint TPM_RIGHTBUTTON = 0x0002, TPM_NONOTIFY = 0x0080, TPM_RETURNCMD = 0x0100;
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public unsafe struct NOTIFYICONDATAW
+    {
+        public uint cbSize;
+        public IntPtr hWnd;
+        public uint uID;
+        public uint uFlags;
+        public uint uCallbackMessage;
+        public IntPtr hIcon;
+        public fixed char szTip[128];
+        public uint dwState;
+        public uint dwStateMask;
+        public fixed char szInfo[256];
+        public uint uTimeoutOrVersion;
+        public fixed char szInfoTitle[64];
+        public uint dwInfoFlags;
+        public Guid guidItem;
+        public IntPtr hBalloonIcon;
+    }
+
+    [LibraryImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool Shell_NotifyIcon(uint dwMessage, ref NOTIFYICONDATAW lpData);
+
+    [LibraryImport("user32.dll", EntryPoint = "RegisterWindowMessageW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial uint RegisterWindowMessage(string lpString);
+
+    [LibraryImport("user32.dll")]
+    public static unsafe partial IntPtr CreateIconFromResourceEx(byte* presbits, uint dwResSize,
+        [MarshalAs(UnmanagedType.Bool)] bool fIcon, uint dwVer, int cxDesired, int cyDesired, uint flags);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DestroyIcon(IntPtr hIcon);
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr CreatePopupMenu();
+
+    [LibraryImport("user32.dll", EntryPoint = "AppendMenuW", StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool AppendMenu(IntPtr hMenu, uint uFlags, nuint uIDNewItem, string? lpNewItem);
+
+    [LibraryImport("user32.dll")]
+    public static partial int TrackPopupMenuEx(IntPtr hMenu, uint uFlags, int x, int y, IntPtr hwnd, IntPtr lptpm);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DestroyMenu(IntPtr hMenu);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetCursorPos(out POINT lpPoint);
+
+    [LibraryImport("user32.dll", EntryPoint = "PostMessageW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+
     [LibraryImport("user32.dll")]
     public static partial IntPtr GetForegroundWindow();
 

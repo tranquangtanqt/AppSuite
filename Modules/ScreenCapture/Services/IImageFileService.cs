@@ -7,7 +7,8 @@ public interface IImageFileService
     /// <summary>Shows a Save As dialog and encodes the bitmap as PNG. Returns the saved path, or null
     /// if the user cancelled. <paramref name="ownerHwnd"/> is required because this is an unpackaged
     /// app - FileSavePicker needs IInitializeWithWindow to know which window owns the dialog.</summary>
-    Task<string?> SaveAsPngAsync(SKBitmap bitmap, IntPtr ownerHwnd);
+    /// <param name="suggestedName">Tên file điền sẵn (không kèm .png) - Editor truyền tên tab.</param>
+    Task<string?> SaveAsPngAsync(SKBitmap bitmap, IntPtr ownerHwnd, string? suggestedName = null);
 
     /// <summary>Hộp thoại chọn thư mục (dùng cho "Đóng tất cả" → lưu tất cả). Null nếu huỷ.</summary>
     Task<string?> PickFolderAsync(IntPtr ownerHwnd);

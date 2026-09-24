@@ -61,6 +61,12 @@
                                        Style="{StaticResource HintStyle}" />
                         </StackPanel>
                         <CheckBox x:Name="CopyAfterCaptureBox" Content="Chụp xong tự copy ảnh vào clipboard" />
+                        <StackPanel Spacing="4">
+                            <CheckBox x:Name="RunInTrayBox" Content="Chạy ngầm ở khay hệ thống" />
+                            <TextBlock Style="{StaticResource HintStyle}"
+                                       Text="Hiện icon ở khay (góc phải thanh taskbar). Bấm X ở cửa sổ chính thì ẩn xuống khay thay vì thoát - phím tắt vẫn dùng được. Bấm icon để mở lại, chuột phải để chụp nhanh hoặc Thoát." />
+                        </StackPanel>
+                        <CheckBox x:Name="StartWithWindowsBox" Content="Khởi động cùng Windows (chạy ngầm ở khay)" />
                     </StackPanel>
 
                     <!-- Tự động lưu -->
@@ -107,7 +113,7 @@
                         <TextBlock Text="Phím tắt" Style="{StaticResource PageHeaderStyle}" />
                         <Grid x:Name="HotkeyGrid" ColumnSpacing="10" RowSpacing="8" />
                         <TextBlock Style="{StaticResource HintStyle}" Margin="0,8,0,0"
-                                   Text="Phím tắt dùng được cả khi app đang thu nhỏ hoặc đang dùng app khác (cửa sổ chính ScreenCapture phải còn mở). ⚠ = phím đang bị Windows hoặc app khác giữ - ví dụ phím PrintScreen khi bật &quot;Use the Print screen key to open screen capture&quot; trong Settings > Accessibility > Keyboard của Windows 11." />
+                                   Text="Phím tắt dùng được cả khi app đang thu nhỏ, ẩn ở khay hệ thống hoặc đang dùng app khác. ⚠ = phím đang bị app khác giữ (vd PicPick đang chạy). Riêng phím PrintScreen đơn lẻ: nếu Windows 11 bật &quot;Use the Print screen key to open screen capture&quot; (Settings > Accessibility > Keyboard) thì Snipping Tool bắt phím trước và app không phát hiện được - tắt tuỳ chọn đó hoặc dùng tổ hợp có Shift/Ctrl/Alt." />
                     </StackPanel>
                 </Grid>
             </ScrollViewer>

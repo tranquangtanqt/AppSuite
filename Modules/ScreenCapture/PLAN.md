@@ -303,7 +303,28 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
     `Ctrl+Shift+PrtSc` báo bị giữ (máy đang chạy PicPick dùng đúng các phím này); mô phỏng bấm `PrtSc`
     → tự chụp + mở Editor; `Shift+PrtSc` → hiện overlay chọn vùng; cửa sổ Cài đặt hiển thị đúng, ⚠
     đúng 2 phím bị giữ. Chưa thử: tự lưu / tự copy / hẹn giờ trên GUI.
-  - Giới hạn: phím tắt chỉ sống khi cửa sổ chính còn mở (chưa có icon khay hệ thống để chạy ngầm).
+- **Chạy ngầm ở khay hệ thống + khởi động cùng Windows**:
+  - `Services/TrayIconService.cs`: `Shell_NotifyIcon` trên HWND launcher, callback `WM_APP+1` bắt qua
+    subclass riêng (id khác HotkeyService, 2 subclass cùng tồn tại được); icon vẽ bằng Skia → PNG →
+    `CreateIconFromResourceEx` (không cần file .ico); menu chuột phải = `CreatePopupMenu` +
+    `TrackPopupMenuEx(TPM_RETURNCMD)` (kèm SetForegroundWindow + PostMessage WM_NULL theo tài liệu);
+    tự thêm lại icon khi nhận "TaskbarCreated" (Explorer khởi động lại). `NOTIFYICONDATAW` khai báo
+    với `fixed char` buffer (blittable, dùng được với LibraryImport).
+  - `AppSettings.RunInTray` (mặc định bật) / `StartWithWindows`. Launcher: `AppWindow.Closing` → bật
+    khay thì `AppWindow.Hide()` (+ bong bóng lần đầu), tắt thì `ExitAsync`. `ExitAsync` gọi
+    `EditorWindow.RequestCloseAsync()` (đổi tên từ TryCloseWindowAsync, trả bool; mở Editor lên nếu cần
+    hỏi) → Huỷ thì không thoát.
+  - `MinimizeForCapture`: cửa sổ đang ẩn (`AppWindow.IsVisible == false`) thì không `SW_MINIMIZE` (sẽ
+    làm nó hiện ở taskbar) và chụp xong không bật lại.
+  - `StartupRegistration`: HKCU Run = `"exe" --tray`. `App.OnLaunched` đọc `--tray` → launcher
+    `StartHidden` (không Activate, không mở Editor phiên cũ ngay).
+  - **Đã chạy thử**: bấm X → process còn chạy, cửa sổ ẩn; `Shift+PrtSc` khi đang ẩn → hiện overlay
+    chọn vùng, Esc → cửa sổ chính vẫn ẩn; chạy `--tray` → không có cửa sổ nào hiện, process sống; log
+    chẩn đoán xác nhận `Shell_NotifyIcon(NIM_ADD)` thành công. Chưa tự động hoá được: click icon / menu
+    khay (icon nằm trong nhóm icon ẩn nên UI Automation không thấy).
+  - **Phát hiện khi test**: PrtSc đơn lẻ không tới app dù `RegisterHotKey` thành công — Snipping Tool
+    (Windows 11, "Print screen key opens screen capture") bắt phím bằng hook cấp thấp trước. Không phát
+    hiện được bằng API → ghi chú trong trang Phím tắt + README.
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 

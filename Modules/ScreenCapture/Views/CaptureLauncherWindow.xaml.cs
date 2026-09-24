@@ -36,7 +36,15 @@ public sealed partial class CaptureLauncherWindow : Window
     private LastCaptureKind _lastKind;
     private RECT _lastRect;
 
-    public CaptureLauncherWindow()
+    private readonly TrayIconService _tray;
+    private bool _exiting;
+    private bool _trayBalloonShown;
+
+    /// <summary>App.OnLaunched không Activate cửa sổ khi true (chạy ngầm ở khay ngay từ đầu).</summary>
+    public bool StartHidden { get; }
+
+    /// <param name="startInTray">Mở bằng tham số --tray (Khởi động cùng Windows).</param>
+    public CaptureLauncherWindow(bool startInTray = false)
     {
         InitializeComponent();
 
@@ -52,9 +60,131 @@ public sealed partial class CaptureLauncherWindow : Window
         _hotkeys.Pressed += Hotkeys_Pressed;
         _failedHotkeys = _hotkeys.Apply(_settings.Hotkeys);
         ReportFailedHotkeys();
-        Closed += (_, _) => _hotkeys.Dispose();
 
-        RestorePreviousSession();
+        _tray = new TrayIconService(hwnd, DispatcherQueue, "ScreenCapture - chụp màn hình");
+        _tray.OpenRequested += (_, _) => ShowLauncher();
+        _tray.MenuRequested += (_, _) => ShowTrayMenu();
+        _tray.IsVisible = _settings.RunInTray;
+
+        // Bấm X: bật "chạy ngầm ở khay" thì chỉ ẩn xuống khay; tắt thì thoát hẳn (hỏi lưu ảnh qua Editor).
+        AppWindow.Closing += (sender, args) =>
+        {
+            if (_exiting)
+            {
+                return;
+            }
+            args.Cancel = true;
+            if (_settings.RunInTray)
+            {
+                HideToTray();
+            }
+            else
+            {
+                _ = ExitAsync();
+            }
+        };
+        Closed += (_, _) =>
+        {
+            _hotkeys.Dispose();
+            _tray.Dispose();
+        };
+
+        StartHidden = startInTray && _settings.RunInTray;
+        if (!StartHidden)
+        {
+            // Chạy ngầm từ lúc khởi động Windows thì không bật Editor lên - tab cũ vẫn được nạp lại ở
+            // lần chụp / mở Editor đầu tiên (OpenEditor tự Load phiên).
+            RestorePreviousSession();
+        }
+    }
+
+    // ---- Khay hệ thống ----
+
+    private void HideToTray()
+    {
+        AppWindow.Hide();
+        if (!_trayBalloonShown)
+        {
+            _trayBalloonShown = true;
+            _tray.ShowBalloon("ScreenCapture vẫn đang chạy",
+                "Phím tắt vẫn dùng được. Bấm icon ở khay để mở lại, chuột phải để Thoát.");
+        }
+    }
+
+    private void ShowLauncher()
+    {
+        AppWindow.Show();
+        var hwnd = WindowNative.GetWindowHandle(this);
+        if (NativeMethods.IsIconic(hwnd))
+        {
+            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+        }
+        Activate();
+    }
+
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit }
+
+    private void ShowTrayMenu()
+    {
+        bool canOpenEditor = _editor is not null || _session.Load().Documents.Count > 0;
+        var command = (TrayCommand)_tray.ShowMenu(
+        [
+            ((int)TrayCommand.FullScreen, "Chụp toàn màn hình", true),
+            ((int)TrayCommand.ActiveWindow, "Chụp cửa sổ hiện tại", true),
+            ((int)TrayCommand.Region, "Chụp vùng chọn", true),
+            ((int)TrayCommand.FixedRegion, "Chụp vùng cố định", true),
+            (0, null, true),
+            ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
+            ((int)TrayCommand.OpenEditor, "Mở Editor", canOpenEditor),
+            ((int)TrayCommand.Settings, "Cài đặt...", true),
+            (0, null, true),
+            ((int)TrayCommand.Exit, "Thoát", true),
+        ]);
+
+        switch (command)
+        {
+            case TrayCommand.FullScreen: _ = CaptureFullScreenAsync(); break;
+            case TrayCommand.ActiveWindow: _ = CaptureActiveWindowAsync(); break;
+            case TrayCommand.Region: _ = CaptureRegionAsync(isFixed: false); break;
+            case TrayCommand.FixedRegion: _ = CaptureRegionAsync(isFixed: true); break;
+            case TrayCommand.OpenLauncher: ShowLauncher(); break;
+            case TrayCommand.OpenEditor: OpenExistingEditor(); break;
+            case TrayCommand.Settings: OpenSettings(); break;
+            case TrayCommand.Exit: _ = ExitAsync(); break;
+        }
+    }
+
+    private void OpenExistingEditor()
+    {
+        if (_editor is null)
+        {
+            var (documents, activeId) = _session.Load();
+            if (documents.Count == 0)
+            {
+                return;
+            }
+            _editor = CreateEditor(documents, activeId, capture: null);
+        }
+        var editorHwnd = WindowNative.GetWindowHandle(_editor);
+        if (NativeMethods.IsIconic(editorHwnd))
+        {
+            NativeMethods.ShowWindow(editorHwnd, NativeMethods.SW_RESTORE);
+        }
+        _editor.Activate();
+    }
+
+    /// <summary>Thoát hẳn app: đóng Editor theo đúng luồng của nó (lưu tạm phiên / hỏi lưu ảnh - người
+    /// dùng Huỷ thì không thoát), đóng Cài đặt, rồi thoát.</summary>
+    private async Task ExitAsync()
+    {
+        if (_editor is not null && !await _editor.RequestCloseAsync())
+        {
+            return;
+        }
+        _settingsWindow?.Close();
+        _exiting = true;
+        Close();
+        Application.Current.Exit();
     }
 
     private void ShowStatus(string message, InfoBarSeverity severity = InfoBarSeverity.Informational)
@@ -104,6 +234,15 @@ public sealed partial class CaptureLauncherWindow : Window
         }
         _session.ApplySettings(settings);
         _editor?.PersistSession(); // tắt "nhớ tab" → dọn thư mục tạm ngay; đổi giới hạn → áp ngay
+        _tray.IsVisible = settings.RunInTray;
+        try
+        {
+            StartupRegistration.Apply(settings.StartWithWindows);
+        }
+        catch (Exception ex)
+        {
+            ShowStatus($"Không đặt được khởi động cùng Windows: {ex.Message}", InfoBarSeverity.Error);
+        }
         _failedHotkeys = _hotkeys.Apply(settings.Hotkeys);
         StatusInfoBar.IsOpen = false;
         ReportFailedHotkeys();
@@ -321,9 +460,14 @@ public sealed partial class CaptureLauncherWindow : Window
     /// đi sẽ dính luôn cửa sổ Editor vào ảnh.</summary>
     private void MinimizeForCapture(IntPtr launcherHwnd)
     {
-        // Chụp bằng phím tắt khi launcher đang thu nhỏ → chụp xong giữ nguyên thu nhỏ, không bật lên.
-        _launcherWasMinimized = NativeMethods.IsIconic(launcherHwnd);
-        NativeMethods.ShowWindow(launcherHwnd, NativeMethods.SW_MINIMIZE);
+        // Chụp bằng phím tắt / menu khay khi launcher đang thu nhỏ hoặc ẩn ở khay → chụp xong giữ nguyên,
+        // không bật lên. Cửa sổ đang ẩn thì không gọi SW_MINIMIZE (sẽ làm nó hiện ra ở taskbar).
+        bool visible = AppWindow.IsVisible;
+        _launcherWasMinimized = !visible || NativeMethods.IsIconic(launcherHwnd);
+        if (visible)
+        {
+            NativeMethods.ShowWindow(launcherHwnd, NativeMethods.SW_MINIMIZE);
+        }
         _editorWasShownBeforeCapture = false;
         if (_editor is not null)
         {

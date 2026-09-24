@@ -26,16 +26,30 @@ tuỳ chọn về ban đầu.
 
 | Trang | Tuỳ chọn |
 |---|---|
-| Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard |
+| Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard; chạy ngầm ở khay hệ thống; khởi động cùng Windows |
 | Tự động lưu | Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên = thời điểm chụp; ảnh đã tự lưu đóng tab không hỏi lại |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
 | Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
 
 - Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`.
-- Dùng được cả khi app đang thu nhỏ / đang ở app khác, **miễn là cửa sổ chính ScreenCapture còn mở**.
-  Chụp bằng phím tắt khi cửa sổ chính đang thu nhỏ thì chụp xong nó vẫn thu nhỏ.
-- Phím đã bị Windows / app khác giữ (vd PicPick đang chạy, hoặc Windows 11 bật "Use the Print screen
-  key to open screen capture") → đánh dấu ⚠ trong trang Phím tắt + thông báo ở cửa sổ chính.
+- Dùng được cả khi app đang thu nhỏ, ẩn ở khay hệ thống hoặc đang ở app khác. Chụp bằng phím tắt
+  khi cửa sổ chính đang thu nhỏ / ẩn thì chụp xong nó vẫn giữ nguyên, không bật lên.
+- Phím đã bị app khác giữ (vd PicPick đang chạy) → đánh dấu ⚠ trong trang Phím tắt + thông báo ở
+  cửa sổ chính. **Ngoại lệ**: PrintScreen đơn lẻ khi Windows 11 bật "Use the Print screen key to open
+  screen capture" — Snipping Tool bắt phím bằng hook cấp thấp nên đăng ký vẫn "thành công" nhưng app
+  không nhận được phím; tắt tuỳ chọn đó của Windows hoặc dùng tổ hợp có Shift/Ctrl/Alt.
+
+**Chạy ngầm ở khay hệ thống** (bật mặc định, tắt được trong Cài đặt → Chung):
+
+- Icon ScreenCapture ở khay (góc phải taskbar; có thể nằm trong nhóm icon ẩn `^`). Click trái → mở
+  cửa sổ chính. Click phải → menu: Chụp toàn màn hình / cửa sổ / vùng chọn / vùng cố định, Mở cửa sổ
+  chính, Mở Editor, Cài đặt..., **Thoát**.
+- Bấm X ở cửa sổ chính → ẩn xuống khay (lần đầu có bong bóng thông báo), phím tắt vẫn dùng được.
+  Thoát hẳn bằng *Thoát* ở menu khay (Editor vẫn lưu tạm / hỏi lưu ảnh như khi đóng bình thường).
+- Tắt tuỳ chọn → không có icon, bấm X ở cửa sổ chính là thoát hẳn app.
+- *Khởi động cùng Windows*: ghi `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (không cần quyền
+  admin), chạy với `--tray` → chỉ hiện icon ở khay, không bật cửa sổ chính; tab của phiên trước được nạp
+  lại ở lần chụp / mở Editor đầu tiên.
 - *Chụp lại lần gần nhất*: lặp lại kiểu chụp gần nhất; vùng chọn / vùng cố định thì chụp lại đúng
   vùng đó ngay, không hiện màn chọn vùng.
 - Không cho 2 thao tác dùng chung 1 tổ hợp phím.

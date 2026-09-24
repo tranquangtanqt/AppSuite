@@ -86,6 +86,8 @@ public sealed partial class SettingsWindow : Window
     {
         DelayBox.Value = s.CaptureDelaySeconds;
         CopyAfterCaptureBox.IsChecked = s.CopyToClipboardAfterCapture;
+        RunInTrayBox.IsChecked = s.RunInTray;
+        StartWithWindowsBox.IsChecked = s.StartWithWindows;
         AutoSaveBox.IsChecked = s.AutoSave;
         AutoSaveFolderBox.Text = s.AutoSaveFolder;
         AutoSaveFolderPanel.Opacity = s.AutoSave ? 1 : 0.5;
@@ -110,6 +112,8 @@ public sealed partial class SettingsWindow : Window
         {
             CaptureDelaySeconds = Int(DelayBox, 0),
             CopyToClipboardAfterCapture = CopyAfterCaptureBox.IsChecked == true,
+            RunInTray = RunInTrayBox.IsChecked == true,
+            StartWithWindows = StartWithWindowsBox.IsChecked == true,
             AutoSave = AutoSaveBox.IsChecked == true,
             AutoSaveFolder = AutoSaveFolderBox.Text.Trim(),
             RememberTabs = RememberTabsBox.IsChecked == true,
