@@ -23,14 +23,29 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
 Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh sửa (tự maximize). Thanh công cụ
 dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn phía dưới, chia thành các tab:
 
+**Cách chọn & chỉnh sửa shape** (áp dụng với mọi công cụ, không cần bấm *Di chuyển* trước):
+
+- **Vẽ/đặt xong là đang chỉnh sửa luôn**: shape vừa vẽ (hoặc stamp/text vừa đặt) được chọn ngay —
+  hiện handle, tab contextual (vd *Number Stamp*) nếu có, đổi màu/cỡ nét áp luôn cho shape đó.
+- **Bấm trúng 1 shape có sẵn** → chọn shape đó và kéo được ngay (di chuyển / kéo handle góc / kéo đầu
+  mũi tên). Chữ nhật và Elip chỉ bắt khi bấm lên **viền**, nên vẫn vẽ được shape khác bên trong khung.
+- **Bấm vào vùng trống** (hoặc nhấn `Esc`) → thoát chỉnh sửa. Với công cụ vẽ hình, bấm-kéo ở vùng
+  trống thì vẽ shape mới luôn. Riêng *Text* và *Stamps*: nếu đang chọn shape, lần bấm vùng trống đầu
+  chỉ bỏ chọn; lần bấm sau mới bật hộp nhập text / đặt stamp. Ví dụ Number Stamps: bấm → stamp 1 (đang
+  sửa, tab *Number Stamp*) → bấm ra ngoài (thoát sửa) → bấm → stamp 2 → ... Công cụ Stamps giữ nguyên
+  cho tới khi chọn công cụ khác.
+- **Kích thước stamp**: kéo handle góc để phóng to/thu nhỏ stamp (luôn giữ tròn/vuông). Stamp đặt
+  tiếp theo dùng đúng kích thước stamp vừa chỉnh. Chọn lại stamp từ menu *Stamps* thì về kích thước
+  mặc định (32px).
+- *Tô màu* là thao tác trên pixel ảnh nên không chọn shape.
+
 **Tab "Trang chủ"**
 
-- **Chọn** — *Di chuyển*: click chọn 1 shape (viền nét đứt + 4 handle góc), kéo để di chuyển, kéo
-  handle góc để đổi kích thước. *Xoá* (hoặc phím `Delete`/`Backspace`), *Lên trên* / *Xuống dưới*
-  (đổi thứ tự lớp).
+- **Chọn** — *Di chuyển*: công cụ chỉ chọn/kéo, bấm vùng trống không vẽ gì. *Xoá* (hoặc phím
+  `Delete`/`Backspace`), *Lên trên* / *Xuống dưới* (đổi thứ tự lớp).
 - **Vẽ hình** — Chữ nhật, Elip, Đường thẳng, Mũi tên, Highlight (marker tô trong mờ), Text (click
   vào canvas, nhập text qua dialog).
-  - Đường thẳng / Mũi tên giữ đúng hướng kéo chuột. Khi chọn bằng *Di chuyển*: hiện 2 handle tròn ở
+  - Đường thẳng / Mũi tên giữ đúng hướng kéo chuột. Khi đang chọn: hiện 2 handle tròn ở
     2 đầu; bấm **gần một đầu** (khoảng 1/3 độ dài, tối đa 30px) rồi kéo để đổi hướng/độ dài, bấm
     khúc giữa để di chuyển cả đường. Chọn theo khoảng cách tới thân đường, không theo khung bao.
   - **Giữ `Shift`** khi vẽ hoặc kéo: Đường thẳng / Mũi tên khoá hướng theo bội số 45° (ngang, dọc,
@@ -72,6 +87,7 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | `Ctrl+S` | Lưu PNG |
 | `Ctrl+C` | Copy ảnh (đã gộp mọi shape) vào clipboard |
 | `Delete` / `Backspace` | Xoá shape đang chọn |
+| `Esc` | Bỏ chọn shape (thoát chỉnh sửa) |
 | Giữ `Shift` khi vẽ/kéo | Khoá góc 45° (đường/mũi tên), vuông/tròn (chữ nhật/elip) |
 
 Khi đang gõ trong ô số (Current/Next), các phím trên thuộc về ô đó (vd `Ctrl+Z` hoàn tác chữ vừa

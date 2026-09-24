@@ -47,6 +47,11 @@ public sealed partial class EditorWindow : Window
     private int _resizingHandle = -1; // -1 = none, 0..3 = TL/TR/BL/BR
     private int _lineEndpointHandle = -1; // -1 = none, 0 = điểm đầu, 1 = điểm cuối của Line/Arrow
 
+    // Kích thước stamp đặt tiếp theo: nhớ theo stamp vừa được kéo to/nhỏ, về mặc định khi chọn lại
+    // stamp từ flyout Stamps (bắt đầu đặt từ đầu).
+    private const float DefaultStampSize = 32f;
+    private float _stampSize = DefaultStampSize;
+
     public ObservableCollection<StampPickerItem> NumberStamps { get; } = [];
     public ObservableCollection<StampPickerItem> GeneralStamps { get; } = [];
 
@@ -256,6 +261,49 @@ public sealed partial class EditorWindow : Window
         return toEnd <= toStart ? 1 : 0;
     }
 
+    /// <summary>Bấm trúng handle của shape đang chọn, hoặc trúng 1 shape bất kỳ (shape vẽ sau nằm trên,
+    /// nên duyệt ngược) → chọn shape đó và bắt đầu kéo (đầu mút / handle góc / di chuyển cả shape).
+    /// Trả false nếu bấm vào vùng trống.</summary>
+    private bool TryBeginEditExisting(SKPoint pos, PointerRoutedEventArgs e)
+    {
+        var selected = _viewModel.SelectedAnnotation;
+        if (selected is LineArrowAnnotation selectedLine && HitTestLineEndpoint(selectedLine, pos) is { } selectedEndpoint)
+        {
+            BeginLineEndpointDrag(selectedLine, selectedEndpoint, e);
+            return true;
+        }
+        if (selected is not null and not LineArrowAnnotation && HitTestHandle(selected.NormalizedBounds, pos) is { } handleIndex)
+        {
+            _resizingHandle = handleIndex;
+            _movingShape = selected;
+            _movingOldBounds = selected.NormalizedBounds;
+            Canvas.CapturePointer(e.Pointer);
+            return true;
+        }
+
+        var hit = _viewModel.Annotations.Reverse().FirstOrDefault(s => s.HitTest(pos, 6));
+        if (hit is null)
+        {
+            return false;
+        }
+
+        _viewModel.SelectedAnnotation = hit;
+        if (hit is LineArrowAnnotation hitLine && HitTestLineEndpoint(hitLine, pos) is { } hitEndpoint)
+        {
+            // Chưa chọn cũng kéo đầu mũi tên được ngay trong 1 thao tác.
+            BeginLineEndpointDrag(hitLine, hitEndpoint, e);
+        }
+        else
+        {
+            _movingShape = hit;
+            _movingOldBounds = hit.Bounds;
+            _moveDragStart = pos;
+            Canvas.CapturePointer(e.Pointer);
+        }
+        Canvas.Invalidate();
+        return true;
+    }
+
     private void BeginLineEndpointDrag(LineArrowAnnotation line, int endpoint, PointerRoutedEventArgs e)
     {
         _lineEndpointHandle = endpoint;
@@ -289,42 +337,27 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        // Tô màu thao tác trên pixel ảnh, không chọn shape.
+        if (_viewModel.SelectedTool == CaptureTool.Fill)
+        {
+            _viewModel.SelectedAnnotation = null;
+            _viewModel.FloodFill(new SKPointI((int)pos.X, (int)pos.Y));
+            return;
+        }
+
+        // Với MỌI công cụ: bấm trúng handle / shape có sẵn thì chọn + kéo shape đó (không cần chuyển
+        // sang "Di chuyển" trước). Chỉ khi bấm vào vùng trống mới bỏ chọn và dùng công cụ hiện tại.
+        if (TryBeginEditExisting(pos, e))
+        {
+            return;
+        }
+
+        bool hadSelection = _viewModel.SelectedAnnotation is not null;
+        _viewModel.SelectedAnnotation = null;
+        Canvas.Invalidate();
+
         switch (_viewModel.SelectedTool)
         {
-            case CaptureTool.Move:
-                if (_viewModel.SelectedAnnotation is LineArrowAnnotation selectedLine
-                    && HitTestLineEndpoint(selectedLine, pos) is { } selectedEndpoint)
-                {
-                    BeginLineEndpointDrag(selectedLine, selectedEndpoint, e);
-                    break;
-                }
-                if (_viewModel.SelectedAnnotation is { } selected and not LineArrowAnnotation
-                    && HitTestHandle(selected.NormalizedBounds, pos) is { } handleIndex)
-                {
-                    _resizingHandle = handleIndex;
-                    _movingShape = selected;
-                    _movingOldBounds = selected.NormalizedBounds;
-                    Canvas.CapturePointer(e.Pointer);
-                    break;
-                }
-
-                var hit = _viewModel.Annotations.Reverse().FirstOrDefault(s => s.HitTest(pos, 6));
-                _viewModel.SelectedAnnotation = hit;
-                if (hit is LineArrowAnnotation hitLine && HitTestLineEndpoint(hitLine, pos) is { } hitEndpoint)
-                {
-                    // Chưa chọn cũng kéo đầu mũi tên được ngay trong 1 thao tác.
-                    BeginLineEndpointDrag(hitLine, hitEndpoint, e);
-                }
-                else if (hit is not null)
-                {
-                    _movingShape = hit;
-                    _movingOldBounds = hit.Bounds;
-                    _moveDragStart = pos;
-                    Canvas.CapturePointer(e.Pointer);
-                }
-                Canvas.Invalidate();
-                break;
-
             case CaptureTool.Rectangle:
                 _draftShape = new RectangleAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y), Color = _viewModel.StrokeColor, StrokeWidth = _viewModel.StrokeWidth };
                 Canvas.CapturePointer(e.Pointer);
@@ -346,15 +379,19 @@ public sealed partial class EditorWindow : Window
                 Canvas.CapturePointer(e.Pointer);
                 break;
             case CaptureTool.Text:
-                PromptForText(pos);
-                break;
-            case CaptureTool.Fill:
-                _viewModel.FloodFill(new SKPointI((int)pos.X, (int)pos.Y));
+                // Đang chọn shape mà bấm ra vùng trống = chỉ bỏ chọn, không bật hộp nhập text ngoài ý muốn.
+                if (!hadSelection)
+                {
+                    PromptForText(pos);
+                }
                 break;
             case CaptureTool.Stamp:
-                if (_selectedStampKind is { } kind)
+                // Giống Text: đang chọn stamp (vừa đặt) mà bấm vùng trống = chỉ thoát chỉnh sửa; lần bấm
+                // tiếp theo mới đặt stamp kế tiếp (1 → bấm ra ngoài → 2 → ...). Công cụ Stamp vẫn giữ
+                // nguyên cho tới khi chọn công cụ khác.
+                if (!hadSelection && _selectedStampKind is { } kind)
                 {
-                    const float half = 16f;
+                    float half = _stampSize / 2;
                     var shape = new StampAnnotation
                     {
                         Kind = kind,
@@ -364,6 +401,7 @@ public sealed partial class EditorWindow : Window
                         Bounds = new SKRect(pos.X - half, pos.Y - half, pos.X + half, pos.Y + half),
                     };
                     _viewModel.AddAnnotation(shape);
+                    _viewModel.SelectedAnnotation = shape;
                     if (kind == StampKind.Number)
                     {
                         NextNumberBox.Value = _numberStampCounter;
@@ -405,9 +443,10 @@ public sealed partial class EditorWindow : Window
 
         if (_movingShape is not null && _resizingHandle >= 0)
         {
-            if (shift && _movingShape is RectangleAnnotation or EllipseAnnotation)
+            if (_movingShape is StampAnnotation || (shift && _movingShape is RectangleAnnotation or EllipseAnnotation))
             {
                 // Giữ Shift: giữ tỉ lệ vuông/tròn, neo ở góc đối diện handle đang kéo (0↔3, 1↔2).
+                // Stamp luôn giữ vuông (vẽ theo cạnh ngắn hơn, khung méo chỉ làm handle lệch khỏi hình).
                 var o = _movingOldBounds;
                 SKPoint[] corners = [new(o.Left, o.Top), new(o.Right, o.Top), new(o.Left, o.Bottom), new(o.Right, o.Bottom)];
                 var anchor = corners[3 - _resizingHandle];
@@ -487,7 +526,16 @@ public sealed partial class EditorWindow : Window
         {
             var newBounds = _movingShape.Bounds;
             _movingShape.Bounds = _movingOldBounds; // MoveResizeAnnotation's Execute() re-applies newBounds
-            _viewModel.MoveResizeAnnotation(_movingShape, _movingOldBounds, newBounds);
+            // Chỉ bấm để chọn (không kéo) thì không ghi command rỗng vào lịch sử Undo.
+            if (newBounds != _movingOldBounds)
+            {
+                _viewModel.MoveResizeAnnotation(_movingShape, _movingOldBounds, newBounds);
+
+                if (_resizingHandle >= 0 && _movingShape is StampAnnotation)
+                {
+                    _stampSize = Math.Max(8f, newBounds.Standardized.Width);
+                }
+            }
             _movingShape = null;
             _resizingHandle = -1;
             _lineEndpointHandle = -1;
@@ -503,6 +551,8 @@ public sealed partial class EditorWindow : Window
         if (_draftShape.NormalizedBounds.Width > 2 || _draftShape.NormalizedBounds.Height > 2)
         {
             _viewModel.AddAnnotation(_draftShape);
+            // Vẽ xong là ở chế độ chỉnh sửa luôn (handle + tab contextual nếu có), bấm vùng trống mới thoát.
+            _viewModel.SelectedAnnotation = _draftShape;
         }
         _draftShape = null;
         Canvas.Invalidate();
@@ -534,6 +584,8 @@ public sealed partial class EditorWindow : Window
                 Color = _viewModel.StrokeColor,
             };
             _viewModel.AddAnnotation(shape);
+            _viewModel.SelectedAnnotation = shape;
+            Canvas.Invalidate();
         }
     }
 
@@ -563,6 +615,14 @@ public sealed partial class EditorWindow : Window
                 }
                 e.Handled = true;
             }
+            return;
+        }
+
+        if (e.Key == Windows.System.VirtualKey.Escape && _viewModel.SelectedAnnotation is not null)
+        {
+            _viewModel.SelectedAnnotation = null;
+            Canvas.Invalidate();
+            e.Handled = true;
             return;
         }
 
@@ -618,6 +678,7 @@ public sealed partial class EditorWindow : Window
         {
             _selectedStampKind = kind;
             _selectedStampColor = _viewModel.StrokeColor;
+            _stampSize = DefaultStampSize;
             SelectTool(CaptureTool.Stamp, StampsToolButton);
             StampsFlyout.Hide();
         }
@@ -629,6 +690,7 @@ public sealed partial class EditorWindow : Window
         {
             _selectedStampKind = StampKind.Number;
             _selectedStampColor = ToSkColor(brush.Color);
+            _stampSize = DefaultStampSize;
             SelectTool(CaptureTool.Stamp, StampsToolButton);
             StampsFlyout.Hide();
         }

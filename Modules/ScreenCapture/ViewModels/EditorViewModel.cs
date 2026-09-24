@@ -26,6 +26,12 @@ public sealed partial class EditorViewModel : ObservableObject
         _ownerHwnd = ownerHwnd;
         UndoRedo.StateChanged += (_, _) =>
         {
+            // Undo "vẽ shape" / Redo "xoá shape" khi shape đó đang được chọn → bỏ chọn, tránh vẽ handle
+            // và tab contextual cho shape không còn trên canvas.
+            if (SelectedAnnotation is { } selected && !Annotations.Contains(selected))
+            {
+                SelectedAnnotation = null;
+            }
             OnPropertyChanged(nameof(CanUndo));
             OnPropertyChanged(nameof(CanRedo));
             RequestRedraw?.Invoke(this, EventArgs.Empty);

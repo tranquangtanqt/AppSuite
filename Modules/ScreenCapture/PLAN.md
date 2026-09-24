@@ -167,6 +167,29 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   ViewModel, có kiểm `CanExecute` (Undo/Redo khi stack rỗng, Save/Copy async đang chạy). Handler gắn
   bằng `+=` nên chỉ nhận phím control đang focus chưa xử lý → TextBox trong NumberBox vẫn giữ
   Ctrl+Z/Ctrl+C/Backspace của nó. Tooltip trên nút ghi phím tắt tương ứng.
+- **Chọn/chỉnh sửa trực tiếp, không cần tool "Di chuyển"** (yêu cầu: vẽ xong là chỉnh sửa được
+  luôn, bấm vùng trống mới thoát, bấm vào shape nào là sửa shape đó):
+  - `Canvas_PointerPressed` gọi `TryBeginEditExisting` trước với mọi tool (trừ Fill): trúng handle
+    của shape đang chọn → resize/kéo đầu mút; trúng shape bất kỳ → chọn + kéo. Không trúng → bỏ chọn
+    rồi mới chạy tool (vẽ draft / đặt stamp / text). Tool Move giờ chỉ còn nghĩa "không vẽ gì".
+  - Vẽ xong (`PointerReleased`), đặt stamp, thêm text → `SelectedAnnotation = shape mới` → handle +
+    tab contextual hiện ngay.
+  - Text + Stamp: nếu đang có selection, bấm vùng trống chỉ bỏ chọn; lần bấm sau mới bật
+    `ContentDialog` / đặt stamp. Theo yêu cầu người dùng cho Stamp: bấm → stamp 1 + tab Number Stamp →
+    bấm ra ngoài thoát sửa → bấm → stamp 2... Tool Stamp giữ tới khi chọn tool khác (`SelectTool`).
+  - Kích thước stamp kế tiếp nhớ theo stamp vừa resize: field `_stampSize` (mặc định
+    `DefaultStampSize = 32`) cập nhật lúc thả chuột sau khi kéo handle góc của 1 `StampAnnotation`;
+    reset về mặc định trong `StampItem_Click`/`NumberStampItem_Click` (chọn lại từ flyout = đặt từ
+    đầu). Resize stamp luôn khoá vuông (dùng chung nhánh `SnapToSquare`) vì stamp vẽ theo cạnh ngắn
+    hơn — khung méo làm handle lệch khỏi hình. Undo resize không trả `_stampSize` về cũ (trạng thái
+    công cụ, giống `_numberStampCounter`).
+  - `RectangleAnnotation`/`EllipseAnnotation` override `HitTest` chỉ trúng **viền** — nếu bắt cả
+    khung thì không vẽ được gì bên trong 1 khung lớn.
+  - Bấm chọn mà không kéo → không ghi `MoveResizeAnnotationCommand` rỗng vào lịch sử Undo.
+  - `EditorViewModel`: khi Undo/Redo làm shape đang chọn biến khỏi `Annotations` → tự bỏ chọn.
+  - `Esc` bỏ chọn.
+  - Hệ quả cần biết: vì shape vừa vẽ đang được chọn, đổi Color1/Size ngay sau khi vẽ sẽ đổi shape đó
+    (giống PicPick); muốn đổi cho shape kế tiếp thì bấm vùng trống/`Esc` trước.
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 
