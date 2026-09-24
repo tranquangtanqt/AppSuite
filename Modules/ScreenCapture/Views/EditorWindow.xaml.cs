@@ -647,6 +647,18 @@ public sealed partial class EditorWindow : Window
         }
     }
 
+    private void CurrentDecrement_Click(object sender, RoutedEventArgs e) => StepNumberBox(CurrentNumberBox, -1);
+    private void CurrentIncrement_Click(object sender, RoutedEventArgs e) => StepNumberBox(CurrentNumberBox, 1);
+    private void NextDecrement_Click(object sender, RoutedEventArgs e) => StepNumberBox(NextNumberBox, -1);
+    private void NextIncrement_Click(object sender, RoutedEventArgs e) => StepNumberBox(NextNumberBox, 1);
+
+    /// <summary>Gán Value mới để ValueChanged của NumberBox tự chạy logic cũ (tạo command / cập nhật bộ đếm).</summary>
+    private static void StepNumberBox(NumberBox box, int delta)
+    {
+        double current = double.IsNaN(box.Value) ? box.Minimum : box.Value;
+        box.Value = Math.Max(box.Minimum, current + delta);
+    }
+
     private void StampOutlineColorPicker_ColorChanged(ColorPicker sender, ColorChangedEventArgs args)
     {
         if (_viewModel.SelectedAnnotation is StampAnnotation { Kind: StampKind.Number } stamp)

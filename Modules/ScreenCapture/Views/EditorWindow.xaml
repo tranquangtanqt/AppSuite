@@ -22,6 +22,13 @@
                 <Setter Property="Padding" Value="8,4" />
                 <Setter Property="MinWidth" Value="52" />
             </Style>
+            <!-- Nút -/+ nhỏ hai bên ô số (Stamp Format), cao bằng NumberBox. -->
+            <Style x:Key="StepperButtonStyle" TargetType="Button">
+                <Setter Property="Width" Value="26" />
+                <Setter Property="Height" Value="32" />
+                <Setter Property="Padding" Value="0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
             <Style x:Key="ToolButtonContentStyle" TargetType="StackPanel">
                 <Setter Property="Spacing" Value="2" />
                 <Setter Property="HorizontalAlignment" Value="Center" />
@@ -365,13 +372,40 @@
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
                                     <TextBlock Text="Current" FontSize="10" HorizontalAlignment="Center" />
-                                    <NumberBox x:Name="CurrentNumberBox" Width="70" SpinButtonPlacementMode="Inline"
-                                               ValueChanged="CurrentNumberBox_ValueChanged" />
+                                    <!-- Nút +/- tự dựng thay cho spin button Inline của NumberBox: bản gốc xếp
+                                         Up trước Down (ngược thói quen trái=giảm, phải=tăng) và chèn lên chữ số khi
+                                         box hẹp. -->
+                                    <StackPanel Orientation="Horizontal" Spacing="2">
+                                        <Button Style="{StaticResource StepperButtonStyle}" Click="CurrentDecrement_Click">
+                                            <FontIcon Glyph="&#xE738;" FontSize="10" />
+                                        </Button>
+                                        <NumberBox x:Name="CurrentNumberBox" Width="48" SpinButtonPlacementMode="Hidden"
+                                                   ValueChanged="CurrentNumberBox_ValueChanged">
+                                            <NumberBox.Resources>
+                                                <x:Double x:Key="TextControlThemeMinWidth">0</x:Double>
+                                            </NumberBox.Resources>
+                                        </NumberBox>
+                                        <Button Style="{StaticResource StepperButtonStyle}" Click="CurrentIncrement_Click">
+                                            <FontIcon Glyph="&#xE710;" FontSize="10" />
+                                        </Button>
+                                    </StackPanel>
                                 </StackPanel>
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
                                     <TextBlock Text="Next" FontSize="10" HorizontalAlignment="Center" />
-                                    <NumberBox x:Name="NextNumberBox" Width="70" SpinButtonPlacementMode="Inline"
-                                               ValueChanged="NextNumberBox_ValueChanged" />
+                                    <StackPanel Orientation="Horizontal" Spacing="2">
+                                        <Button Style="{StaticResource StepperButtonStyle}" Click="NextDecrement_Click">
+                                            <FontIcon Glyph="&#xE738;" FontSize="10" />
+                                        </Button>
+                                        <NumberBox x:Name="NextNumberBox" Width="48" SpinButtonPlacementMode="Hidden"
+                                                   ValueChanged="NextNumberBox_ValueChanged">
+                                            <NumberBox.Resources>
+                                                <x:Double x:Key="TextControlThemeMinWidth">0</x:Double>
+                                            </NumberBox.Resources>
+                                        </NumberBox>
+                                        <Button Style="{StaticResource StepperButtonStyle}" Click="NextIncrement_Click">
+                                            <FontIcon Glyph="&#xE710;" FontSize="10" />
+                                        </Button>
+                                    </StackPanel>
                                 </StackPanel>
                             </StackPanel>
                             <TextBlock Text="Stamp Format" Style="{StaticResource RibbonGroupLabelStyle}" />
@@ -396,7 +430,7 @@
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
                                     <TextBlock Text="Fill" FontSize="10" HorizontalAlignment="Center" />
                                     <Button x:Name="StampFillButton" Width="32" Height="32" Padding="0">
-                                        <Rectangle x:Name="StampFillSwatch" Width="22" Height="22" Fill="#E74C3C" Stroke="Gray" StrokeThickness="1" />
+                                        <Rectangle x:Name="StampFillSwatch" Width="22" Height="22" Fill="#D86445" Stroke="Gray" StrokeThickness="1" />
                                         <Button.Flyout>
                                             <Flyout>
                                                 <ColorPicker x:Name="StampFillColorPicker" ColorChanged="StampFillColorPicker_ColorChanged"
