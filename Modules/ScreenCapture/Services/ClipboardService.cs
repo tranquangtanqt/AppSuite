@@ -32,4 +32,33 @@ public sealed class ClipboardService : IClipboardService
         package.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
         Clipboard.SetContent(package);
     }
+
+    private static readonly string[] ImageExtensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"];
+
+    public async Task<SKBitmap?> GetBitmapAsync()
+    {
+        var content = Clipboard.GetContent();
+
+        if (content.Contains(StandardDataFormats.Bitmap))
+        {
+            var reference = await content.GetBitmapAsync();
+            using var stream = await reference.OpenReadAsync();
+            using var netStream = stream.AsStreamForRead();
+            return SKBitmap.Decode(netStream);
+        }
+
+        // Copy file ảnh trong Explorer → clipboard chứa StorageItems, không chứa Bitmap.
+        if (content.Contains(StandardDataFormats.StorageItems))
+        {
+            var items = await content.GetStorageItemsAsync();
+            var file = items.OfType<Windows.Storage.StorageFile>()
+                .FirstOrDefault(f => ImageExtensions.Contains(f.FileType.ToLowerInvariant()));
+            if (file is not null)
+            {
+                return SKBitmap.Decode(file.Path);
+            }
+        }
+
+        return null;
+    }
 }

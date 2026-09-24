@@ -41,8 +41,14 @@ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn phía dưới, chia
 
 **Tab "Trang chủ"**
 
-- **Chọn** — *Di chuyển*: công cụ chỉ chọn/kéo, bấm vùng trống không vẽ gì. *Xoá* (hoặc phím
-  `Delete`/`Backspace`), *Lên trên* / *Xuống dưới* (đổi thứ tự lớp).
+- **Chọn** — *Move* (icon con trỏ, là công cụ mặc định khi mở ảnh): chỉ chọn/kéo shape, bấm vùng
+  trống không vẽ gì. Khi không chọn shape nào, quanh ảnh hiện **8 handle** (4 góc + 4 cạnh) — kéo để
+  **đổi kích thước khung ảnh** giống PicPick: kéo ra = mở rộng (phần mới tô trắng), kéo vào = cắt bớt
+  cạnh đó. Shape đã vẽ giữ nguyên vị trí so với nội dung ảnh; thanh trạng thái hiện kích thước mới;
+  Undo được. *Select*: kéo chuột chọn 1 vùng chữ nhật trên ảnh (viền "kiến bò" đen/trắng, giữ
+  `Shift` = vùng vuông) → hiện tab contextual **"Vùng chọn"** (xem dưới). Vùng đã chọn có 8 handle:
+  kéo handle để chỉnh kích thước, kéo bên trong vùng để di chuyển; bấm ngoài vùng = chọn lại / bỏ chọn.
+  *Xoá* (hoặc phím `Delete`/`Backspace`), *Lên trên* / *Xuống dưới* (đổi thứ tự lớp).
 - **Vẽ hình** — Chữ nhật, Elip, Đường thẳng, Mũi tên, Highlight (marker tô trong mờ), Text (click
   vào canvas, nhập text qua dialog).
   - Đường thẳng / Mũi tên giữ đúng hướng kéo chuột. Khi đang chọn: hiện 2 handle tròn ở
@@ -58,12 +64,27 @@ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn phía dưới, chia
       Số **tự tăng** mỗi lần đặt (1, 2, 3...).
     - **General Stamps** — mũi tên 8 hướng, bookmark, pin, flag, tag, info, warning, no-entry,
       heart, plus, minus, check, cross, star. Đặt lên ảnh theo màu Color1 hiện tại.
-- **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ), *Undo* / *Redo* từng bước.
+- **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ), *Undo* / *Redo* từng bước, *Dán*
+  (`Ctrl+V`): dán ảnh trong clipboard (ảnh copy từ app khác, hoặc file ảnh copy trong Explorer) thành
+  1 đối tượng ảnh — đặt ở góc trên-trái vùng chọn (nếu có) hoặc phần ảnh đang nhìn thấy, được chọn sẵn
+  để kéo / co giãn (giữ `Shift` = đúng tỉ lệ) / Flatten. Ảnh dán lớn hơn ảnh hiện tại → khung ảnh tự
+  nới ra (nền trắng), cùng 1 bước Undo.
 - **Màu** — *Color1* (màu nét/màu chính) / *Color2* (màu fill/highlight), color picker. Đổi màu khi
   đang chọn 1 shape sẽ áp luôn cho shape đó.
 - **Cỡ nét** — slider 1-20px, cũng áp cho shape đang chọn.
 
 **Tab "Tệp"** — *Lưu PNG*, *Copy* ảnh (đã gộp mọi shape) vào clipboard, *Đóng* cửa sổ.
+
+**Tab "Vùng chọn"** (contextual) — tự hiện khi dùng *Select* chọn 1 vùng, tự ẩn khi bỏ chọn:
+
+- *Cắt ảnh* (`Enter`) — cắt ảnh còn đúng vùng chọn (shape nằm ngoài vùng bị bỏ).
+- *Copy* (`Ctrl+C`) — copy vùng (ảnh + shape đang thấy) vào clipboard.
+- *Cut* (`Ctrl+X`) — copy vùng rồi tô trắng vùng đó trên ảnh nền.
+- *Xoá vùng* (`Delete`) — tô trắng vùng đó trên ảnh nền.
+- *Bỏ chọn* (`Esc`).
+
+Cut/Xoá vùng chỉ đổi pixel ảnh nền, shape (mũi tên, chữ...) nằm trong vùng vẫn giữ nguyên. Tất cả
+Undo được.
 
 **Tab "Number Stamp"** (contextual) — tự hiện và tự chuyển sang khi chọn 1 Number Stamp đã đặt,
 tự ẩn khi bỏ chọn:
@@ -86,8 +107,10 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | `Ctrl+Y` / `Ctrl+Shift+Z` | Redo |
 | `Ctrl+S` | Lưu PNG |
 | `Ctrl+C` | Copy ảnh (đã gộp mọi shape) vào clipboard |
+| `Ctrl+V` | Dán ảnh từ clipboard |
 | `Delete` / `Backspace` | Xoá shape đang chọn |
-| `Esc` | Bỏ chọn shape (thoát chỉnh sửa) |
+| `Esc` | Bỏ chọn shape (thoát chỉnh sửa) / bỏ vùng chọn |
+| Khi có vùng chọn (*Select*): `Ctrl+C` / `Ctrl+X` / `Delete` / `Enter` | Copy / Cut / Xoá vùng / Cắt ảnh theo vùng |
 | Giữ `Shift` khi vẽ/kéo | Khoá góc 45° (đường/mũi tên), vuông/tròn (chữ nhật/elip) |
 
 Khi đang gõ trong ô số (Current/Next), các phím trên thuộc về ô đó (vd `Ctrl+Z` hoàn tác chữ vừa

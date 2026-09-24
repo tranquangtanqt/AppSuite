@@ -15,6 +15,8 @@ public sealed class CropCommand : IEditCommand
     private readonly SKBitmap _newBitmap;
     private readonly List<AnnotationShape> _oldAnnotations;
     private readonly List<AnnotationShape> _keptAnnotations;
+    private readonly float _dx;
+    private readonly float _dy;
 
     public CropCommand(Action<SKBitmap> setBitmap, ObservableCollection<AnnotationShape> annotations,
         SKBitmap oldBitmap, SKBitmap newBitmap, SKRect cropRect)
@@ -26,6 +28,10 @@ public sealed class CropCommand : IEditCommand
         _oldAnnotations = [.. annotations];
         // Inflate 1px: đường thẳng ngang/dọc có khung cao/rộng 0, Intersect sẽ ra Empty và bị xoá nhầm.
         _keptAnnotations = _oldAnnotations.Where(a => SKRect.Intersect(SKRect.Inflate(a.NormalizedBounds, 1, 1), cropRect) != SKRect.Empty).ToList();
+        // Bitmap mới có gốc toạ độ tại góc trên-trái vùng cắt → shape phải dịch theo, nếu không sẽ lệch
+        // khỏi nội dung ảnh (bug cũ: shape giữ toạ độ của ảnh trước khi cắt).
+        _dx = -cropRect.Left;
+        _dy = -cropRect.Top;
     }
 
     public string Description => "Cắt ảnh";
@@ -39,11 +45,13 @@ public sealed class CropCommand : IEditCommand
         {
             _annotations.Add(shape);
         }
+        ResizeCanvasCommand.OffsetAll(_keptAnnotations, _dx, _dy);
     }
 
     public void Undo()
     {
         _setBitmap(_oldBitmap);
+        ResizeCanvasCommand.OffsetAll(_keptAnnotations, -_dx, -_dy);
         _annotations.Clear();
         foreach (var shape in _oldAnnotations)
         {

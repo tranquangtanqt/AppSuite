@@ -160,6 +160,87 @@ public sealed partial class EditorViewModel : ObservableObject
         UndoRedo.Do(new CropCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, cropped, cropRect));
     }
 
+    /// <summary>Đổi khung ảnh thành <paramref name="newRect"/> (toạ độ theo ảnh hiện tại, có thể âm hoặc
+    /// vượt kích thước ảnh). Phần mới mở rộng tô trắng như PicPick.</summary>
+    public void ResizeCanvas(SKRectI newRect)
+    {
+        if (newRect.Width < 1 || newRect.Height < 1)
+        {
+            return;
+        }
+        var info = new SKImageInfo(newRect.Width, newRect.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+        var resized = new SKBitmap(info);
+        using (var canvas = new SKCanvas(resized))
+        {
+            canvas.Clear(SKColors.White);
+            canvas.DrawBitmap(Bitmap, -newRect.Left, -newRect.Top);
+        }
+        UndoRedo.Do(new ResizeCanvasCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, resized,
+            -newRect.Left, -newRect.Top));
+    }
+
+    // ---- Tool Select: thao tác trên vùng chọn (toạ độ pixel ảnh, đã kẹp trong khung ảnh) ----
+
+    /// <summary>Copy đúng những gì đang thấy trong vùng (ảnh nền + annotation) vào clipboard.</summary>
+    public async Task CopyRegionAsync(SKRectI region)
+    {
+        using var composited = RenderComposited();
+        var part = new SKBitmap(new SKImageInfo(region.Width, region.Height, SKColorType.Bgra8888, SKAlphaType.Premul));
+        using (var canvas = new SKCanvas(part))
+        {
+            canvas.DrawBitmap(composited, SKRect.Create(region.Left, region.Top, region.Width, region.Height),
+                SKRect.Create(region.Width, region.Height));
+        }
+        await _clipboardService.CopyBitmapAsync(part);
+        StatusText = $"Đã copy vùng {region.Width} × {region.Height} px vào clipboard.";
+    }
+
+    /// <summary>Đọc ảnh trong clipboard và dán thành <see cref="ImageAnnotation"/> tại
+    /// <paramref name="topLeft"/> (toạ độ ảnh). Ảnh dán vượt khung ảnh hiện tại → nới khung cho vừa (nền
+    /// trắng), gộp chung 1 bước Undo với việc dán. Trả về shape vừa dán, null nếu clipboard không có ảnh.</summary>
+    public async Task<ImageAnnotation?> PasteFromClipboardAsync(SKPoint topLeft)
+    {
+        var image = await _clipboardService.GetBitmapAsync();
+        if (image is null)
+        {
+            StatusText = "Clipboard không có ảnh để dán.";
+            return null;
+        }
+
+        var shape = new ImageAnnotation(image)
+        {
+            Bounds = SKRect.Create(topLeft.X, topLeft.Y, image.Width, image.Height),
+        };
+        var imageRect = SKRectI.Create(Bitmap.Width, Bitmap.Height);
+        var needed = SKRectI.Union(imageRect, SKRectI.Ceiling(shape.Bounds));
+
+        if (needed == imageRect)
+        {
+            AddAnnotation(shape);
+        }
+        else
+        {
+            // Nới khung chỉ về phải/dưới (topLeft luôn >= 0) → offset annotation = 0, shape giữ nguyên toạ độ.
+            var resized = new SKBitmap(new SKImageInfo(needed.Width, needed.Height, SKColorType.Bgra8888, SKAlphaType.Premul));
+            using (var canvas = new SKCanvas(resized))
+            {
+                canvas.Clear(SKColors.White);
+                canvas.DrawBitmap(Bitmap, 0, 0);
+            }
+            UndoRedo.Do(new CompositeEditCommand(
+            [
+                new ResizeCanvasCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, resized, 0, 0),
+                new AddAnnotationCommand(Annotations, shape),
+            ], "Dán ảnh"));
+        }
+
+        StatusText = $"Đã dán ảnh {image.Width} × {image.Height} px.";
+        return shape;
+    }
+
+    public void EraseRegion(SKRectI region) =>
+        UndoRedo.Do(new EraseRegionCommand(newBitmap => Bitmap = newBitmap, Bitmap, region));
+
     public void FloodFill(SKPointI seed) =>
         UndoRedo.Do(new FloodFillCommand(newBitmap => Bitmap = newBitmap, Bitmap, seed, StrokeColor));
 

@@ -58,7 +58,7 @@ public sealed partial class EditorWindow : Window
     // StampsToolButton is a plain Button (Flyout is Button-only in WinUI3, ToggleButton has no
     // Flyout property) - nó không có IsChecked nên không nằm trong danh sách bật/tắt dưới đây.
     private List<ToggleButton> ToolButtons => [
-        MoveToolButton, RectangleToolButton, EllipseToolButton, LineToolButton, ArrowToolButton,
+        MoveToolButton, SelectToolButton, RectangleToolButton, EllipseToolButton, LineToolButton, ArrowToolButton,
         HighlightToolButton, TextToolButton, FillToolButton,
     ];
 
@@ -72,9 +72,9 @@ public sealed partial class EditorWindow : Window
         {
             if (e.PropertyName == nameof(EditorViewModel.Bitmap))
             {
-                Canvas.Width = _viewModel.Bitmap.Width;
-                Canvas.Height = _viewModel.Bitmap.Height;
-                Canvas.Invalidate();
+                // Ảnh đổi (cắt, xoá vùng, đổi khung, undo...) → toạ độ vùng chọn cũ không còn đúng.
+                SetRegion(null);
+                UpdateCanvasLayout();
             }
             if (e.PropertyName == nameof(EditorViewModel.StatusText))
             {
@@ -99,8 +99,14 @@ public sealed partial class EditorWindow : Window
             presenter.Maximize();
         }
 
-        Canvas.Width = bitmap.Width;
-        Canvas.Height = bitmap.Height;
+        UpdateCanvasLayout();
+        // Lúc constructor chạy XamlRoot chưa có → scale tạm lấy theo DPI cửa sổ; tính lại khi đã load
+        // và khi cửa sổ bị kéo sang màn hình DPI khác.
+        Canvas.Loaded += (_, _) =>
+        {
+            UpdateCanvasLayout();
+            Content.XamlRoot.Changed += (_, _) => UpdateCanvasLayout();
+        };
 
         Color1ColorPicker.Color = ToWindowsColor(_viewModel.StrokeColor);
         Color2ColorPicker.Color = ToWindowsColor(_viewModel.FillColor);
@@ -122,7 +128,9 @@ public sealed partial class EditorWindow : Window
         NextNumberBox.Value = _numberStampCounter;
 
         PopulateStampPickers();
-        SelectTool(CaptureTool.Rectangle, RectangleToolButton);
+        // Mở ảnh ra ở tool Move (con trỏ) giống PicPick: bấm nhầm không vẽ ra gì, và thấy ngay 8 handle
+        // để đổi kích thước khung ảnh.
+        SelectTool(CaptureTool.Move, MoveToolButton);
     }
 
     private static Windows.UI.Color ToWindowsColor(SKColor c) => Windows.UI.Color.FromArgb(c.Alpha, c.Red, c.Green, c.Blue);
@@ -161,6 +169,15 @@ public sealed partial class EditorWindow : Window
     {
         var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
+        // Mọi thứ phía dưới vẽ theo toạ độ ảnh; _viewOrigin chừa lề quanh ảnh cho 8 handle khung ảnh
+        // (và dịch theo khi đang kéo mở rộng khung sang trái/lên trên).
+        canvas.Translate(_viewOrigin.X, _viewOrigin.Y);
+
+        var imageRect = SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height);
+        using (var edgePaint = new SKPaint { Color = new SKColor(0, 0, 0, 70), Style = SKPaintStyle.Stroke, StrokeWidth = 1 })
+        {
+            canvas.DrawRect(SKRect.Inflate(imageRect, 0.5f, 0.5f), edgePaint);
+        }
         canvas.DrawBitmap(_viewModel.Bitmap, 0, 0);
         foreach (var shape in _viewModel.Annotations)
         {
@@ -212,17 +229,230 @@ public sealed partial class EditorWindow : Window
             using var paint = new SKPaint { Color = SKColors.DeepSkyBlue, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };
             canvas.DrawRect(_cropRect, paint);
         }
+
+        if (_isDraggingRegion || _region is not null)
+        {
+            var r = _isDraggingRegion || _regionHandle >= 0 ? _regionDrag : ToRect(_region!.Value);
+            // Viền "kiến bò" kiểu PicPick/Paint: nét trắng liền + nét đen đứt đè lên, thấy được trên mọi nền.
+            using var white = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Stroke, StrokeWidth = 1 };
+            using var black = new SKPaint
+            {
+                Color = SKColors.Black,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = 1,
+                PathEffect = SKPathEffect.CreateDash([4, 4], 0),
+            };
+            var outline = SKRect.Inflate(r, 0.5f, 0.5f);
+            canvas.DrawRect(outline, white);
+            canvas.DrawRect(outline, black);
+
+            if (!_isDraggingRegion)
+            {
+                // 8 handle chỉnh kích thước vùng chọn (kéo bên trong vùng = di chuyển).
+                using var handleFill = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill };
+                using var handleStroke = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = 1 };
+                foreach (var p in CanvasHandlePoints(r))
+                {
+                    var h = new SKRect(p.X - HandleSize / 2, p.Y - HandleSize / 2, p.X + HandleSize / 2, p.Y + HandleSize / 2);
+                    canvas.DrawRect(h, handleFill);
+                    canvas.DrawRect(h, handleStroke);
+                }
+            }
+        }
+
+        if (ShowCanvasHandles)
+        {
+            var frame = _canvasHandle >= 0 ? _canvasResizeRect : imageRect;
+            if (_canvasHandle >= 0)
+            {
+                using var previewPaint = new SKPaint
+                {
+                    Color = SKColors.DeepSkyBlue,
+                    Style = SKPaintStyle.Stroke,
+                    StrokeWidth = 1.5f,
+                    PathEffect = SKPathEffect.CreateDash([6, 4], 0),
+                };
+                canvas.DrawRect(frame, previewPaint);
+            }
+            using var fill = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill };
+            using var stroke = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = 1 };
+            foreach (var p in CanvasHandlePoints(frame))
+            {
+                var r = new SKRect(p.X - HandleSize / 2, p.Y - HandleSize / 2, p.X + HandleSize / 2, p.Y + HandleSize / 2);
+                canvas.DrawRect(r, fill);
+                canvas.DrawRect(r, stroke);
+            }
+        }
     }
 
-    /// <summary>Pointer events trả toạ độ logic (DIP), nhưng SKXamlCanvas vẽ theo pixel vật lý
-    /// (Canvas.Width/Height set = kích thước bitmap tính bằng pixel). Trên máy DPI scale khác 100%
-    /// (rất phổ biến khi dùng nhiều màn hình), 2 hệ toạ độ này lệch nhau đúng bằng RasterizationScale
-    /// - không nhân lại thì click sẽ vẽ/hit-test sai vị trí (đã gặp thực tế: stamp không nằm đúng chỗ
-    /// click). Nhân theo RasterizationScale để quy về đúng không gian pixel mà SKCanvas dùng.</summary>
+    /// <summary>Pointer events trả toạ độ logic (DIP), nhưng SKXamlCanvas vẽ theo pixel vật lý. Trên máy
+    /// DPI scale khác 100% (rất phổ biến khi dùng nhiều màn hình), 2 hệ toạ độ này lệch nhau đúng bằng
+    /// RasterizationScale - không nhân lại thì click sẽ vẽ/hit-test sai vị trí (đã gặp thực tế: stamp
+    /// không nằm đúng chỗ click). Nhân theo scale rồi trừ _viewOrigin để ra toạ độ pixel trên ảnh.</summary>
     private SKPoint ToCanvasPoint(Point p)
     {
-        double scale = Content.XamlRoot?.RasterizationScale ?? 1.0;
-        return new SKPoint((float)(p.X * scale), (float)(p.Y * scale));
+        double scale = CurrentScale;
+        return new SKPoint((float)(p.X * scale) - _viewOrigin.X, (float)(p.Y * scale) - _viewOrigin.Y);
+    }
+
+    private double CurrentScale =>
+        Content.XamlRoot?.RasterizationScale
+        ?? Services.Interop.NativeMethods.GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
+
+    // ---- Kéo 8 handle quanh ảnh (tool Move, không chọn shape nào) để đổi kích thước khung ảnh ----
+
+    /// <summary>Lề (pixel) quanh ảnh trên canvas để handle khung ảnh không bị cắt mất.</summary>
+    private const float CanvasPad = 16f;
+    private SKPoint _viewOrigin = new(CanvasPad, CanvasPad);
+    private int _canvasHandle = -1; // -1 = none, 0..7 = TL, T, TR, R, BR, B, BL, L
+    private SKRect _canvasResizeRect;
+    private Point _canvasDragStartWindow;
+
+    // ---- Tool Select: vùng chọn chữ nhật trên ảnh (toạ độ pixel ảnh) ----
+
+    private SKRectI? _region;
+    private bool _isDraggingRegion;
+    private SKRect _regionDrag;
+    private const int RegionMoveHandle = 8;
+    private int _regionHandle = -1; // -1 = none, 0..7 = handle (thứ tự như CanvasHandlePoints), 8 = di chuyển
+    private SKRectI _regionEditStart;
+
+    private static SKRect ToRect(SKRectI r) => SKRect.Create(r.Left, r.Top, r.Width, r.Height);
+
+    /// <summary>Đặt/bỏ vùng chọn và hiện/ẩn tab contextual "Vùng chọn" tương ứng.</summary>
+    private void SetRegion(SKRectI? region)
+    {
+        _region = region;
+        if (region is { } r)
+        {
+            RegionTabHeader.Visibility = Visibility.Visible;
+            SelectRibbonTab(RibbonTab.Region);
+            StatusText.Text = $"Vùng chọn: {r.Width} × {r.Height} px";
+        }
+        else
+        {
+            RegionTabHeader.Visibility = Visibility.Collapsed;
+            if (RegionTabHeader.IsChecked == true)
+            {
+                SelectRibbonTab(RibbonTab.Home);
+            }
+        }
+        Canvas.Invalidate();
+    }
+
+    private void PasteButton_Click(object sender, RoutedEventArgs e) => PasteFromClipboard();
+
+    /// <summary>Dán ảnh từ clipboard: đặt ở góc trên-trái vùng chọn (nếu có), không thì ở góc trên-trái
+    /// phần ảnh đang nhìn thấy. Sau khi dán chuyển sang Move và chọn sẵn ảnh để kéo/co giãn ngay.</summary>
+    private async void PasteFromClipboard()
+    {
+        SKPoint topLeft;
+        if (_region is { } r)
+        {
+            topLeft = new SKPoint(r.Left, r.Top);
+        }
+        else
+        {
+            double scale = CurrentScale;
+            topLeft = new SKPoint(
+                MathF.Round(Math.Max(0f, (float)(CanvasScroller.HorizontalOffset * scale) - _viewOrigin.X)),
+                MathF.Round(Math.Max(0f, (float)(CanvasScroller.VerticalOffset * scale) - _viewOrigin.Y)));
+        }
+
+        try
+        {
+            if (await _viewModel.PasteFromClipboardAsync(topLeft) is { } pasted)
+            {
+                SelectTool(CaptureTool.Move, MoveToolButton);
+                _viewModel.SelectedAnnotation = pasted;
+                Canvas.Invalidate();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Clipboard WinRT có thể lỗi ở app unpackaged / định dạng ảnh lạ - báo thay vì crash.
+            _viewModel.StatusText = $"Không dán được ảnh: {ex.Message}";
+        }
+    }
+
+    private void RegionCropButton_Click(object sender, RoutedEventArgs e) => CropToRegion();
+    private void RegionCopyButton_Click(object sender, RoutedEventArgs e) => CopyRegion();
+    private void RegionCutButton_Click(object sender, RoutedEventArgs e) => CutRegion();
+    private void RegionEraseButton_Click(object sender, RoutedEventArgs e) => EraseRegion();
+    private void RegionClearButton_Click(object sender, RoutedEventArgs e) => SetRegion(null);
+
+    private void CropToRegion()
+    {
+        if (_region is { } r)
+        {
+            _viewModel.Crop(SKRect.Create(r.Left, r.Top, r.Width, r.Height)); // đổi Bitmap → tự bỏ vùng chọn
+        }
+    }
+
+    private async void CopyRegion()
+    {
+        if (_region is { } r)
+        {
+            await _viewModel.CopyRegionAsync(r);
+        }
+    }
+
+    private async void CutRegion()
+    {
+        if (_region is { } r)
+        {
+            await _viewModel.CopyRegionAsync(r);
+            _viewModel.EraseRegion(r);
+            _viewModel.StatusText = $"Đã cut vùng {r.Width} × {r.Height} px vào clipboard.";
+        }
+    }
+
+    private void EraseRegion()
+    {
+        if (_region is { } r)
+        {
+            _viewModel.EraseRegion(r);
+        }
+    }
+
+    private bool ShowCanvasHandles =>
+        _viewModel.SelectedTool == CaptureTool.Move && _viewModel.SelectedAnnotation is null && !_isCropping;
+
+    private static SKPoint[] CanvasHandlePoints(SKRect r) =>
+    [
+        new(r.Left, r.Top), new(r.MidX, r.Top), new(r.Right, r.Top), new(r.Right, r.MidY),
+        new(r.Right, r.Bottom), new(r.MidX, r.Bottom), new(r.Left, r.Bottom), new(r.Left, r.MidY),
+    ];
+
+    private int? HitTestCanvasHandle(SKPoint pos) =>
+        HitTestPoints(CanvasHandlePoints(SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height)), pos);
+
+    private static int? HitTestPoints(SKPoint[] points, SKPoint pos)
+    {
+        for (int i = 0; i < points.Length; i++)
+        {
+            if (Math.Abs(pos.X - points[i].X) <= HandleSize && Math.Abs(pos.Y - points[i].Y) <= HandleSize)
+            {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>Đặt kích thước SKXamlCanvas vừa đủ chứa ảnh (hoặc khung đang kéo, nếu lớn hơn) + lề, và
+    /// dời _viewOrigin khi khung vượt sang trái/lên trên toạ độ 0 của ảnh.</summary>
+    private void UpdateCanvasLayout(SKRect? preview = null)
+    {
+        var content = SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height);
+        if (preview is { } p)
+        {
+            content = SKRect.Union(content, p);
+        }
+        _viewOrigin = new SKPoint(CanvasPad - content.Left, CanvasPad - content.Top);
+        double scale = CurrentScale;
+        Canvas.Width = (content.Width + 2 * CanvasPad) / scale;
+        Canvas.Height = (content.Height + 2 * CanvasPad) / scale;
+        Canvas.Invalidate();
     }
 
     private const float HandleSize = 8f;
@@ -337,6 +567,43 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (_viewModel.SelectedTool == CaptureTool.Select)
+        {
+            // Đã có vùng chọn: bấm trúng 1 trong 8 handle → chỉnh kích thước, bấm bên trong → di chuyển.
+            if (_region is { } current)
+            {
+                var currentRect = ToRect(current);
+                _regionHandle = HitTestPoints(CanvasHandlePoints(currentRect), pos)
+                    ?? (currentRect.Contains(pos) ? RegionMoveHandle : -1);
+                if (_regionHandle >= 0)
+                {
+                    _regionEditStart = current;
+                    _regionDrag = currentRect;
+                    Canvas.CapturePointer(e.Pointer);
+                    return;
+                }
+            }
+
+            // Bấm ngoài vùng: bấm-kéo = chọn vùng mới, bấm không kéo = bỏ chọn.
+            SetRegion(null);
+            _isDraggingRegion = true;
+            _regionDrag = new SKRect(pos.X, pos.Y, pos.X, pos.Y);
+            Canvas.CapturePointer(e.Pointer);
+            Canvas.Invalidate();
+            return;
+        }
+
+        if (ShowCanvasHandles && HitTestCanvasHandle(pos) is { } canvasHandle)
+        {
+            _canvasHandle = canvasHandle;
+            _canvasResizeRect = SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height);
+            // Lấy toạ độ theo cửa sổ, không theo Canvas: khi kéo mở rộng sang trái/lên trên, Canvas tự
+            // lớn ra và dời ảnh → toạ độ theo Canvas sẽ nhảy theo, gây giật.
+            _canvasDragStartWindow = e.GetCurrentPoint(null).Position;
+            Canvas.CapturePointer(e.Pointer);
+            return;
+        }
+
         // Tô màu thao tác trên pixel ảnh, không chọn shape.
         if (_viewModel.SelectedTool == CaptureTool.Fill)
         {
@@ -423,6 +690,59 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (_regionHandle >= 0)
+        {
+            var start = ToRect(_regionEditStart);
+            var imageRect = SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height);
+            float dx = MathF.Round(pos.X - _dragStartPoint.X), dy = MathF.Round(pos.Y - _dragStartPoint.Y);
+            if (_regionHandle == RegionMoveHandle)
+            {
+                // Di chuyển nguyên khung, không cho trượt ra ngoài ảnh.
+                dx = Math.Clamp(dx, -start.Left, imageRect.Right - start.Right);
+                dy = Math.Clamp(dy, -start.Top, imageRect.Bottom - start.Bottom);
+                _regionDrag = new SKRect(start.Left + dx, start.Top + dy, start.Right + dx, start.Bottom + dy);
+            }
+            else
+            {
+                float left = start.Left, top = start.Top, right = start.Right, bottom = start.Bottom;
+                if (_regionHandle is 0 or 6 or 7) left += dx;
+                if (_regionHandle is 2 or 3 or 4) right += dx;
+                if (_regionHandle is 0 or 1 or 2) top += dy;
+                if (_regionHandle is 4 or 5 or 6) bottom += dy;
+                _regionDrag = SKRect.Intersect(MakeRect(new SKPoint(left, top), new SKPoint(right, bottom)), imageRect);
+            }
+            StatusText.Text = $"Vùng chọn: {(int)_regionDrag.Width} × {(int)_regionDrag.Height} px";
+            Canvas.Invalidate();
+            return;
+        }
+
+        if (_isDraggingRegion)
+        {
+            var end = shift ? SnapToSquare(_dragStartPoint, pos) : pos;
+            var imageRect = SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height);
+            _regionDrag = SKRect.Intersect(MakeRect(_dragStartPoint, end), imageRect);
+            StatusText.Text = $"Vùng chọn: {(int)_regionDrag.Width} × {(int)_regionDrag.Height} px";
+            Canvas.Invalidate();
+            return;
+        }
+
+        if (_canvasHandle >= 0)
+        {
+            var now = e.GetCurrentPoint(null).Position;
+            double scale = CurrentScale;
+            float dx = (float)Math.Round((now.X - _canvasDragStartWindow.X) * scale);
+            float dy = (float)Math.Round((now.Y - _canvasDragStartWindow.Y) * scale);
+            float left = 0, top = 0, right = _viewModel.Bitmap.Width, bottom = _viewModel.Bitmap.Height;
+            if (_canvasHandle is 0 or 6 or 7) left = Math.Min(left + dx, right - 1);
+            if (_canvasHandle is 2 or 3 or 4) right = Math.Max(right + dx, left + 1);
+            if (_canvasHandle is 0 or 1 or 2) top = Math.Min(top + dy, bottom - 1);
+            if (_canvasHandle is 4 or 5 or 6) bottom = Math.Max(bottom + dy, top + 1);
+            _canvasResizeRect = new SKRect(left, top, right, bottom);
+            UpdateCanvasLayout(_canvasResizeRect);
+            StatusText.Text = $"Kích thước: {(int)_canvasResizeRect.Width} × {(int)_canvasResizeRect.Height} px";
+            return;
+        }
+
         if (_movingShape is not null && _lineEndpointHandle >= 0)
         {
             var old = _movingOldBounds;
@@ -451,6 +771,14 @@ public sealed partial class EditorWindow : Window
                 SKPoint[] corners = [new(o.Left, o.Top), new(o.Right, o.Top), new(o.Left, o.Bottom), new(o.Right, o.Bottom)];
                 var anchor = corners[3 - _resizingHandle];
                 _movingShape.Bounds = MakeRect(anchor, SnapToSquare(anchor, pos));
+            }
+            else if (shift && _movingShape is ImageAnnotation image)
+            {
+                // Ảnh dán: giữ Shift để co giãn đúng tỉ lệ gốc, không méo.
+                var o = _movingOldBounds;
+                SKPoint[] corners = [new(o.Left, o.Top), new(o.Right, o.Top), new(o.Left, o.Bottom), new(o.Right, o.Bottom)];
+                var anchor = corners[3 - _resizingHandle];
+                _movingShape.Bounds = MakeRect(anchor, SnapToAspect(anchor, pos, image.AspectRatio));
             }
             else
             {
@@ -498,6 +826,23 @@ public sealed partial class EditorWindow : Window
         return new SKPoint(anchor.X + length * cos, anchor.Y + length * sin);
     }
 
+    /// <summary>Điểm đối diện anchor sao cho khung có tỉ lệ rộng/cao = <paramref name="ratio"/>, lấy theo
+    /// chiều đang kéo "trội" hơn, giữ hướng kéo.</summary>
+    private static SKPoint SnapToAspect(SKPoint anchor, SKPoint pos, float ratio)
+    {
+        float dx = pos.X - anchor.X, dy = pos.Y - anchor.Y;
+        float w = Math.Abs(dx), h = Math.Abs(dy);
+        if (w / Math.Max(h, 1f) > ratio)
+        {
+            w = h * ratio;
+        }
+        else
+        {
+            h = w / ratio;
+        }
+        return new SKPoint(anchor.X + (dx < 0 ? -w : w), anchor.Y + (dy < 0 ? -h : h));
+    }
+
     /// <summary>Điểm đối diện anchor sao cho khung là hình vuông (cạnh = chiều dài hơn), giữ hướng kéo.</summary>
     private static SKPoint SnapToSquare(SKPoint anchor, SKPoint pos)
     {
@@ -509,6 +854,32 @@ public sealed partial class EditorWindow : Window
     private void Canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
     {
         Canvas.ReleasePointerCapture(e.Pointer);
+
+        if (_isDraggingRegion || _regionHandle >= 0)
+        {
+            var r = _regionDrag;
+            var region = new SKRectI((int)MathF.Round(r.Left), (int)MathF.Round(r.Top), (int)MathF.Round(r.Right), (int)MathF.Round(r.Bottom));
+            bool valid = region.Width >= 2 && region.Height >= 2;
+            // Chỉnh vùng cũ mà thu quá nhỏ → giữ vùng cũ thay vì mất vùng chọn.
+            SetRegion(valid ? region : _regionHandle >= 0 ? _regionEditStart : null);
+            _isDraggingRegion = false;
+            _regionHandle = -1;
+            return;
+        }
+
+        if (_canvasHandle >= 0)
+        {
+            _canvasHandle = -1;
+            var r = _canvasResizeRect;
+            var newRect = new SKRectI((int)r.Left, (int)r.Top, (int)r.Right, (int)r.Bottom);
+            if (newRect != new SKRectI(0, 0, _viewModel.Bitmap.Width, _viewModel.Bitmap.Height))
+            {
+                _viewModel.ResizeCanvas(newRect); // đổi Bitmap → PropertyChanged → UpdateCanvasLayout()
+                StatusText.Text = $"Kích thước ảnh: {newRect.Width} × {newRect.Height} px";
+            }
+            UpdateCanvasLayout();
+            return;
+        }
 
         if (_isCropping)
         {
@@ -596,6 +967,33 @@ public sealed partial class EditorWindow : Window
         bool ctrl = IsKeyDown(Windows.System.VirtualKey.Control);
         bool shift = IsKeyDown(Windows.System.VirtualKey.Shift);
 
+        // Đang có vùng chọn (tool Select): Ctrl+C/Ctrl+X/Delete/Enter/Esc tác động lên vùng đó.
+        if (_region is not null)
+        {
+            Action? regionAction = (ctrl, e.Key) switch
+            {
+                (true, Windows.System.VirtualKey.C) => CopyRegion,
+                (true, Windows.System.VirtualKey.X) => CutRegion,
+                (false, Windows.System.VirtualKey.Delete or Windows.System.VirtualKey.Back) => EraseRegion,
+                (false, Windows.System.VirtualKey.Enter) => CropToRegion,
+                (false, Windows.System.VirtualKey.Escape) => () => SetRegion(null),
+                _ => null,
+            };
+            if (regionAction is not null)
+            {
+                regionAction();
+                e.Handled = true;
+                return;
+            }
+        }
+
+        if (ctrl && e.Key == Windows.System.VirtualKey.V)
+        {
+            PasteFromClipboard();
+            e.Handled = true;
+            return;
+        }
+
         if (ctrl)
         {
             System.Windows.Input.ICommand? command = e.Key switch
@@ -664,6 +1062,7 @@ public sealed partial class EditorWindow : Window
     }
 
     private void MoveToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Move, MoveToolButton);
+    private void SelectToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Select, SelectToolButton);
     private void RectangleToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Rectangle, RectangleToolButton);
     private void EllipseToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Ellipse, EllipseToolButton);
     private void LineToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Line, LineToolButton);
@@ -700,6 +1099,7 @@ public sealed partial class EditorWindow : Window
     {
         _viewModel.SelectedTool = tool;
         _viewModel.SelectedAnnotation = null;
+        SetRegion(null);
         _isCropping = false;
         CropToolButton.IsChecked = false;
         foreach (var btn in ToolButtons)
@@ -716,6 +1116,7 @@ public sealed partial class EditorWindow : Window
         {
             _viewModel.SelectedTool = CaptureTool.None;
             _viewModel.SelectedAnnotation = null;
+            SetRegion(null);
             foreach (var btn in ToolButtons)
             {
                 btn.IsChecked = false;
@@ -762,7 +1163,7 @@ public sealed partial class EditorWindow : Window
     private void CopyButton_Click(object sender, RoutedEventArgs e) => _viewModel.CopyToClipboardCommand.Execute(null);
     private void CloseButton_Click(object sender, RoutedEventArgs e) => this.Close();
 
-    private enum RibbonTab { Home, File, NumberStamp }
+    private enum RibbonTab { Home, File, NumberStamp, Region }
 
     private void RibbonTabHeader_Click(object sender, RoutedEventArgs e)
     {
@@ -770,6 +1171,7 @@ public sealed partial class EditorWindow : Window
         {
             _ when ReferenceEquals(sender, FileTabHeader) => RibbonTab.File,
             _ when ReferenceEquals(sender, NumberStampTabHeader) => RibbonTab.NumberStamp,
+            _ when ReferenceEquals(sender, RegionTabHeader) => RibbonTab.Region,
             _ => RibbonTab.Home,
         };
         SelectRibbonTab(tab);
@@ -780,6 +1182,8 @@ public sealed partial class EditorWindow : Window
         HomeTabHeader.IsChecked = tab == RibbonTab.Home;
         FileTabHeader.IsChecked = tab == RibbonTab.File;
         NumberStampTabHeader.IsChecked = tab == RibbonTab.NumberStamp;
+        RegionTabHeader.IsChecked = tab == RibbonTab.Region;
+        RegionRibbonPanel.Visibility = tab == RibbonTab.Region ? Visibility.Visible : Visibility.Collapsed;
         HomeRibbonPanel.Visibility = tab == RibbonTab.Home ? Visibility.Visible : Visibility.Collapsed;
         FileRibbonPanel.Visibility = tab == RibbonTab.File ? Visibility.Visible : Visibility.Collapsed;
         NumberStampRibbonPanel.Visibility = tab == RibbonTab.NumberStamp ? Visibility.Visible : Visibility.Collapsed;

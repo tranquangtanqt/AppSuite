@@ -70,6 +70,8 @@
                           Click="RibbonTabHeader_Click" />
             <ToggleButton x:Name="NumberStampTabHeader" Content="Number Stamp" Style="{StaticResource RibbonTabHeaderStyle}"
                           Click="RibbonTabHeader_Click" Visibility="Collapsed" />
+            <ToggleButton x:Name="RegionTabHeader" Content="Vùng chọn" Style="{StaticResource RibbonTabHeaderStyle}"
+                          Click="RibbonTabHeader_Click" Visibility="Collapsed" />
         </StackPanel>
 
         <!-- Row 1: ribbon content, đổi theo tab đang chọn -->
@@ -82,8 +84,19 @@
                             <StackPanel Orientation="Horizontal" Spacing="2">
                                 <ToggleButton x:Name="MoveToolButton" Style="{StaticResource ToolButtonStyle}" Click="MoveToolButton_Click">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE8C9;" />
-                                        <TextBlock Text="Di chuyển" FontSize="10" />
+                                        <!-- Icon con trỏ chuột (như PicPick) - Segoe Fluent Icons không có glyph
+                                             mũi tên con trỏ phù hợp nên vẽ bằng PathIcon. -->
+                                        <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
+                                            <PathIcon Data="M0,0 L0,17 L4.2,13 L7.2,20 L10,18.8 L7,12 L12.5,12 Z" />
+                                        </Viewbox>
+                                        <TextBlock Text="Move" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <ToggleButton x:Name="SelectToolButton" Style="{StaticResource ToolButtonStyle}" Click="SelectToolButton_Click"
+                                              ToolTipService.ToolTip="Kéo chọn 1 vùng để Cắt ảnh / Copy / Cut / Xoá">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8B3;" />
+                                        <TextBlock Text="Select" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <Button x:Name="DeleteButton" Style="{StaticResource ToolButtonStyle}" Click="DeleteButton_Click" IsEnabled="False">
@@ -237,6 +250,12 @@
                                         <TextBlock Text="Redo" FontSize="10" />
                                     </StackPanel>
                                 </Button>
+                                <Button x:Name="PasteButton" Style="{StaticResource ToolButtonStyle}" Click="PasteButton_Click" ToolTipService.ToolTip="Dán ảnh từ clipboard (Ctrl+V)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE77F;" />
+                                        <TextBlock Text="Dán" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                             <TextBlock Text="Cắt &amp; Sửa" Style="{StaticResource RibbonGroupLabelStyle}" />
                         </StackPanel>
@@ -322,6 +341,57 @@
                         </StackPanel>
                     </Border>
 
+                </StackPanel>
+
+                <!-- Tab contextual "Vùng chọn": hiện khi tool Select đã kéo chọn 1 vùng. -->
+                <StackPanel x:Name="RegionRibbonPanel" Orientation="Horizontal" Visibility="Collapsed">
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="RegionCropButton_Click"
+                                        ToolTipService.ToolTip="Cắt ảnh theo vùng chọn (Enter)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE7A8;" />
+                                        <TextBlock Text="Cắt ảnh" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="RegionCopyButton_Click"
+                                        ToolTipService.ToolTip="Copy vùng chọn (Ctrl+C)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8C8;" />
+                                        <TextBlock Text="Copy" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="RegionCutButton_Click"
+                                        ToolTipService.ToolTip="Copy rồi xoá trắng vùng chọn (Ctrl+X)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8C6;" />
+                                        <TextBlock Text="Cut" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="RegionEraseButton_Click"
+                                        ToolTipService.ToolTip="Xoá trắng vùng chọn (Delete)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE75C;" />
+                                        <TextBlock Text="Xoá vùng" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Vùng chọn" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <Button Style="{StaticResource ToolButtonStyle}" Click="RegionClearButton_Click"
+                                    ToolTipService.ToolTip="Bỏ chọn vùng (Esc)">
+                                <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                    <FontIcon Glyph="&#xE711;" />
+                                    <TextBlock Text="Bỏ chọn" FontSize="10" />
+                                </StackPanel>
+                            </Button>
+                            <TextBlock Text="Đóng" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <StackPanel x:Name="NumberStampRibbonPanel" Orientation="Horizontal" Visibility="Collapsed">
@@ -468,9 +538,10 @@
             </Grid>
         </Border>
 
-        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+        <ScrollViewer x:Name="CanvasScroller" Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                       HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Margin="0,8,0,8">
-            <Border BorderBrush="Gray" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <!-- Viền ảnh + 8 handle khung ảnh vẽ trong Skia (có lề CanvasPad), không dùng viền Border. -->
+            <Border HorizontalAlignment="Left" VerticalAlignment="Top">
                 <skia:SKXamlCanvas x:Name="Canvas"
                                     PaintSurface="Canvas_PaintSurface"
                                     PointerPressed="Canvas_PointerPressed"

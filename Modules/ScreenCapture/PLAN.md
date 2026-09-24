@@ -190,6 +190,46 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   - `Esc` bỏ chọn.
   - Hệ quả cần biết: vì shape vừa vẽ đang được chọn, đổi Color1/Size ngay sau khi vẽ sẽ đổi shape đó
     (giống PicPick); muốn đổi cho shape kế tiếp thì bấm vùng trống/`Esc` trước.
+- **Tool Move kiểu PicPick + đổi kích thước khung ảnh**:
+  - Nút đổi tên "Move", icon con trỏ (`PathIcon`), là tool mặc định khi mở Editor (trước là Chữ nhật).
+  - Canvas có lề `CanvasPad = 16px` quanh ảnh; mọi thứ vẽ sau `canvas.Translate(_viewOrigin)` và
+    `ToCanvasPoint` trừ `_viewOrigin` → toạ độ pointer vẫn là toạ độ pixel ảnh. Kích thước
+    `SKXamlCanvas` tính lại trong `UpdateCanvasLayout()` = (ảnh hoặc khung đang kéo + 2×lề) / scale —
+    sửa luôn lỗi cũ: trước đặt `Canvas.Width = bitmap.Width` (DIP) nên ở DPI 150% canvas rộng hơn ảnh
+    1.5 lần, thừa vùng trống.
+  - Tool Move + không chọn shape → vẽ 8 handle (TL,T,TR,R,BR,B,BL,L). Kéo handle: delta lấy theo toạ
+    độ **cửa sổ** (`GetCurrentPoint(null)`), không theo Canvas — vì khung mở rộng sang trái/lên trên làm
+    Canvas lớn ra và dời ảnh, toạ độ theo Canvas sẽ nhảy theo gây giật. Xem trước bằng khung nét đứt.
+  - Thả chuột → `EditorViewModel.ResizeCanvas(SKRectI)` → `ResizeCanvasCommand` mới: bitmap mới nền
+    trắng, vẽ bitmap cũ lệch (−Left, −Top), dịch mọi annotation cùng offset (undo dịch ngược).
+  - **Bug cũ phát hiện kèm**: `CropCommand` không dịch annotation theo vùng cắt → shape lệch khỏi nội
+    dung sau khi cắt. Đã sửa dùng chung `ResizeCanvasCommand.OffsetAll`.
+  - Chưa có: con trỏ chuột đổi thành mũi tên resize khi rê lên handle (`ProtectedCursor` của
+    `SKXamlCanvas` là protected, cần subclass).
+- **Tool Select (chọn vùng) + tab contextual "Vùng chọn"**:
+  - `CaptureTool.Select`, nút *Select* cạnh *Move*. Bấm-kéo → `_regionDrag` (kẹp trong khung ảnh,
+    `Shift` = vuông); thả → `_region` (`SKRectI`, bỏ nếu < 2px). Vẽ viền "kiến bò" (trắng liền + đen
+    đứt). Xử lý trước `TryBeginEditExisting` → tool Select không chọn/kéo shape.
+  - `SetRegion()` bật/tắt tab "Vùng chọn" (cùng cơ chế tab Number Stamp). Vùng tự bỏ khi đổi tool,
+    bật Cắt, hoặc `Bitmap` đổi (cắt/xoá vùng/đổi khung/undo...) vì toạ độ cũ không còn đúng.
+  - Thao tác: *Cắt ảnh* → `EditorViewModel.Crop` sẵn có; *Copy* → `CopyRegionAsync` (cắt từ
+    `RenderComposited()` nên có cả shape); *Xoá vùng* → `EraseRegionCommand` mới (tô trắng pixel ảnh
+    nền, không đụng shape); *Cut* = Copy + Xoá vùng.
+  - Phím khi có vùng chọn được ưu tiên: `Ctrl+C` copy vùng (thay vì cả ảnh), `Ctrl+X`, `Delete`,
+    `Enter` (cắt ảnh), `Esc`.
+  - Chỉnh vùng đã chọn: 8 handle (dùng chung `CanvasHandlePoints`/`HitTestPoints` với handle khung
+    ảnh) + kéo bên trong = di chuyển (`_regionHandle`: 0..7 / 8 = `RegionMoveHandle`). Di chuyển bị
+    kẹp trong ảnh; chỉnh quá nhỏ (< 2px) thì giữ vùng cũ.
+- **Dán ảnh (`Ctrl+V` / nút *Dán* ở nhóm Cắt & Sửa)**:
+  - `IClipboardService.GetBitmapAsync()`: đọc `StandardDataFormats.Bitmap`, fallback
+    `StorageItems` (file ảnh copy trong Explorer). **Đã chạy thử thật**: đọc clipboard WinRT trong app
+    unpackaged hoạt động (ảnh test 300×160 dán đúng, status "Đã dán ảnh...").
+  - Model mới `ImageAnnotation` (vẽ bitmap co giãn vừa `Bounds`) → dùng lại toàn bộ cơ chế shape:
+    chọn/kéo/handle góc/đổi lớp/Flatten/Undo. Giữ `Shift` khi kéo góc = giữ tỉ lệ gốc (`SnapToAspect`).
+  - Vị trí: góc trên-trái vùng chọn nếu có, không thì góc trên-trái phần đang nhìn thấy
+    (`CanvasScroller` offset × scale − `_viewOrigin`). Dán xong chuyển tool Move + chọn sẵn ảnh.
+  - Ảnh vượt khung → `CompositeEditCommand` [ResizeCanvas (nới phải/dưới, offset 0) + AddAnnotation]
+    = 1 bước Undo.
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 
