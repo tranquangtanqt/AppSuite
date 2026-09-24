@@ -13,17 +13,163 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <StackPanel Padding="16" Spacing="8" MinWidth="260">
-        <TextBlock Text="Chụp màn hình" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,8" />
-        <Button x:Name="FullScreenButton" Content="Toàn màn hình" HorizontalAlignment="Stretch"
-                Click="FullScreenButton_Click" />
-        <Button x:Name="WindowButton" Content="Cửa sổ hiện tại" HorizontalAlignment="Stretch"
-                Click="WindowButton_Click" />
-        <Button x:Name="RegionButton" Content="Vùng chọn" HorizontalAlignment="Stretch"
-                Click="RegionButton_Click" />
-        <Button x:Name="FixedRegionButton" Content="Vùng cố định" HorizontalAlignment="Stretch"
-                Click="FixedRegionButton_Click" />
-        <Button Content="Cuộn trang (sắp có)" HorizontalAlignment="Stretch" IsEnabled="False" />
-        <TextBlock x:Name="StatusText" Text="" Opacity="0.7" Margin="0,8,0,0" TextWrapping="Wrap" />
-    </StackPanel>
+    <Grid Padding="24,20,24,20" RowSpacing="20">
+        <Grid.Resources>
+            <!-- Màu nhấn trùng màu Number Stamp mặc định (#D86445) để launcher và editor cùng tông. -->
+            <SolidColorBrush x:Key="LauncherAccentBrush" Color="#D86445" />
+            <SolidColorBrush x:Key="LauncherAccentSoftBrush" Color="#D86445" Opacity="0.14" />
+
+            <!-- Thẻ chế độ chụp: nền Card của Fluent, căn trái, cả thẻ là vùng bấm. -->
+            <Style x:Key="CaptureCardStyle" TargetType="Button">
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="VerticalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
+                <Setter Property="Padding" Value="16,14" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+            </Style>
+            <Style x:Key="CardIconBadgeStyle" TargetType="Border">
+                <Setter Property="Width" Value="44" />
+                <Setter Property="Height" Value="44" />
+                <Setter Property="CornerRadius" Value="10" />
+                <Setter Property="Background" Value="{StaticResource LauncherAccentSoftBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+            <Style x:Key="CardTitleStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="15" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+            <Style x:Key="CardDescriptionStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+        </Grid.Resources>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="14">
+            <Border Width="48" Height="48" CornerRadius="12" Background="{StaticResource LauncherAccentBrush}">
+                <FontIcon Glyph="&#xE722;" FontSize="22" Foreground="White" />
+            </Border>
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="Chụp màn hình" FontSize="22" FontWeight="SemiBold" />
+                <TextBlock Text="Chọn chế độ chụp - ảnh sẽ mở trong trình chỉnh sửa để ghi chú, lưu hoặc sao chép."
+                           Style="{StaticResource CardDescriptionStyle}" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Lưới thẻ chế độ chụp -->
+        <Grid Grid.Row="1" ColumnSpacing="12" RowSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Button x:Name="FullScreenButton" Grid.Row="0" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
+                    Click="FullScreenButton_Click">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardIconBadgeStyle}">
+                        <FontIcon Glyph="&#xE740;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Toàn màn hình" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Chụp toàn bộ các màn hình đang kết nối." Style="{StaticResource CardDescriptionStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+
+            <Button x:Name="WindowButton" Grid.Row="0" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
+                    Click="WindowButton_Click">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardIconBadgeStyle}">
+                        <FontIcon Glyph="&#xE8A7;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Cửa sổ hiện tại" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Chụp cửa sổ đang hoạt động phía sau." Style="{StaticResource CardDescriptionStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+
+            <Button x:Name="RegionButton" Grid.Row="1" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
+                    Click="RegionButton_Click">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardIconBadgeStyle}">
+                        <FontIcon Glyph="&#xE7A8;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Vùng chọn" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Kéo chuột để chọn một vùng bất kỳ." Style="{StaticResource CardDescriptionStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+
+            <Button x:Name="FixedRegionButton" Grid.Row="1" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
+                    Click="FixedRegionButton_Click">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardIconBadgeStyle}">
+                        <FontIcon Glyph="&#xE718;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Vùng cố định" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Chụp lại đúng vùng đã chọn lần trước." Style="{StaticResource CardDescriptionStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+
+            <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CaptureCardStyle}"
+                    IsEnabled="False">
+                <Grid ColumnSpacing="14" Opacity="0.6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardIconBadgeStyle}">
+                        <FontIcon Glyph="&#xEC8F;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Cuộn trang" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Chụp nội dung dài bằng cách cuộn tự động." Style="{StaticResource CardDescriptionStyle}" />
+                    </StackPanel>
+                    <Border Grid.Column="2" VerticalAlignment="Center" Padding="10,3" CornerRadius="10"
+                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                        <TextBlock Text="Sắp có" FontSize="11" />
+                    </Border>
+                </Grid>
+            </Button>
+        </Grid>
+
+        <!-- Status: chỉ hiện khi có thông báo (huỷ chọn vùng, không tìm thấy cửa sổ...). -->
+        <InfoBar x:Name="StatusInfoBar" Grid.Row="2" Severity="Informational" IsClosable="True" IsOpen="False" />
+    </Grid>
 </Window>

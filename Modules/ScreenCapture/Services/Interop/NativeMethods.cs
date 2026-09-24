@@ -48,6 +48,9 @@ internal static partial class NativeMethods
     public static partial int GetSystemMetrics(int nIndex);
 
     [LibraryImport("user32.dll")]
+    public static partial uint GetDpiForWindow(IntPtr hwnd);
+
+    [LibraryImport("user32.dll")]
     public static partial IntPtr GetForegroundWindow();
 
     [LibraryImport("user32.dll")]

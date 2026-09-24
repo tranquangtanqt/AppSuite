@@ -1,12 +1,14 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using ScreenCapture.Services;
 using ScreenCapture.Services.Interop;
 using SkiaSharp;
+using Windows.Graphics;
 using WinRT.Interop;
 
 namespace ScreenCapture.Views;
 
-/// <summary>Main entry window: 4 capture-mode buttons. Owns opening the overlay/editor windows (View
+/// <summary>Main entry window: 4 capture-mode cards (+ Scroll card, disabled). Owns opening the overlay/editor windows (View
 /// responsibility, same split CsvEditor's MainWindow uses) - no ViewModel here since there is no state
 /// beyond "which button was clicked".</summary>
 public sealed partial class CaptureLauncherWindow : Window
@@ -22,6 +24,17 @@ public sealed partial class CaptureLauncherWindow : Window
     public CaptureLauncherWindow()
     {
         InitializeComponent();
+
+        // Kích thước vừa đủ cho lưới thẻ 2 cột - AppWindow.Resize nhận pixel vật lý nên nhân theo DPI.
+        var scale = NativeMethods.GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
+        AppWindow.Resize(new SizeInt32((int)(720 * scale), (int)(500 * scale)));
+    }
+
+    private void ShowStatus(string message, InfoBarSeverity severity = InfoBarSeverity.Informational)
+    {
+        StatusInfoBar.Message = message;
+        StatusInfoBar.Severity = severity;
+        StatusInfoBar.IsOpen = true;
     }
 
     private async void FullScreenButton_Click(object sender, RoutedEventArgs e)
@@ -48,7 +61,7 @@ public sealed partial class CaptureLauncherWindow : Window
 
         if (rect is null)
         {
-            StatusText.Text = "Không tìm thấy cửa sổ để chụp.";
+            ShowStatus("Không tìm thấy cửa sổ để chụp.", InfoBarSeverity.Warning);
             return;
         }
 
@@ -76,7 +89,7 @@ public sealed partial class CaptureLauncherWindow : Window
 
         if (selection is null)
         {
-            StatusText.Text = "Đã huỷ chọn vùng.";
+            ShowStatus("Đã huỷ chọn vùng.");
             return;
         }
 
