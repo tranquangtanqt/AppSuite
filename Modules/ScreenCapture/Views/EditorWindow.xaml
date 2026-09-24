@@ -225,13 +225,13 @@
                                         <TextBlock Text="Cắt" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <Button x:Name="UndoButton" Style="{StaticResource ToolButtonStyle}" Click="UndoButton_Click">
+                                <Button x:Name="UndoButton" Style="{StaticResource ToolButtonStyle}" Click="UndoButton_Click" ToolTipService.ToolTip="Undo (Ctrl+Z)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE7A7;" />
                                         <TextBlock Text="Undo" FontSize="10" />
                                     </StackPanel>
                                 </Button>
-                                <Button x:Name="RedoButton" Style="{StaticResource ToolButtonStyle}" Click="RedoButton_Click">
+                                <Button x:Name="RedoButton" Style="{StaticResource ToolButtonStyle}" Click="RedoButton_Click" ToolTipService.ToolTip="Redo (Ctrl+Y / Ctrl+Shift+Z)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE7A6;" />
                                         <TextBlock Text="Redo" FontSize="10" />
@@ -291,13 +291,13 @@
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <Button Style="{StaticResource ToolButtonStyle}" Click="SaveButton_Click">
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="SaveButton_Click" ToolTipService.ToolTip="Lưu PNG (Ctrl+S)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE792;" />
                                         <TextBlock Text="Lưu PNG" FontSize="10" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource ToolButtonStyle}" Click="CopyButton_Click">
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="CopyButton_Click" ToolTipService.ToolTip="Copy ảnh (Ctrl+C)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8C8;" />
                                         <TextBlock Text="Copy" FontSize="10" />

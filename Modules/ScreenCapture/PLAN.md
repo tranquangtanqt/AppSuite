@@ -81,9 +81,8 @@ mới có) — nút Stamps phải dùng `Button` thường thay vì `ToggleButto
    truy cập `_viewModel.StrokeWidth`. Sửa: bỏ `Minimum`/`Maximum`/`Value` khỏi XAML, gán qua
    code-behind **sau khi** `_viewModel` đã được khởi tạo.
 3. `RegionOverlayWindow` set `presenter.IsAlwaysOnTop = true` khiến overlay full-screen đè lên cả
-   breakpoint/exception dialog của Visual Studio lúc debug, không Alt+Tab sang được. **Đang tạm tắt**
-   (`IsAlwaysOnTop = false`) để debug dễ hơn — **cần bật lại** sau khi xác nhận không còn bug nào khác
-   (xem `Views/RegionOverlayWindow.xaml.cs`, có comment TODO tại chỗ này).
+   breakpoint/exception dialog của Visual Studio lúc debug, không Alt+Tab sang được. ✅ Đã xử lý
+   (2026-09-24): `IsAlwaysOnTop = !Debugger.IsAttached` — xem mục "Tinh chỉnh sau phản hồi".
 
 ### Editor: ribbon 2 tab (File/Home) thay cho toolbar 1 hàng
 
@@ -126,6 +125,51 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   `_numberStampCounter` trong `EditorWindow` như cũ (trạng thái công cụ phiên làm việc, không phải
   nội dung tài liệu).
 
+### Tinh chỉnh sau phản hồi người dùng (2026-09-24)
+
+- **Màu Number Stamp mặc định `#D86445`** (thay `Colors.Crimson`) — áp cho ô màu đầu tiên của
+  `NumberStamps`, màu preview General Stamps trong flyout, và swatch Fill mặc định ở tab Number Stamp.
+  General Stamps khi đặt vẫn lấy Color1 hiện tại, màu flyout chỉ là preview.
+- **Viền Number Stamp**: trước là trắng alpha 60 + dày `radius*0.06` → gần như không thấy. Nay viền
+  đục, dày `radius*0.12` (`StampAnnotation.RenderNumber`); ô chọn màu trong flyout/ribbon cũng có
+  viền trắng cho khớp.
+- **Stamp Format Current/Next**: bỏ spin button `Inline` của `NumberBox` (Up nằm trước Down — ngược
+  thói quen trái=giảm/phải=tăng — và chèn lên chữ số khi ô hẹp). Thay bằng `SpinButtonPlacementMode=
+  "Hidden"` + 2 `Button` `−`/`+` (`StepperButtonStyle`, cao 32px bằng nút Outline/Fill để nhóm không
+  lệch). Nút chỉ gán `NumberBox.Value` → đi qua đúng `ValueChanged` cũ (có command/undo), không
+  xuống dưới `Minimum`.
+- **Launcher làm lại giao diện**: thay 5 `Button` text trơn bằng header (icon + tiêu đề + mô tả) và
+  lưới thẻ 2 cột (icon badge + tên + mô tả), thẻ Cuộn trang disable + nhãn "Sắp có". `StatusText` →
+  `InfoBar` (chỉ hiện khi có thông báo). Cửa sổ `720×500` DIP, nhân theo DPI qua `GetDpiForWindow`
+  (P/Invoke mới trong `NativeMethods`) vì `AppWindow.Resize` nhận pixel vật lý.
+- **Mũi tên luôn chỉ hướng xuống-phải (bug)**: `MakeRect` chuẩn hoá rect khi vẽ và `ResizeFromHandle`
+  chuẩn hoá khi kéo góc, trong khi `LineArrowAnnotation` dùng Left/Top làm điểm đầu, Right/Bottom làm
+  đầu mũi tên → mọi mũi tên bị lật về xuống-phải, kéo góc không đổi được hướng. Sửa:
+  - Line/Arrow lưu `Bounds` **không chuẩn hoá** (`LineArrowAnnotation.FromPoints`). Thêm
+    `AnnotationShape.NormalizedBounds` cho chỗ cần khung thật (vẽ vùng chọn, handle góc, crop, kiểm
+    tra kích thước tối thiểu lúc thả chuột).
+  - Hit-test chuyển thành `virtual AnnotationShape.HitTest`; Line/Arrow override theo khoảng cách tới
+    đoạn thẳng (khung bao của đường chéo chiếm vùng trống lớn, che shape bên dưới).
+  - Move tool với Line/Arrow: 2 handle tròn ở 2 đầu thay cho khung + 4 góc. Bấm gần 1 đầu (bán kính
+    `clamp(độ dài/3, HandleSize, 30px)`) → kéo đầu đó (`_lineEndpointHandle`), kể cả khi shape chưa
+    được chọn; bấm khúc giữa → di chuyển cả đường. Vẫn ghi 1 `MoveResizeAnnotationCommand` lúc thả.
+  - Kèm theo: `CropCommand` inflate 1px trước `Intersect` — đường ngang/dọc có khung cao/rộng 0 từng
+    bị xoá nhầm khi crop.
+- **Giữ `Shift` để khoá góc/tỉ lệ** (đọc `PointerRoutedEventArgs.KeyModifiers` trong
+  `Canvas_PointerMoved`, nên nhấn/nhả Shift giữa chừng có tác dụng ngay ở lần rê chuột kế tiếp):
+  - Line/Arrow (vẽ mới + kéo đầu mút): `SnapToAngle` bắt hướng về bội số 45° tính từ đầu đứng yên,
+    độ dài = hình chiếu của chuột lên hướng đã bắt (giống PowerPoint).
+  - Chữ nhật/Elip (vẽ mới + kéo handle góc): `SnapToSquare` — cạnh = chiều dài hơn, neo ở điểm bắt
+    đầu / góc đối diện handle. Highlight và Crop không áp dụng (không có nhu cầu vùng vuông).
+- **Phím tắt Editor**: `Ctrl+Z` Undo, `Ctrl+Y`/`Ctrl+Shift+Z` Redo, `Ctrl+S` Lưu, `Ctrl+C` Copy —
+  thêm vào `Content_KeyDown` sẵn có (không dùng `KeyboardAccelerator` trên nút vì nút Lưu/Copy nằm ở
+  tab Tệp bị `Collapsed`, accelerator của element collapsed không chạy). Gọi qua `ICommand` của
+  ViewModel, có kiểm `CanExecute` (Undo/Redo khi stack rỗng, Save/Copy async đang chạy). Handler gắn
+  bằng `+=` nên chỉ nhận phím control đang focus chưa xử lý → TextBox trong NumberBox vẫn giữ
+  Ctrl+Z/Ctrl+C/Backspace của nó. Tooltip trên nút ghi phím tắt tương ứng.
+- **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
+  khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
+
 ### Không dùng DI container
 
 Giống mọi module khác trong AppSuite: không có DI container, ViewModel/Service khởi tạo thủ công
@@ -137,6 +181,8 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
 - `dotnet build Modules\ScreenCapture\ScreenCapture.csproj -p:Platform=x64` — build sạch (đã chạy
   thành công).
 - `dotnet build AppSuite.sln` — không ảnh hưởng 11 project còn lại (đã chạy thành công, 0 lỗi).
+- Launcher mới: đã chạy app + chụp màn hình xác nhận hiển thị đúng (DPI 150%). Mũi tên kéo đầu mút
+  và nút `−`/`+` Stamp Format: build sạch, **chưa thao tác thử trên GUI**.
 - **Chưa chạy thử GUI thực tế đầy đủ** — các rủi ro sau cần người dùng tự kiểm chứng khi chạy thật:
   - ✅ **Đã xác nhận và sửa** (phản hồi thực tế từ người dùng dùng máy 2 màn hình): overlay Region/
     Fixed Region bị phóng to khi màn hình chạy DPI scale >100%. Nguyên nhân: `BackgroundImage`
@@ -156,8 +202,8 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
 ## Chưa làm (fast-follow)
 
 - Scroll capture (tự cuộn + ghép ảnh dài/rộng) — `CaptureMode.Scroll` đã có sẵn làm điểm mở rộng.
-- Editor: Blur/Mosaic (khác Fill — làm mờ/che chứ không đổi màu), Freehand pen, crop không phá huỷ,
-  resize/scale annotation qua handle sau khi vẽ xong (Move hiện chỉ di chuyển, chưa resize lại).
+- Editor: Blur/Mosaic (khác Fill — làm mờ/che chứ không đổi màu), Freehand pen, crop không phá huỷ.
+  (Resize shape qua 4 handle góc và đổi hướng/độ dài Line/Arrow qua 2 handle đầu mút **đã làm**.)
 - Fixed Region: lưu vị trí/kích thước qua lần restart app (hiện chỉ session-only, mất khi đóng app).
 - Window capture: chọn cửa sổ khác ngoài foreground window (cần `EnumWindows` + UI danh sách chọn).
 - Hotkey toàn cục (`RegisterHotKey`) để kích hoạt capture từ bên ngoài app — hiện chỉ mở được từ

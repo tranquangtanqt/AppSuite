@@ -376,6 +376,7 @@ public sealed partial class EditorWindow : Window
     private void Canvas_PointerMoved(object sender, PointerRoutedEventArgs e)
     {
         var pos = ToCanvasPoint(e.GetCurrentPoint(Canvas).Position);
+        bool shift = e.KeyModifiers.HasFlag(Windows.System.VirtualKeyModifiers.Shift);
 
         if (_isCropping && e.GetCurrentPoint(Canvas).Properties.IsLeftButtonPressed)
         {
@@ -387,16 +388,35 @@ public sealed partial class EditorWindow : Window
         if (_movingShape is not null && _lineEndpointHandle >= 0)
         {
             var old = _movingOldBounds;
-            _movingShape.Bounds = _lineEndpointHandle == 0
-                ? new SKRect(pos.X, pos.Y, old.Right, old.Bottom)
-                : new SKRect(old.Left, old.Top, pos.X, pos.Y);
+            // Giữ Shift: khoá góc tính từ đầu còn lại (đầu đang đứng yên).
+            if (_lineEndpointHandle == 0)
+            {
+                var anchor = new SKPoint(old.Right, old.Bottom);
+                _movingShape.Bounds = LineArrowAnnotation.FromPoints(shift ? SnapToAngle(anchor, pos) : pos, anchor);
+            }
+            else
+            {
+                var anchor = new SKPoint(old.Left, old.Top);
+                _movingShape.Bounds = LineArrowAnnotation.FromPoints(anchor, shift ? SnapToAngle(anchor, pos) : pos);
+            }
             Canvas.Invalidate();
             return;
         }
 
         if (_movingShape is not null && _resizingHandle >= 0)
         {
-            _movingShape.Bounds = ResizeFromHandle(_movingOldBounds, _resizingHandle, pos);
+            if (shift && _movingShape is RectangleAnnotation or EllipseAnnotation)
+            {
+                // Giữ Shift: giữ tỉ lệ vuông/tròn, neo ở góc đối diện handle đang kéo (0↔3, 1↔2).
+                var o = _movingOldBounds;
+                SKPoint[] corners = [new(o.Left, o.Top), new(o.Right, o.Top), new(o.Left, o.Bottom), new(o.Right, o.Bottom)];
+                var anchor = corners[3 - _resizingHandle];
+                _movingShape.Bounds = MakeRect(anchor, SnapToSquare(anchor, pos));
+            }
+            else
+            {
+                _movingShape.Bounds = ResizeFromHandle(_movingOldBounds, _resizingHandle, pos);
+            }
             Canvas.Invalidate();
             return;
         }
@@ -417,10 +437,34 @@ public sealed partial class EditorWindow : Window
             return;
         }
         // Line/Arrow giữ nguyên điểm bắt đầu -> điểm hiện tại (không chuẩn hoá) để mũi tên chỉ đúng hướng kéo.
-        _draftShape.Bounds = _draftShape is LineArrowAnnotation
-            ? LineArrowAnnotation.FromPoints(_dragStartPoint, pos)
-            : MakeRect(_dragStartPoint, pos);
+        // Giữ Shift: Line/Arrow khoá góc bội số 45°, Chữ nhật/Elip thành hình vuông/tròn.
+        _draftShape.Bounds = _draftShape switch
+        {
+            LineArrowAnnotation => LineArrowAnnotation.FromPoints(_dragStartPoint, shift ? SnapToAngle(_dragStartPoint, pos) : pos),
+            RectangleAnnotation or EllipseAnnotation when shift => MakeRect(_dragStartPoint, SnapToSquare(_dragStartPoint, pos)),
+            _ => MakeRect(_dragStartPoint, pos),
+        };
         Canvas.Invalidate();
+    }
+
+    /// <summary>Bắt hướng anchor→pos về bội số 45° gần nhất (8 hướng). Độ dài lấy theo hình chiếu
+    /// của chuột lên hướng đó (giống PowerPoint) nên đầu mút bám sát con trỏ.</summary>
+    private static SKPoint SnapToAngle(SKPoint anchor, SKPoint pos)
+    {
+        float dx = pos.X - anchor.X, dy = pos.Y - anchor.Y;
+        const float step = MathF.PI / 4;
+        float angle = MathF.Round(MathF.Atan2(dy, dx) / step) * step;
+        float cos = MathF.Cos(angle), sin = MathF.Sin(angle);
+        float length = dx * cos + dy * sin;
+        return new SKPoint(anchor.X + length * cos, anchor.Y + length * sin);
+    }
+
+    /// <summary>Điểm đối diện anchor sao cho khung là hình vuông (cạnh = chiều dài hơn), giữ hướng kéo.</summary>
+    private static SKPoint SnapToSquare(SKPoint anchor, SKPoint pos)
+    {
+        float dx = pos.X - anchor.X, dy = pos.Y - anchor.Y;
+        float side = Math.Max(Math.Abs(dx), Math.Abs(dy));
+        return new SKPoint(anchor.X + (dx < 0 ? -side : side), anchor.Y + (dy < 0 ? -side : side));
     }
 
     private void Canvas_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -493,15 +537,47 @@ public sealed partial class EditorWindow : Window
         }
     }
 
+    /// <summary>Phím tắt của Editor. Chỉ nhận phím mà control đang focus chưa xử lý (TextBox trong
+    /// NumberBox tự xử lý Ctrl+Z/Ctrl+C/Backspace của nó), nên không cướp phím khi đang gõ số.</summary>
     private void Content_KeyDown(object sender, KeyRoutedEventArgs e)
     {
+        bool ctrl = IsKeyDown(Windows.System.VirtualKey.Control);
+        bool shift = IsKeyDown(Windows.System.VirtualKey.Shift);
+
+        if (ctrl)
+        {
+            System.Windows.Input.ICommand? command = e.Key switch
+            {
+                Windows.System.VirtualKey.Z when shift => _viewModel.RedoCommand,
+                Windows.System.VirtualKey.Z => _viewModel.UndoCommand,
+                Windows.System.VirtualKey.Y => _viewModel.RedoCommand,
+                Windows.System.VirtualKey.S => _viewModel.SaveCommand,
+                Windows.System.VirtualKey.C => _viewModel.CopyToClipboardCommand,
+                _ => null,
+            };
+            if (command is not null)
+            {
+                if (command.CanExecute(null))
+                {
+                    command.Execute(null);
+                }
+                e.Handled = true;
+            }
+            return;
+        }
+
         if (e.Key is Windows.System.VirtualKey.Delete or Windows.System.VirtualKey.Back &&
             _viewModel.SelectedAnnotation is not null)
         {
             _viewModel.DeleteSelectedAnnotation();
             Canvas.Invalidate();
+            e.Handled = true;
         }
     }
+
+    private static bool IsKeyDown(Windows.System.VirtualKey key) =>
+        Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(key)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
 
     private void DeleteButton_Click(object sender, RoutedEventArgs e)
     {

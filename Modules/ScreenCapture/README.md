@@ -33,6 +33,8 @@ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn phía dưới, chia
   - Đường thẳng / Mũi tên giữ đúng hướng kéo chuột. Khi chọn bằng *Di chuyển*: hiện 2 handle tròn ở
     2 đầu; bấm **gần một đầu** (khoảng 1/3 độ dài, tối đa 30px) rồi kéo để đổi hướng/độ dài, bấm
     khúc giữa để di chuyển cả đường. Chọn theo khoảng cách tới thân đường, không theo khung bao.
+  - **Giữ `Shift`** khi vẽ hoặc kéo: Đường thẳng / Mũi tên khoá hướng theo bội số 45° (ngang, dọc,
+    chéo); Chữ nhật / Elip thành hình vuông / hình tròn (cả lúc vẽ lẫn lúc kéo handle góc).
 - **Tô & Dấu**
   - *Tô màu* — bucket fill pixel thật (giống MS Paint/PicPick), click vào 1 vùng liền màu trên ảnh
     gốc để đổi màu cả vùng đó (flood-fill, có ngưỡng tolerance cho vùng anti-alias nhẹ).
@@ -60,6 +62,20 @@ tự ẩn khi bỏ chọn:
 
 Mọi thao tác chỉnh sửa (vẽ, di chuyển, đổi kích thước/hướng, đổi màu/cỡ nét, đổi số stamp,
 Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo được.
+
+**Phím tắt trong Editor** (cũng hiện trong tooltip của nút tương ứng):
+
+| Phím | Chức năng |
+|---|---|
+| `Ctrl+Z` | Undo |
+| `Ctrl+Y` / `Ctrl+Shift+Z` | Redo |
+| `Ctrl+S` | Lưu PNG |
+| `Ctrl+C` | Copy ảnh (đã gộp mọi shape) vào clipboard |
+| `Delete` / `Backspace` | Xoá shape đang chọn |
+| Giữ `Shift` khi vẽ/kéo | Khoá góc 45° (đường/mũi tên), vuông/tròn (chữ nhật/elip) |
+
+Khi đang gõ trong ô số (Current/Next), các phím trên thuộc về ô đó (vd `Ctrl+Z` hoàn tác chữ vừa
+gõ), không kích hoạt lệnh của Editor.
 
 ## Chạy độc lập
 
