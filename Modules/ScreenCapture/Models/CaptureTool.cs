@@ -4,7 +4,13 @@ namespace ScreenCapture.Models;
 public enum CaptureTool
 {
     None,
+    Move,
     Rectangle,
+    Ellipse,
+    Line,
     Arrow,
+    Highlight,
     Text,
+    Fill,
+    Stamp,
 }

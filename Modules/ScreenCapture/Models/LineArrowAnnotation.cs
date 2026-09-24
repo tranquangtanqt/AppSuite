@@ -8,7 +8,6 @@ namespace ScreenCapture.Models;
 public sealed class LineArrowAnnotation : AnnotationShape
 {
     public override string DisplayName => "Mũi tên";
-    public float StrokeWidth { get; set; } = 3f;
     public bool IsArrow { get; set; } = true;
 
     public override void Render(SKCanvas canvas)

@@ -14,28 +14,428 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Padding="8" RowSpacing="8">
+    <Grid Padding="8" RowSpacing="0">
+        <Grid.Resources>
+            <!-- Icon-on-top + small label toolbar button, dùng chung cho mọi nút trong toolbar
+                 (ButtonBase để áp được cho cả Button lẫn ToggleButton). -->
+            <Style x:Key="ToolButtonStyle" TargetType="ButtonBase">
+                <Setter Property="Padding" Value="8,4" />
+                <Setter Property="MinWidth" Value="52" />
+            </Style>
+            <Style x:Key="ToolButtonContentStyle" TargetType="StackPanel">
+                <Setter Property="Spacing" Value="2" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+            </Style>
+            <!-- Tab header ribbon (Trang chủ/Tệp) - ToggleButton phẳng, chỉ đổi nền lúc Checked
+                 (theme resource mặc định), không cần ControlTemplate riêng. -->
+            <Style x:Key="RibbonTabHeaderStyle" TargetType="ToggleButton">
+                <Setter Property="Padding" Value="16,6" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="4,4,0,0" />
+            </Style>
+            <!-- Khung 1 nhóm nút trong ribbon content, có nhãn nhóm phía dưới giống PicPick. -->
+            <Style x:Key="RibbonGroupStyle" TargetType="Border">
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="4" />
+                <Setter Property="Padding" Value="6,4" />
+                <Setter Property="Margin" Value="0,0,4,0" />
+            </Style>
+            <Style x:Key="RibbonGroupLabelStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="10" />
+                <Setter Property="Opacity" Value="0.65" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+                <Setter Property="Margin" Value="0,2,0,0" />
+            </Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Orientation="Horizontal" Spacing="4" Grid.Row="0">
-            <ToggleButton x:Name="RectangleToolButton" Content="Chữ nhật" Click="RectangleToolButton_Click" />
-            <ToggleButton x:Name="ArrowToolButton" Content="Mũi tên" Click="ArrowToolButton_Click" />
-            <ToggleButton x:Name="TextToolButton" Content="Text" Click="TextToolButton_Click" />
-            <ToggleButton x:Name="CropToolButton" Content="Cắt" Click="CropToolButton_Click" />
-            <AppBarSeparator />
-            <Button x:Name="UndoButton" Content="Undo" Click="UndoButton_Click" />
-            <Button x:Name="RedoButton" Content="Redo" Click="RedoButton_Click" />
-            <AppBarSeparator />
-            <Button Content="Lưu PNG" Click="SaveButton_Click" />
-            <Button Content="Copy" Click="CopyButton_Click" />
+        <!-- Row 0: tab header -->
+        <StackPanel Orientation="Horizontal" Spacing="2" Grid.Row="0">
+            <ToggleButton x:Name="HomeTabHeader" Content="Trang chủ" Style="{StaticResource RibbonTabHeaderStyle}"
+                          IsChecked="True" Click="RibbonTabHeader_Click" />
+            <ToggleButton x:Name="FileTabHeader" Content="Tệp" Style="{StaticResource RibbonTabHeaderStyle}"
+                          Click="RibbonTabHeader_Click" />
+            <ToggleButton x:Name="NumberStampTabHeader" Content="Number Stamp" Style="{StaticResource RibbonTabHeaderStyle}"
+                          Click="RibbonTabHeader_Click" Visibility="Collapsed" />
         </StackPanel>
 
-        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                      HorizontalContentAlignment="Left" VerticalContentAlignment="Top">
+        <!-- Row 1: ribbon content, đổi theo tab đang chọn -->
+        <Border Grid.Row="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+            <Grid>
+                <StackPanel x:Name="HomeRibbonPanel" Orientation="Horizontal">
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <ToggleButton x:Name="MoveToolButton" Style="{StaticResource ToolButtonStyle}" Click="MoveToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8C9;" />
+                                        <TextBlock Text="Di chuyển" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <Button x:Name="DeleteButton" Style="{StaticResource ToolButtonStyle}" Click="DeleteButton_Click" IsEnabled="False">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE74D;" />
+                                        <TextBlock Text="Xoá" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="BringToFrontButton" Style="{StaticResource ToolButtonStyle}" Click="BringToFrontButton_Click" IsEnabled="False">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8A7;" />
+                                        <TextBlock Text="Lên trên" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="SendToBackButton" Style="{StaticResource ToolButtonStyle}" Click="SendToBackButton_Click" IsEnabled="False">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8A8;" />
+                                        <TextBlock Text="Xuống dưới" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Chọn" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <ToggleButton x:Name="RectangleToolButton" Style="{StaticResource ToolButtonStyle}" Click="RectangleToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE739;" />
+                                        <TextBlock Text="Chữ nhật" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <ToggleButton x:Name="EllipseToolButton" Style="{StaticResource ToolButtonStyle}" Click="EllipseToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xEA3B;" />
+                                        <TextBlock Text="Elip" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <ToggleButton x:Name="LineToolButton" Style="{StaticResource ToolButtonStyle}" Click="LineToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <TextBlock Text="&#x2571;" FontSize="16" HorizontalAlignment="Center" />
+                                        <TextBlock Text="Đường thẳng" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <ToggleButton x:Name="ArrowToolButton" Style="{StaticResource ToolButtonStyle}" Click="ArrowToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE72A;" />
+                                        <TextBlock Text="Mũi tên" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <ToggleButton x:Name="HighlightToolButton" Style="{StaticResource ToolButtonStyle}" Click="HighlightToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE7E6;" />
+                                        <TextBlock Text="Highlight" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <ToggleButton x:Name="TextToolButton" Style="{StaticResource ToolButtonStyle}" Click="TextToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8D2;" />
+                                        <TextBlock Text="Text" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                            </StackPanel>
+                            <TextBlock Text="Vẽ hình" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <ToggleButton x:Name="FillToolButton" Style="{StaticResource ToolButtonStyle}" Click="FillToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8D3;" />
+                                        <TextBlock Text="Tô màu" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <Button x:Name="StampsToolButton" Style="{StaticResource ToolButtonStyle}">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE73E;" />
+                                        <TextBlock Text="Stamps" FontSize="10" />
+                                    </StackPanel>
+                                    <Button.Flyout>
+                                        <Flyout x:Name="StampsFlyout" Placement="Bottom">
+                                            <ScrollViewer MaxHeight="360" MaxWidth="340">
+                                                <StackPanel Spacing="8">
+                                                    <TextBlock Text="Number Stamps" FontWeight="SemiBold" />
+                                                    <ItemsControl x:Name="NumberStampsList" ItemsSource="{x:Bind NumberStamps}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <StackPanel Orientation="Horizontal" Spacing="6" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="local:StampPickerItem">
+                                                                <Button Padding="0" CornerRadius="16" Click="NumberStampItem_Click" Tag="{x:Bind Brush}">
+                                                                    <Grid>
+                                                                        <Ellipse Width="32" Height="32" Fill="{x:Bind Brush}" Stroke="White" StrokeThickness="2" />
+                                                                        <TextBlock Text="1" Foreground="White" FontWeight="Bold"
+                                                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                                    </Grid>
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <TextBlock Text="General Stamps" FontWeight="SemiBold" />
+                                                    <ItemsControl x:Name="GeneralStampsList" ItemsSource="{x:Bind GeneralStamps}">
+                                                        <ItemsControl.ItemsPanel>
+                                                            <ItemsPanelTemplate>
+                                                                <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="44" ItemHeight="44" MaximumRowsOrColumns="6" />
+                                                            </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate x:DataType="local:StampPickerItem">
+                                                                <Button Width="40" Height="40" Padding="0" Click="StampItem_Click" Tag="{x:Bind Kind}">
+                                                                    <FontIcon Glyph="{x:Bind Glyph}" Foreground="{x:Bind Brush}" />
+                                                                </Button>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </ScrollViewer>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Tô &amp; Dấu" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <ToggleButton x:Name="CropToolButton" Style="{StaticResource ToolButtonStyle}" Click="CropToolButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE7A8;" />
+                                        <TextBlock Text="Cắt" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <Button x:Name="UndoButton" Style="{StaticResource ToolButtonStyle}" Click="UndoButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE7A7;" />
+                                        <TextBlock Text="Undo" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="RedoButton" Style="{StaticResource ToolButtonStyle}" Click="RedoButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE7A6;" />
+                                        <TextBlock Text="Redo" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Cắt &amp; Sửa" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="Color1" FontSize="10" HorizontalAlignment="Center" />
+                                    <Button x:Name="Color1Button" Width="32" Height="32" Padding="0">
+                                        <Rectangle x:Name="Color1Swatch" Width="22" Height="22" Fill="#E74C3C" Stroke="Gray" StrokeThickness="1" />
+                                        <Button.Flyout>
+                                            <Flyout>
+                                                <ColorPicker x:Name="Color1ColorPicker" ColorChanged="Color1ColorPicker_ColorChanged"
+                                                             IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                            </Flyout>
+                                        </Button.Flyout>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="Color2" FontSize="10" HorizontalAlignment="Center" />
+                                    <Button x:Name="Color2Button" Width="32" Height="32" Padding="0">
+                                        <Rectangle x:Name="Color2Swatch" Width="22" Height="22" Fill="White" Stroke="Gray" StrokeThickness="1" />
+                                        <Button.Flyout>
+                                            <Flyout>
+                                                <ColorPicker x:Name="Color2ColorPicker" ColorChanged="Color2ColorPicker_ColorChanged"
+                                                             IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                            </Flyout>
+                                        </Button.Flyout>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="Màu" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel VerticalAlignment="Center" Width="120">
+                                <TextBlock Text="Size" FontSize="10" />
+                                <Slider x:Name="SizeSlider" ValueChanged="SizeSlider_ValueChanged" />
+                            </StackPanel>
+                            <TextBlock Text="Cỡ nét" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+                <StackPanel x:Name="FileRibbonPanel" Orientation="Horizontal" Visibility="Collapsed">
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="SaveButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE792;" />
+                                        <TextBlock Text="Lưu PNG" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="CopyButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8C8;" />
+                                        <TextBlock Text="Copy" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Lưu" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="CloseButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE711;" />
+                                        <TextBlock Text="Đóng" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Cửa sổ" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+                <StackPanel x:Name="NumberStampRibbonPanel" Orientation="Horizontal" Visibility="Collapsed">
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button x:Name="FlattenButton" Style="{StaticResource ToolButtonStyle}" Click="FlattenButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE73D;" />
+                                        <TextBlock Text="Flatten" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="DeleteButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE74D;" />
+                                        <TextBlock Text="Xoá" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Edit" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <ItemsControl ItemsSource="{x:Bind NumberStamps}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" Spacing="4" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:StampPickerItem">
+                                        <Button Padding="0" Width="26" Height="26" CornerRadius="13"
+                                                Click="StampStyleSwatch_Click" Tag="{x:Bind Brush}">
+                                            <Ellipse Width="20" Height="20" Fill="{x:Bind Brush}" Stroke="White" StrokeThickness="1.5" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Text="Shape Styles" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="Current" FontSize="10" HorizontalAlignment="Center" />
+                                    <NumberBox x:Name="CurrentNumberBox" Width="70" SpinButtonPlacementMode="Inline"
+                                               ValueChanged="CurrentNumberBox_ValueChanged" />
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="Next" FontSize="10" HorizontalAlignment="Center" />
+                                    <NumberBox x:Name="NextNumberBox" Width="70" SpinButtonPlacementMode="Inline"
+                                               ValueChanged="NextNumberBox_ValueChanged" />
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="Stamp Format" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="Outline" FontSize="10" HorizontalAlignment="Center" />
+                                    <Button x:Name="StampOutlineButton" Width="32" Height="32" Padding="0">
+                                        <Rectangle x:Name="StampOutlineSwatch" Width="22" Height="22" Fill="White" Stroke="Gray" StrokeThickness="1" />
+                                        <Button.Flyout>
+                                            <Flyout>
+                                                <ColorPicker x:Name="StampOutlineColorPicker" ColorChanged="StampOutlineColorPicker_ColorChanged"
+                                                             IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                            </Flyout>
+                                        </Button.Flyout>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="Fill" FontSize="10" HorizontalAlignment="Center" />
+                                    <Button x:Name="StampFillButton" Width="32" Height="32" Padding="0">
+                                        <Rectangle x:Name="StampFillSwatch" Width="22" Height="22" Fill="#E74C3C" Stroke="Gray" StrokeThickness="1" />
+                                        <Button.Flyout>
+                                            <Flyout>
+                                                <ColorPicker x:Name="StampFillColorPicker" ColorChanged="StampFillColorPicker_ColorChanged"
+                                                             IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                            </Flyout>
+                                        </Button.Flyout>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="Shape Colors" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="BringToFrontButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8A7;" />
+                                        <TextBlock Text="Lên trên" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="SendToBackButton_Click">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8A8;" />
+                                        <TextBlock Text="Xuống dưới" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Arrange" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Margin="0,8,0,8">
             <Border BorderBrush="Gray" BorderThickness="1" HorizontalAlignment="Left" VerticalAlignment="Top">
                 <skia:SKXamlCanvas x:Name="Canvas"
                                     PaintSurface="Canvas_PaintSurface"
@@ -45,6 +445,6 @@
             </Border>
         </ScrollViewer>
 
-        <TextBlock x:Name="StatusText" Grid.Row="2" Opacity="0.7" />
+        <TextBlock x:Name="StatusText" Grid.Row="3" Opacity="0.7" />
     </Grid>
 </Window>

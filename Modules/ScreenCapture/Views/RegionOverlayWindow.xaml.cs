@@ -54,7 +54,10 @@ public sealed partial class RegionOverlayWindow : Window
         _initialFixedRegion = initialFixedRegion;
 
         var presenter = OverlappedPresenter.Create();
-        presenter.IsAlwaysOnTop = true;
+        // TẠM THỜI tắt để debug: IsAlwaysOnTop=true khiến overlay full-screen đè lên cả breakpoint/
+        // exception dialog của Visual Studio, không Alt+Tab sang được. Bật lại (presenter.
+        // IsAlwaysOnTop = true) sau khi đã tìm ra và sửa xong lỗi crash lúc mở Editor.
+        presenter.IsAlwaysOnTop = false;
         presenter.IsResizable = false;
         presenter.IsMaximizable = false;
         presenter.IsMinimizable = false;

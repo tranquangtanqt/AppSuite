@@ -48,6 +48,22 @@ public sealed partial class EditorViewModel : ObservableObject
     [ObservableProperty]
     private string _statusText = "Sẵn sàng.";
 
+    /// <summary>Color1 (PicPick convention) - stroke/màu chính, dùng khi vẽ shape mới hoặc Fill.
+    /// Đỏ cam nhạt (không phải đỏ thuần FF0000) - đúng tông màu mặc định của PicPick.</summary>
+    [ObservableProperty]
+    private SKColor _strokeColor = new(0xE7, 0x4C, 0x3C);
+
+    /// <summary>Color2 (PicPick convention) - fill/màu phụ, dùng cho Highlight và các shape có tô nền.</summary>
+    [ObservableProperty]
+    private SKColor _fillColor = SKColors.White;
+
+    [ObservableProperty]
+    private float _strokeWidth = 3f;
+
+    /// <summary>Shape đang được chọn bởi Move tool - EditorWindow vẽ viền chấm chấm quanh nó.</summary>
+    [ObservableProperty]
+    private AnnotationShape? _selectedAnnotation;
+
     public bool CanUndo => UndoRedo.CanUndo;
     public bool CanRedo => UndoRedo.CanRedo;
 
@@ -63,6 +79,67 @@ public sealed partial class EditorViewModel : ObservableObject
     public void EditText(TextAnnotation shape, string newText) =>
         UndoRedo.Do(new EditTextAnnotationCommand(shape, shape.Text, newText));
 
+    public void DeleteSelectedAnnotation()
+    {
+        if (SelectedAnnotation is { } shape)
+        {
+            RemoveAnnotation(shape);
+            SelectedAnnotation = null;
+        }
+    }
+
+    public void BringToFront(AnnotationShape shape)
+    {
+        int oldIndex = Annotations.IndexOf(shape);
+        int newIndex = Annotations.Count - 1;
+        if (oldIndex >= 0 && oldIndex != newIndex)
+        {
+            UndoRedo.Do(new ReorderAnnotationCommand(Annotations, oldIndex, newIndex));
+        }
+    }
+
+    public void SendToBack(AnnotationShape shape)
+    {
+        int oldIndex = Annotations.IndexOf(shape);
+        if (oldIndex > 0)
+        {
+            UndoRedo.Do(new ReorderAnnotationCommand(Annotations, oldIndex, 0));
+        }
+    }
+
+    public void ChangeAnnotationStyle(AnnotationShape shape, SKColor newColor, float newStrokeWidth)
+    {
+        if (shape.Color != newColor || shape.StrokeWidth != newStrokeWidth)
+        {
+            UndoRedo.Do(new ChangeAnnotationStyleCommand(shape, shape.Color, newColor, shape.StrokeWidth, newStrokeWidth));
+        }
+    }
+
+    public void ChangeStampColors(StampAnnotation shape, SKColor newFill, SKColor newOutline)
+    {
+        if (shape.Color != newFill || shape.OutlineColor != newOutline)
+        {
+            UndoRedo.Do(new ChangeStampColorsCommand(shape, shape.Color, newFill, shape.OutlineColor, newOutline));
+        }
+    }
+
+    public void ChangeStampNumber(StampAnnotation shape, int newValue)
+    {
+        if (shape.NumberValue != newValue)
+        {
+            UndoRedo.Do(new ChangeStampNumberCommand(shape, shape.NumberValue, newValue));
+        }
+    }
+
+    public void FlattenSelectedAnnotation()
+    {
+        if (SelectedAnnotation is { } shape)
+        {
+            UndoRedo.Do(new FlattenAnnotationCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, shape));
+            SelectedAnnotation = null;
+        }
+    }
+
     public void RequestRedrawNow() => RequestRedraw?.Invoke(this, EventArgs.Empty);
 
     public void Crop(SKRect cropRect)
@@ -76,6 +153,9 @@ public sealed partial class EditorViewModel : ObservableObject
 
         UndoRedo.Do(new CropCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, cropped, cropRect));
     }
+
+    public void FloodFill(SKPointI seed) =>
+        UndoRedo.Do(new FloodFillCommand(newBitmap => Bitmap = newBitmap, Bitmap, seed, StrokeColor));
 
     [RelayCommand(CanExecute = nameof(CanUndo))]
     private void Undo() => UndoRedo.Undo();

@@ -2,9 +2,9 @@ using SkiaSharp;
 
 namespace ScreenCapture.Models;
 
-public sealed class RectangleAnnotation : AnnotationShape
+public sealed class EllipseAnnotation : AnnotationShape
 {
-    public override string DisplayName => "Hình chữ nhật";
+    public override string DisplayName => "Hình elip";
     public override void Render(SKCanvas canvas)
     {
         using var paint = new SKPaint
@@ -14,6 +14,6 @@ public sealed class RectangleAnnotation : AnnotationShape
             Style = SKPaintStyle.Stroke,
             IsAntialias = true,
         };
-        canvas.DrawRect(Bounds, paint);
+        canvas.DrawOval(Bounds, paint);
     }
 }

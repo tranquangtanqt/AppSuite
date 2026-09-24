@@ -15,12 +15,21 @@ Cửa sổ chính (`CaptureLauncherWindow`) có 4 nút chụp:
   để huỷ). Vị trí/kích thước lần chụp gần nhất được nhớ lại trong phiên làm việc hiện tại.
 - **Cuộn trang** — chưa làm (nút bị disable), xem `PLAN.md` mục "Chưa làm".
 
-Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh sửa (`EditorWindow`):
+Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh sửa (`EditorWindow`, tự maximize),
+toolbar 1 hàng chia nhóm bằng icon (Segoe Fluent Icons):
 
-- Vẽ hình chữ nhật, mũi tên, text lên ảnh.
-- Cắt ảnh (Crop).
-- Undo/Redo từng bước.
-- Lưu ra file PNG, hoặc copy thẳng vào clipboard.
+- **Di chuyển** — chọn/kéo di chuyển 1 shape đã vẽ (viền chấm chấm đánh dấu shape đang chọn).
+- **Vẽ**: Chữ nhật, Elip, Đường thẳng, Mũi tên, Highlight (marker tô trong mờ).
+- **Text** — click vào canvas, nhập text qua dialog.
+- **Tô màu** — bucket fill pixel thật (giống MS Paint/PicPick), click vào 1 vùng liền màu trên ảnh
+  gốc để đổi màu cả vùng đó (thuật toán flood-fill, có ngưỡng tolerance cho vùng anti-alias nhẹ).
+- **Stamps** — dán icon in sẵn lên ảnh: Number Stamps (hình tròn số 1-7 nhiều màu), General Stamps
+  (mũi tên 8 hướng, bookmark, pin, flag, tag, info/warning/no-entry/heart/plus/minus/check/cross).
+- **Cắt ảnh** (Crop).
+- **Undo/Redo** từng bước.
+- **Color1** (màu vẽ/tô chính) / **Color2** (màu fill/highlight) — color picker.
+- **Size** — độ dày nét vẽ (slider 1-20px).
+- **Lưu PNG** / **Copy** vào clipboard.
 
 ## Chạy độc lập
 
