@@ -58,6 +58,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -538,8 +539,25 @@
             </Grid>
         </Border>
 
-        <ScrollViewer x:Name="CanvasScroller" Grid.Row="2" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                      HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Margin="0,8,0,8">
+        <!-- Row 2: mỗi lần chụp là 1 tab (giống PicPick) - tab chỉ dùng làm thanh chuyển ảnh, nội dung
+             luôn vẽ trên cùng 1 Canvas bên dưới (đổi EditorViewModel khi đổi tab). -->
+        <TabView x:Name="DocumentTabs" Grid.Row="2" Margin="0,6,0,0"
+                 IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" CanReorderTabs="False" CanDragTabs="False"
+                 SelectionChanged="DocumentTabs_SelectionChanged" TabCloseRequested="DocumentTabs_TabCloseRequested">
+            <TabView.TabStripFooter>
+                <Button x:Name="CloseAllTabsButton" Click="CloseAllTabsButton_Click" Margin="8,0,0,0" Padding="10,4"
+                        VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
+                        ToolTipService.ToolTip="Đóng tất cả ảnh (hỏi lưu tất cả vào 1 thư mục nếu còn ảnh chưa lưu)">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8BB;" FontSize="12" />
+                        <TextBlock Text="Đóng tất cả" FontSize="12" />
+                    </StackPanel>
+                </Button>
+            </TabView.TabStripFooter>
+        </TabView>
+
+        <ScrollViewer x:Name="CanvasScroller" Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Margin="0,0,0,8">
             <!-- Viền ảnh + 8 handle khung ảnh vẽ trong Skia (có lề CanvasPad), không dùng viền Border. -->
             <Border HorizontalAlignment="Left" VerticalAlignment="Top">
                 <skia:SKXamlCanvas x:Name="Canvas"
@@ -550,6 +568,6 @@
             </Border>
         </ScrollViewer>
 
-        <TextBlock x:Name="StatusText" Grid.Row="3" Opacity="0.7" />
+        <TextBlock x:Name="StatusText" Grid.Row="4" Opacity="0.7" />
     </Grid>
 </Window>

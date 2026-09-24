@@ -230,6 +230,57 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
     (`CanvasScroller` offset × scale − `_viewOrigin`). Dán xong chuyển tool Move + chọn sẵn ảnh.
   - Ảnh vượt khung → `CompositeEditCommand` [ResizeCanvas (nới phải/dưới, offset 0) + AddAnnotation]
     = 1 bước Undo.
+- **Nhiều ảnh chụp dạng tab trong 1 Editor** (yêu cầu: "các lần chụp được lưu lại như PicPick, không
+  mất đi"):
+  - `CaptureLauncherWindow` giữ 1 `_editor` duy nhất: lần đầu tạo, các lần sau gọi
+    `EditorWindow.AddCapture(bitmap)`; `Closed` → null.
+  - `EditorWindow`: `TabView` (Row 2, chỉ dùng làm thanh tab — không có content) mỗi tab `Tag` = 1
+    `EditorViewModel` riêng (bitmap, annotation, UndoRedo riêng). `_viewModel` hết `readonly`;
+    `SwitchTo(vm)` gỡ/gắn `RequestRedraw`/`PropertyChanged`, mang Tool/Color1/Color2/Size từ ảnh trước
+    sang (thiết lập của cửa sổ, không phải của ảnh), reset mọi trạng thái kéo dở + vùng chọn, tính lại
+    layout canvas, cuộn về (0,0). Tên tab = `yyyy-MM-dd HH mm ss`, trùng giây thì thêm "(2)".
+  - `EditorViewModel.NeedsSave` = chưa từng lưu ra file **hoặc** `UndoRedo.IsDirty`. `SaveToFileAsync()`
+    trả bool + `MarkClean()` (trước đây Save không đánh dấu clean).
+  - Đóng tab → `ConfirmCloseDocumentAsync` (Lưu / Không lưu / Huỷ); đóng tab cuối = đóng cửa sổ.
+    Đóng cửa sổ: `AppWindow.Closing` (nút X) + nút *Đóng* → `TryCloseWindowAsync` hỏi 1 lần nếu còn ảnh
+    chưa lưu (`_forceClose` để lần `Close()` thật không bị chặn lại).
+  - **Bug phát hiện khi test**: lần chụp thứ 2 trở đi dính cả cửa sổ Editor vào ảnh (chỉ launcher được
+    thu nhỏ). Sửa: `MinimizeForCapture` thu nhỏ cả Editor; huỷ chụp → `RestoreEditorAfterCancel`; chụp
+    xong `AddCapture` tự mở lại. Đã chạy thử 2 lần chụp liên tiếp qua UI Automation: 2 tab đúng tên, ảnh
+    thứ 2 không còn dính Editor.
+  - Chưa có: kéo đổi thứ tự tab.
+- **Nhớ tab qua lần tắt/mở app** (người dùng chọn: shape vẫn chỉnh sửa được, thư mục `%TEMP%`):
+  - `Services/SessionService.cs`: thư mục `Path.GetTempPath()\AppSuite\ScreenCapture\Session\`.
+    `session.json` (Version, ActiveId, Tabs[Id, Title, SavedToFile, Image, Shapes[Type, 4 cạnh Bounds
+    giữ nguyên thứ tự, Color, StrokeWidth + riêng từng loại: IsArrow / Text+FontSize / StampKind+
+    NumberValue+OutlineColor / Image]]) + PNG `{tabId}_{guid}.png` cho ảnh nền và ảnh dán.
+  - Mỗi bitmap 1 file (map qua `ConditionalWeakTable<SKBitmap,string>`) → ảnh không đổi thì không
+    encode lại; bitmap trong app bất biến (mọi thao tác pixel tạo bitmap mới) nên map này đúng.
+  - `Save`: giữ tối đa 30 tab mới nhất, cắt tiếp theo 300 MB (luôn giữ ≥1 tab mới nhất), ghi manifest
+    qua file `.tmp` rồi `File.Move` (không bị hỏng nửa chừng), rồi **xoá mọi file không được tham
+    chiếu** → thư mục không bao giờ tích luỹ ảnh của tab đã đóng / phiên cũ.
+  - Ghi tạm khi: `AddCapture`, đóng tab, đóng cửa sổ. Đóng cửa sổ không còn hỏi (vì có khôi phục); chỉ
+    hỏi nếu ghi tạm lỗi mà còn ảnh chưa lưu. Đóng tab vẫn hỏi Lưu/Không lưu/Huỷ (đóng tab = bỏ ảnh).
+  - `CaptureLauncherWindow`: mở app → `Load()` → còn tab thì mở Editor ngay; chụp khi Editor chưa mở
+    cũng nạp phiên cũ trước rồi thêm tab mới (không ghi đè mất tab cũ).
+  - `EditorViewModel`: `Id` (Guid), `SavedToFile`, `RestoreFromSession(shapes, savedToFile)` (nạp shape
+    không qua Undo).
+  - **Đã chạy thử**: chụp 2 lần + dán 1 ảnh → đóng Editor bằng X → thư mục có đúng 2 PNG nền (~359 KB
+    mỗi ảnh full-screen) + 1 PNG ảnh dán + session.json; mở lại app → Editor tự mở với đúng 2 tab, tab
+    đang xem được chọn lại.
+  - Chưa có: autosave định kỳ khi đang sửa (sửa xong mà app bị kill trước khi chụp/đóng tab/đóng cửa
+    sổ thì mất phần sửa đó, ảnh gốc vẫn còn); bộ đếm Number Stamp không khôi phục theo số lớn nhất.
+- **Nút "Đóng tất cả" + Lưu tất cả vào 1 thư mục**:
+  - Nút ở `TabView.TabStripFooter`. `CloseAllTabsAsync`: có ảnh `NeedsSave` → ContentDialog *Lưu tất
+    cả...* / *Đóng không lưu* / *Huỷ*. Lưu tất cả: `IImageFileService.PickFolderAsync` (`FolderPicker` +
+    `InitializeWithWindow`) → `EditorViewModel.SaveToFolder` từng ảnh chưa lưu →
+    `SavePngToFolder` (tên = Title, lọc ký tự không hợp lệ, trùng tên thêm " (n)", không ghi đè).
+    Huỷ chọn thư mục / có ảnh lỗi → báo lỗi, giữ nguyên tab. Xong → xoá hết tab, `TrySaveSession()` (0
+    tab → dọn thư mục phiên), đóng Editor.
+  - **Bug cũ sửa kèm**: `SaveAsPngAsync` dùng `OpenStreamForWriteAsync` không cắt file → ghi đè lên
+    PNG cũ lớn hơn để lại đuôi dữ liệu thừa (file hỏng). Thêm `stream.SetLength(0)`.
+  - Đã chạy thử luồng *Đóng tất cả → Đóng không lưu* qua UI Automation (2 ảnh): hộp thoại đủ 3 nút,
+    Editor đóng, thư mục phiên chỉ còn session.json rỗng. Luồng chọn thư mục chưa tự động hoá được.
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 

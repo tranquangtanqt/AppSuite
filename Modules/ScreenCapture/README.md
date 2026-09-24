@@ -20,8 +20,31 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
 
 ### Trình chỉnh sửa (`EditorWindow`)
 
-Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh sửa (tự maximize). Thanh công cụ
-dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn phía dưới, chia thành các tab:
+Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh sửa (tự maximize).
+
+**Nhiều ảnh chụp dạng tab** (giống PicPick): chỉ có 1 cửa sổ Editor. Mỗi lần chụp thêm 1 tab mới
+(tên = thời điểm chụp, vd `2026-09-24 13 36 14`) và chuyển sang tab đó; các ảnh chụp trước vẫn giữ
+nguyên — kể cả shape đã vẽ và lịch sử Undo riêng của từng ảnh. Công cụ / màu / cỡ nét dùng chung cho
+mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để không lọt vào ảnh.
+
+- Đóng 1 tab (`×`) khi ảnh chưa lưu ra file (kể cả ảnh vừa chụp chưa sửa gì) hoặc đã sửa sau lần lưu
+  cuối → hỏi *Lưu* / *Không lưu* / *Huỷ*. Đóng tab cuối cùng = đóng Editor.
+- **Đóng tất cả** (nút cuối thanh tab): còn ảnh chưa lưu → hỏi *Lưu tất cả...* (chọn 1 thư mục, lưu
+  mọi ảnh chưa lưu vào đó, tên file = tên tab, trùng tên thì thêm " (2)" — không ghi đè file có sẵn) /
+  *Đóng không lưu* / *Huỷ*. Xong thì đóng mọi tab và Editor, thư mục lưu tạm được dọn sạch. Huỷ chọn
+  thư mục hoặc có ảnh lưu lỗi → không đóng gì.
+- **Nhớ tab qua lần tắt/mở app**: đóng cửa sổ Editor (nút X / *Đóng*) không hỏi gì — mọi tab được lưu
+  tạm và mở lại đúng như cũ ở lần mở app sau (shape vẫn chỉnh sửa được; lịch sử Undo thì không giữ).
+  - Thư mục: `%TEMP%\AppSuite\ScreenCapture\Session\` — `session.json` (danh sách tab + mô tả shape)
+    và các file PNG (ảnh nền, ảnh dán).
+  - **Không tích luỹ**: thư mục chỉ chứa đúng các tab đang mở ở lần lưu gần nhất. Đóng 1 tab → file
+    của tab đó bị xoá ngay; đóng hết tab → thư mục rỗng. Ảnh của các phiên cũ hơn không còn trên ổ.
+  - Giới hạn tối đa **30 tab / 300 MB**; vượt thì bỏ các tab cũ nhất khỏi bản lưu tạm.
+  - Ghi tạm mỗi khi chụp ảnh mới, đóng tab và đóng cửa sổ.
+  - Lưu ý: Windows (Storage Sense / Disk Cleanup) có thể dọn `%TEMP%`; tab nào mất file ảnh thì bỏ qua
+    khi mở lại. Ảnh quan trọng vẫn nên *Lưu PNG*.
+
+Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn phía dưới, chia thành các tab:
 
 **Cách chọn & chỉnh sửa shape** (áp dụng với mọi công cụ, không cần bấm *Di chuyển* trước):
 

@@ -30,7 +30,13 @@ public sealed class StampPickerItem
 /// MainWindow uses) - EditorViewModel itself never references WinUI/Skia UI types beyond SKBitmap.</summary>
 public sealed partial class EditorWindow : Window
 {
-    private readonly EditorViewModel _viewModel;
+    /// <summary>Ảnh (tab) đang hiển thị. Mỗi lần chụp là 1 EditorViewModel riêng (bitmap, shape, lịch sử
+    /// Undo riêng) nằm trong Tag của 1 TabViewItem; đổi tab = đổi _viewModel (xem SwitchTo).</summary>
+    private EditorViewModel _viewModel = null!;
+    private readonly IImageFileService _fileService;
+    private readonly IClipboardService _clipboardService;
+    private readonly SessionService _session;
+    private bool _forceClose;
     private AnnotationShape? _draftShape;
     private SKPoint _dragStartPoint;
     private bool _isCropping;
@@ -62,35 +68,49 @@ public sealed partial class EditorWindow : Window
         HighlightToolButton, TextToolButton, FillToolButton,
     ];
 
-    public EditorWindow(SKBitmap bitmap, IImageFileService fileService, IClipboardService clipboardService)
+    /// <param name="restored">Các tab của phiên trước (SessionService.Load), có thể rỗng.</param>
+    /// <param name="capture">Ảnh vừa chụp để mở thành tab mới, null nếu chỉ mở lại phiên cũ.
+    /// Phải có ít nhất 1 trong 2.</param>
+    public EditorWindow(IImageFileService fileService, IClipboardService clipboardService, SessionService session,
+        IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture)
     {
         InitializeComponent();
-        var hwnd = WindowNative.GetWindowHandle(this);
-        _viewModel = new EditorViewModel(bitmap, fileService, clipboardService, hwnd);
-        _viewModel.RequestRedraw += (_, _) => Canvas.Invalidate();
-        _viewModel.PropertyChanged += (_, e) =>
+        _fileService = fileService;
+        _clipboardService = clipboardService;
+        _session = session;
+
+        foreach (var doc in restored)
         {
-            if (e.PropertyName == nameof(EditorViewModel.Bitmap))
+            var vm = new EditorViewModel(doc.Bitmap, fileService, clipboardService, WindowNative.GetWindowHandle(this))
             {
-                // Ảnh đổi (cắt, xoá vùng, đổi khung, undo...) → toạ độ vùng chọn cũ không còn đúng.
-                SetRegion(null);
-                UpdateCanvasLayout();
-            }
-            if (e.PropertyName == nameof(EditorViewModel.StatusText))
-            {
-                StatusText.Text = _viewModel.StatusText;
-            }
-            if (e.PropertyName == nameof(EditorViewModel.SelectedAnnotation))
-            {
-                bool hasSelection = _viewModel.SelectedAnnotation is not null;
-                DeleteButton.IsEnabled = hasSelection;
-                BringToFrontButton.IsEnabled = hasSelection;
-                SendToBackButton.IsEnabled = hasSelection;
-                UpdateNumberStampTab();
-            }
-        };
+                Id = doc.Id,
+                Title = doc.Title,
+            };
+            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile);
+            AddTab(vm);
+        }
+        if (capture is not null)
+        {
+            AddCapture(capture);
+        }
+        else
+        {
+            var active = DocumentTabs.TabItems.OfType<TabViewItem>().FirstOrDefault(t => (t.Tag as EditorViewModel)?.Id == activeId)
+                ?? DocumentTabs.TabItems.OfType<TabViewItem>().Last();
+            SwitchTo((EditorViewModel)active.Tag);
+            DocumentTabs.SelectedItem = active;
+        }
 
         this.Content.KeyDown += Content_KeyDown;
+        // Bấm X trên thanh tiêu đề: lưu tạm phiên làm việc rồi mới đóng (lần mở sau khôi phục lại tab).
+        AppWindow.Closing += async (_, args) =>
+        {
+            if (!_forceClose)
+            {
+                args.Cancel = true;
+                await TryCloseWindowAsync();
+            }
+        };
 
         // Mở full màn hình (maximize) cho dễ chỉnh sửa - ảnh chụp thường lớn hơn kích thước cửa sổ
         // mặc định, ScrollViewer bao Canvas xử lý phần còn lại nếu ảnh vẫn lớn hơn cả màn hình.
@@ -131,6 +151,303 @@ public sealed partial class EditorWindow : Window
         // Mở ảnh ra ở tool Move (con trỏ) giống PicPick: bấm nhầm không vẽ ra gì, và thấy ngay 8 handle
         // để đổi kích thước khung ảnh.
         SelectTool(CaptureTool.Move, MoveToolButton);
+    }
+
+    // ---- Nhiều ảnh chụp dạng tab (giống PicPick) ----
+
+    /// <summary>Thêm 1 ảnh chụp mới thành tab mới và chuyển sang tab đó. CaptureLauncherWindow gọi hàm này
+    /// cho các lần chụp sau thay vì mở thêm cửa sổ Editor.</summary>
+    public void AddCapture(SKBitmap bitmap)
+    {
+        var vm = new EditorViewModel(bitmap, _fileService, _clipboardService, WindowNative.GetWindowHandle(this))
+        {
+            Title = UniqueTitle(DateTime.Now.ToString("yyyy-MM-dd HH mm ss")),
+        };
+        var tab = AddTab(vm);
+        SwitchTo(vm);
+        DocumentTabs.SelectedItem = tab;
+
+        // Editor đang thu nhỏ thì mở lại cho người dùng thấy ảnh mới.
+        if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } presenter)
+        {
+            presenter.Maximize();
+        }
+
+        // Ghi tạm ngay khi có ảnh chụp mới - app bị tắt đột ngột cũng không mất ảnh vừa chụp.
+        TrySaveSession();
+    }
+
+    private TabViewItem AddTab(EditorViewModel vm)
+    {
+        var tab = new TabViewItem
+        {
+            Header = vm.Title,
+            Tag = vm,
+            IconSource = new FontIconSource { Glyph = "" },
+        };
+        DocumentTabs.TabItems.Add(tab);
+        return tab;
+    }
+
+    /// <summary>Ghi các tab đang mở vào thư mục phiên tạm (xem SessionService). Trả false nếu lỗi ghi
+    /// (ổ đầy, không có quyền...) - không để lỗi này làm hỏng thao tác của người dùng.</summary>
+    private bool TrySaveSession()
+    {
+        try
+        {
+            var documents = DocumentTabs.TabItems.OfType<TabViewItem>()
+                .Select(t => (EditorViewModel)t.Tag)
+                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile))
+                .ToList();
+            _session.Save(documents, _viewModel?.Id);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            if (_viewModel is not null)
+            {
+                _viewModel.StatusText = $"Không lưu tạm được phiên làm việc: {ex.Message}";
+            }
+            return false;
+        }
+    }
+
+    /// <summary>2 lần chụp trong cùng 1 giây → thêm hậu tố (2), (3)... cho tên tab khỏi trùng.</summary>
+    private string UniqueTitle(string baseTitle)
+    {
+        var existing = DocumentTabs.TabItems.OfType<TabViewItem>().Select(t => (t.Tag as EditorViewModel)?.Title).ToHashSet();
+        string title = baseTitle;
+        for (int i = 2; existing.Contains(title); i++)
+        {
+            title = $"{baseTitle} ({i})";
+        }
+        return title;
+    }
+
+    private void SwitchTo(EditorViewModel vm)
+    {
+        if (ReferenceEquals(vm, _viewModel))
+        {
+            return;
+        }
+
+        var previous = _viewModel;
+        if (previous is not null)
+        {
+            previous.RequestRedraw -= ViewModel_RequestRedraw;
+            previous.PropertyChanged -= ViewModel_PropertyChanged;
+            previous.SelectedAnnotation = null;
+            // Công cụ, màu, cỡ nét là thiết lập của cửa sổ, không phải của từng ảnh → mang sang ảnh mới.
+            vm.SelectedTool = previous.SelectedTool;
+            vm.StrokeColor = previous.StrokeColor;
+            vm.FillColor = previous.FillColor;
+            vm.StrokeWidth = previous.StrokeWidth;
+        }
+
+        _viewModel = vm;
+        vm.RequestRedraw += ViewModel_RequestRedraw;
+        vm.PropertyChanged += ViewModel_PropertyChanged;
+
+        // Bỏ mọi thao tác kéo dở / vùng chọn của ảnh trước (toạ độ không còn đúng với ảnh mới).
+        _draftShape = null;
+        _movingShape = null;
+        _resizingHandle = -1;
+        _lineEndpointHandle = -1;
+        _canvasHandle = -1;
+        _isDraggingRegion = false;
+        _regionHandle = -1;
+        SetRegion(null);
+
+        Title = $"ScreenCapture - {vm.Title}";
+        StatusText.Text = vm.StatusText;
+        UpdateSelectionButtons();
+        UpdateNumberStampTab();
+        UpdateCanvasLayout();
+        CanvasScroller.ChangeView(0, 0, null, true);
+    }
+
+    private void ViewModel_RequestRedraw(object? sender, EventArgs e) => Canvas.Invalidate();
+
+    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(EditorViewModel.Bitmap))
+        {
+            // Ảnh đổi (cắt, xoá vùng, đổi khung, undo...) → toạ độ vùng chọn cũ không còn đúng.
+            SetRegion(null);
+            UpdateCanvasLayout();
+        }
+        if (e.PropertyName == nameof(EditorViewModel.StatusText))
+        {
+            StatusText.Text = _viewModel.StatusText;
+        }
+        if (e.PropertyName == nameof(EditorViewModel.SelectedAnnotation))
+        {
+            UpdateSelectionButtons();
+            UpdateNumberStampTab();
+        }
+    }
+
+    private void UpdateSelectionButtons()
+    {
+        bool hasSelection = _viewModel.SelectedAnnotation is not null;
+        DeleteButton.IsEnabled = hasSelection;
+        BringToFrontButton.IsEnabled = hasSelection;
+        SendToBackButton.IsEnabled = hasSelection;
+    }
+
+    private void DocumentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (DocumentTabs.SelectedItem is TabViewItem { Tag: EditorViewModel vm })
+        {
+            SwitchTo(vm);
+        }
+    }
+
+    private async void DocumentTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
+    {
+        if (args.Tab is not TabViewItem { Tag: EditorViewModel vm } tab || !await ConfirmCloseDocumentAsync(vm))
+        {
+            return;
+        }
+
+        DocumentTabs.TabItems.Remove(tab);
+        // Ghi lại phiên ngay: file tạm của tab vừa đóng bị xoá luôn khỏi ổ đĩa.
+        TrySaveSession();
+        if (DocumentTabs.TabItems.Count == 0)
+        {
+            // Đóng tab cuối = đóng Editor (đã hỏi lưu cho tab này rồi; thư mục phiên giờ rỗng).
+            _forceClose = true;
+            Close();
+        }
+    }
+
+    private async void CloseAllTabsButton_Click(object sender, RoutedEventArgs e) => await CloseAllTabsAsync();
+
+    /// <summary>"Đóng tất cả": còn ảnh chưa lưu → hỏi Lưu tất cả (chọn 1 thư mục, lưu hết các ảnh chưa
+    /// lưu vào đó, tên file = tên tab) / Đóng không lưu / Huỷ. Xong thì đóng mọi tab = đóng Editor,
+    /// thư mục phiên tạm được dọn rỗng.</summary>
+    private async Task CloseAllTabsAsync()
+    {
+        var unsaved = DocumentTabs.TabItems.OfType<TabViewItem>()
+            .Select(t => (EditorViewModel)t.Tag)
+            .Where(vm => vm.NeedsSave)
+            .ToList();
+
+        if (unsaved.Count > 0)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Đóng tất cả ảnh",
+                Content = $"Có {unsaved.Count} ảnh chưa được lưu. Chọn 1 thư mục để lưu tất cả trước khi đóng?",
+                PrimaryButtonText = "Lưu tất cả...",
+                SecondaryButtonText = "Đóng không lưu",
+                CloseButtonText = "Huỷ",
+                DefaultButton = ContentDialogButton.Primary,
+            };
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.None)
+            {
+                return;
+            }
+            if (result == ContentDialogResult.Primary && !await SaveAllToFolderAsync(unsaved))
+            {
+                return; // huỷ chọn thư mục hoặc lưu lỗi → giữ nguyên các tab
+            }
+        }
+
+        DocumentTabs.TabItems.Clear();
+        TrySaveSession(); // 0 tab → thư mục phiên tạm được dọn rỗng
+        _forceClose = true;
+        Close();
+    }
+
+    /// <summary>Chọn thư mục rồi lưu từng ảnh vào đó. Trả false nếu huỷ chọn thư mục hoặc có ảnh lưu lỗi
+    /// (báo lỗi, không đóng gì để khỏi mất ảnh).</summary>
+    private async Task<bool> SaveAllToFolderAsync(IReadOnlyList<EditorViewModel> documents)
+    {
+        var folder = await _fileService.PickFolderAsync(WindowNative.GetWindowHandle(this));
+        if (folder is null)
+        {
+            return false;
+        }
+
+        var failed = new List<string>();
+        foreach (var vm in documents)
+        {
+            try
+            {
+                vm.SaveToFolder(folder);
+            }
+            catch (Exception ex)
+            {
+                failed.Add($"{vm.Title}: {ex.Message}");
+            }
+        }
+
+        if (failed.Count > 0)
+        {
+            await new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Không lưu được một số ảnh",
+                Content = string.Join(Environment.NewLine, failed) + Environment.NewLine + "Các tab vẫn được giữ nguyên.",
+                CloseButtonText = "OK",
+            }.ShowAsync();
+            return false;
+        }
+        return true;
+    }
+
+    /// <summary>Ảnh cần lưu → hỏi Lưu / Không lưu / Huỷ. Trả true nếu được phép đóng.</summary>
+    private async Task<bool> ConfirmCloseDocumentAsync(EditorViewModel vm)
+    {
+        if (!vm.NeedsSave)
+        {
+            return true;
+        }
+
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Ảnh chưa được lưu",
+            Content = $"Lưu ảnh \"{vm.Title}\" trước khi đóng?",
+            PrimaryButtonText = "Lưu",
+            SecondaryButtonText = "Không lưu",
+            CloseButtonText = "Huỷ",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        return await dialog.ShowAsync() switch
+        {
+            ContentDialogResult.Primary => await vm.SaveToFileAsync(),
+            ContentDialogResult.Secondary => true,
+            _ => false,
+        };
+    }
+
+    /// <summary>Đóng cả cửa sổ (nút X hoặc nút Đóng ở tab Tệp): lưu tạm mọi tab vào thư mục phiên để lần
+    /// mở sau khôi phục lại - không cần hỏi. Chỉ khi lưu tạm lỗi mà còn ảnh chưa lưu mới hỏi xác nhận.</summary>
+    private async Task TryCloseWindowAsync()
+    {
+        int unsaved = DocumentTabs.TabItems.OfType<TabViewItem>().Count(t => t.Tag is EditorViewModel { NeedsSave: true });
+        if (!TrySaveSession() && unsaved > 0)
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Không lưu tạm được ảnh",
+                Content = $"Không ghi được thư mục tạm ({SessionService.Folder}). Có {unsaved} ảnh chụp chưa lưu sẽ bị mất khi đóng cửa sổ. Vẫn đóng?",
+                PrimaryButtonText = "Đóng, không lưu",
+                CloseButtonText = "Huỷ",
+                DefaultButton = ContentDialogButton.Close,
+            };
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return;
+            }
+        }
+        _forceClose = true;
+        Close();
     }
 
     private static Windows.UI.Color ToWindowsColor(SKColor c) => Windows.UI.Color.FromArgb(c.Alpha, c.Red, c.Green, c.Blue);
@@ -1161,7 +1478,7 @@ public sealed partial class EditorWindow : Window
     private void RedoButton_Click(object sender, RoutedEventArgs e) => _viewModel.RedoCommand.Execute(null);
     private void SaveButton_Click(object sender, RoutedEventArgs e) => _viewModel.SaveCommand.Execute(null);
     private void CopyButton_Click(object sender, RoutedEventArgs e) => _viewModel.CopyToClipboardCommand.Execute(null);
-    private void CloseButton_Click(object sender, RoutedEventArgs e) => this.Close();
+    private async void CloseButton_Click(object sender, RoutedEventArgs e) => await TryCloseWindowAsync();
 
     private enum RibbonTab { Home, File, NumberStamp, Region }
 

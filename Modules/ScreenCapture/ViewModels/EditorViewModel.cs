@@ -250,11 +250,56 @@ public sealed partial class EditorViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanRedo))]
     private void Redo() => UndoRedo.Redo();
 
+    /// <summary>Tên tab của ảnh trong Editor (thời điểm chụp, kiểu PicPick "2026-09-24 13 36 14").</summary>
+    public string Title { get; init; } = string.Empty;
+
+    /// <summary>Định danh ổn định của tab - tên file lưu tạm phiên làm việc (SessionService).</summary>
+    public Guid Id { get; init; } = Guid.NewGuid();
+
+    private bool _savedToFile;
+    public bool SavedToFile => _savedToFile;
+
+    /// <summary>Nạp lại shape + trạng thái đã lưu của 1 tab từ phiên trước. Không đi qua Undo (mở lại
+    /// app không có lịch sử Undo), shape vẫn chỉnh sửa được như bình thường.</summary>
+    public void RestoreFromSession(IEnumerable<AnnotationShape> shapes, bool savedToFile)
+    {
+        foreach (var shape in shapes)
+        {
+            Annotations.Add(shape);
+        }
+        _savedToFile = savedToFile;
+    }
+
+    /// <summary>Ảnh chưa từng lưu ra file, hoặc đã sửa sau lần lưu gần nhất → đóng tab/cửa sổ phải hỏi,
+    /// tránh mất ảnh chụp (kể cả ảnh vừa chụp chưa sửa gì).</summary>
+    public bool NeedsSave => !_savedToFile || UndoRedo.IsDirty;
+
     [RelayCommand]
-    private async Task SaveAsync()
+    private async Task SaveAsync() => await SaveToFileAsync();
+
+    /// <summary>Lưu PNG (ảnh + shape) vào thư mục đã chọn sẵn, tên file = tên tab. Dùng cho "Lưu tất cả".</summary>
+    public string SaveToFolder(string folder)
+    {
+        var path = _fileService.SavePngToFolder(RenderComposited(), folder, Title);
+        _savedToFile = true;
+        UndoRedo.MarkClean();
+        StatusText = $"Đã lưu: {path}";
+        return path;
+    }
+
+    /// <summary>Hỏi đường dẫn và lưu PNG. Trả false nếu người dùng huỷ hộp thoại lưu.</summary>
+    public async Task<bool> SaveToFileAsync()
     {
         var path = await _fileService.SaveAsPngAsync(RenderComposited(), _ownerHwnd);
-        StatusText = path is null ? "Đã huỷ lưu." : $"Đã lưu: {path}";
+        if (path is null)
+        {
+            StatusText = "Đã huỷ lưu.";
+            return false;
+        }
+        _savedToFile = true;
+        UndoRedo.MarkClean();
+        StatusText = $"Đã lưu: {path}";
+        return true;
     }
 
     [RelayCommand]

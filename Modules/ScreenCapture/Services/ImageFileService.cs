@@ -23,7 +23,38 @@ public sealed class ImageFileService : IImageFileService
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         using var stream = await file.OpenStreamForWriteAsync();
+        // OpenStreamForWriteAsync không xoá nội dung cũ: ghi đè lên file PNG lớn hơn sẽ còn sót đuôi dữ
+        // liệu cũ phía sau → cắt về 0 trước khi ghi.
+        stream.SetLength(0);
         data.SaveTo(stream);
         return file.Path;
+    }
+
+    public async Task<string?> PickFolderAsync(IntPtr ownerHwnd)
+    {
+        var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.PicturesLibrary };
+        picker.FileTypeFilter.Add("*");
+        InitializeWithWindow.Initialize(picker, ownerHwnd);
+        StorageFolder? folder = await picker.PickSingleFolderAsync();
+        return folder?.Path;
+    }
+
+    public string SavePngToFolder(SKBitmap bitmap, string folder, string baseName)
+    {
+        foreach (var c in Path.GetInvalidFileNameChars())
+        {
+            baseName = baseName.Replace(c, '_');
+        }
+        var path = Path.Combine(folder, baseName + ".png");
+        for (int i = 2; File.Exists(path); i++)
+        {
+            path = Path.Combine(folder, $"{baseName} ({i}).png");
+        }
+
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var stream = File.Create(path);
+        data.SaveTo(stream);
+        return path;
     }
 }
