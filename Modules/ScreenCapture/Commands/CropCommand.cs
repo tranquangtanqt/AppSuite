@@ -24,7 +24,8 @@ public sealed class CropCommand : IEditCommand
         _oldBitmap = oldBitmap;
         _newBitmap = newBitmap;
         _oldAnnotations = [.. annotations];
-        _keptAnnotations = _oldAnnotations.Where(a => SKRect.Intersect(a.Bounds, cropRect) != SKRect.Empty).ToList();
+        // Inflate 1px: đường thẳng ngang/dọc có khung cao/rộng 0, Intersect sẽ ra Empty và bị xoá nhầm.
+        _keptAnnotations = _oldAnnotations.Where(a => SKRect.Intersect(SKRect.Inflate(a.NormalizedBounds, 1, 1), cropRect) != SKRect.Empty).ToList();
     }
 
     public string Description => "Cắt ảnh";

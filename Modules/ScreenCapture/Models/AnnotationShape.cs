@@ -6,7 +6,20 @@ namespace ScreenCapture.Models;
 /// draw call, keeping EditorWindow/EditorViewModel shape-agnostic.</summary>
 public abstract class AnnotationShape
 {
+    /// <summary>Với đa số shape luôn là rect chuẩn hoá (Left&lt;=Right, Top&lt;=Bottom). Riêng
+    /// <see cref="LineArrowAnnotation"/> lưu điểm đầu/cuối nên có thể "ngược" - code cần khung thật
+    /// (vẽ vùng chọn, cắt ảnh...) dùng <see cref="NormalizedBounds"/>.</summary>
     public SKRect Bounds { get; set; }
+    public SKRect NormalizedBounds => Bounds.Standardized;
+
+    /// <summary>Click tại <paramref name="point"/> có trúng shape không (dùng cho công cụ Di chuyển).</summary>
+    public virtual bool HitTest(SKPoint point, float tolerance)
+    {
+        var r = NormalizedBounds;
+        return point.X >= r.Left - tolerance && point.X <= r.Right + tolerance
+            && point.Y >= r.Top - tolerance && point.Y <= r.Bottom + tolerance;
+    }
+
     public SKColor Color { get; set; } = new(0xE7, 0x4C, 0x3C);
 
     /// <summary>Không phải shape nào cũng dùng (Text/Stamp/Highlight bỏ qua) nhưng đặt ở base để

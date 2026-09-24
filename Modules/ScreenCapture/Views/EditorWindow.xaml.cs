@@ -45,6 +45,7 @@ public sealed partial class EditorWindow : Window
     private SKRect _movingOldBounds;
     private SKPoint _moveDragStart;
     private int _resizingHandle = -1; // -1 = none, 0..3 = TL/TR/BL/BR
+    private int _lineEndpointHandle = -1; // -1 = none, 0 = điểm đầu, 1 = điểm cuối của Line/Arrow
 
     public ObservableCollection<StampPickerItem> NumberStamps { get; } = [];
     public ObservableCollection<StampPickerItem> GeneralStamps { get; } = [];
@@ -164,26 +165,40 @@ public sealed partial class EditorWindow : Window
 
         if (_viewModel.SelectedAnnotation is { } selected)
         {
-            using var selectPaint = new SKPaint
-            {
-                Color = SKColors.DeepSkyBlue,
-                Style = SKPaintStyle.Stroke,
-                StrokeWidth = 2,
-                PathEffect = SKPathEffect.CreateDash([6, 4], 0),
-            };
-            canvas.DrawRect(selected.Bounds, selectPaint);
-
             using var handleFill = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill, IsAntialias = true };
             using var handleStroke = new SKPaint { Color = SKColors.DeepSkyBlue, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true };
-            (float X, float Y)[] corners =
-            [
-                (selected.Bounds.Left, selected.Bounds.Top), (selected.Bounds.Right, selected.Bounds.Top),
-                (selected.Bounds.Left, selected.Bounds.Bottom), (selected.Bounds.Right, selected.Bounds.Bottom),
-            ];
-            foreach (var (x, y) in corners)
+
+            if (selected is LineArrowAnnotation line)
             {
-                canvas.DrawRect(new SKRect(x - HandleSize / 2, y - HandleSize / 2, x + HandleSize / 2, y + HandleSize / 2), handleFill);
-                canvas.DrawRect(new SKRect(x - HandleSize / 2, y - HandleSize / 2, x + HandleSize / 2, y + HandleSize / 2), handleStroke);
+                // Đường/mũi tên: chỉ 2 handle tròn ở 2 đầu (kéo để đổi hướng/độ dài), không vẽ khung bao.
+                foreach (var p in new[] { line.Start, line.End })
+                {
+                    canvas.DrawCircle(p, HandleSize / 2 + 1, handleFill);
+                    canvas.DrawCircle(p, HandleSize / 2 + 1, handleStroke);
+                }
+            }
+            else
+            {
+                var bounds = selected.NormalizedBounds;
+                using var selectPaint = new SKPaint
+                {
+                    Color = SKColors.DeepSkyBlue,
+                    Style = SKPaintStyle.Stroke,
+                    StrokeWidth = 2,
+                    PathEffect = SKPathEffect.CreateDash([6, 4], 0),
+                };
+                canvas.DrawRect(bounds, selectPaint);
+
+                (float X, float Y)[] corners =
+                [
+                    (bounds.Left, bounds.Top), (bounds.Right, bounds.Top),
+                    (bounds.Left, bounds.Bottom), (bounds.Right, bounds.Bottom),
+                ];
+                foreach (var (x, y) in corners)
+                {
+                    canvas.DrawRect(new SKRect(x - HandleSize / 2, y - HandleSize / 2, x + HandleSize / 2, y + HandleSize / 2), handleFill);
+                    canvas.DrawRect(new SKRect(x - HandleSize / 2, y - HandleSize / 2, x + HandleSize / 2, y + HandleSize / 2), handleStroke);
+                }
             }
         }
 
@@ -205,9 +220,6 @@ public sealed partial class EditorWindow : Window
         return new SKPoint((float)(p.X * scale), (float)(p.Y * scale));
     }
 
-    private static SKRect Inflate(SKRect rect, float amount) =>
-        new(rect.Left - amount, rect.Top - amount, rect.Right + amount, rect.Bottom + amount);
-
     private const float HandleSize = 8f;
 
     /// <summary>Trả về chỉ số handle (0=TL,1=TR,2=BL,3=BR) nếu pos rơi vào 1 trong 4 góc của bounds,
@@ -227,6 +239,29 @@ public sealed partial class EditorWindow : Window
             }
         }
         return null;
+    }
+
+    /// <summary>0 = điểm đầu, 1 = điểm cuối (đầu mũi tên), null = trúng khúc giữa (di chuyển cả đường).
+    /// Vùng bắt mỗi đầu là 1/3 độ dài (tối đa 30px, tối thiểu bằng handle) - nên chỉ cần bấm "gần"
+    /// đầu mũi tên rồi kéo là đổi hướng được, không phải nhắm trúng handle nhỏ.</summary>
+    private static int? HitTestLineEndpoint(LineArrowAnnotation line, SKPoint pos)
+    {
+        float radius = Math.Max(HandleSize, Math.Min(30f, line.Length / 3f));
+        float toStart = SKPoint.Distance(pos, line.Start);
+        float toEnd = SKPoint.Distance(pos, line.End);
+        if (Math.Min(toStart, toEnd) > radius)
+        {
+            return null;
+        }
+        return toEnd <= toStart ? 1 : 0;
+    }
+
+    private void BeginLineEndpointDrag(LineArrowAnnotation line, int endpoint, PointerRoutedEventArgs e)
+    {
+        _lineEndpointHandle = endpoint;
+        _movingShape = line;
+        _movingOldBounds = line.Bounds;
+        Canvas.CapturePointer(e.Pointer);
     }
 
     private static SKRect ResizeFromHandle(SKRect original, int handleIndex, SKPoint pos)
@@ -257,18 +292,30 @@ public sealed partial class EditorWindow : Window
         switch (_viewModel.SelectedTool)
         {
             case CaptureTool.Move:
-                if (_viewModel.SelectedAnnotation is { } selected && HitTestHandle(selected.Bounds, pos) is { } handleIndex)
+                if (_viewModel.SelectedAnnotation is LineArrowAnnotation selectedLine
+                    && HitTestLineEndpoint(selectedLine, pos) is { } selectedEndpoint)
+                {
+                    BeginLineEndpointDrag(selectedLine, selectedEndpoint, e);
+                    break;
+                }
+                if (_viewModel.SelectedAnnotation is { } selected and not LineArrowAnnotation
+                    && HitTestHandle(selected.NormalizedBounds, pos) is { } handleIndex)
                 {
                     _resizingHandle = handleIndex;
                     _movingShape = selected;
-                    _movingOldBounds = selected.Bounds;
+                    _movingOldBounds = selected.NormalizedBounds;
                     Canvas.CapturePointer(e.Pointer);
                     break;
                 }
 
-                var hit = _viewModel.Annotations.Reverse().FirstOrDefault(s => Inflate(s.Bounds, 6).Contains(pos.X, pos.Y));
+                var hit = _viewModel.Annotations.Reverse().FirstOrDefault(s => s.HitTest(pos, 6));
                 _viewModel.SelectedAnnotation = hit;
-                if (hit is not null)
+                if (hit is LineArrowAnnotation hitLine && HitTestLineEndpoint(hitLine, pos) is { } hitEndpoint)
+                {
+                    // Chưa chọn cũng kéo đầu mũi tên được ngay trong 1 thao tác.
+                    BeginLineEndpointDrag(hitLine, hitEndpoint, e);
+                }
+                else if (hit is not null)
                 {
                     _movingShape = hit;
                     _movingOldBounds = hit.Bounds;
@@ -337,6 +384,16 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (_movingShape is not null && _lineEndpointHandle >= 0)
+        {
+            var old = _movingOldBounds;
+            _movingShape.Bounds = _lineEndpointHandle == 0
+                ? new SKRect(pos.X, pos.Y, old.Right, old.Bottom)
+                : new SKRect(old.Left, old.Top, pos.X, pos.Y);
+            Canvas.Invalidate();
+            return;
+        }
+
         if (_movingShape is not null && _resizingHandle >= 0)
         {
             _movingShape.Bounds = ResizeFromHandle(_movingOldBounds, _resizingHandle, pos);
@@ -359,7 +416,10 @@ public sealed partial class EditorWindow : Window
         {
             return;
         }
-        _draftShape.Bounds = MakeRect(_dragStartPoint, pos);
+        // Line/Arrow giữ nguyên điểm bắt đầu -> điểm hiện tại (không chuẩn hoá) để mũi tên chỉ đúng hướng kéo.
+        _draftShape.Bounds = _draftShape is LineArrowAnnotation
+            ? LineArrowAnnotation.FromPoints(_dragStartPoint, pos)
+            : MakeRect(_dragStartPoint, pos);
         Canvas.Invalidate();
     }
 
@@ -386,6 +446,7 @@ public sealed partial class EditorWindow : Window
             _viewModel.MoveResizeAnnotation(_movingShape, _movingOldBounds, newBounds);
             _movingShape = null;
             _resizingHandle = -1;
+            _lineEndpointHandle = -1;
             Canvas.Invalidate();
             return;
         }
@@ -395,7 +456,7 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
-        if (_draftShape.Bounds.Width > 2 || _draftShape.Bounds.Height > 2)
+        if (_draftShape.NormalizedBounds.Width > 2 || _draftShape.NormalizedBounds.Height > 2)
         {
             _viewModel.AddAnnotation(_draftShape);
         }
