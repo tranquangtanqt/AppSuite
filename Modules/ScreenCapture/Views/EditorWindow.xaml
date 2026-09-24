@@ -331,6 +331,12 @@
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="SettingsButton_Click" ToolTipService.ToolTip="Phím tắt, hẹn giờ, tự động lưu, phiên làm việc...">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE713;" />
+                                        <TextBlock Text="Cài đặt" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="CloseButton_Click">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE711;" />

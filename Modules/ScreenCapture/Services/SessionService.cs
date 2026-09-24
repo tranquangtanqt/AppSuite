@@ -21,9 +21,22 @@ public sealed record SessionDocument(Guid Id, string Title, SKBitmap Bitmap, IRe
 /// </summary>
 public sealed class SessionService
 {
-    public const int MaxTabs = 30;
-    public const long MaxBytes = 300L * 1024 * 1024;
+    /// <summary>Tắt trong Cài đặt → Load trả rỗng, Save chỉ dọn sạch thư mục (không giữ ảnh nào).</summary>
+    public bool Enabled { get; set; } = true;
+    public int MaxTabs { get; set; } = 30;
+    public long MaxBytes { get; set; } = 300L * 1024 * 1024;
     private const string ManifestName = "session.json";
+
+    public void ApplySettings(AppSettings settings)
+    {
+        Enabled = settings.RememberTabs;
+        MaxTabs = Math.Max(1, settings.SessionMaxTabs);
+        MaxBytes = Math.Max(1, settings.SessionMaxMegabytes) * 1024L * 1024;
+    }
+
+    /// <summary>Dung lượng thư mục phiên hiện tại (hiện ở trang Cài đặt).</summary>
+    public static long CurrentSizeBytes() =>
+        Directory.Exists(Folder) ? Directory.EnumerateFiles(Folder).Sum(f => new FileInfo(f).Length) : 0;
 
     public static string Folder { get; } = Path.Combine(Path.GetTempPath(), "AppSuite", "ScreenCapture", "Session");
 
@@ -36,6 +49,10 @@ public sealed class SessionService
     public (List<SessionDocument> Documents, Guid? ActiveId) Load()
     {
         var documents = new List<SessionDocument>();
+        if (!Enabled)
+        {
+            return (documents, null);
+        }
         try
         {
             var manifestPath = Path.Combine(Folder, ManifestName);
@@ -69,6 +86,10 @@ public sealed class SessionService
     public void Save(IReadOnlyList<SessionDocument> documents, Guid? activeId)
     {
         Directory.CreateDirectory(Folder);
+        if (!Enabled)
+        {
+            documents = []; // tắt nhớ tab → ghi manifest rỗng, phần dọn file bên dưới xoá hết ảnh cũ
+        }
 
         // Giữ tối đa MaxTabs tab mới nhất (tab mở sau nằm cuối danh sách), rồi cắt tiếp theo dung lượng.
         var candidates = documents.Skip(Math.Max(0, documents.Count - MaxTabs)).Reverse().ToList();

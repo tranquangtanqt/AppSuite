@@ -53,8 +53,17 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
+        <!-- Nút Cài đặt góc phải header (phím tắt, hẹn giờ, tự động lưu, phiên làm việc). -->
+        <Button x:Name="SettingsButton" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="SettingsButton_Click"
+                ToolTipService.ToolTip="Cài đặt: phím tắt, hẹn giờ, tự động lưu, phiên làm việc">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
+                <TextBlock Text="Cài đặt" />
+            </StackPanel>
+        </Button>
+
         <!-- Header -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="14">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="14" Margin="0,0,110,0">
             <Border Width="48" Height="48" CornerRadius="12" Background="{StaticResource LauncherAccentBrush}">
                 <FontIcon Glyph="&#xE722;" FontSize="22" Foreground="White" />
             </Border>

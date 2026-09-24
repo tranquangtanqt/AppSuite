@@ -18,6 +18,28 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   để huỷ). Vị trí/kích thước lần chụp gần nhất được nhớ lại trong phiên làm việc hiện tại.
 - **Cuộn trang** — chưa làm (thẻ bị disable, nhãn "Sắp có"), xem `PLAN.md` mục "Chưa làm".
 
+### Cài đặt (`SettingsWindow`)
+
+Mở bằng nút **Cài đặt** ở góc phải cửa sổ chính, hoặc tab *Tệp* của Editor. Bố cục kiểu "Program
+Options" của PicPick; bấm *OK* mới lưu (vào `Data\Config\settings.json` cạnh exe), *Mặc định* đưa mọi
+tuỳ chọn về ban đầu.
+
+| Trang | Tuỳ chọn |
+|---|---|
+| Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard |
+| Tự động lưu | Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên = thời điểm chụp; ảnh đã tự lưu đóng tab không hỏi lại |
+| Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
+| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
+
+- Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`.
+- Dùng được cả khi app đang thu nhỏ / đang ở app khác, **miễn là cửa sổ chính ScreenCapture còn mở**.
+  Chụp bằng phím tắt khi cửa sổ chính đang thu nhỏ thì chụp xong nó vẫn thu nhỏ.
+- Phím đã bị Windows / app khác giữ (vd PicPick đang chạy, hoặc Windows 11 bật "Use the Print screen
+  key to open screen capture") → đánh dấu ⚠ trong trang Phím tắt + thông báo ở cửa sổ chính.
+- *Chụp lại lần gần nhất*: lặp lại kiểu chụp gần nhất; vùng chọn / vùng cố định thì chụp lại đúng
+  vùng đó ngay, không hiện màn chọn vùng.
+- Không cho 2 thao tác dùng chung 1 tổ hợp phím.
+
 ### Trình chỉnh sửa (`EditorWindow`)
 
 Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh sửa (tự maximize).
@@ -96,7 +118,7 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   đang chọn 1 shape sẽ áp luôn cho shape đó.
 - **Cỡ nét** — slider 1-20px, cũng áp cho shape đang chọn.
 
-**Tab "Tệp"** — *Lưu PNG*, *Copy* ảnh (đã gộp mọi shape) vào clipboard, *Đóng* cửa sổ.
+**Tab "Tệp"** — *Lưu PNG*, *Copy* ảnh (đã gộp mọi shape) vào clipboard, *Cài đặt*, *Đóng* cửa sổ.
 
 **Tab "Vùng chọn"** (contextual) — tự hiện khi dùng *Select* chọn 1 vùng, tự ẩn khi bỏ chọn:
 

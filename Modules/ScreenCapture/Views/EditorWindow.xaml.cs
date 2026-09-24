@@ -177,6 +177,17 @@ public sealed partial class EditorWindow : Window
         TrySaveSession();
     }
 
+    /// <summary>Ảnh (tab) đang hiển thị - launcher dùng để tự lưu / tự copy ngay sau khi chụp.</summary>
+    public EditorViewModel CurrentDocument => _viewModel;
+
+    /// <summary>Launcher yêu cầu mở cửa sổ Cài đặt (nút "Cài đặt" ở tab Tệp).</summary>
+    public event EventHandler? SettingsRequested;
+
+    private void SettingsButton_Click(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>Ghi lại phiên tạm ngay (sau khi tự lưu ảnh, hoặc đổi tuỳ chọn "nhớ tab" / giới hạn).</summary>
+    public void PersistSession() => TrySaveSession();
+
     private TabViewItem AddTab(EditorViewModel vm)
     {
         var tab = new TabViewItem
@@ -430,13 +441,17 @@ public sealed partial class EditorWindow : Window
     private async Task TryCloseWindowAsync()
     {
         int unsaved = DocumentTabs.TabItems.OfType<TabViewItem>().Count(t => t.Tag is EditorViewModel { NeedsSave: true });
-        if (!TrySaveSession() && unsaved > 0)
+        bool saved = TrySaveSession(); // tắt "nhớ tab" thì lần ghi này chỉ dọn sạch thư mục tạm
+        bool persisted = saved && _session.Enabled;
+        if (!persisted && unsaved > 0)
         {
             var dialog = new ContentDialog
             {
                 XamlRoot = Content.XamlRoot,
-                Title = "Không lưu tạm được ảnh",
-                Content = $"Không ghi được thư mục tạm ({SessionService.Folder}). Có {unsaved} ảnh chụp chưa lưu sẽ bị mất khi đóng cửa sổ. Vẫn đóng?",
+                Title = saved ? "Còn ảnh chưa được lưu" : "Không lưu tạm được ảnh",
+                Content = saved
+                    ? $"Có {unsaved} ảnh chụp chưa lưu sẽ bị mất khi đóng cửa sổ (tuỳ chọn \"Nhớ các tab\" đang tắt). Vẫn đóng?"
+                    : $"Không ghi được thư mục tạm ({SessionService.Folder}). Có {unsaved} ảnh chụp chưa lưu sẽ bị mất khi đóng cửa sổ. Vẫn đóng?",
                 PrimaryButtonText = "Đóng, không lưu",
                 CloseButtonText = "Huỷ",
                 DefaultButton = ContentDialogButton.Close,

@@ -281,6 +281,29 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
     PNG cũ lớn hơn để lại đuôi dữ liệu thừa (file hỏng). Thêm `stream.SetLength(0)`.
   - Đã chạy thử luồng *Đóng tất cả → Đóng không lưu* qua UI Automation (2 ảnh): hộp thoại đủ 3 nút,
     Editor đóng, thư mục phiên chỉ còn session.json rỗng. Luồng chọn thư mục chưa tự động hoá được.
+- **Cửa sổ Cài đặt + phím tắt toàn cục** (theo mẫu "Program Options" PicPick; chỉ làm tuỳ chọn cho
+  tính năng app đã có):
+  - `Models/AppSettings.cs` (+ `HotkeyAction`, `HotkeyBinding`: Shift/Ctrl/Alt + tên phím → VK),
+    `Services/SettingsStore.cs` (JSON ở `Data\Config\settings.json` cạnh exe — cùng quy ước
+    `ConnectionSettingsStore` của Rdbms.HtmlGenerator; file hỏng → mặc định).
+  - `Services/HotkeyService.cs`: `RegisterHotKey` (MOD_NOREPEAT) trên HWND launcher; WM_HOTKEY bắt qua
+    `SetWindowSubclass` với `[UnmanagedCallersOnly]` + function pointer (WinUI 3 không cho WndProc);
+    xử lý đẩy lên `DispatcherQueue`. `Apply()` đăng ký lại toàn bộ, trả về binding lỗi (đã bị giữ).
+  - `Views/SettingsWindow`: 4 trang (Chung / Tự động lưu / Phiên làm việc / Phím tắt — lưới phím tắt
+    dựng trong code-behind), chỉnh trên bản sao; OK → validate (thư mục tự lưu, trùng tổ hợp) → callback
+    launcher `ApplySettings` (lưu file, `SessionService.ApplySettings`, `PersistSession`, đăng ký lại
+    phím). Có phím lỗi → giữ cửa sổ mở, đánh ⚠.
+  - `CaptureLauncherWindow` viết lại luồng chụp: `BeginCaptureAsync` (chặn chụp chồng `_isCapturing`,
+    thu nhỏ launcher+Editor, chờ 200ms + hẹn giờ) → chụp → `FinishCaptureAsync` (mở Editor, tự lưu qua
+    `EditorViewModel.SaveToFolder`, tự copy). Launcher đang thu nhỏ trước khi chụp thì không bật lên
+    lại (`IsIconic`). "Chụp lại lần gần nhất" nhớ `_lastKind` + `_lastRect`.
+  - `SessionService`: `MaxTabs`/`MaxBytes` thành property + `Enabled`; tắt nhớ tab → Load rỗng, Save
+    dọn sạch; Editor đóng cửa sổ lúc đó hỏi lưu như trước.
+  - **Đã chạy thử thật**: mở app → `PrtSc` + `Shift+PrtSc` đăng ký được, `Alt+PrtSc` và
+    `Ctrl+Shift+PrtSc` báo bị giữ (máy đang chạy PicPick dùng đúng các phím này); mô phỏng bấm `PrtSc`
+    → tự chụp + mở Editor; `Shift+PrtSc` → hiện overlay chọn vùng; cửa sổ Cài đặt hiển thị đúng, ⚠
+    đúng 2 phím bị giữ. Chưa thử: tự lưu / tự copy / hẹn giờ trên GUI.
+  - Giới hạn: phím tắt chỉ sống khi cửa sổ chính còn mở (chưa có icon khay hệ thống để chạy ngầm).
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ScreenCapture.Views.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Cài đặt - ScreenCapture">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <!-- Bố cục kiểu "Program Options" của PicPick: danh mục bên trái, nội dung bên phải, nút dưới cùng. -->
+    <Grid Padding="16" RowSpacing="12" ColumnSpacing="16">
+        <Grid.Resources>
+            <Style x:Key="PageHeaderStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="18" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Margin" Value="0,0,0,12" />
+            </Style>
+            <Style x:Key="HintStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+        </Grid.Resources>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="170" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ListView x:Name="CategoryList" Grid.Column="0" SelectionChanged="CategoryList_SelectionChanged"
+                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="0,6">
+            <ListViewItem Tag="General">Chung</ListViewItem>
+            <ListViewItem Tag="AutoSave">Tự động lưu</ListViewItem>
+            <ListViewItem Tag="Session">Phiên làm việc</ListViewItem>
+            <ListViewItem Tag="Hotkeys">Phím tắt</ListViewItem>
+        </ListView>
+
+        <Border Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="20,16">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <!-- Chung -->
+                    <StackPanel x:Name="GeneralPage" Spacing="16">
+                        <TextBlock Text="Chung" Style="{StaticResource PageHeaderStyle}" />
+                        <StackPanel Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Hẹn giờ trước khi chụp" VerticalAlignment="Center" />
+                                <NumberBox x:Name="DelayBox" Width="90" SpinButtonPlacementMode="Compact" />
+                                <TextBlock Text="giây" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="Chờ thêm vài giây trước khi chụp để kịp mở menu, rê chuột lên tooltip... (0 = chụp ngay)."
+                                       Style="{StaticResource HintStyle}" />
+                        </StackPanel>
+                        <CheckBox x:Name="CopyAfterCaptureBox" Content="Chụp xong tự copy ảnh vào clipboard" />
+                    </StackPanel>
+
+                    <!-- Tự động lưu -->
+                    <StackPanel x:Name="AutoSavePage" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Tự động lưu" Style="{StaticResource PageHeaderStyle}" />
+                        <CheckBox x:Name="AutoSaveBox" Content="Tự động lưu mỗi ảnh chụp thành file PNG" Checked="AutoSaveBox_Changed" Unchecked="AutoSaveBox_Changed" />
+                        <StackPanel x:Name="AutoSaveFolderPanel" Spacing="6">
+                            <TextBlock Text="Thư mục lưu" />
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="AutoSaveFolderBox" />
+                                <Button Grid.Column="1" Content="Chọn..." Click="BrowseAutoSaveFolder_Click" />
+                            </Grid>
+                            <TextBlock Style="{StaticResource HintStyle}"
+                                       Text="Tên file = thời điểm chụp (vd 2026-09-24 13 36 14.png), trùng tên thì thêm (2). Ảnh đã tự lưu được coi là đã lưu nên đóng tab không hỏi lại (trừ khi sửa thêm)." />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Phiên làm việc -->
+                    <StackPanel x:Name="SessionPage" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Phiên làm việc" Style="{StaticResource PageHeaderStyle}" />
+                        <CheckBox x:Name="RememberTabsBox" Content="Nhớ các tab ảnh khi đóng Editor / tắt app, mở lại ở lần sau" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Giữ tối đa" VerticalAlignment="Center" />
+                            <NumberBox x:Name="MaxTabsBox" Width="100" SpinButtonPlacementMode="Compact" />
+                            <TextBlock Text="tab," VerticalAlignment="Center" />
+                            <NumberBox x:Name="MaxMegabytesBox" Width="110" SpinButtonPlacementMode="Compact" />
+                            <TextBlock Text="MB" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource HintStyle}"
+                                   Text="Ảnh lưu tạm chỉ gồm các tab đang mở; đóng tab là xoá file tạm của tab đó, không tích luỹ qua các lần chạy. Vượt giới hạn thì bỏ các tab cũ nhất khỏi bản lưu tạm. Tắt tuỳ chọn này thì thư mục tạm được dọn sạch và đóng Editor sẽ hỏi lưu như trước." />
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Thư mục lưu tạm" />
+                            <TextBlock x:Name="SessionFolderText" IsTextSelectionEnabled="True" TextWrapping="Wrap" Style="{StaticResource HintStyle}" />
+                            <Button Content="Mở thư mục" Click="OpenSessionFolder_Click" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- Phím tắt -->
+                    <StackPanel x:Name="HotkeysPage" Spacing="8" Visibility="Collapsed">
+                        <TextBlock Text="Phím tắt" Style="{StaticResource PageHeaderStyle}" />
+                        <Grid x:Name="HotkeyGrid" ColumnSpacing="10" RowSpacing="8" />
+                        <TextBlock Style="{StaticResource HintStyle}" Margin="0,8,0,0"
+                                   Text="Phím tắt dùng được cả khi app đang thu nhỏ hoặc đang dùng app khác (cửa sổ chính ScreenCapture phải còn mở). ⚠ = phím đang bị Windows hoặc app khác giữ - ví dụ phím PrintScreen khi bật &quot;Use the Print screen key to open screen capture&quot; trong Settings > Accessibility > Keyboard của Windows 11." />
+                    </StackPanel>
+                </Grid>
+            </ScrollViewer>
+        </Border>
+
+        <Button Grid.Row="1" Grid.Column="0" Content="Mặc định" HorizontalAlignment="Stretch" Click="ResetButton_Click"
+                ToolTipService.ToolTip="Đưa mọi tuỳ chọn về mặc định (chưa lưu cho tới khi bấm OK)" />
+        <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <TextBlock x:Name="ValidationText" VerticalAlignment="Center" Foreground="{ThemeResource SystemFillColorCriticalBrush}" TextWrapping="Wrap" MaxWidth="360" />
+            <Button Content="OK" Width="110" Style="{StaticResource AccentButtonStyle}" Click="OkButton_Click" />
+            <Button Content="Huỷ" Width="110" Click="CancelButton_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

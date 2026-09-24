@@ -50,6 +50,36 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     public static partial uint GetDpiForWindow(IntPtr hwnd);
 
+    // ---- Phím tắt toàn cục (Services/HotkeyService.cs) ----
+    public const uint WM_HOTKEY = 0x0312;
+    public const uint MOD_ALT = 0x0001;
+    public const uint MOD_CONTROL = 0x0002;
+    public const uint MOD_SHIFT = 0x0004;
+    public const uint MOD_NOREPEAT = 0x4000;
+
+    [LibraryImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    [LibraryImport("comctl32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static unsafe partial bool SetWindowSubclass(IntPtr hWnd,
+        delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, IntPtr, nuint, nuint, IntPtr> pfnSubclass,
+        nuint uIdSubclass, nuint dwRefData);
+
+    [LibraryImport("comctl32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static unsafe partial bool RemoveWindowSubclass(IntPtr hWnd,
+        delegate* unmanaged[Stdcall]<IntPtr, uint, IntPtr, IntPtr, nuint, nuint, IntPtr> pfnSubclass,
+        nuint uIdSubclass);
+
+    [LibraryImport("comctl32.dll")]
+    public static partial IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
     [LibraryImport("user32.dll")]
     public static partial IntPtr GetForegroundWindow();
 
