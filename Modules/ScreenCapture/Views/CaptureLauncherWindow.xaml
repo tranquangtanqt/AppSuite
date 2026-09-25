@@ -154,26 +154,43 @@
                 </Grid>
             </Button>
 
-            <Button x:Name="ScrollButton" Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Style="{StaticResource CaptureCardStyle}"
+            <Button x:Name="ScrollButton" Grid.Row="2" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
                     Click="ScrollButton_Click">
                 <Grid ColumnSpacing="14">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Border Style="{StaticResource CardIconBadgeStyle}">
                         <FontIcon Glyph="&#xEC8F;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}" />
                     </Border>
                     <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
-                        <TextBlock Text="Cuộn trang" Style="{StaticResource CardTitleStyle}" />
-                        <TextBlock Text="Chọn vùng nội dung, app tự cuộn và ghép thành 1 ảnh dài (trang web, tài liệu...)." Style="{StaticResource CardDescriptionStyle}" />
+                        <TextBlock Text="Cuộn dọc" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Tự cuộn xuống và ghép thành ảnh dài (trang web, tài liệu). Esc để dừng." Style="{StaticResource CardDescriptionStyle}" />
                     </StackPanel>
-                    <Border Grid.Column="2" VerticalAlignment="Center" Padding="10,3" CornerRadius="10"
-                            Background="{ThemeResource ControlFillColorSecondaryBrush}"
-                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                        <TextBlock Text="Esc để dừng" FontSize="11" />
+                </Grid>
+            </Button>
+
+            <Button x:Name="ScrollHorizontalButton" Grid.Row="2" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
+                    Click="ScrollHorizontalButton_Click">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardIconBadgeStyle}">
+                        <!-- Cùng icon cuộn với thẻ dọc, xoay 90° thành mũi tên trái-phải. -->
+                        <FontIcon Glyph="&#xEC8F;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}"
+                                  RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <RotateTransform Angle="90" />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
                     </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Cuộn ngang" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Tự cuộn sang phải và ghép thành ảnh rộng (bảng tính, timeline...). Esc để dừng." Style="{StaticResource CardDescriptionStyle}" />
+                    </StackPanel>
                 </Grid>
             </Button>
         </Grid>

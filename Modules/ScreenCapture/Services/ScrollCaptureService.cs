@@ -15,6 +15,14 @@ public enum ScrollStopReason
     StitchFailed,
 }
 
+public enum ScrollDirection
+{
+    /// <summary>Cuộn xuống, ghép theo chiều dọc.</summary>
+    Vertical,
+    /// <summary>Cuộn sang phải, ghép theo chiều ngang.</summary>
+    Horizontal,
+}
+
 public sealed record ScrollCaptureResult(SKBitmap Image, int Frames, ScrollStopReason Reason);
 
 /// <summary>
@@ -26,10 +34,17 @@ public sealed record ScrollCaptureResult(SKBitmap Image, int Frames, ScrollStopR
 /// dòng khớp. Dòng một màu (nền trống) không tính điểm để tránh khớp nhầm ở vùng trống.
 /// Đầu/chân trang cố định trong vùng (dòng giống hệt ở cùng vị trí trong 2 khung) được tách ra: đầu
 /// trang giữ 1 lần ở trên cùng, chân trang lấy 1 lần từ khung cuối, chỉ phần giữa được ghép nối.
+///
+/// Cuộn ngang: mỗi khung được CHUYỂN VỊ (cột ↔ dòng) ngay khi chụp, nên "cuộn sang phải, cột mới hiện
+/// ở mép phải" thành "cuộn xuống, dòng mới hiện ở dưới" → dùng lại nguyên thuật toán dọc ở trên, ảnh
+/// ghép xong chuyển vị ngược lại. Lăn ngang bằng MOUSEEVENTF_HWHEEL; app không phản ứng (khung không
+/// đổi ở bước đầu) thì chuyển sang Shift + lăn dọc (cách trình duyệt / Excel cuộn ngang).
 /// </summary>
 public sealed class ScrollCaptureService
 {
-    public const int MaxSteps = 80;
+    // 150 bước: vùng chọn thấp/hẹp thì mỗi bước cuộn ít (đã gặp khi test cuộn ngang: 80 bước chưa hết
+    // nội dung) - giới hạn chính vẫn là MaxHeight.
+    public const int MaxSteps = 150;
     public const int MaxHeight = 30000;
     private const int ScrollSettleMs = 450; // chờ cuộn mượt (smooth scrolling) của trình duyệt dừng hẳn
     private const double MinMatchRatio = 0.9;
@@ -41,12 +56,18 @@ public sealed class ScrollCaptureService
         _capture = capture;
     }
 
-    public async Task<ScrollCaptureResult> CaptureAsync(RECT rect)
+    private bool _horizontal;
+    private bool _useShiftWheel;
+    private int _notches;
+
+    public async Task<ScrollCaptureResult> CaptureAsync(RECT rect, ScrollDirection direction = ScrollDirection.Vertical)
     {
-        int height = rect.Bottom - rect.Top;
-        // Cuộn khoảng 1/3 chiều cao vùng mỗi bước (1 nấc chuột ~100px ở trình duyệt) → 2 khung liên tiếp
-        // luôn trùng nhau nhiều, dễ ghép.
-        int notches = Math.Clamp(height / 300, 1, 5);
+        _horizontal = direction == ScrollDirection.Horizontal;
+        _useShiftWheel = false;
+        int length = _horizontal ? rect.Right - rect.Left : rect.Bottom - rect.Top;
+        // Cuộn khoảng 1/3 kích thước vùng theo hướng cuộn mỗi bước (1 nấc chuột ~100px ở trình duyệt) →
+        // 2 khung liên tiếp luôn trùng nhau nhiều, dễ ghép.
+        _notches = Math.Clamp(length / 300, 1, 5);
 
         NativeMethods.GetCursorPos(out var originalCursor);
         var center = new POINT { X = (rect.Left + rect.Right) / 2, Y = (rect.Top + rect.Bottom) / 2 };
@@ -84,7 +105,7 @@ public sealed class ScrollCaptureService
                     break;
                 }
 
-                ScrollDown(notches);
+                Scroll();
                 await Task.Delay(ScrollSettleMs);
                 if (EscapePressed())
                 {
@@ -92,7 +113,7 @@ public sealed class ScrollCaptureService
                     break;
                 }
 
-                var current = _capture.CaptureRect(rect);
+                var current = CaptureFrame(rect);
                 var currentRows = RowInfo.Of(current);
                 DumpFrame(step == 0 ? previous : null, current, step);
 
@@ -101,9 +122,14 @@ public sealed class ScrollCaptureService
                 for (int retry = 0; retry < 2 && previousRows.Hashes.AsSpan().SequenceEqual(currentRows.Hashes); retry++)
                 {
                     current.Dispose();
-                    ScrollDown(notches);
+                    if (_horizontal && step == 0 && !_useShiftWheel)
+                    {
+                        // Lăn ngang lần đầu không có tác dụng → app không hỗ trợ HWHEEL, thử Shift + lăn dọc.
+                        _useShiftWheel = true;
+                    }
+                    Scroll();
                     await Task.Delay(ScrollSettleMs);
-                    current = _capture.CaptureRect(rect);
+                    current = CaptureFrame(rect);
                     currentRows = RowInfo.Of(current);
                 }
                 if (previousRows.Hashes.AsSpan().SequenceEqual(currentRows.Hashes))
@@ -128,7 +154,7 @@ public sealed class ScrollCaptureService
                     // Có thể còn đang cuộn mượt / vẽ lại → chờ thêm, chụp lại khung này rồi thử 1 lần nữa.
                     current.Dispose();
                     await Task.Delay(ScrollSettleMs);
-                    current = _capture.CaptureRect(rect);
+                    current = CaptureFrame(rect);
                     currentRows = RowInfo.Of(current);
                     (maskedPrev, maskedCur) = MaskedRows(previous, current);
                     shift = FindShift(maskedPrev, maskedCur, topStatic, bottomStatic);
@@ -163,6 +189,12 @@ public sealed class ScrollCaptureService
             var image = firstBody is null || strips.Count == 0
                 ? first.Copy() // chưa ghép được gì (1 khung) → trả nguyên khung đầu
                 : Compose(firstBody, strips, previous, bottomStatic);
+            if (_horizontal)
+            {
+                var upright = Transpose(image); // về lại hướng thật (ghép theo chiều ngang)
+                image.Dispose();
+                image = upright;
+            }
             return new ScrollCaptureResult(image, frames, reason);
         }
         finally
@@ -208,12 +240,12 @@ public sealed class ScrollCaptureService
     private async Task<(SKBitmap Frame, RowInfo Rows)> CaptureStableAsync(RECT rect)
     {
         await Task.Delay(200);
-        var frame = _capture.CaptureRect(rect);
+        var frame = CaptureFrame(rect);
         var rows = RowInfo.Of(frame);
         for (int attempt = 0; attempt < 8; attempt++)
         {
             await Task.Delay(120);
-            var again = _capture.CaptureRect(rect);
+            var again = CaptureFrame(rect);
             var againRows = RowInfo.Of(again);
             bool stable = rows.Hashes.AsSpan().SequenceEqual(againRows.Hashes);
             frame.Dispose();
@@ -250,21 +282,66 @@ public sealed class ScrollCaptureService
         Save(frame, Path.Combine(dir, $"frame_{step + 1:D3}.png"));
     }
 
-    private static void ScrollDown(int notches)
+    /// <summary>Chụp vùng; cuộn ngang thì chuyển vị ngay để phần ghép chỉ cần xử lý chiều dọc.</summary>
+    private SKBitmap CaptureFrame(RECT rect)
     {
+        var frame = _capture.CaptureRect(rect);
+        if (!_horizontal)
+        {
+            return frame;
+        }
+        var transposed = Transpose(frame);
+        frame.Dispose();
+        return transposed;
+    }
+
+    /// <summary>Lăn chuột 1 bước theo hướng đang chụp: dọc = lăn xuống; ngang = lăn ngang sang phải
+    /// (HWHEEL), hoặc Shift + lăn xuống nếu app không hỗ trợ lăn ngang.</summary>
+    private void Scroll()
+    {
+        bool horizontalWheel = _horizontal && !_useShiftWheel;
         var input = new NativeMethods.INPUT
         {
             type = NativeMethods.INPUT_MOUSE,
             mi = new NativeMethods.MOUSEINPUT
             {
-                mouseData = unchecked((uint)(-NativeMethods.WHEEL_DELTA * notches)),
-                dwFlags = NativeMethods.MOUSEEVENTF_WHEEL,
+                // WHEEL: âm = xuống. HWHEEL: dương = sang phải.
+                mouseData = unchecked((uint)((horizontalWheel ? 1 : -1) * NativeMethods.WHEEL_DELTA * _notches)),
+                dwFlags = horizontalWheel ? NativeMethods.MOUSEEVENTF_HWHEEL : NativeMethods.MOUSEEVENTF_WHEEL,
             },
         };
+        bool holdShift = _horizontal && _useShiftWheel;
+        if (holdShift)
+        {
+            NativeMethods.keybd_event(NativeMethods.VK_SHIFT, 0, 0, 0);
+        }
         unsafe
         {
             NativeMethods.SendInput(1, &input, sizeof(NativeMethods.INPUT));
         }
+        if (holdShift)
+        {
+            NativeMethods.keybd_event(NativeMethods.VK_SHIFT, 0, NativeMethods.KEYEVENTF_KEYUP, 0);
+        }
+    }
+
+    /// <summary>Chuyển vị ảnh: pixel (x, y) → (y, x). Tự nghịch đảo (chuyển vị 2 lần = ảnh gốc).</summary>
+    private static unsafe SKBitmap Transpose(SKBitmap source)
+    {
+        int w = source.Width, h = source.Height;
+        var result = new SKBitmap(new SKImageInfo(h, w, SKColorType.Bgra8888, SKAlphaType.Premul));
+        byte* src = (byte*)source.GetPixels();
+        byte* dst = (byte*)result.GetPixels();
+        int srcRow = source.RowBytes, dstRow = result.RowBytes;
+        for (int y = 0; y < h; y++)
+        {
+            uint* s = (uint*)(src + (long)y * srcRow);
+            for (int x = 0; x < w; x++)
+            {
+                *(uint*)(dst + (long)x * dstRow + y * 4L) = s[x];
+            }
+        }
+        return result;
     }
 
     private static bool EscapePressed() => (NativeMethods.GetAsyncKeyState(NativeMethods.VK_ESCAPE) & 0x8001) != 0;

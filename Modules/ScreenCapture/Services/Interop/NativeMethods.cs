@@ -83,6 +83,12 @@ internal static partial class NativeMethods
     // ---- Chụp cuộn (Services/ScrollCaptureService.cs): cuộn chuột giả lập + phím Esc để dừng ----
     public const uint INPUT_MOUSE = 0;
     public const uint MOUSEEVENTF_WHEEL = 0x0800;
+    public const uint MOUSEEVENTF_HWHEEL = 0x01000;
+    public const byte VK_SHIFT = 0x10;
+    public const uint KEYEVENTF_KEYUP = 0x0002;
+
+    [LibraryImport("user32.dll")]
+    public static partial void keybd_event(byte bVk, byte bScan, uint dwFlags, nuint dwExtraInfo);
     public const int VK_ESCAPE = 0x1B;
     public const int WHEEL_DELTA = 120;
 

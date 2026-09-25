@@ -122,7 +122,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal }
 
     private void ShowTrayMenu()
     {
@@ -133,7 +133,8 @@ public sealed partial class CaptureLauncherWindow : Window
             ((int)TrayCommand.ActiveWindow, "Chụp cửa sổ hiện tại", true),
             ((int)TrayCommand.Region, "Chụp vùng chọn", true),
             ((int)TrayCommand.FixedRegion, "Chụp vùng cố định", true),
-            ((int)TrayCommand.Scroll, "Chụp cuộn trang", true),
+            ((int)TrayCommand.Scroll, "Chụp cuộn dọc", true),
+            ((int)TrayCommand.ScrollHorizontal, "Chụp cuộn ngang", true),
             (0, null, true),
             ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
             ((int)TrayCommand.OpenEditor, "Mở Editor", canOpenEditor),
@@ -148,7 +149,8 @@ public sealed partial class CaptureLauncherWindow : Window
             case TrayCommand.ActiveWindow: RunInBackground(CaptureActiveWindowAsync); break;
             case TrayCommand.Region: RunInBackground(() => CaptureRegionAsync(isFixed: false)); break;
             case TrayCommand.FixedRegion: RunInBackground(() => CaptureRegionAsync(isFixed: true)); break;
-            case TrayCommand.Scroll: RunInBackground(CaptureScrollAsync); break;
+            case TrayCommand.Scroll: RunInBackground(() => CaptureScrollAsync(ScrollDirection.Vertical)); break;
+            case TrayCommand.ScrollHorizontal: RunInBackground(() => CaptureScrollAsync(ScrollDirection.Horizontal)); break;
             case TrayCommand.OpenLauncher: ShowLauncher(); break;
             case TrayCommand.OpenEditor: OpenExistingEditor(); break;
             case TrayCommand.Settings: OpenSettings(); break;
@@ -260,7 +262,8 @@ public sealed partial class CaptureLauncherWindow : Window
         HotkeyAction.Region => () => CaptureRegionAsync(isFixed: false),
         HotkeyAction.FixedRegion => () => CaptureRegionAsync(isFixed: true),
         HotkeyAction.RepeatLast => RepeatLastCaptureAsync,
-        HotkeyAction.ScrollCapture => CaptureScrollAsync,
+        HotkeyAction.ScrollCapture => () => CaptureScrollAsync(ScrollDirection.Vertical),
+        HotkeyAction.ScrollCaptureHorizontal => () => CaptureScrollAsync(ScrollDirection.Horizontal),
         _ => () => Task.CompletedTask,
     });
 
@@ -296,12 +299,14 @@ public sealed partial class CaptureLauncherWindow : Window
     private async void WindowButton_Click(object sender, RoutedEventArgs e) => await CaptureActiveWindowAsync();
     private async void RegionButton_Click(object sender, RoutedEventArgs e) => await CaptureRegionAsync(isFixed: false);
     private async void FixedRegionButton_Click(object sender, RoutedEventArgs e) => await CaptureRegionAsync(isFixed: true);
-    private async void ScrollButton_Click(object sender, RoutedEventArgs e) => await CaptureScrollAsync();
+    private async void ScrollButton_Click(object sender, RoutedEventArgs e) => await CaptureScrollAsync(ScrollDirection.Vertical);
+    private async void ScrollHorizontalButton_Click(object sender, RoutedEventArgs e) => await CaptureScrollAsync(ScrollDirection.Horizontal);
 
     /// <summary>Chụp cuộn: chọn vùng nội dung trên ảnh màn hình đứng yên (overlay như Vùng chọn) → overlay
     /// đóng → ScrollCaptureService lăn chuột trong vùng đó, chụp + ghép tới cuối trang / Esc / giới hạn.</summary>
-    private async Task CaptureScrollAsync()
+    private async Task CaptureScrollAsync(ScrollDirection direction)
     {
+        bool horizontal = direction == ScrollDirection.Horizontal;
         if (!await BeginCaptureAsync())
         {
             return;
@@ -310,8 +315,9 @@ public sealed partial class CaptureLauncherWindow : Window
         {
             var virtualRect = _captureService.GetVirtualScreenRect();
             var frozenScreen = _captureService.CaptureRect(virtualRect);
-            var overlay = new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: false, null,
-                "Chụp cuộn: kéo chọn vùng nội dung cần cuộn (bỏ thanh menu cố định) — thả chuột để bắt đầu. Trong lúc cuộn bấm Esc để dừng.");
+            var overlay = new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: false, null, horizontal
+                ? "Chụp cuộn NGANG →: kéo chọn vùng nội dung cần cuộn sang phải (bỏ cột cố định bên trái) — thả chuột để bắt đầu. Esc để dừng."
+                : "Chụp cuộn DỌC ↓: kéo chọn vùng nội dung cần cuộn xuống (bỏ thanh menu cố định) — thả chuột để bắt đầu. Esc để dừng.");
             var selection = await overlay.SelectRegionAsync();
             if (selection is null)
             {
@@ -320,19 +326,19 @@ public sealed partial class CaptureLauncherWindow : Window
             }
 
             await Task.Delay(250); // chờ overlay đóng hẳn, cửa sổ bên dưới vẽ lại
-            var result = await new ScrollCaptureService(_captureService).CaptureAsync(selection.Value);
+            var result = await new ScrollCaptureService(_captureService).CaptureAsync(selection.Value, direction);
             await FinishCaptureAsync(result.Image);
 
             string reason = result.Reason switch
             {
-                ScrollStopReason.ReachedEnd => "đã tới cuối",
+                ScrollStopReason.ReachedEnd => horizontal ? "đã tới mép phải" : "đã tới cuối",
                 ScrollStopReason.Cancelled => "dừng bằng Esc",
                 ScrollStopReason.LimitReached => $"chạm giới hạn ({ScrollCaptureService.MaxSteps} lần cuộn / {ScrollCaptureService.MaxHeight}px)",
                 _ => "không ghép tiếp được (nội dung thay đổi hoặc cuộn quá xa) - đã giữ phần ghép được",
             };
             if (_editor?.CurrentDocument is { } document)
             {
-                document.StatusText = $"Chụp cuộn: {result.Frames} khung, {result.Image.Width} × {result.Image.Height} px — {reason}.";
+                document.StatusText = $"Chụp cuộn {(horizontal ? "ngang" : "dọc")}: {result.Frames} khung, {result.Image.Width} × {result.Image.Height} px — {reason}.";
             }
         }
         finally

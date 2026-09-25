@@ -18,7 +18,8 @@ public sealed partial class SettingsWindow : Window
         (HotkeyAction.ActiveWindow, "Chụp cửa sổ hiện tại"),
         (HotkeyAction.Region, "Chụp vùng chọn"),
         (HotkeyAction.FixedRegion, "Chụp vùng cố định"),
-        (HotkeyAction.ScrollCapture, "Chụp cuộn trang"),
+        (HotkeyAction.ScrollCapture, "Chụp cuộn dọc"),
+        (HotkeyAction.ScrollCaptureHorizontal, "Chụp cuộn ngang"),
         (HotkeyAction.RepeatLast, "Chụp lại lần gần nhất"),
     ];
 

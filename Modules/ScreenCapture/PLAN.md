@@ -351,6 +351,29 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   - **Sự cố trong lúc test (2026-09-24)**: lệnh "sao lưu" `Copy-Item -LiteralPath dir\*` không chép gì
     (LiteralPath không hiểu `*`) rồi thư mục phiên thật bị xoá → mất 3 tab chưa lưu của người dùng. Từ
     đó mọi test dùng thư mục phiên riêng qua `SCREENCAPTURE_SESSION_DIR`.
+- **Chụp cuộn ngang** (người dùng chọn hướng rõ ràng — 2 thẻ "Cuộn dọc" / "Cuộn ngang", không tự đoán):
+  - `ScrollCaptureService.CaptureAsync(rect, ScrollDirection)`. Mỗi khung được **chuyển vị** (cột ↔
+    dòng) ngay khi chụp → "cột mới hiện ở mép phải" thành "dòng mới hiện ở dưới", dùng lại nguyên
+    thuật toán ghép dọc; ảnh ghép xong chuyển vị ngược lại. Số nấc lăn tính theo chiều rộng vùng.
+  - Lăn ngang bằng `MOUSEEVENTF_HWHEEL` (dương = sang phải). Nếu bước đầu khung không đổi (app không
+    hỗ trợ HWHEEL) → chuyển sang Shift + lăn dọc (`keybd_event(VK_SHIFT)` bao quanh `SendInput`).
+  - `MaxSteps` 80 → 150: vùng chọn thấp/hẹp thì mỗi bước cuộn ít, 80 bước chưa hết nội dung (gặp khi
+    test cuộn ngang). Giới hạn chính vẫn là `MaxHeight` 30.000px (theo chiều cuộn).
+  - Nối vào: thẻ launcher "Cuộn ngang" (thẻ cũ đổi tên "Cuộn dọc", 2 thẻ chung 1 hàng),
+    `HotkeyAction.ScrollCaptureHorizontal` (mặc định không có phím), menu khay "Chụp cuộn ngang",
+    thông báo overlay + trạng thái Editor ghi rõ hướng ("đã tới mép phải").
+  - **Kiểm thử tự động trong Windows Sandbox (2026-09-25)** — chuột/phím giả lập không đụng màn hình
+    thật, `%TEMP%` riêng nên không thể chạm thư mục phiên thật. Form WinForms vẽ lưới ô có nhãn, dài
+    12.000px, 3 chế độ: lăn dọc / nhận HWHEEL / chỉ nhận Shift+lăn; ảnh ghép (AutoSave) so từng pixel
+    với ảnh "đáp án" vẽ cùng nội dung. Kết quả: dọc 2/2, ngang HWHEEL 3/3, ngang Shift+lăn 3/3 — đủ
+    chiều dài, **lệch 0,00%**, ~40 giây/lượt. Lỗi dừng sớm ~6000px ở chế độ Shift gặp 1 lần khi test
+    trên máy thật hôm trước không tái hiện (có thể do cửa sổ khác trên máy thật chen vào).
+  - Ghi chú khi dựng test: overlay WinUI không nhận thao tác kéo nếu con trỏ chỉ dời bằng
+    `SetCursorPos` — phải dùng `mouse_event(MOVE | ABSOLUTE)`. Sandbox không có .NET/Windows App SDK
+    runtime → publish self-contained bản Debug (`WindowsAppSDKSelfContained` chỉ đặt cho project app,
+    đặt toàn cục thì SharedUI báo lỗi "should not be applied to a class library") và chép thêm thư mục
+    `SharedUI\` từ bin (bản Debug không nhúng XBF của SharedUI vào `.pri`; bản Release thì có, nên bản
+    deploy qua `build\Publish-AppSuite.ps1` không bị ảnh hưởng).
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 
@@ -385,7 +408,6 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
 
 ## Chưa làm (fast-follow)
 
-- Scroll capture theo chiều ngang (hiện chỉ cuộn dọc).
 - Editor: Blur/Mosaic (khác Fill — làm mờ/che chứ không đổi màu), Freehand pen, crop không phá huỷ.
   (Resize shape qua 4 handle góc và đổi hướng/độ dài Line/Arrow qua 2 handle đầu mút **đã làm**.)
 - Fixed Region: lưu vị trí/kích thước qua lần restart app (hiện chỉ session-only, mất khi đóng app).
