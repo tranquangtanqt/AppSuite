@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="ImageCompare.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ImageCompare"
+    xmlns:skia="using:SkiaSharp.Views.Windows"
+    xmlns:vm="using:ImageCompare.ViewModels"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="So sánh ảnh">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid x:Name="RootGrid" Padding="8" RowSpacing="6">
+        <Grid.Resources>
+            <!-- Ô chứa ảnh A / B: tên + kích thước ảnh, nút Mở / Dán; kéo-thả file ảnh vào ô. -->
+            <Style x:Key="SlotStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="6" />
+                <Setter Property="Padding" Value="8,4" />
+                <Setter Property="AllowDrop" Value="True" />
+            </Style>
+            <Style x:Key="SlotBadgeStyle" TargetType="Border">
+                <Setter Property="Width" Value="24" />
+                <Setter Property="Height" Value="24" />
+                <Setter Property="CornerRadius" Value="12" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+        </Grid.Resources>
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Modifiers="Control" Key="V" Invoked="PasteAccelerator_Invoked" />
+            <KeyboardAccelerator Modifiers="Control,Shift" Key="V" Invoked="PasteAAccelerator_Invoked" />
+            <KeyboardAccelerator Modifiers="Control" Key="Number0" Invoked="FitAccelerator_Invoked" />
+            <KeyboardAccelerator Modifiers="Control" Key="Number1" Invoked="ActualSizeAccelerator_Invoked" />
+            <KeyboardAccelerator Modifiers="Control" Key="F" Invoked="FindTextAccelerator_Invoked" />
+        </Grid.KeyboardAccelerators>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Row 0: 2 ô ảnh -->
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border x:Name="SlotA" Style="{StaticResource SlotStyle}" DragOver="Slot_DragOver" Drop="Slot_Drop">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource SlotBadgeStyle}" Background="#2B7BD6">
+                        <TextBlock Text="A" Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ImageAText, Mode=OneWay}" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind ViewModel.ImageAText, Mode=OneWay}" />
+                    <Button Grid.Column="2" Content="Mở…" Click="OpenA_Click" ToolTipService.ToolTip="Mở file ảnh làm ảnh A (ảnh gốc)" />
+                    <Button Grid.Column="3" Content="Dán" Click="PasteA_Click" ToolTipService.ToolTip="Dán ảnh trong clipboard làm ảnh A (Ctrl+Shift+V)" />
+                    <Button x:Name="ClearAButton" Grid.Column="4" Click="ClearA_Click" Visibility="Collapsed" ToolTipService.ToolTip="Bỏ ảnh A" AutomationProperties.Name="Bỏ ảnh A">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <Button Grid.Column="1" Command="{x:Bind ViewModel.SwapCommand}" VerticalAlignment="Stretch"
+                    ToolTipService.ToolTip="Đổi chỗ ảnh A và B" AutomationProperties.Name="Đổi chỗ ảnh A và B">
+                <FontIcon Glyph="&#xE8AB;" FontSize="14" />
+            </Button>
+
+            <Border x:Name="SlotB" Grid.Column="2" Style="{StaticResource SlotStyle}" DragOver="Slot_DragOver" Drop="Slot_Drop">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource SlotBadgeStyle}" Background="#D86445">
+                        <TextBlock Text="B" Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ImageBText, Mode=OneWay}" VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind ViewModel.ImageBText, Mode=OneWay}" />
+                    <Button Grid.Column="2" Content="Mở…" Click="OpenB_Click" ToolTipService.ToolTip="Mở file ảnh làm ảnh B (ảnh mới)" />
+                    <Button Grid.Column="3" Content="Dán" Click="PasteB_Click" ToolTipService.ToolTip="Dán ảnh trong clipboard làm ảnh B" />
+                    <Button x:Name="ClearBButton" Grid.Column="4" Click="ClearB_Click" Visibility="Collapsed" ToolTipService.ToolTip="Bỏ ảnh B" AutomationProperties.Name="Bỏ ảnh B">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Row 1: chế độ xem + tuỳ chọn của chế độ đang chọn -->
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <SelectorBar x:Name="ModeBar" SelectionChanged="ModeBar_SelectionChanged">
+                <SelectorBarItem Text="Khác biệt" Tag="Diff" IsSelected="True" ToolTipService.ToolTip="Tô đỏ chỗ khác nhau, đánh số từng vùng" />
+                <SelectorBarItem Text="Cạnh nhau" Tag="SideBySide" ToolTipService.ToolTip="A bên trái, B bên phải - zoom và cuộn đồng bộ" />
+                <SelectorBarItem Text="Chồng mờ" Tag="Overlay" ToolTipService.ToolTip="B đặt chồng lên A, chỉnh độ trong suốt" />
+                <SelectorBarItem Text="Thanh trượt" Tag="Swipe" ToolTipService.ToolTip="Kéo vạch chia: trái là A, phải là B" />
+                <SelectorBarItem Text="Tìm ảnh con" Tag="Find" ToolTipService.ToolTip="Tìm ảnh nhỏ hơn (vd 1 nút, 1 icon cắt ra) trong ảnh lớn hơn" />
+                <SelectorBarItem Text="Tìm chữ" Tag="Text" ToolTipService.ToolTip="Đọc chữ trong ảnh (OCR tiếng Việt / tiếng Anh) và tìm chữ trong đó - chỉ cần 1 ảnh" />
+            </SelectorBar>
+            <!-- Tuỳ chọn của chế độ đang chọn; cửa sổ hẹp thì cuộn ngang được (rê chuột lên để hiện thanh cuộn). -->
+            <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled"
+                          VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled" VerticalAlignment="Center">
+            <Grid>
+            <StackPanel x:Name="OverlayOptions" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Visibility="Collapsed">
+                <TextBlock Text="A" VerticalAlignment="Center" Foreground="#2B7BD6" FontWeight="SemiBold" />
+                <Slider x:Name="OpacitySlider" Width="200" VerticalAlignment="Center" ValueChanged="OpacitySlider_ValueChanged"
+                        ToolTipService.ToolTip="Độ đục của ảnh B" />
+                <TextBlock Text="B" VerticalAlignment="Center" Foreground="#D86445" FontWeight="SemiBold" />
+            </StackPanel>
+            <TextBlock x:Name="SwipeHint" VerticalAlignment="Center" Opacity="0.7" Visibility="Collapsed"
+                       Text="Kéo vạch chia (hoặc bấm vào ảnh) để đổi chỗ chia A | B." />
+            <StackPanel x:Name="DiffOptions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                <ComboBox x:Name="AlignBox" SelectionChanged="AlignBox_SelectionChanged" VerticalAlignment="Center" MinWidth="150"
+                          ToolTipService.ToolTip="Căn 2 ảnh trước khi so. Alt + phím mũi tên: dịch ảnh B 1 px (thêm Shift: 10 px)">
+                    <ComboBoxItem Content="Tự căn chỉnh" Tag="Translate" ToolTipService.ToolTip="Tự tìm độ lệch - ảnh chụp lệch vài px, khác lề" />
+                    <ComboBoxItem Content="Căn theo dòng (trang dài)" Tag="Rows" ToolTipService.ToolTip="Trang dài mà B thêm / bớt 1 đoạn ở giữa so với A" />
+                    <ComboBoxItem Content="Không căn" Tag="None" />
+                    <ComboBoxItem Content="Chỉnh tay (Alt+↑↓←→)" Tag="Manual" />
+                </ComboBox>
+                <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center"
+                            ToolTipService.ToolTip="Chênh lệch màu tối thiểu để tính là khác. Ảnh PNG chụp màn hình: 5–10%. Ảnh JPG: ~20%.">
+                    <TextBlock Text="Ngưỡng" VerticalAlignment="Center" />
+                    <Slider x:Name="ThresholdSlider" Width="110" VerticalAlignment="Center" ValueChanged="ThresholdSlider_ValueChanged" />
+                    <TextBlock x:Name="ThresholdText" Width="34" VerticalAlignment="Center" />
+                </StackPanel>
+                <CheckBox x:Name="AntialiasBox" Content="Bỏ qua răng cưa" Checked="AntialiasBox_Changed" Unchecked="AntialiasBox_Changed"
+                          ToolTipService.ToolTip="Không tính các khác biệt chỉ do viền chữ / hình vẽ mịn (khử răng cưa) lệch nhẹ" />
+                <ToggleButton x:Name="IgnoreToolButton" VerticalAlignment="Center" Click="IgnoreToolButton_Click"
+                              ToolTipService.ToolTip="Bật rồi kéo trên ảnh để khoanh vùng bỏ qua (đồng hồ, ngày giờ, avatar...). Bấm vào 1 vùng bỏ qua để xoá nó.">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8D8;" FontSize="14" /><TextBlock Text="Vùng bỏ qua" /></StackPanel>
+                </ToggleButton>
+                <Button x:Name="ClearIgnoreButton" Command="{x:Bind ViewModel.ClearIgnoreRectsCommand}" VerticalAlignment="Center" Visibility="Collapsed"
+                        ToolTipService.ToolTip="Xoá mọi vùng bỏ qua">
+                    <FontIcon Glyph="&#xE74D;" FontSize="14" />
+                </Button>
+            </StackPanel>
+            <StackPanel x:Name="FindOptions" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Visibility="Collapsed"
+                        ToolTipService.ToolTip="Chỉ hiện các chỗ khớp từ mức này trở lên (100% = giống hệt)">
+                <TextBlock Text="Độ khớp tối thiểu" VerticalAlignment="Center" />
+                <Slider x:Name="FindScoreSlider" Width="160" VerticalAlignment="Center" ValueChanged="FindScoreSlider_ValueChanged" />
+                <TextBlock x:Name="FindScoreText" Width="40" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel x:Name="TextOptions" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Visibility="Collapsed">
+                <ComboBox x:Name="TextSourceBox" SelectionChanged="TextSourceBox_SelectionChanged" VerticalAlignment="Center" MinWidth="90"
+                          ToolTipService.ToolTip="Đọc chữ trong ảnh nào (ô được chọn còn trống thì đọc ảnh ở ô kia)">
+                    <ComboBoxItem Content="Ảnh A" />
+                    <ComboBoxItem Content="Ảnh B" />
+                </ComboBox>
+                <TextBox x:Name="TextQueryBox" Width="220" VerticalAlignment="Center" PlaceholderText="Tìm chữ… (Ctrl+F)"
+                         TextChanged="TextQueryBox_TextChanged" AutomationProperties.Name="Tìm chữ"
+                         ToolTipService.ToolTip="Gõ chữ cần tìm - các chỗ có chữ đó được tô vàng. Để trống: liệt kê mọi dòng đọc được." />
+                <CheckBox x:Name="TextDiacriticsBox" Content="Phân biệt dấu" Checked="TextOption_Changed" Unchecked="TextOption_Changed" MinWidth="0"
+                          ToolTipService.ToolTip="Tắt (mặc định): &quot;thanh toan&quot; khớp cả &quot;Thanh toán&quot; - chữ đọc từ ảnh đôi khi sai dấu" />
+                <CheckBox x:Name="TextCaseBox" Content="Phân biệt hoa/thường" Checked="TextOption_Changed" Unchecked="TextOption_Changed" MinWidth="0" />
+                <Button Click="CopyText_Click" IsEnabled="{x:Bind ViewModel.HasOcr, Mode=OneWay}" VerticalAlignment="Center"
+                        ToolTipService.ToolTip="Copy toàn bộ chữ đọc được trong ảnh (mỗi dòng 1 dòng)">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy toàn bộ chữ" /></StackPanel>
+                </Button>
+            </StackPanel>
+            </Grid>
+            </ScrollViewer>
+        </Grid>
+
+        <!-- Row 2: canvas - kéo-thả file ảnh vào đây (nửa trái = A, nửa phải = B ở chế độ Cạnh nhau) -->
+        <Grid Grid.Row="2" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    AllowDrop="True" DragOver="Slot_DragOver" Drop="Canvas_Drop">
+                <skia:SKXamlCanvas x:Name="Canvas" PaintSurface="Canvas_PaintSurface"
+                                   PointerPressed="Canvas_PointerPressed" PointerMoved="Canvas_PointerMoved"
+                                   PointerReleased="Canvas_PointerReleased" PointerExited="Canvas_PointerExited"
+                                   PointerWheelChanged="Canvas_PointerWheelChanged" SizeChanged="Canvas_SizeChanged" />
+            </Border>
+
+            <!-- Kết quả so sánh: kết luận + danh sách vùng khác (bấm → phóng tới vùng) -->
+            <Border x:Name="ResultPanel" Grid.Column="1" Width="270" CornerRadius="6" Padding="12,10"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <Grid RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="16" Height="16" />
+                        <TextBlock Text="{x:Bind ViewModel.SummaryTitle, Mode=OneWay}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.SummaryDetail, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.8" />
+                    <!-- Xuất kết quả: ảnh khác biệt (Copy / PNG) hoặc báo cáo HTML 1 file để gửi người khác -->
+                    <Grid x:Name="ExportButtons" Grid.Row="2" ColumnSpacing="4" RowSpacing="4" Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Button Click="CopyDiff_Click" IsEnabled="{x:Bind ViewModel.CanExport, Mode=OneWay}" HorizontalAlignment="Stretch"
+                                ToolTipService.ToolTip="Copy ảnh khác biệt vào clipboard">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy" /></StackPanel>
+                        </Button>
+                        <Button Grid.Column="1" Click="SavePng_Click" IsEnabled="{x:Bind ViewModel.CanExport, Mode=OneWay}" HorizontalAlignment="Stretch"
+                                ToolTipService.ToolTip="Lưu ảnh khác biệt thành PNG">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Lưu PNG" /></StackPanel>
+                        </Button>
+                        <Button Grid.Row="1" Grid.ColumnSpan="2" Click="SaveHtml_Click" IsEnabled="{x:Bind ViewModel.CanExport, Mode=OneWay}"
+                                HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"
+                                ToolTipService.ToolTip="Báo cáo HTML 1 file (ảnh nhúng sẵn) để gửi người khác - mở bằng trình duyệt">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE9F9;" FontSize="14" /><TextBlock Text="Xuất báo cáo HTML" /></StackPanel>
+                        </Button>
+                    </Grid>
+                    <TextBlock Grid.Row="3" Text="{x:Bind ViewModel.ItemsTitle, Mode=OneWay}" FontWeight="SemiBold" Margin="0,6,0,0" />
+                    <ListView x:Name="RegionList" Grid.Row="4" ItemsSource="{x:Bind ViewModel.Items}" SelectionMode="Single"
+                              SelectionChanged="RegionList_SelectionChanged" IsItemClickEnabled="True" ItemClick="RegionList_ItemClick">
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ResultItem">
+                                <!-- Grid (không phải StackPanel ngang) để dòng chữ dài bị cắt "…" thay vì tràn; di chuột xem đủ. -->
+                                <Grid ColumnSpacing="10" Padding="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Background="{x:Bind local:MainWindow.BrushOf(BadgeColor)}" CornerRadius="3" Padding="6,0" MinWidth="26" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Number}" Foreground="White" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                    </Border>
+                                    <TextBlock Grid.Column="1" Text="{x:Bind Text}" FontFamily="Consolas" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               ToolTipService.ToolTip="{x:Bind Text}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Row 3: trạng thái + zoom -->
+        <Grid Grid.Row="3" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <TextBlock x:Name="CursorText" Grid.Column="1" VerticalAlignment="Center" Opacity="0.75" FontFamily="Consolas" />
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                <Button Click="ZoomOut_Click" ToolTipService.ToolTip="Thu nhỏ (Ctrl + lăn chuột)"><FontIcon Glyph="&#xE71F;" FontSize="12" /></Button>
+                <TextBlock x:Name="ZoomText" Width="52" TextAlignment="Center" VerticalAlignment="Center" Text="100%" />
+                <Button Click="ZoomIn_Click" ToolTipService.ToolTip="Phóng to (Ctrl + lăn chuột)"><FontIcon Glyph="&#xE8A3;" FontSize="12" /></Button>
+                <Button Content="Vừa cửa sổ" Click="Fit_Click" ToolTipService.ToolTip="Ctrl+0" />
+                <Button Content="100%" Click="ActualSize_Click" ToolTipService.ToolTip="Ctrl+1" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

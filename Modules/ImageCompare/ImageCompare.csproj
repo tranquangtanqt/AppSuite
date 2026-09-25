@@ -1,0 +1,100 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>ImageCompare</RootNamespace>
+    <AssemblyName>ImageCompare</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
+    <PublishProfile>win-$(Platform).pubxml</PublishProfile>
+    <UseWinUI>true</UseWinUI>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <!--
+    ImageCompare (So sánh ảnh) is a fully standalone WinUI 3 app: it opens, builds and runs on its own
+    (right-click ImageCompare.csproj > Set as Startup Project, or `dotnet run` from this folder). It only
+    references Common (logging) and SharedUI - never MainLauncher, never another module (image file /
+    clipboard helpers are copied from ScreenCapture, not referenced).
+  -->
+
+  <ItemGroup>
+    <Content Include="Assets\SplashScreen.scale-200.png" />
+    <Content Include="Assets\LockScreenLogo.scale-200.png" />
+    <Content Include="Assets\Square150x150Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.scale-200.png" />
+    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Manifest Include="$(ApplicationManifest)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <ProjectCapability Include="Msix" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="2.88.8" />
+    <!-- Tìm chữ (OCR): wrapper + tesseract50.dll / leptonica native (tự chép vào x64\ / x86\ cạnh exe). -->
+    <PackageReference Include="Tesseract" Version="5.2.0" />
+  </ItemGroup>
+
+  <!--
+    Dữ liệu OCR tiếng Việt (tessdata_fast, cũng đọc được chữ tiếng Anh) → tessdata\ cạnh exe.
+    tesseract50.dll cần VC++ runtime (msvcp140 / vcruntime140) - chép kèm cạnh exe (app-local, được phép phân
+    phối lại) để chạy được cả máy chưa cài VC++ Redistributable. ARM64: gói Tesseract không có bản native → chế độ
+    Tìm chữ báo lỗi, các chế độ khác vẫn chạy.
+  -->
+  <ItemGroup>
+    <None Include="Ocr\tessdata\*.traineddata" Link="tessdata\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)' == 'x64' or '$(RuntimeIdentifier)' == 'win-x64'">
+    <None Include="Ocr\vcruntime\win-x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'">
+    <None Include="Ocr\vcruntime\win-x86\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <!-- Gói Tesseract chép native cả x86\ lẫn x64\ - bỏ bản của kiến trúc kia (~5 MB). Làm trong target vì item của
+       gói được thêm sau phần thân csproj. -->
+  <Target Name="DropOtherArchTesseract" BeforeTargets="AssignTargetPaths">
+    <PropertyGroup>
+      <_TesseractOtherArch Condition="'$(Platform)' == 'x64' or '$(RuntimeIdentifier)' == 'win-x64'">x86\</_TesseractOtherArch>
+      <_TesseractOtherArch Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'">x64\</_TesseractOtherArch>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_TesseractOtherArch)' != ''">
+      <None Remove="@(None)" Condition="$([System.String]::Copy('%(None.Link)').StartsWith('$(_TesseractOtherArch)'))" />
+    </ItemGroup>
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\SharedUI\SharedUI.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
+    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
+    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
+    <PublishTrimmed Condition="'$(Configuration)' == 'Debug' or '$(SelfContained)' != 'true'">False</PublishTrimmed>
+    <PublishTrimmed Condition="'$(Configuration)' != 'Debug' and '$(SelfContained)' == 'true'">True</PublishTrimmed>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <WindowsPackageType>None</WindowsPackageType>
+  </PropertyGroup>
+</Project>
