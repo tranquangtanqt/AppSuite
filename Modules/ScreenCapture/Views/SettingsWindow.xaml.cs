@@ -43,6 +43,13 @@ public sealed partial class SettingsWindow : Window
         DelayBox.Minimum = 0; DelayBox.Maximum = 10; DelayBox.SmallChange = 1;
         MaxTabsBox.Minimum = 1; MaxTabsBox.Maximum = 100; MaxTabsBox.SmallChange = 1;
         MaxMegabytesBox.Minimum = 50; MaxMegabytesBox.Maximum = 5000; MaxMegabytesBox.SmallChange = 50;
+        SetRange(ScrollMaxStepsBox, AppSettings.ScrollMaxStepsRange, 10);
+        SetRange(ScrollMaxLengthBox, AppSettings.ScrollMaxLengthRange, 1000);
+        SetRange(ScrollSettleBox, AppSettings.ScrollSettleMsRange, 50);
+        var defaults = new AppSettings();
+        ScrollMaxStepsHint.Text = $"Mỗi lần lăn khoảng 1/3 vùng chọn. Vùng chọn thấp/hẹp mà trang rất dài thì cần nhiều lần hơn. Mặc định {defaults.ScrollMaxSteps}, từ {AppSettings.ScrollMaxStepsRange.Min} tới {AppSettings.ScrollMaxStepsRange.Max}.";
+        ScrollMaxLengthHint.Text = string.Create(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), $"Chiều cao ảnh ghép khi cuộn dọc, chiều rộng khi cuộn ngang. Ảnh càng dài càng tốn RAM (rộng 2000px × dài 60.000px ≈ 480 MB). Mặc định {defaults.ScrollMaxLength:N0}, từ {AppSettings.ScrollMaxLengthRange.Min:N0} tới {AppSettings.ScrollMaxLengthRange.Max:N0}.");
+        ScrollSettleHint.Text = $"Thời gian chờ trang cuộn xong và vẽ lại trước khi chụp khung tiếp. Tăng lên nếu trang tải chậm, cuộn mượt lâu, ảnh bị thiếu hoặc lặp/lệch; dưới 300 ms chỉ nên dùng cho app không cuộn mượt. Mặc định {defaults.ScrollSettleMs}, từ {AppSettings.ScrollSettleMsRange.Min} tới {AppSettings.ScrollSettleMsRange.Max}.";
 
         BuildHotkeyGrid();
         FillFrom(current);
@@ -96,6 +103,9 @@ public sealed partial class SettingsWindow : Window
         RememberTabsBox.IsChecked = s.RememberTabs;
         MaxTabsBox.Value = s.SessionMaxTabs;
         MaxMegabytesBox.Value = s.SessionMaxMegabytes;
+        ScrollMaxStepsBox.Value = s.ScrollMaxSteps;
+        ScrollMaxLengthBox.Value = s.ScrollMaxLength;
+        ScrollSettleBox.Value = s.ScrollSettleMs;
         foreach (var (action, row) in _hotkeyRows)
         {
             var binding = s.GetHotkey(action);
@@ -109,6 +119,7 @@ public sealed partial class SettingsWindow : Window
     private AppSettings ReadSettings()
     {
         static int Int(NumberBox box, int fallback) => double.IsNaN(box.Value) ? fallback : (int)box.Value;
+        var defaults = new AppSettings();
 
         var s = new AppSettings
         {
@@ -121,6 +132,9 @@ public sealed partial class SettingsWindow : Window
             RememberTabs = RememberTabsBox.IsChecked == true,
             SessionMaxTabs = Int(MaxTabsBox, 30),
             SessionMaxMegabytes = Int(MaxMegabytesBox, 300),
+            ScrollMaxSteps = Int(ScrollMaxStepsBox, defaults.ScrollMaxSteps),
+            ScrollMaxLength = Int(ScrollMaxLengthBox, defaults.ScrollMaxLength),
+            ScrollSettleMs = Int(ScrollSettleBox, defaults.ScrollSettleMs),
             Hotkeys = [],
         };
         foreach (var (action, row) in _hotkeyRows)
@@ -154,7 +168,16 @@ public sealed partial class SettingsWindow : Window
         GeneralPage.Visibility = tag == "General" ? Visibility.Visible : Visibility.Collapsed;
         AutoSavePage.Visibility = tag == "AutoSave" ? Visibility.Visible : Visibility.Collapsed;
         SessionPage.Visibility = tag == "Session" ? Visibility.Visible : Visibility.Collapsed;
+        ScrollPage.Visibility = tag == "Scroll" ? Visibility.Visible : Visibility.Collapsed;
         HotkeysPage.Visibility = tag == "Hotkeys" ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void SelectCategory(string tag) =>
+        CategoryList.SelectedItem = CategoryList.Items.OfType<ListViewItem>().First(i => (string)i.Tag == tag);
+
+    private static void SetRange(NumberBox box, (int Min, int Max) range, int step)
+    {
+        box.Minimum = range.Min; box.Maximum = range.Max; box.SmallChange = step; box.LargeChange = step * 10;
     }
 
     private void AutoSaveBox_Changed(object sender, RoutedEventArgs e) =>
@@ -190,7 +213,7 @@ public sealed partial class SettingsWindow : Window
         if (settings.AutoSave && string.IsNullOrWhiteSpace(settings.AutoSaveFolder))
         {
             ValidationText.Text = "Chọn thư mục cho Tự động lưu.";
-            CategoryList.SelectedIndex = 1;
+            SelectCategory("AutoSave");
             return;
         }
 
@@ -199,7 +222,7 @@ public sealed partial class SettingsWindow : Window
         if (duplicate is not null)
         {
             ValidationText.Text = $"Tổ hợp {duplicate.Key} đang dùng cho nhiều thao tác.";
-            CategoryList.SelectedIndex = 3;
+            SelectCategory("Hotkeys");
             return;
         }
 
@@ -209,7 +232,7 @@ public sealed partial class SettingsWindow : Window
             // Đã lưu, nhưng giữ cửa sổ mở để người dùng đổi các phím bị chiếm.
             ShowHotkeyStatus(failed.Select(f => f.Action));
             ValidationText.Text = "Đã lưu. Phím tắt có ⚠ đang bị chiếm, hãy chọn tổ hợp khác (hoặc bấm Huỷ để đóng).";
-            CategoryList.SelectedIndex = 3;
+            SelectCategory("Hotkeys");
             return;
         }
         Close();

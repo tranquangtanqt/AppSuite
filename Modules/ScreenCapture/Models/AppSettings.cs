@@ -28,6 +28,21 @@ public sealed class AppSettings
     public int SessionMaxTabs { get; set; } = 30;
     public int SessionMaxMegabytes { get; set; } = 300;
 
+    // ---- Chụp cuộn (xem Services/ScrollCaptureService.cs) ----
+    /// <summary>Số lần cuộn tối đa. 150: vùng chọn thấp/hẹp thì mỗi bước cuộn ít (đã gặp khi test cuộn
+    /// ngang: 80 bước chưa hết nội dung).</summary>
+    public int ScrollMaxSteps { get; set; } = 150;
+    /// <summary>Độ dài ảnh ghép tối đa theo chiều cuộn (px) - cao khi cuộn dọc, rộng khi cuộn ngang.</summary>
+    public int ScrollMaxLength { get; set; } = 30000;
+    /// <summary>Chờ sau mỗi lần lăn chuột trước khi chụp (ms) - tăng lên cho trang tải/vẽ chậm.</summary>
+    public int ScrollSettleMs { get; set; } = 450;
+
+    public static readonly (int Min, int Max) ScrollMaxStepsRange = (10, 1000);
+    // Trên 60.000px ảnh ghép (vd 2000px × 60.000px ≈ 480 MB RAM) dễ làm Editor chậm / hết bộ nhớ.
+    public static readonly (int Min, int Max) ScrollMaxLengthRange = (2000, 60000);
+    // Tối thiểu 200ms: chờ quá ngắn thì trang cuộn mượt / vẽ chậm chưa kịp đổi → tưởng đã tới cuối và dừng sớm.
+    public static readonly (int Min, int Max) ScrollSettleMsRange = (200, 3000);
+
     // ---- Phím tắt toàn cục ----
     public List<HotkeyBinding> Hotkeys { get; set; } = DefaultHotkeys();
 

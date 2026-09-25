@@ -19,7 +19,8 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
 - **Cuộn dọc** (phím tắt mặc định `Ctrl+Alt+PrtSc`, hoặc menu khay) — kéo chọn vùng nội dung cần
   cuộn (trang web, tài liệu, danh sách...; nên bỏ thanh menu cố định ra ngoài vùng). App đưa cửa sổ đó
   lên, tự lăn chuột trong vùng, chụp từng khung và ghép thành 1 ảnh dài. Dừng khi tới cuối trang, khi
-  bấm **Esc**, hoặc chạm giới hạn 150 lần cuộn / 30.000px. Đầu/chân trang cố định trong vùng chỉ giữ
+  bấm **Esc**, hoặc chạm giới hạn số lần cuộn / độ dài ảnh (mặc định 150 lần / 30.000px, đổi trong
+  Cài đặt > Chụp cuộn). Đầu/chân trang cố định trong vùng chỉ giữ
   1 lần; viền, khung focus, thanh cuộn lọt vào vùng chọn không làm hỏng việc ghép. Thanh trạng thái
   Editor ghi số khung, kích thước và lý do dừng. Nội dung tự thay đổi (video, ảnh động, trang tự tải
   thêm khi cuộn) có thể làm dừng sớm — app giữ phần đã ghép được.
@@ -27,7 +28,7 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   nhưng cuộn sang phải và ghép thành 1 ảnh rộng (bảng tính, timeline, bảng nhiều cột...; nên bỏ cột
   cố định bên trái ra ngoài vùng). App lăn ngang (bánh xe ngang / touchpad); nếu cửa sổ không phản
   ứng thì tự chuyển sang **Shift + lăn chuột** (cách trình duyệt, Excel cuộn ngang). Dừng khi tới
-  mép phải, Esc, hoặc cùng giới hạn như cuộn dọc (30.000px theo chiều rộng).
+  mép phải, Esc, hoặc cùng giới hạn như cuộn dọc (độ dài ảnh tính theo chiều rộng).
 
 ### Cài đặt (`SettingsWindow`)
 
@@ -40,6 +41,7 @@ tuỳ chọn về ban đầu.
 | Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard; chạy ngầm ở khay hệ thống; khởi động cùng Windows |
 | Tự động lưu | Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên = thời điểm chụp; ảnh đã tự lưu đóng tab không hỏi lại |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
+| Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |
 | Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
 
 - Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`,

@@ -1,3 +1,4 @@
+using ScreenCapture.Models;
 using ScreenCapture.Services.Interop;
 using SkiaSharp;
 
@@ -42,18 +43,22 @@ public sealed record ScrollCaptureResult(SKBitmap Image, int Frames, ScrollStopR
 /// </summary>
 public sealed class ScrollCaptureService
 {
-    // 150 bước: vùng chọn thấp/hẹp thì mỗi bước cuộn ít (đã gặp khi test cuộn ngang: 80 bước chưa hết
-    // nội dung) - giới hạn chính vẫn là MaxHeight.
-    public const int MaxSteps = 150;
-    public const int MaxHeight = 30000;
-    private const int ScrollSettleMs = 450; // chờ cuộn mượt (smooth scrolling) của trình duyệt dừng hẳn
     private const double MinMatchRatio = 0.9;
 
     private readonly ICaptureService _capture;
 
-    public ScrollCaptureService(ICaptureService capture)
+    /// <summary>Giới hạn số lần cuộn / độ dài ảnh (theo chiều cuộn) và thời gian chờ sau mỗi lần lăn -
+    /// lấy từ Cài đặt > Chụp cuộn (xem <see cref="AppSettings"/>), giá trị lạ bị kẹp về khoảng hợp lệ.</summary>
+    public int MaxSteps { get; }
+    public int MaxLength { get; }
+    private readonly int _settleMs; // chờ cuộn mượt (smooth scrolling) của trình duyệt dừng hẳn
+
+    public ScrollCaptureService(ICaptureService capture, AppSettings settings)
     {
         _capture = capture;
+        MaxSteps = Math.Clamp(settings.ScrollMaxSteps, AppSettings.ScrollMaxStepsRange.Min, AppSettings.ScrollMaxStepsRange.Max);
+        MaxLength = Math.Clamp(settings.ScrollMaxLength, AppSettings.ScrollMaxLengthRange.Min, AppSettings.ScrollMaxLengthRange.Max);
+        _settleMs = Math.Clamp(settings.ScrollSettleMs, AppSettings.ScrollSettleMsRange.Min, AppSettings.ScrollSettleMsRange.Max);
     }
 
     private bool _horizontal;
@@ -106,7 +111,7 @@ public sealed class ScrollCaptureService
                 }
 
                 Scroll();
-                await Task.Delay(ScrollSettleMs);
+                await Task.Delay(_settleMs);
                 if (EscapePressed())
                 {
                     reason = ScrollStopReason.Cancelled;
@@ -128,7 +133,7 @@ public sealed class ScrollCaptureService
                         _useShiftWheel = true;
                     }
                     Scroll();
-                    await Task.Delay(ScrollSettleMs);
+                    await Task.Delay(_settleMs);
                     current = CaptureFrame(rect);
                     currentRows = RowInfo.Of(current);
                 }
@@ -153,7 +158,7 @@ public sealed class ScrollCaptureService
                 {
                     // Có thể còn đang cuộn mượt / vẽ lại → chờ thêm, chụp lại khung này rồi thử 1 lần nữa.
                     current.Dispose();
-                    await Task.Delay(ScrollSettleMs);
+                    await Task.Delay(_settleMs);
                     current = CaptureFrame(rect);
                     currentRows = RowInfo.Of(current);
                     (maskedPrev, maskedCur) = MaskedRows(previous, current);
@@ -179,7 +184,7 @@ public sealed class ScrollCaptureService
                 previous = current;
                 previousRows = currentRows;
 
-                if (previous.Height + totalHeight >= MaxHeight)
+                if (previous.Height + totalHeight >= MaxLength) // cuộn ngang: "Height" là chiều rộng (khung đã chuyển vị)
                 {
                     reason = ScrollStopReason.LimitReached;
                     break;

@@ -41,6 +41,7 @@
             <ListViewItem Tag="General">Chung</ListViewItem>
             <ListViewItem Tag="AutoSave">Tự động lưu</ListViewItem>
             <ListViewItem Tag="Session">Phiên làm việc</ListViewItem>
+            <ListViewItem Tag="Scroll">Chụp cuộn</ListViewItem>
             <ListViewItem Tag="Hotkeys">Phím tắt</ListViewItem>
         </ListView>
 
@@ -106,6 +107,37 @@
                             <TextBlock x:Name="SessionFolderText" IsTextSelectionEnabled="True" TextWrapping="Wrap" Style="{StaticResource HintStyle}" />
                             <Button Content="Mở thư mục" Click="OpenSessionFolder_Click" />
                         </StackPanel>
+                    </StackPanel>
+
+                    <!-- Chụp cuộn -->
+                    <StackPanel x:Name="ScrollPage" Spacing="16" Visibility="Collapsed">
+                        <TextBlock Text="Chụp cuộn" Style="{StaticResource PageHeaderStyle}" />
+                        <StackPanel Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Cuộn tối đa" VerticalAlignment="Center" />
+                                <NumberBox x:Name="ScrollMaxStepsBox" Width="110" SpinButtonPlacementMode="Compact" />
+                                <TextBlock Text="lần" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock x:Name="ScrollMaxStepsHint" Style="{StaticResource HintStyle}" />
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Độ dài ảnh tối đa" VerticalAlignment="Center" />
+                                <NumberBox x:Name="ScrollMaxLengthBox" Width="130" SpinButtonPlacementMode="Compact" />
+                                <TextBlock Text="px" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock x:Name="ScrollMaxLengthHint" Style="{StaticResource HintStyle}" />
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Chờ sau mỗi lần cuộn" VerticalAlignment="Center" />
+                                <NumberBox x:Name="ScrollSettleBox" Width="110" SpinButtonPlacementMode="Compact" />
+                                <TextBlock Text="ms" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock x:Name="ScrollSettleHint" Style="{StaticResource HintStyle}" />
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource HintStyle}"
+                                   Text="Chụp cuộn dừng ở giới hạn nào tới trước (hoặc khi tới cuối trang / bấm Esc). Áp dụng cho cả cuộn dọc và cuộn ngang, từ lần chụp tiếp theo." />
                     </StackPanel>
 
                     <!-- Phím tắt -->

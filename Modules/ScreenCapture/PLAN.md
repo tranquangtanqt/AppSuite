@@ -374,6 +374,17 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
     đặt toàn cục thì SharedUI báo lỗi "should not be applied to a class library") và chép thêm thư mục
     `SharedUI\` từ bin (bản Debug không nhúng XBF của SharedUI vào `.pri`; bản Release thì có, nên bản
     deploy qua `build\Publish-AppSuite.ps1` không bị ảnh hưởng).
+- **Giới hạn chụp cuộn chỉnh được trong Cài đặt** (người dùng yêu cầu, thay vì hằng số): trang mới
+  *Chụp cuộn* trong `SettingsWindow` — `AppSettings.ScrollMaxSteps` (10–1000, mặc định 150),
+  `ScrollMaxLength` (2.000–60.000px theo chiều cuộn, mặc định 30.000; trần 60.000 vì ảnh rộng 2000px ×
+  60.000px ≈ 480 MB RAM), `ScrollSettleMs` (200–3000ms, mặc định 450; ban đầu cho tối thiểu 100 nhưng hạ thấp vậy dễ dừng sớm "tới cuối" ở trang cuộn mượt → nâng lên 200). Khoảng hợp lệ là hằng
+  `*Range` trong `AppSettings`, dùng chung cho NumberBox và cho `ScrollCaptureService` (constructor nhận
+  `AppSettings`, kẹp giá trị lạ từ file sửa tay). File cài đặt cũ thiếu 3 khoá → mặc định. Thông báo
+  "chạm giới hạn" ở Editor chỉ tới Cài đặt > Chụp cuộn. Chọn trang theo `Tag` (`SelectCategory`) thay vì
+  chỉ số, vì chèn trang làm lệch `SelectedIndex`.
+  - **Đã chạy thử trong Sandbox**: 10 lần cuộn + chờ 200ms → dừng đúng sau 10 lần lăn (11 khung, ảnh
+    2654px = 654 + 10 × 200, khớp pixel 100%, 6 giây); mặc định cuộn ngang vẫn đủ 11960px, khớp 100%;
+    chụp màn hình trang Cài đặt mới (mở qua UI Automation) hiển thị đúng.
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 

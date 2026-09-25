@@ -326,14 +326,15 @@ public sealed partial class CaptureLauncherWindow : Window
             }
 
             await Task.Delay(250); // chờ overlay đóng hẳn, cửa sổ bên dưới vẽ lại
-            var result = await new ScrollCaptureService(_captureService).CaptureAsync(selection.Value, direction);
+            var scroller = new ScrollCaptureService(_captureService, _settings);
+            var result = await scroller.CaptureAsync(selection.Value, direction);
             await FinishCaptureAsync(result.Image);
 
             string reason = result.Reason switch
             {
                 ScrollStopReason.ReachedEnd => horizontal ? "đã tới mép phải" : "đã tới cuối",
                 ScrollStopReason.Cancelled => "dừng bằng Esc",
-                ScrollStopReason.LimitReached => $"chạm giới hạn ({ScrollCaptureService.MaxSteps} lần cuộn / {ScrollCaptureService.MaxHeight}px)",
+                ScrollStopReason.LimitReached => $"chạm giới hạn ({scroller.MaxSteps} lần cuộn / {scroller.MaxLength}px — đổi trong Cài đặt > Chụp cuộn)",
                 _ => "không ghép tiếp được (nội dung thay đổi hoặc cuộn quá xa) - đã giữ phần ghép được",
             };
             if (_editor?.CurrentDocument is { } document)
