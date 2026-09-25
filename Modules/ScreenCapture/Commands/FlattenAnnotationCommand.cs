@@ -29,7 +29,7 @@ public sealed class FlattenAnnotationCommand : IEditCommand
         _newBitmap = new SKBitmap(info);
         using var canvas = new SKCanvas(_newBitmap);
         canvas.DrawBitmap(oldBitmap, 0, 0);
-        shape.Render(canvas);
+        shape.Render(canvas, oldBitmap);
     }
 
     public string Description => "Flatten stamp";

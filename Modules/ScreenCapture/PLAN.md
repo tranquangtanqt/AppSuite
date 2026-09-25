@@ -385,6 +385,22 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   - **Đã chạy thử trong Sandbox**: 10 lần cuộn + chờ 200ms → dừng đúng sau 10 lần lăn (11 khung, ảnh
     2654px = 654 + 10 × 200, khớp pixel 100%, 6 giây); mặc định cuộn ngang vẫn đủ 11960px, khớp 100%;
     chụp màn hình trang Cài đặt mới (mở qua UI Automation) hiển thị đúng.
+- **Che thông tin nhạy cảm — Mosaic / Làm mờ** (nhóm ribbon "Che", `Models/RedactAnnotation.cs`):
+  - Là 1 shape (`RedactAnnotation`, `Mode` = Mosaic | Blur), không phải thao tác pixel như Tô màu → che
+    chỉ khi người dùng chủ động vẽ, di chuyển / co giãn / xoá / Undo được, ảnh gốc giữ nguyên tới khi
+    Lưu / Copy / Flatten. Mức độ dùng lại `StrokeWidth` (thanh Size 1–20) → panel chỉnh shape đã chọn,
+    `ChangeAnnotationStyleCommand` và lưu phiên dùng được luôn; Color không áp dụng.
+  - Cần pixel ảnh nền → thêm `AnnotationShape.Render(canvas, baseImage)` (mặc định gọi `Render(canvas)`),
+    4 chỗ vẽ shape (canvas Editor, hình nháp, `RenderComposited`, Flatten) truyền ảnh nền. Chỉ che ảnh
+    nền, không che shape nằm dưới. `Render(canvas)` không có ảnh nền → tô xám đặc (không lộ nội dung).
+  - Mosaic: thu nhỏ vùng về 1 pixel/ô (lọc Medium = trung bình), phóng to lại không nội suy; ô =
+    4 + Size × 2 px. Blur: `SKImageFilter.CreateBlur` sigma = 3 + Size, lấy thêm viền 3σ pixel thật quanh
+    vùng để mép mờ đều. Kết quả cache theo (ảnh nền, vùng, Size) — không tính lại mỗi lần vẽ canvas.
+  - Lưu phiên: `ShapeDto.RedactMode`.
+  - **Đã chạy thử trong Sandbox** (Editor thật, thao tác chuột + UI Automation): Mosaic và Làm mờ che
+    kín chữ, phần ngoài vùng nguyên vẹn, ảnh Copy ra clipboard đã che; chọn lại vùng Mosaic + Size 12 →
+    ô to hơn; Ctrl+Z ×2 gỡ đúng việc đổi Size và vùng Làm mờ. Chưa thử qua GUI: Flatten, nhớ vùng che
+    qua phiên (mở lại app).
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 
@@ -419,11 +435,9 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
 
 ## Chưa làm (fast-follow)
 
-- Editor: Blur/Mosaic (khác Fill — làm mờ/che chứ không đổi màu), Freehand pen, crop không phá huỷ.
+- Editor: Freehand pen, crop không phá huỷ. (Blur/Mosaic **đã làm** — nhóm "Che".)
   (Resize shape qua 4 handle góc và đổi hướng/độ dài Line/Arrow qua 2 handle đầu mút **đã làm**.)
 - Fixed Region: lưu vị trí/kích thước qua lần restart app (hiện chỉ session-only, mất khi đóng app).
 - Window capture: chọn cửa sổ khác ngoài foreground window (cần `EnumWindows` + UI danh sách chọn).
-- Hotkey toàn cục (`RegisterHotKey`) để kích hoạt capture từ bên ngoài app — hiện chỉ mở được từ
-  `CaptureLauncherWindow`.
 - Logging: module chưa wire `Common.Logging` (không module nào khác trong repo hiện dùng logging
   ngoài MainLauncher) — cân nhắc thêm sau vì module có nhiều edge case Win32 khó debug.

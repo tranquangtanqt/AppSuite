@@ -65,7 +65,7 @@ public sealed partial class EditorWindow : Window
     // Flyout property) - nó không có IsChecked nên không nằm trong danh sách bật/tắt dưới đây.
     private List<ToggleButton> ToolButtons => [
         MoveToolButton, SelectToolButton, RectangleToolButton, EllipseToolButton, LineToolButton, ArrowToolButton,
-        HighlightToolButton, TextToolButton, FillToolButton,
+        HighlightToolButton, TextToolButton, FillToolButton, MosaicToolButton, BlurToolButton,
     ];
 
     /// <param name="restored">Các tab của phiên trước (SessionService.Load), có thể rỗng.</param>
@@ -523,9 +523,9 @@ public sealed partial class EditorWindow : Window
         canvas.DrawBitmap(_viewModel.Bitmap, 0, 0);
         foreach (var shape in _viewModel.Annotations)
         {
-            shape.Render(canvas);
+            shape.Render(canvas, _viewModel.Bitmap);
         }
-        _draftShape?.Render(canvas);
+        _draftShape?.Render(canvas, _viewModel.Bitmap);
 
         if (_viewModel.SelectedAnnotation is { } selected)
         {
@@ -987,6 +987,15 @@ public sealed partial class EditorWindow : Window
                 _draftShape = new HighlightAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y), Color = _viewModel.FillColor.WithAlpha(90) };
                 Canvas.CapturePointer(e.Pointer);
                 break;
+            case CaptureTool.Mosaic or CaptureTool.Blur:
+                _draftShape = new RedactAnnotation
+                {
+                    Mode = _viewModel.SelectedTool == CaptureTool.Mosaic ? RedactMode.Mosaic : RedactMode.Blur,
+                    Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y),
+                    StrokeWidth = _viewModel.StrokeWidth,
+                };
+                Canvas.CapturePointer(e.Pointer);
+                break;
             case CaptureTool.Text:
                 // Đang chọn shape mà bấm ra vùng trống = chỉ bỏ chọn, không bật hộp nhập text ngoài ý muốn.
                 if (!hadSelection)
@@ -1412,6 +1421,8 @@ public sealed partial class EditorWindow : Window
     private void HighlightToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Highlight, HighlightToolButton);
     private void TextToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Text, TextToolButton);
     private void FillToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Fill, FillToolButton);
+    private void MosaicToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Mosaic, MosaicToolButton);
+    private void BlurToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Blur, BlurToolButton);
 
     private void StampItem_Click(object sender, RoutedEventArgs e)
     {
@@ -1493,7 +1504,12 @@ public sealed partial class EditorWindow : Window
     {
         if (_viewModel.SelectedAnnotation is { } shape)
         {
-            var color = shape is HighlightAnnotation ? _viewModel.FillColor.WithAlpha(90) : _viewModel.StrokeColor;
+            var color = shape switch
+            {
+                HighlightAnnotation => _viewModel.FillColor.WithAlpha(90),
+                RedactAnnotation => shape.Color, // không dùng màu - chỉ Size (mức độ che) áp dụng
+                _ => _viewModel.StrokeColor,
+            };
             _viewModel.ChangeAnnotationStyle(shape, color, _viewModel.StrokeWidth);
             Canvas.Invalidate();
         }

@@ -201,6 +201,9 @@ public sealed class SessionService
                 dto.NumberValue = stamp.NumberValue;
                 dto.OutlineColor = (uint)stamp.OutlineColor;
                 break;
+            case RedactAnnotation redact:
+                dto.RedactMode = redact.Mode.ToString();
+                break;
         }
         return dto;
     }
@@ -212,6 +215,10 @@ public sealed class SessionService
             nameof(RectangleAnnotation) => new RectangleAnnotation(),
             nameof(EllipseAnnotation) => new EllipseAnnotation(),
             nameof(HighlightAnnotation) => new HighlightAnnotation(),
+            nameof(RedactAnnotation) => new RedactAnnotation
+            {
+                Mode = Enum.TryParse<RedactMode>(dto.RedactMode, out var mode) ? mode : RedactMode.Mosaic,
+            },
             nameof(LineArrowAnnotation) => new LineArrowAnnotation { IsArrow = dto.IsArrow ?? true },
             nameof(TextAnnotation) => new TextAnnotation { Text = dto.Text ?? string.Empty, FontSize = dto.FontSize ?? 20f },
             nameof(StampAnnotation) when Enum.TryParse<StampKind>(dto.StampKind, out var kind) => new StampAnnotation
@@ -277,6 +284,7 @@ public sealed class SessionService
         public string? StampKind { get; set; }
         public int? NumberValue { get; set; }
         public uint? OutlineColor { get; set; }
+        public string? RedactMode { get; set; }
         public string? Image { get; set; }
     }
 }

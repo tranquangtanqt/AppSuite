@@ -319,7 +319,7 @@ public sealed partial class EditorViewModel : ObservableObject
         canvas.DrawBitmap(Bitmap, 0, 0);
         foreach (var shape in Annotations)
         {
-            shape.Render(canvas);
+            shape.Render(canvas, Bitmap);
         }
         return result;
     }

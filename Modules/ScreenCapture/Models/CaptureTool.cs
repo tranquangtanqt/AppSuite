@@ -15,4 +15,7 @@ public enum CaptureTool
     Text,
     Fill,
     Stamp,
+    /// <summary>Che vùng bằng ô vuông pixel / làm mờ (RedactAnnotation).</summary>
+    Mosaic,
+    Blur,
 }

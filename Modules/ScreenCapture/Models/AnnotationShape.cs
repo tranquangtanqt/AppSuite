@@ -28,4 +28,8 @@ public abstract class AnnotationShape
 
     public abstract string DisplayName { get; }
     public abstract void Render(SKCanvas canvas);
+
+    /// <summary>Vẽ lên trên <paramref name="baseImage"/> (ảnh nền của tab, cùng hệ toạ độ). Chỉ shape cần
+    /// đọc pixel ảnh nền (<see cref="RedactAnnotation"/>) override; mọi chỗ vẽ shape lên ảnh gọi bản này.</summary>
+    public virtual void Render(SKCanvas canvas, SKBitmap baseImage) => Render(canvas);
 }

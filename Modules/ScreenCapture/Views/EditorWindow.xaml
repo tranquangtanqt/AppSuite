@@ -230,6 +230,29 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Che thông tin nhạy cảm (RedactAnnotation): kéo khung lên vùng cần che; Size = mức độ che. -->
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <ToggleButton x:Name="MosaicToolButton" Style="{StaticResource ToolButtonStyle}" Click="MosaicToolButton_Click"
+                                              ToolTipService.ToolTip="Che bằng ô vuông pixel - kéo khung lên vùng cần che (mật khẩu, email...). Size = cỡ ô.">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE80A;" />
+                                        <TextBlock Text="Mosaic" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <ToggleButton x:Name="BlurToolButton" Style="{StaticResource ToolButtonStyle}" Click="BlurToolButton_Click"
+                                              ToolTipService.ToolTip="Che bằng cách làm mờ - kéo khung lên vùng cần che. Size = độ mờ (chữ nhỏ nên để Size cao hoặc dùng Mosaic).">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xED1A;" />
+                                        <TextBlock Text="Làm mờ" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                            </StackPanel>
+                            <TextBlock Text="Che" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="2">

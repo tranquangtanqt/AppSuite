@@ -137,6 +137,15 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
       Số **tự tăng** mỗi lần đặt (1, 2, 3...).
     - **General Stamps** — mũi tên 8 hướng, bookmark, pin, flag, tag, info, warning, no-entry,
       heart, plus, minus, check, cross, star. Đặt lên ảnh theo màu Color1 hiện tại.
+- **Che** — che thông tin nhạy cảm (mật khẩu, email, số tài khoản...) trước khi gửi ảnh. Chỉ che
+  khi bạn chủ động dùng: chọn công cụ rồi kéo khung lên vùng cần che; không dùng thì ảnh giữ nguyên.
+  - *Mosaic* — ô vuông pixel (mỗi ô = màu trung bình vùng bên dưới). *Size* = cỡ ô (Size 3 ≈ 10px,
+    20 ≈ 44px).
+  - *Làm mờ* — làm mờ Gauss. *Size* = độ mờ. Chữ nhỏ mà Size thấp có thể vẫn đoán được — nên để
+    Size cao hoặc dùng Mosaic.
+  - Vùng che là 1 shape: chọn lại để di chuyển / co giãn / đổi Size / xoá, Undo được, nhớ qua phiên
+    làm việc. Ảnh chỉ thật sự bị che khi *Lưu* / *Copy* / *Flatten*. Chỉ che ảnh chụp bên dưới, không
+    che các shape (chữ, mũi tên...) vẽ trước đó ở cùng chỗ.
 - **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ), *Undo* / *Redo* từng bước, *Dán*
   (`Ctrl+V`): dán ảnh trong clipboard (ảnh copy từ app khác, hoặc file ảnh copy trong Explorer) thành
   1 đối tượng ảnh — đặt ở góc trên-trái vùng chọn (nếu có) hoặc phần ảnh đang nhìn thấy, được chọn sẵn
