@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -31,6 +32,8 @@ public sealed class StampPickerItem
 /// MainWindow uses) - EditorViewModel itself never references WinUI/Skia UI types beyond SKBitmap.</summary>
 public sealed partial class EditorWindow : Window
 {
+    private static readonly ILogger Log = AppLog.For(nameof(EditorWindow));
+
     /// <summary>Ảnh (tab) đang hiển thị. Mỗi lần chụp là 1 EditorViewModel riêng (bitmap, shape, lịch sử
     /// Undo riêng) nằm trong Tag của 1 TabViewItem; đổi tab = đổi _viewModel (xem SwitchTo).</summary>
     private EditorViewModel _viewModel = null!;
@@ -66,7 +69,7 @@ public sealed partial class EditorWindow : Window
     // Flyout property) - nó không có IsChecked nên không nằm trong danh sách bật/tắt dưới đây.
     private List<ToggleButton> ToolButtons => [
         MoveToolButton, SelectToolButton, RectangleToolButton, EllipseToolButton, LineToolButton, ArrowToolButton,
-        HighlightToolButton, TextToolButton, FillToolButton, MosaicToolButton, BlurToolButton,
+        PenToolButton, HighlightToolButton, TextToolButton, FillToolButton, MosaicToolButton, BlurToolButton,
     ];
 
     /// <param name="restored">Các tab của phiên trước (SessionService.Load), có thể rỗng.</param>
@@ -216,6 +219,7 @@ public sealed partial class EditorWindow : Window
         }
         catch (Exception ex)
         {
+            Log.LogError(ex, "Không lưu tạm được phiên làm việc");
             if (_viewModel is not null)
             {
                 _viewModel.StatusText = $"Không lưu tạm được phiên làm việc: {ex.Message}";
@@ -393,6 +397,7 @@ public sealed partial class EditorWindow : Window
             }
             catch (Exception ex)
             {
+                Log.LogError(ex, "Lưu tất cả: không lưu được {Title} vào {Folder}", vm.Title, folder);
                 failed.Add($"{vm.Title}: {ex.Message}");
             }
         }
@@ -714,6 +719,7 @@ public sealed partial class EditorWindow : Window
         catch (Exception ex)
         {
             // Clipboard WinRT có thể lỗi ở app unpackaged / định dạng ảnh lạ - báo thay vì crash.
+            Log.LogError(ex, "Không dán được ảnh từ clipboard");
             _viewModel.StatusText = $"Không dán được ảnh: {ex.Message}";
         }
     }
@@ -957,7 +963,9 @@ public sealed partial class EditorWindow : Window
 
         // Với MỌI công cụ: bấm trúng handle / shape có sẵn thì chọn + kéo shape đó (không cần chuyển
         // sang "Di chuyển" trước). Chỉ khi bấm vào vùng trống mới bỏ chọn và dùng công cụ hiện tại.
-        if (TryBeginEditExisting(pos, e))
+        // Riêng Bút: luôn vẽ nét mới (viết / khoanh chồng lên hình khác là bình thường) - chỉnh nét đã vẽ
+        // bằng công cụ Di chuyển.
+        if (_viewModel.SelectedTool != CaptureTool.Pen && TryBeginEditExisting(pos, e))
         {
             return;
         }
@@ -982,6 +990,12 @@ public sealed partial class EditorWindow : Window
                 break;
             case CaptureTool.Arrow:
                 _draftShape = new LineArrowAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y), Color = _viewModel.StrokeColor, StrokeWidth = _viewModel.StrokeWidth };
+                Canvas.CapturePointer(e.Pointer);
+                break;
+            case CaptureTool.Pen:
+                var stroke = new FreehandAnnotation { Color = _viewModel.StrokeColor, StrokeWidth = _viewModel.StrokeWidth };
+                stroke.AddPoint(pos);
+                _draftShape = stroke;
                 Canvas.CapturePointer(e.Pointer);
                 break;
             case CaptureTool.Highlight:
@@ -1151,6 +1165,12 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (_draftShape is FreehandAnnotation freehand)
+        {
+            freehand.AddPoint(pos);
+            Canvas.Invalidate();
+            return;
+        }
         if (_draftShape is null)
         {
             return;
@@ -1271,11 +1291,15 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
-        if (_draftShape.NormalizedBounds.Width > 2 || _draftShape.NormalizedBounds.Height > 2)
+        if (_draftShape.NormalizedBounds.Width > 2 || _draftShape.NormalizedBounds.Height > 2 || _draftShape is FreehandAnnotation)
         {
             _viewModel.AddAnnotation(_draftShape);
             // Vẽ xong là ở chế độ chỉnh sửa luôn (handle + tab contextual nếu có), bấm vùng trống mới thoát.
-            _viewModel.SelectedAnnotation = _draftShape;
+            // Bút thì không: vẽ liền nhiều nét, handle của nét trước chỉ gây rối.
+            if (_draftShape is not FreehandAnnotation)
+            {
+                _viewModel.SelectedAnnotation = _draftShape;
+            }
         }
         _draftShape = null;
         Canvas.Invalidate();
@@ -1419,6 +1443,7 @@ public sealed partial class EditorWindow : Window
     private void EllipseToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Ellipse, EllipseToolButton);
     private void LineToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Line, LineToolButton);
     private void ArrowToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Arrow, ArrowToolButton);
+    private void PenToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Pen, PenToolButton);
     private void HighlightToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Highlight, HighlightToolButton);
     private void TextToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Text, TextToolButton);
     private void FillToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Fill, FillToolButton);

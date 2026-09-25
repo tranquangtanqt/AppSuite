@@ -13,9 +13,12 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
 - **Toàn màn hình** — chụp toàn bộ virtual screen (mọi màn hình).
 - **Cửa sổ hiện tại** — chụp cửa sổ đang active (bất kỳ ứng dụng nào, kể cả app render bằng
   DirectX như trình duyệt).
-- **Vùng chọn** — kéo-thả chọn 1 vùng màn hình, thả chuột là chụp ngay.
+- **Vùng chọn** — kéo-thả chọn 1 vùng màn hình, thả chuột là chụp ngay. Hoặc **chụp 1 cửa sổ bất
+  kỳ**: di chuột lên cửa sổ nào thì cửa sổ đó được tô viền, **click** (không kéo) là chụp đúng khung
+  cửa sổ đó (phần đang thấy trên màn hình lúc bấm phím tắt).
 - **Vùng cố định** — chọn vùng, chỉnh lại kích thước qua 4 handle góc, nhấn Enter để chụp (Escape
-  để huỷ). Vị trí/kích thước lần chụp gần nhất được nhớ lại trong phiên làm việc hiện tại.
+  để huỷ). Vị trí/kích thước lần chụp gần nhất được nhớ lại, **kể cả sau khi tắt mở lại app** (lưu
+  trong `settings.json`; màn hình đổi mà vùng cũ lọt ra ngoài thì được cắt cho vừa / bỏ qua).
 - **Cuộn dọc** (phím tắt mặc định `Ctrl+Alt+PrtSc`, hoặc menu khay) — kéo chọn vùng nội dung cần
   cuộn (trang web, tài liệu, danh sách...; nên bỏ thanh menu cố định ra ngoài vùng). App đưa cửa sổ đó
   lên, tự lăn chuột trong vùng, chụp từng khung và ghép thành 1 ảnh dài. Dừng khi tới cuối trang, khi
@@ -116,14 +119,16 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
 
 - **Chọn** — *Move* (icon con trỏ, là công cụ mặc định khi mở ảnh): chỉ chọn/kéo shape, bấm vùng
   trống không vẽ gì. Khi không chọn shape nào, quanh ảnh hiện **8 handle** (4 góc + 4 cạnh) — kéo để
-  **đổi kích thước khung ảnh** giống PicPick: kéo ra = mở rộng (phần mới tô trắng), kéo vào = cắt bớt
-  cạnh đó. Shape đã vẽ giữ nguyên vị trí so với nội dung ảnh; thanh trạng thái hiện kích thước mới;
+  **đổi kích thước khung ảnh** giống PicPick: kéo ra = mở rộng, kéo vào = cắt bớt cạnh đó. Phần mở
+  rộng hiện lại nội dung gốc đã bị Cắt trước đó (nếu có), ngoài phạm vi ảnh chụp thì tô trắng. Shape đã vẽ giữ nguyên vị trí so với nội dung ảnh; thanh trạng thái hiện kích thước mới;
   Undo được. *Select*: kéo chuột chọn 1 vùng chữ nhật trên ảnh (viền "kiến bò" đen/trắng, giữ
   `Shift` = vùng vuông) → hiện tab contextual **"Vùng chọn"** (xem dưới). Vùng đã chọn có 8 handle:
   kéo handle để chỉnh kích thước, kéo bên trong vùng để di chuyển; bấm ngoài vùng = chọn lại / bỏ chọn.
   *Xoá* (hoặc phím `Delete`/`Backspace`), *Lên trên* / *Xuống dưới* (đổi thứ tự lớp).
-- **Vẽ hình** — Chữ nhật, Elip, Đường thẳng, Mũi tên, Highlight (marker tô trong mờ), Text (click
-  vào canvas, nhập text qua dialog).
+- **Vẽ hình** — Chữ nhật, Elip, Đường thẳng, Mũi tên, Bút, Highlight (marker tô trong mờ), Text
+  (click vào canvas, nhập text qua dialog).
+  - *Bút* — vẽ tự do (khoanh tròn, gạch chân...), màu Color1, cỡ theo *Size*. Luôn vẽ nét mới kể cả
+    khi bắt đầu trên hình khác; sửa nét đã vẽ (di chuyển, co giãn, đổi màu, xoá) bằng công cụ *Move*.
   - Đường thẳng / Mũi tên giữ đúng hướng kéo chuột. Khi đang chọn: hiện 2 handle tròn ở
     2 đầu; bấm **gần một đầu** (khoảng 1/3 độ dài, tối đa 30px) rồi kéo để đổi hướng/độ dài, bấm
     khúc giữa để di chuyển cả đường. Chọn theo khoảng cách tới thân đường, không theo khung bao.
@@ -146,7 +151,9 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   - Vùng che là 1 shape: chọn lại để di chuyển / co giãn / đổi Size / xoá, Undo được, nhớ qua phiên
     làm việc. Ảnh xuất ra khi *Lưu* / *Copy* là ảnh đã che (ảnh gốc trong Editor vẫn giữ để sửa
     tiếp). Chỉ che ảnh chụp bên dưới, không che các shape (chữ, mũi tên...) vẽ trước đó ở cùng chỗ.
-- **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ), *Undo* / *Redo* từng bước, *Dán*
+- **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ; **khôi phục được**: kéo handle khung
+  ảnh ra lại là hiện lại phần đã cắt — chỉ trong lần mở này, không lưu qua phiên), *Undo* / *Redo*
+  từng bước, *Dán*
   (`Ctrl+V`): dán ảnh trong clipboard (ảnh copy từ app khác, hoặc file ảnh copy trong Explorer) thành
   1 đối tượng ảnh — đặt ở góc trên-trái vùng chọn (nếu có) hoặc phần ảnh đang nhìn thấy, được chọn sẵn
   để kéo / co giãn (giữ `Shift` = đúng tỉ lệ) / Flatten. Ảnh dán lớn hơn ảnh hiện tại → khung ảnh tự
@@ -223,6 +230,10 @@ làm Startup Project, F5. Không cần mở `MainLauncher` hay `AppSuite.sln`.
   tới đoạn thẳng).
 - Không có DI container, giống mọi module khác trong AppSuite — service khởi tạo thủ công trong
   code-behind của View.
+- **Log**: `Logs\screencapture-yyyy-MM-dd.log` cạnh exe (`Services/AppLog.cs`, qua
+  `RollingFileLoggerProvider` của Common — cùng định dạng với MainLauncher), giữ 14 ngày. Ghi lỗi bị
+  nuốt (lưu cài đặt / phiên / tự lưu / clipboard / chụp từ phím tắt), lỗi không xử lý được (thay cho
+  `crash.log` cũ), phím tắt bị chiếm, kết quả mỗi lần chụp và chụp cuộn. Gửi kèm file này khi báo lỗi.
 
 Xem `PLAN.md` để biết đầy đủ quyết định thiết kế, rủi ro chưa kiểm chứng bằng chạy thực tế, và danh
-sách việc chưa làm (blur/mosaic, v.v.).
+sách việc chưa làm.

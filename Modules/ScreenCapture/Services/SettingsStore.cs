@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.Logging;
 using ScreenCapture.Models;
 
 namespace ScreenCapture.Services;
@@ -32,9 +33,10 @@ public sealed class SettingsStore
                 return settings;
             }
         }
-        catch
+        catch (Exception ex)
         {
             // File hỏng → mặc định; lần Save sau ghi đè.
+            AppLog.For(nameof(SettingsStore)).LogError(ex, "settings.json hỏng - dùng cài đặt mặc định ({Path})", ConfigPath);
         }
         return new AppSettings();
     }

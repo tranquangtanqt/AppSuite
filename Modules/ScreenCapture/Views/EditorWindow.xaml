@@ -150,6 +150,13 @@
                                         <TextBlock Text="Mũi tên" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
+                                <ToggleButton x:Name="PenToolButton" Style="{StaticResource ToolButtonStyle}" Click="PenToolButton_Click"
+                                              ToolTipService.ToolTip="Bút vẽ tự do - màu Color1, cỡ nét theo Size. Sửa nét đã vẽ bằng công cụ Move.">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xEE56;" />
+                                        <TextBlock Text="Bút" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
                                 <ToggleButton x:Name="HighlightToolButton" Style="{StaticResource ToolButtonStyle}" Click="HighlightToolButton_Click">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE7E6;" />

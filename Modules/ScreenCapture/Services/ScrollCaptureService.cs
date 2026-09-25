@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using ScreenCapture.Models;
 using ScreenCapture.Services.Interop;
 using SkiaSharp;
@@ -43,6 +44,7 @@ public sealed record ScrollCaptureResult(SKBitmap Image, int Frames, ScrollStopR
 /// </summary>
 public sealed class ScrollCaptureService
 {
+    private static readonly ILogger Log = AppLog.For(nameof(ScrollCaptureService));
     private const double MinMatchRatio = 0.9;
 
     private readonly ICaptureService _capture;
@@ -131,6 +133,7 @@ public sealed class ScrollCaptureService
                     {
                         // Lăn ngang lần đầu không có tác dụng → app không hỗ trợ HWHEEL, thử Shift + lăn dọc.
                         _useShiftWheel = true;
+                        Log.LogInformation("Cuộn ngang: cửa sổ không phản ứng với lăn ngang (HWHEEL) - chuyển sang Shift + lăn dọc");
                     }
                     Scroll();
                     await Task.Delay(_settleMs);

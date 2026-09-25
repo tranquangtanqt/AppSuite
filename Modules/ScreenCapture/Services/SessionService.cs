@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using ScreenCapture.Models;
 using SkiaSharp;
 
@@ -81,9 +82,10 @@ public sealed class SessionService
             }
             return (documents, manifest?.ActiveId);
         }
-        catch
+        catch (Exception ex)
         {
             // session.json hỏng → coi như không có phiên cũ; lần Save sau sẽ ghi đè và dọn file thừa.
+            AppLog.For(nameof(SessionService)).LogError(ex, "Không đọc được phiên làm việc cũ ({Folder})", Folder);
             return ([], null);
         }
     }
@@ -204,6 +206,10 @@ public sealed class SessionService
             case RedactAnnotation redact:
                 dto.RedactMode = redact.Mode.ToString();
                 break;
+            case FreehandAnnotation freehand:
+                // Lưu điểm đã ánh xạ vào Bounds hiện tại (x0, y0, x1, y1...) - lúc nạp lại khung vẽ = Bounds.
+                dto.Points = freehand.CurrentPoints().SelectMany(p => new[] { p.X, p.Y }).ToList();
+                break;
         }
         return dto;
     }
@@ -227,6 +233,7 @@ public sealed class SessionService
                 NumberValue = dto.NumberValue ?? 0,
                 OutlineColor = new SKColor(dto.OutlineColor ?? (uint)SKColors.White),
             },
+            nameof(FreehandAnnotation) when dto.Points is { Count: >= 2 } => new FreehandAnnotation(),
             nameof(ImageAnnotation) => LoadImageShape(dto.Image),
             _ => null,
         };
@@ -238,6 +245,10 @@ public sealed class SessionService
         shape.Bounds = new SKRect(dto.Left, dto.Top, dto.Right, dto.Bottom);
         shape.Color = new SKColor(dto.Color);
         shape.StrokeWidth = dto.StrokeWidth;
+        if (shape is FreehandAnnotation freehandShape && dto.Points is { } points)
+        {
+            freehandShape.SetPoints(Enumerable.Range(0, points.Count / 2).Select(i => new SKPoint(points[2 * i], points[2 * i + 1])));
+        }
         return shape;
     }
 
@@ -285,6 +296,7 @@ public sealed class SessionService
         public int? NumberValue { get; set; }
         public uint? OutlineColor { get; set; }
         public string? RedactMode { get; set; }
+        public List<float>? Points { get; set; }
         public string? Image { get; set; }
     }
 }

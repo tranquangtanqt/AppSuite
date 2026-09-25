@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using ScreenCapture.Models;
@@ -14,13 +15,11 @@ namespace ScreenCapture.Views;
 /// beyond "which button was clicked".</summary>
 public sealed partial class CaptureLauncherWindow : Window
 {
+    private static readonly ILogger Log = AppLog.For(nameof(CaptureLauncherWindow));
+
     private readonly ICaptureService _captureService = new CaptureService();
     private readonly IImageFileService _fileService = new ImageFileService();
     private readonly IClipboardService _clipboardService = new ClipboardService();
-
-    /// <summary>Session-only remembered Fixed Region rect (PLAN.md: mặc định session-only, cần xác
-    /// nhận lại với người dùng nếu cần lưu qua lần restart).</summary>
-    private RECT? _lastFixedRegion;
 
     private readonly SettingsStore _settingsStore = new();
     private AppSettings _settings;
@@ -202,6 +201,7 @@ public sealed partial class CaptureLauncherWindow : Window
     {
         if (_failedHotkeys.Count > 0)
         {
+            Log.LogWarning("Phím tắt không đăng ký được (bị Windows/app khác giữ): {Hotkeys}", string.Join(", ", _failedHotkeys.Select(h => $"{h.Action}={h.Describe()}")));
             ShowStatus($"Phím tắt đang bị Windows/app khác giữ: {string.Join(", ", _failedHotkeys.Select(h => h.Describe()))}. Đổi trong Cài đặt → Phím tắt.",
                 InfoBarSeverity.Warning);
         }
@@ -227,6 +227,8 @@ public sealed partial class CaptureLauncherWindow : Window
     /// tắt đăng ký lỗi để cửa sổ Cài đặt đánh dấu ⚠.</summary>
     private IReadOnlyList<HotkeyBinding> ApplySettings(AppSettings settings)
     {
+        // Cửa sổ Cài đặt không có mục Vùng cố định (ReadSettings tạo AppSettings mới) → giữ vùng đã lưu.
+        settings.LastFixedRegion = _settings.LastFixedRegion;
         _settings = settings;
         try
         {
@@ -234,6 +236,7 @@ public sealed partial class CaptureLauncherWindow : Window
         }
         catch (Exception ex)
         {
+            Log.LogError(ex, "Không lưu được cài đặt");
             ShowStatus($"Không lưu được cài đặt: {ex.Message}", InfoBarSeverity.Error);
         }
         _session.ApplySettings(settings);
@@ -245,6 +248,7 @@ public sealed partial class CaptureLauncherWindow : Window
         }
         catch (Exception ex)
         {
+            Log.LogError(ex, "Không đặt được khởi động cùng Windows");
             ShowStatus($"Không đặt được khởi động cùng Windows: {ex.Message}", InfoBarSeverity.Error);
         }
         _failedHotkeys = _hotkeys.Apply(settings.Hotkeys);
@@ -269,7 +273,7 @@ public sealed partial class CaptureLauncherWindow : Window
 
     /// <summary>Chạy 1 thao tác chụp gọi từ phím tắt / menu khay (không có ai await). Trước đây dùng
     /// <c>_ = Task</c> nên exception bị nuốt mất - người dùng chỉ thấy "không hoạt động". Giờ bắt lỗi,
-    /// hiện lên cửa sổ chính và ghi crash.log.</summary>
+    /// hiện lên cửa sổ chính và ghi log (Logs\).</summary>
     private async void RunInBackground(Func<Task> capture)
     {
         try
@@ -283,15 +287,7 @@ public sealed partial class CaptureLauncherWindow : Window
             RestoreEditorAfterCancel();
             ShowLauncher();
             ShowStatus($"Chụp thất bại: {ex.Message}", InfoBarSeverity.Error);
-            try
-            {
-                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "crash.log"),
-                    $"{DateTime.Now:O}{Environment.NewLine}{ex}{Environment.NewLine}{Environment.NewLine}");
-            }
-            catch
-            {
-                // Không để việc ghi log làm lỗi tiếp.
-            }
+            Log.LogError(ex, "Chụp thất bại (phím tắt / menu khay)");
         }
     }
 
@@ -328,6 +324,9 @@ public sealed partial class CaptureLauncherWindow : Window
             await Task.Delay(250); // chờ overlay đóng hẳn, cửa sổ bên dưới vẽ lại
             var scroller = new ScrollCaptureService(_captureService, _settings);
             var result = await scroller.CaptureAsync(selection.Value, direction);
+            Log.LogInformation("Chụp cuộn {Direction}: vùng {W}x{H}, {Frames} khung, ảnh {Width}x{Height}, dừng: {Reason}",
+                direction, selection.Value.Right - selection.Value.Left, selection.Value.Bottom - selection.Value.Top,
+                result.Frames, result.Image.Width, result.Image.Height, result.Reason);
             await FinishCaptureAsync(result.Image);
 
             string reason = result.Reason switch
@@ -401,7 +400,13 @@ public sealed partial class CaptureLauncherWindow : Window
             var virtualRect = _captureService.GetVirtualScreenRect();
             var frozenScreen = _captureService.CaptureRect(virtualRect);
 
-            var overlay = new RegionOverlayWindow(frozenScreen, virtualRect, isFixed, _lastFixedRegion);
+            // Vùng chọn: kéo = chọn vùng, click = chụp cả cửa sổ đang tô viền dưới con trỏ. Liệt kê cửa sổ
+            // cùng lúc chụp ảnh nền đứng yên để khung khớp với ảnh.
+            var overlay = isFixed
+                ? new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: true, LastFixedRegionOn(virtualRect))
+                : new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: false, null,
+                    "Kéo chuột để chọn vùng — hoặc click để chụp cả cửa sổ đang tô viền. Esc: huỷ",
+                    WindowEnumerator.GetVisibleWindowRects());
             var selection = await overlay.SelectRegionAsync();
             if (selection is null)
             {
@@ -411,7 +416,7 @@ public sealed partial class CaptureLauncherWindow : Window
 
             if (isFixed)
             {
-                _lastFixedRegion = selection.Value;
+                SaveLastFixedRegion(selection.Value);
             }
             _lastKind = LastCaptureKind.Rect;
             _lastRect = selection.Value;
@@ -432,6 +437,37 @@ public sealed partial class CaptureLauncherWindow : Window
         finally
         {
             _isCapturing = false;
+        }
+    }
+
+    /// <summary>Vùng cố định đã lưu (settings.json), cắt cho vừa màn hình hiện tại - màn hình có thể đã đổi
+    /// từ lần trước (rút màn hình phụ, đổi độ phân giải). Còn quá nhỏ / nằm ngoài hẳn thì bỏ, chọn vùng mới.</summary>
+    private RECT? LastFixedRegionOn(RECT screen)
+    {
+        if (_settings.LastFixedRegion is not { } r)
+        {
+            return null;
+        }
+        var clipped = new RECT
+        {
+            Left = Math.Max(r.Left, screen.Left),
+            Top = Math.Max(r.Top, screen.Top),
+            Right = Math.Min(r.Right, screen.Right),
+            Bottom = Math.Min(r.Bottom, screen.Bottom),
+        };
+        return clipped.Right - clipped.Left >= 10 && clipped.Bottom - clipped.Top >= 10 ? clipped : null;
+    }
+
+    private void SaveLastFixedRegion(RECT region)
+    {
+        _settings.LastFixedRegion = new ScreenRegion { Left = region.Left, Top = region.Top, Right = region.Right, Bottom = region.Bottom };
+        try
+        {
+            _settingsStore.Save(_settings);
+        }
+        catch
+        {
+            // Không lưu được thì vẫn nhớ trong lần chạy này (_settings), như trước đây.
         }
     }
 
@@ -491,6 +527,7 @@ public sealed partial class CaptureLauncherWindow : Window
     /// <summary>Mở ảnh trong Editor rồi chạy các tuỳ chọn sau khi chụp (tự lưu, tự copy).</summary>
     private async Task FinishCaptureAsync(SKBitmap bitmap)
     {
+        Log.LogInformation("Chụp xong: {Width}x{Height}", bitmap.Width, bitmap.Height);
         RestoreLauncherAfterCapture();
         OpenEditor(bitmap);
 
@@ -505,6 +542,7 @@ public sealed partial class CaptureLauncherWindow : Window
             }
             catch (Exception ex)
             {
+                Log.LogError(ex, "Tự động lưu thất bại ({Folder})", _settings.AutoSaveFolder);
                 document.StatusText = $"Tự động lưu thất bại: {ex.Message}";
             }
         }
@@ -520,6 +558,7 @@ public sealed partial class CaptureLauncherWindow : Window
             }
             catch (Exception ex)
             {
+                Log.LogError(ex, "Không copy được ảnh chụp vào clipboard");
                 if (document is not null)
                 {
                     document.StatusText = $"Không copy được vào clipboard: {ex.Message}";

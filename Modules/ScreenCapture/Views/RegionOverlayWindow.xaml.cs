@@ -45,10 +45,18 @@ public sealed partial class RegionOverlayWindow : Window
     private Point _dragStart;
     private Rect _selectionLogical; // logical (XAML-space) pixels, converted to device px on confirm
 
+    // Trỏ để chọn cửa sổ (Vùng chọn): khung các cửa sổ đang thấy, trên → dưới (toạ độ màn hình). Di chuột
+    // = tô viền cửa sổ dưới con trỏ, click (không kéo) = chụp cả cửa sổ đó, kéo = chọn vùng như cũ.
+    private readonly IReadOnlyList<RECT>? _pickWindows;
+    private Rect? _hoverWindowLogical;
+
     /// <param name="hint">Dòng hướng dẫn thay cho mặc định "Kéo chuột để chọn vùng" (vd chụp cuộn).</param>
-    public RegionOverlayWindow(SKBitmap frozenScreen, RECT virtualRect, bool isFixed, RECT? initialFixedRegion, string? hint = null)
+    /// <param name="pickWindows">Khung cửa sổ để trỏ-chọn (xem <see cref="Services.WindowEnumerator"/>), null = tắt.</param>
+    public RegionOverlayWindow(SKBitmap frozenScreen, RECT virtualRect, bool isFixed, RECT? initialFixedRegion, string? hint = null,
+        IReadOnlyList<RECT>? pickWindows = null)
     {
         InitializeComponent();
+        _pickWindows = pickWindows;
         if (hint is not null)
         {
             HintText.Text = hint;
@@ -128,8 +136,49 @@ public sealed partial class RegionOverlayWindow : Window
                 prevRegion.Height / scale);
             EnterAdjustState();
         }
+        else if (_pickWindows is not null && NativeMethods.GetCursorPos(out var cursor))
+        {
+            // Tô viền ngay cửa sổ đang dưới con trỏ, không đợi người dùng nhúc nhích chuột.
+            UpdateHoverWindow(new Point((cursor.X - _virtualRect.Left) / dpiScale, (cursor.Y - _virtualRect.Top) / dpiScale));
+        }
 
         await Task.CompletedTask;
+    }
+
+    /// <summary>Trỏ-chọn: tô viền cửa sổ trên cùng chứa điểm <paramref name="pos"/> (toạ độ canvas).</summary>
+    private void UpdateHoverWindow(Point pos)
+    {
+        if (_pickWindows is null)
+        {
+            return;
+        }
+        double scale = Scale;
+        int x = _virtualRect.Left + (int)Math.Round(pos.X * scale), y = _virtualRect.Top + (int)Math.Round(pos.Y * scale);
+        _hoverWindowLogical = null;
+        foreach (var w in _pickWindows)
+        {
+            if (x >= w.Left && x < w.Right && y >= w.Top && y < w.Bottom)
+            {
+                // Cắt theo màn hình ảo (cửa sổ phóng to / kéo lệch ra ngoài màn hình).
+                double left = Math.Max(w.Left, _virtualRect.Left), top = Math.Max(w.Top, _virtualRect.Top);
+                double right = Math.Min(w.Right, _virtualRect.Right), bottom = Math.Min(w.Bottom, _virtualRect.Bottom);
+                _hoverWindowLogical = new Rect((left - _virtualRect.Left) / scale, (top - _virtualRect.Top) / scale,
+                    (right - left) / scale, (bottom - top) / scale);
+                break;
+            }
+        }
+        if (_hoverWindowLogical is { } hover)
+        {
+            _selectionLogical = hover;
+            _selectionBorder.Visibility = Visibility.Visible;
+            UpdateSelectionVisuals();
+        }
+        else
+        {
+            _selectionBorder.Visibility = Visibility.Collapsed;
+            _selectionLogical = new Rect(0, 0, 0, 0);
+            UpdateSelectionVisuals();
+        }
     }
 
     private static async Task<BitmapImage> LoadBitmapAsync(byte[] pngBytes)
@@ -192,6 +241,7 @@ public sealed partial class RegionOverlayWindow : Window
 
         if (!_isDragging)
         {
+            UpdateHoverWindow(pos);
             return;
         }
 
@@ -221,6 +271,15 @@ public sealed partial class RegionOverlayWindow : Window
 
         if (_selectionLogical.Width < 4 || _selectionLogical.Height < 4)
         {
+            // Click (không kéo) khi đang trỏ-chọn cửa sổ = chụp cả cửa sổ đang được tô viền.
+            if (_pickWindows is not null && _hoverWindowLogical is { } window)
+            {
+                _selectionLogical = window;
+                Confirm();
+                return;
+            }
+            // Click lỡ tay: khôi phục viền cửa sổ dưới con trỏ (trỏ-chọn) thay vì để khung 0×0.
+            UpdateHoverWindow(e.GetCurrentPoint(OverlayCanvas).Position);
             return; // ignore accidental clicks
         }
 

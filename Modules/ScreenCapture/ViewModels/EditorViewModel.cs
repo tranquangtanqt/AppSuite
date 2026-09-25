@@ -148,6 +148,33 @@ public sealed partial class EditorViewModel : ObservableObject
 
     public void RequestRedrawNow() => RequestRedraw?.Invoke(this, EventArgs.Empty);
 
+    // ---- Cắt ảnh khôi phục được ----
+    // Mỗi ảnh sinh ra từ Cắt / đổi khung nhớ ảnh gốc trước lần cắt đầu tiên + vị trí của ảnh gốc theo toạ độ
+    // ảnh mới. Nới khung ra sau khi cắt → phần mới hiện lại nội dung gốc thay vì nền trắng. Gắn với chính
+    // đối tượng bitmap nên Undo/Redo (chỉ đổi qua lại các bitmap) tự đúng, không cần command riêng. Ảnh sinh
+    // từ thao tác pixel khác (Tô màu, Xoá vùng, Flatten, Dán) kế thừa của ảnh trước (xem OnBitmapChanged).
+    // Không lưu qua phiên làm việc: mở lại app thì phần đã cắt không còn.
+    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<SKBitmap, CropSource> CropSources = new();
+
+    private sealed record CropSource(SKBitmap Original, SKPointI Offset);
+
+    partial void OnBitmapChanged(SKBitmap? oldValue, SKBitmap newValue)
+    {
+        if (oldValue is not null && !CropSources.TryGetValue(newValue, out _)
+            && CropSources.TryGetValue(oldValue, out var inherited))
+        {
+            CropSources.AddOrUpdate(newValue, inherited);
+        }
+    }
+
+    /// <summary>Ảnh gốc của <see cref="Bitmap"/> và vị trí của nó khi khung ảnh dịch góc trên-trái tới
+    /// <paramref name="newTopLeft"/> (toạ độ ảnh hiện tại).</summary>
+    private CropSource SourceAfterReframe(SKPointI newTopLeft)
+    {
+        var current = CropSources.TryGetValue(Bitmap, out var source) ? source : new CropSource(Bitmap, SKPointI.Empty);
+        return current with { Offset = new SKPointI(current.Offset.X - newTopLeft.X, current.Offset.Y - newTopLeft.Y) };
+    }
+
     public void Crop(SKRect cropRect)
     {
         var info = new SKImageInfo((int)cropRect.Width, (int)cropRect.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
@@ -156,12 +183,14 @@ public sealed partial class EditorViewModel : ObservableObject
         {
             canvas.DrawBitmap(Bitmap, cropRect, new SKRect(0, 0, cropRect.Width, cropRect.Height));
         }
+        CropSources.AddOrUpdate(cropped, SourceAfterReframe(new SKPointI((int)cropRect.Left, (int)cropRect.Top)));
 
         UndoRedo.Do(new CropCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, cropped, cropRect));
     }
 
     /// <summary>Đổi khung ảnh thành <paramref name="newRect"/> (toạ độ theo ảnh hiện tại, có thể âm hoặc
-    /// vượt kích thước ảnh). Phần mới mở rộng tô trắng như PicPick.</summary>
+    /// vượt kích thước ảnh). Phần mới mở rộng: nội dung gốc đã bị Cắt trước đó (nếu có), ngoài ra tô trắng
+    /// như PicPick.</summary>
     public void ResizeCanvas(SKRectI newRect)
     {
         if (newRect.Width < 1 || newRect.Height < 1)
@@ -170,11 +199,17 @@ public sealed partial class EditorViewModel : ObservableObject
         }
         var info = new SKImageInfo(newRect.Width, newRect.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
         var resized = new SKBitmap(info);
+        var source = SourceAfterReframe(new SKPointI(newRect.Left, newRect.Top));
         using (var canvas = new SKCanvas(resized))
         {
             canvas.Clear(SKColors.White);
+            if (!ReferenceEquals(source.Original, Bitmap))
+            {
+                canvas.DrawBitmap(source.Original, source.Offset.X, source.Offset.Y);
+            }
             canvas.DrawBitmap(Bitmap, -newRect.Left, -newRect.Top);
         }
+        CropSources.AddOrUpdate(resized, source);
         UndoRedo.Do(new ResizeCanvasCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, resized,
             -newRect.Left, -newRect.Top));
     }

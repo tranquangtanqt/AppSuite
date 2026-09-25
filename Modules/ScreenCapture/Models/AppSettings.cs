@@ -28,6 +28,11 @@ public sealed class AppSettings
     public int SessionMaxTabs { get; set; } = 30;
     public int SessionMaxMegabytes { get; set; } = 300;
 
+    // ---- Vùng cố định (không có trên cửa sổ Cài đặt - app tự ghi mỗi lần chụp Vùng cố định) ----
+    /// <summary>Vùng cố định lần gần nhất (toạ độ màn hình ảo), để lần chụp sau - kể cả sau khi tắt mở
+    /// lại app - hiện sẵn đúng vùng đó. null = chưa chụp lần nào.</summary>
+    public ScreenRegion? LastFixedRegion { get; set; }
+
     // ---- Chụp cuộn (xem Services/ScrollCaptureService.cs) ----
     /// <summary>Số lần cuộn tối đa. 150: vùng chọn thấp/hẹp thì mỗi bước cuộn ít (đã gặp khi test cuộn
     /// ngang: 80 bước chưa hết nội dung).</summary>
@@ -124,4 +129,13 @@ public sealed class HotkeyBinding
         ['F', .. var n] when int.TryParse(n, out int f) && f is >= 1 and <= 12 => (uint)(0x70 + f - 1),
         _ => 0,
     };
+}
+
+/// <summary>Hình chữ nhật trên màn hình ảo (px thật) - dạng lưu được vào settings.json.</summary>
+public sealed class ScreenRegion
+{
+    public int Left { get; set; }
+    public int Top { get; set; }
+    public int Right { get; set; }
+    public int Bottom { get; set; }
 }

@@ -12,6 +12,8 @@ public enum CaptureTool
     Line,
     Arrow,
     Highlight,
+    /// <summary>Bút vẽ tự do (FreehandAnnotation).</summary>
+    Pen,
     Text,
     Fill,
     Stamp,

@@ -403,6 +403,28 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
     app → mở lại, 2 vùng che (đúng Mosaic/Blur) + mũi tên + stamp khôi phục nguyên vẹn.
   - Flatten **không áp dụng** cho vùng che: nút Flatten chỉ nằm trong tab contextual "Number Stamp".
     Không cần — Lưu / Copy đã xuất ảnh đã che.
+- **Nhóm tính năng B (2026-09-25)** — mỗi mục đã chạy thử trong Windows Sandbox:
+  - **Vùng cố định nhớ qua restart**: `AppSettings.LastFixedRegion` (`ScreenRegion`, không có trên cửa
+    sổ Cài đặt; `ApplySettings` giữ lại vì `SettingsWindow.ReadSettings` tạo AppSettings mới). Launcher
+    ghi file mỗi lần chụp Vùng cố định; lúc dùng cắt theo màn hình ảo hiện tại, < 10px thì bỏ. Test: chụp
+    500×300 → tắt app → mở lại → overlay hiện sẵn đúng vùng, Enter → 500×300.
+  - **Chụp cửa sổ bất kỳ = trỏ-chọn trong Vùng chọn** (thay cho ý "danh sách cửa sổ" ban đầu - nhanh
+    hơn, không phải đọc tên): `Services/WindowEnumerator` (EnumWindows theo z-order; bỏ cửa sổ ẩn / thu
+    nhỏ / cloaked / WS_EX_TRANSPARENT / tool window không tiêu đề / Progman, WorkerW / của chính app;
+    khung = DWM extended frame bounds), liệt kê cùng lúc chụp ảnh nền đứng yên. Overlay: di chuột = tô
+    viền cửa sổ trên cùng dưới con trỏ, click (< 4px) = chụp khung đó (cắt theo màn hình ảo), kéo = chọn
+    vùng như cũ. Không bật cho Vùng cố định / chụp cuộn. Test: cửa sổ WinForms 622×411 → ảnh 622×411.
+  - **Bút** (`FreehandAnnotation`): điểm lưu theo toạ độ lúc vẽ + khung bao lúc đó, vẽ bằng cách ánh xạ
+    sang `Bounds` hiện tại → di chuyển / co giãn / Cắt / Undo dùng lại đường chung. Nét mềm (QuadTo qua
+    trung điểm), hit-test theo khoảng cách tới nét. Công cụ Bút bỏ qua "bấm trúng hình có sẵn thì chọn"
+    và không tự chọn nét vừa vẽ (vẽ liền nhiều nét). Phiên: `ShapeDto.Points`. Test: vòng tròn + nét bắt
+    đầu trên vòng tròn (vẽ nét mới, không kéo vòng tròn), Move kéo lên 100px, tắt mở lại app còn nguyên.
+  - **Cắt khôi phục được**: `EditorViewModel.CropSources` (`ConditionalWeakTable<SKBitmap, CropSource>`)
+    gắn ảnh gốc + độ lệch vào bitmap sinh từ Cắt / đổi khung; bitmap từ thao tác pixel khác kế thừa qua
+    `OnBitmapChanged`. Undo/Redo chỉ đổi bitmap nên tự đúng. `ResizeCanvas` vẽ ảnh gốc dưới ảnh hiện tại.
+    Test: cắt 300×180 giữa ảnh → kéo handle ra 500×310 → hiện lại đúng các ô gốc; Undo ×2 → 600×360.
+  - **Log** (`Services/AppLog`): xem README "Kiến trúc". Thay `crash.log`. Test: lượt chụp cuộn ngang
+    chế độ Shift ghi đủ: khởi động, chuyển HWHEEL → Shift+lăn, kết quả chụp cuộn, chụp xong.
 - **Kiểm tra GUI bổ sung trong Sandbox (2026-09-25)**: kéo đầu mút mũi tên (đầu đổi hướng, đuôi giữ
   nguyên); nút `−`/`+` Current/Next của Number Stamp (1 → 2, Next 2 → 3, stamp vẽ lại đúng số).
   **Sửa**: menu General Stamps hiện 4 mũi tên chéo thành mũi tên lên — glyph chéo là mũi tên lên xoay
@@ -443,9 +465,9 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
 
 ## Chưa làm (fast-follow)
 
-- Editor: Freehand pen, crop không phá huỷ. (Blur/Mosaic **đã làm** — nhóm "Che".)
-  (Resize shape qua 4 handle góc và đổi hướng/độ dài Line/Arrow qua 2 handle đầu mút **đã làm**.)
-- Fixed Region: lưu vị trí/kích thước qua lần restart app (hiện chỉ session-only, mất khi đóng app).
-- Window capture: chọn cửa sổ khác ngoài foreground window (cần `EnumWindows` + UI danh sách chọn).
-- Logging: module chưa wire `Common.Logging` (không module nào khác trong repo hiện dùng logging
-  ngoài MainLauncher) — cân nhắc thêm sau vì module có nhiều edge case Win32 khó debug.
+- Danh sách fast-follow cũ đã làm hết (2026-09-25): Blur/Mosaic, Bút vẽ tự do, Cắt khôi phục được,
+  Vùng cố định nhớ qua restart, chụp cửa sổ bất kỳ, Log — xem các mục tương ứng ở trên.
+- Có thể làm tiếp: Cắt khôi phục được **qua phiên làm việc** (hiện chỉ trong lần mở — phiên chỉ lưu
+  ảnh hiện tại); trỏ-chọn cửa sổ con (nút, vùng nội dung) như PicPick, hiện mới chọn cửa sổ cấp cao nhất.
+- Ribbon Editor ở màn hình rộng ~1500px (100% DPI) đã không hiện hết các nhóm sau "Che" (Cắt & Sửa,
+  Màu, Cỡ nét phải cuộn ngang ribbon) - cân nhắc thu gọn nhãn / gộp nhóm.
