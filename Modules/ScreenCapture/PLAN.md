@@ -425,6 +425,14 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
     Test: cắt 300×180 giữa ảnh → kéo handle ra 500×310 → hiện lại đúng các ô gốc; Undo ×2 → 600×360.
   - **Log** (`Services/AppLog`): xem README "Kiến trúc". Thay `crash.log`. Test: lượt chụp cuộn ngang
     chế độ Shift ghi đủ: khởi động, chuyển HWHEEL → Shift+lăn, kết quả chụp cuộn, chụp xong.
+- **Ribbon vừa màn hình (2026-09-25)**: ribbon Trang chủ đã rộng ~1360px logic (tràn ở màn 1920px /
+  150% = 1280px) và **không có ScrollViewer** → các nhóm bên phải (Cắt & Sửa, Màu, Cỡ nét) bị cắt mất,
+  không bấm được. Sửa: Xoá / Lên trên / Xuống dưới và Undo / Redo / Dán thành nút nhỏ 1 hàng xếp 3 tầng
+  (`SmallToolButtonStyle`), nhãn "Đường thẳng" → "Đường" (tooltip giữ tên đủ), padding/MinWidth nút lớn
+  8/52 → 6/46, gộp "Màu" + "Cỡ nét" → ~1100px logic. Bọc nội dung ribbon trong `ScrollViewer` ngang
+  (không dùng `SharedUI.HorizontalScrollContainer` vì luôn chừa lề 36px mỗi bên + nút cuộn, hợp dải
+  tile hơn ribbon). Sandbox chạy 150% DPI (1514px thật ≈ 1010px logic): thu cửa sổ về 1000px, rê chuột
+  hiện thanh cuộn, lăn chuột tới được Cắt & Sửa / Màu & Cỡ nét.
 - **Kiểm tra GUI bổ sung trong Sandbox (2026-09-25)**: kéo đầu mút mũi tên (đầu đổi hướng, đuôi giữ
   nguyên); nút `−`/`+` Current/Next của Number Stamp (1 → 2, Next 2 → 3, stamp vẽ lại đúng số).
   **Sửa**: menu General Stamps hiện 4 mũi tên chéo thành mũi tên lên — glyph chéo là mũi tên lên xoay
@@ -469,5 +477,5 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
   Vùng cố định nhớ qua restart, chụp cửa sổ bất kỳ, Log — xem các mục tương ứng ở trên.
 - Có thể làm tiếp: Cắt khôi phục được **qua phiên làm việc** (hiện chỉ trong lần mở — phiên chỉ lưu
   ảnh hiện tại); trỏ-chọn cửa sổ con (nút, vùng nội dung) như PicPick, hiện mới chọn cửa sổ cấp cao nhất.
-- Ribbon Editor ở màn hình rộng ~1500px (100% DPI) đã không hiện hết các nhóm sau "Che" (Cắt & Sửa,
-  Màu, Cỡ nét phải cuộn ngang ribbon) - cân nhắc thu gọn nhãn / gộp nhóm.
+- Ribbon Editor: đã thu gọn (xem mục "Ribbon vừa màn hình" ở trên). Nếu thêm nhóm mới, giữ tổng
+  ≤ ~1100px logic hoặc làm ribbon co giãn (ẩn nhãn khi hẹp) như Office.

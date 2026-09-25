@@ -19,8 +19,20 @@
             <!-- Icon-on-top + small label toolbar button, dùng chung cho mọi nút trong toolbar
                  (ButtonBase để áp được cho cả Button lẫn ToggleButton). -->
             <Style x:Key="ToolButtonStyle" TargetType="ButtonBase">
-                <Setter Property="Padding" Value="8,4" />
-                <Setter Property="MinWidth" Value="52" />
+                <Setter Property="Padding" Value="6,4" />
+                <Setter Property="MinWidth" Value="46" />
+            </Style>
+            <!-- Nút nhỏ 1 hàng (icon + chữ), xếp 3 nút chồng nhau trong 1 cột như ribbon Office/PicPick - cho
+                 các lệnh phụ (Xoá / Lên trên / Xuống dưới, Undo / Redo / Dán) để ribbon vừa màn hình ~1280px. -->
+            <Style x:Key="SmallToolButtonStyle" TargetType="Button">
+                <Setter Property="Padding" Value="6,0" />
+                <Setter Property="Height" Value="21" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+                <Setter Property="HorizontalContentAlignment" Value="Left" />
+            </Style>
+            <Style x:Key="SmallToolButtonContentStyle" TargetType="StackPanel">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Spacing" Value="6" />
             </Style>
             <!-- Nút -/+ nhỏ hai bên ô số (Stamp Format), cao bằng NumberBox. -->
             <Style x:Key="StepperButtonStyle" TargetType="Button">
@@ -77,6 +89,9 @@
 
         <!-- Row 1: ribbon content, đổi theo tab đang chọn -->
         <Border Grid.Row="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,6">
+            <!-- Cửa sổ hẹp hơn ribbon (màn hình nhỏ / DPI cao) → cuộn ngang được thay vì mất hẳn các nhóm bên phải. -->
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled"
+                          VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled">
             <Grid>
                 <StackPanel x:Name="HomeRibbonPanel" Orientation="Horizontal">
 
@@ -100,24 +115,27 @@
                                         <TextBlock Text="Select" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <Button x:Name="DeleteButton" Style="{StaticResource ToolButtonStyle}" Click="DeleteButton_Click" IsEnabled="False">
-                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE74D;" />
-                                        <TextBlock Text="Xoá" FontSize="10" />
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="BringToFrontButton" Style="{StaticResource ToolButtonStyle}" Click="BringToFrontButton_Click" IsEnabled="False">
-                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE8A7;" />
-                                        <TextBlock Text="Lên trên" FontSize="10" />
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="SendToBackButton" Style="{StaticResource ToolButtonStyle}" Click="SendToBackButton_Click" IsEnabled="False">
-                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE8A8;" />
-                                        <TextBlock Text="Xuống dưới" FontSize="10" />
-                                    </StackPanel>
-                                </Button>
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <Button x:Name="DeleteButton" Style="{StaticResource SmallToolButtonStyle}" Click="DeleteButton_Click" IsEnabled="False"
+                                            ToolTipService.ToolTip="Xoá hình đang chọn (Delete)">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                                            <TextBlock Text="Xoá" FontSize="11" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="BringToFrontButton" Style="{StaticResource SmallToolButtonStyle}" Click="BringToFrontButton_Click" IsEnabled="False">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE8A7;" FontSize="12" />
+                                            <TextBlock Text="Lên trên" FontSize="11" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="SendToBackButton" Style="{StaticResource SmallToolButtonStyle}" Click="SendToBackButton_Click" IsEnabled="False">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE8A8;" FontSize="12" />
+                                            <TextBlock Text="Xuống dưới" FontSize="11" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                             </StackPanel>
                             <TextBlock Text="Chọn" Style="{StaticResource RibbonGroupLabelStyle}" />
                         </StackPanel>
@@ -138,10 +156,11 @@
                                         <TextBlock Text="Elip" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <ToggleButton x:Name="LineToolButton" Style="{StaticResource ToolButtonStyle}" Click="LineToolButton_Click">
+                                <ToggleButton x:Name="LineToolButton" Style="{StaticResource ToolButtonStyle}" Click="LineToolButton_Click"
+                                              ToolTipService.ToolTip="Đường thẳng (giữ Shift: khoá góc 45°)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <TextBlock Text="&#x2571;" FontSize="16" HorizontalAlignment="Center" />
-                                        <TextBlock Text="Đường thẳng" FontSize="10" />
+                                        <TextBlock Text="Đường" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ToggleButton x:Name="ArrowToolButton" Style="{StaticResource ToolButtonStyle}" Click="ArrowToolButton_Click">
@@ -273,24 +292,26 @@
                                         <TextBlock Text="Cắt" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <Button x:Name="UndoButton" Style="{StaticResource ToolButtonStyle}" Click="UndoButton_Click" ToolTipService.ToolTip="Undo (Ctrl+Z)">
-                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE7A7;" />
-                                        <TextBlock Text="Undo" FontSize="10" />
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="RedoButton" Style="{StaticResource ToolButtonStyle}" Click="RedoButton_Click" ToolTipService.ToolTip="Redo (Ctrl+Y / Ctrl+Shift+Z)">
-                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE7A6;" />
-                                        <TextBlock Text="Redo" FontSize="10" />
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="PasteButton" Style="{StaticResource ToolButtonStyle}" Click="PasteButton_Click" ToolTipService.ToolTip="Dán ảnh từ clipboard (Ctrl+V)">
-                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE77F;" />
-                                        <TextBlock Text="Dán" FontSize="10" />
-                                    </StackPanel>
-                                </Button>
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <Button x:Name="UndoButton" Style="{StaticResource SmallToolButtonStyle}" Click="UndoButton_Click" ToolTipService.ToolTip="Undo (Ctrl+Z)">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE7A7;" FontSize="12" />
+                                            <TextBlock Text="Undo" FontSize="11" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="RedoButton" Style="{StaticResource SmallToolButtonStyle}" Click="RedoButton_Click" ToolTipService.ToolTip="Redo (Ctrl+Y / Ctrl+Shift+Z)">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE7A6;" FontSize="12" />
+                                            <TextBlock Text="Redo" FontSize="11" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="PasteButton" Style="{StaticResource SmallToolButtonStyle}" Click="PasteButton_Click" ToolTipService.ToolTip="Dán ảnh từ clipboard (Ctrl+V)">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE77F;" FontSize="12" />
+                                            <TextBlock Text="Dán" FontSize="11" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                             </StackPanel>
                             <TextBlock Text="Cắt &amp; Sửa" Style="{StaticResource RibbonGroupLabelStyle}" />
                         </StackPanel>
@@ -323,18 +344,12 @@
                                         </Button.Flyout>
                                     </Button>
                                 </StackPanel>
+                                <StackPanel VerticalAlignment="Center" Width="100">
+                                    <TextBlock Text="Size" FontSize="10" />
+                                    <Slider x:Name="SizeSlider" ValueChanged="SizeSlider_ValueChanged" />
+                                </StackPanel>
                             </StackPanel>
-                            <TextBlock Text="Màu" Style="{StaticResource RibbonGroupLabelStyle}" />
-                        </StackPanel>
-                    </Border>
-
-                    <Border Style="{StaticResource RibbonGroupStyle}">
-                        <StackPanel>
-                            <StackPanel VerticalAlignment="Center" Width="120">
-                                <TextBlock Text="Size" FontSize="10" />
-                                <Slider x:Name="SizeSlider" ValueChanged="SizeSlider_ValueChanged" />
-                            </StackPanel>
-                            <TextBlock Text="Cỡ nét" Style="{StaticResource RibbonGroupLabelStyle}" />
+                            <TextBlock Text="Màu &amp; Cỡ nét" Style="{StaticResource RibbonGroupLabelStyle}" />
                         </StackPanel>
                     </Border>
 
@@ -577,6 +592,7 @@
 
                 </StackPanel>
             </Grid>
+            </ScrollViewer>
         </Border>
 
         <!-- Row 2: mỗi lần chụp là 1 tab (giống PicPick) - tab chỉ dùng làm thanh chuyển ảnh, nội dung
