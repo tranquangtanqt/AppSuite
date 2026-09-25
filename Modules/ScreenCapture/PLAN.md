@@ -449,6 +449,10 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
 
 ## Kiểm chứng
 
+- **Bản Release đã publish** (`build\Publish-AppSuite.ps1` → `Application\Modules\ScreenCapture`,
+  2026-09-25, sau commit `df5d280`): người dùng chạy từ MainLauncher trên máy thật — mở được không
+  crash (XAML SharedUI nhúng trong `.pri`), Cài đặt → OK tạo `Data\Config\settings.json`, chụp Vùng
+  chọn → Editor + ribbon hiển thị đủ, `Logs\screencapture-*.log` có dòng khởi động / chụp xong.
 - `dotnet build Modules\ScreenCapture\ScreenCapture.csproj -p:Platform=x64` — build sạch (đã chạy
   thành công).
 - `dotnet build AppSuite.sln` — không ảnh hưởng 11 project còn lại (đã chạy thành công, 0 lỗi).
