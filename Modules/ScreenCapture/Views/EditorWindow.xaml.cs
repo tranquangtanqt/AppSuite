@@ -24,6 +24,7 @@ public sealed class StampPickerItem
     public StampKind Kind { get; set; }
     public SolidColorBrush Brush { get; set; } = new(Microsoft.UI.Colors.Black);
     public string Glyph { get; set; } = string.Empty;
+    public double Rotation => StampAnnotation.RotationOf(Kind);
 }
 
 /// <summary>Owns all pointer/canvas interaction (View responsibility, same split CsvEditor's

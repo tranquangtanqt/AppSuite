@@ -399,8 +399,15 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   - Lưu phiên: `ShapeDto.RedactMode`.
   - **Đã chạy thử trong Sandbox** (Editor thật, thao tác chuột + UI Automation): Mosaic và Làm mờ che
     kín chữ, phần ngoài vùng nguyên vẹn, ảnh Copy ra clipboard đã che; chọn lại vùng Mosaic + Size 12 →
-    ô to hơn; Ctrl+Z ×2 gỡ đúng việc đổi Size và vùng Làm mờ. Chưa thử qua GUI: Flatten, nhớ vùng che
-    qua phiên (mở lại app).
+    ô to hơn; Ctrl+Z ×2 gỡ đúng việc đổi Size và vùng Làm mờ. Nhớ qua phiên: đóng Editor → tắt hẳn
+    app → mở lại, 2 vùng che (đúng Mosaic/Blur) + mũi tên + stamp khôi phục nguyên vẹn.
+  - Flatten **không áp dụng** cho vùng che: nút Flatten chỉ nằm trong tab contextual "Number Stamp".
+    Không cần — Lưu / Copy đã xuất ảnh đã che.
+- **Kiểm tra GUI bổ sung trong Sandbox (2026-09-25)**: kéo đầu mút mũi tên (đầu đổi hướng, đuôi giữ
+  nguyên); nút `−`/`+` Current/Next của Number Stamp (1 → 2, Next 2 → 3, stamp vẽ lại đúng số).
+  **Sửa**: menu General Stamps hiện 4 mũi tên chéo thành mũi tên lên — glyph chéo là mũi tên lên xoay
+  đi, stamp trên ảnh có xoay (`GlyphRotationDegrees`) nhưng icon trong menu thì không. Thêm
+  `StampAnnotation.RotationOf` dùng chung cho `RotateTransform` của icon trong menu → đủ 8 hướng.
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
 
@@ -416,7 +423,7 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
   thành công).
 - `dotnet build AppSuite.sln` — không ảnh hưởng 11 project còn lại (đã chạy thành công, 0 lỗi).
 - Launcher mới: đã chạy app + chụp màn hình xác nhận hiển thị đúng (DPI 150%). Mũi tên kéo đầu mút
-  và nút `−`/`+` Stamp Format: build sạch, **chưa thao tác thử trên GUI**.
+  và nút `−`/`+` Stamp Format: ✅ đã thao tác thử trên GUI (Sandbox, 2026-09-25).
 - **Chưa chạy thử GUI thực tế đầy đủ** — các rủi ro sau cần người dùng tự kiểm chứng khi chạy thật:
   - ✅ **Đã xác nhận và sửa** (phản hồi thực tế từ người dùng dùng máy 2 màn hình): overlay Region/
     Fixed Region bị phóng to khi màn hình chạy DPI scale >100%. Nguyên nhân: `BackgroundImage`
@@ -424,12 +431,13 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
     theo DIP (logical pixel) — ảnh bị vẽ to hơn màn hình thật đúng bằng hệ số scale. Đã sửa: đổi
     `Stretch="Fill"` + set `Width`/`Height` của ảnh bằng `virtualRect.Width/Height` chia cho
     `XamlRoot.RasterizationScale` ngay khi overlay activate (`RegionOverlayWindow.xaml.cs`).
-  - `SKXamlCanvas` (SkiaSharp.Views.WinUI) có render đúng trong project unpackaged này không.
+  - ✅ `SKXamlCanvas` (SkiaSharp.Views.WinUI) render đúng trong project unpackaged (thấy trên ảnh chụp
+    Editor khi test trong Sandbox).
   - `AppWindow`/`OverlappedPresenter` với `IsAlwaysOnTop` trên máy đa màn hình DPI khác nhau.
   - `DwmGetWindowAttribute(EXTENDED_FRAME_BOUNDS)` trên các loại cửa sổ khác nhau (browser, Electron,
     WPF, WinUI).
-  - Copy ảnh vào clipboard trên app unpackaged (`Windows.ApplicationModel.DataTransfer.Clipboard`) —
-    nếu lỗi, cần chuyển sang GDI clipboard thuần (`OpenClipboard`/`SetClipboardData(CF_DIB)`).
+  - ✅ Copy ảnh vào clipboard trên app unpackaged (`Windows.ApplicationModel.DataTransfer.Clipboard`)
+    chạy được — test trong Sandbox đọc lại ảnh từ clipboard bằng app khác (`Clipboard.GetImage`) đúng.
   - Delay 200ms sau `SetForegroundWindow`/minimize launcher có đủ cho các app khác nhau repaint xong
     trước khi chụp không — con số này là ước lượng, cần tinh chỉnh thực tế.
 

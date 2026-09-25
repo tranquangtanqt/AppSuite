@@ -215,7 +215,11 @@
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate x:DataType="local:StampPickerItem">
                                                                 <Button Width="40" Height="40" Padding="0" Click="StampItem_Click" Tag="{x:Bind Kind}">
-                                                                    <FontIcon Glyph="{x:Bind Glyph}" Foreground="{x:Bind Brush}" />
+                                                                    <FontIcon Glyph="{x:Bind Glyph}" Foreground="{x:Bind Brush}" RenderTransformOrigin="0.5,0.5">
+                                                                        <FontIcon.RenderTransform>
+                                                                            <RotateTransform Angle="{x:Bind Rotation}" />
+                                                                        </FontIcon.RenderTransform>
+                                                                    </FontIcon>
                                                                 </Button>
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>

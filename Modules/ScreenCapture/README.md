@@ -144,8 +144,8 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   - *Làm mờ* — làm mờ Gauss. *Size* = độ mờ. Chữ nhỏ mà Size thấp có thể vẫn đoán được — nên để
     Size cao hoặc dùng Mosaic.
   - Vùng che là 1 shape: chọn lại để di chuyển / co giãn / đổi Size / xoá, Undo được, nhớ qua phiên
-    làm việc. Ảnh chỉ thật sự bị che khi *Lưu* / *Copy* / *Flatten*. Chỉ che ảnh chụp bên dưới, không
-    che các shape (chữ, mũi tên...) vẽ trước đó ở cùng chỗ.
+    làm việc. Ảnh xuất ra khi *Lưu* / *Copy* là ảnh đã che (ảnh gốc trong Editor vẫn giữ để sửa
+    tiếp). Chỉ che ảnh chụp bên dưới, không che các shape (chữ, mũi tên...) vẽ trước đó ở cùng chỗ.
 - **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ), *Undo* / *Redo* từng bước, *Dán*
   (`Ctrl+V`): dán ảnh trong clipboard (ảnh copy từ app khác, hoặc file ảnh copy trong Explorer) thành
   1 đối tượng ảnh — đặt ở góc trên-trái vùng chọn (nếu có) hoặc phần ảnh đang nhìn thấy, được chọn sẵn

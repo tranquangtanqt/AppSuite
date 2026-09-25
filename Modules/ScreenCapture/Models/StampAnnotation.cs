@@ -67,6 +67,10 @@ public sealed class StampAnnotation : AnnotationShape
         [StampKind.ArrowUpLeft] = 315,
     };
 
+    /// <summary>Góc xoay (độ) của glyph - mũi tên chéo dùng glyph mũi tên lên xoay đi. Dùng chung cho menu chọn
+    /// Stamps để biểu tượng trong menu đúng hướng như stamp đặt lên ảnh.</summary>
+    public static double RotationOf(StampKind kind) => GlyphRotationDegrees.GetValueOrDefault(kind);
+
     // Typeface tra cứu tốn kém - cache tĩnh, không tạo mới mỗi lần Render() (được gọi mỗi lần
     // Canvas.Invalidate, có thể vài chục lần/giây khi đang kéo shape khác).
     private static readonly SKTypeface NumberTypeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold);
