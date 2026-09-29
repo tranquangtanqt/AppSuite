@@ -96,7 +96,7 @@ mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để kh
   thư mục hoặc có ảnh lưu lỗi → không đóng gì.
 - **Nhớ tab qua lần tắt/mở app**: đóng cửa sổ Editor (nút X / *Đóng*) không hỏi gì — mọi tab được lưu
   tạm và mở lại đúng như cũ ở lần mở app sau (shape vẫn chỉnh sửa được; lịch sử Undo thì không giữ).
-  - Thư mục: `%TEMP%\AppSuite\ScreenCapture\Session\` — `session.json` (danh sách tab + mô tả shape)
+  - Thư mục: `%TEMP%\AppSuite\ScreenCapture\Session\` — `session.json` (danh sách tab + mô tả shape + ảnh gốc trước khi Cắt, nếu có)
     và các file PNG (ảnh nền, ảnh dán).
   - **Không tích luỹ**: thư mục chỉ chứa đúng các tab đang mở ở lần lưu gần nhất. Đóng 1 tab → file
     của tab đó bị xoá ngay; đóng hết tab → thư mục rỗng. Ảnh của các phiên cũ hơn không còn trên ổ.
@@ -160,7 +160,7 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
     làm việc. Ảnh xuất ra khi *Lưu* / *Copy* là ảnh đã che (ảnh gốc trong Editor vẫn giữ để sửa
     tiếp). Chỉ che ảnh chụp bên dưới, không che các shape (chữ, mũi tên...) vẽ trước đó ở cùng chỗ.
 - **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ; **khôi phục được**: kéo handle khung
-  ảnh ra lại là hiện lại phần đã cắt — chỉ trong lần mở này, không lưu qua phiên), *Undo* / *Redo*
+  ảnh ra lại là hiện lại phần đã cắt — kể cả sau khi tắt mở lại app), *Undo* / *Redo*
   từng bước, *Dán*
   (`Ctrl+V`): dán ảnh trong clipboard (ảnh copy từ app khác, hoặc file ảnh copy trong Explorer) thành
   1 đối tượng ảnh — đặt ở góc trên-trái vùng chọn (nếu có) hoặc phần ảnh đang nhìn thấy, được chọn sẵn

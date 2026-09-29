@@ -153,7 +153,7 @@ public sealed partial class EditorViewModel : ObservableObject
     // ảnh mới. Nới khung ra sau khi cắt → phần mới hiện lại nội dung gốc thay vì nền trắng. Gắn với chính
     // đối tượng bitmap nên Undo/Redo (chỉ đổi qua lại các bitmap) tự đúng, không cần command riêng. Ảnh sinh
     // từ thao tác pixel khác (Tô màu, Xoá vùng, Flatten, Dán) kế thừa của ảnh trước (xem OnBitmapChanged).
-    // Không lưu qua phiên làm việc: mở lại app thì phần đã cắt không còn.
+    // Lưu qua phiên làm việc (SessionCropSource): mở lại app vẫn kéo khung ra lấy lại được phần đã cắt.
     private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<SKBitmap, CropSource> CropSources = new();
 
     private sealed record CropSource(SKBitmap Original, SKPointI Offset);
@@ -300,8 +300,18 @@ public sealed partial class EditorViewModel : ObservableObject
 
     /// <summary>Nạp lại shape + trạng thái đã lưu của 1 tab từ phiên trước. Không đi qua Undo (mở lại
     /// app không có lịch sử Undo), shape vẫn chỉnh sửa được như bình thường.</summary>
-    public void RestoreFromSession(IEnumerable<AnnotationShape> shapes, bool savedToFile)
+    /// <summary>Ảnh gốc trước khi cắt của ảnh hiện tại, để ghi vào phiên làm việc; null nếu chưa cắt / đổi khung.</summary>
+    public SessionCropSource? CropSourceForSession =>
+        CropSources.TryGetValue(Bitmap, out var source) && !ReferenceEquals(source.Original, Bitmap)
+            ? new SessionCropSource(source.Original, source.Offset.X, source.Offset.Y)
+            : null;
+
+    public void RestoreFromSession(IEnumerable<AnnotationShape> shapes, bool savedToFile, SessionCropSource? crop = null)
     {
+        if (crop is not null)
+        {
+            CropSources.AddOrUpdate(Bitmap, new CropSource(crop.Original, new SKPointI(crop.OffsetX, crop.OffsetY)));
+        }
         foreach (var shape in shapes)
         {
             Annotations.Add(shape);

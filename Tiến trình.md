@@ -37,7 +37,8 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   mở bằng nút ở cửa sổ chính, nút `?` / tab Tệp của Editor, menu khay, F1 — kiểm tra GUI đạt (2026-09-29)
 - [ ] Zoom sâu trên ảnh lớn: hiện kẹp theo bộ nhớ (ảnh 1920×1080 tối đa ≈ 400%); muốn hơn thì phải đổi
   canvas sang chỉ vẽ phần đang hiển thị
-- [ ] Cắt khôi phục được **qua phiên làm việc** (hiện chỉ trong lần mở)
+- [x] Cắt khôi phục được **qua phiên làm việc**: tắt mở lại app vẫn kéo khung ra lấy lại phần đã cắt
+  (lưu ảnh gốc vào phiên) — kiểm tra GUI trong Sandbox đạt (2026-09-29)
 - [ ] Trỏ-chọn cửa sổ con (nút, vùng nội dung) như PicPick — hiện mới chọn cửa sổ cấp cao nhất
 
 ## ImageCompare

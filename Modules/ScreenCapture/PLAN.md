@@ -423,6 +423,11 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
     gắn ảnh gốc + độ lệch vào bitmap sinh từ Cắt / đổi khung; bitmap từ thao tác pixel khác kế thừa qua
     `OnBitmapChanged`. Undo/Redo chỉ đổi bitmap nên tự đúng. `ResizeCanvas` vẽ ảnh gốc dưới ảnh hiện tại.
     Test: cắt 300×180 giữa ảnh → kéo handle ra 500×310 → hiện lại đúng các ô gốc; Undo ×2 → 600×360.
+    **Qua phiên (2026-09-29)**: `SessionCropSource` → `TabDto.CropOriginal` (file PNG ảnh gốc, thường
+    dùng lại file ảnh chụp đã ghi nhờ `_written`) + `CropOffsetX/Y`; nạp lại qua
+    `EditorViewModel.RestoreFromSession`. Phiên cũ không có trường này vẫn mở được (chỉ không khôi phục
+    phần đã cắt). Tính vào giới hạn MB của phiên. Test Sandbox: cắt 1200×800 → 400×300, đóng Editor,
+    tắt app, mở lại, kéo góc ra 850×500 → nội dung gốc hiện lại; đóng lần 2 vẫn giữ ảnh gốc.
   - **Log** (`Services/AppLog`): xem README "Kiến trúc". Thay `crash.log`. Test: lượt chụp cuộn ngang
     chế độ Shift ghi đủ: khởi động, chuyển HWHEEL → Shift+lăn, kết quả chụp cuộn, chụp xong.
 - **Ribbon vừa màn hình (2026-09-25)**: ribbon Trang chủ đã rộng ~1360px logic (tràn ở màn 1920px /
@@ -502,7 +507,7 @@ trong code-behind của View (View sở hữu việc mở cửa sổ mới — `
 
 - Danh sách fast-follow cũ đã làm hết (2026-09-25): Blur/Mosaic, Bút vẽ tự do, Cắt khôi phục được,
   Vùng cố định nhớ qua restart, chụp cửa sổ bất kỳ, Log — xem các mục tương ứng ở trên.
-- Có thể làm tiếp: Cắt khôi phục được **qua phiên làm việc** (hiện chỉ trong lần mở — phiên chỉ lưu
-  ảnh hiện tại); trỏ-chọn cửa sổ con (nút, vùng nội dung) như PicPick, hiện mới chọn cửa sổ cấp cao nhất.
+- ~~Cắt khôi phục được qua phiên làm việc~~ — đã làm 2026-09-29 (xem mục "Cắt khôi phục được" ở trên). Có thể làm tiếp:
+  trỏ-chọn cửa sổ con (nút, vùng nội dung) như PicPick, hiện mới chọn cửa sổ cấp cao nhất.
 - Ribbon Editor: đã thu gọn (xem mục "Ribbon vừa màn hình" ở trên). Nếu thêm nhóm mới, giữ tổng
   ≤ ~1100px logic hoặc làm ribbon co giãn (ẩn nhãn khi hẹp) như Office.

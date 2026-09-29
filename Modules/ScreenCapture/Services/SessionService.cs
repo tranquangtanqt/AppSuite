@@ -7,7 +7,12 @@ using SkiaSharp;
 namespace ScreenCapture.Services;
 
 /// <summary>1 tab ảnh trong Editor, dạng dữ liệu thuần để ghi/đọc phiên làm việc.</summary>
-public sealed record SessionDocument(Guid Id, string Title, SKBitmap Bitmap, IReadOnlyList<AnnotationShape> Shapes, bool SavedToFile);
+public sealed record SessionDocument(Guid Id, string Title, SKBitmap Bitmap, IReadOnlyList<AnnotationShape> Shapes, bool SavedToFile,
+    SessionCropSource? CropSource = null);
+
+/// <summary>Ảnh gốc trước lần Cắt / đổi khung đầu tiên của tab + vị trí góc trên-trái của nó theo toạ độ
+/// ảnh hiện tại - lưu qua phiên để mở lại app vẫn kéo khung ra lấy lại được phần đã cắt.</summary>
+public sealed record SessionCropSource(SKBitmap Original, int OffsetX, int OffsetY);
 
 /// <summary>
 /// Nhớ các tab ảnh của Editor qua lần tắt/mở app (giống PicPick), lưu tạm ở
@@ -78,7 +83,17 @@ public sealed class SessionService
                 }
                 _written.AddOrUpdate(bitmap, tab.Image);
                 var shapes = tab.Shapes.Select(FromDto).OfType<AnnotationShape>().ToList();
-                documents.Add(new SessionDocument(tab.Id, tab.Title, bitmap, shapes, tab.SavedToFile));
+                // Ảnh gốc của phần đã cắt: thiếu file (phiên cũ chưa có trường này, hoặc bị dọn) thì chỉ
+                // mất khả năng khôi phục phần đã cắt, tab vẫn mở bình thường.
+                var cropPath = tab.CropOriginal is { Length: > 0 } cropFile ? Path.Combine(Folder, cropFile) : null;
+                var cropBitmap = cropPath is not null && File.Exists(cropPath) ? SKBitmap.Decode(cropPath) : null;
+                SessionCropSource? crop = null;
+                if (cropBitmap is not null)
+                {
+                    _written.AddOrUpdate(cropBitmap, tab.CropOriginal!);
+                    crop = new SessionCropSource(cropBitmap, tab.CropOffsetX, tab.CropOffsetY);
+                }
+                documents.Add(new SessionDocument(tab.Id, tab.Title, bitmap, shapes, tab.SavedToFile, crop));
             }
             return (documents, manifest?.ActiveId);
         }
@@ -113,6 +128,14 @@ public sealed class SessionService
                 Image = WriteBitmap(doc.Bitmap, doc.Id),
             };
             files.Add(dto.Image);
+            if (doc.CropSource is { } crop)
+            {
+                // Ảnh gốc thường chính là ảnh chụp đã ghi từ trước khi cắt → WriteBitmap dùng lại file cũ.
+                dto.CropOriginal = WriteBitmap(crop.Original, doc.Id);
+                dto.CropOffsetX = crop.OffsetX;
+                dto.CropOffsetY = crop.OffsetY;
+                files.Add(dto.CropOriginal);
+            }
             foreach (var shape in doc.Shapes)
             {
                 string? imageFile = null;
@@ -145,7 +168,7 @@ public sealed class SessionService
         File.Move(tempPath, manifestPath, overwrite: true);
 
         // Dọn mọi file không còn được tham chiếu: tab đã đóng, tab vượt giới hạn, ảnh của phiên cũ.
-        var referenced = kept.SelectMany(t => t.Shapes.Select(s => s.Image).Append(t.Image))
+        var referenced = kept.SelectMany(t => t.Shapes.Select(s => s.Image).Append(t.Image).Append(t.CropOriginal))
             .OfType<string>().Append(ManifestName).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var file in Directory.EnumerateFiles(Folder))
         {
@@ -277,6 +300,10 @@ public sealed class SessionService
         public string Title { get; set; } = string.Empty;
         public bool SavedToFile { get; set; }
         public string Image { get; set; } = string.Empty;
+        /// <summary>File ảnh gốc trước khi Cắt (null = tab chưa cắt / đổi khung, hoặc phiên cũ).</summary>
+        public string? CropOriginal { get; set; }
+        public int CropOffsetX { get; set; }
+        public int CropOffsetY { get; set; }
         public List<ShapeDto> Shapes { get; set; } = [];
     }
 

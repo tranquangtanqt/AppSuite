@@ -124,7 +124,7 @@ public static class HelpContent
 
         new("Cắt, khung ảnh & dán", "\uE7A8", "Nhóm Cắt & Sửa ở tab Trang chủ.",
         [
-            new("Cắt", "Kéo khung vùng cần giữ; hình nằm ngoài vùng cắt bị bỏ. Khôi phục được: kéo handle khung ảnh ra lại là hiện lại phần đã cắt (trong lần mở này)."),
+            new("Cắt", "Kéo khung vùng cần giữ; hình nằm ngoài vùng cắt bị bỏ. Khôi phục được: kéo handle khung ảnh ra lại là hiện lại phần đã cắt, kể cả sau khi tắt mở lại app."),
             new("Đổi kích thước khung ảnh", "Công cụ Move, không chọn hình nào → kéo 1 trong 8 handle quanh ảnh: kéo ra = mở rộng (nền trắng), kéo vào = cắt bớt cạnh đó. Hình đã vẽ giữ nguyên vị trí."),
             new("Dán ảnh", "Dán ảnh trong clipboard (ảnh copy từ app khác hoặc file ảnh copy trong Explorer) thành 1 hình ảnh, kéo / co giãn được (giữ Shift = đúng tỉ lệ). Ảnh dán lớn hơn thì khung ảnh tự nới ra.", "Ctrl+V"),
         ]),

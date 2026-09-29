@@ -90,7 +90,7 @@ public sealed partial class EditorWindow : Window
                 Id = doc.Id,
                 Title = doc.Title,
             };
-            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile);
+            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile, doc.CropSource);
             AddTab(vm);
         }
         if (capture is not null)
@@ -223,7 +223,7 @@ public sealed partial class EditorWindow : Window
         {
             var documents = DocumentTabs.TabItems.OfType<TabViewItem>()
                 .Select(t => (EditorViewModel)t.Tag)
-                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile))
+                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile, vm.CropSourceForSession))
                 .ToList();
             _session.Save(documents, _viewModel?.Id);
             return true;
