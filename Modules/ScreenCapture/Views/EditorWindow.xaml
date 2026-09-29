@@ -86,6 +86,12 @@
             <ToggleButton x:Name="RegionTabHeader" Content="Vùng chọn" Style="{StaticResource RibbonTabHeaderStyle}"
                           Click="RibbonTabHeader_Click" Visibility="Collapsed" />
         </StackPanel>
+        <!-- Nút "?" góc phải hàng tab (giống nút Help của Office/PicPick). -->
+        <Button x:Name="HelpHeaderButton" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"
+                Style="{StaticResource SmallToolButtonStyle}" Click="HelpButton_Click"
+                ToolTipService.ToolTip="Hướng dẫn: tất cả tính năng và phím tắt (F1)">
+            <FontIcon Glyph="&#xE897;" FontSize="16" />
+        </Button>
 
         <!-- Row 1: ribbon content, đổi theo tab đang chọn -->
         <Border Grid.Row="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="0,0,0,1" Padding="0,0,0,6">
@@ -386,6 +392,12 @@
                                         <TextBlock Text="Cài đặt" FontSize="10" />
                                     </StackPanel>
                                 </Button>
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="HelpButton_Click" ToolTipService.ToolTip="Tất cả tính năng và phím tắt (F1)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE897;" />
+                                        <TextBlock Text="Hướng dẫn" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="CloseButton_Click">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE711;" />
@@ -624,6 +636,34 @@
             </Border>
         </ScrollViewer>
 
-        <TextBlock x:Name="StatusText" Grid.Row="4" Opacity="0.7" />
+        <!-- Row 4: thanh trạng thái - trái: thông báo; phải: zoom của ảnh đang mở (kiểu PicPick).
+             Ctrl + lăn chuột trên ảnh, Ctrl + '+' / '-' / '0' cũng zoom. -->
+        <Grid Grid.Row="4" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock x:Name="StatusText" Opacity="0.7" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                <Button x:Name="ZoomFitButton" Style="{StaticResource SmallToolButtonStyle}" Click="ZoomFitButton_Click"
+                        ToolTipService.ToolTip="Vừa cửa sổ">
+                    <FontIcon Glyph="&#xE9A6;" FontSize="14" />
+                </Button>
+                <Button x:Name="ZoomOutButton" Style="{StaticResource SmallToolButtonStyle}" Click="ZoomOutButton_Click"
+                        ToolTipService.ToolTip="Thu nhỏ (Ctrl + -)">
+                    <FontIcon Glyph="&#xE71F;" FontSize="14" />
+                </Button>
+                <DropDownButton x:Name="ZoomLevelButton" Content="100%" MinWidth="72" Padding="8,2"
+                                ToolTipService.ToolTip="Mức zoom (Ctrl + 0 = 100%)">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout x:Name="ZoomLevelFlyout" Placement="Top" />
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+                <Button x:Name="ZoomInButton" Style="{StaticResource SmallToolButtonStyle}" Click="ZoomInButton_Click"
+                        ToolTipService.ToolTip="Phóng to (Ctrl + +)">
+                    <FontIcon Glyph="&#xE8A3;" FontSize="14" />
+                </Button>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

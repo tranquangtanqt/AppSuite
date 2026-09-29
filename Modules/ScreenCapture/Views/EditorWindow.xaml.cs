@@ -106,6 +106,12 @@ public sealed partial class EditorWindow : Window
         }
 
         this.Content.KeyDown += Content_KeyDown;
+        BuildZoomFlyout();
+        // Ctrl + lăn chuột: Canvas chặn trước để ScrollViewer không cuộn, còn zoom xử lý ở ScrollViewer
+        // (handledEventsToo) để lăn ở vùng trống quanh ảnh cũng zoom được.
+        Canvas.PointerWheelChanged += (_, e) => e.Handled |= IsKeyDown(Windows.System.VirtualKey.Control);
+        CanvasScroller.AddHandler(UIElement.PointerWheelChangedEvent,
+            new PointerEventHandler(CanvasScroller_PointerWheelChanged), handledEventsToo: true);
         // Bấm X trên thanh tiêu đề: lưu tạm phiên làm việc rồi mới đóng (lần mở sau khôi phục lại tab).
         AppWindow.Closing += async (_, args) =>
         {
@@ -188,6 +194,11 @@ public sealed partial class EditorWindow : Window
     public event EventHandler? SettingsRequested;
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>Nút Hướng dẫn / F1 - launcher mở cửa sổ Hướng dẫn dùng chung (cần AppSettings để hiện phím tắt).</summary>
+    public event EventHandler? HelpRequested;
+
+    private void HelpButton_Click(object sender, RoutedEventArgs e) => HelpRequested?.Invoke(this, EventArgs.Empty);
 
     /// <summary>Ghi lại phiên tạm ngay (sau khi tự lưu ảnh, hoặc đổi tuỳ chọn "nhớ tab" / giới hạn).</summary>
     public void PersistSession() => TrySaveSession();
@@ -278,6 +289,8 @@ public sealed partial class EditorWindow : Window
         StatusText.Text = vm.StatusText;
         UpdateSelectionButtons();
         UpdateNumberStampTab();
+        _zoom = vm.Zoom;
+        UpdateZoomLabel();
         UpdateCanvasLayout();
         CanvasScroller.ChangeView(0, 0, null, true);
     }
@@ -290,6 +303,9 @@ public sealed partial class EditorWindow : Window
         {
             // Ảnh đổi (cắt, xoá vùng, đổi khung, undo...) → toạ độ vùng chọn cũ không còn đúng.
             SetRegion(null);
+            // Ảnh to ra (mở rộng khung...) có thể làm mức zoom hiện tại vượt giới hạn bộ nhớ → kẹp lại.
+            _zoom = _viewModel.Zoom = Math.Min(_zoom, EffectiveMaxZoom);
+            UpdateZoomLabel();
             UpdateCanvasLayout();
         }
         if (e.PropertyName == nameof(EditorViewModel.StatusText))
@@ -520,13 +536,19 @@ public sealed partial class EditorWindow : Window
         // Mọi thứ phía dưới vẽ theo toạ độ ảnh; _viewOrigin chừa lề quanh ảnh cho 8 handle khung ảnh
         // (và dịch theo khi đang kéo mở rộng khung sang trái/lên trên).
         canvas.Translate(_viewOrigin.X, _viewOrigin.Y);
+        // Zoom: vẽ theo toạ độ ảnh rồi scale; nét viền/handle chia cho _zoom (Px) để luôn mảnh như ở 100%.
+        canvas.Scale(_zoom);
 
         var imageRect = SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height);
-        using (var edgePaint = new SKPaint { Color = new SKColor(0, 0, 0, 70), Style = SKPaintStyle.Stroke, StrokeWidth = 1 })
+        using (var edgePaint = new SKPaint { Color = new SKColor(0, 0, 0, 70), Style = SKPaintStyle.Stroke, StrokeWidth = Px(1) })
         {
-            canvas.DrawRect(SKRect.Inflate(imageRect, 0.5f, 0.5f), edgePaint);
+            canvas.DrawRect(SKRect.Inflate(imageRect, Px(0.5f), Px(0.5f)), edgePaint);
         }
-        canvas.DrawBitmap(_viewModel.Bitmap, 0, 0);
+        // Phóng to: lấy mẫu nearest để thấy rõ từng pixel; thu nhỏ: lọc mượt cho khỏi răng cưa.
+        using (var bitmapPaint = new SKPaint { FilterQuality = _zoom < 1f ? SKFilterQuality.Medium : SKFilterQuality.None })
+        {
+            canvas.DrawBitmap(_viewModel.Bitmap, 0, 0, bitmapPaint);
+        }
         foreach (var shape in _viewModel.Annotations)
         {
             shape.Render(canvas, _viewModel.Bitmap);
@@ -536,15 +558,15 @@ public sealed partial class EditorWindow : Window
         if (_viewModel.SelectedAnnotation is { } selected)
         {
             using var handleFill = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill, IsAntialias = true };
-            using var handleStroke = new SKPaint { Color = SKColors.DeepSkyBlue, Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f, IsAntialias = true };
+            using var handleStroke = new SKPaint { Color = SKColors.DeepSkyBlue, Style = SKPaintStyle.Stroke, StrokeWidth = Px(1.5f), IsAntialias = true };
 
             if (selected is LineArrowAnnotation line)
             {
                 // Đường/mũi tên: chỉ 2 handle tròn ở 2 đầu (kéo để đổi hướng/độ dài), không vẽ khung bao.
                 foreach (var p in new[] { line.Start, line.End })
                 {
-                    canvas.DrawCircle(p, HandleSize / 2 + 1, handleFill);
-                    canvas.DrawCircle(p, HandleSize / 2 + 1, handleStroke);
+                    canvas.DrawCircle(p, HandleSize / 2 + Px(1), handleFill);
+                    canvas.DrawCircle(p, HandleSize / 2 + Px(1), handleStroke);
                 }
             }
             else
@@ -554,8 +576,8 @@ public sealed partial class EditorWindow : Window
                 {
                     Color = SKColors.DeepSkyBlue,
                     Style = SKPaintStyle.Stroke,
-                    StrokeWidth = 2,
-                    PathEffect = SKPathEffect.CreateDash([6, 4], 0),
+                    StrokeWidth = Px(2),
+                    PathEffect = SKPathEffect.CreateDash([Px(6), Px(4)], 0),
                 };
                 canvas.DrawRect(bounds, selectPaint);
 
@@ -574,7 +596,7 @@ public sealed partial class EditorWindow : Window
 
         if (_isCropping)
         {
-            using var paint = new SKPaint { Color = SKColors.DeepSkyBlue, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };
+            using var paint = new SKPaint { Color = SKColors.DeepSkyBlue, Style = SKPaintStyle.Stroke, StrokeWidth = Px(2) };
             canvas.DrawRect(_cropRect, paint);
         }
 
@@ -582,15 +604,15 @@ public sealed partial class EditorWindow : Window
         {
             var r = _isDraggingRegion || _regionHandle >= 0 ? _regionDrag : ToRect(_region!.Value);
             // Viền "kiến bò" kiểu PicPick/Paint: nét trắng liền + nét đen đứt đè lên, thấy được trên mọi nền.
-            using var white = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Stroke, StrokeWidth = 1 };
+            using var white = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Stroke, StrokeWidth = Px(1) };
             using var black = new SKPaint
             {
                 Color = SKColors.Black,
                 Style = SKPaintStyle.Stroke,
-                StrokeWidth = 1,
-                PathEffect = SKPathEffect.CreateDash([4, 4], 0),
+                StrokeWidth = Px(1),
+                PathEffect = SKPathEffect.CreateDash([Px(4), Px(4)], 0),
             };
-            var outline = SKRect.Inflate(r, 0.5f, 0.5f);
+            var outline = SKRect.Inflate(r, Px(0.5f), Px(0.5f));
             canvas.DrawRect(outline, white);
             canvas.DrawRect(outline, black);
 
@@ -598,7 +620,7 @@ public sealed partial class EditorWindow : Window
             {
                 // 8 handle chỉnh kích thước vùng chọn (kéo bên trong vùng = di chuyển).
                 using var handleFill = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill };
-                using var handleStroke = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = 1 };
+                using var handleStroke = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = Px(1) };
                 foreach (var p in CanvasHandlePoints(r))
                 {
                     var h = new SKRect(p.X - HandleSize / 2, p.Y - HandleSize / 2, p.X + HandleSize / 2, p.Y + HandleSize / 2);
@@ -617,13 +639,13 @@ public sealed partial class EditorWindow : Window
                 {
                     Color = SKColors.DeepSkyBlue,
                     Style = SKPaintStyle.Stroke,
-                    StrokeWidth = 1.5f,
-                    PathEffect = SKPathEffect.CreateDash([6, 4], 0),
+                    StrokeWidth = Px(1.5f),
+                    PathEffect = SKPathEffect.CreateDash([Px(6), Px(4)], 0),
                 };
                 canvas.DrawRect(frame, previewPaint);
             }
             using var fill = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill };
-            using var stroke = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = 1 };
+            using var stroke = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = Px(1) };
             foreach (var p in CanvasHandlePoints(frame))
             {
                 var r = new SKRect(p.X - HandleSize / 2, p.Y - HandleSize / 2, p.X + HandleSize / 2, p.Y + HandleSize / 2);
@@ -640,7 +662,7 @@ public sealed partial class EditorWindow : Window
     private SKPoint ToCanvasPoint(Point p)
     {
         double scale = CurrentScale;
-        return new SKPoint((float)(p.X * scale) - _viewOrigin.X, (float)(p.Y * scale) - _viewOrigin.Y);
+        return new SKPoint(((float)(p.X * scale) - _viewOrigin.X) / _zoom, ((float)(p.Y * scale) - _viewOrigin.Y) / _zoom);
     }
 
     private double CurrentScale =>
@@ -648,6 +670,117 @@ public sealed partial class EditorWindow : Window
         ?? Services.Interop.NativeMethods.GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
 
     // ---- Kéo 8 handle quanh ảnh (tool Move, không chọn shape nào) để đổi kích thước khung ảnh ----
+
+    // ---- Zoom (thanh trạng thái góc phải, Ctrl + lăn chuột, Ctrl + '+' / '-' / '0') ----
+
+    /// <summary>Mức zoom của tab đang mở (1 = 100%), đồng bộ với EditorViewModel.Zoom khi đổi.</summary>
+    private float _zoom = 1f;
+    private const float MinZoom = 0.1f;
+    private const float MaxZoom = 8f;
+
+    /// <summary>SKXamlCanvas vẽ cả canvas (không chỉ phần đang thấy) vào 1 bitmap - phóng quá to ảnh lớn
+    /// sẽ tốn hàng GB RAM và vẽ lại rất chậm. Giới hạn zoom sao cho canvas tối đa ~32 triệu pixel và
+    /// 16384px mỗi cạnh (ảnh chụp 1920×1080 phóng được ~4x, ảnh nhỏ vẫn tới 8x).</summary>
+    private float EffectiveMaxZoom
+    {
+        get
+        {
+            float w = Math.Max(1, _viewModel.Bitmap.Width), h = Math.Max(1, _viewModel.Bitmap.Height);
+            float byArea = MathF.Sqrt(32_000_000f / (w * h));
+            float bySide = 16384f / Math.Max(w, h);
+            return Math.Max(1f, Math.Min(MaxZoom, Math.Min(byArea, bySide)));
+        }
+    }
+    private static readonly float[] ZoomSteps = [0.1f, 0.25f, 0.33f, 0.5f, 0.67f, 0.75f, 1f, 1.25f, 1.5f, 2f, 3f, 4f, 6f, 8f];
+    private static readonly float[] ZoomPresets = [0.25f, 0.5f, 0.75f, 1f, 1.5f, 2f, 4f, 8f];
+
+    private void BuildZoomFlyout()
+    {
+        foreach (var preset in ZoomPresets)
+        {
+            var item = new MenuFlyoutItem { Text = $"{preset * 100:0}%" };
+            item.Click += (_, _) => SetZoom(preset);
+            ZoomLevelFlyout.Items.Add(item);
+        }
+        ZoomLevelFlyout.Items.Add(new MenuFlyoutSeparator());
+        var fit = new MenuFlyoutItem { Text = "Vừa cửa sổ" };
+        fit.Click += (_, _) => ZoomToFit();
+        ZoomLevelFlyout.Items.Add(fit);
+    }
+
+    private void ZoomInButton_Click(object sender, RoutedEventArgs e) => StepZoom(+1);
+    private void ZoomOutButton_Click(object sender, RoutedEventArgs e) => StepZoom(-1);
+    private void ZoomFitButton_Click(object sender, RoutedEventArgs e) => ZoomToFit();
+
+    /// <summary>Nhảy sang mức kế tiếp trong ZoomSteps (kể cả khi mức hiện tại lẻ, vd sau "Vừa cửa sổ").</summary>
+    private void StepZoom(int direction, Point? anchor = null)
+    {
+        float next = direction > 0
+            ? ZoomSteps.FirstOrDefault(z => z > _zoom + 0.001f, EffectiveMaxZoom)
+            : ZoomSteps.LastOrDefault(z => z < _zoom - 0.001f, MinZoom);
+        SetZoom(next, anchor);
+    }
+
+    /// <summary>Zoom vừa khít phần nhìn thấy của ScrollViewer (không phóng to quá 100% với ảnh nhỏ).</summary>
+    private void ZoomToFit()
+    {
+        double scale = CurrentScale;
+        double viewW = CanvasScroller.ViewportWidth * scale - 2 * CanvasPad;
+        double viewH = CanvasScroller.ViewportHeight * scale - 2 * CanvasPad;
+        if (viewW <= 0 || viewH <= 0)
+        {
+            return;
+        }
+        float fit = (float)Math.Min(viewW / _viewModel.Bitmap.Width, viewH / _viewModel.Bitmap.Height);
+        SetZoom(Math.Min(1f, fit));
+    }
+
+    /// <summary>Đổi mức zoom, giữ nguyên điểm ảnh nằm dưới <paramref name="anchor"/> (toạ độ DIP trong
+    /// viewport của ScrollViewer; mặc định là tâm viewport).</summary>
+    private void SetZoom(float zoom, Point? anchor = null)
+    {
+        zoom = Math.Clamp(zoom, MinZoom, EffectiveMaxZoom);
+        if (Math.Abs(zoom - _zoom) < 0.0001f)
+        {
+            return;
+        }
+
+        double scale = CurrentScale;
+        var a = anchor ?? new Point(CanvasScroller.ViewportWidth / 2, CanvasScroller.ViewportHeight / 2);
+        // Điểm ảnh (toạ độ ảnh) đang nằm dưới anchor, trước khi đổi zoom.
+        double imageX = ((CanvasScroller.HorizontalOffset + a.X) * scale - _viewOrigin.X) / _zoom;
+        double imageY = ((CanvasScroller.VerticalOffset + a.Y) * scale - _viewOrigin.Y) / _zoom;
+
+        _zoom = zoom;
+        _viewModel.Zoom = zoom;
+        UpdateZoomLabel();
+        UpdateCanvasLayout();
+        CanvasScroller.UpdateLayout(); // cập nhật extent mới trước khi cuộn, không thì ChangeView bị kẹp theo kích thước cũ
+
+        CanvasScroller.ChangeView(
+            Math.Max(0, (imageX * _zoom + _viewOrigin.X) / scale - a.X),
+            Math.Max(0, (imageY * _zoom + _viewOrigin.Y) / scale - a.Y),
+            null, true);
+    }
+
+    private void UpdateZoomLabel()
+    {
+        ZoomLevelButton.Content = $"{_zoom * 100:0}%";
+        ZoomInButton.IsEnabled = _zoom < EffectiveMaxZoom - 0.001f;
+        ZoomOutButton.IsEnabled = _zoom > MinZoom + 0.001f;
+    }
+
+    /// <summary>Ctrl + lăn chuột trên ảnh = zoom quanh vị trí con trỏ (không Ctrl thì cuộn như thường).</summary>
+    private void CanvasScroller_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        if (!IsKeyDown(Windows.System.VirtualKey.Control))
+        {
+            return;
+        }
+        var point = e.GetCurrentPoint(CanvasScroller);
+        StepZoom(point.Properties.MouseWheelDelta > 0 ? +1 : -1, point.Position);
+        e.Handled = true;
+    }
 
     /// <summary>Lề (pixel) quanh ảnh trên canvas để handle khung ảnh không bị cắt mất.</summary>
     private const float CanvasPad = 16f;
@@ -703,8 +836,8 @@ public sealed partial class EditorWindow : Window
         {
             double scale = CurrentScale;
             topLeft = new SKPoint(
-                MathF.Round(Math.Max(0f, (float)(CanvasScroller.HorizontalOffset * scale) - _viewOrigin.X)),
-                MathF.Round(Math.Max(0f, (float)(CanvasScroller.VerticalOffset * scale) - _viewOrigin.Y)));
+                MathF.Round(Math.Max(0f, ((float)(CanvasScroller.HorizontalOffset * scale) - _viewOrigin.X) / _zoom)),
+                MathF.Round(Math.Max(0f, ((float)(CanvasScroller.VerticalOffset * scale) - _viewOrigin.Y) / _zoom)));
         }
 
         try
@@ -776,7 +909,7 @@ public sealed partial class EditorWindow : Window
     private int? HitTestCanvasHandle(SKPoint pos) =>
         HitTestPoints(CanvasHandlePoints(SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height)), pos);
 
-    private static int? HitTestPoints(SKPoint[] points, SKPoint pos)
+    private int? HitTestPoints(SKPoint[] points, SKPoint pos)
     {
         for (int i = 0; i < points.Length; i++)
         {
@@ -797,18 +930,22 @@ public sealed partial class EditorWindow : Window
         {
             content = SKRect.Union(content, p);
         }
-        _viewOrigin = new SKPoint(CanvasPad - content.Left, CanvasPad - content.Top);
+        _viewOrigin = new SKPoint(CanvasPad - content.Left * _zoom, CanvasPad - content.Top * _zoom);
         double scale = CurrentScale;
-        Canvas.Width = (content.Width + 2 * CanvasPad) / scale;
-        Canvas.Height = (content.Height + 2 * CanvasPad) / scale;
+        Canvas.Width = (content.Width * _zoom + 2 * CanvasPad) / scale;
+        Canvas.Height = (content.Height * _zoom + 2 * CanvasPad) / scale;
         Canvas.Invalidate();
     }
 
-    private const float HandleSize = 8f;
+    /// <summary>Cạnh handle (toạ độ ảnh) - chia theo zoom để trên màn hình luôn 8px, dễ bấm ở mọi mức zoom.</summary>
+    private float HandleSize => 8f / _zoom;
+
+    /// <summary>Đổi độ dài tính theo pixel màn hình (nét viền, nét đứt...) sang toạ độ ảnh ở mức zoom hiện tại.</summary>
+    private float Px(float screenPixels) => screenPixels / _zoom;
 
     /// <summary>Trả về chỉ số handle (0=TL,1=TR,2=BL,3=BR) nếu pos rơi vào 1 trong 4 góc của bounds,
     /// null nếu không trúng handle nào.</summary>
-    private static int? HitTestHandle(SKRect bounds, SKPoint pos)
+    private int? HitTestHandle(SKRect bounds, SKPoint pos)
     {
         (float X, float Y)[] corners =
         [
@@ -828,9 +965,9 @@ public sealed partial class EditorWindow : Window
     /// <summary>0 = điểm đầu, 1 = điểm cuối (đầu mũi tên), null = trúng khúc giữa (di chuyển cả đường).
     /// Vùng bắt mỗi đầu là 1/3 độ dài (tối đa 30px, tối thiểu bằng handle) - nên chỉ cần bấm "gần"
     /// đầu mũi tên rồi kéo là đổi hướng được, không phải nhắm trúng handle nhỏ.</summary>
-    private static int? HitTestLineEndpoint(LineArrowAnnotation line, SKPoint pos)
+    private int? HitTestLineEndpoint(LineArrowAnnotation line, SKPoint pos)
     {
-        float radius = Math.Max(HandleSize, Math.Min(30f, line.Length / 3f));
+        float radius = Math.Max(HandleSize, Math.Min(Px(30f), line.Length / 3f));
         float toStart = SKPoint.Distance(pos, line.Start);
         float toEnd = SKPoint.Distance(pos, line.End);
         if (Math.Min(toStart, toEnd) > radius)
@@ -860,7 +997,7 @@ public sealed partial class EditorWindow : Window
             return true;
         }
 
-        var hit = _viewModel.Annotations.Reverse().FirstOrDefault(s => s.HitTest(pos, 6));
+        var hit = _viewModel.Annotations.Reverse().FirstOrDefault(s => s.HitTest(pos, Px(6)));
         if (hit is null)
         {
             return false;
@@ -1096,8 +1233,8 @@ public sealed partial class EditorWindow : Window
         {
             var now = e.GetCurrentPoint(null).Position;
             double scale = CurrentScale;
-            float dx = (float)Math.Round((now.X - _canvasDragStartWindow.X) * scale);
-            float dy = (float)Math.Round((now.Y - _canvasDragStartWindow.Y) * scale);
+            float dx = (float)Math.Round((now.X - _canvasDragStartWindow.X) * scale / _zoom);
+            float dy = (float)Math.Round((now.Y - _canvasDragStartWindow.Y) * scale / _zoom);
             float left = 0, top = 0, right = _viewModel.Bitmap.Width, bottom = _viewModel.Bitmap.Height;
             if (_canvasHandle is 0 or 6 or 7) left = Math.Min(left + dx, right - 1);
             if (_canvasHandle is 2 or 3 or 4) right = Math.Max(right + dx, left + 1);
@@ -1343,6 +1480,13 @@ public sealed partial class EditorWindow : Window
         bool ctrl = IsKeyDown(Windows.System.VirtualKey.Control);
         bool shift = IsKeyDown(Windows.System.VirtualKey.Shift);
 
+        if (e.Key == Windows.System.VirtualKey.F1)
+        {
+            HelpRequested?.Invoke(this, EventArgs.Empty);
+            e.Handled = true;
+            return;
+        }
+
         // Đang có vùng chọn (tool Select): Ctrl+C/Ctrl+X/Delete/Enter/Esc tác động lên vùng đó.
         if (_region is not null)
         {
@@ -1372,6 +1516,21 @@ public sealed partial class EditorWindow : Window
 
         if (ctrl)
         {
+            // 187/189 = phím '=' '+' / '-' ở hàng số (VirtualKey không có tên riêng cho 2 phím OEM này).
+            Action? zoomAction = e.Key switch
+            {
+                Windows.System.VirtualKey.Add or (Windows.System.VirtualKey)187 => () => StepZoom(+1),
+                Windows.System.VirtualKey.Subtract or (Windows.System.VirtualKey)189 => () => StepZoom(-1),
+                Windows.System.VirtualKey.Number0 or Windows.System.VirtualKey.NumberPad0 => () => SetZoom(1f),
+                _ => null,
+            };
+            if (zoomAction is not null)
+            {
+                zoomAction();
+                e.Handled = true;
+                return;
+            }
+
             System.Windows.Input.ICommand? command = e.Key switch
             {
                 Windows.System.VirtualKey.Z when shift => _viewModel.RedoCommand,

@@ -12,16 +12,8 @@ namespace ScreenCapture.Views;
 /// bấm OK mới gọi <c>apply</c> (launcher lưu file + đăng ký lại phím tắt + áp cho Session/Editor).</summary>
 public sealed partial class SettingsWindow : Window
 {
-    private static readonly (HotkeyAction Action, string Label)[] HotkeyRows =
-    [
-        (HotkeyAction.FullScreen, "Chụp toàn màn hình"),
-        (HotkeyAction.ActiveWindow, "Chụp cửa sổ hiện tại"),
-        (HotkeyAction.Region, "Chụp vùng chọn"),
-        (HotkeyAction.FixedRegion, "Chụp vùng cố định"),
-        (HotkeyAction.ScrollCapture, "Chụp cuộn dọc"),
-        (HotkeyAction.ScrollCaptureHorizontal, "Chụp cuộn ngang"),
-        (HotkeyAction.RepeatLast, "Chụp lại lần gần nhất"),
-    ];
+    // Dùng chung tên hiển thị với cửa sổ Hướng dẫn.
+    private static readonly (HotkeyAction Action, string Label)[] HotkeyRows = HelpContent.HotkeyLabels;
 
     private readonly IImageFileService _fileService;
     private readonly Func<AppSettings, IReadOnlyList<HotkeyBinding>> _apply;

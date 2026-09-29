@@ -440,6 +440,29 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   `StampAnnotation.RotationOf` dùng chung cho `RotateTransform` của icon trong menu → đủ 8 hướng.
 - **`RegionOverlayWindow.IsAlwaysOnTop` bật lại** (bug #3 ở trên): `= !Debugger.IsAttached` — topmost
   khi chạy thật, tự tắt khi debug trong VS để không che breakpoint/exception dialog.
+- **Zoom ảnh trong Editor (2026-09-29)**: cụm zoom ở góc phải thanh trạng thái (kiểu PicPick):
+  `Vừa cửa sổ` / `−` / `100% ▾` (preset 25–800% + Vừa cửa sổ) / `+`; Ctrl + lăn chuột zoom quanh con
+  trỏ; Ctrl + `+`/`-`/`0`. Mỗi tab nhớ mức zoom riêng (`EditorViewModel.Zoom`, không lưu vào phiên).
+  Cách làm: Skia `canvas.Scale(_zoom)` sau `Translate(_viewOrigin)` (`_viewOrigin` giờ là pixel màn
+  hình), `ToCanvasPoint` chia `_zoom`; handle/nét viền/nét đứt/dung sai hit-test chia `_zoom` (`Px`,
+  `HandleSize`) để trên màn hình luôn cùng cỡ. Phóng to lấy mẫu nearest (thấy rõ pixel), thu nhỏ lọc
+  Medium. **Giới hạn**: `SKXamlCanvas` vẽ cả canvas vào 1 bitmap (không chỉ viewport) → zoom tối đa bị
+  kẹp theo ~32 triệu pixel / 16384px mỗi cạnh (`EffectiveMaxZoom`; ảnh 1920×1080 ≈ 4x). Muốn zoom sâu
+  hơn trên ảnh lớn phải đổi sang chỉ vẽ phần viewport.
+  **Kiểm tra GUI trong Sandbox (2026-09-29, 150% DPI)**: nút +/−/Vừa cửa sổ, preset, Ctrl+0/'+'/'-'/
+  NumPad+, lăn không Ctrl chỉ cuộn; vẽ chữ nhật ở 300% kéo 150×90px màn hình → đúng 50×30px ảnh;
+  Ctrl+lăn 200→400→200% điểm dưới con trỏ lệch ≤2.2px, chấm to đúng 2.00x; phóng to thấy rõ pixel.
+  Lưu ý: khi ảnh vừa khít viewport (chưa có thanh cuộn), nấc zoom đầu không giữ được điểm neo hoàn
+  toàn vì ScrollViewer không cuộn quá extent — giới hạn tự nhiên, không phải lỗi.
+- **Cửa sổ Hướng dẫn (2026-09-29)**: người dùng muốn 1 nút nêu tất cả tính năng. `HelpWindow` (bố cục
+  như `SettingsWindow`: 16 danh mục trái, thẻ tính năng phải, phím tắt hiện dạng keycap) + ô tìm kiếm
+  bỏ dấu tiếng Việt. Nội dung là dữ liệu C# (`Models/HelpContent.cs`, soạn từ README) chứ không phải
+  XAML tĩnh để tìm kiếm được và mục "Phím tắt chụp" lấy theo `AppSettings` (dựng lại khi bấm OK ở Cài
+  đặt). 1 cửa sổ dùng chung do launcher giữ (`OpenHelp`); Editor gọi qua event `HelpRequested` như
+  `SettingsRequested`. Tên phím tắt dùng chung `HelpContent.HotkeyLabels` với trang Phím tắt. Kích
+  thước 1000×700 logic, kẹp ≤ 90% vùng làm việc và căn giữa (bản đầu tràn màn hình ở Sandbox 150%).
+  Kiểm tra GUI trong Sandbox: mở từ nút cửa sổ chính / nút ? Editor / F1, 16 danh mục, phím tắt theo
+  cài đặt, tìm "cat" / "mui ten" / không ra kết quả, chỉ 1 cửa sổ khi mở lại — đạt hết.
 
 ### Không dùng DI container
 

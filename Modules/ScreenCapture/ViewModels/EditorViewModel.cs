@@ -288,6 +288,10 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>Tên tab của ảnh trong Editor (thời điểm chụp, kiểu PicPick "2026-09-24 13 36 14").</summary>
     public string Title { get; init; } = string.Empty;
 
+    /// <summary>Mức zoom hiển thị của tab (1 = 100%). Chỉ là trạng thái xem - không ảnh hưởng ảnh khi
+    /// lưu/copy, không ghi vào phiên làm việc.</summary>
+    public float Zoom { get; set; } = 1f;
+
     /// <summary>Định danh ổn định của tab - tên file lưu tạm phiên làm việc (SessionService).</summary>
     public Guid Id { get; init; } = Guid.NewGuid();
 

@@ -26,6 +26,7 @@ public sealed partial class CaptureLauncherWindow : Window
     private readonly HotkeyService _hotkeys;
     private IReadOnlyList<HotkeyBinding> _failedHotkeys = [];
     private SettingsWindow? _settingsWindow;
+    private HelpWindow? _helpWindow;
 
     /// <summary>Đang trong 1 lần chụp (chờ hẹn giờ / overlay chọn vùng) - bỏ qua phím tắt bấm chồng.</summary>
     private bool _isCapturing;
@@ -88,6 +89,16 @@ public sealed partial class CaptureLauncherWindow : Window
             _tray.Dispose();
         };
 
+        // F1 = Hướng dẫn (Editor cũng có F1 riêng, gọi về đây qua HelpRequested).
+        Content.KeyDown += (_, e) =>
+        {
+            if (e.Key == Windows.System.VirtualKey.F1)
+            {
+                OpenHelp();
+                e.Handled = true;
+            }
+        };
+
         StartHidden = startInTray && _settings.RunInTray;
         if (!StartHidden)
         {
@@ -121,7 +132,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help }
 
     private void ShowTrayMenu()
     {
@@ -138,6 +149,7 @@ public sealed partial class CaptureLauncherWindow : Window
             ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
             ((int)TrayCommand.OpenEditor, "Mở Editor", canOpenEditor),
             ((int)TrayCommand.Settings, "Cài đặt...", true),
+            ((int)TrayCommand.Help, "Hướng dẫn", true),
             (0, null, true),
             ((int)TrayCommand.Exit, "Thoát", true),
         ]);
@@ -153,6 +165,7 @@ public sealed partial class CaptureLauncherWindow : Window
             case TrayCommand.OpenLauncher: ShowLauncher(); break;
             case TrayCommand.OpenEditor: OpenExistingEditor(); break;
             case TrayCommand.Settings: OpenSettings(); break;
+            case TrayCommand.Help: OpenHelp(); break;
             case TrayCommand.Exit: _ = ExitAsync(); break;
         }
     }
@@ -185,6 +198,7 @@ public sealed partial class CaptureLauncherWindow : Window
             return;
         }
         _settingsWindow?.Close();
+        _helpWindow?.Close();
         _exiting = true;
         Close();
         Application.Current.Exit();
@@ -223,6 +237,26 @@ public sealed partial class CaptureLauncherWindow : Window
         _settingsWindow.Activate();
     }
 
+    // ---- Hướng dẫn ----
+
+    private void HelpButton_Click(object sender, RoutedEventArgs e) => OpenHelp();
+
+    /// <summary>Mở cửa sổ Hướng dẫn (1 cửa sổ dùng chung cho launcher, Editor, menu khay, F1).</summary>
+    private void OpenHelp()
+    {
+        if (_helpWindow is null)
+        {
+            _helpWindow = new HelpWindow(_settings);
+            _helpWindow.Closed += (_, _) => _helpWindow = null;
+        }
+        var hwnd = WindowNative.GetWindowHandle(_helpWindow);
+        if (NativeMethods.IsIconic(hwnd))
+        {
+            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+        }
+        _helpWindow.Activate();
+    }
+
     /// <summary>Bấm OK ở cửa sổ Cài đặt: lưu file, đăng ký lại phím tắt, áp giới hạn phiên. Trả về phím
     /// tắt đăng ký lỗi để cửa sổ Cài đặt đánh dấu ⚠.</summary>
     private IReadOnlyList<HotkeyBinding> ApplySettings(AppSettings settings)
@@ -252,6 +286,7 @@ public sealed partial class CaptureLauncherWindow : Window
             ShowStatus($"Không đặt được khởi động cùng Windows: {ex.Message}", InfoBarSeverity.Error);
         }
         _failedHotkeys = _hotkeys.Apply(settings.Hotkeys);
+        _helpWindow?.UpdateSettings(settings); // mục "Phím tắt chụp" hiện theo phím vừa đổi
         StatusInfoBar.IsOpen = false;
         ReportFailedHotkeys();
         return _failedHotkeys;
@@ -633,6 +668,7 @@ public sealed partial class CaptureLauncherWindow : Window
         var editor = new EditorWindow(_fileService, _clipboardService, _session, restored, activeId, capture);
         editor.Closed += (_, _) => _editor = null;
         editor.SettingsRequested += (_, _) => OpenSettings();
+        editor.HelpRequested += (_, _) => OpenHelp();
         return editor;
     }
 

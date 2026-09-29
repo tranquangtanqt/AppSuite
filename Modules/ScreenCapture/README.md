@@ -33,6 +33,14 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   ứng thì tự chuyển sang **Shift + lăn chuột** (cách trình duyệt, Excel cuộn ngang). Dừng khi tới
   mép phải, Esc, hoặc cùng giới hạn như cuộn dọc (độ dài ảnh tính theo chiều rộng).
 
+### Hướng dẫn (`HelpWindow`)
+
+Liệt kê mọi tính năng cho người dùng cuối, chia 16 danh mục (chế độ chụp, phím tắt, khay, Editor,
+vẽ, che, cắt, zoom, lưu, cài đặt...). Có ô tìm kiếm không phân biệt dấu ("cat" ra "Cắt"). Mục *Phím
+tắt chụp* hiện đúng phím đang cài đặt. Mở bằng nút **Hướng dẫn** ở cửa sổ chính, nút **?** góc phải
+ribbon / nút *Hướng dẫn* ở tab *Tệp* của Editor, menu khay, hoặc **F1**. Nội dung ở
+`Models/HelpContent.cs` — **thêm/đổi tính năng thì cập nhật cả file đó lẫn README này**.
+
 ### Cài đặt (`SettingsWindow`)
 
 Mở bằng nút **Cài đặt** ở góc phải cửa sổ chính, hoặc tab *Tệp* của Editor. Bố cục kiểu "Program
@@ -60,7 +68,7 @@ tuỳ chọn về ban đầu.
 
 - Icon ScreenCapture ở khay (góc phải taskbar; có thể nằm trong nhóm icon ẩn `^`). Click trái → mở
   cửa sổ chính. Click phải → menu: Chụp toàn màn hình / cửa sổ / vùng chọn / vùng cố định, Mở cửa sổ
-  chính, Mở Editor, Cài đặt..., **Thoát**.
+  chính, Mở Editor, Cài đặt..., Hướng dẫn, **Thoát**.
 - Bấm X ở cửa sổ chính → ẩn xuống khay (lần đầu có bong bóng thông báo), phím tắt vẫn dùng được.
   Thoát hẳn bằng *Thoát* ở menu khay (Editor vẫn lưu tạm / hỏi lưu ảnh như khi đóng bình thường).
 - Tắt tuỳ chọn → không có icon, bấm X ở cửa sổ chính là thoát hẳn app.
@@ -163,8 +171,13 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
 - Ribbon vừa cửa sổ rộng ~1100px logic (vd màn 1920px ở 150%). Cửa sổ hẹp hơn: rê chuột lên ribbon
   hiện thanh cuộn ngang, lăn chuột để tới các nhóm bên phải.
 
+**Zoom** (góc phải thanh trạng thái): *Vừa cửa sổ* / `−` / `100% ▾` (25–800%) / `+`; `Ctrl` + lăn
+chuột zoom quanh con trỏ; `Ctrl++` / `Ctrl+-` / `Ctrl+0`. Mỗi tab nhớ mức zoom riêng (không lưu qua
+phiên); zoom không ảnh hưởng ảnh khi lưu / copy. Phóng to hiện rõ từng pixel. Ảnh lớn có giới hạn
+zoom tối đa (ảnh 1920×1080 ≈ 400%) để không tốn quá nhiều bộ nhớ.
+
 **Tab "Tệp"** — *Lưu PNG* (hộp thoại điền sẵn tên file = tên tab, vd `2026-09-24 15 31 59.png`),
-*Copy* ảnh (đã gộp mọi shape) vào clipboard, *Cài đặt*, *Đóng* cửa sổ.
+*Copy* ảnh (đã gộp mọi shape) vào clipboard, *Cài đặt*, *Hướng dẫn*, *Đóng* cửa sổ.
 
 **Tab "Vùng chọn"** (contextual) — tự hiện khi dùng *Select* chọn 1 vùng, tự ẩn khi bỏ chọn:
 
@@ -203,6 +216,8 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | `Esc` | Bỏ chọn shape (thoát chỉnh sửa) / bỏ vùng chọn |
 | Khi có vùng chọn (*Select*): `Ctrl+C` / `Ctrl+X` / `Delete` / `Enter` | Copy / Cut / Xoá vùng / Cắt ảnh theo vùng |
 | Giữ `Shift` khi vẽ/kéo | Khoá góc 45° (đường/mũi tên), vuông/tròn (chữ nhật/elip) |
+| `Ctrl` + lăn chuột / `Ctrl++` / `Ctrl+-` / `Ctrl+0` | Zoom quanh con trỏ / phóng to / thu nhỏ / về 100% |
+| `F1` | Mở cửa sổ Hướng dẫn |
 
 Khi đang gõ trong ô số (Current/Next), các phím trên thuộc về ô đó (vd `Ctrl+Z` hoàn tác chữ vừa
 gõ), không kích hoạt lệnh của Editor.
