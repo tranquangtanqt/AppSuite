@@ -101,11 +101,38 @@ public sealed partial class RegionOverlayWindow : Window
         _selectionBorder.Visibility = Visibility.Collapsed;
 
         this.Activated += RegionOverlayWindow_Activated;
+
+        // Esc huỷ ở MỌI chế độ (Vùng chọn / trỏ-chọn cửa sổ / chụp cuộn / Vùng cố định); Enter chỉ dùng khi
+        // đang chỉnh Vùng cố định. Trước đây chỉ gắn trong EnterAdjustState → Esc ở Vùng chọn không huỷ được.
+        this.Content.KeyDown += Content_KeyDown;
+
+        // Dự phòng: overlay mở từ phím tắt / menu khay có thể không được Windows cho lên foreground (luật
+        // chống cướp focus) → không nhận KeyDown. Hỏi thẳng trạng thái phím Esc (như ScrollCaptureService).
+        NativeMethods.GetAsyncKeyState(NativeMethods.VK_ESCAPE); // xoá trạng thái "đã bấm" cũ
+        NativeMethods.GetAsyncKeyState(VK_RETURN);
+        _escapeTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+        _escapeTimer.Tick += (_, _) =>
+        {
+            if ((NativeMethods.GetAsyncKeyState(NativeMethods.VK_ESCAPE) & 0x8000) != 0)
+            {
+                Cancel();
+            }
+            else if (_isAdjusting && _draggedHandleIndex < 0 && (NativeMethods.GetAsyncKeyState(VK_RETURN) & 0x8000) != 0)
+            {
+                Confirm(); // Enter chụp Vùng cố định - cùng lý do dự phòng như Esc
+            }
+        };
+        this.Closed += (_, _) => _escapeTimer.Stop();
     }
+
+    private const int VK_RETURN = 0x0D;
+    private readonly DispatcherTimer _escapeTimer;
+    private bool _finished;
 
     public async Task<RECT?> SelectRegionAsync()
     {
         _tcs = new TaskCompletionSource<RECT?>();
+        _escapeTimer.Start(); // sau khi có _tcs: Cancel trước đó sẽ không trả kết quả, SelectRegionAsync treo
         using var image = SKImage.FromBitmap(_frozenScreen);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         BackgroundImage.Source = await LoadBitmapAsync(data.ToArray());
@@ -116,6 +143,8 @@ public sealed partial class RegionOverlayWindow : Window
     private async void RegionOverlayWindow_Activated(object sender, WindowActivatedEventArgs args)
     {
         this.Activated -= RegionOverlayWindow_Activated;
+        // Cố lấy foreground để phím (Esc/Enter) đi vào overlay thay vì app đang active bên dưới.
+        NativeMethods.SetForegroundWindow(WinRT.Interop.WindowNative.GetWindowHandle(this));
 
         // BackgroundImage.Source is a BitmapImage sized in DEVICE pixels (the raw capture), but
         // Image/Canvas layout in WinUI works in DIPs (logical pixels). Without this, on any monitor
@@ -300,26 +329,29 @@ public sealed partial class RegionOverlayWindow : Window
         HintText.Text = "Kéo góc để chỉnh kích thước — Enter: chụp, Esc: huỷ";
         ShowHandles();
         UpdateSelectionVisuals();
-
-        // Window-level key handling for Enter/Escape while adjusting.
-        this.Content.KeyDown -= Content_KeyDown;
-        this.Content.KeyDown += Content_KeyDown;
     }
 
     private void Content_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key == Windows.System.VirtualKey.Enter)
+        if (e.Key == Windows.System.VirtualKey.Enter && _isAdjusting)
         {
             Confirm();
+            e.Handled = true;
         }
         else if (e.Key == Windows.System.VirtualKey.Escape)
         {
             Cancel();
+            e.Handled = true;
         }
     }
 
     private void Confirm()
     {
+        if (_finished)
+        {
+            return;
+        }
+        _finished = true;
         double scale = Scale;
         var rect = new RECT
         {
@@ -334,6 +366,12 @@ public sealed partial class RegionOverlayWindow : Window
 
     private void Cancel()
     {
+        // KeyDown và timer dự phòng có thể cùng bắt 1 lần bấm Esc → chỉ đóng 1 lần.
+        if (_finished)
+        {
+            return;
+        }
+        _finished = true;
         _tcs?.TrySetResult(null);
         this.Close();
     }

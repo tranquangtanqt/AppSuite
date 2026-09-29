@@ -459,6 +459,15 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   Ctrl+lăn 200→400→200% điểm dưới con trỏ lệch ≤2.2px, chấm to đúng 2.00x; phóng to thấy rõ pixel.
   Lưu ý: khi ảnh vừa khít viewport (chưa có thanh cuộn), nấc zoom đầu không giữ được điểm neo hoàn
   toàn vì ScrollViewer không cuộn quá extent — giới hạn tự nhiên, không phải lỗi.
+- **Esc không huỷ màn chọn vùng (bug, 2026-09-29)**: `RegionOverlayWindow` chỉ gắn `Content.KeyDown`
+  trong `EnterAdjustState` (Vùng cố định) → ở Vùng chọn / trỏ-chọn cửa sổ / chọn vùng chụp cuộn, Esc
+  không làm gì dù dòng hướng dẫn ghi "Esc: huỷ". Sửa: gắn KeyDown ngay trong constructor (Esc luôn huỷ,
+  Enter chỉ khi đang chỉnh); `SetForegroundWindow` overlay khi hiện; thêm `DispatcherTimer` 50ms hỏi
+  `GetAsyncKeyState` Esc (và Enter khi đang chỉnh) để vẫn chạy khi Windows không cho overlay lên
+  foreground. Timer start sau khi có `_tcs` (Cancel sớm hơn sẽ làm `SelectRegionAsync` treo); cờ
+  `_finished` chống đóng 2 lần (KeyDown + timer cùng bắt 1 lần bấm). Kiểm tra Sandbox bằng phím tắt thật:
+  Esc huỷ ở Vùng chọn / Vùng cố định / Chụp cuộn dọc (không mở Editor, app còn chạy); huỷ xong vẫn kéo
+  chụp được; Enter ở Vùng cố định vẫn chụp.
 - **Cửa sổ Hướng dẫn (2026-09-29)**: người dùng muốn 1 nút nêu tất cả tính năng. `HelpWindow` (bố cục
   như `SettingsWindow`: 16 danh mục trái, thẻ tính năng phải, phím tắt hiện dạng keycap) + ô tìm kiếm
   bỏ dấu tiếng Việt. Nội dung là dữ liệu C# (`Models/HelpContent.cs`, soạn từ README) chứ không phải
