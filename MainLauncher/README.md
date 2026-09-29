@@ -37,11 +37,12 @@ Start/Stop/Restart gọi thẳng `RelayCommand` trên `ModuleViewModel`.
 - **DashboardHeader**: dùng lại **chính asset gốc** của WinUI Gallery - `Assets/GalleryHeaderImage.png`
   làm ảnh nền, làm mờ dần bằng `SharedUI.Controls.OpacityMaskView` (đúng kỹ thuật `HomePageHeader`),
   tiêu đề "AppSuite" + subtitle động (`DashboardViewModel.HeaderSubtitle`, ví dụ "1/2 module đang
-  chạy"), và một hàng tile liên kết cuộn ngang (`SharedUI.Controls.HorizontalScrollContainer` +
-  `SharedUI.Controls.Tile`) dùng icon thật từ `Assets/HomeHeaderTiles/*.png` (WinUI, Windows Design,
-  Toolkit) cộng vector GitHub octocat (`GitHubIconPath` resource, copy từ `App.xaml` của Gallery),
-  trỏ tới tài liệu WinUI 3 / Windows App SDK / WinUI Gallery / Community Toolkit - đúng bộ tile
-  "Getting started / Design / GitHub / Toolkit" trên HomePage gốc.
+  chạy"). Hàng tile liên kết tài liệu (WinUI / Windows App SDK / Gallery / Toolkit) kiểu HomePage gốc
+  đã bỏ (2026-09-29, người dùng thấy thừa) - ảnh nền header thu còn cao 170.
+- **Card module**: chiều cao cố định (`ModuleCard` Height 186) - `GridView` (ItemsWrapGrid) lấy kích
+  thước ô theo card đầu tiên, card cao hơn sẽ bị cắt mất hàng nút Start/Stop/Restart. Tên module 1
+  dòng, mô tả tối đa 2 dòng, quá thì `…` + tooltip đầy đủ.
+- Cửa sổ launcher mở ở trạng thái maximize (`App.OnLaunched`).
 - **Bên dưới header**: thẻ thống kê Total/Running/Stopped (không đổi so với trước), rồi một
   `GridView` các `ModuleCard` - tương đương phần "Recently added samples" GridView của HomePage,
   nhưng hiển thị module thay vì control sample. Mỗi `ModuleCard` có icon vuông màu (màu suy ra từ
@@ -52,7 +53,7 @@ Start/Stop/Restart gọi thẳng `RelayCommand` trên `ModuleViewModel`.
 
 Các file `.png` dùng cho header được copy trực tiếp từ
 `D:\Project\Tantq\WinUI\WinUI-Gallery\WinUIGallery\Assets\` (Microsoft, MIT license, dự án mẫu công
-khai) vào `MainLauncher/Assets/` và `MainLauncher/Assets/HomeHeaderTiles/`.
+khai) vào `MainLauncher/Assets/`.
 
 ## Cấu hình
 

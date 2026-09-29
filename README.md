@@ -157,7 +157,7 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-Publish cả 9 project (MainLauncher + 8 module) khá mất thời gian. Khi chỉ đang sửa 1 module, dùng
+Publish cả 11 project (MainLauncher + 10 module) khá mất thời gian. Khi chỉ đang sửa 1 module, dùng
 `-Targets` để publish riêng project đó thay vì chờ build hết:
 
 ```powershell
