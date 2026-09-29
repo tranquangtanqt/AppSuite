@@ -16,6 +16,7 @@ MainLauncher.exe
     |-- Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.exe
     |-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
     |-- Modules\ScreenCapture\ScreenCapture.exe
+    |-- Modules\ImageCompare\ImageCompare.exe
     |-- ... (them Module moi theo cung mot khuon mau)
 ```
 
@@ -54,7 +55,8 @@ AppSuite.sln
 |   |-- CsvEditor/                CSV/TSV editor
 |   |-- Mcf.Screen.HtmlGenerator/                Tai lieu man hinh (画面説明書) tu Excel -> SQLite -> HTML
 |   |-- Mcf.CrudDiagram.HtmlGenerator/                CRUD図 tu Excel -> SQLite -> HTML
-|   `-- ScreenCapture/            Chup man hinh + chinh sua anh (PicPick-like)
+|   |-- ScreenCapture/            Chup man hinh + chinh sua anh (PicPick-like)
+|   `-- ImageCompare/             So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)
 |
 `-- build/
     |-- Sync-Modules-Dev.ps1    Tien ich cho F5/debug local (xem ben duoi)
@@ -164,7 +166,7 @@ Publish cả 9 project (MainLauncher + 8 module) khá mất thời gian. Khi ch�
 ```
 
 Tên hợp lệ: `MainLauncher`, `ModuleA`, `ModuleB`, `ModuleC`, `Mcf.DbDef.HtmlGenerator`, `Rdbms.HtmlGenerator`,
-`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator`, `ScreenCapture` (không phân biệt
+`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator`, `ScreenCapture`, `ImageCompare` (không phân biệt
 hoa/thường). Bỏ qua `-Targets` để publish toàn bộ như trước.
 
 Kết quả nằm ở `Application\`:
@@ -181,6 +183,7 @@ Application\
 |-- Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.exe
 |-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
 |-- Modules\ScreenCapture\ScreenCapture.exe
+|-- Modules\ImageCompare\ImageCompare.exe
 `-- Config\modules.json, appsettings.json
 ```
 
@@ -244,8 +247,8 @@ hiện có (`ProjectReference` tới `Common`, không reference `MainLauncher`),
 
 ## Đã kiểm thử
 
-- `dotnet build AppSuite.sln` - build thành công cả 12 project (Common, SharedUI, MainLauncher,
-  ModuleA, ModuleB, ModuleC, Mcf.DbDef.HtmlGenerator, Rdbms.HtmlGenerator, CsvEditor, Mcf.Screen.HtmlGenerator, Mcf.CrudDiagram.HtmlGenerator, ScreenCapture).
+- `dotnet build AppSuite.sln` - build thành công cả 13 project (Common, SharedUI, MainLauncher,
+  ModuleA, ModuleB, ModuleC, Mcf.DbDef.HtmlGenerator, Rdbms.HtmlGenerator, CsvEditor, Mcf.Screen.HtmlGenerator, Mcf.CrudDiagram.HtmlGenerator, ScreenCapture, ImageCompare).
 - Chạy `MainLauncher.exe` thực tế: load `modules.json`, tự auto-start `ModuleA` (do `AutoStart: true`),
   ghi log ra file và hiển thị trên UI - xem `MainLauncher/README.md` để biết chi tiết log mẫu.
 - Chạy `MainLauncher.exe` sau khi merge `SharedUI/Themes/Generic.xaml` - không phát sinh lỗi runtime

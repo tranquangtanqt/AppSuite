@@ -13,6 +13,7 @@
         |-- Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.exe
         |-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
         |-- Modules\ScreenCapture\ScreenCapture.exe
+        |-- Modules\ImageCompare\ImageCompare.exe
         `-- Config\modules.json
 
 .DESCRIPTION
@@ -21,7 +22,7 @@
     MSBuild - is what ties the three executables into one deployable folder.
 
     Use -Targets to publish only a subset (faster than rebuilding everything while iterating on
-    one module). Names are matched case-insensitively; "MainLauncher" and "ModuleA".."Mcf.CrudDiagram.HtmlGenerator" are
+    one module). Names are matched case-insensitively; "MainLauncher" and "ModuleA".."ImageCompare" are
     valid. Omit -Targets to publish everything, same as before.
 
 .EXAMPLE
@@ -31,7 +32,7 @@
     .\build\Publish-AppSuite.ps1 -Targets Mcf.DbDef.HtmlGenerator,Rdbms.HtmlGenerator,MainLauncher
 
 .NOTES
-    Publishing all 10 projects takes a while - pass -Targets to publish only the project(s) you're
+    Publishing all 11 projects takes a while - pass -Targets to publish only the project(s) you're
     iterating on (e.g. -Targets Mcf.DbDef.HtmlGenerator) instead of waiting on a full run every time.
 
     If PowerShell refuses to run this script with an error like "cannot be loaded because
@@ -65,6 +66,7 @@ $allProjects = [ordered]@{
     "Mcf.Screen.HtmlGenerator"      = @{ ProjectPath = "Modules\Mcf.Screen.HtmlGenerator\Mcf.Screen.HtmlGenerator.csproj"; DestSubfolder = "Modules\Mcf.Screen.HtmlGenerator" }
     "Mcf.CrudDiagram.HtmlGenerator"      = @{ ProjectPath = "Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.csproj"; DestSubfolder = "Modules\Mcf.CrudDiagram.HtmlGenerator" }
     "ScreenCapture"      = @{ ProjectPath = "Modules\ScreenCapture\ScreenCapture.csproj"; DestSubfolder = "Modules\ScreenCapture" }
+    "ImageCompare"      = @{ ProjectPath = "Modules\ImageCompare\ImageCompare.csproj"; DestSubfolder = "Modules\ImageCompare" }
 }
 
 function Publish-Project {

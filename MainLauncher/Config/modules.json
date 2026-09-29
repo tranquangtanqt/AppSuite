@@ -61,5 +61,12 @@
     "Path": ".\\Modules\\ScreenCapture\\ScreenCapture.exe",
     "Arguments": "",
     "AutoStart": false
+  },
+  {
+    "Name": "ImageCompare",
+    "Description": "So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)",
+    "Path": ".\\Modules\\ImageCompare\\ImageCompare.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]
