@@ -14,9 +14,19 @@
         CornerRadius="8"
         Padding="16"
         Width="260"
+        Height="186"
         Margin="0,0,12,12">
         <Grid>
-            <StackPanel Spacing="8">
+            <!--  Fixed card height + star row for the description: GridView's ItemsWrapGrid sizes every cell
+                  from the first item, so variable-height cards would get their buttons clipped.  -->
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
                 <Grid ColumnSpacing="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -33,12 +43,21 @@
                         VerticalAlignment="Center"
                         Text="{x:Bind Module.Name, Mode=OneWay}"
                         Style="{StaticResource SubtitleTextBlockStyle}"
-                        TextTrimming="CharacterEllipsis" />
+                        TextWrapping="NoWrap"
+                        TextTrimming="CharacterEllipsis"
+                        ToolTipService.ToolTip="{x:Bind Module.Name, Mode=OneWay}" />
                 </Grid>
 
-                <TextBlock Text="{x:Bind Module.Description, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.7" FontSize="12" />
+                <TextBlock
+                    Grid.Row="1"
+                    Text="{x:Bind Module.Description, Mode=OneWay}"
+                    TextWrapping="Wrap"
+                    TextTrimming="CharacterEllipsis"
+                    MaxLines="2"
+                    Opacity="0.7" FontSize="12"
+                    ToolTipService.ToolTip="{x:Bind Module.Description, Mode=OneWay}" />
 
-                <StackPanel Orientation="Horizontal" Spacing="6">
+                <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">
                     <Ellipse
                         Width="10" Height="10"
                         Fill="{x:Bind Module.Status, Mode=OneWay, Converter={StaticResource ModuleStatusToBrushConverter}}"
@@ -50,12 +69,12 @@
                         Visibility="{x:Bind Module.CanStop, Mode=OneWay}" />
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal" Spacing="8">
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
                     <Button Content="Start" Command="{x:Bind Module.StartCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStart, Mode=OneWay}" />
                     <Button Content="Stop" Command="{x:Bind Module.StopCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStop, Mode=OneWay}" />
                     <Button Content="Restart" Command="{x:Bind Module.RestartCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStop, Mode=OneWay}" />
                 </StackPanel>
-            </StackPanel>
+            </Grid>
 
             <!--  Status badge, echoing the small colored corner dot on WinUI Gallery's home cards  -->
             <Ellipse

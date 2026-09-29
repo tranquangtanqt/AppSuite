@@ -11,10 +11,9 @@
     <!--
         Hero header, same structure and same assets as WinUI Gallery's HomePageHeader
         (Controls/HomePage/HomePageHeader.xaml): a hero image faded out via OpacityMaskView +
-        a Rectangle mask, title/subtitle over it, and a row of quick-link tiles below in a
-        HorizontalScrollContainer. OpacityMaskView/HorizontalScrollContainer/Tile all come from
-        SharedUI; GalleryHeaderImage.png and the HomeHeaderTiles/*.png icons were copied from the
-        WinUI Gallery sample referenced for this project.
+        a Rectangle mask and title/subtitle over it (the quick-link tiles row was dropped).
+        OpacityMaskView comes from SharedUI; GalleryHeaderImage.png was copied from the WinUI
+        Gallery sample referenced for this project.
     -->
     <UserControl.Resources>
         <ResourceDictionary>
@@ -54,7 +53,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <shared:OpacityMaskView Grid.RowSpan="3" Height="260" VerticalAlignment="Top">
+        <shared:OpacityMaskView Grid.RowSpan="3" Height="170" VerticalAlignment="Top">
             <shared:OpacityMaskView.OpacityMask>
                 <Rectangle Fill="{ThemeResource HeaderFadeMaskBrush}" />
             </shared:OpacityMaskView.OpacityMask>
@@ -76,46 +75,5 @@
                 Style="{StaticResource TitleLargeTextBlockStyle}"
                 Text="AppSuite" />
         </StackPanel>
-
-        <shared:HorizontalScrollContainer Grid.Row="2" Margin="0,32,0,12">
-            <shared:HorizontalScrollContainer.Source>
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <shared:Tile
-                        Title="WinUI 3 Documentation"
-                        Description="Kien truc, control va huong dan thiet ke WinUI 3."
-                        Link="https://learn.microsoft.com/windows/apps/winui/winui3/">
-                        <shared:Tile.Source>
-                            <Image Source="/Assets/HomeHeaderTiles/Header-WinUI.png" />
-                        </shared:Tile.Source>
-                    </shared:Tile>
-                    <shared:Tile
-                        Title="Windows App SDK"
-                        Description="Tai lieu Windows App SDK - runtime ma AppSuite su dung."
-                        Link="https://learn.microsoft.com/windows/apps/windows-app-sdk/">
-                        <shared:Tile.Source>
-                            <Image Source="/Assets/HomeHeaderTiles/Header-WindowsDesign.png" />
-                        </shared:Tile.Source>
-                    </shared:Tile>
-                    <shared:Tile
-                        Title="WinUI Gallery (tham khao)"
-                        Description="Du an mau ma cac control trong SharedUI duoc chuyen the tu do."
-                        Link="https://github.com/microsoft/WinUI-Gallery">
-                        <shared:Tile.Source>
-                            <Viewbox Height="18">
-                                <PathIcon Data="{StaticResource GitHubIconPath}" Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
-                            </Viewbox>
-                        </shared:Tile.Source>
-                    </shared:Tile>
-                    <shared:Tile
-                        Title="Community Toolkit"
-                        Description="Tap hop helper, control va app service tai su dung cho WinUI."
-                        Link="https://github.com/CommunityToolkit/Windows">
-                        <shared:Tile.Source>
-                            <Image Source="/Assets/HomeHeaderTiles/Header-Toolkit.png" />
-                        </shared:Tile.Source>
-                    </shared:Tile>
-                </StackPanel>
-            </shared:HorizontalScrollContainer.Source>
-        </shared:HorizontalScrollContainer>
     </Grid>
 </UserControl>

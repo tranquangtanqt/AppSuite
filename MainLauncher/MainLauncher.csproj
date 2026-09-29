@@ -24,9 +24,6 @@
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
     <Content Include="Assets\GalleryHeaderImage.png" />
-    <Content Include="Assets\HomeHeaderTiles\Header-WinUI.png" />
-    <Content Include="Assets\HomeHeaderTiles\Header-WindowsDesign.png" />
-    <Content Include="Assets\HomeHeaderTiles\Header-Toolkit.png" />
     <None Include="Config\modules.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Config\appsettings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
