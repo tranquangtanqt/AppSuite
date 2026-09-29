@@ -58,6 +58,9 @@ AppSuite.sln
 |   |-- ScreenCapture/            Chup man hinh + chinh sua anh (PicPick-like)
 |   `-- ImageCompare/             So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)
 |
+|-- Tests/
+|   `-- CsvEditor.Tests/        Unit test logic CsvEditor (xUnit v3, exe tu chay) - xem Modules/CsvEditor/README.md
+|
 `-- build/
     |-- Sync-Modules-Dev.ps1    Tien ich cho F5/debug local (xem ben duoi)
     `-- Publish-AppSuite.ps1    Dong goi ra thu muc "Application\" de deploy
@@ -247,8 +250,9 @@ hiện có (`ProjectReference` tới `Common`, không reference `MainLauncher`),
 
 ## Đã kiểm thử
 
-- `dotnet build AppSuite.sln` - build thành công cả 13 project (Common, SharedUI, MainLauncher,
-  ModuleA, ModuleB, ModuleC, Mcf.DbDef.HtmlGenerator, Rdbms.HtmlGenerator, CsvEditor, Mcf.Screen.HtmlGenerator, Mcf.CrudDiagram.HtmlGenerator, ScreenCapture, ImageCompare).
+- `dotnet build AppSuite.sln` - build thành công cả 14 project (Common, SharedUI, MainLauncher,
+  ModuleA, ModuleB, ModuleC, Mcf.DbDef.HtmlGenerator, Rdbms.HtmlGenerator, CsvEditor, Mcf.Screen.HtmlGenerator, Mcf.CrudDiagram.HtmlGenerator, ScreenCapture, ImageCompare, CsvEditor.Tests).
+- Unit test CsvEditor: `dotnet test Tests\CsvEditor.Tests` - 89/89 đạt (cả trên máy dev lẫn trong Windows Sandbox không cài .NET, 2026-09-29).
 - Chạy `MainLauncher.exe` thực tế: load `modules.json`, tự auto-start `ModuleA` (do `AutoStart: true`),
   ghi log ra file và hiển thị trên UI - xem `MainLauncher/README.md` để biết chi tiết log mẫu.
 - Chạy `MainLauncher.exe` sau khi merge `SharedUI/Themes/Generic.xaml` - không phát sinh lỗi runtime

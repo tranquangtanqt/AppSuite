@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Unit test cho phần logic của CsvEditor (Services / Models / Commands / ViewModels) theo spec Note/ModuleF.txt:
+    Open, Save, Search, Sort, Filter, Statistics, Undo, Redo.
+
+    CsvEditor là app WinUI (WinExe) nên không ProjectReference được từ project test .NET thường. Các
+    thư mục logic không phụ thuộc WinUI → biên dịch kèm trực tiếp (Compile Include, dạng link) thay vì
+    tách thư viện riêng - CsvEditor giữ nguyên, không đổi build/publish.
+
+    xUnit v3: project test là 1 file exe tự chạy (không cần `dotnet test`), publish self-contained
+    chạy được cả trong Windows Sandbox (không có .NET). Trên máy dev: `dotnet test` hoặc `dotnet run`.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>CsvEditor.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Modules\CsvEditor\Services\**\*.cs" Link="CsvEditor\Services\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\CsvEditor\Models\**\*.cs" Link="CsvEditor\Models\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\CsvEditor\Commands\**\*.cs" Link="CsvEditor\Commands\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\CsvEditor\ViewModels\**\*.cs" Link="CsvEditor\ViewModels\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit.v3" Version="1.0.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

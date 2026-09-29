@@ -56,7 +56,7 @@ public sealed class StatisticsService
                 else
                 {
                     uniqueSets[c].Add(cell);
-                    if (double.TryParse(cell, out var number))
+                    if (CsvNumber.TryParse(cell, out var number))
                     {
                         hasNumeric[c] = true;
                         sums[c] += number;

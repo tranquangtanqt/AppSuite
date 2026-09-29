@@ -58,7 +58,8 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
   dialog sẽ hiện đúng điều kiện đang áp dụng; nút **Clear Filter** cạnh bên bỏ lọc ngay không cần
   mở dialog (chỉ sáng khi đang có lọc).
 - **Sort**: nhiều cột theo thứ tự ưu tiên (kéo Lên/Xuống để đổi thứ tự), so sánh theo số nếu cả 2 ô
-  parse được số, ngược lại so chuỗi. Mở lại dialog sẽ hiện đúng sort đang áp dụng; nút **Clear
+  parse được số (dấu chấm thập phân "2.5", hoặc dấu thập phân của máy "2,5"; không đoán dấu phân nhóm
+  "1,000" - xem `Services/CsvNumber`), ngược lại so chuỗi. Filter/Statistics đọc số cùng quy tắc. Mở lại dialog sẽ hiện đúng sort đang áp dụng; nút **Clear
   Sort** cạnh bên bỏ sắp xếp ngay không cần mở dialog (chỉ sáng khi đang có sort).
 - **Statistics**: Row/Column Count, Duplicate Row, và theo từng cột: Empty/Unique/Min/Max/
   Average/Sum (Min/Max/Avg/Sum chỉ tính nếu cột có giá trị số).
@@ -81,6 +82,26 @@ thấp của delimiter/encoding tự nhận diện - không cái nào chặn vi�
 Undo/Redo các thao tác đó, và mỗi lần Save/Save As - nên sửa dữ liệu để khắc phục cảnh báo sẽ thấy
 nó biến mất mà không cần mở lại file. Lỗi ngoặc kép không đóng và cảnh báo delimiter/encoding thì
 không tính lại được (mô tả nội dung file gốc lúc đọc, dữ liệu đó không còn sau khi đã parse).
+
+## Unit test
+
+`Tests\CsvEditor.Tests` (xUnit v3) - 89 test theo spec `Note/ModuleF.txt`: **Open** (delimiter
+`,` `;` `|` Tab, encoding UTF-8 / UTF-8 BOM / UTF-16, ngoặc kép, dòng lệch cột, huỷ), **Save** (round-trip,
+chỉ bọc ngoặc kép khi cần, giữ delimiter/encoding/BOM, Save As), **Search** (5 kiểu so khớp, phân biệt
+hoa thường), **Sort** (số / chữ, nhiều cột, không đổi dữ liệu gốc), **Filter** (mọi toán tử, NOT,
+AND/OR), **Statistics**, **Undo/Redo** (mọi thao tác sửa, dán / thay thế = 1 bước, trạng thái "chưa lưu").
+
+```powershell
+dotnet test Tests\CsvEditor.Tests          # hoặc: dotnet run --project Tests\CsvEditor.Tests
+```
+
+Project test biên dịch kèm trực tiếp `Services/`, `Models/`, `Commands/`, `ViewModels/` của CsvEditor (không phụ
+thuộc WinUI) nên không cần tách thư viện riêng. Là exe tự chạy, publish self-contained
+(`dotnet publish -r win-x64 --self-contained`) chạy được cả trên máy không cài .NET (đã chạy trong
+Windows Sandbox). Test mặc định chạy ở culture Invariant; `CultureTests` chạy riêng dưới vi-VN / de-DE / en-US.
+
+Lỗi tìm ra nhờ test (đã sửa 2026-09-29): tooltip Undo sau **Xóa cột** hiện tên cột kế bên, và văng
+`ArgumentOutOfRangeException` khi xoá cột cuối (`RemoveColumnCommand.Description` đọc cột sau khi đã xoá).
 
 ## Vì sao độc lập được với MainLauncher?
 

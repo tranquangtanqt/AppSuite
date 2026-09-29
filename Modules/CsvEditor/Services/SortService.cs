@@ -29,7 +29,7 @@ public sealed class SortService
 
     private static int CompareCells(string left, string right)
     {
-        if (double.TryParse(left, out var leftNumber) && double.TryParse(right, out var rightNumber))
+        if (CsvNumber.TryParse(left, out var leftNumber) && CsvNumber.TryParse(right, out var rightNumber))
         {
             return leftNumber.CompareTo(rightNumber);
         }

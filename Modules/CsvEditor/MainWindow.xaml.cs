@@ -58,21 +58,20 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
 
         ViewModel.ColumnsChanged += (_, _) => RebuildColumns();
-        ViewModel.PropertyChanged += (_, _) => Bindings.Update();
-        ViewModel.Issues.CollectionChanged += (_, _) => Bindings.Update();
 
         RebuildColumns();
     }
 
     public CsvEditorViewModel ViewModel { get; }
 
-    public Visibility IsBusyVisibility => ViewModel.IsBusy ? Visibility.Visible : Visibility.Collapsed;
+    // Hàm cho x:Bind function binding: XAML truyền ViewModel.IsDirty / ViewModel.Issues.Count (đều phát
+    // PropertyChanged) nên tự cập nhật, không cần Bindings.Update() chạy lại mọi binding của cửa sổ
+    // sau mỗi thay đổi của ViewModel (cách cũ, kèm cảnh báo WMC1506). IsBusy bind thẳng bool → Visibility.
+    public Visibility VisibleIfAny(int count) => count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public Visibility HasIssuesVisibility => ViewModel.Issues.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    public string IssuesHeaderText(int count) => $"Cảnh báo ({count})";
 
-    public string IssuesHeader => $"Cảnh báo ({ViewModel.Issues.Count})";
-
-    public string SaveStateText => ViewModel.IsDirty ? "● Chưa lưu" : "Đã lưu";
+    public string SaveStateText(bool isDirty) => isDirty ? "● Chưa lưu" : "Đã lưu";
 
     // ----- DataGrid column/row wiring -----
 

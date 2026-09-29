@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScreenCapture", "Modules\Sc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageCompare", "Modules\ImageCompare\ImageCompare.csproj", "{54E329AE-E2AD-4279-982E-7213196B12DC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CsvEditor.Tests", "Tests\CsvEditor.Tests\CsvEditor.Tests.csproj", "{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -195,6 +197,18 @@ Global
 		{54E329AE-E2AD-4279-982E-7213196B12DC}.Release|x64.Build.0 = Release|x64
 		{54E329AE-E2AD-4279-982E-7213196B12DC}.Release|x86.ActiveCfg = Release|x86
 		{54E329AE-E2AD-4279-982E-7213196B12DC}.Release|x86.Build.0 = Release|x86
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Debug|ARM64.ActiveCfg = Debug|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Debug|ARM64.Build.0 = Debug|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Debug|x64.Build.0 = Debug|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Debug|x86.Build.0 = Debug|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Release|ARM64.ActiveCfg = Release|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Release|ARM64.Build.0 = Release|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Release|x64.ActiveCfg = Release|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Release|x64.Build.0 = Release|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Release|x86.ActiveCfg = Release|Any CPU
+		{7E1C4A92-3B5D-4F60-9A8E-2C4D6F8B0A13}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -112,8 +112,8 @@
         </ScrollViewer>
 
         <!-- Validation issues -->
-        <Expander Grid.Row="1" Header="{x:Bind IssuesHeader, Mode=OneWay}" IsExpanded="False"
-                  Visibility="{x:Bind HasIssuesVisibility, Mode=OneWay}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+        <Expander Grid.Row="1" Header="{x:Bind IssuesHeaderText(ViewModel.Issues.Count), Mode=OneWay}" IsExpanded="False"
+                  Visibility="{x:Bind VisibleIfAny(ViewModel.Issues.Count), Mode=OneWay}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
             <ListView x:Name="IssuesListView" ItemsSource="{x:Bind ViewModel.Issues}" MaxHeight="160" DoubleTapped="IssuesListView_DoubleTapped">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="models:ValidationIssue">
@@ -249,15 +249,15 @@
                            IsTapEnabled="True" Tapped="EncodingLabel_Tapped" ToolTipService.ToolTip="Bấm để đổi encoding/delimiter" />
                 <TextBlock Opacity="0.8"><Run Text="Dòng:" /><Run Text="{x:Bind ViewModel.RowCount, Mode=OneWay}" /></TextBlock>
                 <TextBlock Opacity="0.8"><Run Text="Cột:" /><Run Text="{x:Bind ViewModel.ColumnCount, Mode=OneWay}" /></TextBlock>
-                <TextBlock Text="{x:Bind SaveStateText, Mode=OneWay}" Opacity="0.8" />
+                <TextBlock Text="{x:Bind SaveStateText(ViewModel.IsDirty), Mode=OneWay}" Opacity="0.8" />
                 <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Opacity="0.6" />
             </StackPanel>
 
             <ProgressBar Grid.Column="1" Width="140" VerticalAlignment="Center"
-                         Visibility="{x:Bind IsBusyVisibility, Mode=OneWay}"
+                         Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
                          Value="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}" Maximum="100" />
 
-            <Button Grid.Column="2" Content="Hủy" Click="CancelButton_Click" Visibility="{x:Bind IsBusyVisibility, Mode=OneWay}" />
+            <Button Grid.Column="2" Content="Hủy" Click="CancelButton_Click" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
         </Grid>
     </Grid>
 </Window>

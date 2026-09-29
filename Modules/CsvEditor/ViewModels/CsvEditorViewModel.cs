@@ -39,6 +39,11 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             OnPropertyChanged(nameof(CanRedo));
             OnPropertyChanged(nameof(UndoDescription));
             OnPropertyChanged(nameof(RedoDescription));
+            // Nút Undo/Redo chỉ bật/tắt khi RelayCommand báo CanExecuteChanged - PropertyChanged(CanUndo)
+            // không đủ. Trước đây nút cập nhật "ké" nhờ MainWindow gọi Bindings.Update() (gán lại Command)
+            // mỗi lần ViewModel đổi; bỏ cơ chế đó thì phải báo trực tiếp ở đây.
+            UndoCommand.NotifyCanExecuteChanged();
+            RedoCommand.NotifyCanExecuteChanged();
             IsDirty = _editService.UndoRedo.IsDirty;
         };
     }
@@ -114,6 +119,12 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             _editService.ReplaceDocument(result.Document);
             _activeFilter = null;
             _activeSort.Clear();
+            // Nút Clear Filter / Clear Sort bind IsEnabled vào 2 cờ này - phải báo, không thì vẫn sáng
+            // sau khi mở file mới (trước đây Bindings.Update() ở MainWindow che mất thiếu sót này).
+            OnPropertyChanged(nameof(ActiveFilter));
+            OnPropertyChanged(nameof(IsFilterActive));
+            OnPropertyChanged(nameof(ActiveSort));
+            OnPropertyChanged(nameof(IsSortActive));
             RebuildView();
 
             Issues.Clear();

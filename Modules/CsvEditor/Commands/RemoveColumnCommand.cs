@@ -16,9 +16,14 @@ public sealed class RemoveColumnCommand : IEditCommand
     {
         _document = document;
         _index = index;
+        // Lấy tên lúc tạo: Description được đọc (tooltip nút Undo) SAU khi cột đã bị xoá - đọc
+        // Columns[_index] lúc đó ra tên cột kế bên, hoặc văng lỗi nếu vừa xoá cột cuối.
+        _columnName = document.Columns[index].Name;
     }
 
-    public string Description => $"Xóa cột '{_document.Columns[_index].Name}'";
+    private readonly string _columnName;
+
+    public string Description => $"Xóa cột '{_columnName}'";
 
     public bool ChangesStructure => true;
 

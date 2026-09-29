@@ -13,7 +13,8 @@ Cập nhật lần cuối: 2026-09-29
 - [x] README gốc: sửa số project "9 project (MainLauncher + 8 module)" → 11 project (2026-09-29)
 - [ ] `Modules/1.zip` (8 file Excel tài liệu nội bộ mcframe M7) đang bị commit và đã push — có vẻ nhầm.
   Gỡ khỏi repo (`git rm` + `.gitignore`); xoá khỏi lịch sử thì phải viết lại history + force-push
-- [ ] Chưa có project unit test nào trong solution
+- [x] Có project unit test đầu tiên: `Tests\CsvEditor.Tests` (đã thêm vào `AppSuite.sln`) (2026-09-29)
+- [ ] Các module khác chưa có unit test
 - [ ] Cập nhật CodeGraph 1.4.1 → 1.6.0 (`codegraph upgrade`)
 
 **Lưu ý vận hành**: chạy MainLauncher ở cấu hình nào (Debug/Release) thì phải chạy
@@ -63,5 +64,15 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 
 - [x] Các tính năng theo spec: mở/lưu CSV/TSV (tự nhận delimiter/encoding), sửa ô, thêm/xoá dòng/cột,
   đổi tên cột, Find/Replace, Filter, Sort nhiều cột, Statistics, Undo/Redo, context menu, validation
-- [ ] Unit test theo spec: Open, Save, Search, Sort, Filter, Statistics, Undo, Redo
-- [ ] Dọn 5 warning `WMC1506` trong `MainWindow.xaml` (vô hại — đã có `Bindings.Update()` thủ công)
+- [x] Unit test theo spec: Open, Save, Search, Sort, Filter, Statistics, Undo, Redo — `Tests\CsvEditor.Tests`
+  (xUnit v3), 70/70 đạt trên máy dev và trong Windows Sandbox không cài .NET (2026-09-29)
+- [x] Bug tìm ra nhờ test: tooltip Undo sau Xóa cột hiện sai tên cột, xoá cột cuối thì văng
+  `ArgumentOutOfRangeException` — đã sửa `RemoveColumnCommand` (2026-09-29)
+- [x] Sort/Filter/Statistics đọc số theo culture máy — máy vi-VN/de-DE hiểu "2.5" thành 25 (sắp xếp,
+  lọc, tổng sai). Sửa: `Services/CsvNumber` đọc dấu chấm thập phân trước, rồi dấu thập phân của máy,
+  không đoán dấu phân nhóm; +15 test culture, 85/85 đạt trên máy dev và Sandbox (2026-09-29)
+- [x] Dọn 5 warning `WMC1506`: bind thẳng vào thuộc tính có thông báo của ViewModel (`IsBusy`,
+  `IsDirty`, `Issues.Count`), bỏ `Bindings.Update()` chạy lại mọi binding sau mỗi thay đổi (2026-09-29)
+- [x] 2 thiếu sót lộ ra khi bỏ `Bindings.Update()` (đã sửa, có test): nút Undo/Redo không bật lại
+  (thiếu `NotifyCanExecuteChanged`); mở file mới không tắt nút Clear Filter/Clear Sort (2026-09-29)
+  — build 0 warning; GUI Sandbox 11/11, unit test 89/89

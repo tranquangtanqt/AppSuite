@@ -44,7 +44,7 @@ public sealed class FilterService
         {
             var cell = row.GetCell(condition.ColumnIndex);
             double cellNumber = 0, valueNumber = 0;
-            var bothNumeric = double.TryParse(cell, out cellNumber) && double.TryParse(condition.Value, out valueNumber);
+            var bothNumeric = CsvNumber.TryParse(cell, out cellNumber) && CsvNumber.TryParse(condition.Value, out valueNumber);
 
             var comparisonResult = bothNumeric
                 ? cellNumber.CompareTo(valueNumber)
