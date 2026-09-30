@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Unit test cho Engine của ImageCompare: so sánh pixel, tự căn (dịch chuyển / theo dòng), SSIM, tìm ảnh con,
+    tìm chữ trong kết quả OCR, OCR tiếng Việt, báo cáo HTML.
+
+    Giống CsvEditor.Tests: ImageCompare là app WinUI nên không ProjectReference được; Engine\ không phụ thuộc
+    WinUI (chỉ SkiaSharp + Tesseract) → biên dịch kèm trực tiếp. Chỉ x64: OCR cần native tesseract50.dll.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <RootNamespace>ImageCompare.Tests</RootNamespace>
+    <!-- xUnit1051: test engine ngắn (< 1 s), không cần truyền TestContext.Current.CancellationToken vào mọi lời gọi. -->
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Modules\ImageCompare\Engine\**\*.cs" Link="ImageCompare\Engine\%(RecursiveDir)%(Filename)%(Extension)" />
+    <None Include="..\..\Modules\ImageCompare\Ocr\tessdata\*.traineddata" Link="tessdata\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\Modules\ImageCompare\Ocr\vcruntime\win-x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="Tesseract" Version="5.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit.v3" Version="1.0.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

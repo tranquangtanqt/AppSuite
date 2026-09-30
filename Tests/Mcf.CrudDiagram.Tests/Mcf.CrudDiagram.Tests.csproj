@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Unit test cho Mcf.CrudDiagram.HtmlGenerator (ModuleH): đọc sheet CRUD図 (EPPlus) → HTML từng logic → SQLite →
+    trang index. File Excel mẫu được dựng ngay trong test bằng EPPlus - không cần tài liệu mcframe thật.
+
+    Giống CsvEditor.Tests: module là app WinUI nên biên dịch kèm trực tiếp Services\ + Models\ (không phụ thuộc WinUI).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Mcf.CrudDiagram.Tests</RootNamespace>
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Modules\Mcf.CrudDiagram.HtmlGenerator\Services\**\*.cs" Link="Module\Services\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\Mcf.CrudDiagram.HtmlGenerator\Models\**\*.cs" Link="Module\Models\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EPPlus" Version="4.5.3.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit.v3" Version="1.0.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

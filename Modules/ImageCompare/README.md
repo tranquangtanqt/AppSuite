@@ -90,4 +90,18 @@ Phần 2 ảnh không chồng lên nhau (khác kích thước / bị dịch) tô
   reference nhau). Log: `Logs\imagecompare-yyyy-MM-dd.log` cạnh exe, giữ 14 ngày.
 - Chỉ reference `Common` + `SharedUI`; không DI container (giống các module khác).
 
+## Unit test
+
+`Tests\ImageCompare.Tests` (xUnit v3) - 40 test cho `Engine/`, ảnh thử dựng bằng SkiaSharp ngay trong test (không cần
+file mẫu): **so pixel** (giống hệt, đúng số vùng + khung ôm sát, ngưỡng màu, vùng bỏ qua, khác kích thước, huỷ),
+**tự căn** (dịch ngang/dọc, B rộng hơn A, chỉnh tay), **căn theo dòng** (B thêm / bỏ 1 đoạn, lui về tự căn khi 2 ảnh
+khác hẳn), **tìm ảnh con** (đúng vị trí, tự đổi chiều, nhiều bản sao, không có), **tìm chữ** (không dấu, hoa/thường,
+bỏ khoảng trắng, đ → d), **OCR thật** (chữ tiếng Việt vẽ bằng Segoe UI trên nền sáng / tối), **báo cáo HTML**.
+
+```powershell
+dotnet test Tests\ImageCompare.Tests          # hoặc: dotnet run --project Tests\ImageCompare.Tests
+```
+
+Biên dịch kèm trực tiếp `Engine\` (như CsvEditor.Tests). Chỉ x64 vì OCR cần `tesseract50.dll` native.
+
 Xem `PLAN.md` cho quyết định thiết kế và kết quả kiểm chứng.

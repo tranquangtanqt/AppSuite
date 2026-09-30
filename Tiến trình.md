@@ -11,10 +11,12 @@ Cập nhật lần cuối: 2026-09-30
 - [x] Mọi module đăng ký đủ ở `AppSuite.sln`, `modules.json`, `Sync-Modules-Dev.ps1`,
   `Publish-AppSuite.ps1`, README gốc; mọi project cùng .NET 8 / WindowsAppSDK 2.2.0 (rà 2026-09-29)
 - [x] README gốc: sửa số project "9 project (MainLauncher + 8 module)" → 11 project (2026-09-29)
-- [ ] `Modules/1.zip` (8 file Excel tài liệu nội bộ mcframe M7) đang bị commit và đã push — có vẻ nhầm.
-  Gỡ khỏi repo (`git rm` + `.gitignore`); xoá khỏi lịch sử thì phải viết lại history + force-push
 - [x] Có project unit test đầu tiên: `Tests\CsvEditor.Tests` (đã thêm vào `AppSuite.sln`) (2026-09-29)
-- [ ] Các module khác chưa có unit test
+- [x] Unit test cho engine ImageCompare (40) + parser Excel của Mcf.CrudDiagram (21), Mcf.DbDef (11), Mcf.Screen (29)
+  — `Tests\*.Tests`, đã thêm vào `AppSuite.sln`, tất cả đạt trên máy dev; build sln 0 warning (2026-09-30)
+- [ ] Chạy 4 project test mới trong Windows Sandbox (publish self-contained như CsvEditor.Tests)
+- [ ] Unit test còn thiếu: Rdbms.HtmlGenerator (cần PostgreSQL/Oracle thật hoặc tách phần dựng HTML), ModuleB/C,
+  ScreenCapture (logic chỉnh ảnh / phiên làm việc)
 - [ ] Cập nhật CodeGraph 1.4.1 → 1.6.0 (`codegraph upgrade`)
 - [x] Build cả `AppSuite.sln` (x64, `--no-incremental`): 0 warning, 0 error (rà 2026-09-30)
 - [ ] File này chưa có mục cho ModuleA/B, Mcf.DbDef, Mcf.Screen, Rdbms.HtmlGenerator — rà PLAN.md của
@@ -87,5 +89,5 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] 2 thiếu sót lộ ra khi bỏ `Bindings.Update()` (đã sửa, có test): nút Undo/Redo không bật lại
   (thiếu `NotifyCanExecuteChanged`); mở file mới không tắt nút Clear Filter/Clear Sort (2026-09-29)
   — build 0 warning; GUI Sandbox 11/11, unit test 89/89
-- [ ] `PLAN.md` còn ghi "Bỏ unit test" và mục "Rủi ro chưa kiểm chứng bằng chạy thật" — đã lỗi thời
-  (đã có 89 test + GUI Sandbox 11/11), cần cập nhật
+- [x] `PLAN.md` lỗi thời ("Bỏ unit test", mục "Rủi ro chưa kiểm chứng", Sort đọc số theo culture) —
+  cập nhật theo test 89/89 + GUI Sandbox 11/11 + `CsvNumber` (2026-09-30)

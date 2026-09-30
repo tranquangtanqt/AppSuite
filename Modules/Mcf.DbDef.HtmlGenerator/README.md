@@ -67,6 +67,18 @@ marker, lưu vào bảng `ForeignKeys` riêng (`TableName`, `LocalColumns`, `Ref
 Khi cần cập nhật dữ liệu: chỉ cần thay/thêm file `.xlsm` trong `Data\Excel\`, chạy lại bước "1. Doc
 Excel → SQLite" rồi "2. Xuat HTML".
 
+## Unit test
+
+`Tests\Mcf.DbDef.Tests` (xUnit v3) - 11 test, workbook `.xlsm` mẫu dựng bằng EPPlus ngay trong test: bảng theo sheet
+index (tên tiếng Nhật lấy từ khối hoặc từ index), các mục 【説明】/【管理タイプ】/【運用後の変更に注意が必要な項目】/【改廃】,
+cột + ghép nhóm cột dùng chung `$...$`, `テーブル名` ở cột khác cột A không mở khối mới, FOREIGN đọc theo nội dung, khối
+`$...$` không phải bảng, log bảng/sheet thiếu, trùng bảng giữa 2 file (giữ file đầu), file hỏng / thiếu sheet index,
+SQLite + báo cáo HTML.
+
+```powershell
+dotnet test Tests\Mcf.DbDef.Tests
+```
+
 ## Vì sao độc lập được với MainLauncher?
 
 - Không `ProjectReference` tới `MainLauncher.csproj`.

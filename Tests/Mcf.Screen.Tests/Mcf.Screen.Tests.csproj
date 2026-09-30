@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Unit test cho Mcf.Screen.HtmlGenerator: đọc 画面説明書 (EPPlus) → HTML từng màn hình (lưới gộp ô, 3 parser 概要 /
+    項目説明 / 画面遷移, sơ đồ vẽ bằng SkiaSharp) → SQLite → trang index. File Excel mẫu được dựng ngay trong test bằng EPPlus - không cần tài liệu mcframe thật.
+
+    Giống CsvEditor.Tests: module là app WinUI nên biên dịch kèm trực tiếp Services\ + Models\ (không phụ thuộc WinUI).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Mcf.Screen.Tests</RootNamespace>
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Modules\Mcf.Screen.HtmlGenerator\Services\**\*.cs" Link="Module\Services\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\Mcf.Screen.HtmlGenerator\Models\**\*.cs" Link="Module\Models\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EPPlus" Version="4.5.3.3" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit.v3" Version="1.0.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

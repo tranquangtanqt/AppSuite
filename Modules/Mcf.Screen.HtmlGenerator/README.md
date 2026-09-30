@@ -97,6 +97,19 @@ về ý tưởng "1 file tự chứa" nhưng **chỉ áp dụng cho danh mục n
 tìm kiếm) - không nhúng HTML/ảnh của từng màn hình (phần đó vẫn là file riêng, theo đúng quyết định đã
 chốt để tránh 1 file khổng lồ).
 
+## Unit test
+
+`Tests\Mcf.Screen.Tests` (xUnit v3) - 29 test, file Excel mẫu dựng bằng EPPlus ngay trong test: tách tên file,
+**lưới chung** (bỏ khối header "mcframe 7", gộp ô → rowspan/colspan, màu nền, đậm, căn lề, escape, xuống dòng),
+**概要** (mục 【...】, thụt lề theo cột, bảng theo hàng tiêu đề, mục không khớp → lưới, chèn 画面イメージ sau 【説明】,
+sơ đồ không có shape → log + lưới), **項目説明** (cột cờ theo nhóm, dải nhóm, 説明 lệch cột), **画面遷移** (chip,
+遷移処理/復帰処理, bảng 引継項目), **sơ đồ** (đọc box/connector từ DrawingML, vẽ PNG), **đọc thư mục** (bỏ 表紙/変更来歴,
+trùng mã → `_2.html`, file hỏng), **SQLite + trang index**.
+
+```powershell
+dotnet test Tests\Mcf.Screen.Tests
+```
+
 ## Vì sao độc lập được với MainLauncher?
 
 - Không `ProjectReference` tới `MainLauncher.csproj`.

@@ -20,6 +20,8 @@ của Module (constructor injection thủ công trong `MainWindow` - xem mục T
    sau khi đọc xong - vì edit/sort/filter/undo cần random-access. Có cảnh báo ngưỡng số dòng ước tính
    quá lớn (3 triệu dòng) trước khi đọc thật.
 3. **Bỏ unit test** (repo chưa có project test nào) - chỉ có checklist kiểm chứng thủ công.
+   **Đã đổi (2026-09-29)**: thêm `Tests\CsvEditor.Tests` (xUnit v3, 89 test theo spec
+   `Note/ModuleF.txt`) - xem mục Unit test trong `README.md`.
 
 ## Thiết kế
 
@@ -76,7 +78,9 @@ lọc/sắp xếp vẫn tạo đúng `SetCellCommand` trên dữ liệu thật. 
   (xác nhận qua đọc metadata DLL, không có trong bản này) nên không đảm bảo cuộn tới đúng vị trí với
   bảng rất dài - hạn chế đã biết, chấp nhận được cho 1 tool nội bộ.
 - **Sort**: `IComparer<CsvRow>` gộp nhiều cột qua `OrderBy(...).ThenBy(...)`, số ưu tiên số nếu 2 vế
-  parse được `double`, ngược lại so chuỗi.
+  đọc được là số, ngược lại so chuỗi. Đọc số qua `Services\CsvNumber` (dùng chung cho Filter/Statistics):
+  dấu chấm thập phân trước, rồi dấu thập phân của máy, không nhận dấu phân nhóm - bản đầu dùng
+  `double.TryParse` theo culture máy nên máy vi-VN/de-DE hiểu "2.5" thành 25 (sửa 2026-09-29).
 
 ### 3. Undo/Redo - Command Pattern
 
@@ -114,15 +118,21 @@ không raise `PropertyChanged` per-row - chỉ raise `StructureChanged` 1 lần)
 `MainLauncher\Config\modules.json`, `build\Sync-Modules-Dev.ps1`, `build\Publish-AppSuite.ps1`, root
 `README.md` (cây thư mục + danh sách module) - đúng 4+1 điểm sửa như Mcf.DbDef.HtmlGenerator/E đã làm.
 
-## Rủi ro/giả định chưa kiểm chứng bằng cách chạy thật
+## Kết quả kiểm chứng (2026-09-29)
 
-Toàn bộ thiết kế trên đã build sạch (`dotnet build`), nhưng hành vi runtime của binding indexer
-(`Path="[i]"` + `Mode=OneWay` + refresh qua `PropertyChanged("Item[i]")`) và
-`DataGridTextColumn.GetCellContent` trong `CellEditEnding` **chưa được xác nhận bằng cách mở app thật
-và gõ thử** - đây là hành vi tiêu chuẩn của binding engine WPF/UWP/WinUI (không phải suy đoán tùy
-tiện) nhưng nên kiểm chứng ở buổi test đầu tiên (mục 3 phần Kiểm chứng).
+Bản đầu chỉ build sạch, chưa chạy thật - rủi ro chính là binding indexer (`Path="[i]"` + `OneWay` +
+`PropertyChanged("Item[i]")`) và `GetCellContent` trong `CellEditEnding`. Đã chạy thật:
+
+- Unit test `Tests\CsvEditor.Tests`: 89/89 đạt trên máy dev và trong Windows Sandbox không cài .NET.
+- GUI trong Windows Sandbox: 11/11 đạt; build 0 warning (đã bỏ `Bindings.Update()`, bind thẳng vào
+  thuộc tính có thông báo của ViewModel).
+- Lỗi tìm ra và đã sửa: tooltip Undo sau Xóa cột sai tên cột + văng khi xoá cột cuối
+  (`RemoveColumnCommand`); Sort/Filter/Statistics đọc số theo culture máy (`CsvNumber`); nút Undo/Redo
+  không bật lại (thiếu `NotifyCanExecuteChanged`); mở file mới không tắt nút Clear Filter/Clear Sort.
 
 ## Kiểm chứng
+
+0. `dotnet test Tests\CsvEditor.Tests` - toàn bộ test đạt (kể cả `CultureTests` dưới vi-VN/de-DE/en-US).
 
 1. `dotnet build Modules\CsvEditor\CsvEditor.csproj -p:Platform=x64` - build sạch.
 2. Mở file CSV có BOM, không BOM, TSV, delimiter `;`/`|` - auto-detect đúng; bấm nhãn Encoding/

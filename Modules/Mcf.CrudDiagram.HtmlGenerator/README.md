@@ -98,6 +98,17 @@ khác**, vd `MSBBL6020.Slo_Chk03` = "gọi block `Slo_Chk03` bên trong sheet `M
    `<a href="{Code}.html#blk-{ID}">` (mỗi hàng có `ID` được gắn sẵn `id="blk-{ID}"`); không khớp (tên
    bảng thường không có dấu `.`, hoặc gọi vào code ngoài phạm vi tài liệu này) thì giữ nguyên text.
 
+## Unit test
+
+`Tests\Mcf.CrudDiagram.Tests` (xUnit v3) - 21 test, file Excel mẫu dựng bằng EPPlus ngay trong test: **parser** (khối
+header, nhãn có giá trị bên dưới, tiêu đề bảng lệch dòng/cột, sheet không đúng bố cục), **HTML** (bỏ dòng trống, neo
+`blk-ID`, link `MaCode.ID` chỉ khi mã có thật, escape, lưới dự phòng), **đọc thư mục** (bỏ 表紙/変更来歴 và file khoá
+`~$`, link chéo giữa 2 workbook, trùng tên sheet → `_2.html`, file hỏng không dừng cả lô), **SQLite + trang index**.
+
+```powershell
+dotnet test Tests\Mcf.CrudDiagram.Tests
+```
+
 ## Vì sao độc lập được với MainLauncher?
 
 - Không `ProjectReference` tới `MainLauncher.csproj`.
