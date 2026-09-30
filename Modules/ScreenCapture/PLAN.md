@@ -468,6 +468,11 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   `_finished` chống đóng 2 lần (KeyDown + timer cùng bắt 1 lần bấm). Kiểm tra Sandbox bằng phím tắt thật:
   Esc huỷ ở Vùng chọn / Vùng cố định / Chụp cuộn dọc (không mở Editor, app còn chạy); huỷ xong vẫn kéo
   chụp được; Enter ở Vùng cố định vẫn chụp.
+- **Ctrl+W / Ctrl+F4 đóng tab (2026-09-29)**: thân `DocumentTabs_TabCloseRequested` tách thành
+  `CloseTabAsync(tab)` dùng chung cho nút × và phím tắt (tab đang chọn). Cờ `_closingTab`: giữ Ctrl+W
+  (phím tự lặp) khi đang hỏi lưu không mở ContentDialog thứ 2 (WinUI văng lỗi khi 2 dialog cùng mở).
+  Test Sandbox (phiên giả 3 tab): tab đã lưu đóng không hỏi; tab chưa lưu hỏi, Huỷ giữ tab, Ctrl+F4 →
+  Không lưu đóng tab; Ctrl+W lặp khi đang hỏi không crash; tab cuối → đóng Editor, phiên tạm dọn rỗng.
 - **Cửa sổ Hướng dẫn (2026-09-29)**: người dùng muốn 1 nút nêu tất cả tính năng. `HelpWindow` (bố cục
   như `SettingsWindow`: 16 danh mục trái, thẻ tính năng phải, phím tắt hiện dạng keycap) + ô tìm kiếm
   bỏ dấu tiếng Việt. Nội dung là dữ liệu C# (`Models/HelpContent.cs`, soạn từ README) chứ không phải

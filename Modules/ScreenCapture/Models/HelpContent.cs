@@ -71,7 +71,7 @@ public static class HelpContent
         new("Editor: tab ảnh & phiên làm việc", "\uE8A5", "Chỉ có 1 cửa sổ Editor; mỗi lần chụp mở thêm 1 tab.",
         [
             new("Nhiều ảnh dạng tab", "Mỗi ảnh chụp là 1 tab (tên = thời điểm chụp). Mỗi tab giữ riêng hình đã vẽ, lịch sử Undo và mức zoom; công cụ / màu / cỡ nét dùng chung."),
-            new("Đóng 1 tab", "Bấm × trên tab. Ảnh chưa lưu hoặc đã sửa sau lần lưu cuối → hỏi Lưu / Không lưu / Huỷ. Đóng tab cuối cùng = đóng Editor."),
+            new("Đóng 1 tab", "Bấm × trên tab, hoặc Ctrl+W / Ctrl+F4 để đóng tab đang mở. Ảnh chưa lưu hoặc đã sửa sau lần lưu cuối → hỏi Lưu / Không lưu / Huỷ. Đóng tab cuối cùng = đóng Editor.", "Ctrl+W", "Ctrl+F4"),
             new("Đóng tất cả", "Nút cuối thanh tab. Còn ảnh chưa lưu → hỏi Lưu tất cả (chọn 1 thư mục, tên file = tên tab, không ghi đè file có sẵn) / Đóng không lưu / Huỷ."),
             new("Nhớ tab khi tắt app", "Đóng cửa sổ Editor không hỏi gì: mọi tab được lưu tạm và mở lại y như cũ ở lần sau (hình đã vẽ vẫn sửa được, lịch sử Undo thì không giữ). Tối đa 30 tab / 300 MB, đổi hoặc tắt trong Cài đặt > Phiên làm việc."),
             new("Lưu ý thư mục tạm", "Tab được lưu tạm trong %TEMP% - Windows có thể dọn thư mục này. Ảnh quan trọng vẫn nên Lưu PNG."),
@@ -168,6 +168,7 @@ public static class HelpContent
             new("Vùng chọn", "Cut vùng / Cắt ảnh theo vùng.", "Ctrl+X", "Enter"),
             new("Zoom", "Phóng to / thu nhỏ / về 100% / zoom quanh con trỏ.", "Ctrl++", "Ctrl+-", "Ctrl+0", "Ctrl+lăn chuột"),
             new("Khoá góc / hình đều", "Giữ khi vẽ / kéo: đường thẳng khoá 45°, chữ nhật → vuông, elip → tròn, vùng chọn → vuông, ảnh dán giữ tỉ lệ.", "Shift"),
+            new("Đóng tab", "Đóng tab đang mở (ảnh chưa lưu thì hỏi trước).", "Ctrl+W", "Ctrl+F4"),
             new("Hướng dẫn", "Mở cửa sổ này.", "F1"),
         ]),
 

@@ -88,7 +88,7 @@ Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh 
 nguyên — kể cả shape đã vẽ và lịch sử Undo riêng của từng ảnh. Công cụ / màu / cỡ nét dùng chung cho
 mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để không lọt vào ảnh.
 
-- Đóng 1 tab (`×`) khi ảnh chưa lưu ra file (kể cả ảnh vừa chụp chưa sửa gì) hoặc đã sửa sau lần lưu
+- Đóng 1 tab (`×`, hoặc `Ctrl+W` / `Ctrl+F4` cho tab đang mở) khi ảnh chưa lưu ra file (kể cả ảnh vừa chụp chưa sửa gì) hoặc đã sửa sau lần lưu
   cuối → hỏi *Lưu* / *Không lưu* / *Huỷ*. Đóng tab cuối cùng = đóng Editor.
 - **Đóng tất cả** (nút cuối thanh tab): còn ảnh chưa lưu → hỏi *Lưu tất cả...* (chọn 1 thư mục, lưu
   mọi ảnh chưa lưu vào đó, tên file = tên tab, trùng tên thì thêm " (2)" — không ghi đè file có sẵn) /
@@ -217,6 +217,7 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | Khi có vùng chọn (*Select*): `Ctrl+C` / `Ctrl+X` / `Delete` / `Enter` | Copy / Cut / Xoá vùng / Cắt ảnh theo vùng |
 | Giữ `Shift` khi vẽ/kéo | Khoá góc 45° (đường/mũi tên), vuông/tròn (chữ nhật/elip) |
 | `Ctrl` + lăn chuột / `Ctrl++` / `Ctrl+-` / `Ctrl+0` | Zoom quanh con trỏ / phóng to / thu nhỏ / về 100% |
+| `Ctrl+W` / `Ctrl+F4` | Đóng tab đang mở (ảnh chưa lưu thì hỏi Lưu / Không lưu / Huỷ; tab cuối = đóng Editor) |
 | `F1` | Mở cửa sổ Hướng dẫn |
 
 Khi đang gõ trong ô số (Current/Next), các phím trên thuộc về ô đó (vd `Ctrl+Z` hoàn tác chữ vừa

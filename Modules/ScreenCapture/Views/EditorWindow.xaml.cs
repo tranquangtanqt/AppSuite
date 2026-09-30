@@ -335,11 +335,31 @@ public sealed partial class EditorWindow : Window
         }
     }
 
-    private async void DocumentTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
+    private async void DocumentTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args) =>
+        await CloseTabAsync(args.Tab);
+
+    /// <summary>Đang hỏi lưu cho 1 tab - giữ Ctrl+W (phím tự lặp) không mở thêm ContentDialog thứ 2
+    /// (WinUI văng lỗi khi 2 ContentDialog cùng mở).</summary>
+    private bool _closingTab;
+
+    /// <summary>Đóng 1 tab (nút × hoặc Ctrl+W / Ctrl+F4): ảnh chưa lưu thì hỏi Lưu / Không lưu / Huỷ.</summary>
+    private async Task CloseTabAsync(TabViewItem? tab)
     {
-        if (args.Tab is not TabViewItem { Tag: EditorViewModel vm } tab || !await ConfirmCloseDocumentAsync(vm))
+        if (_closingTab || tab is not { Tag: EditorViewModel vm })
         {
             return;
+        }
+        _closingTab = true;
+        try
+        {
+            if (!await ConfirmCloseDocumentAsync(vm))
+            {
+                return;
+            }
+        }
+        finally
+        {
+            _closingTab = false;
         }
 
         DocumentTabs.TabItems.Remove(tab);
@@ -1516,6 +1536,14 @@ public sealed partial class EditorWindow : Window
 
         if (ctrl)
         {
+            // Ctrl+W / Ctrl+F4: đóng tab đang mở (như trình duyệt / PicPick) - cùng luồng với nút × của tab.
+            if (e.Key is Windows.System.VirtualKey.W or Windows.System.VirtualKey.F4)
+            {
+                _ = CloseTabAsync(DocumentTabs.SelectedItem as TabViewItem);
+                e.Handled = true;
+                return;
+            }
+
             // 187/189 = phím '=' '+' / '-' ở hàng số (VirtualKey không có tên riêng cho 2 phím OEM này).
             Action? zoomAction = e.Key switch
             {
