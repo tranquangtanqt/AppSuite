@@ -4,7 +4,7 @@ Danh sách việc cần làm / đã làm của toàn bộ AppSuite. Có vấn đ
 mục; làm xong thì đổi thành `- [x]` và ghi ngày hoàn thành. Chi tiết thiết kế của từng module vẫn nằm
 trong `PLAN.md` / `README.md` của module đó — file này chỉ để theo dõi tiến độ.
 
-Cập nhật lần cuối: 2026-09-29
+Cập nhật lần cuối: 2026-09-30
 
 ## Chung (repo, build, deploy)
 
@@ -16,6 +16,9 @@ Cập nhật lần cuối: 2026-09-29
 - [x] Có project unit test đầu tiên: `Tests\CsvEditor.Tests` (đã thêm vào `AppSuite.sln`) (2026-09-29)
 - [ ] Các module khác chưa có unit test
 - [ ] Cập nhật CodeGraph 1.4.1 → 1.6.0 (`codegraph upgrade`)
+- [x] Build cả `AppSuite.sln` (x64, `--no-incremental`): 0 warning, 0 error (rà 2026-09-30)
+- [ ] File này chưa có mục cho ModuleA/B, Mcf.DbDef, Mcf.Screen, Rdbms.HtmlGenerator — rà PLAN.md của
+  chúng (2026-09-30) không thấy việc nào còn dở
 
 **Lưu ý vận hành**: chạy MainLauncher ở cấu hình nào (Debug/Release) thì phải chạy
 `.\build\Sync-Modules-Dev.ps1 -Configuration <cấu hình đó>` để chép module vào cạnh launcher — thiếu
@@ -59,8 +62,14 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 ## Mcf.CrudDiagram.HtmlGenerator (ModuleH — `Note/ModuleH.txt`)
 
 - [x] Dòng không có dữ liệu thì không vẽ
+- [ ] Chạy UI thật (chọn thư mục → Đọc Excel → Xuất HTML → Mở HTML): index đủ 71 logic, tìm `MAM_BP`
+  ra đúng các logic dùng bảng đó — PLAN.md ghi "chưa tự kiểm chứng bằng UI thật, cần user xác nhận"
 - [ ] Header bảng giữ nguyên khi scroll — CSS chưa có `position: sticky`, và khung `.table-scroll`
   đang `overflow-x: auto` nên thêm sticky thôi chưa đủ, phải sửa cả khung cuộn
+
+## ModuleC
+
+- [ ] Nút "Huong dan su dung" vẫn là placeholder chưa gắn hành vi (PLAN.md ghi cố ý để sau)
 
 ## CsvEditor (ModuleF — `Note/ModuleF.txt`)
 
@@ -78,3 +87,5 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] 2 thiếu sót lộ ra khi bỏ `Bindings.Update()` (đã sửa, có test): nút Undo/Redo không bật lại
   (thiếu `NotifyCanExecuteChanged`); mở file mới không tắt nút Clear Filter/Clear Sort (2026-09-29)
   — build 0 warning; GUI Sandbox 11/11, unit test 89/89
+- [ ] `PLAN.md` còn ghi "Bỏ unit test" và mục "Rủi ro chưa kiểm chứng bằng chạy thật" — đã lỗi thời
+  (đã có 89 test + GUI Sandbox 11/11), cần cập nhật
