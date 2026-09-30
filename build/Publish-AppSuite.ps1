@@ -14,6 +14,7 @@
         |-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
         |-- Modules\ScreenCapture\ScreenCapture.exe
         |-- Modules\ImageCompare\ImageCompare.exe
+        |-- Modules\FileTools\FileTools.exe
         `-- Config\modules.json
 
 .DESCRIPTION
@@ -22,7 +23,7 @@
     MSBuild - is what ties the three executables into one deployable folder.
 
     Use -Targets to publish only a subset (faster than rebuilding everything while iterating on
-    one module). Names are matched case-insensitively; "MainLauncher" and "ModuleA".."ImageCompare" are
+    one module). Names are matched case-insensitively; "MainLauncher" and "ModuleA".."FileTools" are
     valid. Omit -Targets to publish everything, same as before.
 
 .EXAMPLE
@@ -32,7 +33,7 @@
     .\build\Publish-AppSuite.ps1 -Targets Mcf.DbDef.HtmlGenerator,Rdbms.HtmlGenerator,MainLauncher
 
 .NOTES
-    Publishing all 11 projects takes a while - pass -Targets to publish only the project(s) you're
+    Publishing all 12 projects takes a while - pass -Targets to publish only the project(s) you're
     iterating on (e.g. -Targets Mcf.DbDef.HtmlGenerator) instead of waiting on a full run every time.
 
     If PowerShell refuses to run this script with an error like "cannot be loaded because
@@ -67,6 +68,7 @@ $allProjects = [ordered]@{
     "Mcf.CrudDiagram.HtmlGenerator"      = @{ ProjectPath = "Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.csproj"; DestSubfolder = "Modules\Mcf.CrudDiagram.HtmlGenerator" }
     "ScreenCapture"      = @{ ProjectPath = "Modules\ScreenCapture\ScreenCapture.csproj"; DestSubfolder = "Modules\ScreenCapture" }
     "ImageCompare"      = @{ ProjectPath = "Modules\ImageCompare\ImageCompare.csproj"; DestSubfolder = "Modules\ImageCompare" }
+    "FileTools"      = @{ ProjectPath = "Modules\FileTools\FileTools.csproj"; DestSubfolder = "Modules\FileTools" }
 }
 
 function Publish-Project {

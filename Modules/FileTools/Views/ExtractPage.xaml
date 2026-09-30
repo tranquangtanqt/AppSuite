@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="FileTools.Views.ExtractPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:FileTools.Views"
+    NavigationCacheMode="Required">
+
+    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+    <Grid x:Name="Root" Padding="24,16" RowSpacing="12" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="140" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Spacing="2">
+            <TextBlock Text="Trích dòng" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Opacity="0.7" TextWrapping="Wrap"
+                       Text="Lấy 1 đoạn dòng của file lớn ra file tạm để mở xem (Excel / CsvEditor / Notepad). Chỉ đọc đúng phần cần - file vài GB vẫn gần như tức thì." />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Spacing="4">
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Header="File nguồn" Text="{x:Bind ViewModel.SourcePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseSourceCommand}" />
+            </Grid>
+            <TextBlock Text="{x:Bind ViewModel.SourceInfo, Mode=OneWay}" Opacity="0.7" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="32">
+            <RadioButtons Header="Lấy" SelectedIndex="{x:Bind ViewModel.ModeIndex, Mode=TwoWay}">
+                <x:String>N dòng đầu</x:String>
+                <x:String>Từ dòng X đến dòng Y</x:String>
+                <x:String>N dòng cuối</x:String>
+            </RadioButtons>
+            <StackPanel Spacing="8">
+                <NumberBox Header="N (số dòng)" Width="200" Minimum="1" SmallChange="1000" SpinButtonPlacementMode="Compact"
+                           Value="{x:Bind ViewModel.Count, Mode=TwoWay}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <NumberBox Header="Từ dòng X" Width="160" Minimum="1" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.From, Mode=TwoWay}" />
+                    <NumberBox Header="Đến dòng Y" Width="160" Minimum="1" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.To, Mode=TwoWay}" />
+                </StackPanel>
+            </StackPanel>
+            <StackPanel Spacing="8" Margin="0,24,0,0">
+                <CheckBox Content="Kèm dòng tiêu đề (dòng 1)" IsChecked="{x:Bind ViewModel.IncludeHeader, Mode=TwoWay}" />
+                <CheckBox Content="Mở file sau khi trích" IsChecked="{x:Bind ViewModel.OpenAfter, Mode=TwoWay}" />
+            </StackPanel>
+        </StackPanel>
+
+        <Grid Grid.Row="3" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Header="Lưu vào thư mục tạm" Text="{x:Bind ViewModel.TempFolder}" IsReadOnly="True" />
+            <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Mở thư mục tạm" Command="{x:Bind ViewModel.OpenTempFolderCommand}" />
+            <views:OutputPanel Grid.Column="2" Settings="{x:Bind ViewModel.Output}" />
+        </Grid>
+
+        <Button Grid.Row="4" Content="Trích dòng" MinWidth="110" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.ExtractCommand}" />
+
+        <views:JobPanel Grid.Row="5" Job="{x:Bind ViewModel}" />
+    </Grid>
+    </ScrollViewer>
+</Page>

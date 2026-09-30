@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="FileTools.Views.CsvSourcePanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:FileTools.ViewModels">
+
+    <!-- File CSV nguồn + dấu phân cách + dòng tiêu đề (dùng chung cho các trang CSV). -->
+    <StackPanel Spacing="4">
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Header="File nguồn" Text="{x:Bind Source.SourcePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue=''}" />
+            <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind Source.BrowseSourceCommand, Mode=OneWay}" />
+            <ComboBox Grid.Column="2" Header="Dấu phân cách" MinWidth="170" ItemsSource="{x:Bind vm:CsvSourceViewModel.DelimiterNames}"
+                      SelectedIndex="{x:Bind Source.DelimiterIndex, Mode=TwoWay, FallbackValue=0}" />
+            <CheckBox Grid.Column="3" VerticalAlignment="Bottom" Content="Dòng 1 là tiêu đề" IsChecked="{x:Bind Source.HasHeader, Mode=TwoWay, FallbackValue=True}" />
+        </Grid>
+        <TextBlock Opacity="0.7" TextWrapping="Wrap">
+            <Run Text="{x:Bind Source.SourceInfo, Mode=OneWay, FallbackValue=''}" />
+            <Run Text="  ·  " />
+            <Run Text="{x:Bind Source.LayoutInfo, Mode=OneWay, FallbackValue=''}" />
+        </TextBlock>
+    </StackPanel>
+</UserControl>

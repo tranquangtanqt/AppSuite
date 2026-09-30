@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="FileTools.Views.OutputPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:FileTools.ViewModels">
+
+    <!-- Encoding + xuống dòng của file đầu ra (mặc định UTF-8, giữ xuống dòng như nguồn). -->
+    <StackPanel Orientation="Horizontal" Spacing="16">
+        <ComboBox Header="Encoding đầu ra" MinWidth="170"
+                  ItemsSource="{x:Bind vm:OutputSettings.EncodingNames}"
+                  SelectedIndex="{x:Bind Settings.EncodingIndex, Mode=TwoWay, FallbackValue=0}" />
+        <ComboBox Header="Xuống dòng" MinWidth="150"
+                  ItemsSource="{x:Bind vm:OutputSettings.NewlineNames}"
+                  SelectedIndex="{x:Bind Settings.NewlineIndex, Mode=TwoWay, FallbackValue=0}" />
+    </StackPanel>
+</UserControl>

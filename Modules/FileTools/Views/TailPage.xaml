@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="FileTools.Views.TailPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    NavigationCacheMode="Required">
+
+    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+    <Grid x:Name="Root" Padding="24,16" RowSpacing="12" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="260" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Spacing="2">
+            <TextBlock Text="Theo dõi log" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Opacity="0.7" TextWrapping="Wrap"
+                       Text="Như tail -f: hiện N dòng cuối rồi tự thêm dòng mới khi file được ghi (không cản chương trình đang ghi log). File bị xoá nội dung / xoay vòng thì tự đọc lại từ đầu. Kéo-thả file vào đây." />
+        </StackPanel>
+
+        <Grid Grid.Row="1" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Header="File log" Text="{x:Bind ViewModel.SourcePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{x:Bind ViewModel.IsStopped, Mode=OneWay}" />
+            <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseSourceCommand}" IsEnabled="{x:Bind ViewModel.IsStopped, Mode=OneWay}" />
+            <NumberBox Grid.Column="2" Header="Hiện N dòng cuối" Width="150" Minimum="0" Maximum="5000" SpinButtonPlacementMode="Compact"
+                       Value="{x:Bind ViewModel.LastLines, Mode=TwoWay}" />
+        </Grid>
+
+        <Grid Grid.Row="2" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Header="Chỉ hiện dòng chứa (để trống = mọi dòng; áp dụng khi bấm Bắt đầu)" PlaceholderText="vd: ERROR"
+                     Text="{x:Bind ViewModel.FilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <CheckBox Grid.Column="1" VerticalAlignment="Bottom" Content="Không phân biệt dấu" IsChecked="{x:Bind ViewModel.IgnoreDiacritics, Mode=TwoWay}" />
+            <Button Grid.Column="2" VerticalAlignment="Bottom" Content="▶ Bắt đầu" MinWidth="100" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.StartCommand}" />
+            <Button Grid.Column="3" VerticalAlignment="Bottom" Content="■ Dừng" Command="{x:Bind ViewModel.StopCommand}" />
+            <CheckBox Grid.Column="4" VerticalAlignment="Bottom" Content="Tự cuộn xuống cuối" IsChecked="{x:Bind ViewModel.AutoScroll, Mode=TwoWay}" />
+        </Grid>
+
+        <Grid Grid.Row="3">
+            <TextBlock Text="{x:Bind ViewModel.Status, Mode=OneWay}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <Button Content="Lưu dòng đang hiện..." Command="{x:Bind ViewModel.SaveShownCommand}" />
+                <Button Content="Xoá màn hình" Command="{x:Bind ViewModel.ClearCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="4" BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <ListView x:Name="LinesView" ItemsSource="{x:Bind ViewModel.Lines}" SelectionMode="Extended" Padding="0,4">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="MinHeight" Value="20" />
+                        <Setter Property="Padding" Value="8,0" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" FontFamily="Consolas" FontSize="12" TextTrimming="CharacterEllipsis" IsTextSelectionEnabled="True" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Border>
+    </Grid>
+    </ScrollViewer>
+</Page>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="FileTools.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="FileTools - xử lý file text / CSV / log lớn">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <!-- Mỗi mục 1 trang; Tag = tên class trang trong FileTools.Views. -->
+    <NavigationView x:Name="Nav" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" PaneDisplayMode="Left"
+                    OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked">
+        <NavigationView.MenuItems>
+            <NavigationViewItemHeader Content="Gộp / tách" />
+            <NavigationViewItem Content="Nối file" Tag="MergePage" Icon="Add" />
+            <NavigationViewItem Content="Tách file" Tag="SplitPage" Icon="Cut" />
+            <NavigationViewItemHeader Content="Xem" />
+            <NavigationViewItem Content="Thông tin file" Tag="InfoPage" Icon="Document" />
+            <NavigationViewItem Content="Trích dòng" Tag="ExtractPage" Icon="Preview" />
+            <NavigationViewItem Content="Tìm" Tag="SearchPage" Icon="Find" />
+            <NavigationViewItem Content="So sánh 2 file" Tag="ComparePage" Icon="TwoPage" />
+            <NavigationViewItem Content="Theo dõi log" Tag="TailPage" Icon="Clock" />
+            <NavigationViewItemHeader Content="Biến đổi" />
+            <NavigationViewItem Content="Lọc dòng" Tag="FilterPage" Icon="Filter" />
+            <NavigationViewItem Content="Đổi encoding" Tag="EncodingPage" Icon="Font" />
+            <NavigationViewItem Content="Đổi xuống dòng" Tag="NewlinePage" Icon="Switch" />
+            <NavigationViewItem Content="Thay thế hàng loạt" Tag="ReplacePage" Icon="Edit" />
+            <NavigationViewItemHeader Content="CSV" />
+            <NavigationViewItem Content="Tách theo cột" Tag="CsvSplitPage" Icon="ViewAll" />
+            <NavigationViewItem Content="Bỏ dòng trùng" Tag="DedupePage" Icon="Remove" />
+            <NavigationViewItem Content="Chọn / sắp cột" Tag="ColumnsPage" Icon="List" />
+            <NavigationViewItem Content="Đổi dấu phân cách" Tag="DelimiterPage" Icon="Sync" />
+            <NavigationViewItemHeader Content="Thư mục" />
+            <NavigationViewItem Content="Tìm file trùng" Tag="DuplicatesPage" Icon="Copy" />
+        </NavigationView.MenuItems>
+        <NavigationView.FooterMenuItems>
+            <!-- Mở cửa sổ Hướng dẫn, không chuyển trang (SelectsOnInvoked=False → xử lý ở ItemInvoked). -->
+            <NavigationViewItem Content="Hướng dẫn (F1)" Tag="Help" Icon="Help" SelectsOnInvoked="False" />
+        </NavigationView.FooterMenuItems>
+
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <!-- Mẫu (preset): lưu / nạp bộ tuỳ chọn của trang đang mở. -->
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="6" Padding="24,8,24,0">
+                <TextBlock Text="{x:Bind Presets.Status, Mode=OneWay}" VerticalAlignment="Center" Opacity="0.7" Margin="0,0,8,0" />
+                <TextBlock Text="Mẫu:" VerticalAlignment="Center" />
+                <ComboBox MinWidth="200" PlaceholderText="(chưa có mẫu)" ItemsSource="{x:Bind Presets.Names}"
+                          SelectedItem="{x:Bind Presets.SelectedName, Mode=TwoWay}" AutomationProperties.Name="Mẫu đã lưu" />
+                <Button Content="Nạp" Command="{x:Bind Presets.LoadCommand}" />
+                <Button Content="Lưu mẫu..." Click="SavePreset_Click" />
+                <Button Content="Xoá" Command="{x:Bind Presets.DeleteCommand}" />
+                <Button Content="?" Width="36" Margin="12,0,0,0" Click="Help_Click" ToolTipService.ToolTip="Hướng dẫn trang này (F1)"
+                        AutomationProperties.Name="Hướng dẫn">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F1" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+            </StackPanel>
+            <Frame x:Name="ContentFrame" Grid.Row="1" Navigated="ContentFrame_Navigated" />
+        </Grid>
+    </NavigationView>
+</Window>

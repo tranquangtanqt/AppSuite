@@ -17,6 +17,7 @@ MainLauncher.exe
     |-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
     |-- Modules\ScreenCapture\ScreenCapture.exe
     |-- Modules\ImageCompare\ImageCompare.exe
+    |-- Modules\FileTools\FileTools.exe
     |-- ... (them Module moi theo cung mot khuon mau)
 ```
 
@@ -56,10 +57,12 @@ AppSuite.sln
 |   |-- Mcf.Screen.HtmlGenerator/                Tai lieu man hinh (画面説明書) tu Excel -> SQLite -> HTML
 |   |-- Mcf.CrudDiagram.HtmlGenerator/                CRUD図 tu Excel -> SQLite -> HTML
 |   |-- ScreenCapture/            Chup man hinh + chinh sua anh (PicPick-like)
-|   `-- ImageCompare/             So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)
+|   |-- ImageCompare/             So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)
+|   `-- FileTools/                Xu ly file text/CSV/log lon (vai GB): noi, tach, trich, tim, loc, doi encoding...
 |
 |-- Tests/                      Unit test (xUnit v3, exe tu chay) - xem muc "Unit test" trong README cua tung module
 |   |-- CsvEditor.Tests/
+|   |-- FileTools.Tests/        Doc/ghi stream, encoding, noi/tach/trich/tim/loc/doi encoding (+ test file 2 GB chay tay)
 |   |-- ImageCompare.Tests/     Engine: so pixel, tu can, tim anh con, OCR, bao cao (chi x64)
 |   |-- Mcf.CrudDiagram.Tests/  Doc sheet CRUD図 -> HTML -> SQLite
 |   |-- Mcf.DbDef.Tests/        Doc workbook DBDef -> bang/cot/khoa ngoai -> SQLite -> HTML
@@ -164,7 +167,7 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-Publish cả 11 project (MainLauncher + 10 module) khá mất thời gian. Khi chỉ đang sửa 1 module, dùng
+Publish cả 12 project (MainLauncher + 11 module) khá mất thời gian. Khi chỉ đang sửa 1 module, dùng
 `-Targets` để publish riêng project đó thay vì chờ build hết:
 
 ```powershell
@@ -173,7 +176,7 @@ Publish cả 11 project (MainLauncher + 10 module) khá mất thời gian. Khi c
 ```
 
 Tên hợp lệ: `MainLauncher`, `ModuleA`, `ModuleB`, `ModuleC`, `Mcf.DbDef.HtmlGenerator`, `Rdbms.HtmlGenerator`,
-`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator`, `ScreenCapture`, `ImageCompare` (không phân biệt
+`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator`, `ScreenCapture`, `ImageCompare`, `FileTools` (không phân biệt
 hoa/thường). Bỏ qua `-Targets` để publish toàn bộ như trước.
 
 Kết quả nằm ở `Application\`:
@@ -191,6 +194,7 @@ Application\
 |-- Modules\Mcf.CrudDiagram.HtmlGenerator\Mcf.CrudDiagram.HtmlGenerator.exe
 |-- Modules\ScreenCapture\ScreenCapture.exe
 |-- Modules\ImageCompare\ImageCompare.exe
+|-- Modules\FileTools\FileTools.exe
 `-- Config\modules.json, appsettings.json
 ```
 
@@ -254,11 +258,11 @@ hiện có (`ProjectReference` tới `Common`, không reference `MainLauncher`),
 
 ## Đã kiểm thử
 
-- `dotnet build AppSuite.sln` - build thành công cả 18 project (Common, SharedUI, MainLauncher,
+- `dotnet build AppSuite.sln` - build thành công cả 20 project (Common, SharedUI, MainLauncher,
   ModuleA, ModuleB, ModuleC, Mcf.DbDef.HtmlGenerator, Rdbms.HtmlGenerator, CsvEditor, Mcf.Screen.HtmlGenerator, Mcf.CrudDiagram.HtmlGenerator, ScreenCapture, ImageCompare,
-  và 5 project test trong `Tests\`), 0 warning (2026-09-30).
+  FileTools và 6 project test trong `Tests\`), 0 warning (2026-09-30).
 - Unit test (`dotnet test Tests\<Tên>.Tests`): CsvEditor 89/89 (cả trên máy dev lẫn trong Windows Sandbox không cài
-  .NET, 2026-09-29); ImageCompare 40/40, Mcf.CrudDiagram 21/21, Mcf.DbDef 11/11, Mcf.Screen 29/29 (máy dev, 2026-09-30).
+  .NET, 2026-09-29); ImageCompare 40/40, Mcf.CrudDiagram 21/21, Mcf.DbDef 11/11, Mcf.Screen 29/29, FileTools 128/128 (máy dev, 2026-09-30).
 - Chạy `MainLauncher.exe` thực tế: load `modules.json`, tự auto-start `ModuleA` (do `AutoStart: true`),
   ghi log ra file và hiển thị trên UI - xem `MainLauncher/README.md` để biết chi tiết log mẫu.
 - Chạy `MainLauncher.exe` sau khi merge `SharedUI/Themes/Generic.xaml` - không phát sinh lỗi runtime

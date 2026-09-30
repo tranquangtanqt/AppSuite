@@ -68,5 +68,12 @@
     "Path": ".\\Modules\\ImageCompare\\ImageCompare.exe",
     "Arguments": "",
     "AutoStart": false
+  },
+  {
+    "Name": "FileTools",
+    "Description": "Xu ly file text/CSV/log lon: noi, tach, trich, tim, loc, so sanh, theo doi log, thay the, doi encoding; CSV; file trung",
+    "Path": ".\\Modules\\FileTools\\FileTools.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]

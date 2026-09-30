@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="FileTools.Views.HelpWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Hướng dẫn - FileTools">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <!-- Cùng bố cục với cửa sổ Hướng dẫn của ScreenCapture: danh mục bên trái, nội dung bên phải; gõ vào ô tìm kiếm thì
+         bên phải hiện mọi mục khớp của tất cả danh mục. Nội dung ở Core\HelpContent. -->
+    <Grid Padding="16" RowSpacing="12" ColumnSpacing="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="230" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="12">
+            <Border Width="40" Height="40" CornerRadius="10" Background="#2B7BD6">
+                <FontIcon Glyph="&#xE897;" FontSize="20" Foreground="White" />
+            </Border>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="Hướng dẫn sử dụng FileTools" FontSize="20" FontWeight="SemiBold" />
+                <TextBlock Text="Từng trang: dùng khi nào, các bước, ý nghĩa tuỳ chọn và lưu ý."
+                           FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </StackPanel>
+
+        <TextBox x:Name="SearchBox" Grid.Column="1" Width="300" HorizontalAlignment="Right" VerticalAlignment="Center"
+                 PlaceholderText="Tìm, vd: tach cot, shift-jis, trung..." AutomationProperties.Name="Tìm trong hướng dẫn"
+                 TextChanged="SearchBox_TextChanged" />
+
+        <ListView x:Name="SectionList" Grid.Row="1" SelectionChanged="SectionList_SelectionChanged"
+                  Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="0,6" />
+
+        <Border Grid.Row="1" Grid.Column="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+            <ScrollViewer x:Name="ContentScroller" VerticalScrollBarVisibility="Auto" Padding="24,16">
+                <StackPanel x:Name="ContentPanel" Spacing="10" Padding="0,0,0,16" />
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</Window>

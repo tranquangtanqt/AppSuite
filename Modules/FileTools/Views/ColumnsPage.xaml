@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="FileTools.Views.ColumnsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:FileTools.Views"
+    xmlns:vm="using:FileTools.ViewModels"
+    NavigationCacheMode="Required">
+
+    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+    <Grid x:Name="Root" Padding="24,16" RowSpacing="12" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="290" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="140" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Spacing="2">
+            <TextBlock Text="Chọn / sắp xếp cột" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Opacity="0.7" TextWrapping="Wrap"
+                       Text="Tích cột cần giữ, đổi thứ tự bằng Lên / Xuống (thứ tự trong danh sách = thứ tự ghi ra). Có thể đổi luôn dấu phân cách." />
+        </StackPanel>
+
+        <views:CsvSourcePanel Grid.Row="1" Source="{x:Bind ViewModel}" />
+
+        <Grid Grid.Row="2" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Border BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <ListView ItemsSource="{x:Bind ViewModel.Columns}" SelectedItem="{x:Bind ViewModel.SelectedColumn, Mode=TwoWay}">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CsvColumnItem">
+                            <CheckBox Content="{x:Bind Label}" IsChecked="{x:Bind IsChecked, Mode=TwoWay}" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Border>
+            <StackPanel Grid.Column="1" Spacing="8" Width="190">
+                <Button HorizontalAlignment="Stretch" Content="▲ Lên" Command="{x:Bind ViewModel.MoveUpCommand}" />
+                <Button HorizontalAlignment="Stretch" Content="▼ Xuống" Command="{x:Bind ViewModel.MoveDownCommand}" />
+                <Button HorizontalAlignment="Stretch" Content="Tích tất cả" Command="{x:Bind ViewModel.CheckAllCommand}" />
+                <Button HorizontalAlignment="Stretch" Content="Bỏ tích tất cả" Command="{x:Bind ViewModel.CheckNoneCommand}" />
+                <Button HorizontalAlignment="Stretch" Content="Thứ tự như gốc" Command="{x:Bind ViewModel.ResetOrderCommand}" />
+            </StackPanel>
+        </Grid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="24">
+            <ComboBox Header="Dấu phân cách ghi ra" MinWidth="200" ItemsSource="{x:Bind vm:ColumnsViewModel.OutputDelimiterNames}"
+                      SelectedIndex="{x:Bind ViewModel.OutputDelimiterIndex, Mode=TwoWay}" />
+            <CheckBox VerticalAlignment="Bottom" Content="Bọc mọi ô trong &quot;&quot;" IsChecked="{x:Bind ViewModel.QuoteAll, Mode=TwoWay}" />
+        </StackPanel>
+
+        <Grid Grid.Row="4" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Header="File kết quả" Text="{x:Bind ViewModel.OutputPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseOutputCommand}" />
+            <views:OutputPanel Grid.Column="2" Settings="{x:Bind ViewModel.Output}" />
+        </Grid>
+
+        <Button Grid.Row="5" Content="Ghi các cột đã chọn" MinWidth="120" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.RunCommand}" />
+
+        <views:JobPanel Grid.Row="6" Job="{x:Bind ViewModel}" />
+    </Grid>
+    </ScrollViewer>
+</Page>

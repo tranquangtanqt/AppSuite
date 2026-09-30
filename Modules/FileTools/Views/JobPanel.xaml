@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="FileTools.Views.JobPanel"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Phần chung dưới mọi trang: tiến độ, Huỷ, mở kết quả, nhật ký. -->
+    <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ProgressBar VerticalAlignment="Center" Maximum="100" Value="{x:Bind Job.Progress, Mode=OneWay, FallbackValue=0}" />
+            <Button Grid.Column="1" Content="Huỷ" Command="{x:Bind Job.CancelCommand, Mode=OneWay}" />
+            <Button Grid.Column="2" Content="Mở kết quả" Command="{x:Bind Job.OpenResultCommand, Mode=OneWay}" />
+            <Button Grid.Column="3" Content="Mở thư mục" Command="{x:Bind Job.RevealResultCommand, Mode=OneWay}" />
+        </Grid>
+        <Grid Grid.Row="1">
+            <TextBlock Text="{x:Bind Job.Status, Mode=OneWay, FallbackValue=''}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+            <HyperlinkButton HorizontalAlignment="Right" Content="Xoá nhật ký" Padding="4,0" Command="{x:Bind Job.ClearMessagesCommand, Mode=OneWay}" />
+        </Grid>
+        <Border Grid.Row="2" BorderThickness="1" CornerRadius="4"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <ListView ItemsSource="{x:Bind Job.Messages, Mode=OneWay}" SelectionMode="None" Padding="0,4">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="MinHeight" Value="20" />
+                        <Setter Property="Padding" Value="8,0" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="x:String">
+                        <TextBlock Text="{x:Bind}" FontFamily="Consolas" FontSize="12" IsTextSelectionEnabled="True" TextWrapping="Wrap" />
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Border>
+    </Grid>
+</UserControl>

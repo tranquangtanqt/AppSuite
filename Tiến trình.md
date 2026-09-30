@@ -26,6 +26,31 @@ Cập nhật lần cuối: 2026-09-30
 `.\build\Sync-Modules-Dev.ps1 -Configuration <cấu hình đó>` để chép module vào cạnh launcher — thiếu
 bước này thì Start module nào cũng lỗi "Executable not found" (đã gặp 2026-09-29).
 
+## FileTools (module mới — xử lý file text/CSV/log lớn, `Modules/FileTools/PLAN.md`)
+
+- [x] Đợt 1–2: khung + lõi đọc/ghi stream + **Nối file**, **Tách file** (dung lượng / số dòng / số phần),
+  **Trích dòng** (đầu / X–Y / cuối); đăng ký sln / modules.json / build scripts; test 59/59; file 2 GB: trích
+  đầu/cuối < 20 ms, tách + nối lại đúng từng byte, RAM 75 MB; GUI qua UI Automation đạt (2026-09-30)
+- [ ] Người dùng thử đợt 1–2 trên file thật
+- [x] Đợt 3: **Thông tin file**, **Tìm** (không phân biệt dấu), **Đổi encoding** + **Đổi xuống dòng** (hàng loạt,
+  ghi đè giữ .bak, báo ký tự mất khi sang Shift-JIS), **Lọc dòng**; test 79/79; file 2 GB: thông tin 12,6 s, tìm 26 s,
+  lọc 20 s; GUI qua UI Automation đạt cả 5 trang (2026-09-30)
+- [ ] Người dùng thử đợt 3 trên file thật
+- [x] Đợt 4 (CSV): **tách theo giá trị cột**, **bỏ dòng trùng** (cả dòng / theo cột), **chọn / sắp cột**, **đổi dấu
+  phân cách**; test 97/97; Sandbox: unit test + GUI 4 trang đạt (sửa 1 lỗi bố cục trang Chọn cột). File 2 GB: bỏ trùng
+  cả dòng 26 triệu dòng lúc đầu hết RAM (HashSet) → đổi sang `UInt64Set` 8 byte / ô cấp sẵn (2026-09-30)
+- [ ] Người dùng thử đợt 4 trên file thật
+- [x] Đợt 5: **So sánh 2 file**, **Theo dõi log**, **Thay thế hàng loạt** (xem trước rồi mới ghi), **Tìm file trùng**
+  (chuyển bản thừa vào Thùng rác), **Mẫu (preset)**; test 120/120; Sandbox: GUI 5 phần đạt, sửa 1 lỗi (nút Xem trước
+  không sáng khi thêm file sau) (2026-09-30)
+- [ ] Người dùng thử đợt 5 trên file thật
+- [x] Cửa sổ **Hướng dẫn** (F1 / nút ? / mục cuối menu, mở đúng trang đang xem, tìm không dấu); test đảm bảo mọi trang
+  đều có hướng dẫn; kiểm tra GUI trong Sandbox đạt (2026-09-30)
+- [x] Windows Sandbox (máy không cài .NET): unit test 79/79 + file 300 MB; GUI 8 trang đạt. Ảnh chụp 150% DPI lộ 4 lỗi
+  bố cục, đã sửa: danh sách file trang hàng loạt bị ép về 0, trang không cuộn được (cắt nhật ký), tuỳ chọn trang Tìm
+  tràn mép, ô từ khoá trang Lọc lệch (2026-09-30)
+- [ ] Chạy FileTools từ MainLauncher (sau `Sync-Modules-Dev.ps1`)
+
 ## MainLauncher
 
 - [x] Card module bị cắt mất hàng nút Start/Stop/Restart khi mô tả dài → card cao cố định, tên 1 dòng,
