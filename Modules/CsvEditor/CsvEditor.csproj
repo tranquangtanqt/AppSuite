@@ -41,9 +41,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <!-- Component packages thay cho metapackage Microsoft.WindowsAppSDK: bỏ AI/ML (onnxruntime + DirectML ~38 MB/exe) không dùng tới. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.2.1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.2.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
+    <!-- DataGrid 7.1.2 kéo metapackage Microsoft.WindowsAppSDK 1.0.0 (nguyên khối, cũ): ghim đúng 1.0.0 + ExcludeAssets=all
+         để không chép lẫn DLL WinUI cũ; WinUI 2.2.1 ở trên cung cấp runtime. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0" ExcludeAssets="all" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
   </ItemGroup>
 

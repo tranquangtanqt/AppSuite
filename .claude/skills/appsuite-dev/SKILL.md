@@ -22,6 +22,15 @@ AppSuite là "Application Hub" WinUI 3: `MainLauncher` khởi động/điều kh
    manifest) sang `Modules\<TênMới>`, đổi tên project/namespace.
 2. Csproj chỉ `ProjectReference` tới `..\..\Common\Common.csproj`. Tuyệt đối không thêm reference
    tới `MainLauncher.csproj`.
+   - Windows App SDK: dùng component package `Microsoft.WindowsAppSDK.WinUI` (2.2.1) +
+     `Microsoft.WindowsAppSDK.Runtime` (2.2.0) như ModuleA — **không** dùng metapackage
+     `Microsoft.WindowsAppSDK` (nó kéo AI/ML: onnxruntime + DirectML, ~40 MB thừa mỗi exe). NuGet UI
+     hay gợi ý cài metapackage — đừng nhận.
+   - Nếu một package bên thứ ba kéo metapackage bản cũ theo transitive (vd `SkiaSharp.Views.WinUI` →
+     1.1.5, `CommunityToolkit.WinUI.UI.Controls.DataGrid` → 1.0.0): ghim đúng bản đó với
+     `ExcludeAssets="all"` (xem ScreenCapture / CsvEditor). Đừng ghim 2.2.0 — `ExcludeAssets` không
+     lan xuống dependency nên AI/ML vẫn bị kéo vào.
+   - Kiểm chứng sau publish: thư mục module không được có `onnxruntime.dll` / `DirectML.dll`.
 3. Không đọc `modules.json` hay bất kỳ cấu hình launcher nào từ trong code của module —
    `Environment.GetCommandLineArgs()` phải hoạt động giống nhau dù chạy từ VS, `dotnet run`, hay bị
    `MainLauncher` khởi động qua `Process.Start`.

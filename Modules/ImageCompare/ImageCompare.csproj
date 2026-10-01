@@ -43,10 +43,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.2.0" />
+    <!-- Component packages thay cho metapackage Microsoft.WindowsAppSDK: bỏ AI/ML (onnxruntime + DirectML ~38 MB/exe) không dùng tới. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.2.1" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.2.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
     <PackageReference Include="SkiaSharp" Version="2.88.8" />
     <PackageReference Include="SkiaSharp.Views.WinUI" Version="2.88.8" />
+    <!-- SkiaSharp.Views.WinUI kéo metapackage Microsoft.WindowsAppSDK 1.1.5 (nguyên khối, xung đột với WinUI 2.2.1):
+         ghim đúng 1.1.5 + ExcludeAssets=all để bỏ hẳn asset của nó; WinUI 2.2.1 ở trên cung cấp runtime. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.1.5" ExcludeAssets="all" />
     <!-- Tìm chữ (OCR): wrapper + tesseract50.dll / leptonica native (tự chép vào x64\ / x86\ cạnh exe). -->
     <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>
