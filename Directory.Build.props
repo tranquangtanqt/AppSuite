@@ -1,0 +1,10 @@
+<Project>
+  <!--
+    Áp dụng cho MỌI project trong repo (MSBuild tự tìm file này ở thư mục cha gần nhất).
+    Thiết lập riêng cho module WinUI nằm ở Modules\Directory.Build.props (file đó import file này).
+  -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+</Project>

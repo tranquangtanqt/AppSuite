@@ -20,17 +20,23 @@ AppSuite là "Application Hub" WinUI 3: `MainLauncher` khởi động/điều kh
 
 1. Copy cấu trúc `Modules\ModuleA` (csproj + `App.xaml(.cs)` + `MainWindow.xaml(.cs)` + Assets +
    manifest) sang `Modules\<TênMới>`, đổi tên project/namespace.
-2. Csproj chỉ `ProjectReference` tới `..\..\Common\Common.csproj`. Tuyệt đối không thêm reference
-   tới `MainLauncher.csproj`.
-   - Windows App SDK: dùng component package `Microsoft.WindowsAppSDK.WinUI` (2.2.1) +
-     `Microsoft.WindowsAppSDK.Runtime` (2.2.0) như ModuleA — **không** dùng metapackage
-     `Microsoft.WindowsAppSDK` (nó kéo AI/ML: onnxruntime + DirectML, ~40 MB thừa mỗi exe). NuGet UI
-     hay gợi ý cài metapackage — đừng nhận.
+2. Csproj chỉ `ProjectReference` tới `..\..\Common\Common.csproj` (+ `SharedUI`). Tuyệt đối không thêm
+   reference tới `MainLauncher.csproj`.
+   - Khuôn chung (TFM, Platforms/RID, UseWinUI, unpackaged, Assets, manifest, publish settings) và
+     **Windows App SDK dạng component** (`WinUI` + `Runtime` + `SDK.BuildTools`) đã có sẵn trong
+     `Modules\Directory.Build.props` — csproj module mới KHÔNG khai báo lại (xem ModuleA: 14 dòng).
+   - Central Package Management: `<PackageReference Include="X" />` **không có `Version`** (lỗi NU1008);
+     package mới → thêm `<PackageVersion Include="X" Version="..." />` vào `Directory.Packages.props` ở gốc.
+   - **Không** dùng metapackage `Microsoft.WindowsAppSDK` (kéo AI/ML: onnxruntime + DirectML, ~40 MB thừa
+     mỗi exe). NuGet UI hay gợi ý cài metapackage — đừng nhận.
    - Nếu một package bên thứ ba kéo metapackage bản cũ theo transitive (vd `SkiaSharp.Views.WinUI` →
-     1.1.5, `CommunityToolkit.WinUI.UI.Controls.DataGrid` → 1.0.0): ghim đúng bản đó với
-     `ExcludeAssets="all"` (xem ScreenCapture / CsvEditor). Đừng ghim 2.2.0 — `ExcludeAssets` không
-     lan xuống dependency nên AI/ML vẫn bị kéo vào.
+     ≥1.1.5, `CommunityToolkit.WinUI.UI.Controls.DataGrid` → ≥1.0.0): thêm
+     `<PackageReference Include="Microsoft.WindowsAppSDK" ExcludeAssets="all" />` (version ghim 1.1.5 ở
+     `Directory.Packages.props`; xem ScreenCapture / CsvEditor). Đừng ghim 2.x — `ExcludeAssets` không lan
+     xuống dependency nên AI/ML vẫn bị kéo vào.
    - Kiểm chứng sau publish: thư mục module không được có `onnxruntime.dll` / `DirectML.dll`.
+   - Tách module ra ngoài repo: `.\build\Export-Module.ps1 -Name <Tên> -Dest D:\work\<Tên> [-Inline]`
+     (chép module + Common + SharedUI + các file props, tạo .sln, build thử). Đích phải ngắn (MAX_PATH).
 3. Không đọc `modules.json` hay bất kỳ cấu hình launcher nào từ trong code của module —
    `Environment.GetCommandLineArgs()` phải hoạt động giống nhau dù chạy từ VS, `dotnet run`, hay bị
    `MainLauncher` khởi động qua `Process.Start`.
@@ -61,6 +67,9 @@ AppSuite là "Application Hub" WinUI 3: `MainLauncher` khởi động/điều kh
   hoặc `dotnet build SharedUI\SharedUI.csproj`. Mỗi project build độc lập.
 - **Chạy riêng một module**: `dotnet run --project Modules\<Tên>\<Tên>.csproj`, hoặc mở `.csproj` đó
   trực tiếp trong VS và F5.
+- **Dọn output build**: `.\build\Clean.ps1` (xem trước `-WhatIf`; `-Targets <Tên>`; `-Application` xoá cả
+  `Application\`). Không dùng `git clean -xdf` — nó xoá cả file chưa track như Excel trong
+  `Mcf.DbDef.HtmlGenerator\Data\Excel\` và `*.csproj.user`.
 - **Đóng gói Release**: `.\build\Publish-AppSuite.ps1 -Configuration Release -Runtime win-x64` →
   output vào `Application\` (MainLauncher.exe + Modules\*\*.exe + Config\).
 - Nếu nút Start trên Module List báo lỗi "Executable not found" khi F5 MainLauncher trong VS: chạy

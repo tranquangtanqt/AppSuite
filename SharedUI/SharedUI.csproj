@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
@@ -7,8 +6,6 @@
     <AssemblyName>SharedUI</AssemblyName>
     <Platforms>x86;x64;ARM64</Platforms>
     <UseWinUI>true</UseWinUI>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <!--
@@ -24,9 +21,8 @@
 
   <ItemGroup>
     <!-- Component packages thay cho metapackage Microsoft.WindowsAppSDK: bỏ AI/ML (onnxruntime + DirectML ~38 MB/exe) không dùng tới. -->
-    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.2.1" />
-    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
   </ItemGroup>
-
 </Project>

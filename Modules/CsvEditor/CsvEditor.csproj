@@ -1,20 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
-    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>CsvEditor</RootNamespace>
-    <AssemblyName>CsvEditor</AssemblyName>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Platforms>x86;x64;ARM64</Platforms>
-    <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
-    <PublishProfile>win-$(Platform).pubxml</PublishProfile>
-    <UseWinUI>true</UseWinUI>
-    <EnableMsixTooling>true</EnableMsixTooling>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-  </PropertyGroup>
-
   <!--
     CsvEditor is a fully standalone WinUI 3 app: it opens, builds and runs on its own (right-click
     CsvEditor.csproj > Set as Startup Project, or `dotnet run` from this folder). It only references
@@ -22,53 +6,16 @@
   -->
 
   <ItemGroup>
-    <Content Include="Assets\SplashScreen.scale-200.png" />
-    <Content Include="Assets\LockScreenLogo.scale-200.png" />
-    <Content Include="Assets\Square150x150Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.scale-200.png" />
-    <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
-    <Content Include="Assets\StoreLogo.png" />
-    <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Manifest Include="$(ApplicationManifest)" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
-    <ProjectCapability Include="Msix" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2270" />
-    <!-- Component packages thay cho metapackage Microsoft.WindowsAppSDK: bỏ AI/ML (onnxruntime + DirectML ~38 MB/exe) không dùng tới. -->
-    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" Version="2.2.1" />
-    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" Version="2.2.0" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
-    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" Version="7.1.2" />
-    <!-- DataGrid 7.1.2 kéo metapackage Microsoft.WindowsAppSDK 1.0.0 (nguyên khối, cũ): ghim đúng 1.0.0 + ExcludeAssets=all
-         để không chép lẫn DLL WinUI cũ; WinUI 2.2.1 ở trên cung cấp runtime. -->
-    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.0.0" ExcludeAssets="all" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="CommunityToolkit.WinUI.UI.Controls.DataGrid" />
+    <!-- DataGrid 7.1.2 kéo metapackage Microsoft.WindowsAppSDK >= 1.0.0 (nguyên khối, cũ): ghim (1.1.5, Directory.Packages.props) + ExcludeAssets=all
+         để không chép lẫn DLL WinUI cũ; WinUI 2.2.1 từ Modules/Directory.Build.props cung cấp runtime. -->
+    <PackageReference Include="Microsoft.WindowsAppSDK" ExcludeAssets="all" />
+    <PackageReference Include="System.Text.Encoding.CodePages" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\SharedUI\SharedUI.csproj" />
   </ItemGroup>
-
-  <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
-    <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug' or '$(SelfContained)' != 'true'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug' and '$(SelfContained)' == 'true'">True</PublishTrimmed>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <WindowsPackageType>None</WindowsPackageType>
-  </PropertyGroup>
 </Project>

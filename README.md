@@ -70,7 +70,9 @@ AppSuite.sln
 |
 `-- build/
     |-- Sync-Modules-Dev.ps1    Tien ich cho F5/debug local (xem ben duoi)
-    `-- Publish-AppSuite.ps1    Dong goi ra thu muc "Application\" de deploy
+    |-- Publish-AppSuite.ps1    Dong goi ra thu muc "Application\" de deploy
+    |-- Export-Module.ps1       Tach 1 module ra thu muc rieng (ngoai repo) van build/chay duoc
+    `-- Clean.ps1               Xoa bin\ obj\ (va Application\ neu muon) - an toan hon git clean
 ```
 
 ## Nguyên tắc kiến trúc
@@ -117,34 +119,29 @@ khi MainLauncher truyền qua trường `Arguments` trong `modules.json`).
 
 ### Copy riêng một Module ra chạy ở nơi khác
 
-Mỗi Module `ProjectReference` tới `Common` (bắt buộc) và có thể tới `SharedUI` bằng đường dẫn tương
-đối (`..\..\Common\Common.csproj`, `..\..\SharedUI\SharedUI.csproj`) - nên chỉ copy đúng thư mục
-`Modules\<Tên module>\` sẽ thiếu 2 project này và báo lỗi "Unable to find project ...". Muốn chạy
-module độc lập ở thư mục/máy khác (không đụng tới phần còn lại của solution), làm theo các bước sau:
+Mỗi Module `ProjectReference` tới `Common` và `SharedUI` bằng đường dẫn tương đối, và lấy thiết lập
+chung + version package từ các file props ở thư mục cha (xem [Package & thiết lập chung](#package--thiết-lập-chung-directorypackagesprops--directorybuildprops)).
+Nên chỉ copy riêng thư mục `Modules\<Tên module>\` sẽ **không** build được. Dùng script:
 
-1. Tạo thư mục gốc mới, ví dụ `D:\tantq\src\<TênModule>`, rồi copy đúng cấu trúc thư mục tương đối
-   mà `.csproj` của module đang dùng:
-   ```
-   D:\tantq\src\<TênModule>\
-   |-- Common\              (copy nguyên thư mục Common/ từ AppSuite)
-   |-- SharedUI\             (copy nguyên thư mục SharedUI/ từ AppSuite, bỏ qua nếu module không dùng)
-   `-- Modules\<TênModule>\  (copy nguyên thư mục Modules\<TênModule>/ từ AppSuite)
-   ```
-   Không cần copy `MainLauncher`, `build/`, hay các Module khác.
-2. Xoá các thư mục `bin\` và `obj\` trong 3 thư mục vừa copy (nếu có) để tránh dính output/cache cũ
-   của máy nguồn.
-3. Tạo 1 file `.sln` mới ngay trong thư mục gốc để Visual Studio có đủ ngữ cảnh solution (mở thẳng
-   `.csproj` rời không có `.sln` sẽ báo "Unable to find project information ... run a restore from
-   the command-line"):
-   ```powershell
-   cd D:\tantq\src\<TênModule>
-   dotnet new sln -n <TênModule>
-   dotnet sln <TênModule>.sln add Common\Common.csproj SharedUI\SharedUI.csproj Modules\<TênModule>\<TênModule>.csproj
-   dotnet restore <TênModule>.sln
-   ```
-   (bỏ `SharedUI\SharedUI.csproj` khỏi lệnh `add` nếu module không tham chiếu `SharedUI`).
-4. Mở `<TênModule>.sln` bằng Visual Studio, đặt module làm Startup Project, F5 - hoặc chạy thẳng
-   bằng CLI: `dotnet run --project Modules\<TênModule>\<TênModule>.csproj`.
+```powershell
+.\build\Export-Module.ps1 -Name <TênModule> -Dest D:\work\<TênModule>            # giữ Central Package Management
+.\build\Export-Module.ps1 -Name <TênModule> -Dest D:\work\<TênModule> -Inline    # ghi version thẳng vào csproj
+```
+
+Script chép đúng những gì module cần (đọc `ProjectReference` đệ quy), bỏ `bin\ obj\ .vs\ *.user`:
+
+```
+D:\work\<TênModule>\
+|-- Directory.Build.props, Directory.Packages.props   (Directory.Packages.props không có khi dùng -Inline)
+|-- Common\  SharedUI\
+|-- Modules\Directory.Build.props
+|-- Modules\<TênModule>\
+`-- <TênModule>.sln
+```
+
+rồi build thử bản tách để chứng minh nó tự đủ. Mở `<TênModule>.sln`, đặt module làm Startup Project, F5.
+Thư mục đích phải nằm ngoài repo và nên ngắn (vd `D:\work\...`): đường dẫn output quá 260 ký tự làm app
+crash lúc khởi động (`Microsoft.WindowsAppRuntime.Bootstrap.dll` ... "filename too long").
 
 > Nếu chỉ cần đưa file thực thi cho người khác chạy (không cần sửa code), dùng
 > `.\build\Publish-AppSuite.ps1 -Targets <TênModule>` rồi copy thư mục `Application\Modules\<TênModule>\`
@@ -198,6 +195,32 @@ Application\
 `-- Config\modules.json, appsettings.json
 ```
 
+### Các script trong `build\`
+
+Chạy từ thư mục gốc repo (PowerShell). Xem đầy đủ tham số + ví dụ của từng script bằng
+`Get-Help .\build\<Tên>.ps1 -Detailed`. Bị chặn bởi ExecutionPolicy → xem mục "Đóng gói để triển khai" ở trên.
+
+| Script | Dùng khi | Lệnh hay dùng |
+|---|---|---|
+| `Sync-Modules-Dev.ps1` | Muốn F5 MainLauncher trong VS mà bấm Start được module | `.\build\Sync-Modules-Dev.ps1` (thêm `-Configuration Release` nếu chạy launcher Release) |
+| `Publish-AppSuite.ps1` | Đóng gói bản deploy vào `Application\` | `.\build\Publish-AppSuite.ps1` · riêng vài project: `-Targets ImageCompare,MainLauncher` |
+| `Export-Module.ps1` | Tách 1 module ra repo/máy khác (vẫn build + F5 được) | `.\build\Export-Module.ps1 -Name ImageCompare -Dest D:\work\ImageCompare` · tự đứng hẳn: thêm `-Inline` |
+| `Clean.ps1` | Repo phình to vì output build | xem trước: `.\build\Clean.ps1 -WhatIf` · xoá: `.\build\Clean.ps1` · kèm `Application\`: `-Application` · riêng project: `-Targets ModuleA` |
+
+**`Export-Module.ps1`** - tham số:
+- `-Name` (bắt buộc): tên module (= tên thư mục trong `Modules\`).
+- `-Dest` (bắt buộc): thư mục đích - phải trống, nằm **ngoài** repo và nên **ngắn** (vd `D:\work\<Tên>`;
+  đường dẫn output quá 260 ký tự làm app crash lúc khởi động, script sẽ cảnh báo).
+- `-Inline`: ghi version vào csproj, bỏ `Directory.Packages.props` (không dùng Central Package Management nữa).
+- `-NoBuild`: không build thử sau khi chép. `-Platform`: nền tảng build thử (mặc định `x64`).
+
+Kết quả: `<Dest>\<Tên>.sln` - mở bằng VS, đặt module làm Startup Project, F5.
+
+**`Clean.ps1`** - chỉ xoá `bin\`/`obj\` nằm cạnh một `.csproj`; không xoá file chưa track như
+`git clean -xdf` (Excel trong `Mcf.DbDef.HtmlGenerator\Data\Excel\`, `*.csproj.user`, `.vs\`). Nếu đang có exe
+chạy từ thư mục sắp xoá (MainLauncher F5, module mở qua launcher...), script dừng và liệt kê tiến trình để bạn
+tắt trước. Lần build đầu sau khi clean sẽ lâu hơn (restore + biên dịch lại); VS đang mở vẫn dùng được.
+
 ## Cấu hình module (`MainLauncher/Config/modules.json`)
 
 ```json
@@ -223,6 +246,22 @@ Application\
 Muốn thêm module mới: tạo project WinUI 3 mới trong `Modules\<TênModule>` theo đúng khuôn của module
 hiện có (`ProjectReference` tới `Common`, không reference `MainLauncher`), thêm một entry vào
 `modules.json`, xong - không cần sửa gì trong MainLauncher.
+
+### Package & thiết lập chung (`Directory.Packages.props` / `Directory.Build.props`)
+
+- **`Directory.Packages.props`** (gốc repo) - Central Package Management: version của mọi NuGet package
+  khai báo một chỗ. Trong csproj chỉ ghi `<PackageReference Include="..." />`, **không** có `Version`
+  (NuGet báo lỗi NU1008). Package mới: thêm `<PackageVersion>` ở đây trước.
+- **`Directory.Build.props`** (gốc repo) - thuộc tính chung cho mọi project (`Nullable`, `ImplicitUsings`).
+- **`Modules\Directory.Build.props`** - khuôn chung của module WinUI: TFM, Platforms/RID, unpackaged,
+  Assets, manifest, publish settings, và **Windows App SDK dạng component** (`WinUI` + `Runtime` +
+  `SDK.BuildTools`). Vì vậy csproj của module chỉ còn package riêng, item riêng và `ProjectReference`
+  (ModuleA: 14 dòng). Không reference metapackage `Microsoft.WindowsAppSDK` (kéo onnxruntime + DirectML
+  ~40 MB/exe), trừ khi phải ghim bản cũ mà package bên thứ ba kéo theo - khi đó dùng `ExcludeAssets="all"`
+  (xem ScreenCapture / ImageCompare / CsvEditor).
+
+MSBuild tự tìm các file này ở thư mục cha, nên build/F5/`dotnet run`/publish riêng một module trong repo
+vẫn như cũ. Chỉ khi tách module ra ngoài repo mới cần mang theo - `build\Export-Module.ps1` lo việc đó.
 
 ### Quy ước đặt tên module
 

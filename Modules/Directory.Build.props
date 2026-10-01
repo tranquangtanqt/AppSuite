@@ -1,16 +1,24 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
+  <!--
+    Khuôn chung cho mọi module WinUI 3 trong Modules\: app unpackaged (WindowsPackageType=None), chạy độc lập
+    (F5 / dotnet run / Process.Start từ MainLauncher đều như nhau). MSBuild tự import file này cho mọi csproj
+    dưới Modules\ - csproj của module chỉ còn: package riêng, item riêng (Data\, tessdata\...), ProjectReference.
+
+    Module mới: copy Modules\ModuleA, đổi tên - KHÔNG cần khai báo Windows App SDK, đã có sẵn ở đây.
+  -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)..'))" />
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>MainLauncher</RootNamespace>
-    <AssemblyName>MainLauncher</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64;ARM64</Platforms>
     <RuntimeIdentifiers>win-x86;win-x64;win-arm64</RuntimeIdentifiers>
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <WindowsPackageType>None</WindowsPackageType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,59 +29,34 @@
     <Content Include="Assets\Square44x44Logo.targetsize-24_altform-unplated.png" />
     <Content Include="Assets\StoreLogo.png" />
     <Content Include="Assets\Wide310x150Logo.scale-200.png" />
-    <Content Include="Assets\GalleryHeaderImage.png" />
-    <None Include="Config\modules.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="Config\appsettings.json" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\SharedUI\SharedUI.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <!-- Windows App SDK dạng component (version ở Directory.Packages.props). Không dùng metapackage Microsoft.WindowsAppSDK. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
+    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" />
+  </ItemGroup>
+
   <!--
-    Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging
-    Tools extension to be activated for this project even if the Windows App SDK Nuget
-    package has not yet been restored.
+    "Msix" ProjectCapability / HasPackageAndPublishMenu: giữ menu Package and Publish của VS hoạt động kể cả khi
+    package Windows App SDK chưa restore.
   -->
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <ProjectCapability Include="Msix" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
-    <!-- Component packages thay cho metapackage Microsoft.WindowsAppSDK: bỏ AI/ML (onnxruntime + DirectML ~38 MB/exe) không dùng tới. -->
-    <PackageReference Include="Microsoft.WindowsAppSDK.WinUI" />
-    <PackageReference Include="Microsoft.WindowsAppSDK.Runtime" />
-    <PackageReference Include="CommunityToolkit.Mvvm" />
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
-    <PackageReference Include="Microsoft.Extensions.Logging" />
-  </ItemGroup>
-
-  <!--
-    Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution
-    Explorer "Package and Publish" context menu entry to be enabled for this project even if
-    the Windows App SDK Nuget package has not yet been restored.
-  -->
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
 
-  <!-- Publish Properties -->
   <PropertyGroup>
     <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
     <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
     <PublishTrimmed Condition="'$(Configuration)' == 'Debug' or '$(SelfContained)' != 'true'">False</PublishTrimmed>
     <PublishTrimmed Condition="'$(Configuration)' != 'Debug' and '$(SelfContained)' == 'true'">True</PublishTrimmed>
   </PropertyGroup>
-  <PropertyGroup>
-  <WindowsPackageType>None</WindowsPackageType>
-</PropertyGroup>
 </Project>
