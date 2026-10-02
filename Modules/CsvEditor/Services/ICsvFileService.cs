@@ -17,6 +17,8 @@ public interface ICsvFileService
     /// <see cref="CsvFileService.LargeFileRowThreshold"/> - return false to abort (the method then
     /// throws <see cref="OperationCanceledException"/>). Pass explicit <paramref name="encodingOverride"/>/
     /// <paramref name="delimiterOverride"/> to skip auto-detection (e.g. the user picked one manually).
+    /// <paramref name="hasHeader"/>: the first row holds column names (the user's choice, not detected) - false
+    /// reads every row as data and names the columns "Cột 1"..., one per field of the longest row.
     /// </summary>
     Task<CsvOpenResult> OpenAsync(
         string filePath,
@@ -24,7 +26,8 @@ public interface ICsvFileService
         char? delimiterOverride,
         Func<long, Task<bool>> confirmLargeFile,
         IProgress<int>? progress,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        bool hasHeader = true);
 
     Task SaveAsync(CsvDocument document, IProgress<int>? progress, CancellationToken cancellationToken);
 

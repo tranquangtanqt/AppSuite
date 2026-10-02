@@ -100,6 +100,12 @@ không raise `PropertyChanged` per-row - chỉ raise `StructureChanged` 1 lần)
   `score = (Mode(count) - 1) * (1 - variance)`; file `.tsv` ưu tiên thử Tab trước.
 - Cả 2 đều có thể bị người dùng ghi đè qua `EncodingPickerDialog` (bấm vào nhãn Encoding/Delimiter ở
   status bar để mở lại file với lựa chọn thủ công).
+- Dòng tiêu đề (2026-10-02): **không tự đoán** (người dùng chọn checkbox "Dòng đầu là tiêu đề") — dòng đầu toàn chữ
+  hay toàn số đều có thể là tiêu đề hoặc dữ liệu. `CsvDocument.HasHeader` = false: mọi dòng là dữ liệu, số cột = dòng
+  dài nhất (có header thì field thừa của dòng dài hơn header bị cắt khi lưu — không đổi hành vi đó), tên `Cột N` chỉ
+  để hiển thị, `CsvSerializer` bỏ dòng tên cột. Đổi lựa chọn khi đang mở file → `ReopenAsync` (giữ encoding /
+  delimiter). Mở lại (đổi tiêu đề / encoding) giờ đọc đường dẫn từ tài liệu: trước đây `MainWindow._currentFilePath`
+  không cập nhật sau Save As → mở lại nhầm file cũ.
 
 ### 5. Cảnh báo file lớn & Validation & Statistics
 

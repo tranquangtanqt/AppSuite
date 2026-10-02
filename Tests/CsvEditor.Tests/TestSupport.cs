@@ -52,8 +52,8 @@ internal static class Csv
     public static CsvFileService FileService() =>
         new(new EncodingDetector(), new DelimiterDetector(), new ValidationService());
 
-    public static Task<CsvOpenResult> OpenAsync(string path, Encoding? encoding = null, char? delimiter = null) =>
-        FileService().OpenAsync(path, encoding, delimiter, _ => Task.FromResult(true), null, CancellationToken.None);
+    public static Task<CsvOpenResult> OpenAsync(string path, Encoding? encoding = null, char? delimiter = null, bool hasHeader = true) =>
+        FileService().OpenAsync(path, encoding, delimiter, _ => Task.FromResult(true), null, CancellationToken.None, hasHeader);
 
     /// <summary>Tài liệu trong bộ nhớ: dòng đầu là header.</summary>
     public static CsvDocument Doc(params string[][] headerThenRows)

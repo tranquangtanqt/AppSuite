@@ -49,7 +49,7 @@ public sealed class ValidationService : IValidationService
                 issues.Add(new ValidationIssue
                 {
                     Severity = ValidationSeverity.Warning,
-                    Message = $"Dòng {rowIndex + 1}: có {cellCount} field, header có {document.Columns.Count} cột.",
+                    Message = $"Dòng {rowIndex + 1}: có {cellCount} field, {(document.HasHeader ? "header" : "bảng")} có {document.Columns.Count} cột.",
                     RowIndex = rowIndex,
                     IsRecomputable = true,
                 });

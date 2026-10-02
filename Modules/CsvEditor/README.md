@@ -29,13 +29,17 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 ## Toolbar
 
-`Open` `Save` `Save As` | `Undo` `Redo` | `Add Row` `Delete Row` `Copy Row` `Add Column`
+`Open` ☐ *Dòng đầu là tiêu đề* `Save` `Save As` | `Undo` `Redo` | `Add Row` `Delete Row` `Copy Row` `Add Column`
 `Delete Column` `Rename Column` | `Find` `Replace` `Filter` `Clear Filter` `Sort` `Clear Sort`
 `Statistics`.
 
 - **Open**: chọn `.csv`/`.tsv`/`.txt`, tự nhận diện delimiter (`,` `Tab` `;` `|`) và encoding
   (UTF-8, UTF-8 BOM, UTF-16 LE/BE). Nếu nhận diện sai, bấm vào nhãn "Encoding"/"Delimiter" ở thanh
   trạng thái để mở lại file với lựa chọn thủ công.
+- **Dòng đầu là tiêu đề** (checkbox cạnh Open, mặc định có tick — người dùng tự chọn, không tự đoán): bỏ tick cho
+  file không có dòng tên cột → mọi dòng là dữ liệu, cột tự đặt tên `Cột 1`, `Cột 2`… (số cột = dòng dài nhất, không
+  cắt field nào); tên này chỉ để hiển thị — Save không ghi dòng tên cột. Đổi lựa chọn khi đang mở file → mở lại file đó
+  (giữ encoding / delimiter; có thay đổi chưa lưu thì hỏi trước).
 - **Save / Save As**: ghi lại đúng delimiter/encoding đang dùng. Hotkey: `Ctrl+S` (Save).
 - **Undo/Redo**: áp dụng cho sửa ô, thêm/xóa dòng, thêm/xóa/đổi tên cột, dán nhiều ô, kéo điền
   (fill handle), thay thế tất cả kết quả Find/Replace (mỗi thao tác trên là **1** bước Undo dù đổi

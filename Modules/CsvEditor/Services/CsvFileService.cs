@@ -35,7 +35,8 @@ public sealed class CsvFileService : ICsvFileService
         char? delimiterOverride,
         Func<long, Task<bool>> confirmLargeFile,
         IProgress<int>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool hasHeader = true)
     {
         var encodingResult = encodingOverride is not null
             ? new EncodingDetectionResult(encodingOverride, DetectionConfidence.High, null)
@@ -70,7 +71,7 @@ public sealed class CsvFileService : ICsvFileService
         }
 
         var document = await Task.Run(
-            () => ParseDocument(filePath, encodingResult.Encoding, delimiterResult.Delimiter, fileLength, issues, progress, cancellationToken),
+            () => ParseDocument(filePath, encodingResult.Encoding, delimiterResult.Delimiter, hasHeader, fileLength, issues, progress, cancellationToken),
             cancellationToken);
 
         document.FilePath = filePath;
@@ -108,6 +109,7 @@ public sealed class CsvFileService : ICsvFileService
         string filePath,
         Encoding encoding,
         char delimiter,
+        bool hasHeader,
         long fileLength,
         List<ValidationIssue> issues,
         IProgress<int>? progress,
@@ -125,7 +127,11 @@ public sealed class CsvFileService : ICsvFileService
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if (rowIndex == 0)
+            if (!hasHeader)
+            {
+                rows.Add(new CsvRow(fields)); // số cột (dòng dài nhất) + cảnh báo lệch cột tính sau khi đọc hết
+            }
+            else if (rowIndex == 0)
             {
                 columns.AddRange(fields.Select(f => new CsvColumn(f)));
             }
@@ -160,7 +166,27 @@ public sealed class CsvFileService : ICsvFileService
 
         progress?.Report(100);
 
-        var document = new CsvDocument();
+        if (!hasHeader)
+        {
+            // Không có dòng tên cột: số cột = dòng dài nhất (không cắt bớt field của dòng nào khi lưu lại), tên tự đặt.
+            var columnCount = rows.Count == 0 ? 0 : rows.Max(r => r.CellCount);
+            columns.AddRange(Enumerable.Range(1, columnCount).Select(i => new CsvColumn($"Cột {i}")));
+            for (var i = 0; i < rows.Count; i++)
+            {
+                if (rows[i].CellCount != columnCount)
+                {
+                    issues.Add(new ValidationIssue
+                    {
+                        Severity = ValidationSeverity.Warning,
+                        Message = $"Dòng {i + 1}: có {rows[i].CellCount} field, bảng có {columnCount} cột.",
+                        RowIndex = i,
+                        IsRecomputable = true,
+                    });
+                }
+            }
+        }
+
+        var document = new CsvDocument { HasHeader = hasHeader };
         document.ReplaceAll(columns, rows);
         return document;
     }

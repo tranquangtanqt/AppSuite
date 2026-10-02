@@ -22,6 +22,10 @@ public sealed class CsvDocument
     public Encoding Encoding { get; set; } = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
     public char Delimiter { get; set; } = ',';
 
+    /// <summary>Dòng đầu file là tiêu đề (tên cột) - người dùng chọn khi mở. False: mọi dòng là dữ liệu, tên cột
+    /// tự đặt ("Cột 1"…) chỉ để hiển thị, lưu file không ghi dòng tên cột.</summary>
+    public bool HasHeader { get; set; } = true;
+
     /// <summary>Raised once after Columns/Rows are replaced wholesale (Open, or Undo/Redo of a
     /// structural command). Subscribers should rebuild DataGrid columns and reset ItemsSource.</summary>
     public event EventHandler? StructureChanged;

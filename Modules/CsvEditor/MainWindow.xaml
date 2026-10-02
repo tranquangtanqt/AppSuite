@@ -30,6 +30,10 @@
                 <Button x:Name="OpenButton" Click="OpenButton_Click" ToolTipService.ToolTip="Mở file CSV/TSV">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Open" /></StackPanel>
                 </Button>
+                <!-- Người dùng tự chọn file có dòng tiêu đề hay không (không tự đoán). Đổi khi đang mở file → mở lại file đó. -->
+                <CheckBox x:Name="HasHeaderBox" Content="Dòng đầu là tiêu đề" IsChecked="True" MinWidth="0" VerticalAlignment="Center"
+                          Click="HasHeaderBox_Click"
+                          ToolTipService.ToolTip="Bỏ tick nếu file không có dòng tên cột: mọi dòng là dữ liệu, cột tự đặt tên Cột 1, Cột 2… (chỉ để hiển thị, lưu file không ghi dòng tên cột)" />
                 <Button x:Name="SaveButton" Click="SaveButton_Click" IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" ToolTipService.ToolTip="Lưu (Ctrl+S)">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Save" /></StackPanel>
                     <Button.KeyboardAccelerators>

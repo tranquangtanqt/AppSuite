@@ -7,10 +7,14 @@ public static class CsvSerializer
 {
     /// <summary>Writes header + every row to <paramref name="writer"/>, quoting a field only when it
     /// contains the delimiter, a quote, or a newline (minimal-quoting, matches how most CSV tools
-    /// round-trip a file so a re-opened file doesn't gain quotes it didn't have before).</summary>
+    /// round-trip a file so a re-opened file doesn't gain quotes it didn't have before). File mở ở chế độ không có
+    /// tiêu đề (<see cref="CsvDocument.HasHeader"/> = false) thì không ghi dòng tên cột - tên "Cột 1"… chỉ để hiển thị.</summary>
     public static async Task WriteAsync(TextWriter writer, CsvDocument document, CancellationToken cancellationToken)
     {
-        await WriteRowAsync(writer, document.Columns.Select(c => c.Name), document.Delimiter, cancellationToken);
+        if (document.HasHeader)
+        {
+            await WriteRowAsync(writer, document.Columns.Select(c => c.Name), document.Delimiter, cancellationToken);
+        }
 
         foreach (var row in document.Rows)
         {

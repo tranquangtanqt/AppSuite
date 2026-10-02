@@ -39,7 +39,8 @@ public sealed class EmptyStringToVisibilityConverter : IValueConverter
 public sealed partial class MainWindow : Window
 {
     private CancellationTokenSource? _currentOperationCts;
-    private string? _currentFilePath;
+    /// <summary>File đang mở (đổi theo Save As) - "mở lại" (đổi tiêu đề / encoding) đọc lại đúng file này.</summary>
+    private string? CurrentFilePath => ViewModel.CurrentFilePath;
 
     // ----- Fill handle drag state (see FillHandleLayer in MainWindow.xaml) -----
     private ScrollViewer? _gridScrollViewer;
@@ -493,16 +494,49 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        _currentFilePath = file.Path;
         _currentOperationCts = new CancellationTokenSource();
         await ViewModel.OpenAsync(file.Path, ConfirmLargeFileAsync, _currentOperationCts.Token);
+    }
+
+    /// <summary>"Dòng đầu là tiêu đề": đổi lựa chọn khi đang mở file → mở lại file đó (giữ encoding / delimiter). Có
+    /// thay đổi chưa lưu thì hỏi trước; huỷ thì trả checkbox về như cũ.</summary>
+    private async void HasHeaderBox_Click(object sender, RoutedEventArgs e)
+    {
+        var hasHeader = HasHeaderBox.IsChecked == true;
+        if (CurrentFilePath is not { } filePath)
+        {
+            ViewModel.HasHeader = hasHeader; // chưa mở file: áp dụng cho lần mở tới
+            return;
+        }
+
+        if (ViewModel.IsDirty)
+        {
+            var confirm = new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Mở lại file?",
+                Content = "Đổi \"Dòng đầu là tiêu đề\" sẽ mở lại file từ đĩa - các thay đổi chưa lưu sẽ mất.",
+                PrimaryButtonText = "Mở lại",
+                CloseButtonText = "Hủy",
+                DefaultButton = ContentDialogButton.Close,
+            };
+            if (await confirm.ShowAsync() != ContentDialogResult.Primary)
+            {
+                HasHeaderBox.IsChecked = !hasHeader;
+                return;
+            }
+        }
+
+        ViewModel.HasHeader = hasHeader;
+        _currentOperationCts = new CancellationTokenSource();
+        await ViewModel.ReopenAsync(filePath, ConfirmLargeFileAsync, _currentOperationCts.Token);
     }
 
     /// <summary>Status bar "Encoding"/"Delimiter" labels are tappable - re-opens the same file with a
     /// manually chosen encoding/delimiter when auto-detection guessed wrong.</summary>
     private async void EncodingLabel_Tapped(object sender, TappedRoutedEventArgs e)
     {
-        if (_currentFilePath is null)
+        if (CurrentFilePath is not { } filePath)
         {
             return;
         }
@@ -514,7 +548,7 @@ public sealed partial class MainWindow : Window
         }
 
         _currentOperationCts = new CancellationTokenSource();
-        await ViewModel.OpenAsync(_currentFilePath, dialog.SelectedEncoding, dialog.SelectedDelimiter, ConfirmLargeFileAsync, _currentOperationCts.Token);
+        await ViewModel.OpenAsync(filePath, dialog.SelectedEncoding, dialog.SelectedDelimiter, ConfirmLargeFileAsync, _currentOperationCts.Token);
     }
 
     private async Task<bool> ConfirmLargeFileAsync(long estimatedRows)

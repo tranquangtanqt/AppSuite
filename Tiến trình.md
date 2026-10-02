@@ -163,5 +163,8 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] 2 thiếu sót lộ ra khi bỏ `Bindings.Update()` (đã sửa, có test): nút Undo/Redo không bật lại
   (thiếu `NotifyCanExecuteChanged`); mở file mới không tắt nút Clear Filter/Clear Sort (2026-09-29)
   — build 0 warning; GUI Sandbox 11/11, unit test 89/89
+- [x] Mở file không có dòng tiêu đề: checkbox "Dòng đầu là tiêu đề" cạnh Open (người dùng chọn, không đoán); bỏ tick →
+  cột `Cột 1`…, số cột theo dòng dài nhất, Save không ghi dòng tên cột; đổi khi đang mở → mở lại (hỏi nếu chưa lưu).
+  Kèm sửa: mở lại sau Save As đọc nhầm file cũ. Unit test 93/93, GUI Sandbox 16/16 (2026-10-02)
 - [x] `PLAN.md` lỗi thời ("Bỏ unit test", mục "Rủi ro chưa kiểm chứng", Sort đọc số theo culture) —
   cập nhật theo test 89/89 + GUI Sandbox 11/11 + `CsvNumber` (2026-09-30)

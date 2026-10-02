@@ -61,6 +61,9 @@ public sealed partial class CsvEditorViewModel : ObservableObject
 
     public IReadOnlyList<CsvColumn> Columns => _editService.GetColumns();
 
+    /// <summary>Đường dẫn file đang mở (cập nhật khi Save As), null nếu chưa mở / chưa lưu file nào.</summary>
+    public string? CurrentFilePath => string.IsNullOrEmpty(_editService.Document.FilePath) ? null : _editService.Document.FilePath;
+
     [ObservableProperty]
     private string _fileName = "(chưa mở file)";
 
@@ -69,6 +72,11 @@ public sealed partial class CsvEditorViewModel : ObservableObject
 
     [ObservableProperty]
     private string _delimiterLabel = "-";
+
+    /// <summary>Dòng đầu file là tiêu đề - người dùng chọn (checkbox trên toolbar), áp dụng cho lần mở file tiếp theo /
+    /// <see cref="ReopenAsync"/>. Không tự đoán: file toàn chữ hay toàn số đều có thể có hoặc không có tiêu đề.</summary>
+    [ObservableProperty]
+    private bool _hasHeader = true;
 
     [ObservableProperty]
     private int _rowCount;
@@ -114,7 +122,7 @@ public sealed partial class CsvEditorViewModel : ObservableObject
         try
         {
             var progress = new Progress<int>(p => ProgressPercent = p);
-            var result = await _fileService.OpenAsync(filePath, encodingOverride, delimiterOverride, confirmLargeFile, progress, cancellationToken);
+            var result = await _fileService.OpenAsync(filePath, encodingOverride, delimiterOverride, confirmLargeFile, progress, cancellationToken, HasHeader);
 
             _editService.ReplaceDocument(result.Document);
             _activeFilter = null;
@@ -138,7 +146,7 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             DelimiterLabel = DescribeDelimiter(result.DelimiterResult.Delimiter);
             RowCount = result.Document.Rows.Count;
             ColumnCount = result.Document.Columns.Count;
-            StatusMessage = $"Đã mở {result.Document.FileName} - {RowCount:N0} dòng, {ColumnCount:N0} cột.";
+            StatusMessage = $"Đã mở {result.Document.FileName} - {RowCount:N0} dòng, {ColumnCount:N0} cột" + (HasHeader ? "." : " (không có dòng tiêu đề).");
             ColumnsChanged?.Invoke(this, EventArgs.Empty);
         }
         catch (OperationCanceledException)
@@ -150,6 +158,21 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
+    /// <summary>Mở lại file đang mở với encoding / delimiter hiện tại và <see cref="HasHeader"/> mới (người dùng đổi
+    /// lựa chọn "Dòng đầu là tiêu đề" khi file đang mở). Bỏ các thay đổi chưa lưu - bên gọi hỏi trước.</summary>
+    /// <summary>Tài liệu chưa gắn file (chưa mở / chưa lưu): lựa chọn áp dụng ngay cho lần Save As tới. Đã có file thì
+    /// chỉ đổi khi mở lại (<see cref="ReopenAsync"/>) - tài liệu đang hiện vẫn đúng với cách nó được đọc.</summary>
+    partial void OnHasHeaderChanged(bool value)
+    {
+        if (CurrentFilePath is null)
+        {
+            _editService.Document.HasHeader = value;
+        }
+    }
+
+    public Task ReopenAsync(string filePath, Func<long, Task<bool>> confirmLargeFile, CancellationToken cancellationToken) =>
+        OpenAsync(filePath, _editService.Document.Encoding, _editService.Document.Delimiter, confirmLargeFile, cancellationToken);
 
     public async Task SaveAsync(CancellationToken cancellationToken)
     {
