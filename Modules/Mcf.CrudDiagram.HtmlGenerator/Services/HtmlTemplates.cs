@@ -12,18 +12,24 @@ internal static class HtmlTemplates
         .crud-table { border-collapse: collapse; width: 100%; font-size: 13px; }
         .crud-table th, .crud-table td { border: 1px solid #8886; padding: 5px 10px; vertical-align: top; text-align: left; }
         .crud-table th { background: #c6e0b4; color: #375623; font-weight: 600; white-space: nowrap; }
+        /* Header dính khi cuộn: dính theo .table-scroll (khung tự cuộn, xem dưới). border-collapse làm viền của th
+           sticky biến mất khi cuộn → vẽ viền dưới bằng box-shadow. */
+        .crud-table thead th { position: sticky; top: 0; z-index: 1; box-shadow: inset 0 -1px 0 #8888; }
         .crud-table tbody tr:hover td { background-color: #4a90d914; }
         .crud-table td.flag { text-align: center; font-weight: 600; }
         .crud-table tr.crud-block-row td:first-child, .crud-table tr.crud-block-row td:nth-child(2) { font-weight: 600; }
-        .crud-table tr.crud-block-row { scroll-margin-top: 12px; }
+        /* Nhảy tới 1 khối ID (link #blk-...): chừa chỗ cho header đang dính, dòng đích không bị che. */
+        .crud-table tr.crud-block-row { scroll-margin-top: 44px; }
         .crud-table a { color: var(--accent); text-decoration: none; }
         .crud-table a:hover { text-decoration: underline; }
         .crud-empty { padding: 10px 14px; font-size: 13px; opacity: .6; }
         @media (prefers-color-scheme: dark) {
           .crud-table th { background: #385723; color: #d3e7c5; }
         }
+        /* Khung cuộn cả dọc lẫn ngang, cao tối đa gần bằng cửa sổ: sticky chỉ dính theo khung cuộn gần nhất - khung chỉ
+           overflow-x (trang cuộn dọc) thì header trôi theo trang. Bảng ngắn hơn cửa sổ thì khung co theo, không thừa chỗ. */
         .table-scroll {
-          overflow-x: auto; margin-bottom: 14px; border-radius: 8px;
+          overflow: auto; max-height: calc(100vh - 32px); margin-bottom: 14px; border-radius: 8px;
           border: 1px solid #8884; box-shadow: 0 1px 3px #0002;
         }
         .sheet-grid { border-collapse: collapse; width: 100%; table-layout: fixed; }

@@ -16,6 +16,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
 
         ViewModel = new SearchViewModel(_catalog);
         TableNameSearchViewModel = new TableNameSearchViewModel(_catalog);

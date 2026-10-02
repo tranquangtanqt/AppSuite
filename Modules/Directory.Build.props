@@ -35,6 +35,15 @@
     <Manifest Include="$(ApplicationManifest)" />
   </ItemGroup>
 
+  <!-- Icon app: Assets\<Tên project>.ico (tạo bằng build\New-AppIcon.ps1) → icon exe (Explorer, ghim taskbar) + chép cạnh exe để
+       SharedUI.Helpers.WindowIcon.Apply gán cho cửa sổ (app unpackaged không tự lấy icon exe cho nút taskbar). -->
+  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)\Assets\$(MSBuildProjectName).ico')">
+    <ApplicationIcon>Assets\$(MSBuildProjectName).ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup Condition="Exists('$(MSBuildProjectDirectory)\Assets\$(MSBuildProjectName).ico')">
+    <Content Include="Assets\$(MSBuildProjectName).ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- Windows App SDK dạng component (version ở Directory.Packages.props). Không dùng metapackage Microsoft.WindowsAppSDK. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" />

@@ -79,7 +79,7 @@ public sealed partial class EditorWindow : Window
         IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null, string? captureFilePath = null)
     {
         InitializeComponent();
-        AppIcon.Apply(this);
+        SharedUI.Helpers.WindowIcon.Apply(this);
         _fileService = fileService;
         _clipboardService = clipboardService;
         _session = session;

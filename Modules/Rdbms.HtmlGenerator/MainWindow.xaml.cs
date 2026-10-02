@@ -17,6 +17,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
     }
 
     private async void OpenSettingsDialog_Click(object sender, RoutedEventArgs e)

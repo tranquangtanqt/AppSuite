@@ -15,5 +15,6 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
     }
 }

@@ -54,6 +54,11 @@ AppSuite là "Application Hub" WinUI 3: `MainLauncher` khởi động/điều kh
 5. Không cần sửa gì trong `MainLauncher` — nó nạp danh sách module hoàn toàn qua `modules.json`.
 6. Kiểm chứng độc lập: mở `Modules\<TênMới>\<TênMới>.csproj` riêng, đặt Startup Project, F5 — phải
    chạy được mà không cần mở `MainLauncher`.
+7. Icon (exe + taskbar): `.\build\New-AppIcon.ps1 -OutPath Modules\<TênMới>\Assets\<TênMới>.ico -Glyph <mã Segoe Fluent>
+   -Color <hex>` (chọn màu khác các module có sẵn — xem README gốc mục "Icon app") rồi thêm
+   `SharedUI.Helpers.WindowIcon.Apply(this);` sau `InitializeComponent()` của mọi cửa sổ hiện trên taskbar. Csproj không
+   cần sửa (`Modules\Directory.Build.props` tự nhận `Assets\<Tên project>.ico`). Hướng dẫn F1: dùng
+   `SharedUI.Help.HelpWindow`, module chỉ viết nội dung `HelpSection`.
 
 ## Build / chạy / publish
 

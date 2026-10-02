@@ -14,6 +14,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
     }
 
     private void NavView_Loaded(object sender, RoutedEventArgs e)

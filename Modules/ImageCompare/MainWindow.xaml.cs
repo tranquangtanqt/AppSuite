@@ -53,6 +53,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
         Closed += (_, _) => _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
         uint dpi = GetDpiForWindow(WindowNative.GetWindowHandle(this));
         double scale = dpi > 0 ? dpi / 96.0 : 1;

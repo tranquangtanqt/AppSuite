@@ -59,6 +59,7 @@ public sealed partial class MainWindow : Window
         ViewModel = new CsvEditorViewModel(fileService, editService);
 
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
 
         ViewModel.ColumnsChanged += (_, _) => RebuildColumns();
 

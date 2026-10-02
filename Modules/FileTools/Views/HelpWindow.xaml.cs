@@ -21,6 +21,7 @@ public sealed partial class HelpWindow : Window
     public HelpWindow(string? pageTag)
     {
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
 
         // 1000×700 logic nhưng không vượt 90% vùng làm việc (màn nhỏ ở 150% chỉ cao ~600 logic), căn giữa.
         var scale = GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;

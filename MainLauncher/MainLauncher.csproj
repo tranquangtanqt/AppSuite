@@ -11,7 +11,13 @@
     <PublishProfile>win-$(Platform).pubxml</PublishProfile>
     <UseWinUI>true</UseWinUI>
     <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- Icon app (build\New-AppIcon.ps1); cửa sổ gán bằng SharedUI.Helpers.WindowIcon.Apply - giống quy ước ở Modules\Directory.Build.props. -->
+    <ApplicationIcon>Assets\MainLauncher.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\MainLauncher.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\SplashScreen.scale-200.png" />

@@ -25,7 +25,7 @@ public sealed partial class SettingsWindow : Window
         Func<AppSettings, IReadOnlyList<HotkeyBinding>> apply)
     {
         InitializeComponent();
-        AppIcon.Apply(this);
+        SharedUI.Helpers.WindowIcon.Apply(this);
         _fileService = fileService;
         _apply = apply;
 

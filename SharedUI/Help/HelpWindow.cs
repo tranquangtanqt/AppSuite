@@ -41,7 +41,7 @@ public sealed class HelpWindow : Window
     /// <param name="subtitle">1 dòng mô tả dưới tiêu đề.</param>
     /// <param name="accent">Màu nhấn của module (ô icon trên cùng, icon danh mục); null = màu nhấn của Windows.</param>
     /// <param name="searchPlaceholder">Gợi ý trong ô tìm, vd "Tìm tính năng, vd: lọc, Ctrl+G...".</param>
-    /// <param name="iconPath">File .ico cho thanh tiêu đề / taskbar (null = không đặt).</param>
+    /// <param name="iconPath">File .ico cho thanh tiêu đề / taskbar (null = icon của app, xem <see cref="Helpers.WindowIcon"/>).</param>
     public HelpWindow(string appName, string subtitle, IReadOnlyList<HelpSection> sections, Color? accent = null,
         string searchPlaceholder = "Tìm tính năng...", string? iconPath = null)
     {
@@ -51,10 +51,7 @@ public sealed class HelpWindow : Window
             : (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"];
         Title = $"Hướng dẫn - {appName}";
         SystemBackdrop = new MicaBackdrop();
-        if (iconPath is not null && File.Exists(iconPath))
-        {
-            AppWindow.SetIcon(iconPath);
-        }
+        Helpers.WindowIcon.Apply(this, iconPath); // null = icon của app (Assets\<tên exe>.ico)
 
         _searchBox = new TextBox
         {

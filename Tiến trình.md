@@ -9,6 +9,36 @@ Cập nhật lần cuối: 2026-10-02
 Mục ghi **[Đề xuất · Cao / Nên có / Có thể]** là tính năng còn thiếu tìm ra khi rà toàn bộ module (2026-10-02), chưa
 được duyệt làm — người dùng chọn mục nào thì bỏ nhãn đề xuất và làm như việc bình thường.
 
+## Đề xuất ưu tiên — thứ tự làm tiếp (rà 2026-10-02)
+
+Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công sức. Chi tiết từng việc nằm ở mục của module.
+
+**Bước 0 — người dùng thử tay** (Sandbox không tự kiểm được; nên làm trước khi phát hành bản mới):
+kéo-thả file từ Explorer vào ScreenCapture / CsvEditor; mở file `.xlsx` CsvEditor xuất ra bằng Excel thật; ImageCompare
+bản Release từ MainLauncher (Tìm chữ, *Lưu PNG*, *Xuất báo cáo HTML*); FileTools đợt 1–5 trên file thật + chạy từ
+MainLauncher; Mcf.CrudDiagram chạy UI thật.
+
+**Ưu tiên 1 — nhỏ, lợi ngay:** ✅ xong cả 3 (2026-10-02)
+1. ~~Icon riêng (exe + taskbar) cho các module còn lại~~ — 12 project có icon, xem mục Chung
+2. ~~Mcf.CrudDiagram: header bảng giữ nguyên khi cuộn~~
+3. ~~Chạy 4 project test mới (ImageCompare, Mcf.*) trong Windows Sandbox~~ — 138/138
+
+**Ưu tiên 2 — tính năng nên có, giải quyết vấn đề thật:**
+1. ImageCompare: so ảnh lệch bố cục dần — phương án A *Căn từng vùng* hoặc B *Soi 1 vùng* trong tab Khác biệt (người
+   dùng chưa chọn A / B). Lý do: ảnh thật của khách (B giãn 7 → 46 px) làm tab Khác biệt báo sai gần cả trang
+2. ScreenCapture: xoay 90° / lật / đổi cỡ ảnh theo % hoặc px — thao tác dùng hằng ngày, nối tiếp Mở ảnh / Lưu
+3. Hướng dẫn F1 cho 4 module HtmlGenerator, ModuleB/C — dùng `SharedUI.Help.HelpWindow` (mỗi module chỉ viết nội dung)
+
+**Ưu tiên 3 — có thì tốt, làm khi có nhu cầu:**
+- ImageCompare: so sánh hàng loạt 2 thư mục ảnh
+- ScreenCapture: nền trong suốt cho Ảnh mới; hiệu ứng ảnh (viền, đổ bóng, độ sáng, watermark); hút màu / kính lúp / thước;
+  in ảnh, chụp kèm con trỏ, mẫu tên file tự lưu
+- CsvEditor: freeze cột đầu, ẩn / hiện cột, tự giãn độ rộng cột
+- Chung: nhớ kích thước / vị trí cửa sổ + file gần đây cho mọi module (helper chung trong `Common`); nhớ thư mục nguồn
+  ModuleB / ModuleC / Mcf.DbDef; chuyển Hướng dẫn của ScreenCapture / FileTools sang bản dùng chung
+- Kỹ thuật: giảm tiếp dung lượng publish (runtime chung), unit test còn thiếu (Rdbms.HtmlGenerator, ModuleB/C, ScreenCapture),
+  `codegraph upgrade`
+
 ## Chung (repo, build, deploy)
 
 - [x] Mọi module đăng ký đủ ở `AppSuite.sln`, `modules.json`, `Sync-Modules-Dev.ps1`,
@@ -17,7 +47,12 @@ Mục ghi **[Đề xuất · Cao / Nên có / Có thể]** là tính năng còn 
 - [x] Có project unit test đầu tiên: `Tests\CsvEditor.Tests` (đã thêm vào `AppSuite.sln`) (2026-09-29)
 - [x] Unit test cho engine ImageCompare (40) + parser Excel của Mcf.CrudDiagram (21), Mcf.DbDef (11), Mcf.Screen (29)
   — `Tests\*.Tests`, đã thêm vào `AppSuite.sln`, tất cả đạt trên máy dev; build sln 0 warning (2026-09-30)
-- [ ] Chạy 4 project test mới trong Windows Sandbox (publish self-contained như CsvEditor.Tests)
+- [x] Chạy 4 project test mới trong Windows Sandbox (publish self-contained như CsvEditor.Tests): ImageCompare 77,
+  Mcf.CrudDiagram 21, Mcf.DbDef 11, Mcf.Screen 29 — 138/138 đạt, cả trên máy dev (2026-10-02)
+- [x] Icon riêng cho 12 project (MainLauncher + 11 module): `Assets\<Tên>.ico` tạo bằng `build\New-AppIcon.ps1` (mỗi module
+  1 màu + glyph), `Modules\Directory.Build.props` tự dùng làm icon exe + chép cạnh exe, cửa sổ gọi
+  `SharedUI.Helpers.WindowIcon.Apply` (thay `ScreenCapture/Views/AppIcon`). Build sln 0 warning; Sandbox: taskbar + thanh
+  tiêu đề của MainLauncher / ModuleA / FileTools / CsvEditor + cửa sổ Hướng dẫn đều có icon (2026-10-02)
 - [ ] Unit test còn thiếu: Rdbms.HtmlGenerator (cần PostgreSQL/Oracle thật hoặc tách phần dựng HTML), ModuleB/C,
   ScreenCapture (logic chỉnh ảnh / phiên làm việc)
 - [ ] Cập nhật CodeGraph 1.4.1 → 1.6.0 (`codegraph upgrade`)
@@ -134,7 +169,7 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Bug: taskbar / Alt+Tab không có icon (chỉ khay có). Thêm `Assets\ScreenCapture.ico` (vẽ như icon khay) làm
   `ApplicationIcon` của exe + `AppWindow.SetIcon` cho cửa sổ chính / Editor / Cài đặt / Hướng dẫn. Sandbox: taskbar,
   thanh tiêu đề, icon exe đều hiện (2026-10-02)
-- [ ] **[Đề xuất · Có thể]** Các module khác cũng chưa có icon riêng (exe + taskbar) — làm tương tự nếu cần
+- [x] Các module khác cũng chưa có icon riêng (exe + taskbar) — đã làm cho mọi project, xem mục Chung (2026-10-02)
 - [ ] **[Đề xuất · Nên có]** Xoay 90° / lật ngang - dọc; đổi kích thước ảnh theo % hoặc px (co giãn nội dung — khác
   kéo khung ảnh hiện có)
 - [ ] **[Đề xuất · Nên có]** Nền trong suốt cho Ảnh mới (cần sửa Cắt / đổi khung đang tô nền trắng)
@@ -182,8 +217,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Dòng không có dữ liệu thì không vẽ
 - [ ] Chạy UI thật (chọn thư mục → Đọc Excel → Xuất HTML → Mở HTML): index đủ 71 logic, tìm `MAM_BP`
   ra đúng các logic dùng bảng đó — PLAN.md ghi "chưa tự kiểm chứng bằng UI thật, cần user xác nhận"
-- [ ] Header bảng giữ nguyên khi scroll — CSS chưa có `position: sticky`, và khung `.table-scroll`
-  đang `overflow-x: auto` nên thêm sticky thôi chưa đủ, phải sửa cả khung cuộn
+- [x] Header bảng giữ nguyên khi scroll: `.table-scroll` cuộn cả 2 chiều, cao tối đa `100vh - 32px` (sticky chỉ dính theo
+  khung cuộn gần nhất); `th` sticky + viền dưới bằng `box-shadow` (border-collapse làm mất viền khi dính); nhảy tới khối ID
+  chừa 44px cho header. Kiểm bằng Edge: cuộn tới dòng 33 header vẫn ở trên, `#blk-...` không bị che. Cần xuất lại HTML
+  để trang cũ có CSS mới (2026-10-02)
 
 ## ModuleC
 

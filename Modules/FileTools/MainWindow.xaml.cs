@@ -16,6 +16,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
         AppWindow.Resize(new SizeInt32(1280, 880));
         AppLog.For("App").LogInformation("Khởi động FileTools");
         Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().First();

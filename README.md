@@ -206,6 +206,12 @@ Chạy từ thư mục gốc repo (PowerShell). Xem đầy đủ tham số + ví
 | `Publish-AppSuite.ps1` | Đóng gói bản deploy vào `Application\` | `.\build\Publish-AppSuite.ps1` · riêng vài project: `-Targets ImageCompare,MainLauncher` |
 | `Export-Module.ps1` | Tách 1 module ra repo/máy khác (vẫn build + F5 được) | `.\build\Export-Module.ps1 -Name ImageCompare -Dest D:\work\ImageCompare` · tự đứng hẳn: thêm `-Inline` |
 | `Clean.ps1` | Repo phình to vì output build | xem trước: `.\build\Clean.ps1 -WhatIf` · xoá: `.\build\Clean.ps1` · kèm `Application\`: `-Application` · riêng project: `-Targets ModuleA` |
+| `New-AppIcon.ps1` | Module mới cần icon (exe + taskbar) | `.\build\New-AppIcon.ps1 -OutPath Modules\<Tên>\Assets\<Tên>.ico -Glyph E80A -Color 16A34A` · chữ thay glyph: `-Text A` |
+
+**Icon app**: mỗi project có `Assets\<Tên project>.ico` (ký hiệu trắng trên nền màu bo góc, tạo bằng `New-AppIcon.ps1`;
+glyph = mã Segoe Fluent Icons). `Modules\Directory.Build.props` tự dùng file này làm icon exe và chép ra cạnh exe (MainLauncher
+khai báo trong csproj); cửa sổ gọi `SharedUI.Helpers.WindowIcon.Apply(this)` sau `InitializeComponent()` — app unpackaged không
+tự lấy icon exe cho nút taskbar. Module mới: tạo icon + thêm dòng `Apply` vào `MainWindow`, không cần sửa csproj.
 
 **`Export-Module.ps1`** - tham số:
 - `-Name` (bắt buộc): tên module (= tên thư mục trong `Modules\`).

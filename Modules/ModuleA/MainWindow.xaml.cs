@@ -13,6 +13,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        SharedUI.Helpers.WindowIcon.Apply(this);
 
         var args = Environment.GetCommandLineArgs();
         var passedArguments = args.Length > 1 ? string.Join(' ', args[1..]) : "(none)";

@@ -47,7 +47,7 @@ public sealed partial class CaptureLauncherWindow : Window
     public CaptureLauncherWindow(bool startInTray = false)
     {
         InitializeComponent();
-        AppIcon.Apply(this);
+        SharedUI.Helpers.WindowIcon.Apply(this);
 
         // Kích thước vừa đủ cho lưới thẻ 2 cột - AppWindow.Resize nhận pixel vật lý nên nhân theo DPI.
         var hwnd = WindowNative.GetWindowHandle(this);

@@ -41,6 +41,12 @@ chung khác (giống cách mọi project đã reference `Common`).
 `Helpers/UIHelper.AnnounceActionForAccessibility` và `Converters/BrushToColorConverter` là phần phụ
 trợ nhỏ được port kèm để các control trên hoạt động độc lập, không cần thêm gì khác.
 
+## Icon cửa sổ (`SharedUI.Helpers.WindowIcon`)
+
+`WindowIcon.Apply(this)` (gọi sau `InitializeComponent()`) gán `Assets\<tên exe>.ico` cạnh exe cho thanh tiêu đề + nút taskbar /
+Alt+Tab. App unpackaged không tự lấy icon exe cho cửa sổ WinUI; thiếu file thì bỏ qua. Icon tạo bằng `build\New-AppIcon.ps1`
+(xem README gốc mục "Icon app"). Mọi `MainWindow` của AppSuite và cửa sổ Hướng dẫn dùng chung đã gọi (2026-10-02).
+
 ## Cửa sổ Hướng dẫn dùng chung (`SharedUI.Help`)
 
 `Help/HelpWindow.cs` — cửa sổ Hướng dẫn (F1) của AppSuite, không phải port từ WinUI Gallery: danh mục bên trái, nội dung
