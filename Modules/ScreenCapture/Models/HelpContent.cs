@@ -71,6 +71,7 @@ public static class HelpContent
         new("Editor: tab ảnh & phiên làm việc", "\uE8A5", "Chỉ có 1 cửa sổ Editor; mỗi lần chụp mở thêm 1 tab.",
         [
             new("Nhiều ảnh dạng tab", "Mỗi ảnh chụp là 1 tab (tên = thời điểm chụp). Mỗi tab giữ riêng hình đã vẽ, lịch sử Undo và mức zoom; công cụ / màu / cỡ nét dùng chung."),
+            new("Ảnh mới", "Tab Tệp > Ảnh mới (hoặc nút Ảnh mới ở cửa sổ chính): tạo ảnh trống thành 1 tab - chọn cỡ theo mẫu (ảnh trong clipboard, ảnh đang mở, màn hình chính, 640×480 … 1920×1080) hoặc nhập rộng / cao (nút ⇄ đổi ngang ↔ dọc), và màu nền (Trắng, Đen, màu bất kỳ - nhớ cho lần sau). Dùng làm nền để ghép nhiều ảnh dán vào.", "Ctrl+N"),
             new("Đóng 1 tab", "Bấm × trên tab, hoặc Ctrl+W / Ctrl+F4 để đóng tab đang mở. Ảnh chưa lưu hoặc đã sửa sau lần lưu cuối → hỏi Lưu / Không lưu / Huỷ. Đóng tab cuối cùng = đóng Editor.", "Ctrl+W", "Ctrl+F4"),
             new("Đóng tất cả", "Nút cuối thanh tab. Còn ảnh chưa lưu → hỏi Lưu tất cả (chọn 1 thư mục, tên file = tên tab, không ghi đè file có sẵn) / Đóng không lưu / Huỷ."),
             new("Nhớ tab khi tắt app", "Đóng cửa sổ Editor không hỏi gì: mọi tab được lưu tạm và mở lại y như cũ ở lần sau (hình đã vẽ vẫn sửa được, lịch sử Undo thì không giữ). Tối đa 30 tab / 300 MB, đổi hoặc tắt trong Cài đặt > Phiên làm việc."),
@@ -163,6 +164,7 @@ public static class HelpContent
             new("Lưu PNG", "Lưu ảnh ra file.", "Ctrl+S"),
             new("Copy ảnh", "Copy ảnh (hoặc vùng chọn, nếu có) vào clipboard.", "Ctrl+C"),
             new("Dán ảnh", "Dán ảnh từ clipboard.", "Ctrl+V"),
+            new("Ảnh mới", "Tạo ảnh trống thành tab mới.", "Ctrl+N"),
             new("Xoá", "Xoá hình đang chọn (hoặc xoá vùng chọn).", "Delete", "Backspace"),
             new("Bỏ chọn", "Bỏ chọn hình / vùng chọn.", "Esc"),
             new("Vùng chọn", "Cut vùng / Cắt ảnh theo vùng.", "Ctrl+X", "Enter"),

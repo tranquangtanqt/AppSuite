@@ -88,6 +88,11 @@ Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh 
 nguyên — kể cả shape đã vẽ và lịch sử Undo riêng của từng ảnh. Công cụ / màu / cỡ nét dùng chung cho
 mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để không lọt vào ảnh.
 
+- **Ảnh mới** (`Ctrl+N`, tab *Tệp* > *Ảnh mới*, hoặc nút *Ảnh mới* ở cửa sổ chính — giống *New* của PicPick): tạo ảnh
+  trống thành 1 tab tên `Ảnh mới`. Hộp thoại: mẫu kích thước (*Ảnh trong clipboard*, *Ảnh đang mở*, *Màn hình chính*,
+  640×480 … 1920×1080; mặc định là ảnh trong clipboard nếu có), rộng / cao (1–16384 px, nút ⇄ đổi ngang ↔ dọc, nhập tay
+  → *Tuỳ chỉnh*), màu nền (*Trắng* / *Đen* / màu bất kỳ qua ô màu; lần đầu *Đen* như gợi ý của PicPick, sau đó nhớ
+  màu lần trước — `NewImageBackColor` trong settings.json). Chưa có nền trong suốt (cắt / đổi khung ảnh tô nền trắng).
 - Đóng 1 tab (`×`, hoặc `Ctrl+W` / `Ctrl+F4` cho tab đang mở) khi ảnh chưa lưu ra file (kể cả ảnh vừa chụp chưa sửa gì) hoặc đã sửa sau lần lưu
   cuối → hỏi *Lưu* / *Không lưu* / *Huỷ*. Đóng tab cuối cùng = đóng Editor.
 - **Đóng tất cả** (nút cuối thanh tab): còn ảnh chưa lưu → hỏi *Lưu tất cả...* (chọn 1 thư mục, lưu
@@ -212,6 +217,7 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | `Ctrl+S` | Lưu PNG |
 | `Ctrl+C` | Copy ảnh (đã gộp mọi shape) vào clipboard |
 | `Ctrl+V` | Dán ảnh từ clipboard |
+| `Ctrl+N` | Ảnh mới (ảnh trống thành tab mới) |
 | `Delete` / `Backspace` | Xoá shape đang chọn |
 | `Esc` | Bỏ chọn shape (thoát chỉnh sửa) / bỏ vùng chọn |
 | Khi có vùng chọn (*Select*): `Ctrl+C` / `Ctrl+X` / `Delete` / `Enter` | Copy / Cut / Xoá vùng / Cắt ảnh theo vùng |

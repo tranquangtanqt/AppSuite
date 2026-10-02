@@ -36,6 +36,8 @@ internal static partial class NativeMethods
     public const int SM_YVIRTUALSCREEN = 77;
     public const int SM_CXVIRTUALSCREEN = 78;
     public const int SM_CYVIRTUALSCREEN = 79;
+    public const int SM_CXSCREEN = 0; // màn hình chính
+    public const int SM_CYSCREEN = 1;
 
     public const int SW_MINIMIZE = 6;
     public const int SW_RESTORE = 9;

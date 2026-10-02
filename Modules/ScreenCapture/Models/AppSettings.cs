@@ -28,6 +28,10 @@ public sealed class AppSettings
     public int SessionMaxTabs { get; set; } = 30;
     public int SessionMaxMegabytes { get; set; } = 300;
 
+    // ---- Ảnh mới (hộp thoại New) ----
+    /// <summary>Màu nền lần tạo ảnh mới gần nhất (#RRGGBB). Mặc định đen như gợi ý ban đầu (giống PicPick).</summary>
+    public string NewImageBackColor { get; set; } = "#000000";
+
     // ---- Vùng cố định (không có trên cửa sổ Cài đặt - app tự ghi mỗi lần chụp Vùng cố định) ----
     /// <summary>Vùng cố định lần gần nhất (toạ độ màn hình ảo), để lần chụp sau - kể cả sau khi tắt mở
     /// lại app - hiện sẵn đúng vùng đó. null = chưa chụp lần nào.</summary>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Ảnh mới" (giống New của PicPick): tạo ảnh trống thành 1 tab trong Editor - chọn cỡ theo mẫu (ảnh trong clipboard,
+     ảnh đang mở, màn hình, cỡ phổ biến) hoặc nhập tay, và màu nền. -->
+<ContentDialog
+    x:Class="ScreenCapture.Views.NewImageDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Ảnh mới"
+    PrimaryButtonText="Tạo"
+    CloseButtonText="Hủy"
+    DefaultButton="Primary">
+
+    <StackPanel Spacing="14" MinWidth="340">
+        <TextBlock x:Name="SummaryText" Opacity="0.8" />
+
+        <ComboBox x:Name="PresetBox" Header="Mẫu kích thước" HorizontalAlignment="Stretch"
+                  SelectionChanged="PresetBox_SelectionChanged" />
+
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <NumberBox x:Name="WidthBox" Header="Rộng (px)" Width="140" SpinButtonPlacementMode="Compact"
+                       ValueChanged="SizeBox_ValueChanged" />
+            <Button x:Name="SwapButton" VerticalAlignment="Bottom" Click="SwapButton_Click"
+                    ToolTipService.ToolTip="Đổi rộng ↔ cao (ngang ↔ dọc)">
+                <FontIcon Glyph="&#xE8AB;" FontSize="14" />
+            </Button>
+            <NumberBox x:Name="HeightBox" Header="Cao (px)" Width="140" SpinButtonPlacementMode="Compact"
+                       ValueChanged="SizeBox_ValueChanged" />
+        </StackPanel>
+
+        <ComboBox x:Name="ColorBox" Header="Màu nền" HorizontalAlignment="Stretch" SelectionChanged="ColorBox_SelectionChanged">
+            <ComboBoxItem Content="Trắng" Tag="#FFFFFF" />
+            <ComboBoxItem Content="Đen" Tag="#000000" />
+            <ComboBoxItem Content="Màu khác… (bấm ô màu bên dưới)" Tag="custom" />
+        </ComboBox>
+
+        <!-- Ô xem trước màu nền - bấm để chọn màu bất kỳ. -->
+        <Button x:Name="SwatchButton" Width="96" Height="56" Padding="2" ToolTipService.ToolTip="Bấm để chọn màu khác">
+            <Border x:Name="Swatch" Width="88" Height="48" BorderThickness="1"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Button.Flyout>
+                <Flyout>
+                    <ColorPicker x:Name="BackColorPicker" IsAlphaEnabled="False" IsMoreButtonVisible="True"
+                                 ColorChanged="BackColorPicker_ColorChanged" />
+                </Flyout>
+            </Button.Flyout>
+        </Button>
+    </StackPanel>
+</ContentDialog>

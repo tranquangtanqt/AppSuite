@@ -76,7 +76,7 @@ public sealed partial class EditorWindow : Window
     /// <param name="capture">Ảnh vừa chụp để mở thành tab mới, null nếu chỉ mở lại phiên cũ.
     /// Phải có ít nhất 1 trong 2.</param>
     public EditorWindow(IImageFileService fileService, IClipboardService clipboardService, SessionService session,
-        IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture)
+        IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null)
     {
         InitializeComponent();
         _fileService = fileService;
@@ -95,7 +95,7 @@ public sealed partial class EditorWindow : Window
         }
         if (capture is not null)
         {
-            AddCapture(capture);
+            AddCapture(capture, captureTitle);
         }
         else
         {
@@ -167,11 +167,12 @@ public sealed partial class EditorWindow : Window
 
     /// <summary>Thêm 1 ảnh chụp mới thành tab mới và chuyển sang tab đó. CaptureLauncherWindow gọi hàm này
     /// cho các lần chụp sau thay vì mở thêm cửa sổ Editor.</summary>
-    public void AddCapture(SKBitmap bitmap)
+    /// <param name="title">Tên tab gợi ý (vd "Ảnh mới") - mặc định là thời điểm chụp.</param>
+    public void AddCapture(SKBitmap bitmap, string? title = null)
     {
         var vm = new EditorViewModel(bitmap, _fileService, _clipboardService, WindowNative.GetWindowHandle(this))
         {
-            Title = UniqueTitle(DateTime.Now.ToString("yyyy-MM-dd HH mm ss")),
+            Title = UniqueTitle(title ?? DateTime.Now.ToString("yyyy-MM-dd HH mm ss")),
         };
         var tab = AddTab(vm);
         SwitchTo(vm);
@@ -199,6 +200,15 @@ public sealed partial class EditorWindow : Window
     public event EventHandler? HelpRequested;
 
     private void HelpButton_Click(object sender, RoutedEventArgs e) => HelpRequested?.Invoke(this, EventArgs.Empty);
+
+    /// <summary>Nút "Ảnh mới" / Ctrl+N - launcher mở hộp thoại Ảnh mới (giữ cài đặt: màu nền lần trước) rồi gọi
+    /// <see cref="AddCapture"/>. Tham số: cỡ ảnh đang mở (mẫu "Ảnh đang mở"), null nếu Editor chưa có ảnh.</summary>
+    public event EventHandler<SKSizeI?>? NewImageRequested;
+
+    private void NewImageButton_Click(object sender, RoutedEventArgs e) => RequestNewImage();
+
+    private void RequestNewImage() =>
+        NewImageRequested?.Invoke(this, _viewModel is { } vm ? new SKSizeI(vm.Bitmap.Width, vm.Bitmap.Height) : null);
 
     /// <summary>Ghi lại phiên tạm ngay (sau khi tự lưu ảnh, hoặc đổi tuỳ chọn "nhớ tab" / giới hạn).</summary>
     public void PersistSession() => TrySaveSession();
@@ -1530,6 +1540,13 @@ public sealed partial class EditorWindow : Window
         if (ctrl && e.Key == Windows.System.VirtualKey.V)
         {
             PasteFromClipboard();
+            e.Handled = true;
+            return;
+        }
+
+        if (ctrl && e.Key == Windows.System.VirtualKey.N)
+        {
+            RequestNewImage();
             e.Handled = true;
             return;
         }

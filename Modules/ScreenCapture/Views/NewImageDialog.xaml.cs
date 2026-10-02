@@ -1,0 +1,150 @@
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using SkiaSharp;
+
+namespace ScreenCapture.Views;
+
+/// <summary>1 mẫu kích thước trong hộp thoại Ảnh mới.</summary>
+public sealed record NewImagePreset(string Label, int Width, int Height)
+{
+    public override string ToString() => Label;
+}
+
+/// <summary>Hộp thoại "Ảnh mới" - xem NewImageDialog.xaml. Bên gọi đưa danh sách mẫu (mẫu đầu = mặc định) và màu nền
+/// lần trước; bấm Tạo → <see cref="CreateBitmap"/>.</summary>
+public sealed partial class NewImageDialog : ContentDialog
+{
+    /// <summary>Cạnh tối đa: 16384 × 16384 BGRA ≈ 1 GB - lớn hơn nữa dễ hết bộ nhớ khi vẽ / lưu.</summary>
+    public const int MaxSide = 16384;
+
+    private const string CustomLabel = "Tuỳ chỉnh";
+
+    private readonly List<NewImagePreset> _presets;
+    private bool _syncing;
+
+    public NewImageDialog(IReadOnlyList<NewImagePreset> presets, SKColor backColor)
+    {
+        InitializeComponent();
+        _presets = [.. presets];
+
+        // Minimum/Maximum của NumberBox gán qua code - gán qua XAML attribute từng gây XamlParseException (xem EditorWindow).
+        foreach (var box in new[] { WidthBox, HeightBox })
+        {
+            box.Minimum = 1;
+            box.Maximum = MaxSide;
+            box.SmallChange = 10;
+            box.LargeChange = 100;
+        }
+
+        foreach (var preset in _presets)
+        {
+            PresetBox.Items.Add(preset);
+        }
+        PresetBox.Items.Add(CustomLabel);
+        PresetBox.SelectedIndex = 0;
+
+        SetColor(backColor, syncPicker: true);
+    }
+
+    public int ImageWidth => (int)Math.Round(WidthBox.Value);
+    public int ImageHeight => (int)Math.Round(HeightBox.Value);
+    public SKColor BackColor { get; private set; }
+
+    /// <summary>Ảnh trống đúng cỡ, tô màu nền (cùng định dạng pixel với ảnh chụp - xem CaptureService).</summary>
+    public SKBitmap CreateBitmap()
+    {
+        var bitmap = new SKBitmap(new SKImageInfo(ImageWidth, ImageHeight, SKColorType.Bgra8888, SKAlphaType.Premul));
+        bitmap.Erase(BackColor);
+        return bitmap;
+    }
+
+    private void PresetBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_syncing || PresetBox.SelectedItem is not NewImagePreset preset)
+        {
+            return; // "Tuỳ chỉnh": giữ nguyên số đang nhập
+        }
+        _syncing = true;
+        WidthBox.Value = preset.Width;
+        HeightBox.Value = preset.Height;
+        _syncing = false;
+        UpdateSummary();
+    }
+
+    /// <summary>Nhập tay: cỡ khớp 1 mẫu thì chọn mẫu đó, không thì chuyển sang "Tuỳ chỉnh".</summary>
+    private void SizeBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_syncing)
+        {
+            return;
+        }
+        if (!double.IsNaN(sender.Value) && sender.Value != Math.Round(sender.Value))
+        {
+            sender.Value = Math.Round(sender.Value); // px nguyên - gọi lại handler này
+            return;
+        }
+        if (IsValid)
+        {
+            _syncing = true;
+            var match = PresetBox.SelectedItem is NewImagePreset selected && selected.Width == ImageWidth && selected.Height == ImageHeight
+                ? selected
+                : _presets.FirstOrDefault(p => p.Width == ImageWidth && p.Height == ImageHeight);
+            PresetBox.SelectedItem = match is null ? CustomLabel : match;
+            _syncing = false;
+        }
+        UpdateSummary();
+    }
+
+    private void SwapButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        if (!IsValid)
+        {
+            return;
+        }
+        (WidthBox.Value, HeightBox.Value) = (HeightBox.Value, WidthBox.Value);
+    }
+
+    private void ColorBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncing && ColorBox.SelectedItem is ComboBoxItem { Tag: string tag } && tag != "custom")
+        {
+            SetColor(SKColor.Parse(tag), syncPicker: true);
+        }
+    }
+
+    private void BackColorPicker_ColorChanged(ColorPicker sender, ColorChangedEventArgs args)
+    {
+        if (!_syncing)
+        {
+            var c = args.NewColor;
+            SetColor(new SKColor(c.R, c.G, c.B), syncPicker: false);
+        }
+    }
+
+    private void SetColor(SKColor color, bool syncPicker)
+    {
+        BackColor = color.WithAlpha(255);
+        _syncing = true;
+        if (syncPicker)
+        {
+            BackColorPicker.Color = Windows.UI.Color.FromArgb(255, color.Red, color.Green, color.Blue);
+        }
+        string hex = $"#{color.Red:X2}{color.Green:X2}{color.Blue:X2}";
+        ColorBox.SelectedItem = ColorBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == hex)
+            ?? ColorBox.Items.OfType<ComboBoxItem>().Last();
+        _syncing = false;
+        Swatch.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, color.Red, color.Green, color.Blue));
+    }
+
+    private bool IsValid =>
+        !double.IsNaN(WidthBox.Value) && !double.IsNaN(HeightBox.Value)
+        && WidthBox.Value is >= 1 and <= MaxSide && HeightBox.Value is >= 1 and <= MaxSide;
+
+    private void UpdateSummary()
+    {
+        IsPrimaryButtonEnabled = IsValid;
+        SummaryText.Text = IsValid
+            ? $"Tạo ảnh trống {ImageWidth} × {ImageHeight} px thành 1 tab mới trong Editor."
+            : $"Nhập rộng / cao từ 1 đến {MaxSide} px.";
+    }
+}

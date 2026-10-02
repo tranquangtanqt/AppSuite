@@ -483,6 +483,17 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
   Kiểm tra GUI trong Sandbox: mở từ nút cửa sổ chính / nút ? Editor / F1, 16 danh mục, phím tắt theo
   cài đặt, tìm "cat" / "mui ten" / không ra kết quả, chỉ 1 cửa sổ khi mở lại — đạt hết.
 
+### Ảnh mới (giống New của PicPick) — 2026-10-02
+
+- `Views/NewImageDialog` (ContentDialog): mẫu kích thước, rộng / cao (NumberBox, Min/Max gán trong code như
+  EditorWindow), nút đổi chiều, màu nền (Trắng / Đen / ColorPicker). Launcher sở hữu luồng (`NewImageAsync`): đọc cỡ
+  ảnh trong clipboard, cỡ màn hình chính (`SM_CXSCREEN`), giữ `AppSettings.NewImageBackColor`; Editor chỉ phát
+  `NewImageRequested` (kèm cỡ ảnh đang mở) như `SettingsRequested` / `HelpRequested`, hộp thoại hiện trên cửa sổ đã bấm.
+  Kết quả qua `OpenEditor` / `AddCapture(bitmap, title)` → tab `Ảnh mới`, `Ảnh mới (2)`… và ghi phiên ngay như ảnh chụp.
+- Không có nền trong suốt: Crop / đổi khung tô nền trắng (`EditorViewModel`) nên trong suốt không giữ được nhất quán.
+- Kiểm tra GUI trong Sandbox (job tự động, phiên giả): mẫu mặc định = ảnh trong clipboard, nhập rộng → Tuỳ chỉnh, đổi
+  chiều, tạo → tab + PNG phiên đúng cỡ / màu; từ tab Tệp của Editor có mẫu "Ảnh đang mở", 640×480 nền trắng, nhớ màu — 17/17.
+
 ### Không dùng DI container
 
 Giống mọi module khác trong AppSuite: không có DI container, ViewModel/Service khởi tạo thủ công

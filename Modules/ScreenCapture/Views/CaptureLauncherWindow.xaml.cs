@@ -237,6 +237,74 @@ public sealed partial class CaptureLauncherWindow : Window
         _settingsWindow.Activate();
     }
 
+    // ---- Ảnh mới ----
+
+    private void NewImageButton_Click(object sender, RoutedEventArgs e) =>
+        _ = NewImageAsync(Content.XamlRoot, _editor?.CurrentDocument is { } doc ? new SKSizeI(doc.Bitmap.Width, doc.Bitmap.Height) : null);
+
+    private bool _newImageDialogOpen;
+
+    /// <summary>Hộp thoại Ảnh mới (từ launcher hoặc Editor - hiện trên cửa sổ đã bấm) → ảnh trống thành tab mới trong
+    /// Editor. Mẫu mặc định: ảnh trong clipboard nếu có, rồi ảnh đang mở, rồi màn hình chính; màu nền = lần trước.</summary>
+    private async Task NewImageAsync(XamlRoot root, SKSizeI? current)
+    {
+        if (_newImageDialogOpen)
+        {
+            return; // 1 XamlRoot chỉ hiện được 1 ContentDialog
+        }
+        _newImageDialogOpen = true;
+        try
+        {
+            SKSizeI? clipboard = null;
+            try
+            {
+                using var bitmap = await _clipboardService.GetBitmapAsync();
+                clipboard = bitmap is null ? null : new SKSizeI(bitmap.Width, bitmap.Height);
+            }
+            catch (Exception ex)
+            {
+                Log.LogWarning(ex, "Không đọc được ảnh trong clipboard cho mẫu Ảnh mới");
+            }
+
+            var presets = new List<NewImagePreset>();
+            if (clipboard is { } c)
+            {
+                presets.Add(new($"Ảnh trong clipboard ({c.Width} × {c.Height})", c.Width, c.Height));
+            }
+            if (current is { } cur)
+            {
+                presets.Add(new($"Ảnh đang mở ({cur.Width} × {cur.Height})", cur.Width, cur.Height));
+            }
+            int screenW = NativeMethods.GetSystemMetrics(NativeMethods.SM_CXSCREEN), screenH = NativeMethods.GetSystemMetrics(NativeMethods.SM_CYSCREEN);
+            presets.Add(new($"Màn hình chính ({screenW} × {screenH})", screenW, screenH));
+            presets.Add(new("640 × 480", 640, 480));
+            presets.Add(new("800 × 600", 800, 600));
+            presets.Add(new("1024 × 768", 1024, 768));
+            presets.Add(new("1280 × 720 (HD)", 1280, 720));
+            presets.Add(new("1920 × 1080 (Full HD)", 1920, 1080));
+
+            SKColor back = SKColor.TryParse(_settings.NewImageBackColor, out var parsed) ? parsed : SKColors.Black;
+            var dialog = new NewImageDialog(presets, back) { XamlRoot = root };
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+            {
+                return;
+            }
+
+            var color = dialog.BackColor;
+            _settings.NewImageBackColor = $"#{color.Red:X2}{color.Green:X2}{color.Blue:X2}";
+            _settingsStore.Save(_settings);
+            OpenEditor(dialog.CreateBitmap(), "Ảnh mới");
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Không tạo được ảnh mới");
+        }
+        finally
+        {
+            _newImageDialogOpen = false;
+        }
+    }
+
     // ---- Hướng dẫn ----
 
     private void HelpButton_Click(object sender, RoutedEventArgs e) => OpenHelp();
@@ -663,26 +731,28 @@ public sealed partial class CaptureLauncherWindow : Window
         DispatcherQueue.TryEnqueue(() => _editor?.Activate());
     }
 
-    private EditorWindow CreateEditor(IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture)
+    private EditorWindow CreateEditor(IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null)
     {
-        var editor = new EditorWindow(_fileService, _clipboardService, _session, restored, activeId, capture);
+        var editor = new EditorWindow(_fileService, _clipboardService, _session, restored, activeId, capture, captureTitle);
         editor.Closed += (_, _) => _editor = null;
         editor.SettingsRequested += (_, _) => OpenSettings();
         editor.HelpRequested += (_, _) => OpenHelp();
+        editor.NewImageRequested += (_, size) => _ = NewImageAsync(editor.Content.XamlRoot, size);
         return editor;
     }
 
-    private void OpenEditor(SKBitmap bitmap)
+    /// <param name="title">Tên tab (vd "Ảnh mới"), null = thời điểm chụp.</param>
+    private void OpenEditor(SKBitmap bitmap, string? title = null)
     {
         if (_editor is null)
         {
             // Chưa mở Editor: vẫn nạp lại tab của phiên trước (nếu có) để ảnh cũ không bị ghi đè mất.
             var (documents, activeId) = _session.Load();
-            _editor = CreateEditor(documents, activeId, bitmap);
+            _editor = CreateEditor(documents, activeId, bitmap, title);
         }
         else
         {
-            _editor.AddCapture(bitmap);
+            _editor.AddCapture(bitmap, title);
         }
         _editor.Activate();
     }

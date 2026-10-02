@@ -366,6 +366,21 @@
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button x:Name="NewImageButton" Style="{StaticResource ToolButtonStyle}" Click="NewImageButton_Click"
+                                        ToolTipService.ToolTip="Tạo ảnh trống thành tab mới - chọn cỡ (ảnh trong clipboard, ảnh đang mở, màn hình…) và màu nền (Ctrl+N)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8A5;" />
+                                        <TextBlock Text="Ảnh mới" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Text="Tạo" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="SaveButton_Click" ToolTipService.ToolTip="Lưu PNG (Ctrl+S)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE792;" />
