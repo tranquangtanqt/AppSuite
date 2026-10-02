@@ -494,6 +494,34 @@ Current/Next), Shape Colors (Outline/Fill tách biệt), Arrange (Bring to Front
 - Kiểm tra GUI trong Sandbox (job tự động, phiên giả): mẫu mặc định = ảnh trong clipboard, nhập rộng → Tuỳ chỉnh, đổi
   chiều, tạo → tab + PNG phiên đúng cỡ / màu; từ tab Tệp của Editor có mẫu "Ảnh đang mở", 640×480 nền trắng, nhớ màu — 17/17.
 
+### Mở ảnh có sẵn — 2026-10-02
+
+- `ImageFileService.LoadImage`: `SKCodec` → BGRA premul như ảnh chụp, áp EXIF Orientation (8 trường hợp, ma trận đưa
+  điểm ảnh lưu sang ảnh hiển thị; 4 trường hợp đổi rộng ↔ cao); chặn > 250 triệu pixel. `LoadImagesAsync` đọc nền, gom lỗi
+  từng file. Editor: nút Mở (tab Tệp) / `Ctrl+O` / `AllowDrop` ở Grid gốc (nền Transparent để bắt thả ở chỗ trống);
+  launcher: nút Mở ảnh + kéo-thả (Editor đang mở thì chuyển cho Editor). Tab mở từ file: `RestoreFromSession([], true)`
+  → đã lưu.
+- Header cửa sổ chính đổi sang Grid 2 cột (tiêu đề co giãn + hàng nút); hẹp hơn 900 DIP thì hàng nút xuống dòng — bản
+  trước chừa lề phải cố định, thêm nút thứ 4 là tiêu đề mất hẳn khi cửa sổ hẹp.
+- Kiểm tra GUI trong Sandbox: mở nhiều file từ cửa sổ chính (a.png 300×200; b.jpg lưu 200×100 + EXIF 6 → 100×200, nửa
+  đen lên trên), từ tab Tệp (thêm tab "a (2)", c.txt báo lỗi ở thanh trạng thái), Đóng tất cả không hỏi lưu — 15/15.
+  **Kéo-thả chưa kiểm được tự động**: agent Sandbox chạy quyền admin (Windows chặn thả từ Explorer vào app quyền cao
+  hơn — UIPI); mở app qua `explorer.exe` (quyền thường) thì kéo giả lập bằng `mouse_event` lúc được lúc không. Cần thử tay.
+
+### Lưu / Lưu thành (PNG, JPG, BMP) — 2026-10-02
+
+- `EditorViewModel.FilePath` (lần lưu gần nhất / file đã mở / tự lưu, nhớ qua phiên — `TabDto.FilePath`). *Lưu* ghi thẳng
+  vào đó nếu định dạng ghi được, không thì như *Lưu thành*. `ImageFileService.WriteImage` theo đuôi file: PNG (Skia),
+  JPG (Skia, `JpegQuality` từ `AppSettings`), BMP 24-bit tự viết (Skia không mã hoá BMP); JPG / BMP ghép nền trắng;
+  ghi file tạm rồi `File.Move` ghi đè. Lỗi IO → `StatusText`, không đánh dấu đã lưu. `Saved` event → Editor ghi phiên ngay.
+- Hộp thoại Lưu thành trả `x.jpg.png` khi gõ `x.jpg` lúc đang chọn loại PNG (gặp khi kiểm tra) → `TypedExtensionPath`
+  theo đuôi người dùng gõ, xoá file rỗng thừa.
+- Sửa kèm: cửa sổ Cài đặt tạo `AppSettings` mới khi OK nên mất `NewImageBackColor` (màu nền Ảnh mới về Đen) — launcher
+  giữ lại như `LastFixedRegion`. Trang Cài đặt "Tự động lưu" đổi tên "Lưu ảnh" (thêm Chất lượng JPG).
+- Kiểm tra GUI trong Sandbox: Ảnh mới 640×480 đỏ → Lưu (chưa có file) hỏi → x.jpg đúng JPEG / cỡ / màu; Lưu lần 2 ghi đè
+  không hỏi; Lưu thành y.bmp đúng BMP; phiên nhớ y.bmp; file bị khoá → báo lỗi, không văng, không sót file tạm — 14/14.
+  Chưa kiểm GUI: Lưu ghi đè ảnh mở từ file (cùng đường code `FilePath`), giao diện ô Chất lượng JPG.
+
 ### Không dùng DI container
 
 Giống mọi module khác trong AppSuite: không có DI container, ViewModel/Service khởi tạo thủ công

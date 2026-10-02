@@ -31,7 +31,7 @@ public static class HelpContent
         [
             new("1. Chụp", "Bấm 1 thẻ ở cửa sổ chính (Toàn màn hình, Cửa sổ hiện tại, Vùng chọn...), dùng phím tắt, hoặc click phải icon ở khay hệ thống. Cửa sổ ScreenCapture tự thu nhỏ để không lọt vào ảnh."),
             new("2. Chỉnh sửa", "Ảnh mở ngay trong Editor: vẽ khung, mũi tên, chữ, đánh số, che thông tin nhạy cảm, cắt ảnh... Mọi thao tác đều Undo được."),
-            new("3. Lưu hoặc chia sẻ", "Lưu PNG, hoặc copy ảnh vào clipboard rồi dán vào chat/email/tài liệu.", "Ctrl+S", "Ctrl+C"),
+            new("3. Lưu hoặc chia sẻ", "Lưu (PNG / JPG / BMP), hoặc copy ảnh vào clipboard rồi dán vào chat/email/tài liệu.", "Ctrl+S", "Ctrl+C"),
             new("Mở lại hướng dẫn này", "Nút Hướng dẫn ở cửa sổ chính, tab Tệp hoặc nút ? của Editor, menu khay, hoặc phím F1.", "F1"),
         ]),
 
@@ -71,11 +71,12 @@ public static class HelpContent
         new("Editor: tab ảnh & phiên làm việc", "\uE8A5", "Chỉ có 1 cửa sổ Editor; mỗi lần chụp mở thêm 1 tab.",
         [
             new("Nhiều ảnh dạng tab", "Mỗi ảnh chụp là 1 tab (tên = thời điểm chụp). Mỗi tab giữ riêng hình đã vẽ, lịch sử Undo và mức zoom; công cụ / màu / cỡ nét dùng chung."),
+            new("Mở ảnh có sẵn", "Tab Tệp > Mở (hoặc nút Mở ảnh ở cửa sổ chính, hoặc kéo-thả file vào Editor / cửa sổ chính): mở ảnh PNG, JPG, BMP, GIF (khung đầu), WEBP thành tab mới để ghi chú - chọn được nhiều file, mỗi file 1 tab, tên tab = tên file. Ảnh chụp điện thoại tự xoay đúng chiều theo EXIF. Tab mở từ file coi như đã lưu: không sửa gì thì đóng không hỏi. Lưu (Ctrl+S) ghi đè chính file đó (ảnh gốc mất - muốn giữ thì dùng Lưu thành…); GIF / WEBP thì Lưu hỏi nơi lưu mới.", "Ctrl+O"),
             new("Ảnh mới", "Tab Tệp > Ảnh mới (hoặc nút Ảnh mới ở cửa sổ chính): tạo ảnh trống thành 1 tab - chọn cỡ theo mẫu (ảnh trong clipboard, ảnh đang mở, màn hình chính, 640×480 … 1920×1080) hoặc nhập rộng / cao (nút ⇄ đổi ngang ↔ dọc), và màu nền (Trắng, Đen, màu bất kỳ - nhớ cho lần sau). Dùng làm nền để ghép nhiều ảnh dán vào.", "Ctrl+N"),
             new("Đóng 1 tab", "Bấm × trên tab, hoặc Ctrl+W / Ctrl+F4 để đóng tab đang mở. Ảnh chưa lưu hoặc đã sửa sau lần lưu cuối → hỏi Lưu / Không lưu / Huỷ. Đóng tab cuối cùng = đóng Editor.", "Ctrl+W", "Ctrl+F4"),
             new("Đóng tất cả", "Nút cuối thanh tab. Còn ảnh chưa lưu → hỏi Lưu tất cả (chọn 1 thư mục, tên file = tên tab, không ghi đè file có sẵn) / Đóng không lưu / Huỷ."),
             new("Nhớ tab khi tắt app", "Đóng cửa sổ Editor không hỏi gì: mọi tab được lưu tạm và mở lại y như cũ ở lần sau (hình đã vẽ vẫn sửa được, lịch sử Undo thì không giữ). Tối đa 30 tab / 300 MB, đổi hoặc tắt trong Cài đặt > Phiên làm việc."),
-            new("Lưu ý thư mục tạm", "Tab được lưu tạm trong %TEMP% - Windows có thể dọn thư mục này. Ảnh quan trọng vẫn nên Lưu PNG."),
+            new("Lưu ý thư mục tạm", "Tab được lưu tạm trong %TEMP% - Windows có thể dọn thư mục này. Ảnh quan trọng vẫn nên Lưu ra file."),
         ]),
 
         new("Chọn & chỉnh sửa hình", "\uE7C9", "Áp dụng với mọi công cụ - không cần bấm Move trước.",
@@ -151,9 +152,10 @@ public static class HelpContent
 
         new("Lưu & chia sẻ", "\uE74E", "Tab Tệp của Editor và các tuỳ chọn tự động.",
         [
-            new("Lưu PNG", "Hộp thoại lưu điền sẵn tên file = tên tab.", "Ctrl+S"),
+            new("Lưu", "Tab đã gắn với 1 file (đã lưu trước đó, hoặc mở từ PNG / JPG / BMP) → ghi đè file đó, không hỏi. Ảnh chụp chưa lưu → hỏi nơi lưu như Lưu thành. Nhớ qua lần tắt mở app.", "Ctrl+S"),
+            new("Lưu thành…", "Chọn nơi lưu và định dạng PNG / JPG / BMP (chọn sẵn định dạng của file hiện tại, chưa có thì PNG); tên điền sẵn = tên file hoặc tên tab. JPG / BMP ghép nền trắng. Chất lượng JPG: Cài đặt > Lưu ảnh (mặc định 90).", "Ctrl+Shift+S"),
             new("Copy ảnh", "Copy ảnh (đã gộp mọi hình vẽ, vùng che) vào clipboard để dán sang app khác.", "Ctrl+C"),
-            new("Tự động lưu", "Cài đặt > Tự động lưu: mỗi ảnh chụp tự lưu thành PNG vào 1 thư mục (mặc định Pictures\\ScreenCapture); đóng tab không hỏi lại."),
+            new("Tự động lưu", "Cài đặt > Lưu ảnh: mỗi ảnh chụp tự lưu thành PNG vào 1 thư mục (mặc định Pictures\\ScreenCapture); đóng tab không hỏi lại."),
             new("Tự copy sau khi chụp", "Cài đặt > Chung: chụp xong tự copy ảnh vào clipboard."),
         ]),
 
@@ -161,10 +163,12 @@ public static class HelpContent
         [
             new("Undo", "Hoàn tác bước vừa làm.", "Ctrl+Z"),
             new("Redo", "Làm lại bước vừa hoàn tác.", "Ctrl+Y", "Ctrl+Shift+Z"),
-            new("Lưu PNG", "Lưu ảnh ra file.", "Ctrl+S"),
+            new("Lưu", "Lưu vào file đang gắn với tab (chưa có thì hỏi).", "Ctrl+S"),
+            new("Lưu thành…", "Lưu ra file mới, chọn PNG / JPG / BMP.", "Ctrl+Shift+S"),
             new("Copy ảnh", "Copy ảnh (hoặc vùng chọn, nếu có) vào clipboard.", "Ctrl+C"),
             new("Dán ảnh", "Dán ảnh từ clipboard.", "Ctrl+V"),
             new("Ảnh mới", "Tạo ảnh trống thành tab mới.", "Ctrl+N"),
+            new("Mở ảnh", "Mở ảnh có sẵn thành tab mới.", "Ctrl+O"),
             new("Xoá", "Xoá hình đang chọn (hoặc xoá vùng chọn).", "Delete", "Backspace"),
             new("Bỏ chọn", "Bỏ chọn hình / vùng chọn.", "Esc"),
             new("Vùng chọn", "Cut vùng / Cắt ảnh theo vùng.", "Ctrl+X", "Enter"),

@@ -55,6 +55,7 @@ public sealed partial class CaptureLauncherWindow : Window
 
         _settings = _settingsStore.Load();
         _session.ApplySettings(_settings);
+        _fileService.JpegQuality = _settings.JpegQuality;
 
         _hotkeys = new HotkeyService(hwnd, DispatcherQueue);
         _hotkeys.Pressed += Hotkeys_Pressed;
@@ -237,6 +238,65 @@ public sealed partial class CaptureLauncherWindow : Window
         _settingsWindow.Activate();
     }
 
+    /// <summary>Header hẹp hơn chừng này (hàng 4 nút ~580 px + chỗ cho tiêu đề) thì hàng nút xuống dòng dưới tiêu đề.</summary>
+    private const double HeaderWrapWidth = 900;
+
+    private void Header_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        bool wrap = e.NewSize.Width < HeaderWrapWidth;
+        Grid.SetRow(HeaderButtons, wrap ? 1 : 0);
+        Grid.SetColumn(HeaderButtons, wrap ? 0 : 1);
+        HeaderButtons.HorizontalAlignment = wrap ? HorizontalAlignment.Left : HorizontalAlignment.Right;
+    }
+
+    // ---- Mở ảnh có sẵn ----
+
+    private async void OpenImageButton_Click(object sender, RoutedEventArgs e) =>
+        await OpenImageFilesAsync(await _fileService.PickImagesAsync(WindowNative.GetWindowHandle(this)));
+
+    private void Root_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "Mở ảnh trong trình chỉnh sửa";
+        }
+    }
+
+    private async void Root_Drop(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            await OpenImageFilesAsync(items.OfType<Windows.Storage.StorageFile>().Select(f => f.Path).ToList());
+        }
+    }
+
+    /// <summary>Mở file ảnh trong Editor (mỗi file 1 tab, coi như đã lưu). Editor đang mở thì để Editor tự mở (báo lỗi ở
+    /// thanh trạng thái của nó); chưa mở thì tạo Editor bằng ảnh đầu tiên.</summary>
+    private async Task OpenImageFilesAsync(IReadOnlyList<string> paths)
+    {
+        if (paths.Count == 0)
+        {
+            return;
+        }
+        if (_editor is not null)
+        {
+            await _editor.OpenImageFilesAsync(paths);
+            _editor.Activate();
+            return;
+        }
+        var (images, errors) = await ImageFileService.LoadImagesAsync(paths);
+        foreach (var (name, path, bitmap) in images)
+        {
+            OpenEditor(bitmap, name, path);
+        }
+        if (errors.Count > 0)
+        {
+            ShowStatus($"Không mở được {errors.Count} file: {string.Join("; ", errors)}", InfoBarSeverity.Warning);
+        }
+    }
+
     // ---- Ảnh mới ----
 
     private void NewImageButton_Click(object sender, RoutedEventArgs e) =>
@@ -329,9 +389,12 @@ public sealed partial class CaptureLauncherWindow : Window
     /// tắt đăng ký lỗi để cửa sổ Cài đặt đánh dấu ⚠.</summary>
     private IReadOnlyList<HotkeyBinding> ApplySettings(AppSettings settings)
     {
-        // Cửa sổ Cài đặt không có mục Vùng cố định (ReadSettings tạo AppSettings mới) → giữ vùng đã lưu.
+        // Cửa sổ Cài đặt không có mục Vùng cố định / màu nền Ảnh mới (ReadSettings tạo AppSettings mới) → giữ giá trị đã
+        // lưu (thiếu dòng màu nền thì mỗi lần OK ở Cài đặt màu nền Ảnh mới về lại Đen - đã gặp).
         settings.LastFixedRegion = _settings.LastFixedRegion;
+        settings.NewImageBackColor = _settings.NewImageBackColor;
         _settings = settings;
+        _fileService.JpegQuality = settings.JpegQuality;
         try
         {
             _settingsStore.Save(settings);
@@ -731,9 +794,9 @@ public sealed partial class CaptureLauncherWindow : Window
         DispatcherQueue.TryEnqueue(() => _editor?.Activate());
     }
 
-    private EditorWindow CreateEditor(IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null)
+    private EditorWindow CreateEditor(IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null, string? captureFilePath = null)
     {
-        var editor = new EditorWindow(_fileService, _clipboardService, _session, restored, activeId, capture, captureTitle);
+        var editor = new EditorWindow(_fileService, _clipboardService, _session, restored, activeId, capture, captureTitle, captureFilePath);
         editor.Closed += (_, _) => _editor = null;
         editor.SettingsRequested += (_, _) => OpenSettings();
         editor.HelpRequested += (_, _) => OpenHelp();
@@ -742,17 +805,17 @@ public sealed partial class CaptureLauncherWindow : Window
     }
 
     /// <param name="title">Tên tab (vd "Ảnh mới"), null = thời điểm chụp.</param>
-    private void OpenEditor(SKBitmap bitmap, string? title = null)
+    private void OpenEditor(SKBitmap bitmap, string? title = null, string? filePath = null)
     {
         if (_editor is null)
         {
             // Chưa mở Editor: vẫn nạp lại tab của phiên trước (nếu có) để ảnh cũ không bị ghi đè mất.
             var (documents, activeId) = _session.Load();
-            _editor = CreateEditor(documents, activeId, bitmap, title);
+            _editor = CreateEditor(documents, activeId, bitmap, title, filePath);
         }
         else
         {
-            _editor.AddCapture(bitmap, title);
+            _editor.AddCapture(bitmap, title, filePath);
         }
         _editor.Activate();
     }

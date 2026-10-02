@@ -50,7 +50,7 @@ tuỳ chọn về ban đầu.
 | Trang | Tuỳ chọn |
 |---|---|
 | Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard; chạy ngầm ở khay hệ thống; khởi động cùng Windows |
-| Tự động lưu | Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên = thời điểm chụp; ảnh đã tự lưu đóng tab không hỏi lại |
+| Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên = thời điểm chụp; ảnh đã tự lưu đóng tab không hỏi lại |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |
 | Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
@@ -88,6 +88,10 @@ Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh 
 nguyên — kể cả shape đã vẽ và lịch sử Undo riêng của từng ảnh. Công cụ / màu / cỡ nét dùng chung cho
 mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để không lọt vào ảnh.
 
+- **Mở ảnh có sẵn** (`Ctrl+O`, tab *Tệp* > *Mở*, nút *Mở ảnh* ở cửa sổ chính, hoặc kéo-thả file vào Editor / cửa sổ chính):
+  PNG, JPG, BMP, GIF (khung đầu), WEBP; chọn nhiều file → mỗi file 1 tab, tên tab = tên file. Ảnh chụp điện thoại tự xoay
+  đúng chiều theo EXIF. Tab mở từ file coi như **đã lưu** (không sửa gì thì đóng không hỏi) và gắn với file đó: *Lưu*
+  (`Ctrl+S`) **ghi đè file gốc** (PNG / JPG / BMP; GIF / WEBP thì hỏi nơi lưu) — muốn giữ ảnh gốc thì dùng *Lưu thành…*. File không phải ảnh / đọc lỗi → báo ở thanh trạng thái, các file khác vẫn mở. Tối đa 250 triệu pixel.
 - **Ảnh mới** (`Ctrl+N`, tab *Tệp* > *Ảnh mới*, hoặc nút *Ảnh mới* ở cửa sổ chính — giống *New* của PicPick): tạo ảnh
   trống thành 1 tab tên `Ảnh mới`. Hộp thoại: mẫu kích thước (*Ảnh trong clipboard*, *Ảnh đang mở*, *Màn hình chính*,
   640×480 … 1920×1080; mặc định là ảnh trong clipboard nếu có), rộng / cao (1–16384 px, nút ⇄ đổi ngang ↔ dọc, nhập tay
@@ -108,7 +112,7 @@ mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để kh
   - Giới hạn tối đa **30 tab / 300 MB**; vượt thì bỏ các tab cũ nhất khỏi bản lưu tạm.
   - Ghi tạm mỗi khi chụp ảnh mới, đóng tab và đóng cửa sổ.
   - Lưu ý: Windows (Storage Sense / Disk Cleanup) có thể dọn `%TEMP%`; tab nào mất file ảnh thì bỏ qua
-    khi mở lại. Ảnh quan trọng vẫn nên *Lưu PNG*.
+    khi mở lại. Ảnh quan trọng vẫn nên *Lưu* ra file.
 
 Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn phía dưới, chia thành các tab:
 
@@ -181,7 +185,12 @@ chuột zoom quanh con trỏ; `Ctrl++` / `Ctrl+-` / `Ctrl+0`. Mỗi tab nhớ m�
 phiên); zoom không ảnh hưởng ảnh khi lưu / copy. Phóng to hiện rõ từng pixel. Ảnh lớn có giới hạn
 zoom tối đa (ảnh 1920×1080 ≈ 400%) để không tốn quá nhiều bộ nhớ.
 
-**Tab "Tệp"** — *Lưu PNG* (hộp thoại điền sẵn tên file = tên tab, vd `2026-09-24 15 31 59.png`),
+**Tab "Tệp"** — *Mở*, *Ảnh mới*; *Lưu* (`Ctrl+S`): tab đã gắn với 1 file (đã lưu, tự lưu, hoặc mở từ PNG / JPG / BMP) →
+ghi đè file đó, không hỏi; chưa có → như *Lưu thành…* (`Ctrl+Shift+S`): chọn nơi lưu + định dạng PNG / JPG / BMP (chọn sẵn
+định dạng của file hiện tại, chưa có thì PNG; gõ tên có đuôi `.jpg` / `.bmp` thì theo đuôi đó), tên điền sẵn = tên file
+hoặc tên tab (vd `2026-09-24 15 31 59`). JPG / BMP ghép nền trắng; chất lượng JPG trong Cài đặt > Lưu ảnh. File gắn
+với tab được nhớ qua phiên làm việc. Ghi ra file tạm rồi mới thay file thật (lưu lỗi không làm hỏng file cũ; file đang
+bị app khác khoá → báo ở thanh trạng thái),
 *Copy* ảnh (đã gộp mọi shape) vào clipboard, *Cài đặt*, *Hướng dẫn*, *Đóng* cửa sổ.
 
 **Tab "Vùng chọn"** (contextual) — tự hiện khi dùng *Select* chọn 1 vùng, tự ẩn khi bỏ chọn:
@@ -214,10 +223,12 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 |---|---|
 | `Ctrl+Z` | Undo |
 | `Ctrl+Y` / `Ctrl+Shift+Z` | Redo |
-| `Ctrl+S` | Lưu PNG |
+| `Ctrl+S` | Lưu (ghi đè file đang gắn với tab; chưa có thì hỏi nơi lưu) |
+| `Ctrl+Shift+S` | Lưu thành… (PNG / JPG / BMP) |
 | `Ctrl+C` | Copy ảnh (đã gộp mọi shape) vào clipboard |
 | `Ctrl+V` | Dán ảnh từ clipboard |
 | `Ctrl+N` | Ảnh mới (ảnh trống thành tab mới) |
+| `Ctrl+O` | Mở ảnh có sẵn thành tab mới |
 | `Delete` / `Backspace` | Xoá shape đang chọn |
 | `Esc` | Bỏ chọn shape (thoát chỉnh sửa) / bỏ vùng chọn |
 | Khi có vùng chọn (*Select*): `Ctrl+C` / `Ctrl+X` / `Delete` / `Enter` | Copy / Cut / Xoá vùng / Cắt ảnh theo vùng |

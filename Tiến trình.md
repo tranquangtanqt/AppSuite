@@ -4,7 +4,10 @@ Danh sách việc cần làm / đã làm của toàn bộ AppSuite. Có vấn đ
 mục; làm xong thì đổi thành `- [x]` và ghi ngày hoàn thành. Chi tiết thiết kế của từng module vẫn nằm
 trong `PLAN.md` / `README.md` của module đó — file này chỉ để theo dõi tiến độ.
 
-Cập nhật lần cuối: 2026-10-01
+Cập nhật lần cuối: 2026-10-02
+
+Mục ghi **[Đề xuất · Cao / Nên có / Có thể]** là tính năng còn thiếu tìm ra khi rà toàn bộ module (2026-10-02), chưa
+được duyệt làm — người dùng chọn mục nào thì bỏ nhãn đề xuất và làm như việc bình thường.
 
 ## Chung (repo, build, deploy)
 
@@ -50,6 +53,10 @@ Cập nhật lần cuối: 2026-10-01
 - [x] Build cả `AppSuite.sln` (x64, `--no-incremental`): 0 warning, 0 error (rà 2026-09-30)
 - [ ] File này chưa có mục cho ModuleA/B, Mcf.DbDef, Mcf.Screen, Rdbms.HtmlGenerator — rà PLAN.md của
   chúng (2026-09-30) không thấy việc nào còn dở
+- [ ] **[Đề xuất · Nên có]** Cửa sổ Hướng dẫn (F1) cho các module chưa có: CsvEditor, ImageCompare, 4 module
+  HtmlGenerator, ModuleB/C — theo mẫu FileTools / ScreenCapture (danh mục + tìm không dấu + phím tắt)
+- [ ] **[Đề xuất · Có thể]** Nhớ kích thước / vị trí cửa sổ và danh sách file / thư mục gần đây cho mọi module —
+  đưa 1 helper dùng chung vào `Common` (hiện mỗi module tự lưu hoặc không lưu)
 
 **Lưu ý vận hành**: chạy MainLauncher ở cấu hình nào (Debug/Release) thì phải chạy
 `.\build\Sync-Modules-Dev.ps1 -Configuration <cấu hình đó>` để chép module vào cạnh launcher — thiếu
@@ -107,6 +114,21 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Cắt khôi phục được **qua phiên làm việc**: tắt mở lại app vẫn kéo khung ra lấy lại phần đã cắt
   (lưu ảnh gốc vào phiên) — kiểm tra GUI trong Sandbox đạt (2026-09-29)
 - [ ] Trỏ-chọn cửa sổ con (nút, vùng nội dung) như PicPick — hiện mới chọn cửa sổ cấp cao nhất
+- [x] Mở ảnh có sẵn vào Editor: nút *Mở* ở tab Tệp, `Ctrl+O`, nút *Mở ảnh* ở cửa sổ chính, kéo-thả file; PNG / JPG / BMP /
+  GIF / WEBP, nhiều file → nhiều tab, xoay theo EXIF, tab coi như đã lưu. Kèm sửa: tiêu đề cửa sổ chính mất khi hẹp (hàng
+  nút giờ xuống dòng). GUI Sandbox 15/15 (2026-10-02)
+- [ ] Người dùng thử **kéo-thả** file ảnh vào Editor / cửa sổ chính trên máy thật (Sandbox không kiểm tự động được: agent
+  chạy quyền admin nên Windows chặn thả từ Explorer)
+- [x] Lưu / Lưu thành: *Lưu* (`Ctrl+S`) ghi đè file đang gắn với tab (đã lưu / mở từ file / tự lưu, nhớ qua phiên), chưa
+  có thì hỏi; *Lưu thành…* (`Ctrl+Shift+S`) PNG / JPG / BMP, chất lượng JPG trong Cài đặt > Lưu ảnh; ghi an toàn qua file
+  tạm, lỗi IO báo không văng. Kèm sửa: gõ `x.jpg` ra `x.jpg.png`; lưu Cài đặt làm mất màu nền Ảnh mới. GUI Sandbox 14/14
+  (2026-10-02)
+- [ ] **[Đề xuất · Nên có]** Xoay 90° / lật ngang - dọc; đổi kích thước ảnh theo % hoặc px (co giãn nội dung — khác
+  kéo khung ảnh hiện có)
+- [ ] **[Đề xuất · Nên có]** Nền trong suốt cho Ảnh mới (cần sửa Cắt / đổi khung đang tô nền trắng)
+- [ ] **[Đề xuất · Nên có]** Hiệu ứng ảnh: viền (border), đổ bóng, làm xám, độ sáng / tương phản; watermark chữ
+- [ ] **[Đề xuất · Có thể]** Công cụ phụ như PicPick: hút màu trên màn hình, kính lúp, thước đo pixel
+- [ ] **[Đề xuất · Có thể]** In ảnh; tuỳ chọn chụp kèm con trỏ chuột; mẫu tên file khi tự lưu (vd `{date}_{window}`)
 
 ## ImageCompare
 
@@ -136,6 +158,11 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   phải 1 mục trong danh sách (mọi chế độ): Copy mục này / Copy cả danh sách. Unit test 77/77; GUI trong Sandbox: menu,
   clipboard, hộp thoại lưu CSV + HTML đều chạy (2026-10-02)
 - [ ] Chạy bản Release So chữ trên máy chưa có gói OCR tiếng Nhật của Windows nhưng có mạng: thử hướng dẫn cài trong README
+- [ ] **[Đề xuất · Nên có]** Khác biệt cho 2 ảnh lệch bố cục dần (đã phân tích 2026-10-02: B giãn 7 → 46 px từ trên
+  xuống, dịch tay cả ảnh không giúp): chế độ căn *Căn từng vùng* (tự tìm độ lệch từng dải / ô) và/hoặc *Soi 1 vùng*
+  (khoanh vùng trên A → tự tìm chỗ khớp ở B, chỉ so vùng đó) — chờ người dùng chọn hướng
+- [ ] **[Đề xuất · Nên có]** So sánh hàng loạt 2 thư mục ảnh (ghép theo tên file) → bảng tổng hợp giống / khác + báo
+  cáo HTML — cho kiểm thử hồi quy nhiều màn hình 1 lần
 - Giới hạn đã biết: OCR không chạy trên ARM64 (không có bản Tesseract native)
 
 ## Mcf.CrudDiagram.HtmlGenerator (ModuleH — `Note/ModuleH.txt`)
@@ -149,6 +176,8 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 ## ModuleC
 
 - [ ] Nút "Huong dan su dung" vẫn là placeholder chưa gắn hành vi (PLAN.md ghi cố ý để sau)
+- [ ] **[Đề xuất · Có thể]** Nhớ thư mục nguồn lần trước như Mcf.Screen / Mcf.CrudDiagram (ModuleB, ModuleC,
+  Mcf.DbDef.HtmlGenerator chưa lưu)
 
 ## CsvEditor (ModuleF — `Note/ModuleF.txt`)
 
@@ -171,3 +200,12 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   Kèm sửa: mở lại sau Save As đọc nhầm file cũ. Unit test 93/93, GUI Sandbox 16/16 (2026-10-02)
 - [x] `PLAN.md` lỗi thời ("Bỏ unit test", mục "Rủi ro chưa kiểm chứng", Sort đọc số theo culture) —
   cập nhật theo test 89/89 + GUI Sandbox 11/11 + `CsvNumber` (2026-09-30)
+- [x] Hỏi *Lưu / Không lưu / Hủy* khi còn thay đổi chưa lưu lúc đóng cửa sổ, Open file khác, mở lại (đổi encoding /
+  delimiter, đổi "Dòng đầu là tiêu đề"); Lưu khi chưa có file → Save As; huỷ Save As / lưu lỗi → dừng, không mất thay
+  đổi. Lưu lỗi (file bị khoá…) báo hộp thoại thay vì văng app. GUI Sandbox (21 bước, cả 2 việc) đạt (2026-10-02)
+- [x] Chế độ có tiêu đề, dòng dài hơn header: tự thêm cột `Cột N` cho phần dư (+ 1 cảnh báo; tên cột ghi vào dòng tiêu
+  đề khi lưu) — trước đây field thừa bị cắt khi Save. Cảnh báo lệch cột tính lại sau sửa so với số field phổ biến nhất
+  (không báo cả bảng khi chỉ 1 dòng dài). Unit test 96/96 (2026-10-02)
+- [ ] **[Đề xuất · Nên có]** Kéo-thả file vào cửa sổ để mở; danh sách file gần đây
+- [ ] **[Đề xuất · Nên có]** Xuất sang Excel (.xlsx) / copy vùng chọn dạng Tab để dán Excel; Go to dòng (`Ctrl+G`)
+- [ ] **[Đề xuất · Có thể]** Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột; tự giãn độ rộng cột

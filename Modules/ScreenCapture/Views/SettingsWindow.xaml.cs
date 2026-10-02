@@ -38,10 +38,12 @@ public sealed partial class SettingsWindow : Window
         SetRange(ScrollMaxStepsBox, AppSettings.ScrollMaxStepsRange, 10);
         SetRange(ScrollMaxLengthBox, AppSettings.ScrollMaxLengthRange, 1000);
         SetRange(ScrollSettleBox, AppSettings.ScrollSettleMsRange, 50);
+        SetRange(JpegQualityBox, AppSettings.JpegQualityRange, 5);
         var defaults = new AppSettings();
         ScrollMaxStepsHint.Text = $"Mỗi lần lăn khoảng 1/3 vùng chọn. Vùng chọn thấp/hẹp mà trang rất dài thì cần nhiều lần hơn. Mặc định {defaults.ScrollMaxSteps}, từ {AppSettings.ScrollMaxStepsRange.Min} tới {AppSettings.ScrollMaxStepsRange.Max}.";
         ScrollMaxLengthHint.Text = string.Create(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), $"Chiều cao ảnh ghép khi cuộn dọc, chiều rộng khi cuộn ngang. Ảnh càng dài càng tốn RAM (rộng 2000px × dài 60.000px ≈ 480 MB). Mặc định {defaults.ScrollMaxLength:N0}, từ {AppSettings.ScrollMaxLengthRange.Min:N0} tới {AppSettings.ScrollMaxLengthRange.Max:N0}.");
         ScrollSettleHint.Text = $"Thời gian chờ trang cuộn xong và vẽ lại trước khi chụp khung tiếp. Tăng lên nếu trang tải chậm, cuộn mượt lâu, ảnh bị thiếu hoặc lặp/lệch; dưới 300 ms chỉ nên dùng cho app không cuộn mượt. Mặc định {defaults.ScrollSettleMs}, từ {AppSettings.ScrollSettleMsRange.Min} tới {AppSettings.ScrollSettleMsRange.Max}.";
+        JpegQualityHint.Text = $"Dùng khi Lưu / Lưu thành ảnh JPG trong Editor. Cao = ảnh nét hơn, file lớn hơn; ảnh chụp màn hình có chữ nên để ≥ 85. Mặc định {defaults.JpegQuality}, từ {AppSettings.JpegQualityRange.Min} tới {AppSettings.JpegQualityRange.Max}.";
 
         BuildHotkeyGrid();
         FillFrom(current);
@@ -98,6 +100,7 @@ public sealed partial class SettingsWindow : Window
         ScrollMaxStepsBox.Value = s.ScrollMaxSteps;
         ScrollMaxLengthBox.Value = s.ScrollMaxLength;
         ScrollSettleBox.Value = s.ScrollSettleMs;
+        JpegQualityBox.Value = s.JpegQuality;
         foreach (var (action, row) in _hotkeyRows)
         {
             var binding = s.GetHotkey(action);
@@ -127,6 +130,7 @@ public sealed partial class SettingsWindow : Window
             ScrollMaxSteps = Int(ScrollMaxStepsBox, defaults.ScrollMaxSteps),
             ScrollMaxLength = Int(ScrollMaxLengthBox, defaults.ScrollMaxLength),
             ScrollSettleMs = Int(ScrollSettleBox, defaults.ScrollSettleMs),
+            JpegQuality = Int(JpegQualityBox, defaults.JpegQuality),
             Hotkeys = [],
         };
         foreach (var (action, row) in _hotkeyRows)

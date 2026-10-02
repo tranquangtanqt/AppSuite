@@ -8,7 +8,7 @@ namespace ScreenCapture.Services;
 
 /// <summary>1 tab ảnh trong Editor, dạng dữ liệu thuần để ghi/đọc phiên làm việc.</summary>
 public sealed record SessionDocument(Guid Id, string Title, SKBitmap Bitmap, IReadOnlyList<AnnotationShape> Shapes, bool SavedToFile,
-    SessionCropSource? CropSource = null);
+    SessionCropSource? CropSource = null, string? FilePath = null);
 
 /// <summary>Ảnh gốc trước lần Cắt / đổi khung đầu tiên của tab + vị trí góc trên-trái của nó theo toạ độ
 /// ảnh hiện tại - lưu qua phiên để mở lại app vẫn kéo khung ra lấy lại được phần đã cắt.</summary>
@@ -93,7 +93,7 @@ public sealed class SessionService
                     _written.AddOrUpdate(cropBitmap, tab.CropOriginal!);
                     crop = new SessionCropSource(cropBitmap, tab.CropOffsetX, tab.CropOffsetY);
                 }
-                documents.Add(new SessionDocument(tab.Id, tab.Title, bitmap, shapes, tab.SavedToFile, crop));
+                documents.Add(new SessionDocument(tab.Id, tab.Title, bitmap, shapes, tab.SavedToFile, crop, tab.FilePath));
             }
             return (documents, manifest?.ActiveId);
         }
@@ -125,6 +125,7 @@ public sealed class SessionService
                 Id = doc.Id,
                 Title = doc.Title,
                 SavedToFile = doc.SavedToFile,
+                FilePath = doc.FilePath,
                 Image = WriteBitmap(doc.Bitmap, doc.Id),
             };
             files.Add(dto.Image);
@@ -299,6 +300,8 @@ public sealed class SessionService
         public Guid Id { get; set; }
         public string Title { get; set; } = string.Empty;
         public bool SavedToFile { get; set; }
+        /// <summary>File gắn với tab (Lưu ghi đè vào đây), null = chưa lưu / phiên cũ.</summary>
+        public string? FilePath { get; set; }
         public string Image { get; set; } = string.Empty;
         /// <summary>File ảnh gốc trước khi Cắt (null = tab chưa cắt / đổi khung, hoặc phiên cũ).</summary>
         public string? CropOriginal { get; set; }

@@ -39,7 +39,7 @@
                   Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8"
                   BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" Padding="0,6">
             <ListViewItem Tag="General">Chung</ListViewItem>
-            <ListViewItem Tag="AutoSave">Tự động lưu</ListViewItem>
+            <ListViewItem Tag="AutoSave">Lưu ảnh</ListViewItem>
             <ListViewItem Tag="Session">Phiên làm việc</ListViewItem>
             <ListViewItem Tag="Scroll">Chụp cuộn</ListViewItem>
             <ListViewItem Tag="Hotkeys">Phím tắt</ListViewItem>
@@ -72,7 +72,7 @@
 
                     <!-- Tự động lưu -->
                     <StackPanel x:Name="AutoSavePage" Spacing="12" Visibility="Collapsed">
-                        <TextBlock Text="Tự động lưu" Style="{StaticResource PageHeaderStyle}" />
+                        <TextBlock Text="Lưu ảnh" Style="{StaticResource PageHeaderStyle}" />
                         <CheckBox x:Name="AutoSaveBox" Content="Tự động lưu mỗi ảnh chụp thành file PNG" Checked="AutoSaveBox_Changed" Unchecked="AutoSaveBox_Changed" />
                         <StackPanel x:Name="AutoSaveFolderPanel" Spacing="6">
                             <TextBlock Text="Thư mục lưu" />
@@ -86,6 +86,11 @@
                             </Grid>
                             <TextBlock Style="{StaticResource HintStyle}"
                                        Text="Tên file = thời điểm chụp (vd 2026-09-24 13 36 14.png), trùng tên thì thêm (2). Ảnh đã tự lưu được coi là đã lưu nên đóng tab không hỏi lại (trừ khi sửa thêm)." />
+                        </StackPanel>
+                        <StackPanel Spacing="6" Margin="0,12,0,0">
+                            <TextBlock Text="Chất lượng JPG" />
+                            <NumberBox x:Name="JpegQualityBox" Width="110" HorizontalAlignment="Left" SpinButtonPlacementMode="Compact" />
+                            <TextBlock x:Name="JpegQualityHint" Style="{StaticResource HintStyle}" />
                         </StackPanel>
                     </StackPanel>
 

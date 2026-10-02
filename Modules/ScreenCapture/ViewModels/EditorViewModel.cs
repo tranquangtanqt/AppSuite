@@ -306,8 +306,10 @@ public sealed partial class EditorViewModel : ObservableObject
             ? new SessionCropSource(source.Original, source.Offset.X, source.Offset.Y)
             : null;
 
-    public void RestoreFromSession(IEnumerable<AnnotationShape> shapes, bool savedToFile, SessionCropSource? crop = null)
+    /// <param name="filePath">File gắn với tab (xem <see cref="FilePath"/>), null nếu chưa có.</param>
+    public void RestoreFromSession(IEnumerable<AnnotationShape> shapes, bool savedToFile, SessionCropSource? crop = null, string? filePath = null)
     {
+        FilePath = filePath;
         if (crop is not null)
         {
             CropSources.AddOrUpdate(Bitmap, new CropSource(crop.Original, new SKPointI(crop.OffsetX, crop.OffsetY)));
@@ -323,33 +325,76 @@ public sealed partial class EditorViewModel : ObservableObject
     /// tránh mất ảnh chụp (kể cả ảnh vừa chụp chưa sửa gì).</summary>
     public bool NeedsSave => !_savedToFile || UndoRedo.IsDirty;
 
+    /// <summary>File gắn với tab: lần lưu gần nhất (Lưu / Lưu thành / tự lưu / Lưu tất cả) hoặc file đã mở. Null = ảnh chụp
+    /// chưa lưu. Lưu (Ctrl+S) ghi thẳng vào file này nếu định dạng ghi được (PNG / JPG / BMP).</summary>
+    public string? FilePath { get; private set; }
+
+    /// <summary>Vừa lưu ra file (Lưu / Lưu thành / tự lưu / Lưu tất cả) - Editor ghi lại phiên ngay để tắt app đột ngột
+    /// cũng không quên tab đã lưu vào file nào.</summary>
+    public event EventHandler? Saved;
+
     [RelayCommand]
     private async Task SaveAsync() => await SaveToFileAsync();
 
-    /// <summary>Lưu PNG (ảnh + shape) vào thư mục đã chọn sẵn, tên file = tên tab. Dùng cho "Lưu tất cả".</summary>
+    [RelayCommand]
+    private async Task SaveAsAsync() => await SaveAsToFileAsync();
+
+    /// <summary>Ghi PNG (ảnh + shape) vào thư mục đã chọn sẵn, tên file = tên tab. Dùng cho "Lưu tất cả" / tự lưu.</summary>
     public string SaveToFolder(string folder)
     {
         var path = _fileService.SavePngToFolder(RenderComposited(), folder, Title);
-        _savedToFile = true;
-        UndoRedo.MarkClean();
-        StatusText = $"Đã lưu: {path}";
+        MarkSaved(path);
         return path;
     }
 
-    /// <summary>Hỏi đường dẫn và lưu PNG. Trả false nếu người dùng huỷ hộp thoại lưu.</summary>
-    public async Task<bool> SaveToFileAsync()
+    /// <summary>Lưu: tab đã gắn file ghi được → ghi đè file đó (đúng định dạng của nó), không hỏi; chưa có (ảnh chụp mới,
+    /// hoặc mở từ GIF / WEBP) → Lưu thành. False nếu huỷ hoặc lưu lỗi.</summary>
+    public async Task<bool> SaveToFileAsync() =>
+        FilePath is { } path && ImageFileService.CanSaveAs(path) ? await WriteAsync(path) : await SaveAsToFileAsync();
+
+    /// <summary>Lưu thành: chọn đường dẫn + định dạng (PNG / JPG / BMP; chọn sẵn định dạng của file hiện tại, chưa có thì
+    /// PNG), tên điền sẵn = tên file hiện tại hoặc tên tab. False nếu huỷ hoặc lưu lỗi.</summary>
+    public async Task<bool> SaveAsToFileAsync()
     {
-        // Điền sẵn tên tab (thời điểm chụp, vd "2026-09-24 15 31 59") làm tên file.
-        var path = await _fileService.SaveAsPngAsync(RenderComposited(), _ownerHwnd, Title);
+        var name = FilePath is { } current ? Path.GetFileNameWithoutExtension(current) : Title;
+        var ext = FilePath is { } p && ImageFileService.CanSaveAs(p) ? Path.GetExtension(p) : ".png";
+        var path = await _fileService.PickSavePathAsync(_ownerHwnd, name, ext);
         if (path is null)
         {
             StatusText = "Đã huỷ lưu.";
             return false;
         }
+        return await WriteAsync(path);
+    }
+
+    private async Task<bool> WriteAsync(string path)
+    {
+        var composited = RenderComposited();
+        try
+        {
+            await Task.Run(() => _fileService.WriteImage(composited, path));
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // File đang bị app khác giữ / không có quyền ghi / đầy ổ: báo, không đánh dấu đã lưu, không văng app.
+            StatusText = $"Không lưu được {Path.GetFileName(path)}: {ex.Message}";
+            return false;
+        }
+        finally
+        {
+            composited.Dispose();
+        }
+        MarkSaved(path);
+        return true;
+    }
+
+    private void MarkSaved(string path)
+    {
+        FilePath = path;
         _savedToFile = true;
         UndoRedo.MarkClean();
         StatusText = $"Đã lưu: {path}";
-        return true;
+        Saved?.Invoke(this, EventArgs.Empty);
     }
 
     [RelayCommand]

@@ -76,7 +76,7 @@ public sealed partial class EditorWindow : Window
     /// <param name="capture">Ảnh vừa chụp để mở thành tab mới, null nếu chỉ mở lại phiên cũ.
     /// Phải có ít nhất 1 trong 2.</param>
     public EditorWindow(IImageFileService fileService, IClipboardService clipboardService, SessionService session,
-        IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null)
+        IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null, string? captureFilePath = null)
     {
         InitializeComponent();
         _fileService = fileService;
@@ -90,12 +90,12 @@ public sealed partial class EditorWindow : Window
                 Id = doc.Id,
                 Title = doc.Title,
             };
-            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile, doc.CropSource);
+            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile, doc.CropSource, doc.FilePath);
             AddTab(vm);
         }
         if (capture is not null)
         {
-            AddCapture(capture, captureTitle);
+            AddCapture(capture, captureTitle, captureFilePath);
         }
         else
         {
@@ -167,13 +167,19 @@ public sealed partial class EditorWindow : Window
 
     /// <summary>Thêm 1 ảnh chụp mới thành tab mới và chuyển sang tab đó. CaptureLauncherWindow gọi hàm này
     /// cho các lần chụp sau thay vì mở thêm cửa sổ Editor.</summary>
-    /// <param name="title">Tên tab gợi ý (vd "Ảnh mới") - mặc định là thời điểm chụp.</param>
-    public void AddCapture(SKBitmap bitmap, string? title = null)
+    /// <param name="title">Tên tab gợi ý (vd "Ảnh mới", tên file) - mặc định là thời điểm chụp.</param>
+    /// <param name="filePath">Ảnh mở từ file có sẵn: gắn tab với file đó (Lưu ghi đè vào đây) và coi như đã lưu - đóng tab
+    /// không sửa gì thì không hỏi lưu.</param>
+    public void AddCapture(SKBitmap bitmap, string? title = null, string? filePath = null)
     {
         var vm = new EditorViewModel(bitmap, _fileService, _clipboardService, WindowNative.GetWindowHandle(this))
         {
             Title = UniqueTitle(title ?? DateTime.Now.ToString("yyyy-MM-dd HH mm ss")),
         };
+        if (filePath is not null)
+        {
+            vm.RestoreFromSession([], savedToFile: true, filePath: filePath);
+        }
         var tab = AddTab(vm);
         SwitchTo(vm);
         DocumentTabs.SelectedItem = tab;
@@ -207,6 +213,53 @@ public sealed partial class EditorWindow : Window
 
     private void NewImageButton_Click(object sender, RoutedEventArgs e) => RequestNewImage();
 
+    // ---- Mở ảnh có sẵn (nút Mở / Ctrl+O / kéo-thả file) ----
+
+    private async void OpenImageButton_Click(object sender, RoutedEventArgs e) => await PickAndOpenImagesAsync();
+
+    private async Task PickAndOpenImagesAsync()
+    {
+        var paths = await _fileService.PickImagesAsync(WindowNative.GetWindowHandle(this));
+        await OpenImageFilesAsync(paths);
+    }
+
+    /// <summary>Mở các file ảnh thành tab mới (tên tab = tên file, coi như đã lưu). File lỗi / không phải ảnh → báo ở thanh
+    /// trạng thái, các file khác vẫn mở. Launcher cũng gọi hàm này khi Editor đang mở.</summary>
+    public async Task OpenImageFilesAsync(IEnumerable<string> paths)
+    {
+        var (images, errors) = await ImageFileService.LoadImagesAsync(paths);
+        foreach (var (name, path, bitmap) in images)
+        {
+            AddCapture(bitmap, name, path);
+        }
+        if (errors.Count > 0)
+        {
+            _viewModel.StatusText = $"Không mở được {errors.Count} file: {string.Join("; ", errors)}";
+        }
+        else if (images.Count > 0)
+        {
+            _viewModel.StatusText = images.Count == 1 ? $"Đã mở {images[0].Name}." : $"Đã mở {images.Count} ảnh.";
+        }
+    }
+
+    private void Root_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = Windows.ApplicationModel.DataTransfer.DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "Mở ảnh thành tab mới";
+        }
+    }
+
+    private async void Root_Drop(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.StorageItems))
+        {
+            var items = await e.DataView.GetStorageItemsAsync();
+            await OpenImageFilesAsync(items.OfType<Windows.Storage.StorageFile>().Select(f => f.Path));
+        }
+    }
+
     private void RequestNewImage() =>
         NewImageRequested?.Invoke(this, _viewModel is { } vm ? new SKSizeI(vm.Bitmap.Width, vm.Bitmap.Height) : null);
 
@@ -215,6 +268,7 @@ public sealed partial class EditorWindow : Window
 
     private TabViewItem AddTab(EditorViewModel vm)
     {
+        vm.Saved += (_, _) => TrySaveSession(); // nhớ file vừa lưu của tab ngay (xem EditorViewModel.Saved)
         var tab = new TabViewItem
         {
             Header = vm.Title,
@@ -233,7 +287,7 @@ public sealed partial class EditorWindow : Window
         {
             var documents = DocumentTabs.TabItems.OfType<TabViewItem>()
                 .Select(t => (EditorViewModel)t.Tag)
-                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile, vm.CropSourceForSession))
+                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile, vm.CropSourceForSession, vm.FilePath))
                 .ToList();
             _session.Save(documents, _viewModel?.Id);
             return true;
@@ -1544,6 +1598,13 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (ctrl && e.Key == Windows.System.VirtualKey.O)
+        {
+            _ = PickAndOpenImagesAsync();
+            e.Handled = true;
+            return;
+        }
+
         if (ctrl && e.Key == Windows.System.VirtualKey.N)
         {
             RequestNewImage();
@@ -1581,6 +1642,7 @@ public sealed partial class EditorWindow : Window
                 Windows.System.VirtualKey.Z when shift => _viewModel.RedoCommand,
                 Windows.System.VirtualKey.Z => _viewModel.UndoCommand,
                 Windows.System.VirtualKey.Y => _viewModel.RedoCommand,
+                Windows.System.VirtualKey.S when shift => _viewModel.SaveAsCommand,
                 Windows.System.VirtualKey.S => _viewModel.SaveCommand,
                 Windows.System.VirtualKey.C => _viewModel.CopyToClipboardCommand,
                 _ => null,
@@ -1748,6 +1810,7 @@ public sealed partial class EditorWindow : Window
     private void UndoButton_Click(object sender, RoutedEventArgs e) => _viewModel.UndoCommand.Execute(null);
     private void RedoButton_Click(object sender, RoutedEventArgs e) => _viewModel.RedoCommand.Execute(null);
     private void SaveButton_Click(object sender, RoutedEventArgs e) => _viewModel.SaveCommand.Execute(null);
+    private void SaveAsButton_Click(object sender, RoutedEventArgs e) => _viewModel.SaveAsCommand.Execute(null);
     private void CopyButton_Click(object sender, RoutedEventArgs e) => _viewModel.CopyToClipboardCommand.Execute(null);
     private async void CloseButton_Click(object sender, RoutedEventArgs e) => await RequestCloseAsync();
 

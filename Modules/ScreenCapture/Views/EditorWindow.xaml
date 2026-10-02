@@ -14,7 +14,8 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Padding="8" RowSpacing="0">
+    <!-- Kéo-thả file ảnh vào bất kỳ đâu trong Editor → mở thành tab mới. -->
+    <Grid Padding="8" RowSpacing="0" Background="Transparent" AllowDrop="True" DragOver="Root_DragOver" Drop="Root_Drop">
         <Grid.Resources>
             <!-- Icon-on-top + small label toolbar button, dùng chung cho mọi nút trong toolbar
                  (ButtonBase để áp được cho cả Button lẫn ToggleButton). -->
@@ -366,6 +367,13 @@
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="2">
+                                <Button x:Name="OpenImageButton" Style="{StaticResource ToolButtonStyle}" Click="OpenImageButton_Click"
+                                        ToolTipService.ToolTip="Mở ảnh có sẵn (PNG, JPG, BMP, GIF, WEBP) thành tab mới để ghi chú - chọn được nhiều file, hoặc kéo-thả file vào Editor (Ctrl+O)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8E5;" />
+                                        <TextBlock Text="Mở" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
                                 <Button x:Name="NewImageButton" Style="{StaticResource ToolButtonStyle}" Click="NewImageButton_Click"
                                         ToolTipService.ToolTip="Tạo ảnh trống thành tab mới - chọn cỡ (ảnh trong clipboard, ảnh đang mở, màn hình…) và màu nền (Ctrl+N)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
@@ -374,17 +382,25 @@
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
-                            <TextBlock Text="Tạo" Style="{StaticResource RibbonGroupLabelStyle}" />
+                            <TextBlock Text="Mở &amp; Tạo" Style="{StaticResource RibbonGroupLabelStyle}" />
                         </StackPanel>
                     </Border>
 
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <Button Style="{StaticResource ToolButtonStyle}" Click="SaveButton_Click" ToolTipService.ToolTip="Lưu PNG (Ctrl+S)">
+                                <Button x:Name="SaveButton" Style="{StaticResource ToolButtonStyle}" Click="SaveButton_Click"
+                                        ToolTipService.ToolTip="Lưu (Ctrl+S): ảnh đã gắn với 1 file (đã lưu trước đó, hoặc mở từ PNG / JPG / BMP) thì ghi đè file đó, chưa có thì hỏi nơi lưu như Lưu thành">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE74E;" />
+                                        <TextBlock Text="Lưu" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="SaveAsButton" Style="{StaticResource ToolButtonStyle}" Click="SaveAsButton_Click"
+                                        ToolTipService.ToolTip="Lưu thành file mới: chọn nơi lưu và định dạng PNG / JPG / BMP (Ctrl+Shift+S). Chất lượng JPG chỉnh trong Cài đặt">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE792;" />
-                                        <TextBlock Text="Lưu PNG" FontSize="10" />
+                                        <TextBlock Text="Lưu thành…" FontSize="10" />
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="CopyButton_Click" ToolTipService.ToolTip="Copy ảnh (Ctrl+C)">
