@@ -186,6 +186,31 @@ public sealed class CsvFileService : ICsvFileService
             }
         }
 
+        else if (rows.Count > 0 && rows.Max(r => r.CellCount) is var width && width > columns.Count)
+        {
+            // Có dòng dài hơn header: thêm cột cho phần dư - không thì Save chỉ ghi đủ số cột của header, field thừa mất
+            // âm thầm. Tên "Cột N" được ghi vào dòng tiêu đề khi lưu (đổi được bằng Rename Column).
+            var headerCount = columns.Count;
+            var names = columns.Select(c => c.Name).ToHashSet();
+            for (var i = headerCount + 1; i <= width; i++)
+            {
+                var name = $"Cột {i}";
+                for (var n = 2; names.Contains(name); n++)
+                {
+                    name = $"Cột {i} ({n})";
+                }
+                names.Add(name);
+                columns.Add(new CsvColumn(name));
+            }
+            var longRows = rows.Count(r => r.CellCount > headerCount);
+            issues.Add(new ValidationIssue
+            {
+                Severity = ValidationSeverity.Warning,
+                Message = $"{longRows:N0} dòng có nhiều field hơn header ({headerCount} cột) → thêm {width - headerCount} cột " +
+                          $"\"{columns[headerCount].Name}\"… để không mất dữ liệu; khi lưu, dòng tiêu đề sẽ có thêm tên các cột này.",
+            });
+        }
+
         var document = new CsvDocument { HasHeader = hasHeader };
         document.ReplaceAll(columns, rows);
         return document;

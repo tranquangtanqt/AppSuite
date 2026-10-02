@@ -73,3 +73,51 @@ public sealed class HeaderOptionTests : IDisposable
         Assert.Equal(Csv.Utf8Bom.GetPreamble(), File.ReadAllBytes(path)[..3]);
     }
 }
+
+/// <summary>Có dòng tiêu đề mà dòng dữ liệu dài hơn: không được mất field thừa khi lưu.</summary>
+public sealed class LongRowTests : IDisposable
+{
+    private readonly TempDir _dir = new();
+
+    public void Dispose() => _dir.Dispose();
+
+    [Fact]
+    public async Task Rows_longer_than_header_get_extra_columns_and_survive_save()
+    {
+        var path = _dir.Write("l.csv", "A,B,C\r\n1,2,3\r\n4,5,6,7,8\r\n9,10,11\r\n", Csv.Utf8NoBom);
+
+        var result = await Csv.OpenAsync(path);
+
+        Assert.Equal(["A", "B", "C", "Cột 4", "Cột 5"], Csv.Header(result.Document));
+        Assert.Equal(["4", "5", "6", "7", "8"], Csv.Cells(result.Document.Rows[1], 5));
+        Assert.Contains(result.Issues, i => i.RowIndex is null && i.Message.Contains("thêm 2 cột"));
+        var rowIssue = Assert.Single(result.Issues, i => i.RowIndex is not null); // chỉ dòng dài, không báo các dòng thường
+        Assert.Equal(2, rowIssue.RowIndex);
+
+        await Csv.FileService().SaveAsync(result.Document, null, CancellationToken.None);
+        Assert.Equal("A,B,C,Cột 4,Cột 5\r\n1,2,3,,\r\n4,5,6,7,8\r\n9,10,11,,\r\n", File.ReadAllText(path));
+    }
+
+    [Fact]
+    public async Task Extra_column_names_do_not_clash_with_header_names()
+    {
+        var path = _dir.Write("c.csv", "Cột 2,X\r\n1,2,3\r\n", Csv.Utf8NoBom);
+        var result = await Csv.OpenAsync(path);
+        Assert.Equal(["Cột 2", "X", "Cột 3"], Csv.Header(result.Document));
+
+        var clash = _dir.Write("d.csv", "A,Cột 3\r\n1,2,3\r\n", Csv.Utf8NoBom);
+        Assert.Equal(["A", "Cột 3", "Cột 3 (2)"], Csv.Header((await Csv.OpenAsync(clash)).Document));
+    }
+
+    [Fact]
+    public void Recomputed_field_count_warning_compares_with_the_most_common_count()
+    {
+        // 4 cột (đã nới cho 1 dòng dài), phần lớn các dòng 3 field: chỉ báo dòng dài và dòng thiếu.
+        var document = Csv.Doc(["A", "B", "C", "Cột 4"], ["1", "2", "3"], ["4", "5", "6", "7"], ["8", "9", "10"], ["11", "12"]);
+
+        var issues = new ValidationService().ValidateFieldCounts(document);
+
+        Assert.Equal([1, 3], issues.Select(i => i.RowIndex!.Value));
+        Assert.Contains("phần lớn các dòng có 3 field", issues[0].Message);
+    }
+}

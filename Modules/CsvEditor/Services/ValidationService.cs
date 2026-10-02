@@ -33,23 +33,33 @@ public sealed class ValidationService : IValidationService
         return issues;
     }
 
-    /// <summary>Re-derives the "Dòng N: có X field, header có Y cột" warning from the current in-memory
-    /// rows (comparing <see cref="CsvRow.CellCount"/> against the column count) - used to refresh that
+    /// <summary>Re-derives the "Dòng N: có X field" warning from the current in-memory
+    /// rows (comparing each <see cref="CsvRow.CellCount"/> with the most common one) - used to refresh that
     /// warning after an edit closes the gap (e.g. typing into the row's missing trailing cells), unlike
     /// the one-shot version collected while parsing in <see cref="CsvFileService"/>, which never updates.
+    /// So với số field mà nhiều dòng có nhất (hoà thì lấy số cột của bảng), không so với số cột: bảng được nới thêm cột
+    /// cho vài dòng dài hơn header (xem CsvFileService) thì mọi dòng bình thường không bị báo lệch.
     /// </summary>
     public List<ValidationIssue> ValidateFieldCounts(CsvDocument document)
     {
         var issues = new List<ValidationIssue>();
+        if (document.Rows.Count == 0)
+        {
+            return issues;
+        }
+
+        var reference = document.Rows.GroupBy(r => r.CellCount)
+            .OrderByDescending(g => g.Count()).ThenByDescending(g => g.Key == document.Columns.Count)
+            .First().Key;
         for (var rowIndex = 0; rowIndex < document.Rows.Count; rowIndex++)
         {
             var cellCount = document.Rows[rowIndex].CellCount;
-            if (cellCount != document.Columns.Count)
+            if (cellCount != reference)
             {
                 issues.Add(new ValidationIssue
                 {
                     Severity = ValidationSeverity.Warning,
-                    Message = $"Dòng {rowIndex + 1}: có {cellCount} field, {(document.HasHeader ? "header" : "bảng")} có {document.Columns.Count} cột.",
+                    Message = $"Dòng {rowIndex + 1}: có {cellCount} field, phần lớn các dòng có {reference} field.",
                     RowIndex = rowIndex,
                     IsRecomputable = true,
                 });

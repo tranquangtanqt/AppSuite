@@ -40,7 +40,12 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
   file không có dòng tên cột → mọi dòng là dữ liệu, cột tự đặt tên `Cột 1`, `Cột 2`… (số cột = dòng dài nhất, không
   cắt field nào); tên này chỉ để hiển thị — Save không ghi dòng tên cột. Đổi lựa chọn khi đang mở file → mở lại file đó
   (giữ encoding / delimiter; có thay đổi chưa lưu thì hỏi trước).
-- **Save / Save As**: ghi lại đúng delimiter/encoding đang dùng. Hotkey: `Ctrl+S` (Save).
+- **Save / Save As**: ghi lại đúng delimiter/encoding đang dùng. Hotkey: `Ctrl+S` (Save). Còn thay đổi chưa lưu mà **đóng cửa sổ**,
+  **Open** file khác hoặc **mở lại** file (đổi encoding / delimiter / "Dòng đầu là tiêu đề") → hỏi *Lưu* / *Không lưu* /
+  *Hủy* (Lưu khi chưa có file → Save As; huỷ Save As hoặc lưu lỗi → dừng lại, không mất thay đổi). Lưu lỗi (file đang bị
+  app khác khoá…) hiện hộp thoại báo lỗi.
+- **Dòng dài hơn tiêu đề**: tự thêm cột `Cột N` cho phần dư (kèm 1 cảnh báo) để không mất field khi lưu; tên cột mới được
+  ghi vào dòng tiêu đề khi Save (đổi tên bằng Rename Column).
 - **Undo/Redo**: áp dụng cho sửa ô, thêm/xóa dòng, thêm/xóa/đổi tên cột, dán nhiều ô, kéo điền
   (fill handle), thay thế tất cả kết quả Find/Replace (mỗi thao tác trên là **1** bước Undo dù đổi
   nhiều ô/dòng cùng lúc) - **không** áp dụng cho Filter/Sort (2 cái này chỉ là cách hiển thị, không

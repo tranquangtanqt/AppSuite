@@ -60,6 +60,21 @@ public sealed partial class MainWindow : Window
 
         ViewModel.ColumnsChanged += (_, _) => RebuildColumns();
 
+        // Bấm X khi còn thay đổi chưa lưu: hỏi Lưu / Không lưu / Hủy (trước đây đóng luôn, mất thay đổi).
+        AppWindow.Closing += async (_, args) =>
+        {
+            if (_closeConfirmed || !ViewModel.IsDirty)
+            {
+                return;
+            }
+            args.Cancel = true;
+            if (await ConfirmSaveChangesAsync("đóng"))
+            {
+                _closeConfirmed = true;
+                Close();
+            }
+        };
+
         RebuildColumns();
     }
 
@@ -482,6 +497,11 @@ public sealed partial class MainWindow : Window
 
     private async void OpenButton_Click(object sender, RoutedEventArgs e)
     {
+        if (!await ConfirmSaveChangesAsync("mở file khác"))
+        {
+            return;
+        }
+
         var picker = new FileOpenPicker { SuggestedStartLocation = PickerLocationId.ComputerFolder };
         picker.FileTypeFilter.Add(".csv");
         picker.FileTypeFilter.Add(".tsv");
@@ -509,22 +529,10 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        if (ViewModel.IsDirty)
+        if (!await ConfirmSaveChangesAsync("mở lại file"))
         {
-            var confirm = new ContentDialog
-            {
-                XamlRoot = Content.XamlRoot,
-                Title = "Mở lại file?",
-                Content = "Đổi \"Dòng đầu là tiêu đề\" sẽ mở lại file từ đĩa - các thay đổi chưa lưu sẽ mất.",
-                PrimaryButtonText = "Mở lại",
-                CloseButtonText = "Hủy",
-                DefaultButton = ContentDialogButton.Close,
-            };
-            if (await confirm.ShowAsync() != ContentDialogResult.Primary)
-            {
-                HasHeaderBox.IsChecked = !hasHeader;
-                return;
-            }
+            HasHeaderBox.IsChecked = !hasHeader;
+            return;
         }
 
         ViewModel.HasHeader = hasHeader;
@@ -543,6 +551,11 @@ public sealed partial class MainWindow : Window
 
         var dialog = new EncodingPickerDialog { XamlRoot = Content.XamlRoot };
         if (await dialog.ShowAsync() != ContentDialogResult.Primary)
+        {
+            return;
+        }
+
+        if (!await ConfirmSaveChangesAsync("mở lại file"))
         {
             return;
         }
@@ -566,20 +579,23 @@ public sealed partial class MainWindow : Window
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 
-    private async void SaveButton_Click(object sender, RoutedEventArgs e)
-    {
-        _currentOperationCts = new CancellationTokenSource();
-        try
-        {
-            await ViewModel.SaveAsync(_currentOperationCts.Token);
-        }
-        catch (InvalidOperationException)
-        {
-            SaveAsButton_Click(sender, e);
-        }
-    }
+    private async void SaveButton_Click(object sender, RoutedEventArgs e) => await SaveCurrentAsync();
 
-    private async void SaveAsButton_Click(object sender, RoutedEventArgs e)
+    private async void SaveAsButton_Click(object sender, RoutedEventArgs e) => await RunSaveAsync(SaveAsWithPickerAsync);
+
+    /// <summary>Lưu file đang mở (chưa có đường dẫn → Save As). True nếu đã lưu xong.</summary>
+    private Task<bool> SaveCurrentAsync() => RunSaveAsync(async () =>
+    {
+        if (CurrentFilePath is null)
+        {
+            return await SaveAsWithPickerAsync();
+        }
+        await ViewModel.SaveAsync(_currentOperationCts!.Token);
+        return true;
+    });
+
+    /// <summary>Chọn file rồi lưu. False nếu người dùng huỷ hộp thoại chọn file.</summary>
+    private async Task<bool> SaveAsWithPickerAsync()
     {
         var picker = new FileSavePicker { SuggestedStartLocation = PickerLocationId.ComputerFolder };
         picker.FileTypeChoices.Add("CSV", new List<string> { ".csv" });
@@ -590,13 +606,81 @@ public sealed partial class MainWindow : Window
         var file = await picker.PickSaveFileAsync();
         if (file is null)
         {
-            return;
+            return false;
         }
 
-        _currentOperationCts = new CancellationTokenSource();
-        await ViewModel.SaveAsAsync(file.Path, _currentOperationCts.Token);
+        await ViewModel.SaveAsAsync(file.Path, _currentOperationCts!.Token);
+        return true;
     }
 
+    /// <summary>Chạy 1 lần lưu, báo lỗi (file đang bị app khác khoá, hết chỗ...) thay vì văng app. True nếu đã lưu.</summary>
+    private async Task<bool> RunSaveAsync(Func<Task<bool>> save)
+    {
+        _currentOperationCts = new CancellationTokenSource();
+        try
+        {
+            return await save();
+        }
+        catch (OperationCanceledException)
+        {
+            ViewModel.StatusMessage = "Đã hủy lưu.";
+            return false;
+        }
+        catch (Exception ex)
+        {
+            ViewModel.StatusMessage = $"Không lưu được: {ex.Message}";
+            await new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Không lưu được file",
+                Content = ex.Message,
+                CloseButtonText = "Đóng",
+            }.ShowAsync();
+            return false;
+        }
+    }
+
+    private bool _closeConfirmed;
+    private bool _savePromptOpen;
+
+    /// <summary>Còn thay đổi chưa lưu trước khi <paramref name="action"/> (đóng, mở file khác, mở lại file): hỏi Lưu /
+    /// Không lưu / Hủy. True = tiếp tục (đã lưu xong hoặc chọn bỏ thay đổi); false = dừng lại (Hủy, huỷ Save As, lưu
+    /// lỗi). Không có thay đổi thì không hỏi.</summary>
+    private async Task<bool> ConfirmSaveChangesAsync(string action)
+    {
+        if (!ViewModel.IsDirty)
+        {
+            return true;
+        }
+        if (_savePromptOpen)
+        {
+            return false; // đang hỏi rồi (vd bấm X 2 lần) - 1 XamlRoot chỉ hiện được 1 ContentDialog
+        }
+        _savePromptOpen = true;
+        try
+        {
+            var dialog = new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Lưu thay đổi?",
+                Content = $"{ViewModel.FileName} có thay đổi chưa lưu. Lưu trước khi {action}?",
+                PrimaryButtonText = "Lưu",
+                SecondaryButtonText = "Không lưu",
+                CloseButtonText = "Hủy",
+                DefaultButton = ContentDialogButton.Primary,
+            };
+            return await dialog.ShowAsync() switch
+            {
+                ContentDialogResult.Primary => await SaveCurrentAsync(),
+                ContentDialogResult.Secondary => true,
+                _ => false,
+            };
+        }
+        finally
+        {
+            _savePromptOpen = false;
+        }
+    }
     private void CancelButton_Click(object sender, RoutedEventArgs e) => _currentOperationCts?.Cancel();
 
     // ----- Toolbar: rows/columns -----

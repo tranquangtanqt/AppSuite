@@ -106,6 +106,11 @@ không raise `PropertyChanged` per-row - chỉ raise `StructureChanged` 1 lần)
   để hiển thị, `CsvSerializer` bỏ dòng tên cột. Đổi lựa chọn khi đang mở file → `ReopenAsync` (giữ encoding /
   delimiter). Mở lại (đổi tiêu đề / encoding) giờ đọc đường dẫn từ tài liệu: trước đây `MainWindow._currentFilePath`
   không cập nhật sau Save As → mở lại nhầm file cũ.
+- Không mất dữ liệu âm thầm (2026-10-02): (1) hỏi Lưu / Không lưu / Hủy trước khi đóng cửa sổ (`AppWindow.Closing`),
+  Open, mở lại — `ConfirmSaveChangesAsync`, Lưu dùng chung `SaveCurrentAsync` (bắt lỗi IO → hộp thoại, trước đây
+  `async void` văng app); (2) có tiêu đề mà dòng dài hơn → thêm cột `Cột N` (tránh trùng tên header). Cảnh báo lệch
+  cột tính lại (`ValidateFieldCounts`) so với số field phổ biến nhất thay vì số cột, để cột nới thêm cho vài dòng dài
+  không làm mọi dòng khác bị báo. Ghi tên cột mới vào tiêu đề (không để trống) cho thấy gì lưu nấy.
 
 ### 5. Cảnh báo file lớn & Validation & Statistics
 
