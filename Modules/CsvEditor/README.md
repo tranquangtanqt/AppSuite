@@ -31,7 +31,10 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 `Open` `🕘` ☐ *Dòng đầu là tiêu đề* `Save` `Save As` `Export .xlsx` | `Undo` `Redo` | `Add Row` `Delete Row` `Copy Row`
 `Add Column` `Delete Column` `Rename Column` | `Find` `Replace` `Go To` `Filter` `Clear Filter` `Sort` `Clear Sort`
-`Statistics`.
+`Statistics` | `?`.
+
+- **Hướng dẫn** (nút `?` cuối thanh công cụ, `F1`): mọi tính năng theo danh mục + tìm không dấu. Nội dung ở
+  `Views/HelpContent.cs` (cửa sổ dùng chung `SharedUI.Help.HelpWindow`) — thêm / đổi tính năng thì cập nhật cả ở đó.
 
 - **Open** (`Ctrl+O`): chọn `.csv`/`.tsv`/`.txt`, tự nhận diện delimiter (`,` `Tab` `;` `|`) và encoding
   (UTF-8, UTF-8 BOM, UTF-16 LE/BE). Nếu nhận diện sai, bấm vào nhãn "Encoding"/"Delimiter" ở thanh

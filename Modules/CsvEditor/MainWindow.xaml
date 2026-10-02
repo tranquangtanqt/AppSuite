@@ -133,6 +133,15 @@
                 <Button Click="StatisticsButton_Click" ToolTipService.ToolTip="Thống kê">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE9D9;" FontSize="14" /><TextBlock Text="Statistics" /></StackPanel>
                 </Button>
+
+                <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                <Button x:Name="HelpButton" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)" AutomationProperties.Name="Hướng dẫn">
+                    <FontIcon Glyph="&#xE897;" FontSize="14" />
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F1" />
+                    </Button.KeyboardAccelerators>
+                </Button>
             </StackPanel>
         </ScrollViewer>
 

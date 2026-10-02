@@ -53,8 +53,13 @@ Mục ghi **[Đề xuất · Cao / Nên có / Có thể]** là tính năng còn 
 - [x] Build cả `AppSuite.sln` (x64, `--no-incremental`): 0 warning, 0 error (rà 2026-09-30)
 - [ ] File này chưa có mục cho ModuleA/B, Mcf.DbDef, Mcf.Screen, Rdbms.HtmlGenerator — rà PLAN.md của
   chúng (2026-09-30) không thấy việc nào còn dở
-- [ ] **[Đề xuất · Nên có]** Cửa sổ Hướng dẫn (F1) cho các module chưa có: CsvEditor, ImageCompare, 4 module
-  HtmlGenerator, ModuleB/C — theo mẫu FileTools / ScreenCapture (danh mục + tìm không dấu + phím tắt)
+- [x] Cửa sổ Hướng dẫn dùng chung `SharedUI.Help.HelpWindow` (dựng bằng code, module chỉ viết nội dung) + Hướng dẫn F1
+  cho **CsvEditor** (6 danh mục, nút `?` cuối toolbar) và **ImageCompare** (9 danh mục, nút `?` góc trên-phải, mở đúng
+  phần theo chế độ xem đang dùng). GUI Sandbox 14/14: nút + F1, tìm không dấu, đóng app đóng theo (2026-10-02)
+- [ ] **[Đề xuất · Nên có]** Hướng dẫn F1 cho các module còn lại: 4 module HtmlGenerator, ModuleB/C — dùng
+  `SharedUI.Help.HelpWindow`
+- [ ] **[Đề xuất · Có thể]** Chuyển Hướng dẫn của ScreenCapture / FileTools sang `SharedUI.Help.HelpWindow` (đang là 2
+  bản chép riêng cùng bố cục)
 - [ ] **[Đề xuất · Có thể]** Nhớ kích thước / vị trí cửa sổ và danh sách file / thư mục gần đây cho mọi module —
   đưa 1 helper dùng chung vào `Common` (hiện mỗi module tự lưu hoặc không lưu)
 

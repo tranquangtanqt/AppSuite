@@ -12,6 +12,8 @@ khác (font, trình duyệt) mà so pixel tô đỏ gần hết.
   `dotnet run --project Modules\ImageCompare\ImageCompare.csproj -p:Platform=x64`).
 - Qua MainLauncher: entry `ImageCompare` trong `MainLauncher/Config/modules.json`.
 - Dòng lệnh: `ImageCompare.exe [ảnh A] [ảnh B]` mở sẵn 2 ảnh.
+- **Hướng dẫn**: nút `?` góc trên-phải hoặc `F1` — mở đúng phần của chế độ đang xem, tìm không dấu. Nội dung ở
+  `Models/HelpContent.cs` (cửa sổ dùng chung `SharedUI.Help.HelpWindow`) — thêm / đổi tính năng thì cập nhật cả ở đó.
 
 ## Đưa ảnh vào
 

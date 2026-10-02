@@ -39,6 +39,7 @@
             <KeyboardAccelerator Modifiers="Control" Key="Number0" Invoked="FitAccelerator_Invoked" />
             <KeyboardAccelerator Modifiers="Control" Key="Number1" Invoked="ActualSizeAccelerator_Invoked" />
             <KeyboardAccelerator Modifiers="Control" Key="F" Invoked="FindTextAccelerator_Invoked" />
+            <KeyboardAccelerator Key="F1" Invoked="HelpAccelerator_Invoked" />
         </Grid.KeyboardAccelerators>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -47,13 +48,19 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Row 0: 2 ô ảnh -->
+        <!-- Row 0: 2 ô ảnh + nút Hướng dẫn -->
         <Grid ColumnSpacing="8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
+
+            <Button x:Name="HelpButton" Grid.Column="3" Click="HelpButton_Click" VerticalAlignment="Stretch"
+                    ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)" AutomationProperties.Name="Hướng dẫn">
+                <FontIcon Glyph="&#xE897;" FontSize="14" />
+            </Button>
 
             <Border x:Name="SlotA" Style="{StaticResource SlotStyle}" DragOver="Slot_DragOver" Drop="Slot_Drop">
                 <Grid ColumnSpacing="8">

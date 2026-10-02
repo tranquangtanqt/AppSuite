@@ -41,6 +41,23 @@ chung khác (giống cách mọi project đã reference `Common`).
 `Helpers/UIHelper.AnnounceActionForAccessibility` và `Converters/BrushToColorConverter` là phần phụ
 trợ nhỏ được port kèm để các control trên hoạt động độc lập, không cần thêm gì khác.
 
+## Cửa sổ Hướng dẫn dùng chung (`SharedUI.Help`)
+
+`Help/HelpWindow.cs` — cửa sổ Hướng dẫn (F1) của AppSuite, không phải port từ WinUI Gallery: danh mục bên trái, nội dung
+bên phải, ô tìm không phân biệt hoa thường / dấu tiếng Việt (`cat` khớp `Cắt`). Module chỉ cung cấp nội dung:
+
+```csharp
+var help = new SharedUI.Help.HelpWindow("CsvEditor", "Mô tả 1 dòng", HelpContent.Sections,
+    accent: null /* màu nhấn của Windows */, searchPlaceholder: "Tìm tính năng, vd: ...");
+help.ShowSection("So chữ"); // tuỳ chọn: mở đúng danh mục theo tiêu đề
+help.Activate();
+```
+
+`HelpSection(Title, Glyph, Summary, Items)` / `HelpItem(Name, Description, params Keys)` — `Keys` hiện thành các "phím"
+nhỏ; `Description` rỗng thì chỉ hiện tên + phím (dùng cho danh mục *Phím tắt*). Dựng hoàn toàn bằng code (không
+`.xaml`) nên không cần merge `Generic.xaml`. Đang dùng: CsvEditor, ImageCompare (2026-10-02). ScreenCapture / FileTools
+có bản riêng từ trước (cùng bố cục) — chuyển sang bản chung khi tiện.
+
 ## Những control KHÔNG port và lý do
 
 WinUI Gallery's `Controls/` còn có `ControlExample`, `SampleCodePresenter`, `PageHeader`,

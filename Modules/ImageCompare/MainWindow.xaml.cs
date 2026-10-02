@@ -53,6 +53,7 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Closed += (_, _) => _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
         uint dpi = GetDpiForWindow(WindowNative.GetWindowHandle(this));
         double scale = dpi > 0 ? dpi / 96.0 : 1;
         AppWindow.Resize(new Windows.Graphics.SizeInt32((int)(1280 * scale), (int)(820 * scale)));
@@ -226,6 +227,39 @@ public sealed partial class MainWindow : Window
         ModeBar.SelectedItem = ModeBar.Items.First(i => (string)i.Tag == nameof(ViewMode.Text));
         TextQueryBox.Focus(FocusState.Keyboard);
         TextQueryBox.SelectAll();
+    }
+
+    // ----- Hướng dẫn (F1) -----
+
+    private SharedUI.Help.HelpWindow? _helpWindow;
+
+    private void HelpAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        ShowHelp();
+    }
+
+    private void HelpButton_Click(object sender, RoutedEventArgs e) => ShowHelp();
+
+    /// <summary>Mở cửa sổ Hướng dẫn (1 cửa sổ duy nhất) ở đúng phần của chế độ xem đang dùng. Nội dung: Models/HelpContent.</summary>
+    private void ShowHelp()
+    {
+        if (_helpWindow is null)
+        {
+            _helpWindow = new SharedUI.Help.HelpWindow("ImageCompare", "So sánh 2 ảnh: tô chỗ khác nhau, tìm ảnh con, đọc và so chữ trong ảnh, xuất báo cáo.",
+                Models.HelpContent.Sections, Windows.UI.Color.FromArgb(0xFF, 0x2B, 0x7B, 0xD6),
+                "Tìm tính năng, vd: ngưỡng, so chữ, Ctrl+V...");
+            _helpWindow.Closed += (_, _) => _helpWindow = null;
+        }
+        if (ModeBar.SelectedItem is { } mode)
+        {
+            _helpWindow.ShowSection(mode.Text switch
+            {
+                "Cạnh nhau" or "Chồng mờ" or "Thanh trượt" => "Cạnh nhau & Chồng mờ",
+                var text => text,
+            });
+        }
+        _helpWindow.Activate();
     }
 
     private void CopyText_Click(object sender, RoutedEventArgs e)

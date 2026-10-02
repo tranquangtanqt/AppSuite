@@ -77,6 +77,8 @@ public sealed partial class MainWindow : Window
             }
         };
 
+        Closed += (_, _) => _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
+
         RebuildColumns();
     }
 
@@ -1118,6 +1120,22 @@ public sealed partial class MainWindow : Window
         {
             ViewModel.IsBusy = false;
         }
+    }
+
+    // ----- Hướng dẫn (F1) -----
+
+    private SharedUI.Help.HelpWindow? _helpWindow;
+
+    /// <summary>Mở cửa sổ Hướng dẫn (1 cửa sổ duy nhất - đang mở thì đưa lên trước). Nội dung: Views/HelpContent.</summary>
+    private void HelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_helpWindow is null)
+        {
+            _helpWindow = new SharedUI.Help.HelpWindow("CsvEditor", "Mở, sửa, lọc, sắp xếp file CSV / TSV và xuất sang Excel.",
+                HelpContent.Sections, searchPlaceholder: "Tìm tính năng, vd: lọc, encoding, Ctrl+G...");
+            _helpWindow.Closed += (_, _) => _helpWindow = null;
+        }
+        _helpWindow.Activate();
     }
 
     // ----- Context menu -----
