@@ -104,12 +104,13 @@ public sealed partial class CsvEditorViewModel : ObservableObject
     public string? UndoDescription => _editService.UndoRedo.UndoDescription;
     public string? RedoDescription => _editService.UndoRedo.RedoDescription;
 
-    public Task OpenAsync(string filePath, Func<long, Task<bool>> confirmLargeFile, CancellationToken cancellationToken) =>
+    public Task<bool> OpenAsync(string filePath, Func<long, Task<bool>> confirmLargeFile, CancellationToken cancellationToken) =>
         OpenAsync(filePath, null, null, confirmLargeFile, cancellationToken);
 
     /// <summary>Overload used by the status bar's "đổi encoding/delimiter" affordance to re-open the
-    /// same file with a manually chosen encoding/delimiter when auto-detection guessed wrong.</summary>
-    public async Task OpenAsync(
+    /// same file with a manually chosen encoding/delimiter when auto-detection guessed wrong. True nếu đã mở xong,
+    /// false nếu huỷ; lỗi đọc file (không tồn tại, bị khoá...) ném ra cho View báo.</summary>
+    public async Task<bool> OpenAsync(
         string filePath,
         System.Text.Encoding? encodingOverride,
         char? delimiterOverride,
@@ -148,10 +149,12 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             ColumnCount = result.Document.Columns.Count;
             StatusMessage = $"Đã mở {result.Document.FileName} - {RowCount:N0} dòng, {ColumnCount:N0} cột" + (HasHeader ? "." : " (không có dòng tiêu đề).");
             ColumnsChanged?.Invoke(this, EventArgs.Empty);
+            return true;
         }
         catch (OperationCanceledException)
         {
             StatusMessage = "Đã hủy mở file.";
+            return false;
         }
         finally
         {
@@ -171,7 +174,7 @@ public sealed partial class CsvEditorViewModel : ObservableObject
         }
     }
 
-    public Task ReopenAsync(string filePath, Func<long, Task<bool>> confirmLargeFile, CancellationToken cancellationToken) =>
+    public Task<bool> ReopenAsync(string filePath, Func<long, Task<bool>> confirmLargeFile, CancellationToken cancellationToken) =>
         OpenAsync(filePath, _editService.Document.Encoding, _editService.Document.Delimiter, confirmLargeFile, cancellationToken);
 
     public async Task SaveAsync(CancellationToken cancellationToken)
@@ -204,6 +207,49 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             IsDirty = _editService.UndoRedo.IsDirty;
             RevalidateColumns();
             StatusMessage = $"Đã lưu {_editService.Document.FileName}.";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>Xuất ra .xlsx đúng các dòng đang hiện (theo lọc / sắp xếp hiện tại) - không đổi file đang mở, không
+    /// đổi trạng thái đã lưu. Lỗi ghi file ném ra cho View báo.</summary>
+    public async Task<XlsxExportResult> ExportXlsxAsync(string filePath, CancellationToken cancellationToken)
+    {
+        IsBusy = true;
+        ProgressPercent = 0;
+        try
+        {
+            var progress = new Progress<int>(p => ProgressPercent = p);
+            var columnNames = Columns.Select(c => c.Name).ToList();
+            var rows = ViewRows.ToList(); // chụp lại trên UI thread, ghi ở luồng nền
+            var writeHeader = _editService.Document.HasHeader;
+            var sheetName = Path.GetFileNameWithoutExtension(_editService.Document.FileName);
+            var result = await Task.Run(
+                () => XlsxExporter.Export(filePath, sheetName, columnNames, writeHeader, rows, progress, cancellationToken),
+                cancellationToken);
+
+            var notes = new List<string>();
+            if (rows.Count < _editService.Document.Rows.Count)
+            {
+                notes.Add($"đang lọc: {rows.Count:N0}/{_editService.Document.Rows.Count:N0} dòng");
+            }
+            if (result.SkippedRows > 0)
+            {
+                notes.Add($"bỏ {result.SkippedRows:N0} dòng vượt giới hạn Excel");
+            }
+            if (result.SkippedColumns > 0)
+            {
+                notes.Add($"bỏ {result.SkippedColumns:N0} cột vượt giới hạn Excel");
+            }
+            if (result.TruncatedCells > 0)
+            {
+                notes.Add($"cắt {result.TruncatedCells:N0} ô dài quá 32.767 ký tự");
+            }
+            StatusMessage = $"Đã xuất {Path.GetFileName(filePath)} - {result.RowsWritten:N0} dòng" + (notes.Count > 0 ? $" ({string.Join("; ", notes)})." : ".");
+            return result;
         }
         finally
         {
