@@ -32,6 +32,15 @@ public sealed partial class CompareViewModel : ObservableObject
     /// <summary>Chữ đã đọc của từng ảnh: đổi qua lại A / B, chế độ khác rồi quay lại không phải đọc lại.</summary>
     private readonly ConditionalWeakTable<LoadedImage, OcrResult> _ocrCache = new();
 
+    private CancellationTokenSource? _textDiffCts;
+    private string? _textDiffError;
+    private string? _textDiffReaderName;
+    private string? _textDiffReaderNote;
+
+    /// <summary>Chữ đọc theo kiểu form (chế độ So chữ) của từng ảnh, theo từng ngôn ngữ - khác cách đọc của Tìm chữ
+    /// nên cache riêng.</summary>
+    private readonly ConditionalWeakTable<LoadedImage, Dictionary<FormLanguage, OcrResult>> _formOcrCache = new();
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ImageAText), nameof(HasBothImages), nameof(TextTarget))]
     private LoadedImage? _imageA;
@@ -41,7 +50,7 @@ public sealed partial class CompareViewModel : ObservableObject
     private LoadedImage? _imageB;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanExport))]
+    [NotifyPropertyChangedFor(nameof(CanExport), nameof(CanExportTextDiff))]
     private ViewMode _mode = ViewMode.Diff;
 
     /// <summary>Độ đục của ảnh B ở chế độ Chồng mờ (0 = chỉ thấy A, 1 = chỉ thấy B).</summary>
@@ -118,6 +127,18 @@ public sealed partial class CompareViewModel : ObservableObject
     [ObservableProperty]
     private List<TextMatch>? _textMatches;
 
+    // ---- So chữ ----
+    [ObservableProperty]
+    private FormLanguage _textDiffLanguage = FormLanguage.Japanese;
+
+    /// <summary>Hiện cả các chỗ chỉ lệch 1 ký tự (nhiều khả năng OCR đọc lệch) - mặc định ẩn cho đỡ nhiễu.</summary>
+    [ObservableProperty]
+    private bool _textDiffShowSimilar;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanExportTextDiff))]
+    private TextDiffResult? _textDiffResult;
+
     /// <summary>Mục đang chọn trong danh sách (vẽ khung vàng), 0 = không chọn.</summary>
     [ObservableProperty]
     private int _highlightedItem;
@@ -132,6 +153,16 @@ public sealed partial class CompareViewModel : ObservableObject
     public string ImageBText => ImageB?.Describe() ?? "(chưa có ảnh)";
     public bool HasBothImages => ImageA is not null && ImageB is not null;
     public bool CanExport => Mode == ViewMode.Diff && Painter is not null;
+
+    /// <summary>Xuất được kết quả So chữ (copy / CSV / HTML): đang ở chế độ So chữ và đã so xong.</summary>
+    public bool CanExportTextDiff => Mode == ViewMode.TextDiff && TextDiffResult is not null;
+
+    /// <summary>Tên bộ đọc chữ của lần So chữ gần nhất - ghi vào báo cáo.</summary>
+    public string TextDiffReaderName => _textDiffReaderName ?? string.Empty;
+
+    /// <summary>Mục So chữ ứng với 1 dòng của danh sách bên phải (cùng số thứ tự), null nếu không phải chế độ So chữ.</summary>
+    public TextDiffItem? TextDiffItemAt(int number) =>
+        Mode == ViewMode.TextDiff ? VisibleTextDiffItems.FirstOrDefault(i => i.Number == number) : null;
 
     /// <summary>Ô sẽ nhận ảnh khi dán / kéo-thả mà không nói rõ ô nào: ô A nếu còn trống, không thì B
     /// (thay ảnh B cũ - kiểu "so ảnh mới nhất với ảnh gốc").</summary>
@@ -154,9 +185,21 @@ public sealed partial class CompareViewModel : ObservableObject
         IgnoreRects = IgnoreRects.ToList(),
     };
 
+    /// <summary>Các mục So chữ đang hiện (bỏ "gần giống" nếu không bật <see cref="TextDiffShowSimilar"/>) - cùng thứ tự
+    /// và số như danh sách bên phải, để canvas vẽ đúng các khung đó.</summary>
+    public IReadOnlyList<TextDiffItem> VisibleTextDiffItems =>
+        TextDiffResult?.Items.Where(i => TextDiffShowSimilar || i.Kind != TextDiffKind.Similar).ToList() ?? [];
+
     public CompareViewModel()
     {
-        IgnoreRects.CollectionChanged += (_, _) => RequestCompare();
+        IgnoreRects.CollectionChanged += (_, _) =>
+        {
+            RequestCompare();
+            if (Mode == ViewMode.TextDiff)
+            {
+                RequestTextDiff(); // chữ đã đọc nằm trong cache → chỉ ghép lại, nhanh
+            }
+        };
     }
 
     /// <summary>Đặt ảnh vào ô A hoặc B. Ảnh cũ KHÔNG Dispose ngay: lượt so sánh nền có thể vẫn đang đọc con trỏ
@@ -236,6 +279,10 @@ public sealed partial class CompareViewModel : ObservableObject
         else
         {
             RequestCompare();
+            if (Mode == ViewMode.TextDiff)
+            {
+                RequestTextDiff();
+            }
         }
     }
 
@@ -258,6 +305,10 @@ public sealed partial class CompareViewModel : ObservableObject
             IgnoreRects.Clear(); // toạ độ ảnh ghép khác toạ độ ảnh A - không vẽ vùng bỏ qua ở chế độ này
         }
         RequestCompare();
+        if (Mode == ViewMode.TextDiff)
+        {
+            RequestTextDiff(); // chỉnh tay ↔ tự căn: đổi độ lệch dùng để ghép
+        }
     }
 
     partial void OnThresholdPercentChanged(double value) => RequestCompare(debounce: true);
@@ -275,7 +326,28 @@ public sealed partial class CompareViewModel : ObservableObject
         {
             RequestOcr();
         }
+        if (value == ViewMode.TextDiff && TextDiffResult is null)
+        {
+            RequestTextDiff();
+        }
         UpdatePanel();
+    }
+
+    partial void OnTextDiffLanguageChanged(FormLanguage value)
+    {
+        TextDiffResult = null;
+        if (Mode == ViewMode.TextDiff)
+        {
+            RequestTextDiff();
+        }
+    }
+
+    partial void OnTextDiffShowSimilarChanged(bool value)
+    {
+        if (Mode == ViewMode.TextDiff)
+        {
+            UpdatePanel();
+        }
     }
 
     partial void OnTextUseAChanged(bool value)
@@ -302,6 +374,116 @@ public sealed partial class CompareViewModel : ObservableObject
         {
             RequestOcr();
         }
+        if (Mode == ViewMode.TextDiff)
+        {
+            RequestTextDiff();
+        }
+    }
+
+    /// <summary>So chữ A ↔ B ở nền: đọc chữ 2 ảnh (cache theo ảnh + ngôn ngữ), tự căn (độ lệch chung), rồi ghép đoạn
+    /// (Engine/TextDiff). Đọc A chiếm nửa đầu tiến độ, B nửa sau.</summary>
+    public async void RequestTextDiff()
+    {
+        _textDiffCts?.Cancel();
+        _textDiffCts = null;
+        _textDiffError = null;
+        if (ImageA is not { } a || ImageB is not { } b)
+        {
+            TextDiffResult = null;
+            if (Mode == ViewMode.TextDiff)
+            {
+                UpdatePanel();
+            }
+            return;
+        }
+        var cts = _textDiffCts = new CancellationTokenSource();
+        var language = TextDiffLanguage;
+        var ignore = IgnoreRects.ToList();
+        var manualOffset = Align == AlignMode.Manual ? OffsetB : (SKPointI?)null;
+        IsBusy = true;
+        TextDiffResult = null;
+        if (Mode == ViewMode.TextDiff)
+        {
+            UpdatePanel();
+        }
+        var progress = new Progress<double>(p =>
+        {
+            if (ReferenceEquals(_textDiffCts, cts) && Mode == ViewMode.TextDiff)
+            {
+                SummaryTitle = p < 0.6 ? $"Đang đọc chữ… {p * 100:0}%" : $"Đang kiểm tra lại từng chỗ… {p * 100:0}%";
+            }
+        });
+        IProgress<double> report = progress;
+        try
+        {
+            var reader = FormReaders.Create(language, out var note);
+            _textDiffReaderName = reader.Name;
+            _textDiffReaderNote = note;
+            var cachedA = CachedFormOcr(a, language);
+            var cachedB = CachedFormOcr(b, language);
+            var verifyReaders = FormReaders.VerifyReaders(reader, language);
+            var result = await Task.Run(() =>
+            {
+                var ocrA = cachedA ?? reader.Read(a.Bitmap, cts.Token, new SyncProgress(p => report.Report(p * 0.3)));
+                var ocrB = cachedB ?? reader.Read(b.Bitmap, cts.Token, new SyncProgress(p => report.Report(0.3 + p * 0.3)));
+                var offset = manualOffset ?? Aligner.FindOffset(a.Bitmap, b.Bitmap, cts.Token);
+                var diff = TextDiff.Compare(ocrA, ocrB, offset, ignore, a.Bitmap, b.Bitmap, cts.Token);
+                // Đọc lại riêng từng chỗ nghi khác: bỏ chỗ thực ra giống (OCR cả trang đọc sai 1 phía), thay chữ rác.
+                diff = TextDiffVerifier.Verify(diff, a.Bitmap, b.Bitmap, verifyReaders, cts.Token,
+                    new SyncProgress(p => report.Report(0.6 + p * 0.4)));
+                return (ocrA, ocrB, diff);
+            }, cts.Token);
+            if (cts.IsCancellationRequested)
+            {
+                return;
+            }
+            StoreFormOcr(a, language, result.ocrA);
+            StoreFormOcr(b, language, result.ocrB);
+            TextDiffResult = result.diff;
+            if (Mode == ViewMode.TextDiff)
+            {
+                UpdatePanel();
+            }
+            var d = result.diff;
+            Log.LogInformation("So chữ {A} ↔ {B} ({Reader}): {Items} chỗ khác (đổi {Changed}, chỉ A {OnlyA}, chỉ B {OnlyB}, màu {Color}, gần giống {Similar}), giống {Same}, đoạn A {SegA} / B {SegB}, đọc A {MsA} ms, B {MsB} ms",
+                a.Name, b.Name, reader.Name, d.Items.Count, d.Count(TextDiffKind.Changed), d.Count(TextDiffKind.OnlyInA),
+                d.Count(TextDiffKind.OnlyInB), d.Count(TextDiffKind.ColorChanged), d.Count(TextDiffKind.Similar), d.SameCount,
+                d.SegmentsA, d.SegmentsB, (int)result.ocrA.Elapsed.TotalMilliseconds, (int)result.ocrB.Elapsed.TotalMilliseconds);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            var error = ex is AggregateException { InnerException: { } inner } ? inner : ex;
+            _textDiffError = error is DllNotFoundException or BadImageFormatException or TypeInitializationException
+                ? $"Thiếu thư viện nhận dạng chữ cho máy này: {error.Message}"
+                : error.Message;
+            if (Mode == ViewMode.TextDiff)
+            {
+                UpdatePanel();
+            }
+            Log.LogError(ex, "So chữ thất bại");
+        }
+        finally
+        {
+            if (ReferenceEquals(_textDiffCts, cts))
+            {
+                IsBusy = false;
+            }
+        }
+    }
+
+    private OcrResult? CachedFormOcr(LoadedImage image, FormLanguage language) =>
+        _formOcrCache.TryGetValue(image, out var byLanguage) && byLanguage.TryGetValue(language, out var ocr) ? ocr : null;
+
+    private void StoreFormOcr(LoadedImage image, FormLanguage language, OcrResult ocr) =>
+        _formOcrCache.GetOrCreateValue(image)[language] = ocr;
+
+    /// <summary>IProgress gọi thẳng (không qua SynchronizationContext) - báo tiến độ từ luồng nền sang Progress của UI.</summary>
+    private sealed class SyncProgress(Action<double> report) : IProgress<double>
+    {
+        public void Report(double value) => report(value);
     }
 
     /// <summary>Đọc chữ ảnh <see cref="TextTarget"/> ở nền (lấy từ cache nếu đã đọc), rồi tìm lại chữ đang gõ.</summary>
@@ -494,6 +676,7 @@ public sealed partial class CompareViewModel : ObservableObject
         {
             ViewMode.Find => "Các chỗ tìm thấy (khớp nhất trước)",
             ViewMode.Text => TextMatches is null ? "Các dòng chữ đọc được" : "Các chỗ tìm thấy",
+            ViewMode.TextDiff => "Các chỗ khác về chữ",
             _ => "Các vùng khác",
         };
         if (Mode == ViewMode.Find)
@@ -503,6 +686,10 @@ public sealed partial class CompareViewModel : ObservableObject
         else if (Mode == ViewMode.Text)
         {
             ShowTextPanel();
+        }
+        else if (Mode == ViewMode.TextDiff)
+        {
+            ShowTextDiffPanel();
         }
         else
         {
@@ -549,6 +736,10 @@ public sealed partial class CompareViewModel : ObservableObject
         if ((IsJpeg(ImageA) || IsJpeg(ImageB)) && s.RegionCount > 0 && s.Ssim > 0.98 && ThresholdPercent < 15)
         {
             lines.Add("Ảnh JPG: nhiễu nén hay bị tính là khác - thử tăng ngưỡng lên ~20%.");
+        }
+        if (LayoutShiftWarning(view) is { } warning)
+        {
+            lines.Add(warning);
         }
         lines.Add($"{(int)s.Elapsed.TotalMilliseconds} ms");
         SummaryDetail = string.Join(Environment.NewLine, lines);
@@ -642,6 +833,83 @@ public sealed partial class CompareViewModel : ObservableObject
         StatusText = $"{SummaryTitle}. Bấm 1 kết quả để phóng tới.";
     }
 
+    /// <summary>1 vùng khác phủ ≥ 60% ảnh: 2 ảnh lệch bố cục cục bộ (khác font / trình duyệt...) mà tự căn 1 độ lệch
+    /// chung không bù được → so pixel tô đỏ gần hết, không còn chỉ ra chỗ khác thật. Chỉ thêm lời nhắc, không đổi
+    /// kết quả so.</summary>
+    private string? LayoutShiftWarning(IDiffView view)
+    {
+        if (view.Stats.Align == AlignMode.Rows || view.Regions.Count == 0 || ImageA is not { } a)
+        {
+            return null;
+        }
+        double area = (double)a.Bitmap.Width * a.Bitmap.Height;
+        double largest = view.Regions.Max(r => (double)r.Bounds.Width * r.Bounds.Height);
+        double share = largest / area;
+        return share >= 0.6
+            ? $"⚠ 1 vùng phủ {(share * 100).ToString("0", Vi)}% ảnh: 2 ảnh lệch bố cục (khác font / trình duyệt?) nên so pixel tô gần hết. Thử chế độ \"So chữ\" để xem chữ / giá trị nào khác."
+            : null;
+    }
+
+    private void ShowTextDiffPanel()
+    {
+        if (!HasBothImages)
+        {
+            SummaryTitle = "Chưa so chữ";
+            SummaryDetail = "Đưa đủ ảnh A và B (2 ảnh chụp cùng 1 màn hình) để so chữ / giá trị giữa 2 ảnh.";
+            return;
+        }
+        if (TextDiffResult is not { } r)
+        {
+            SummaryTitle = _textDiffError is null ? "Đang đọc chữ…" : "Không so được chữ";
+            SummaryDetail = _textDiffError ?? $"{_textDiffReaderName ?? "Đang chuẩn bị"} - đọc chữ cả 2 ảnh, mỗi ảnh vài giây.";
+            return;
+        }
+        var visible = VisibleTextDiffItems;
+        foreach (var item in visible)
+        {
+            Items.Add(new ResultItem(item.Number, DescribeTextDiff(item), item.BoundsInA(r.OffsetB), TextDiffColor(item.Kind)));
+        }
+        int changed = r.Count(TextDiffKind.Changed), onlyA = r.Count(TextDiffKind.OnlyInA), onlyB = r.Count(TextDiffKind.OnlyInB);
+        int color = r.Count(TextDiffKind.ColorChanged), similar = r.Count(TextDiffKind.Similar);
+        int shown = visible.Count;
+        SummaryTitle = shown == 0 ? (similar > 0 ? "Chữ giống nhau (trừ vài ký tự nghi do OCR)" : "Chữ giống nhau") : $"{shown} chỗ khác về chữ";
+        var lines = new List<string>
+        {
+            $"Đổi chữ: {changed} · Chỉ ở A: {onlyA} · Chỉ ở B: {onlyB} · Khác màu chữ: {color}",
+            $"Giống: {r.SameCount} đoạn (đọc được A: {r.SegmentsA}, B: {r.SegmentsB}), trong đó {r.VerifiedSame} chỗ nghi khác đã đọc lại riêng → giống",
+        };
+        if (similar > 0)
+        {
+            lines.Add(TextDiffShowSimilar
+                ? $"Đang hiện {similar} chỗ gần giống (nghi OCR đọc lệch)."
+                : $"Ẩn {similar} chỗ gần giống (nghi OCR đọc lệch).");
+        }
+        if (IgnoreRects.Count > 0)
+        {
+            lines.Add($"Bỏ qua chữ trong {IgnoreRects.Count} vùng bỏ qua (vẽ ở chế độ Khác biệt)");
+        }
+        lines.Add($"Đọc bằng {_textDiffReaderName} - chữ đọc từ ảnh có thể sai, soi lại trên ảnh.");
+        if (_textDiffReaderNote is not null)
+        {
+            lines.Add(_textDiffReaderNote);
+        }
+        SummaryDetail = string.Join(Environment.NewLine, lines);
+        StatusText = $"{SummaryTitle}. Bấm 1 mục bên phải để phóng tới chỗ đó trên cả 2 ảnh.";
+    }
+
+    private static string DescribeTextDiff(TextDiffItem item) => item.Kind switch
+    {
+        TextDiffKind.Changed => $"「{item.A!.Text}」→「{item.B!.Text}」",
+        TextDiffKind.Similar => $"≈ 「{item.A!.Text}」→「{item.B!.Text}」",
+        TextDiffKind.OnlyInA => $"chỉ A: 「{item.A!.Text}」",
+        TextDiffKind.OnlyInB => $"chỉ B: 「{item.B!.Text}」",
+        TextDiffKind.ColorChanged => $"màu 「{item.A!.Text}」 {item.Note}",
+        _ => item.A?.Text ?? item.B?.Text ?? string.Empty,
+    };
+
+    /// <summary>Màu theo loại: đổi chữ đỏ, chỉ A xanh (màu ảnh A), chỉ B cam (màu ảnh B), khác màu tím, gần giống xám.</summary>
+    public static string TextDiffColor(TextDiffKind kind) => TextDiffReport.KindColor(kind);
+
     private static bool IsJpeg(LoadedImage? image) =>
         image?.Path is { } p && (p.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) || p.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase));
 
@@ -651,11 +919,14 @@ public sealed partial class CompareViewModel : ObservableObject
         FindResult = null;
         Ocr = null;
         TextMatches = null;
+        TextDiffResult = null;
         UpdatePanel();
     }
 
     private void CancelAll()
     {
+        _textDiffCts?.Cancel();
+        _textDiffCts = null;
         _compareCts?.Cancel();
         _compareCts = null;
         _findCts?.Cancel();

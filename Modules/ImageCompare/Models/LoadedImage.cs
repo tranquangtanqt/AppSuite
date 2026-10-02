@@ -26,4 +26,7 @@ public enum ViewMode
     Find,
     /// <summary>Đọc chữ trong 1 ảnh (OCR, Engine/TextRecognizer) và tìm chữ trong đó - chỉ cần 1 ảnh.</summary>
     Text,
+    /// <summary>So chữ giữa A và B (OCR cả 2 ảnh, Engine/TextDiff) - cho 2 ảnh cùng màn hình khác môi trường, bố cục
+    /// xê dịch nên so pixel vô nghĩa.</summary>
+    TextDiff,
 }

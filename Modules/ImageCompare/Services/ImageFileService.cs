@@ -40,6 +40,14 @@ public sealed class ImageFileService
             writer.Write(html);
         });
 
+    /// <summary>CSV kèm BOM UTF-8 - không có BOM, Excel mở bằng bảng mã hệ thống làm vỡ chữ Nhật / Việt.</summary>
+    public Task<string?> SaveCsvAsync(string csv, IntPtr ownerHwnd, string suggestedName) =>
+        SaveAsync(ownerHwnd, suggestedName, "CSV (mở bằng Excel)", ".csv", stream =>
+        {
+            using var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(true));
+            writer.Write(csv);
+        });
+
     private static async Task<string?> SaveAsync(IntPtr ownerHwnd, string suggestedName, string typeName, string extension,
         Action<Stream> write)
     {

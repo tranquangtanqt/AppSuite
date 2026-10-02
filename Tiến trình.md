@@ -112,7 +112,27 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [ ] Chạy thử GUI hộp thoại *Lưu PNG* và *Xuất báo cáo HTML*
 - [ ] Chạy bản Release trên máy thật từ MainLauncher (kể cả Tìm chữ):
   `.\build\Publish-AppSuite.ps1 -Targets ImageCompare,MainLauncher`
-- [ ] (Tuỳ chọn) So sánh chữ giữa A và B: dòng thêm / bớt / sửa qua OCR
+- [x] Chế độ **So chữ** (A ↔ B qua OCR: đổi chữ / chỉ A / chỉ B / khác màu chữ / gần giống; tiếng Nhật = Windows OCR,
+  dự phòng Tesseract jpn; Việt / Anh = Tesseract vie) + cảnh báo ở Khác biệt khi 1 vùng phủ ≥ 60% ảnh. Unit test 61/61
+  và GUI trong Sandbox (số Khác biệt không đổi so với bản cũ); nhánh Windows OCR chạy app trên máy dev: 130 đoạn giống,
+  54 chỗ khác, 6 khác màu chữ thật — xem PLAN.md (2026-10-01)
+- [x] So chữ hiện chữ sai (người dùng báo: "230川7" → "230107"…): thêm bước đọc lại riêng từng chỗ nghi khác
+  (TextDiffVerifier) + kẹp ngưỡng đen trắng giữ chữ xám. Ảnh thật (Windows OCR): 54 → 26 chỗ khác, 130 → 158 giống,
+  khác màu chữ 6 → 9; unit test 68/68 trong Sandbox, Khác biệt vẫn cùng số (2026-10-01)
+- [x] So chữ ghép nhầm nhãn + giá trị combobox (`受注区分受注`, `使用インキ耐光24H`) và cắt `ページ数` thành 2 mục: tách
+  đoạn tại viền ô + nhập mảnh lẻ vào cặp. Ảnh thật: 184 đoạn giống (158 trước), unit test 70/70 (2026-10-02)
+- [x] So chữ: chữ xám của ô bị khoá báo "đổi chữ" (`三 → 受注`, `商印そ → 商印その他`, `耐 → 耐光2`…) → đọc lại vùng nới
+  bằng khung phía kia + so màu khi đọc lại giống. Ảnh thật: khác màu 9 → 15, đổi chữ 8 → 1; Sandbox (Tesseract) 71 → 56
+  chỗ khác; unit test 72/72 cả 2 nơi (2026-10-02)
+- [x] So chữ: mục chỉ-1-phía mà OCR bỏ sót phía kia (`枚` xám đọc thành `物`, `胴ｻｲｽﾞ`) → đọc lại vùng dự đoán cắt sát
+  + so hình nét chữ (không OCR). Ảnh thật: khác màu 15 → 19, chỉ còn khung trình duyệt; Sandbox (Tesseract) 56 → 45;
+  unit test 74/74 cả 2 nơi (2026-10-02)
+- [ ] So chữ: còn vài chỗ font bitmap của ảnh cũ đọc sai (`角途区分`, `使用インキ耐、`) và thanh tiêu đề / URL — cân nhắc
+  tự đề xuất vùng bỏ qua cho khung trình duyệt; thử thêm trên vài cặp màn hình khác (Việt / Anh chưa có ảnh thật)
+- [x] So chữ: xuất kết quả - nút Copy (tách Tab, dán Excel) / Lưu CSV (BOM) / Xuất báo cáo HTML (ảnh cắt A | B); chuột
+  phải 1 mục trong danh sách (mọi chế độ): Copy mục này / Copy cả danh sách. Unit test 77/77; GUI trong Sandbox: menu,
+  clipboard, hộp thoại lưu CSV + HTML đều chạy (2026-10-02)
+- [ ] Chạy bản Release So chữ trên máy chưa có gói OCR tiếng Nhật của Windows nhưng có mạng: thử hướng dẫn cài trong README
 - Giới hạn đã biết: OCR không chạy trên ARM64 (không có bản Tesseract native)
 
 ## Mcf.CrudDiagram.HtmlGenerator (ModuleH — `Note/ModuleH.txt`)

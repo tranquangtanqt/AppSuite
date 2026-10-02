@@ -121,7 +121,81 @@ public sealed partial class MainWindow : Window
         TextSourceBox.SelectedIndex = ViewModel.TextUseA ? 0 : 1;
         TextDiacriticsBox.IsChecked = ViewModel.TextMatchDiacritics;
         TextCaseBox.IsChecked = ViewModel.TextMatchCase;
+        TextDiffLanguageBox.SelectedItem = TextDiffLanguageBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == ViewModel.TextDiffLanguage.ToString());
+        TextDiffSimilarBox.IsChecked = ViewModel.TextDiffShowSimilar;
         _syncingOptions = false;
+    }
+
+    // ---- So chữ ----
+
+    private void TextDiffLanguageBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncingOptions && TextDiffLanguageBox.SelectedItem is ComboBoxItem { Tag: string tag } && Enum.TryParse<FormLanguage>(tag, out var language))
+        {
+            ViewModel.TextDiffLanguage = language;
+        }
+    }
+
+    private void TextDiffSimilarBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_syncingOptions)
+        {
+            ViewModel.TextDiffShowSimilar = TextDiffSimilarBox.IsChecked == true;
+        }
+    }
+
+    /// <summary>Chế độ 2 ô trái / phải (A | B): Cạnh nhau và So chữ.</summary>
+    private bool IsSplit => ViewModel.Mode is ViewMode.SideBySide or ViewMode.TextDiff;
+
+    /// <summary>Vị trí vẽ ảnh B: So chữ dùng độ lệch của chính lượt so chữ (khung chữ B tính theo đó).</summary>
+    private SKPointI DrawOffsetB => ViewModel.Mode == ViewMode.TextDiff && ViewModel.TextDiffResult is { } r ? r.OffsetB : ViewModel.OffsetB;
+
+    /// <summary>Chế độ So chữ: khung màu quanh đoạn chữ khác - ô trái khung theo ảnh A, ô phải theo ảnh B. Mục đang
+    /// chọn: khung vàng đậm. Số thứ tự khi ít mục (nhiều thì rối) hoặc mục đang chọn.</summary>
+    private void DrawTextDiffBoxes(SKCanvas canvas, int pane)
+    {
+        if (ViewModel.TextDiffResult is not { } result)
+        {
+            return;
+        }
+        var items = ViewModel.VisibleTextDiffItems;
+        float px = 1 / _zoom;
+        using var strong = new SKPaint { Color = new SKColor(0xFF, 0xC1, 0x07), Style = SKPaintStyle.Stroke, StrokeWidth = 3 * px, IsAntialias = true };
+        using var box = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 1.5f * px, IsAntialias = true };
+        using var fill = new SKPaint();
+        using var tagFill = new SKPaint { IsAntialias = true };
+        using var text = new SKPaint { Color = SKColors.White, IsAntialias = true, TextSize = 11 * px, Typeface = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold) };
+        foreach (var item in items)
+        {
+            var segment = pane == 0 ? item.A : item.B;
+            if (segment is null)
+            {
+                continue;
+            }
+            var bounds = SKRect.Inflate(segment.Bounds, 2, 2);
+            if (pane == 1)
+            {
+                bounds.Offset(result.OffsetB.X, result.OffsetB.Y);
+            }
+            var color = SKColor.Parse(CompareViewModel.TextDiffColor(item.Kind));
+            fill.Color = color.WithAlpha(40);
+            box.Color = color;
+            tagFill.Color = color;
+            canvas.DrawRect(bounds, fill);
+            bool selected = item.Number == ViewModel.HighlightedItem;
+            canvas.DrawRect(bounds, selected ? strong : box);
+            if (items.Count <= 80 || selected)
+            {
+                string label = item.Number.ToString();
+                var tag = SKRect.Create(bounds.Left, bounds.Top - 14 * px, text.MeasureText(label) + 6 * px, 14 * px);
+                if (tag.Top < 0)
+                {
+                    tag.Offset(0, bounds.Height + 14 * px);
+                }
+                canvas.DrawRect(tag, tagFill);
+                canvas.DrawText(label, tag.Left + 3 * px, tag.Bottom - 3.5f * px, text);
+            }
+        }
     }
 
     // ---- Tìm chữ ----
@@ -237,7 +311,10 @@ public sealed partial class MainWindow : Window
             case nameof(CompareViewModel.TextTarget) when ViewModel.Mode == ViewMode.Text && ContentBounds() != _lastFitBounds:
                 FitToWindow();
                 break;
-            case nameof(CompareViewModel.Align) or nameof(CompareViewModel.TextUseA):
+            case nameof(CompareViewModel.TextDiffResult) when ViewModel.Mode == ViewMode.TextDiff && ContentBounds() != _lastFitBounds:
+                FitToWindow();
+                break;
+            case nameof(CompareViewModel.Align) or nameof(CompareViewModel.TextUseA) or nameof(CompareViewModel.TextDiffLanguage):
                 SyncOptionControls();
                 break;
         }
@@ -260,13 +337,115 @@ public sealed partial class MainWindow : Window
         var pane = CurrentPanes()[0];
         var box = item.Bounds;
         // Tìm chữ: tối đa 300% - 1 từ ngắn phóng 800% thì vỡ hạt, mất chữ xung quanh.
-        float maxZoom = ViewModel.Mode == ViewMode.Text ? 3f : 8f;
+        float maxZoom = ViewModel.Mode is ViewMode.Text or ViewMode.TextDiff ? 3f : 8f;
         float zoom = Math.Clamp(Math.Min(pane.Width * 0.4f / Math.Max(1, box.Width), pane.Height * 0.4f / Math.Max(1, box.Height)), MinZoom, maxZoom);
         _zoom = zoom;
         _pan = new SKPoint(pane.Width / 2 - (box.Left + box.Width / 2f) * zoom, pane.Height / 2 - (box.Top + box.Height / 2f) * zoom);
         _fitted = false;
         UpdateZoomText();
         Canvas.Invalidate();
+    }
+
+    /// <summary>Mục bị bấm chuột phải - menu Copy làm việc trên mục này (không phụ thuộc mục đang chọn).</summary>
+    private ResultItem? _menuItem;
+
+    private void RegionList_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if ((e.OriginalSource as FrameworkElement)?.DataContext is not ResultItem item)
+        {
+            return; // bấm vào chỗ trống của danh sách
+        }
+        _menuItem = item;
+        RegionList.SelectedItem = item;
+        ((MenuFlyout)RegionList.Resources["RegionMenu"]).ShowAt(RegionList, e.GetPosition(RegionList));
+        e.Handled = true;
+    }
+
+    /// <summary>1 dòng để copy: So chữ → các cột tách Tab (dán Excel ra đúng cột); chế độ khác → "số  nội dung".</summary>
+    private string ItemLine(ResultItem item) =>
+        ViewModel.TextDiffItemAt(item.Number) is { } t ? Engine.TextDiffReport.TsvLine(t) : $"{item.Number}\t{item.Text}";
+
+    private void CopyItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_menuItem is { } item)
+        {
+            CopyToClipboard(ItemLine(item), $"Đã copy mục {item.Number}.");
+        }
+    }
+
+    private void CopyAllItems_Click(object sender, RoutedEventArgs e) => CopyAllItems();
+
+    private void CopyTextDiff_Click(object sender, RoutedEventArgs e) => CopyAllItems();
+
+    private void CopyAllItems()
+    {
+        if (ViewModel.Items.Count == 0)
+        {
+            return;
+        }
+        string text = ViewModel.Mode == ViewMode.TextDiff
+            ? Engine.TextDiffReport.Tsv(ViewModel.VisibleTextDiffItems)
+            : string.Join("\r\n", ViewModel.Items.Select(ItemLine));
+        CopyToClipboard(text, $"Đã copy {ViewModel.Items.Count} mục (tách cột bằng Tab - dán được vào Excel).");
+    }
+
+    private void CopyToClipboard(string text, string status)
+    {
+        var package = new DataPackage();
+        package.SetText(text);
+        Clipboard.SetContent(package);
+        ViewModel.StatusText = status;
+    }
+
+    private async void SaveTextDiffCsv_Click(object sender, RoutedEventArgs e)
+    {
+        if (!ViewModel.CanExportTextDiff)
+        {
+            return;
+        }
+        try
+        {
+            string csv = Engine.TextDiffReport.Csv(ViewModel.VisibleTextDiffItems);
+            if (await _fileService.SaveCsvAsync(csv, Hwnd, ReportBaseName() + " so-chu") is { } path)
+            {
+                ViewModel.StatusText = $"Đã lưu: {path}";
+                Log.LogInformation("Lưu CSV So chữ {Path}", path);
+            }
+        }
+        catch (Exception ex)
+        {
+            ViewModel.StatusText = $"Không lưu được: {ex.Message}";
+            Log.LogError(ex, "Không lưu được CSV So chữ");
+        }
+    }
+
+    private async void SaveTextDiffHtml_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.TextDiffResult is not { } result || ViewModel.ImageA is not { } a || ViewModel.ImageB is not { } b)
+        {
+            return;
+        }
+        try
+        {
+            var items = ViewModel.VisibleTextDiffItems;
+            string reader = ViewModel.TextDiffReaderName;
+            ViewModel.StatusText = "Đang tạo báo cáo…";
+            string html = await Task.Run(() => Engine.TextDiffReport.Html(a.Name, a.Bitmap, b.Name, b.Bitmap, result, items, reader));
+            if (await _fileService.SaveHtmlAsync(html, Hwnd, ReportBaseName() + " so-chu") is { } path)
+            {
+                ViewModel.StatusText = $"Đã xuất báo cáo: {path}";
+                Log.LogInformation("Xuất báo cáo So chữ {Path}", path);
+            }
+            else
+            {
+                ViewModel.StatusText = "Đã huỷ xuất báo cáo.";
+            }
+        }
+        catch (Exception ex)
+        {
+            ViewModel.StatusText = $"Không xuất được báo cáo: {ex.Message}";
+            Log.LogError(ex, "Không xuất được báo cáo So chữ");
+        }
     }
 
     private string ReportBaseName() =>
@@ -459,7 +638,7 @@ public sealed partial class MainWindow : Window
         }
         else if (files.Count == 1)
         {
-            bool slotA = ViewModel.Mode == ViewMode.SideBySide
+            bool slotA = IsSplit
                 ? e.GetPosition(Canvas).X < Canvas.ActualWidth / 2
                 : ViewModel.NextSlotIsA;
             await LoadFileAsync(slotA, files[0]);
@@ -485,11 +664,11 @@ public sealed partial class MainWindow : Window
     {
         if (sender.SelectedItem?.Tag is string tag && Enum.TryParse<ViewMode>(tag, out var mode))
         {
-            bool wasSplit = ViewModel.Mode == ViewMode.SideBySide;
+            bool wasSplit = IsSplit;
             ViewModel.Mode = mode;
             // Sự kiện có thể tới lúc InitializeComponent chưa gán xong các control bên dưới.
             if (OverlayOptions is null || SwipeHint is null || DiffOptions is null || ResultPanel is null || FindOptions is null
-                || TextOptions is null || ExportButtons is null)
+                || TextOptions is null || TextDiffOptions is null || ExportButtons is null || TextDiffExportButtons is null)
             {
                 return;
             }
@@ -498,11 +677,13 @@ public sealed partial class MainWindow : Window
             DiffOptions.Visibility = mode == ViewMode.Diff ? Visibility.Visible : Visibility.Collapsed;
             FindOptions.Visibility = mode == ViewMode.Find ? Visibility.Visible : Visibility.Collapsed;
             TextOptions.Visibility = mode == ViewMode.Text ? Visibility.Visible : Visibility.Collapsed;
-            ResultPanel.Visibility = mode is ViewMode.Diff or ViewMode.Find or ViewMode.Text ? Visibility.Visible : Visibility.Collapsed;
+            TextDiffOptions.Visibility = mode == ViewMode.TextDiff ? Visibility.Visible : Visibility.Collapsed;
+            ResultPanel.Visibility = mode is ViewMode.Diff or ViewMode.Find or ViewMode.Text or ViewMode.TextDiff ? Visibility.Visible : Visibility.Collapsed;
             ExportButtons.Visibility = mode == ViewMode.Diff ? Visibility.Visible : Visibility.Collapsed; // xuất = ảnh khác biệt
+            TextDiffExportButtons.Visibility = mode == ViewMode.TextDiff ? Visibility.Visible : Visibility.Collapsed; // xuất = danh sách chữ khác
             // Giữa các chế độ 1 ô cùng khung nội dung giữ nguyên zoom / vị trí để soi cùng 1 chỗ; Cạnh nhau ↔ 1 ô (bề
             // rộng ô xem đổi gấp đôi) hoặc khung nội dung đổi (ảnh ghép, ảnh được tìm) thì vừa cửa sổ lại.
-            if (wasSplit != (mode == ViewMode.SideBySide) || ContentBounds() != _lastFitBounds)
+            if (wasSplit != IsSplit || ContentBounds() != _lastFitBounds)
             {
                 FitToWindow();
             }
@@ -517,7 +698,7 @@ public sealed partial class MainWindow : Window
     /// <summary>Các ô xem trên canvas (pixel thiết bị): Cạnh nhau = 2 ô trái / phải, còn lại 1 ô.</summary>
     private SKRect[] Panes(float width, float height)
     {
-        if (ViewModel.Mode != ViewMode.SideBySide)
+        if (!IsSplit)
         {
             return [SKRect.Create(width, height)];
         }
@@ -552,7 +733,7 @@ public sealed partial class MainWindow : Window
         }
         if (ViewModel.ImageB is { } b)
         {
-            var rb = SKRect.Create(ViewModel.OffsetB.X, ViewModel.OffsetB.Y, b.Bitmap.Width, b.Bitmap.Height);
+            var rb = SKRect.Create(DrawOffsetB.X, DrawOffsetB.Y, b.Bitmap.Width, b.Bitmap.Height);
             bounds = bounds.IsEmpty ? rb : SKRect.Union(bounds, rb);
         }
         return bounds;
@@ -766,7 +947,7 @@ public sealed partial class MainWindow : Window
             CursorText.Text = $"x {x,5}  y {y,5}   (toạ độ ảnh ghép)";
             return;
         }
-        var offset = ViewModel.OffsetB;
+        var offset = DrawOffsetB;
         CursorText.Text = $"x {x,5}  y {y,5}   A {ColorAt(ViewModel.ImageA, x, y)}   B {ColorAt(ViewModel.ImageB, x - offset.X, y - offset.Y)}";
     }
 
@@ -810,6 +991,10 @@ public sealed partial class MainWindow : Window
                     break;
                 case ViewMode.SideBySide:
                     DrawImage(canvas, i == 0 ? ViewModel.ImageA : ViewModel.ImageB, i == 0 ? SKPointI.Empty : ViewModel.OffsetB, imagePaint);
+                    break;
+                case ViewMode.TextDiff:
+                    DrawImage(canvas, i == 0 ? ViewModel.ImageA : ViewModel.ImageB, i == 0 ? SKPointI.Empty : DrawOffsetB, imagePaint);
+                    DrawTextDiffBoxes(canvas, i);
                     break;
                 case ViewMode.Overlay:
                     DrawImage(canvas, ViewModel.ImageA, SKPointI.Empty, imagePaint);
@@ -936,7 +1121,7 @@ public sealed partial class MainWindow : Window
     {
         float s = RasterScale;
         using var font = new SKPaint { IsAntialias = true, TextSize = 13 * s, Typeface = SKTypeface.FromFamilyName("Segoe UI") };
-        bool split = ViewModel.Mode == ViewMode.SideBySide;
+        bool split = IsSplit;
 
         void Tag(string text, SKColor color, float x, float y)
         {

@@ -133,3 +133,143 @@ dev chỉ có gói OCR tiếng Anh / tiếng Nhật).
   vàng; Ctrl+F → sang Tìm chữ, con trỏ ở ô tìm; Ctrl+V trong ô tìm dán chữ, ô B vẫn trống; bấm kết quả → phóng
   tới; bỏ ảnh → "Chưa có ảnh"; dán ảnh 1100 × 10.000 → "Đang đọc chữ… 24%", xong 3,5 s / 619 dòng, "#1030" →
   4 chỗ. Publish Release như `Publish-AppSuite.ps1` → có `tessdata\`, `x64\` native, VC++ runtime (không có `x86\`).
+
+## Bổ sung: chế độ So chữ + cảnh báo lệch bố cục — 2026-10-01
+
+### Bối cảnh
+So 2 ảnh chụp cùng 1 màn hình nghiệp vụ tiếng Nhật ở 2 môi trường (server cũ chế độ IE ↔ localhost Edge): font và
+độ rộng ô khác → bố cục xê dịch cục bộ, tự căn 1 độ lệch chung (2, 10) không bù được → chế độ Khác biệt ra **1 vùng
+phủ 99% ảnh** (pixel giống 74,6%, SSIM 0,29) — đúng kỹ thuật nhưng không chỉ ra chỗ khác thật. Câu hỏi thật: chữ /
+giá trị trên màn hình có khác không. Yêu cầu: không đổi kết quả của các chế độ có sẵn; hỗ trợ tiếng Nhật, Việt, Anh;
+có kiểm tra "khác màu chữ"; ảnh thật của người dùng chỉ dùng trong Windows Sandbox, không commit.
+
+### Quyết định
+- **Cảnh báo (Khác biệt)**: 1 vùng phủ ≥ 60% ảnh A → thêm 1 dòng nhắc thử *So chữ*. Chỉ thêm chữ — mọi con số giữ
+  nguyên (kiểm chứng bằng bản cũ / mới trên cùng cặp ảnh).
+- **Chế độ So chữ mới** (tab thứ 7), không sửa engine cũ — file mới `FormPreprocess`, `FormTextReader`, `TextDiff`,
+  `Services/FormReaders`.
+- **OCR tiếng Nhật — đo trước khi chọn** (2 ảnh, 155 nhãn / giá trị làm đáp án; "nhất quán" = % đoạn của A đọc ra
+  giống hệt ở B — quan trọng hơn đúng tuyệt đối khi so):
+
+  | Cấu hình | Đúng A / B | Nhất quán |
+  |---|---|---|
+  | Tesseract jpn fast, cả trang (như Tìm chữ) | 41% / 50% | — |
+  | Windows OCR ja, cả trang | 36–40% / 43–61% | — |
+  | Tesseract jpn fast + xử lý trước, từng cụm | 62% / 74% | 42% |
+  | Tesseract jpn best + xử lý trước, từng cụm | 68% / 77% (chậm 2,5×, 13,7 MB) | 48% |
+  | **Windows OCR ja + xử lý trước, cả trang** | **75% / 85%**, ~0,5 s | **66%** |
+
+  → **Windows OCR "ja"** (có sẵn trên Windows tiếng Nhật, không thêm dữ liệu); máy không có gói OCR tiếng Nhật →
+  **Tesseract jpn fast** làm dự phòng (+2,4 MB `Ocr\tessdata\jpn.traineddata`); tiếng Việt / Anh: **Tesseract vie**
+  (Windows OCR không có tiếng Việt). Windows OCR cần WinRT → `WindowsFormReader` ở `Services/`, Engine vẫn test được.
+- **Xử lý trước** (`FormPreprocess`) là yếu tố quyết định: phóng ×3 nội suy song tuyến → đen trắng Otsu → xoá đoạn
+  mực ngang ≥ 40 px / dọc ≥ 16 px (viền ô). Trước đó viền ô làm OCR chia dòng sai, số trong ô thành rác ("23ロ1ロ7").
+  Đã thử và bỏ: **ngưỡng cục bộ** (để giữ chữ xám) — đúng không hơn, ghép được ít đoạn giống hơn (87–121 so với 130),
+  kết hợp Otsu + cục bộ = như Otsu; **phóng không nội suy** (cho font bitmap của ảnh cũ) — kém hẳn (93/104 so với
+  116/131). Windows OCR đọc cả trang đã xử lý; Tesseract đọc **từng cụm chữ** (PSM SingleLine) — đọc cả trang chỉ 9%
+  nhất quán.
+- **Ghép đoạn (`TextDiff`)**:
+  - Tách dòng OCR thành đoạn ở khoảng trống > 0,8 chiều cao chữ; hiển thị nối ký tự CJK không dấu cách.
+  - **Khoá so**: NFKC (toàn / nửa độ rộng), bỏ khoảng trắng + vết viền (`| [ ] _`), gộp ký tự OCR hay nhầm
+    (`0 O ロ 口 〇`, `1 l I`, `- ー 一`, `カ/力`, `エ/工`, `ニ/二`, `,`/`.`… — `,`/`.` thêm sau khi thử: Tesseract đọc
+    "1,360,000" thành "1.360.000").
+  - **Độ lệch cục bộ**: đoạn có khoá duy nhất ở cả 2 ảnh làm mốc; vị trí dự đoán ở B = trung bình có trọng số 4 mốc
+    gần nhất (B trôi tới ~50 px ở cuối trang — 1 độ lệch chung không đủ).
+  - Thứ tự ghép: mốc → giống hệt gần chỗ dự đoán → 1 đoạn ↔ 2–4 đoạn liền nhau ở ảnh kia (OCR cắt khác) → gần giống
+    (Levenshtein ≥ 0,5) → **cùng đúng chỗ + gần nhất của nhau** (chữ khác hẳn, vd "2圓" ↔ "200": 1 mục đổi chữ thay
+    vì 2 mục chỉ-A + chỉ-B; 63 → 57 mục) → còn lại chỉ A / chỉ B.
+  - **Gần giống** (ẩn mặc định): lệch ≤ 1/5 độ dài mà **chữ số giống hệt** — nhãn bị OCR đọc lệch. Chữ số khác luôn
+    là đổi chữ (giá trị là thứ cần bắt). Ban đầu là "lệch đúng 1 ký tự" — trên ảnh thật còn quá nhiều nhãn dài lệch
+    2–3 ký tự bị báo đổi.
+  - **Khác màu chữ**: cặp giống chữ → màu lõi nét (nền = màu hay gặp nhất trong khung; nét = lệch nền > 40; lấy 30%
+    pixel lệch nhiều nhất — bỏ viền khử răng cưa làm chữ đen trông như xám); khác khi chênh độ sáng ≥ 45 hoặc RGB ≥ 80.
+- **Giao diện**: 2 ô A | B (như Cạnh nhau, B vẽ theo độ lệch của lượt so chữ), khung màu theo loại (đỏ đổi, xanh chỉ
+  A, cam chỉ B, tím màu, xám gần giống); chọn ngôn ngữ; *Hiện gần giống*; bấm mục → phóng ≤ 300% tới khung bao cả 2
+  phía. OCR cache theo ảnh + ngôn ngữ; *Vùng bỏ qua* (vẽ ở Khác biệt) áp dụng luôn. Bảng tóm tắt viết ngắn — bản đầu
+  ghi cách cài gói OCR ngay trong bảng, đẩy danh sách xuống chỉ còn 1 mục (cách cài chuyển sang README).
+
+### Kiểm chứng
+- **Unit test — Windows Sandbox** (exe xUnit self-contained): 61/61 PASS (40 cũ + 21 mới: khoá so, tách đoạn, bố cục
+  trôi, đổi giá trị, gần giống vs đổi chữ số, chỉ A / chỉ B, cắt đoạn khác nhau, nhãn lặp, vùng bỏ qua, màu xám ↔ đen,
+  xoá viền ô, tách cụm, Tesseract đọc form tiếng Nhật / tiếng Việt, đầu-cuối phát hiện giá trị bị đổi).
+- **Giao diện — Windows Sandbox** (UI Automation, cặp ảnh thật của người dùng): bản cũ ↔ bản mới tab Khác biệt cùng
+  số (1 vùng, 74,644%, SSIM 0,2859, lệch (2, 10), 11.862 px) + dòng cảnh báo "1 vùng phủ 99% ảnh"; tab So chữ tiếng
+  Nhật (sandbox không có gói Windows OCR → Tesseract dự phòng, ghi rõ trên bảng): ~2 s, 123 chỗ khác / 61 giống;
+  tiếng Việt / English chạy hết; bấm mục → phóng tới; quay lại Khác biệt số không đổi; không lỗi Event Log.
+- **Nhánh Windows OCR — chạy app trên máy dev** (sandbox không có gói OCR và không bật mạng để cài): 54 chỗ khác hiện
+  (+3 gần giống ẩn), 130 đoạn giống / 181–177 đoạn, 6 khác màu chữ thật (ô bị khoá chữ #A0A0A0 ở A ↔ chữ đen ở B),
+  đọc ~0,5 s / ảnh. Nhiễu còn lại chủ yếu do font bitmap của ảnh cũ bị đọc sai ("230川7") và thanh tiêu đề / URL
+  (dùng Vùng bỏ qua).
+
+### Sửa: chữ hiển thị sai trong danh sách So chữ — 2026-10-01 (chiều)
+Người dùng chạy thử trên cặp ảnh thật: nhiều mục "đổi chữ" hiện chữ rác (`230川7` → `230107`, `厓途区分商印こ`,
+`商品コード937間-029-圓02`) — OCR cả trang đọc sai font bitmap của ảnh cũ (chế độ IE), chữ thật giống hệt.
+- **Đọc lại riêng từng chỗ nghi khác** (`Engine/TextDiffVerifier`): cắt vùng ở A và B (mục chỉ 1 phía: vùng dự đoán ở
+  ảnh kia, cắt rộng hơn), đọc lại ở {×3, ×4} × {ngưỡng thường, 225} bằng bộ đọc chính + Tesseract jpn (font mà Windows
+  OCR đọc sai thì Tesseract có khi đúng). Có cách đọc trùng ở 2 phía → bỏ mục. Chữ trùng phải na ná chữ của chính mục
+  đó (giống ≥ 1/2) — test với bộ đọc giả cho thấy vùng cắt dính nhãn bên cạnh, 2 phía cùng đọc ra nhãn đó, sẽ xoá nhầm
+  1 thay đổi thật. Còn khác: hiện cặp cách đọc sát nhau nhất trong các cách đọc na ná chữ gốc. Chạy song song (Tesseract
+  có pool; Windows OCR khoá vì tài liệu không nói an toàn đa luồng): 5,0 s → 1,5 s.
+- **Ngưỡng đen trắng kẹp [185, 200]** (`FormPreprocess`): chữ xám của ô bị khoá (#A0A0A0, nét 1 px) bị Otsu thuần xoá
+  ở cả trang; vùng cắt nhỏ chỉ gồm nền trắng + nền trang xanh nhạt thì Otsu biến nền thành mực. Ngưỡng 225 khi đọc lại
+  để nét xám mảnh không đứt. Phóng ×3 không nội suy đã thử - kém hơn.
+- Kết quả trên cặp ảnh thật (Windows OCR): 158 đoạn giống (130 trước), **26 chỗ khác** (54 trước) gồm 9 khác màu chữ
+  thật (6 trước) và 7 chỗ thanh tiêu đề / URL; đọc ~0,5 s / ảnh + kiểm tra lại ~1,5 s. Nhánh Tesseract (sandbox): 75 chỗ
+  (123 trước), ~4 s tổng. Unit test 68/68 trong Sandbox; tab Khác biệt vẫn cùng số với bản cũ.
+
+### Sửa: ghép nhầm nhãn + giá trị ô, ô bị cắt mảnh — 2026-10-02
+Người dùng báo trên cặp ảnh thật: `受注区分` ↔ `受注区分受注` + 1 mục chỉ-A `三` (ghép nhầm), `ページ数` ra 2 mục, và
+`使用インキ耐光24H` / `色見本指定その他` dính cả nhãn lẫn giá trị combobox. Nguyên nhân: Windows OCR đọc cả trang trên
+ảnh đã xoá viền → nhãn sát combobox chỉ cách vài px, bị gộp 1 đoạn.
+- **Tách đoạn tại viền ô** (`TextDiff.Segments` nhận ảnh gốc): trong khoảng trống giữa 2 từ có 1 cột mà ≥ 80% số dòng
+  (chiều cao chữ + 2 px mỗi phía) đổi độ sáng ≥ 24 so với cột trái → viền / mép ô → tách. Phần nới 2 px loại nét dọc
+  của ký tự mà khung từ OCR bỏ sót (đã gặp: `水性ﾆｽ版1` bị tách ở nửa trái chữ 版 khi chưa nới).
+- **Nhập mảnh lẻ vào cặp** (bước 6 của `Compare`): đoạn chưa ghép nằm trong khung đoạn của 1 cặp chữ khác nhau ở ảnh
+  kia và sát đoạn cùng cặp ở ảnh mình → nhập vào cặp (A `へ` + `ゾ数` ↔ B `へ叮ゾ数` → 1 mục gần giống, ẩn mặc định).
+- Ảnh thật (Windows OCR): 158 → 184 đoạn giống, 28 → 26 mục (3 gần giống, ẩn); `受注区分`, `使用インキ`, `色見本指定`
+  giờ giống, chỉ còn giá trị: `三 → 受注` (A: chữ trắng trên nền chọn xanh, đen trắng hoá làm mất chữ), `耐 → 耐光2`
+  (A: chữ xám đọc thiếu). Unit test 70/70.
+
+### Sửa: chữ xám của ô bị khoá báo "đổi chữ" thay vì "khác màu" — 2026-10-02
+Người dùng báo tiếp các mục `商印そ → 商印その他`, `三 → 受注`, `宮挙壱 → 宮業売上`, `耐 → 耐光2`, `品仕丿 → 【コ`,
+chỉ-B `鋼サイス。`. Soi ảnh cắt: trừ mục cuối, A đều là ô bị khoá chữ xám #A0A0A0 nét 1 px, B chữ đen - chữ giống nhau,
+chỉ khác màu; OCR cả trang bắt được 1 phần chữ, khung đoạn hụt → đọc lại vùng cắt đó kiểu gì cũng thiếu chữ.
+- **Vùng đọc lại nới bằng khung phía kia** (`TextDiffVerifier.Region`): nới đều 2 bên tới chiều rộng / cao phía kia.
+- **Chữ chung "chứa trọn"** (`Common`): vùng nới hay dính nhãn bên cạnh (`区分商印その他` ↔ `商印その他`) → 1 cách đọc
+  nằm trọn trong cách đọc phía kia (≥ 3 ký tự) cũng tính là giống, với 2 điều kiện: phần dư không có chữ số (`200` ↔
+  `1200` là đổi thật) và phần dư nằm ở phía có vùng được nới (`商印その` ↔ `商印その他` mà chữ dư ở phía vốn rộng hơn là
+  chữ thêm thật - có test).
+- **Đọc lại giống thì vẫn so màu** trong khung gốc của mục → "khác màu chữ" thay vì bỏ mục. Màu nét sáng ≥ 200 không
+  tính (khung nhỏ trên nút bị mờ đo trúng viền nổi trắng: `商品仕入` #A0A0A0 → #E4EBEE, đã gặp).
+- `Closest`: có cặp cách đọc chỉ lệch kiểu OCR (cùng chữ số) thì ưu tiên → gần giống (`FSC認証製品` đọc ra `JF60…` ↔ `JFS0…`).
+- Khoá so bỏ thêm ký tự viền nút `「」【】〔〕\` (`「その他金額」` ↔ `その他金額\`).
+- Đã thử và bỏ: so khớp mờ (Levenshtein đoạn con) cho mục chỉ-1-phía - không cứu được `胴ｻｲｽﾞ` (A `胴サれ。`, B `鋼サイス。`,
+  lệch 3/5) mà tăng rủi ro ẩn nhầm.
+- Ảnh thật, Windows OCR: 26 mục → 26 nhưng **khác màu chữ 9 → 15** (thêm 商印その他, 受注, 過不足不可, 営業売上, 検査S1,
+  耐光24H), đổi chữ 8 → 1 (chỉ còn URL thanh địa chỉ), 商品仕入 / その他金額 hết báo. Còn sai: chỉ-B `鋼サイス。`, chỉ-A
+  `物`, và khung trình duyệt. Sandbox (Tesseract): 71 → 56 chỗ khác, khác màu 1 → 9; tab Khác biệt cùng số; unit test
+  72/72 ở cả máy thật và Sandbox.
+
+### Sửa: mục chỉ-1-phía mà OCR cả trang bỏ sót phía kia — 2026-10-02
+Người dùng báo chỉ-A `物` và chỉ-B `鋼サイス。`. Thật ra: ô `枚` ở cả 2 ảnh (A xám đọc thành `物`, B đen OCR cả trang
+không đọc ra), nhãn `胴ｻｲｽﾞ` ở cả 2 ảnh (A không đọc ra, B đọc sai). Kiểm tra cũ chỉ tìm chữ cả-trang của phía có
+(≥ 2 ký tự) trong vùng dự đoán → không cứu được chữ đọc sai.
+- `CheckOneSided`: vùng dự đoán đọc cả cắt sát lẫn cắt rộng; thêm điều kiện: đọc lại riêng chính mục ra đúng chữ mà vùng
+  dự đoán cắt sát đọc ra (chỉ cắt sát - cắt rộng dễ dính ô bên cạnh). Giống thì so màu như mục 2 phía → "khác màu".
+  Nhờ so màu, thêm 3 chỗ khác màu thật trước đây bị bỏ không so: `なし`, `A4縦`, `無線綴`.
+- **So hình nét chữ** (`SameShape`, không OCR) khi OCR không chốt được: mặt nạ nét (lệch nền ≥ 40% độ lệch lớn nhất →
+  chữ xám lẫn đen), vùng tự nới khi nét chạm mép (dự đoán `枚` lệch 5 px), dóng cột bằng quy hoạch động cho độ lệch trôi
+  ±1 px mỗi cột (2 trình duyệt cùng font nhưng khoảng cách chữ lệch 1 px cộng dồn; `ｲ` `ｽ` dính nhau ở A nên tách theo
+  cột trống - đã thử - không được), pixel lệch ≤ 30% số pixel nét. Lấy chữ hiển thị từ phía nét đậm hơn.
+- Ảnh thật, Windows OCR: `枚` → khác màu, `胴ｻｲｽﾞ` hết báo; khác màu 15 → 19; còn lại chỉ khung trình duyệt (4 chỉ-A
+  vẫn giữ - so hình không ẩn nhầm) + 1 URL đổi. Sandbox (Tesseract): 56 → 45 chỗ khác (chỉ-A 9 → 3); tab Khác biệt cùng
+  số; unit test 74/74 cả 2 nơi.
+
+### Bổ sung: xuất kết quả So chữ + menu chuột phải — 2026-10-02
+- `Engine/TextDiffReport`: cột chung #, Loại, Chữ A, Chữ B, Ghi chú, Vị trí A, Vị trí B (mục 1 phía: vị trí phía kia
+  = chỗ dự đoán, ghi `≈`). Tab (clipboard → dán Excel ra đúng cột), CSV RFC 4180 lưu kèm BOM (Excel mở đúng chữ Nhật /
+  Việt), HTML 1 file dùng lại `HtmlReport.CropCell` (ảnh cắt A | B mỗi mục). Chỉ xuất mục đang hiện (*Hiện gần giống*).
+- UI: 3 nút Copy / Lưu CSV / Xuất báo cáo HTML (thay chỗ nút xuất ảnh khác biệt khi ở So chữ); chuột phải 1 mục
+  (`RightTapped` → `MenuFlyout`, mọi chế độ): Copy mục này / Copy cả danh sách — So chữ ra dòng Tab, chế độ khác `số⇥chữ`.
+- Kiểm: unit test 77/77; GUI trong Sandbox (job tự động): menu hiện đúng 2 mục, clipboard đúng 1 dòng / 46 dòng, nút
+  Copy = menu, hộp thoại lưu (gõ đường dẫn) → CSV có BOM, HTML 45 dòng bảng + ảnh cắt.

@@ -118,6 +118,7 @@
                 <SelectorBarItem Text="Thanh trượt" Tag="Swipe" ToolTipService.ToolTip="Kéo vạch chia: trái là A, phải là B" />
                 <SelectorBarItem Text="Tìm ảnh con" Tag="Find" ToolTipService.ToolTip="Tìm ảnh nhỏ hơn (vd 1 nút, 1 icon cắt ra) trong ảnh lớn hơn" />
                 <SelectorBarItem Text="Tìm chữ" Tag="Text" ToolTipService.ToolTip="Đọc chữ trong ảnh (OCR tiếng Việt / tiếng Anh) và tìm chữ trong đó - chỉ cần 1 ảnh" />
+                <SelectorBarItem Text="So chữ" Tag="TextDiff" ToolTipService.ToolTip="Đọc chữ cả 2 ảnh và liệt kê chữ / giá trị khác nhau - cho 2 ảnh cùng màn hình chụp ở môi trường khác (font, trình duyệt) mà so pixel tô đỏ gần hết" />
             </SelectorBar>
             <!-- Tuỳ chọn của chế độ đang chọn; cửa sổ hẹp thì cuộn ngang được (rê chuột lên để hiện thanh cuộn). -->
             <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled"
@@ -179,6 +180,18 @@
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy toàn bộ chữ" /></StackPanel>
                 </Button>
             </StackPanel>
+            <StackPanel x:Name="TextDiffOptions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Visibility="Collapsed">
+                <ComboBox x:Name="TextDiffLanguageBox" SelectionChanged="TextDiffLanguageBox_SelectionChanged" VerticalAlignment="Center" MinWidth="170"
+                          AutomationProperties.Name="Ngôn ngữ chữ"
+                          ToolTipService.ToolTip="Ngôn ngữ chữ trên màn hình - chọn đúng thì đọc chính xác hơn">
+                    <ComboBoxItem Content="Tiếng Nhật" Tag="Japanese" ToolTipService.ToolTip="Windows OCR (tiếng Nhật); máy chưa có gói OCR tiếng Nhật thì dùng Tesseract" />
+                    <ComboBoxItem Content="Tiếng Việt / English" Tag="VietnameseEnglish" ToolTipService.ToolTip="Tesseract - đọc cả tiếng Việt lẫn tiếng Anh" />
+                </ComboBox>
+                <CheckBox x:Name="TextDiffSimilarBox" Content="Hiện gần giống" Checked="TextDiffSimilarBox_Changed" Unchecked="TextDiffSimilarBox_Changed" MinWidth="0"
+                          ToolTipService.ToolTip="Hiện cả các chỗ chỉ lệch 1 ký tự - thường do OCR đọc lệch chứ không phải khác thật" />
+                <TextBlock VerticalAlignment="Center" Opacity="0.75"
+                           Text="Đỏ: đổi chữ · Xanh: chỉ A · Cam: chỉ B · Tím: khác màu chữ" />
+            </StackPanel>
             </Grid>
             </ScrollViewer>
         </Grid>
@@ -238,9 +251,45 @@
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE9F9;" FontSize="14" /><TextBlock Text="Xuất báo cáo HTML" /></StackPanel>
                         </Button>
                     </Grid>
+                    <!-- Xuất kết quả So chữ: danh sách (copy dán Excel / CSV) hoặc báo cáo HTML kèm ảnh cắt A | B -->
+                    <Grid x:Name="TextDiffExportButtons" Grid.Row="2" ColumnSpacing="4" RowSpacing="4" Margin="0,4,0,0" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Button Click="CopyTextDiff_Click" IsEnabled="{x:Bind ViewModel.CanExportTextDiff, Mode=OneWay}" HorizontalAlignment="Stretch"
+                                ToolTipService.ToolTip="Copy cả danh sách (tách cột bằng Tab - dán thẳng vào Excel)">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy" /></StackPanel>
+                        </Button>
+                        <Button Grid.Column="1" Click="SaveTextDiffCsv_Click" IsEnabled="{x:Bind ViewModel.CanExportTextDiff, Mode=OneWay}" HorizontalAlignment="Stretch"
+                                ToolTipService.ToolTip="Lưu danh sách thành file CSV (mở bằng Excel)">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Lưu CSV" /></StackPanel>
+                        </Button>
+                        <Button Grid.Row="1" Grid.ColumnSpan="2" Click="SaveTextDiffHtml_Click" IsEnabled="{x:Bind ViewModel.CanExportTextDiff, Mode=OneWay}"
+                                HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"
+                                ToolTipService.ToolTip="Báo cáo HTML 1 file: bảng các chỗ khác kèm ảnh cắt A | B từng chỗ - mở bằng trình duyệt">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE9F9;" FontSize="14" /><TextBlock Text="Xuất báo cáo HTML" /></StackPanel>
+                        </Button>
+                    </Grid>
                     <TextBlock Grid.Row="3" Text="{x:Bind ViewModel.ItemsTitle, Mode=OneWay}" FontWeight="SemiBold" Margin="0,6,0,0" />
+                    <!-- Chuột phải 1 mục: copy mục đó / cả danh sách (So chữ: tách Tab để dán Excel) -->
                     <ListView x:Name="RegionList" Grid.Row="4" ItemsSource="{x:Bind ViewModel.Items}" SelectionMode="Single"
-                              SelectionChanged="RegionList_SelectionChanged" IsItemClickEnabled="True" ItemClick="RegionList_ItemClick">
+                              SelectionChanged="RegionList_SelectionChanged" IsItemClickEnabled="True" ItemClick="RegionList_ItemClick"
+                              RightTapped="RegionList_RightTapped">
+                        <ListView.Resources>
+                            <MenuFlyout x:Key="RegionMenu">
+                                <MenuFlyoutItem Text="Copy mục này" Click="CopyItem_Click">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Copy cả danh sách" Click="CopyAllItems_Click">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B3;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </ListView.Resources>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:ResultItem">
                                 <!-- Grid (không phải StackPanel ngang) để dòng chữ dài bị cắt "…" thay vì tràn; di chuột xem đủ. -->

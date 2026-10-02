@@ -95,7 +95,7 @@ public static class HtmlReport
     }
 
     /// <summary>Ảnh cắt vùng (thêm lề <see cref="CropPadding"/>), hoặc ghi chú nếu vùng không có ở ảnh này.</summary>
-    private static string CropCell(SKBitmap source, SKRectI? region)
+    internal static string CropCell(SKBitmap source, SKRectI? region)
     {
         if (region is not { } box)
         {
@@ -114,7 +114,7 @@ public static class HtmlReport
         return $"<img class=\"crop\" alt=\"\" src=\"{DataUri(crop)}\">";
     }
 
-    private static string DataUri(SKBitmap bitmap)
+    internal static string DataUri(SKBitmap bitmap)
     {
         using var image = SKImage.FromBitmap(bitmap);
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
