@@ -123,6 +123,13 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   có thì hỏi; *Lưu thành…* (`Ctrl+Shift+S`) PNG / JPG / BMP, chất lượng JPG trong Cài đặt > Lưu ảnh; ghi an toàn qua file
   tạm, lỗi IO báo không văng. Kèm sửa: gõ `x.jpg` ra `x.jpg.png`; lưu Cài đặt làm mất màu nền Ảnh mới. GUI Sandbox 14/14
   (2026-10-02)
+- [x] Bug: dán ảnh to (Ctrl+V) rồi không vẽ thêm được — bấm đâu cũng chọn ảnh dán. Ảnh dán / Highlight / Mosaic-Blur giờ
+  chỉ chọn bằng *Move* (handle góc của shape đang chọn vẫn kéo được); công cụ vẽ bấm bên trong là vẽ chồng lên. GUI
+  Sandbox: 2 chữ nhật vẽ trên ảnh dán, Move + Delete xoá ảnh dán (2026-10-02)
+- [x] Bug: taskbar / Alt+Tab không có icon (chỉ khay có). Thêm `Assets\ScreenCapture.ico` (vẽ như icon khay) làm
+  `ApplicationIcon` của exe + `AppWindow.SetIcon` cho cửa sổ chính / Editor / Cài đặt / Hướng dẫn. Sandbox: taskbar,
+  thanh tiêu đề, icon exe đều hiện (2026-10-02)
+- [ ] **[Đề xuất · Có thể]** Các module khác cũng chưa có icon riêng (exe + taskbar) — làm tương tự nếu cần
 - [ ] **[Đề xuất · Nên có]** Xoay 90° / lật ngang - dọc; đổi kích thước ảnh theo % hoặc px (co giãn nội dung — khác
   kéo khung ảnh hiện có)
 - [ ] **[Đề xuất · Nên có]** Nền trong suốt cho Ảnh mới (cần sửa Cắt / đổi khung đang tô nền trắng)
@@ -206,6 +213,13 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Chế độ có tiêu đề, dòng dài hơn header: tự thêm cột `Cột N` cho phần dư (+ 1 cảnh báo; tên cột ghi vào dòng tiêu
   đề khi lưu) — trước đây field thừa bị cắt khi Save. Cảnh báo lệch cột tính lại sau sửa so với số field phổ biến nhất
   (không báo cả bảng khi chỉ 1 dòng dài). Unit test 96/96 (2026-10-02)
-- [ ] **[Đề xuất · Nên có]** Kéo-thả file vào cửa sổ để mở; danh sách file gần đây
-- [ ] **[Đề xuất · Nên có]** Xuất sang Excel (.xlsx) / copy vùng chọn dạng Tab để dán Excel; Go to dòng (`Ctrl+G`)
+- [x] Kéo-thả file `.csv/.tsv/.txt` vào cửa sổ để mở; nút 🕘 *File gần đây* (10 file, `Data\Config\recent-files.json`,
+  file đã xoá → báo + bỏ khỏi danh sách, *Xoá danh sách*); `Ctrl+O` = Open; mở lỗi (file khoá…) báo hộp thoại thay vì văng
+  (2026-10-02)
+- [x] *Export .xlsx* (Open XML SDK, ghi streaming + file tạm): xuất các dòng đang hiện theo lọc / sắp xếp; số thật ghi
+  thành số, mã `00123` / 16 chữ số / `=…` giữ dạng chữ; tiêu đề đậm + cố định + nút lọc; báo khi vượt giới hạn Excel.
+  *Go To* `Ctrl+G` (theo số dòng đang hiện). Copy / Paste dạng Tab bọc `"…"` như Excel (ô nhiều dòng dán sang Excel đúng
+  1 ô). Unit test 120/120 (2026-10-02)
+- [ ] Thử tay trên máy thật: kéo-thả file từ Explorer vào CsvEditor (Sandbox không tự động hoá được: UIPI chặn thả từ
+  Explorer vào app chạy quyền cao); mở file .xlsx vừa xuất bằng Excel thật (Sandbox không có Excel)
 - [ ] **[Đề xuất · Có thể]** Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột; tự giãn độ rộng cột

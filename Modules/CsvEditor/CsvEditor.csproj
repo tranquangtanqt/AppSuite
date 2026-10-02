@@ -12,6 +12,8 @@
          để không chép lẫn DLL WinUI cũ; WinUI 2.2.1 từ Modules/Directory.Build.props cung cấp runtime. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" ExcludeAssets="all" />
     <PackageReference Include="System.Text.Encoding.CodePages" />
+    <!-- Xuất .xlsx (Services/XlsxExporter). -->
+    <PackageReference Include="DocumentFormat.OpenXml" />
   </ItemGroup>
 
   <ItemGroup>

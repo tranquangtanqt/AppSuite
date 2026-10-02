@@ -129,6 +129,18 @@ không raise `PropertyChanged` per-row - chỉ raise `StructureChanged` 1 lần)
 `MainLauncher\Config\modules.json`, `build\Sync-Modules-Dev.ps1`, `build\Publish-AppSuite.ps1`, root
 `README.md` (cây thư mục + danh sách module) - đúng 4+1 điểm sửa như Mcf.DbDef.HtmlGenerator/E đã làm.
 
+### 7. Kéo-thả, file gần đây, Export .xlsx, Go To (2026-10-02)
+
+- Mọi cách mở file (Open, kéo-thả, file gần đây, mở lại khi đổi encoding / tiêu đề) đi qua `MainWindow.RunOpenAsync`:
+  mở xong mới ghi vào `RecentFilesStore`; lỗi IO báo hộp thoại. `OpenAsync` trả `bool` (false = huỷ).
+- `Services/RecentFilesStore`: JSON cạnh exe (`Data\Config\recent-files.json`, quy ước như ScreenCapture), đọc / ghi
+  lỗi thì bỏ qua — danh sách gần đây không được làm hỏng thao tác mở / lưu.
+- `Services/XlsxExporter`: Open XML SDK + `OpenXmlWriter` (streaming, không dựng cả sheet trong RAM), inline string
+  (không cần bảng sharedStrings), file tạm → `File.Move`. Xuất `ViewRows` (đúng cái người dùng đang thấy), không phải
+  toàn bộ tài liệu. Chọn số / chữ bằng quy tắc chặt (`IsPlainNumber`) vì CSV hay chứa mã có số 0 ở đầu.
+- `Services/TabularClipboard`: định dạng clipboard của Excel (bọc `"…"` khi có tab / xuống dòng / ngoặc kép), thay cho
+  `Join('\t')` / `Split('\n')` cũ làm vỡ ô nhiều dòng.
+
 ## Kết quả kiểm chứng (2026-09-29)
 
 Bản đầu chỉ build sạch, chưa chạy thật - rủi ro chính là binding indexer (`Path="[i]"` + `OneWay` +

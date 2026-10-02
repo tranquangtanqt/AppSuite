@@ -11,7 +11,9 @@ using CsvEditor.Models;
 using CsvEditor.Services;
 using CsvEditor.ViewModels;
 using CsvEditor.Views;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
+using Windows.Storage;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 
@@ -514,8 +516,150 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        await OpenPathAsync(file.Path);
+    }
+
+    private static readonly string[] OpenableExtensions = [".csv", ".tsv", ".txt"];
+
+    private readonly RecentFilesStore _recentFiles = new();
+
+    /// <summary>Mở <paramref name="filePath"/> (bên gọi đã hỏi lưu thay đổi), ghi vào danh sách gần đây. Lỗi đọc file
+    /// (không tồn tại, bị khoá, không có quyền...) báo hộp thoại thay vì văng app.</summary>
+    private Task<bool> OpenPathAsync(string filePath) =>
+        RunOpenAsync(filePath, ct => ViewModel.OpenAsync(filePath, ConfirmLargeFileAsync, ct));
+
+    private async Task<bool> RunOpenAsync(string filePath, Func<CancellationToken, Task<bool>> open)
+    {
         _currentOperationCts = new CancellationTokenSource();
-        await ViewModel.OpenAsync(file.Path, ConfirmLargeFileAsync, _currentOperationCts.Token);
+        try
+        {
+            if (!await open(_currentOperationCts.Token))
+            {
+                return false;
+            }
+            _recentFiles.Add(filePath);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            ViewModel.StatusMessage = $"Không mở được {Path.GetFileName(filePath)}: {ex.Message}";
+            await new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Không mở được file",
+                Content = $"{filePath}\n\n{ex.Message}",
+                CloseButtonText = "Đóng",
+            }.ShowAsync();
+            return false;
+        }
+    }
+
+    // ----- Kéo-thả file vào cửa sổ -----
+
+    private void Root_DragOver(object sender, DragEventArgs e)
+    {
+        if (e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "Mở file";
+        }
+    }
+
+    /// <summary>Thả 1 hoặc nhiều file: mở file .csv/.tsv/.txt đầu tiên (Editor chỉ giữ 1 file mỗi lúc). Lấy danh sách
+    /// file xong mới hỏi lưu / mở - hiện hộp thoại khi thao tác thả chưa kết thúc dễ treo Explorer bên kia.</summary>
+    private async void Root_Drop(object sender, DragEventArgs e)
+    {
+        if (!e.DataView.Contains(StandardDataFormats.StorageItems))
+        {
+            return;
+        }
+
+        IReadOnlyList<IStorageItem> items;
+        var deferral = e.GetDeferral();
+        try
+        {
+            items = await e.DataView.GetStorageItemsAsync();
+        }
+        finally
+        {
+            deferral.Complete();
+        }
+
+        var files = items.OfType<IStorageFile>().Select(f => f.Path).Where(p => !string.IsNullOrEmpty(p)).ToList();
+        var path = files.FirstOrDefault(p => OpenableExtensions.Contains(Path.GetExtension(p), StringComparer.OrdinalIgnoreCase));
+        if (path is null)
+        {
+            ViewModel.StatusMessage = "Chỉ mở được file .csv, .tsv, .txt.";
+            return;
+        }
+
+        if (!await ConfirmSaveChangesAsync("mở file khác"))
+        {
+            return;
+        }
+        if (await OpenPathAsync(path) && files.Count > 1)
+        {
+            ViewModel.StatusMessage += $" (thả {files.Count} file - chỉ mở file đầu tiên)";
+        }
+    }
+
+    // ----- File gần đây -----
+
+    /// <summary>Dựng lại menu mỗi lần mở: tên file (trùng tên thì kèm thư mục), di chuột thấy đường dẫn đầy đủ.</summary>
+    private void RecentMenu_Opening(object sender, object e)
+    {
+        RecentMenu.Items.Clear();
+        var paths = _recentFiles.Paths;
+        if (paths.Count == 0)
+        {
+            RecentMenu.Items.Add(new MenuFlyoutItem { Text = "(chưa có file nào)", IsEnabled = false });
+            return;
+        }
+
+        var duplicateNames = paths.GroupBy(p => Path.GetFileName(p), StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1).Select(g => g.Key).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        for (var i = 0; i < paths.Count; i++)
+        {
+            var path = paths[i];
+            var name = Path.GetFileName(path);
+            if (duplicateNames.Contains(name))
+            {
+                name += $"  ({Path.GetFileName(Path.GetDirectoryName(path))})";
+            }
+            var item = new MenuFlyoutItem { Text = $"{i + 1}. {name}", Tag = path };
+            ToolTipService.SetToolTip(item, path);
+            item.Click += RecentItem_Click;
+            RecentMenu.Items.Add(item);
+        }
+        RecentMenu.Items.Add(new MenuFlyoutSeparator());
+        var clear = new MenuFlyoutItem { Text = "Xoá danh sách", Icon = new FontIcon { Glyph = "" } };
+        clear.Click += (_, _) => _recentFiles.Clear();
+        RecentMenu.Items.Add(clear);
+    }
+
+    private async void RecentItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).Tag is not string path)
+        {
+            return;
+        }
+        if (!File.Exists(path))
+        {
+            _recentFiles.Remove(path);
+            ViewModel.StatusMessage = $"Không còn file {Path.GetFileName(path)} - đã bỏ khỏi danh sách gần đây.";
+            await new ContentDialog
+            {
+                XamlRoot = Content.XamlRoot,
+                Title = "Không tìm thấy file",
+                Content = $"{path}\n\nFile đã bị xoá, đổi tên hoặc chuyển chỗ - đã bỏ khỏi danh sách gần đây.",
+                CloseButtonText = "Đóng",
+            }.ShowAsync();
+            return;
+        }
+        if (await ConfirmSaveChangesAsync("mở file khác"))
+        {
+            await OpenPathAsync(path);
+        }
     }
 
     /// <summary>"Dòng đầu là tiêu đề": đổi lựa chọn khi đang mở file → mở lại file đó (giữ encoding / delimiter). Có
@@ -536,8 +680,7 @@ public sealed partial class MainWindow : Window
         }
 
         ViewModel.HasHeader = hasHeader;
-        _currentOperationCts = new CancellationTokenSource();
-        await ViewModel.ReopenAsync(filePath, ConfirmLargeFileAsync, _currentOperationCts.Token);
+        await RunOpenAsync(filePath, ct => ViewModel.ReopenAsync(filePath, ConfirmLargeFileAsync, ct));
     }
 
     /// <summary>Status bar "Encoding"/"Delimiter" labels are tappable - re-opens the same file with a
@@ -560,8 +703,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        _currentOperationCts = new CancellationTokenSource();
-        await ViewModel.OpenAsync(filePath, dialog.SelectedEncoding, dialog.SelectedDelimiter, ConfirmLargeFileAsync, _currentOperationCts.Token);
+        await RunOpenAsync(filePath, ct => ViewModel.OpenAsync(filePath, dialog.SelectedEncoding, dialog.SelectedDelimiter, ConfirmLargeFileAsync, ct));
     }
 
     private async Task<bool> ConfirmLargeFileAsync(long estimatedRows)
@@ -610,7 +752,36 @@ public sealed partial class MainWindow : Window
         }
 
         await ViewModel.SaveAsAsync(file.Path, _currentOperationCts!.Token);
+        _recentFiles.Add(file.Path);
         return true;
+    }
+
+    /// <summary>Xuất các dòng đang hiện ra .xlsx (tên gợi ý = tên file đang mở). Lỗi ghi (file đang mở trong Excel...)
+    /// báo hộp thoại như khi lưu.</summary>
+    private async void ExportXlsxButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.Columns.Count == 0)
+        {
+            ViewModel.StatusMessage = "Chưa có dữ liệu để xuất.";
+            return;
+        }
+
+        var picker = new FileSavePicker { SuggestedStartLocation = PickerLocationId.ComputerFolder };
+        picker.FileTypeChoices.Add("Excel", new List<string> { ".xlsx" });
+        picker.SuggestedFileName = CurrentFilePath is { } current ? Path.GetFileNameWithoutExtension(current) : "data";
+        InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(this));
+
+        var file = await picker.PickSaveFileAsync();
+        if (file is null)
+        {
+            return;
+        }
+
+        await RunSaveAsync(async () =>
+        {
+            await ViewModel.ExportXlsxAsync(file.Path, _currentOperationCts!.Token);
+            return true;
+        });
     }
 
     /// <summary>Chạy 1 lần lưu, báo lỗi (file đang bị app khác khoá, hết chỗ...) thay vì văng app. True nếu đã lưu.</summary>
@@ -783,6 +954,78 @@ public sealed partial class MainWindow : Window
 
     private async void FindButton_Click(object sender, RoutedEventArgs e) => await ShowFindReplaceDialogAsync();
 
+    /// <summary>Ctrl+G: đi tới dòng số N theo số ở đầu dòng của bảng (tức là theo lọc / sắp xếp đang hiện), giữ cột
+    /// đang chọn. Enter = Đi tới; số ngoài phạm vi thì báo ngay trong hộp thoại, không đóng.</summary>
+    private async void GoToButton_Click(object sender, RoutedEventArgs e)
+    {
+        var rowCount = ViewModel.ViewRows.Count;
+        if (rowCount == 0)
+        {
+            ViewModel.StatusMessage = "Không có dòng nào để đi tới.";
+            return;
+        }
+
+        var input = new TextBox
+        {
+            Header = $"Số dòng (1 – {rowCount:N0})",
+            Text = Grid.SelectedIndex >= 0 ? (Grid.SelectedIndex + 1).ToString() : string.Empty,
+            InputScope = new InputScope { Names = { new InputScopeName(InputScopeNameValue.Number) } },
+        };
+        var error = new TextBlock { Foreground = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"], TextWrapping = TextWrapping.Wrap };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Đi tới dòng",
+            Content = new StackPanel { Spacing = 8, MinWidth = 280, Children = { input, error } },
+            PrimaryButtonText = "Đi tới",
+            CloseButtonText = "Hủy",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        int? target = null;
+        bool TryAccept()
+        {
+            var text = input.Text.Trim().Replace(".", string.Empty).Replace(",", string.Empty);
+            if (int.TryParse(text, out var line) && line >= 1 && line <= rowCount)
+            {
+                target = line;
+                return true;
+            }
+            error.Text = $"Nhập số từ 1 đến {rowCount:N0}.";
+            input.SelectAll();
+            return false;
+        }
+
+        dialog.PrimaryButtonClick += (_, args) => args.Cancel = !TryAccept();
+        input.KeyDown += (_, args) =>
+        {
+            if (args.Key == Windows.System.VirtualKey.Enter)
+            {
+                args.Handled = true;
+                if (TryAccept())
+                {
+                    dialog.Hide();
+                }
+            }
+        };
+        dialog.Opened += (_, _) =>
+        {
+            input.Focus(FocusState.Programmatic);
+            input.SelectAll();
+        };
+
+        await dialog.ShowAsync();
+        if (target is not { } lineNumber)
+        {
+            return;
+        }
+
+        var columnIndex = Grid.CurrentColumn is { } column ? Grid.Columns.IndexOf(column) : 0;
+        NavigateToCell(new CellRef(lineNumber - 1, Math.Max(columnIndex, 0)));
+        Grid.Focus(FocusState.Programmatic);
+        ViewModel.StatusMessage = $"Dòng {lineNumber:N0}/{rowCount:N0}.";
+    }
+
     private async void ReplaceButton_Click(object sender, RoutedEventArgs e) => await ShowFindReplaceDialogAsync();
 
     private async Task ShowFindReplaceDialogAsync()
@@ -887,29 +1130,27 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        var sb = new System.Text.StringBuilder();
-        foreach (var row in selectedRows)
-        {
-            sb.AppendLine(string.Join('\t', Enumerable.Range(0, ViewModel.Columns.Count).Select(row.GetCell)));
-        }
-
-        var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
-        package.SetText(sb.ToString());
-        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+        // Dạng Tab như Excel: ô có tab / xuống dòng được bọc ngoặc kép nên dán sang Excel vẫn đúng 1 ô.
+        var text = TabularClipboard.Format(selectedRows.Select(row => Enumerable.Range(0, ViewModel.Columns.Count).Select(row.GetCell)));
+        var package = new DataPackage();
+        package.SetText(text);
+        Clipboard.SetContent(package);
     }
 
     private async void PasteMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        var clipboardContent = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
-        if (!clipboardContent.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text))
+        var clipboardContent = Clipboard.GetContent();
+        if (!clipboardContent.Contains(StandardDataFormats.Text))
         {
             return;
         }
 
         var text = await clipboardContent.GetTextAsync();
-        var block = text.TrimEnd('\r', '\n').Split('\n')
-            .Select(line => (IReadOnlyList<string>)line.TrimEnd('\r').Split('\t'))
-            .ToList();
+        var block = TabularClipboard.Parse(text);
+        if (block.Count == 0)
+        {
+            return;
+        }
 
         var anchorRowIndex = Grid.SelectedIndex >= 0 ? Grid.SelectedIndex : 0;
         var currentColumnIndex = Grid.CurrentColumn is { } pasteColumn ? Grid.Columns.IndexOf(pasteColumn) : -1;

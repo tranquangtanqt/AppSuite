@@ -16,7 +16,8 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid Padding="12" RowSpacing="8">
+    <!-- Kéo-thả file CSV/TSV vào bất kỳ chỗ nào trong cửa sổ để mở (Background Transparent để cả vùng trống nhận thả). -->
+    <Grid Padding="12" RowSpacing="8" Background="Transparent" AllowDrop="True" DragOver="Root_DragOver" Drop="Root_Drop">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -27,9 +28,19 @@
         <!-- Toolbar -->
         <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,16">
             <StackPanel Orientation="Horizontal" Spacing="6">
-                <Button x:Name="OpenButton" Click="OpenButton_Click" ToolTipService.ToolTip="Mở file CSV/TSV">
+                <Button x:Name="OpenButton" Click="OpenButton_Click" ToolTipService.ToolTip="Mở file CSV/TSV (Ctrl+O) - hoặc kéo-thả file vào cửa sổ">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Open" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="O" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
                 </Button>
+                <!-- Menu dựng lại mỗi lần mở (RecentMenu_Opening) từ Data\Config\recent-files.json. -->
+                <DropDownButton x:Name="RecentButton" ToolTipService.ToolTip="File gần đây">
+                    <FontIcon Glyph="&#xE81C;" FontSize="14" />
+                    <DropDownButton.Flyout>
+                        <MenuFlyout x:Name="RecentMenu" Placement="BottomEdgeAlignedLeft" Opening="RecentMenu_Opening" />
+                    </DropDownButton.Flyout>
+                </DropDownButton>
                 <!-- Người dùng tự chọn file có dòng tiêu đề hay không (không tự đoán). Đổi khi đang mở file → mở lại file đó. -->
                 <CheckBox x:Name="HasHeaderBox" Content="Dòng đầu là tiêu đề" IsChecked="True" MinWidth="0" VerticalAlignment="Center"
                           Click="HasHeaderBox_Click"
@@ -42,6 +53,10 @@
                 </Button>
                 <Button x:Name="SaveAsButton" Click="SaveAsButton_Click" ToolTipService.ToolTip="Lưu thành file khác">
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE792;" FontSize="14" /><TextBlock Text="Save As" /></StackPanel>
+                </Button>
+                <Button x:Name="ExportXlsxButton" Click="ExportXlsxButton_Click"
+                        ToolTipService.ToolTip="Xuất các dòng đang hiện (theo lọc / sắp xếp) ra file Excel .xlsx - file CSV đang mở không đổi">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xEDE1;" FontSize="14" /><TextBlock Text="Export .xlsx" /></StackPanel>
                 </Button>
 
                 <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
@@ -93,6 +108,12 @@
                     <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8AC;" FontSize="14" /><TextBlock Text="Replace" /></StackPanel>
                     <Button.KeyboardAccelerators>
                         <KeyboardAccelerator Key="H" Modifiers="Control" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+                <Button x:Name="GoToButton" Click="GoToButton_Click" ToolTipService.ToolTip="Đi tới dòng (Ctrl+G)">
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE72A;" FontSize="14" /><TextBlock Text="Go To" /></StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="G" Modifiers="Control" />
                     </Button.KeyboardAccelerators>
                 </Button>
                 <Button Click="FilterButton_Click" ToolTipService.ToolTip="Lọc dữ liệu">

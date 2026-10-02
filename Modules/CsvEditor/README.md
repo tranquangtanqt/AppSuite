@@ -29,13 +29,18 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 ## Toolbar
 
-`Open` ☐ *Dòng đầu là tiêu đề* `Save` `Save As` | `Undo` `Redo` | `Add Row` `Delete Row` `Copy Row` `Add Column`
-`Delete Column` `Rename Column` | `Find` `Replace` `Filter` `Clear Filter` `Sort` `Clear Sort`
+`Open` `🕘` ☐ *Dòng đầu là tiêu đề* `Save` `Save As` `Export .xlsx` | `Undo` `Redo` | `Add Row` `Delete Row` `Copy Row`
+`Add Column` `Delete Column` `Rename Column` | `Find` `Replace` `Go To` `Filter` `Clear Filter` `Sort` `Clear Sort`
 `Statistics`.
 
-- **Open**: chọn `.csv`/`.tsv`/`.txt`, tự nhận diện delimiter (`,` `Tab` `;` `|`) và encoding
+- **Open** (`Ctrl+O`): chọn `.csv`/`.tsv`/`.txt`, tự nhận diện delimiter (`,` `Tab` `;` `|`) và encoding
   (UTF-8, UTF-8 BOM, UTF-16 LE/BE). Nếu nhận diện sai, bấm vào nhãn "Encoding"/"Delimiter" ở thanh
-  trạng thái để mở lại file với lựa chọn thủ công.
+  trạng thái để mở lại file với lựa chọn thủ công. Mở lỗi (file bị khoá, không có quyền…) hiện hộp thoại báo lỗi.
+- **Kéo-thả**: thả file `.csv`/`.tsv`/`.txt` vào bất kỳ chỗ nào trong cửa sổ để mở (thả nhiều file → mở file đầu
+  tiên). Còn thay đổi chưa lưu thì hỏi như Open.
+- **File gần đây** (nút 🕘 cạnh Open): 10 file mở / Save As gần nhất, mới nhất trước; trùng tên thì kèm tên thư mục, di
+  chuột thấy đường dẫn đầy đủ. File đã bị xoá / chuyển chỗ → báo và tự bỏ khỏi danh sách; *Xoá danh sách* ở cuối menu.
+  Lưu ở `Data\Config\recent-files.json` cạnh exe.
 - **Dòng đầu là tiêu đề** (checkbox cạnh Open, mặc định có tick — người dùng tự chọn, không tự đoán): bỏ tick cho
   file không có dòng tên cột → mọi dòng là dữ liệu, cột tự đặt tên `Cột 1`, `Cột 2`… (số cột = dòng dài nhất, không
   cắt field nào); tên này chỉ để hiển thị — Save không ghi dòng tên cột. Đổi lựa chọn khi đang mở file → mở lại file đó
@@ -44,6 +49,11 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
   **Open** file khác hoặc **mở lại** file (đổi encoding / delimiter / "Dòng đầu là tiêu đề") → hỏi *Lưu* / *Không lưu* /
   *Hủy* (Lưu khi chưa có file → Save As; huỷ Save As hoặc lưu lỗi → dừng lại, không mất thay đổi). Lưu lỗi (file đang bị
   app khác khoá…) hiện hộp thoại báo lỗi.
+- **Export .xlsx**: xuất **các dòng đang hiện** (theo lọc / sắp xếp hiện tại) ra 1 sheet Excel; file CSV đang mở và
+  trạng thái đã lưu không đổi. Ô trông như số (không có số 0 ở đầu, ≤ 15 chữ số) ghi thành số; còn lại ghi thành chữ —
+  mã `00123`, số 16 chữ số, `1e5` giữ nguyên, ô bắt đầu bằng `=` không thành công thức. Dòng tiêu đề in đậm, cố định khi
+  cuộn, có nút lọc (file không có dòng tiêu đề thì chỉ ghi dữ liệu). Vượt giới hạn Excel (1.048.576 dòng, 16.384 cột,
+  32.767 ký tự / ô) → bỏ / cắt phần dư và báo ở thanh trạng thái. Ghi ra file tạm rồi mới thay file đích.
 - **Dòng dài hơn tiêu đề**: tự thêm cột `Cột N` cho phần dư (kèm 1 cảnh báo) để không mất field khi lưu; tên cột mới được
   ghi vào dòng tiêu đề khi Save (đổi tên bằng Rename Column).
 - **Undo/Redo**: áp dụng cho sửa ô, thêm/xóa dòng, thêm/xóa/đổi tên cột, dán nhiều ô, kéo điền
@@ -62,6 +72,8 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
   điều hướng Trước/Sau giữa các kết quả (tự cuộn dọc+ngang tới đúng ô khớp). Hotkey: `Ctrl+F`.
 - **Replace**: cùng dialog với Find, "Thay thế tất cả kết quả" ghi đè toàn bộ kết quả đang tìm được,
   gộp thành 1 bước Undo. Hotkey: `Ctrl+H`.
+- **Go To** (`Ctrl+G`): đi tới dòng số N — theo số ở đầu dòng của bảng (tức là theo lọc / sắp xếp đang hiện), giữ cột
+  đang chọn. Nhập số rồi `Enter`; số ngoài phạm vi thì báo ngay trong hộp thoại.
 - **Filter**: nhiều điều kiện `== != > < >= <= Contains Regex`, mỗi điều kiện có thể `NOT`, kết hợp
   toàn bộ danh sách bằng 1 phép `AND` hoặc `OR` chung (không phải cây biểu thức lồng nhau). Mở lại
   dialog sẽ hiện đúng điều kiện đang áp dụng; nút **Clear Filter** cạnh bên bỏ lọc ngay không cần
@@ -72,7 +84,8 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
   Sort** cạnh bên bỏ sắp xếp ngay không cần mở dialog (chỉ sáng khi đang có sort).
 - **Statistics**: Row/Column Count, Duplicate Row, và theo từng cột: Empty/Unique/Min/Max/
   Average/Sum (Min/Max/Avg/Sum chỉ tính nếu cột có giá trị số).
-- **Context menu** (chuột phải trên bảng): Copy, Paste, Delete, Insert Row, Duplicate Row.
+- **Context menu** (chuột phải trên bảng): Copy, Paste, Delete, Insert Row, Duplicate Row. Copy / Paste dùng dạng Tab
+  như Excel (ô có tab / xuống dòng / ngoặc kép được bọc `"…"`), nên dán qua lại với Excel vẫn đúng từng ô.
 
 ## Dữ liệu lớn
 
@@ -98,7 +111,9 @@ không tính lại được (mô tả nội dung file gốc lúc đọc, dữ li
 `,` `;` `|` Tab, encoding UTF-8 / UTF-8 BOM / UTF-16, ngoặc kép, dòng lệch cột, huỷ), **Save** (round-trip,
 chỉ bọc ngoặc kép khi cần, giữ delimiter/encoding/BOM, Save As), **Search** (5 kiểu so khớp, phân biệt
 hoa thường), **Sort** (số / chữ, nhiều cột, không đổi dữ liệu gốc), **Filter** (mọi toán tử, NOT,
-AND/OR), **Statistics**, **Undo/Redo** (mọi thao tác sửa, dán / thay thế = 1 bước, trạng thái "chưa lưu").
+AND/OR), **Statistics**, **Undo/Redo** (mọi thao tác sửa, dán / thay thế = 1 bước, trạng thái "chưa lưu"). Thêm sau:
+dòng tiêu đề / dòng dài, **Export .xlsx** (đọc lại bằng Open XML SDK + kiểm schema), clipboard dạng Tab, file gần đây —
+tổng 120 test (2026-10-02).
 
 ```powershell
 dotnet test Tests\CsvEditor.Tests          # hoặc: dotnet run --project Tests\CsvEditor.Tests
@@ -116,6 +131,6 @@ Lỗi tìm ra nhờ test (đã sửa 2026-09-29): tooltip Undo sau **Xóa cột*
 
 - Không `ProjectReference` tới `MainLauncher.csproj`.
 - Không đọc `modules.json` hay bất kỳ cấu hình nào của launcher.
-- Không có dữ liệu/cấu hình lưu cạnh exe (không giống ModuleB/C/D/E) - file CSV/TSV người dùng tự
-  chọn qua `FileOpenPicker`/`FileSavePicker` mỗi lần, không phụ thuộc ai khởi động tiến trình (VS,
-  `dotnet run`, hay `Process.Start` từ MainLauncher).
+- Cấu hình duy nhất cạnh exe là danh sách file gần đây (`Data\Config\recent-files.json`, thiếu / hỏng thì coi như
+  rỗng) - file CSV/TSV người dùng tự chọn qua `FileOpenPicker`/`FileSavePicker` hoặc kéo-thả, không phụ thuộc ai khởi
+  động tiến trình (VS, `dotnet run`, hay `Process.Start` từ MainLauncher).
