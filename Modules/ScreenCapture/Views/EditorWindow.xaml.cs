@@ -79,6 +79,7 @@ public sealed partial class EditorWindow : Window
         IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null, string? captureFilePath = null)
     {
         InitializeComponent();
+        AppIcon.Apply(this);
         _fileService = fileService;
         _clipboardService = clipboardService;
         _session = session;
@@ -1081,7 +1082,12 @@ public sealed partial class EditorWindow : Window
             return true;
         }
 
-        var hit = _viewModel.Annotations.Reverse().FirstOrDefault(s => s.HitTest(pos, Px(6)));
+        // Ảnh dán / Highlight / Mosaic-Blur phủ cả 1 vùng (bấm đâu bên trong cũng "trúng"): với công cụ vẽ, bấm bên
+        // trong là vẽ chồng lên - không thì dán 1 ảnh to là không vẽ thêm được gì. Chọn / kéo chúng bằng Di chuyển
+        // (handle góc của shape đang chọn vẫn kéo được ở trên).
+        bool grabAreas = _viewModel.SelectedTool == CaptureTool.Move;
+        var hit = _viewModel.Annotations.Reverse().FirstOrDefault(s =>
+            (grabAreas || s is not (ImageAnnotation or HighlightAnnotation or RedactAnnotation)) && s.HitTest(pos, Px(6)));
         if (hit is null)
         {
             return false;
@@ -1185,7 +1191,8 @@ public sealed partial class EditorWindow : Window
         // Với MỌI công cụ: bấm trúng handle / shape có sẵn thì chọn + kéo shape đó (không cần chuyển
         // sang "Di chuyển" trước). Chỉ khi bấm vào vùng trống mới bỏ chọn và dùng công cụ hiện tại.
         // Riêng Bút: luôn vẽ nét mới (viết / khoanh chồng lên hình khác là bình thường) - chỉnh nét đã vẽ
-        // bằng công cụ Di chuyển.
+        // bằng công cụ Di chuyển. Shape phủ vùng (ảnh dán, Highlight, Mosaic) chỉ chọn được bằng Di chuyển - xem
+        // TryBeginEditExisting.
         if (_viewModel.SelectedTool != CaptureTool.Pen && TryBeginEditExisting(pos, e))
         {
             return;

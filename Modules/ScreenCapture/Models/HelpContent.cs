@@ -82,7 +82,7 @@ public static class HelpContent
         new("Chọn & chỉnh sửa hình", "\uE7C9", "Áp dụng với mọi công cụ - không cần bấm Move trước.",
         [
             new("Vẽ xong là đang sửa", "Hình vừa vẽ (hoặc stamp / chữ vừa đặt) được chọn ngay: kéo handle, đổi màu / cỡ nét áp luôn cho hình đó."),
-            new("Bấm trúng hình có sẵn", "Chọn hình đó và kéo được ngay: di chuyển, kéo handle góc, kéo đầu mũi tên. Chữ nhật và Elip chỉ bắt khi bấm lên viền, nên vẫn vẽ được hình khác bên trong.", "Click", "Kéo"),
+            new("Bấm trúng hình có sẵn", "Chọn hình đó và kéo được ngay: di chuyển, kéo handle góc, kéo đầu mũi tên. Chữ nhật và Elip chỉ bắt khi bấm lên viền, nên vẫn vẽ được hình khác bên trong. Ảnh dán, Highlight, Mosaic / Blur phủ cả 1 vùng: đang cầm công cụ vẽ thì bấm bên trong là vẽ chồng lên - chọn / kéo chúng bằng Move.", "Click", "Kéo"),
             new("Bỏ chọn", "Bấm vào vùng trống hoặc nhấn Esc.", "Esc"),
             new("Move", "Công cụ mặc định: chỉ chọn / kéo hình, bấm vùng trống không vẽ gì. Khi không chọn hình nào, quanh ảnh có 8 handle để đổi kích thước khung ảnh (xem mục Cắt, khung ảnh & dán)."),
             new("Xoá, đổi thứ tự lớp", "Xoá hình đang chọn; Lên trên / Xuống dưới để đưa hình lên trên hoặc xuống dưới hình khác.", "Delete", "Backspace"),

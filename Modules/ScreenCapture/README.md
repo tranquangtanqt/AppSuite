@@ -122,6 +122,8 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   hiện handle, tab contextual (vd *Number Stamp*) nếu có, đổi màu/cỡ nét áp luôn cho shape đó.
 - **Bấm trúng 1 shape có sẵn** → chọn shape đó và kéo được ngay (di chuyển / kéo handle góc / kéo đầu
   mũi tên). Chữ nhật và Elip chỉ bắt khi bấm lên **viền**, nên vẫn vẽ được shape khác bên trong khung.
+  Shape phủ cả 1 vùng (**ảnh dán**, Highlight, Mosaic / Blur): đang cầm công cụ vẽ thì bấm bên trong là vẽ chồng lên
+  (dán 1 ảnh to vẫn vẽ thêm được); chọn / kéo chúng bằng *Di chuyển* (handle góc của shape đang chọn vẫn kéo được).
 - **Bấm vào vùng trống** (hoặc nhấn `Esc`) → thoát chỉnh sửa. Với công cụ vẽ hình, bấm-kéo ở vùng
   trống thì vẽ shape mới luôn. Riêng *Text* và *Stamps*: nếu đang chọn shape, lần bấm vùng trống đầu
   chỉ bỏ chọn; lần bấm sau mới bật hộp nhập text / đặt stamp. Ví dụ Number Stamps: bấm → stamp 1 (đang

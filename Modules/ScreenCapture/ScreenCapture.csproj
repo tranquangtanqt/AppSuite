@@ -1,7 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- Icon của exe (Explorer, ghim taskbar). Cửa sổ gán riêng bằng AppWindow.SetIcon (AppIcon.Apply) - app unpackaged
+         không tự lấy icon exe cho nút taskbar. Vẽ giống icon khay (TrayIconService.CreateAppIcon). -->
+    <ApplicationIcon>Assets\ScreenCapture.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\ScreenCapture.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <!--
     ScreenCapture is a fully standalone WinUI 3 app: it opens, builds and runs on its own (right-click

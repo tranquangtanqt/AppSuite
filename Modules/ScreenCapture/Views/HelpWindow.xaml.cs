@@ -21,6 +21,7 @@ public sealed partial class HelpWindow : Window
     public HelpWindow(AppSettings settings)
     {
         InitializeComponent();
+        AppIcon.Apply(this);
         _sections = HelpContent.Build(settings);
 
         // 1000×700 logic nhưng không vượt 90% vùng làm việc (màn 1920 ở 150% chỉ cao ~690 logic), căn giữa.
