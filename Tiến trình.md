@@ -28,7 +28,7 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 **Ưu tiên 2 — tính năng nên có, giải quyết vấn đề thật:**
 1. ~~ImageCompare: so ảnh lệch bố cục dần~~ — làm phương án B *Soi 1 vùng* 2026-10-05, còn test GUI Sandbox
 2. ~~ScreenCapture: xoay 90° / lật / đổi cỡ ảnh theo % hoặc px~~ — code xong 2026-10-05, còn test GUI Sandbox
-3. Hướng dẫn F1 cho 4 module HtmlGenerator, ModuleB/C — dùng `SharedUI.Help.HelpWindow` (mỗi module chỉ viết nội dung)
+3. ~~Hướng dẫn F1 cho 4 module HtmlGenerator, ModuleB/C~~ — xong 2026-10-05, còn test GUI Sandbox
 
 **Ưu tiên 3 — có thì tốt, làm khi có nhu cầu:**
 - ImageCompare: so sánh hàng loạt 2 thư mục ảnh
@@ -92,8 +92,12 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 - [x] Cửa sổ Hướng dẫn dùng chung `SharedUI.Help.HelpWindow` (dựng bằng code, module chỉ viết nội dung) + Hướng dẫn F1
   cho **CsvEditor** (6 danh mục, nút `?` cuối toolbar) và **ImageCompare** (9 danh mục, nút `?` góc trên-phải, mở đúng
   phần theo chế độ xem đang dùng). GUI Sandbox 14/14: nút + F1, tìm không dấu, đóng app đóng theo (2026-10-02)
-- [ ] **[Đề xuất · Nên có]** Hướng dẫn F1 cho các module còn lại: 4 module HtmlGenerator, ModuleB/C — dùng
-  `SharedUI.Help.HelpWindow`
+- [x] **[Đề xuất · Nên có]** Hướng dẫn F1 cho các module còn lại: 4 module HtmlGenerator, ModuleB/C — dùng
+  `SharedUI.Help.HelpWindow`. Mỗi module có `Views\HelpContent.cs` (viết theo code hiện tại, đã đối chiếu tên nút / ô
+  tìm trong HTML sinh ra) + nút Hướng dẫn và phím F1; ModuleC gắn vào nút "Huong dan su dung" có sẵn. Build 6 module
+  0 warning (2026-10-05). README / PLAN của ModuleB còn tả bản cũ (đọc .docx, không chỉ mục) - Hướng dẫn viết theo
+  code thật
+- [ ] Test GUI Hướng dẫn F1 của 6 module (Sandbox): mở bằng nút / F1, tìm kiếm trong cửa sổ, đóng app đóng theo
 - [ ] **[Đề xuất · Có thể]** Chuyển Hướng dẫn của ScreenCapture / FileTools sang `SharedUI.Help.HelpWindow` (đang là 2
   bản chép riêng cùng bố cục)
 - [ ] **[Đề xuất · Có thể]** Nhớ kích thước / vị trí cửa sổ và danh sách file / thư mục gần đây cho mọi module —

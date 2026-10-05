@@ -29,6 +29,9 @@ hoặc mở `Mcf.Screen.HtmlGenerator.csproj` riêng trong Visual Studio, đặt
    sao JSON thuần, không phải thứ `01_画面説明書.html` đọc, chỉ để tiện dùng ngoài nếu cần).
 4. **"Mo file HTML"** - mở `01_画面説明書.html` bằng trình duyệt mặc định.
 
+**Hướng dẫn (F1)**: nút "Huong dan (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
+`ViewsHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
+
 ## Giao diện `01_画面説明書.html`
 
 Cột trái có **2 ô tìm kiếm** kết hợp `AND`:

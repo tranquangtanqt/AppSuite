@@ -39,6 +39,9 @@ chiếu là link `#table=TÊN_BẢNG` trỏ vào chính file HTML này, mở b�
 mở **tab trình duyệt mới** đã chọn sẵn bảng đó (nếu bảng đó có trong dữ liệu đã đọc) - có thể mở
 `Mcf.DbDef.HtmlGenerator.html#table=TÊN_BẢNG` trực tiếp để chia sẻ link tới 1 bảng cụ thể.
 
+**Hướng dẫn (F1)**: nút "Huong dan (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
+`ViewsHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
+
 ## Cấu trúc workbook nguồn (`Data\Excel\*.xlsm`)
 
 Mỗi file có 1 sheet index `テーブル・ビュー一覧` (tên bảng | tên tiếng Nhật | loại | ghi chú | tên

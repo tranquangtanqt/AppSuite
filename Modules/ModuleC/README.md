@@ -25,7 +25,8 @@ hoặc mở `ModuleC.csproj` riêng trong Visual Studio, đặt Startup Project,
   chú thích (tiếng Nhật), khớp kiểu "chứa chuỗi" (`Contains`, không phân biệt hoa/thường) trên cả
   hai trường, liệt kê mọi bảng khớp (STT, Tên bảng, Chú thích tên bảng). Dùng chung
   `TableColumnCatalog` đã nạp sẵn với ô tìm kiếm chính (không tải lại dữ liệu).
-- "Huong dan su dung": placeholder, chưa gắn hành vi.
+- Nút **"Huong dan su dung"** (hoặc phím **F1**): mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`), nội
+  dung ở `Views\HelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
 
 ## Dữ liệu
 

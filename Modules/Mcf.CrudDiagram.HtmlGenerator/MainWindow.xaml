@@ -42,6 +42,11 @@
             <Button Content="1. Doc Excel -> SQLite" Command="{x:Bind ViewModel.ImportCommand}" Style="{StaticResource AccentButtonStyle}" />
             <Button Content="2. Xuat HTML" Command="{x:Bind ViewModel.ExportHtmlCommand}" />
             <Button Content="Mo file HTML" Command="{x:Bind ViewModel.OpenHtmlCommand}" />
+            <Button Content="Huong dan (F1)" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F1" />
+                </Button.KeyboardAccelerators>
+            </Button>
         </StackPanel>
 
         <ProgressBar Grid.Row="3" IsIndeterminate="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />

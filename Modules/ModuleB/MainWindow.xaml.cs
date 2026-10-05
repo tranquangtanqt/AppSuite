@@ -27,6 +27,7 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
+        Closed += (_, _) => _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
     }
 
     private void LoadRoot(string path)
@@ -195,5 +196,21 @@ public sealed partial class MainWindow : Window
             XamlRoot = Content.XamlRoot,
         };
         await dialog.ShowAsync();
+    }
+
+    // ----- Hướng dẫn (F1) -----
+
+    private SharedUI.Help.HelpWindow? _helpWindow;
+
+    /// <summary>Mở cửa sổ Hướng dẫn (1 cửa sổ duy nhất - đang mở thì đưa lên trước). Nội dung: Views/HelpContent.</summary>
+    private void HelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_helpWindow is null)
+        {
+            _helpWindow = new SharedUI.Help.HelpWindow("ModuleB - Tìm file Excel", "Tìm file Excel theo nhóm thư mục và chữ trong nội dung, mở thẳng tới ô khớp.",
+                Views.HelpContent.Sections, searchPlaceholder: "Tìm tính năng, vd: AND OR, chỉ mục, mở ô...");
+            _helpWindow.Closed += (_, _) => _helpWindow = null;
+        }
+        _helpWindow.Activate();
     }
 }

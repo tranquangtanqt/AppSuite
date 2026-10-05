@@ -76,8 +76,19 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Margin="0,0,0,8" TextWrapping="Wrap" Opacity="0.8"
-                       Text="Hay nhap noi dung can tim kiem. Ban co the ket hop voi toan tu AND hoac OR de ho tro cho viec tim kiem tot hon." />
+            <Grid Grid.Row="0" Margin="0,0,0,8" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock VerticalAlignment="Center" TextWrapping="Wrap" Opacity="0.8"
+                           Text="Hay nhap noi dung can tim kiem. Ban co the ket hop voi toan tu AND hoac OR de ho tro cho viec tim kiem tot hon." />
+                <Button Grid.Column="1" Content="Huong dan (F1)" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F1" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+            </Grid>
 
             <Grid Grid.Row="1" Margin="0,0,0,8" ColumnSpacing="8">
                 <Grid.ColumnDefinitions>

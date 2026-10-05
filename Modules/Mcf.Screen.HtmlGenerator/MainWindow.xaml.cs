@@ -18,6 +18,7 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
+        Closed += (_, _) => _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
     }
 
     private async void ChooseFolderButton_Click(object sender, RoutedEventArgs e)
@@ -35,5 +36,21 @@ public sealed partial class MainWindow : Window
         }
 
         ViewModel.SetSourceFolder(folder.Path);
+    }
+
+    // ----- Hướng dẫn (F1) -----
+
+    private SharedUI.Help.HelpWindow? _helpWindow;
+
+    /// <summary>Mở cửa sổ Hướng dẫn (1 cửa sổ duy nhất - đang mở thì đưa lên trước). Nội dung: Views/HelpContent.</summary>
+    private void HelpButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_helpWindow is null)
+        {
+            _helpWindow = new SharedUI.Help.HelpWindow("Mcf.Screen.HtmlGenerator", "Tài liệu màn hình 画面説明書 (Excel) → trang HTML tra cứu theo mã / tên / nội dung.",
+                Views.HelpContent.Sections, searchPlaceholder: "Tìm tính năng, vd: tìm theo nội dung, sơ đồ...");
+            _helpWindow.Closed += (_, _) => _helpWindow = null;
+        }
+        _helpWindow.Activate();
     }
 }

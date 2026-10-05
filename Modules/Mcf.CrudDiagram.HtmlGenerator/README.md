@@ -38,6 +38,9 @@ chứ không theo file, và `CrudRecord`/HTML/nav trong index đều tính theo 
    `manifest.json` (bản sao JSON thuần, chỉ để tiện dùng ngoài nếu cần).
 4. **"Mo file HTML"** - mở `02_CRUD図.html` bằng trình duyệt mặc định.
 
+**Hướng dẫn (F1)**: nút "Huong dan (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
+`ViewsHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
+
 ## Giao diện `02_CRUD図.html`
 
 Cột trái có **2 ô tìm kiếm** kết hợp `AND`, y hệt bố cục Mcf.Screen.HtmlGenerator:

@@ -54,6 +54,9 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    nhận đúng file `.db`/`.html` đã có sẵn cho database/nguồn đang chọn (`RdbmsHtmlGeneratorViewModel.RefreshDatabaseTarget`
    kiểm tra lại mỗi khi đổi nguồn hoặc lưu settings), không cần import lại nếu đã có cache từ trước.
 
+**Hướng dẫn (F1)**: nút "Huong dan (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
+`ViewsHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
+
 ## Ánh xạ dữ liệu
 
 Cả 2 importer đọc thẳng vào catalog/data dictionary của DB (không qua `information_schema` một mình

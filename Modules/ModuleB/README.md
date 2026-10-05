@@ -35,6 +35,9 @@ MainLauncher, chỉ reference `Common`).
   cũ (`.xls/.doc`) hoặc bất kỳ loại khác **fallback về so khớp theo tên file** thay vì bị loại khỏi
   kết quả. File đang mở/khoá bởi Office hoặc lỗi đọc không làm crash lượt tìm.
 
+**Hướng dẫn (F1)**: nút "Huong dan (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
+`ViewsHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
+
 ## Dữ liệu
 
 `Data\DataFromExcel.db` (SQLite, tự tạo cạnh exe lúc chạy) lưu lịch sử các thư mục gốc đã dùng
