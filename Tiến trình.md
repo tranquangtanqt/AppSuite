@@ -261,6 +261,10 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
   chính xác thì cho sai / thiếu / thừa 1 ký tự (OCR đọc 受注数量 → 受淺数量, 受注金額合計 → 受注金合計). Ảnh của người
   dùng: 9 / 9 nhãn thử đều tìm thấy (5 chính xác, 4 gần đúng; trước: 0). Unit test 90/90, build 0 warning (2026-10-05)
 - [ ] Người dùng thử lại Tìm chữ trên máy thật với ảnh tiếng Nhật (Sandbox không có gói OCR tiếng Nhật của Windows)
+- [x] Bug (người dùng báo, ảnh chụp): hàng tuỳ chọn tràn → thanh cuộn ngang **nổi đè lên** các ô (che mép dưới ô tìm / ô
+  chọn) - lộ ra khi Tìm chữ thêm ô ngôn ngữ. Khi tràn tự chừa lề dưới 14 px cho thanh cuộn (`Options_SizeChanged`, không
+  tràn thì giữ chiều cao cũ); thu gọn hàng Tìm chữ (ô tìm 220 → 190, ô ngôn ngữ, nút "Copy chữ"). Build 0 warning; chưa
+  xem lại trên GUI (2026-10-05)
 - [ ] **[Đề xuất · Có thể]** Phương án A *Căn từng vùng* cả trang (tự chia ô như Soi 1 vùng nhưng không cần khoanh)
 - [ ] **[Đề xuất · Nên có]** So sánh hàng loạt 2 thư mục ảnh (ghép theo tên file) → bảng tổng hợp giống / khác + báo
   cáo HTML — cho kiểm thử hồi quy nhiều màn hình 1 lần

@@ -141,6 +141,18 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    /// <summary>Hàng tuỳ chọn tràn (cửa sổ hẹp / chế độ nhiều ô) → có thanh cuộn ngang, mà thanh cuộn WinUI nổi đè lên nội
+    /// dung (che mép dưới ô tìm, ô chọn). Khi tràn thì chừa lề dưới cho thanh cuộn; không tràn thì bỏ, hàng giữ chiều cao cũ.</summary>
+    private void Options_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        // So chiều rộng thật (nội dung trong ScrollViewer ngang không bị bó) - ScrollableWidth có thể chưa cập nhật lúc này.
+        double bottom = OptionsHost.ActualWidth > OptionsScroller.ActualWidth + 0.5 ? 14 : 0;
+        if (OptionsHost.Margin.Bottom != bottom)
+        {
+            OptionsHost.Margin = new Thickness(0, 0, 0, bottom);
+        }
+    }
+
     private void TextLanguageBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (!_syncingOptions && TextLanguageBox.SelectedItem is ComboBoxItem { Tag: string tag } && Enum.TryParse<FormLanguage>(tag, out var language))

@@ -124,13 +124,15 @@
                 <SelectorBarItem Text="Chồng mờ" Tag="Overlay" ToolTipService.ToolTip="B đặt chồng lên A, chỉnh độ trong suốt" />
                 <SelectorBarItem Text="Thanh trượt" Tag="Swipe" ToolTipService.ToolTip="Kéo vạch chia: trái là A, phải là B" />
                 <SelectorBarItem Text="Tìm ảnh con" Tag="Find" ToolTipService.ToolTip="Tìm ảnh nhỏ hơn (vd 1 nút, 1 icon cắt ra) trong ảnh lớn hơn" />
-                <SelectorBarItem Text="Tìm chữ" Tag="Text" ToolTipService.ToolTip="Đọc chữ trong ảnh (OCR tiếng Việt / tiếng Anh) và tìm chữ trong đó - chỉ cần 1 ảnh" />
+                <SelectorBarItem Text="Tìm chữ" Tag="Text" ToolTipService.ToolTip="Đọc chữ trong ảnh (OCR tiếng Nhật hoặc tiếng Việt / Anh) và tìm chữ trong đó - chỉ cần 1 ảnh" />
                 <SelectorBarItem Text="So chữ" Tag="TextDiff" ToolTipService.ToolTip="Đọc chữ cả 2 ảnh và liệt kê chữ / giá trị khác nhau - cho 2 ảnh cùng màn hình chụp ở môi trường khác (font, trình duyệt) mà so pixel tô đỏ gần hết" />
             </SelectorBar>
             <!-- Tuỳ chọn của chế độ đang chọn; cửa sổ hẹp thì cuộn ngang được (rê chuột lên để hiện thanh cuộn). -->
-            <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled"
+            <!-- Thanh cuộn ngang của WinUI nổi đè lên nội dung → khi tràn, OptionsHost được chừa lề dưới cho thanh cuộn
+                 (UpdateOptionsScrollRoom), không tràn thì giữ nguyên chiều cao. -->
+            <ScrollViewer x:Name="OptionsScroller" Grid.Column="1" HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled" SizeChanged="Options_SizeChanged"
                           VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled" VerticalAlignment="Center">
-            <Grid>
+            <Grid x:Name="OptionsHost" SizeChanged="Options_SizeChanged">
             <StackPanel x:Name="OverlayOptions" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Visibility="Collapsed">
                 <TextBlock Text="A" VerticalAlignment="Center" Foreground="#2B7BD6" FontWeight="SemiBold" />
                 <Slider x:Name="OpacitySlider" Width="200" VerticalAlignment="Center" ValueChanged="OpacitySlider_ValueChanged"
@@ -179,13 +181,13 @@
                     <ComboBoxItem Content="Ảnh B" />
                 </ComboBox>
                 <!-- Cùng ngôn ngữ với So chữ (1 thuộc tính ViewModel.TextDiffLanguage, 2 ô đồng bộ qua SyncOptionControls). -->
-                <ComboBox x:Name="TextLanguageBox" SelectionChanged="TextLanguageBox_SelectionChanged" VerticalAlignment="Center" MinWidth="170"
+                <ComboBox x:Name="TextLanguageBox" SelectionChanged="TextLanguageBox_SelectionChanged" VerticalAlignment="Center" MinWidth="120"
                           AutomationProperties.Name="Ngôn ngữ chữ"
                           ToolTipService.ToolTip="Ngôn ngữ chữ trong ảnh - chọn sai thì đọc ra toàn ký tự rác, tìm không thấy">
                     <ComboBoxItem Content="Tiếng Nhật" Tag="Japanese" ToolTipService.ToolTip="Windows OCR (tiếng Nhật); máy chưa có gói OCR tiếng Nhật thì dùng Tesseract" />
                     <ComboBoxItem Content="Tiếng Việt / English" Tag="VietnameseEnglish" ToolTipService.ToolTip="Tesseract - đọc cả tiếng Việt lẫn tiếng Anh" />
                 </ComboBox>
-                <TextBox x:Name="TextQueryBox" Width="220" VerticalAlignment="Center" PlaceholderText="Tìm chữ… (Ctrl+F)"
+                <TextBox x:Name="TextQueryBox" Width="190" VerticalAlignment="Center" PlaceholderText="Tìm chữ… (Ctrl+F)"
                          TextChanged="TextQueryBox_TextChanged" AutomationProperties.Name="Tìm chữ"
                          ToolTipService.ToolTip="Gõ chữ cần tìm - các chỗ có chữ đó được tô vàng. Để trống: liệt kê mọi dòng đọc được." />
                 <CheckBox x:Name="TextDiacriticsBox" Content="Phân biệt dấu" Checked="TextOption_Changed" Unchecked="TextOption_Changed" MinWidth="0"
@@ -193,7 +195,7 @@
                 <CheckBox x:Name="TextCaseBox" Content="Phân biệt hoa/thường" Checked="TextOption_Changed" Unchecked="TextOption_Changed" MinWidth="0" />
                 <Button Click="CopyText_Click" IsEnabled="{x:Bind ViewModel.HasOcr, Mode=OneWay}" VerticalAlignment="Center"
                         ToolTipService.ToolTip="Copy toàn bộ chữ đọc được trong ảnh (mỗi dòng 1 dòng)">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy toàn bộ chữ" /></StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy chữ" /></StackPanel>
                 </Button>
             </StackPanel>
             <StackPanel x:Name="TextDiffOptions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Visibility="Collapsed">
