@@ -26,8 +26,7 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 3. ~~Chạy 4 project test mới (ImageCompare, Mcf.*) trong Windows Sandbox~~ — 138/138
 
 **Ưu tiên 2 — tính năng nên có, giải quyết vấn đề thật:**
-1. ImageCompare: so ảnh lệch bố cục dần — phương án A *Căn từng vùng* hoặc B *Soi 1 vùng* trong tab Khác biệt (người
-   dùng chưa chọn A / B). Lý do: ảnh thật của khách (B giãn 7 → 46 px) làm tab Khác biệt báo sai gần cả trang
+1. ~~ImageCompare: so ảnh lệch bố cục dần~~ — làm phương án B *Soi 1 vùng* 2026-10-05, còn test GUI Sandbox
 2. ~~ScreenCapture: xoay 90° / lật / đổi cỡ ảnh theo % hoặc px~~ — code xong 2026-10-05, còn test GUI Sandbox
 3. Hướng dẫn F1 cho 4 module HtmlGenerator, ModuleB/C — dùng `SharedUI.Help.HelpWindow` (mỗi module chỉ viết nội dung)
 
@@ -128,6 +127,13 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   bố cục, đã sửa: danh sách file trang hàng loạt bị ép về 0, trang không cuộn được (cắt nhật ký), tuỳ chọn trang Tìm
   tràn mép, ô từ khoá trang Lọc lệch (2026-09-30)
 - [ ] Chạy FileTools từ MainLauncher (sau `Sync-Modules-Dev.ps1`)
+- [x] Người dùng: "chuyển trang thì phải chọn lại file, cực quá" → **file đang làm dùng chung**: chọn file ở 1 trang,
+  mở trang khác đã điền sẵn (luôn theo file mới nhất; danh sách nhiều file chỉ tự thêm khi trống; trang đang chạy giữ
+  file cũ). **Gộp 8 trang thành 4** (16 → 12): Xem file (Thông tin + Trích dòng), Tìm / Lọc dòng, Đổi encoding /
+  xuống dòng, CSV: Chọn cột / đổi dấu phân cách; mẫu đã lưu của trang cũ tự chuyển sang trang mới. Unit test 132/132,
+  build 0 warning (2026-10-05)
+- [ ] Test GUI FileTools sau khi gộp trang (Sandbox): chuyển trang giữ file, 4 trang gộp, Enter / Shift+Enter ở ô từ
+  khoá, nạp mẫu cũ đã chuyển
 
 ## MainLauncher
 
@@ -212,9 +218,13 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   phải 1 mục trong danh sách (mọi chế độ): Copy mục này / Copy cả danh sách. Unit test 77/77; GUI trong Sandbox: menu,
   clipboard, hộp thoại lưu CSV + HTML đều chạy (2026-10-02)
 - [ ] Chạy bản Release So chữ trên máy chưa có gói OCR tiếng Nhật của Windows nhưng có mạng: thử hướng dẫn cài trong README
-- [ ] **[Đề xuất · Nên có]** Khác biệt cho 2 ảnh lệch bố cục dần (đã phân tích 2026-10-02: B giãn 7 → 46 px từ trên
-  xuống, dịch tay cả ảnh không giúp): chế độ căn *Căn từng vùng* (tự tìm độ lệch từng dải / ô) và/hoặc *Soi 1 vùng*
-  (khoanh vùng trên A → tự tìm chỗ khớp ở B, chỉ so vùng đó) — chờ người dùng chọn hướng
+- [x] **[Đề xuất · Nên có]** Khác biệt cho 2 ảnh lệch bố cục dần (đã phân tích 2026-10-02: B giãn 7 → 46 px từ trên
+  xuống, dịch tay cả ảnh không giúp): người dùng chọn *Soi 1 vùng* — mục căn mới "Soi 1 vùng (khoanh trên ảnh)": kéo
+  chuột khoanh vùng → vùng tự tìm chỗ khớp ở B, từng ô (nhãn / ô nhập) căn riêng, chỉ so vùng đó (`RegionAligner`).
+  Unit test 85/85, build 0 warning. Ảnh thật IE ↔ Edge: khối 受注数量 74,6% → 89% giống; phần đỏ còn lại là khác cách
+  vẽ chữ / viền ô (so pixel không bỏ được — dùng So chữ) (2026-10-05)
+- [ ] Test GUI *Soi 1 vùng* trong Sandbox: chọn mục căn, kéo khoanh, khoanh lại, Lưu PNG / báo cáo HTML
+- [ ] **[Đề xuất · Có thể]** Phương án A *Căn từng vùng* cả trang (tự chia ô như Soi 1 vùng nhưng không cần khoanh)
 - [ ] **[Đề xuất · Nên có]** So sánh hàng loạt 2 thư mục ảnh (ghép theo tên file) → bảng tổng hợp giống / khác + báo
   cáo HTML — cho kiểm thử hồi quy nhiều màn hình 1 lần
 - Giới hạn đã biết: OCR không chạy trên ARM64 (không có bản Tesseract native)

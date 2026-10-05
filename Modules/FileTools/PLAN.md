@@ -210,3 +210,22 @@ trước" không sáng khi nhập chữ cần tìm trước rồi mới thêm fi
 - Sandbox: nút ? trên trang Tách theo cột mở đúng mục; tìm "thung rac" ra Tìm file trùng; mục chân menu khi đang mở sẵn đổi
   sang mục So sánh (vẫn 1 cửa sổ); F1 trên trang Tìm mở mục Tìm. Lỗi nhỏ đã sửa: danh mục không cuộn tới mục đang chọn
   (ScrollIntoView gọi trước khi danh sách bố cục xong).
+
+## Bổ sung (2026-10-05): file đang làm dùng chung + gộp 8 trang thành 4
+Người dùng: "có một số tính năng có thể gom chung, khi chuyển trang thì phải chọn lại file, cực quá".
+- **File đang làm dùng chung** (`ViewModels/SharedFile.cs`): mọi chỗ chọn file (Chọn..., kéo-thả, gõ đường dẫn, nạp mẫu)
+  ghi `SharedFile.Current` (chỉ file có thật); `MainWindow.ContentFrame_Navigated` đưa vào trang vừa mở qua
+  `IUsesSharedFile.ApplySharedFile`. Người dùng chọn "luôn đổi theo file mới nhất". Ngoại lệ: trang đang chạy giữ file cũ;
+  Theo dõi log đang theo dõi giữ file cũ; danh sách nhiều file (Nối, Đổi encoding, Thay thế) chỉ tự thêm khi trống (thêm
+  đúng 1 file vào danh sách thì file đó thành file chung); So sánh 2 file điền ô A (trừ khi file đó đang ở ô B).
+- **Gộp trang** (16 → 12): Thông tin file + Trích dòng → *Xem file* (`InfoPage`); Tìm + Lọc dòng → *Tìm / Lọc dòng*
+  (`SearchPage`, ô từ khoá chung nhiều dòng - Tìm cũ chỉ 1 chữ; Enter = Tìm bắt ở `PreviewKeyDown` vì ô nhiều dòng nuốt
+  Enter, Shift+Enter = thêm dòng); Đổi encoding + Đổi xuống dòng → *Đổi encoding / xuống dòng* (`EncodingPage` - khối Đầu
+  ra vốn có ô xuống dòng + "Giữ như file nguồn", nên chỉ đổi mô tả / cột xem trước); Chọn / sắp cột + Đổi dấu phân cách →
+  *CSV: Chọn cột / đổi dấu phân cách* (`ColumnsPage`; mọi cột đúng thứ tự gốc → `Columns = null` để giữ cả ô thừa như
+  trang Đổi dấu phân cách cũ; Tab → đuôi .tsv). Giữ tên class trang cũ còn lại để mẫu + mục Hướng dẫn không đổi khoá.
+- **Mẫu đã lưu** của 4 trang bị bỏ chuyển sang trang mới lúc mở app (`PresetMigration` trong `Core/Presets.cs`): Lọc dòng
+  giữ nguyên tên tuỳ chọn; Tìm `Query` → `Terms`; Đổi xuống dòng `TargetIndex` 0/1 → `Output.NewlineIndex` 1/2 +
+  `Output.EncodingIndex` = Giữ như nguồn; Đổi dấu phân cách `TargetIndex` 0..3 → `OutputDelimiterIndex` 1..4; trùng tên
+  thì thêm "(tên trang cũ)".
+- Kiểm: unit test 132/132 (thêm test chuyển mẫu, 2 mục tìm Hướng dẫn); build 0 warning. GUI chưa test.

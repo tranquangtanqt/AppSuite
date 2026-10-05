@@ -11,7 +11,7 @@ namespace FileTools.ViewModels;
 public sealed record DiffRow(string NumberA, string NumberB, string Mark, string Text, DiffLineKind Kind, bool IsHeader);
 
 /// <summary>Trang "So sánh 2 file": dòng thêm / bớt / sửa kèm ngữ cảnh + báo cáo HTML.</summary>
-public sealed partial class CompareViewModel : JobViewModel
+public sealed partial class CompareViewModel : JobViewModel, IUsesSharedFile
 {
     public ObservableCollection<DiffRow> Rows { get; } = [];
 
@@ -55,6 +55,17 @@ public sealed partial class CompareViewModel : JobViewModel
 
     [RelayCommand]
     private void Swap() => (PathA, PathB) = (PathB, PathA);
+
+    partial void OnPathAChanged(string value) => SharedFile.Set(value);
+
+    /// <summary>File đang làm chung → ô A (trừ khi nó đang ở ô B - không so 1 file với chính nó).</summary>
+    public void ApplySharedFile(string path)
+    {
+        if (!IsBusy && !SharedFile.SamePath(path, PathA) && !SharedFile.SamePath(path, PathB))
+        {
+            PathA = path;
+        }
+    }
 
     /// <summary>Kéo-thả: 2 file cùng lúc → A và B; 1 file → ô còn trống (hoặc B).</summary>
     public void AddPaths(IReadOnlyList<string> paths)
@@ -125,7 +136,7 @@ public sealed partial class CompareViewModel : JobViewModel
 }
 
 /// <summary>Trang "Theo dõi log": hiện N dòng cuối rồi tự thêm dòng mới (đọc mỗi 0,5 s), lọc theo từ khoá, tạm dừng cuộn.</summary>
-public sealed partial class TailViewModel : ObservableObject
+public sealed partial class TailViewModel : ObservableObject, IUsesSharedFile
 {
     private const int MaxRows = 5000;
     private readonly DispatcherQueueTimer _timer;
@@ -177,6 +188,17 @@ public sealed partial class TailViewModel : ObservableObject
         if (await Pickers.PickFileAsync() is { } p)
         {
             SourcePath = p;
+        }
+    }
+
+    partial void OnSourcePathChanged(string value) => SharedFile.Set(value);
+
+    /// <summary>Đang theo dõi thì giữ file cũ - không dừng theo dõi giữa chừng.</summary>
+    public void ApplySharedFile(string path)
+    {
+        if (!IsRunning && !SharedFile.SamePath(path, SourcePath))
+        {
+            SourcePath = path;
         }
     }
 

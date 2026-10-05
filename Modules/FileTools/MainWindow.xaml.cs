@@ -40,6 +40,7 @@ public sealed partial class MainWindow : Window
         var page = ContentFrame.Content;
         var viewModel = page?.GetType().GetProperty("ViewModel")?.GetValue(page);
         Presets.Attach(viewModel, page?.GetType().Name ?? string.Empty);
+        SharedFile.ApplyTo(viewModel); // file đang làm ở trang trước → trang này, khỏi chọn lại
     }
 
     private HelpWindow? _help;

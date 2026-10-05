@@ -42,9 +42,10 @@ public sealed partial class MainWindow : Window
     private SKRect _lastFitBounds; // khung nội dung lúc "vừa cửa sổ" gần nhất
     private bool _syncingOptions; // đang đồng bộ control từ ViewModel - bỏ qua sự kiện của control
 
-    private enum DragKind { None, Pan, Swipe, Ignore }
-    private SKPoint _ignoreStart; // toạ độ ảnh A - điểm bắt đầu kéo khoanh vùng bỏ qua
+    private enum DragKind { None, Pan, Swipe, Ignore, Focus }
+    private SKPoint _ignoreStart; // toạ độ ảnh A - điểm bắt đầu kéo khoanh vùng bỏ qua / vùng soi
     private SKRect? _ignoreDraft;
+    private SKRect? _focusDraft;
     private DragKind _drag;
     private SKPoint _dragLast;
 
@@ -874,6 +875,13 @@ public sealed partial class MainWindow : Window
             _ignoreStart = ToImage(local);
             _ignoreDraft = null;
         }
+        // Soi 1 vùng: chuột trái kéo = khoanh vùng cần soi (toạ độ ảnh A); cuộn ảnh bằng chuột phải / giữa.
+        else if (ViewModel.Mode == ViewMode.Diff && ViewModel.Align == Engine.AlignMode.Focus && point.Properties.IsLeftButtonPressed)
+        {
+            _drag = DragKind.Focus;
+            _ignoreStart = ToImage(local);
+            _focusDraft = null;
+        }
         else
         {
             _drag = DragKind.Pan;
@@ -895,9 +903,17 @@ public sealed partial class MainWindow : Window
             case DragKind.Swipe:
                 ViewModel.SwipeX = ToImage(local).X;
                 break;
-            case DragKind.Ignore:
+            case DragKind.Ignore or DragKind.Focus:
                 var p = ToImage(local);
-                _ignoreDraft = new SKRect(Math.Min(p.X, _ignoreStart.X), Math.Min(p.Y, _ignoreStart.Y), Math.Max(p.X, _ignoreStart.X), Math.Max(p.Y, _ignoreStart.Y));
+                var draft = new SKRect(Math.Min(p.X, _ignoreStart.X), Math.Min(p.Y, _ignoreStart.Y), Math.Max(p.X, _ignoreStart.X), Math.Max(p.Y, _ignoreStart.Y));
+                if (_drag == DragKind.Focus)
+                {
+                    _focusDraft = draft;
+                }
+                else
+                {
+                    _ignoreDraft = draft;
+                }
                 Canvas.Invalidate();
                 break;
         }
@@ -923,6 +939,20 @@ public sealed partial class MainWindow : Window
                 ViewModel.RemoveIgnoreRectAt((int)_ignoreStart.X, (int)_ignoreStart.Y);
             }
             _ignoreDraft = null;
+            Canvas.Invalidate();
+        }
+        else if (_drag == DragKind.Focus)
+        {
+            // Kéo ≥ 8 px = khoanh vùng soi mới (cắt theo ảnh A); bấm không kéo thì giữ vùng cũ.
+            if (_focusDraft is { } draft && draft.Width >= 8 && draft.Height >= 8 && ViewModel.ImageA is { } a)
+            {
+                var rect = SKRectI.Intersect(SKRectI.Round(draft), SKRectI.Create(a.Bitmap.Width, a.Bitmap.Height));
+                if (rect.Width >= 8 && rect.Height >= 8)
+                {
+                    ViewModel.FocusRect = rect;
+                }
+            }
+            _focusDraft = null;
             Canvas.Invalidate();
         }
         _drag = DragKind.None;
@@ -982,7 +1012,8 @@ public sealed partial class MainWindow : Window
             CursorText.Text = $"x {x,5}  y {y,5}   (toạ độ ảnh ghép)";
             return;
         }
-        var offset = DrawOffsetB;
+        // Soi 1 vùng: màu B lấy theo độ lệch của ô dưới con trỏ (đúng điểm đã đem so).
+        var offset = ViewModel.Mode == ViewMode.Diff && ViewModel.Painter is Engine.DiffPainter painter ? painter.Result.OffsetAt(x, y) : DrawOffsetB;
         CursorText.Text = $"x {x,5}  y {y,5}   A {ColorAt(ViewModel.ImageA, x, y)}   B {ColorAt(ViewModel.ImageB, x - offset.X, y - offset.Y)}";
     }
 
@@ -1063,6 +1094,10 @@ public sealed partial class MainWindow : Window
         if (_ignoreDraft is { } draft)
         {
             Engine.DiffPainter.DrawIgnoreRects(canvas, [SKRectI.Round(draft)], 1 / _zoom);
+        }
+        if (_focusDraft is { } focus)
+        {
+            Engine.DiffPainter.DrawFocusFrame(canvas, SKRectI.Round(focus), 1 / _zoom);
         }
     }
 

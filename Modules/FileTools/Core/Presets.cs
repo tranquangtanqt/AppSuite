@@ -51,6 +51,19 @@ public sealed class PresetStore(string path)
         return true;
     }
 
+    /// <summary>Chuyển mẫu của các trang đã gộp sang trang mới (xem <see cref="PresetMigration"/>); chạy lúc mở app, không có gì
+    /// để chuyển thì không ghi file. Trả về số mẫu đã chuyển / sửa.</summary>
+    public int MigrateMergedPages()
+    {
+        var all = Load();
+        int changed = PresetMigration.Migrate(all);
+        if (changed > 0)
+        {
+            Write(all);
+        }
+        return changed;
+    }
+
     private Dictionary<string, List<Preset>> Load()
     {
         try
@@ -159,6 +172,94 @@ public static class PresetMapper
                 IFormattable f => f.ToString(null, System.Globalization.CultureInfo.InvariantCulture),
                 _ => value.ToString() ?? string.Empty,
             };
+        }
+    }
+}
+
+/// <summary>
+/// 2026-10-05 gộp 8 trang thành 4: Lọc dòng → Tìm / Lọc dòng (SearchPage), Đổi xuống dòng → Đổi encoding / xuống dòng
+/// (EncodingPage), Đổi dấu phân cách → Chọn cột / đổi dấu phân cách (ColumnsPage), Trích dòng → Xem file (InfoPage). Mẫu đã
+/// lưu của trang cũ chuyển sang trang mới, đổi tên tuỳ chọn cho khớp; trùng tên với mẫu có sẵn thì thêm tên trang cũ.
+/// </summary>
+public static class PresetMigration
+{
+    public static readonly IReadOnlyList<(string From, string To, string Label)> Moves =
+    [
+        ("FilterPage", "SearchPage", "Lọc dòng"),
+        ("NewlinePage", "EncodingPage", "Đổi xuống dòng"),
+        ("DelimiterPage", "ColumnsPage", "Đổi dấu phân cách"),
+        ("ExtractPage", "InfoPage", "Trích dòng"),
+    ];
+
+    /// <summary>Sửa <paramref name="all"/> tại chỗ; trả về số mẫu đã chuyển / sửa.</summary>
+    public static int Migrate(Dictionary<string, List<Preset>> all)
+    {
+        int changed = 0;
+        // Trang Tìm cũ: ô "Query" (1 từ) → "Terms" (mỗi dòng 1 từ) của trang gộp.
+        if (all.TryGetValue("SearchPage", out var search))
+        {
+            foreach (var p in search.Where(p => p.Values.ContainsKey("Query")))
+            {
+                Rename(p.Values, "Query", "Terms");
+                changed++;
+            }
+        }
+        foreach (var (from, to, label) in Moves)
+        {
+            if (!all.Remove(from, out var old))
+            {
+                continue;
+            }
+            if (!all.TryGetValue(to, out var target))
+            {
+                target = [];
+                all[to] = target;
+            }
+            foreach (var preset in old)
+            {
+                var name = preset.Name;
+                if (target.Any(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase)))
+                {
+                    name = $"{name} ({label})";
+                }
+                target.RemoveAll(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase));
+                target.Add(new Preset(name, Convert(from, preset.Values)));
+                changed++;
+            }
+        }
+        return changed;
+    }
+
+    /// <summary>Giá trị của 1 mẫu trang cũ theo tên tuỳ chọn của trang mới.</summary>
+    public static Dictionary<string, string> Convert(string fromPage, IReadOnlyDictionary<string, string> values)
+    {
+        var result = new Dictionary<string, string>(values);
+        switch (fromPage)
+        {
+            case "NewlinePage":
+                // Đổi xuống dòng: TargetIndex 0 = CRLF, 1 = LF; encoding giữ như nguồn.
+                if (result.Remove("TargetIndex", out var newline))
+                {
+                    result["Output.NewlineIndex"] = newline == "1" ? "2" : "1";
+                }
+                result["Output.EncodingIndex"] = ((int)OutputEncoding.SameAsSource).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                break;
+            case "DelimiterPage":
+                // Đổi dấu phân cách: TargetIndex 0..3 (, Tab ; |) → OutputDelimiterIndex 1..4 (0 = giữ như nguồn).
+                if (result.Remove("TargetIndex", out var target) && int.TryParse(target, out int t))
+                {
+                    result["OutputDelimiterIndex"] = (Math.Clamp(t, 0, 3) + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+                break;
+        }
+        return result;
+    }
+
+    private static void Rename(Dictionary<string, string> values, string from, string to)
+    {
+        if (values.Remove(from, out var value) && !values.ContainsKey(to))
+        {
+            values[to] = value;
         }
     }
 }

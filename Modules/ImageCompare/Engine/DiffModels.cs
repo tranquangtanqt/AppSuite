@@ -12,6 +12,9 @@ public enum AlignMode
     Manual,
     /// <summary>Căn từng dòng (trang dài: B thêm / bớt 1 đoạn ở giữa so với A) - xem <see cref="RowAligner"/>.</summary>
     Rows,
+    /// <summary>Soi 1 vùng: chỉ so vùng người dùng khoanh trên A (<see cref="DiffOptions.FocusRect"/>), vùng đó tự tìm chỗ
+    /// khớp riêng ở B - cho 2 ảnh lệch bố cục dần (B giãn / dịch khác nhau ở từng chỗ) - xem <see cref="RegionAligner"/>.</summary>
+    Focus,
 }
 
 public enum RegionKind
@@ -36,6 +39,8 @@ public sealed record DiffOptions
     public bool IgnoreAntialiasing { get; init; } = true;
     /// <summary>Vùng bỏ qua (toạ độ ảnh A) - đồng hồ, ngày giờ, avatar... khác nhau nhưng không quan trọng.</summary>
     public IReadOnlyList<SKRectI> IgnoreRects { get; init; } = [];
+    /// <summary>Vùng cần soi (toạ độ ảnh A) khi <see cref="Align"/> = Focus; null = chưa khoanh (so như Tự căn chỉnh).</summary>
+    public SKRectI? FocusRect { get; init; }
 
     public int ThresholdValue => (int)Math.Round(Math.Clamp(ThresholdPercent, 0, 100) * 255 / 100);
 }
@@ -114,6 +119,14 @@ public sealed class DiffResult
     public AlignMode Align { get; init; } = AlignMode.None;
     /// <summary>Vùng bỏ qua đã dùng (toạ độ ảnh A) - vẽ sọc xám trên ảnh khác biệt.</summary>
     public IReadOnlyList<SKRectI> IgnoreRects { get; init; } = [];
+    /// <summary>Soi 1 vùng: vùng đã so (toạ độ ảnh A) - ngoài vùng này không so, vẽ tối đi. Null ở các cách căn khác.</summary>
+    public SKRectI? Focus { get; init; }
+    /// <summary>Soi 1 vùng: độ lệch từng ô + ảnh B đã nắn (vẽ thay B trong vùng soi). Null ở các cách căn khác.</summary>
+    public RegionMatch? FocusMatch { get; init; }
+
+    /// <summary>Độ lệch của B tại điểm (<paramref name="x"/>, <paramref name="y"/>) (toạ độ A): Soi 1 vùng thì theo ô chứa điểm đó.</summary>
+    public SKPointI OffsetAt(int x, int y) =>
+        FocusMatch?.Cells.FirstOrDefault(c => c.Area.Contains(x, y))?.OffsetB ?? OffsetB;
 
     public bool IsIdentical => DiffPixels == 0 && OnlyInA == 0 && OnlyInB == 0;
 
@@ -132,7 +145,20 @@ public sealed class DiffResult
         {
             AlignMode.None => "Không căn (trùng góc trên-trái)",
             AlignMode.Manual => $"Chỉnh tay: B lệch ({OffsetB.X}, {OffsetB.Y}) px",
+            AlignMode.Focus when Focus is { } f => $"Soi vùng {f.Width} × {f.Height} tại ({f.Left}, {f.Top}): " + FocusOffsetsText(),
             _ => $"Tự căn: B lệch ({OffsetB.X}, {OffsetB.Y}) px",
         },
     };
+
+    /// <summary>"B lệch (0, −10) px" hoặc, khi các ô lệch khác nhau, "B lệch x −2…5, y −14…−10 px (căn riêng 12 ô)".</summary>
+    private string FocusOffsetsText()
+    {
+        var cells = FocusMatch?.Cells ?? [];
+        if (cells.Count <= 1 || cells.All(c => c.OffsetB == cells[0].OffsetB))
+        {
+            return $"B lệch ({OffsetB.X}, {OffsetB.Y}) px";
+        }
+        static string Range(IEnumerable<int> values) => values.Min() == values.Max() ? $"{values.Min()}" : $"{values.Min()}…{values.Max()}";
+        return $"B lệch x {Range(cells.Select(c => c.OffsetB.X))}, y {Range(cells.Select(c => c.OffsetB.Y))} px (căn riêng {cells.Count} ô)";
+    }
 }

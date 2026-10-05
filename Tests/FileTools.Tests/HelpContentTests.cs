@@ -53,7 +53,9 @@ public class HelpContentTests
 
     [Theory]
     [InlineData("tach cot", "CSV: Tách theo cột")]
-    [InlineData("SHIFT-JIS", "Đổi encoding")]
+    [InlineData("SHIFT-JIS", "Đổi encoding / xuống dòng")]
+    [InlineData("healthcheck", "Tìm / Lọc dòng")]
+    [InlineData("tsv", "CSV: Chọn cột / đổi dấu phân cách")]
     [InlineData("thung rac", "Tìm file trùng")]
     [InlineData("tail -f", "Theo dõi log")]
     public void Search_ignores_case_and_diacritics(string query, string expectedSection)

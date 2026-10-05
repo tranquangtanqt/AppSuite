@@ -17,8 +17,9 @@ public static class HelpContent
     [
         new("Bắt đầu nhanh", "", "FileTools xử lý file text / CSV / log lớn (vài trăm MB tới vài GB) mà Excel, Notepad không mở nổi. Mọi thao tác đọc file từng đoạn nên RAM không tăng theo cỡ file.", null,
         [
-            new("1. Chọn trang ở menu bên trái", "Mỗi trang làm 1 việc: Nối, Tách, Trích dòng, Tìm, Lọc, Đổi encoding, CSV, So sánh, Theo dõi log, Tìm file trùng..."),
+            new("1. Chọn trang ở menu bên trái", "Mỗi trang làm 1 việc: Nối, Tách, Xem file (thông tin + trích dòng), Tìm / Lọc dòng, Đổi encoding / xuống dòng, CSV, So sánh, Theo dõi log, Tìm file trùng..."),
             new("2. Chọn file", "Bấm Chọn..., dán đường dẫn vào ô, hoặc kéo-thả file / thư mục từ Explorer vào trang.", "Kéo-thả"),
+            new("File đang làm dùng chung", "Chọn file ở 1 trang thì chuyển sang trang khác file đó đã điền sẵn - không phải chọn lại. Luôn theo file chọn gần nhất. Trang danh sách nhiều file (Nối file, Đổi encoding, Thay thế) chỉ tự thêm khi danh sách đang trống; So sánh 2 file điền vào ô A; trang đang chạy (hoặc Theo dõi log đang theo dõi) giữ nguyên file cũ."),
             new("3. Chọn tuỳ chọn rồi bấm nút chính (nút màu xanh)", "Thao tác chạy nền: thanh tiến độ + nút Huỷ. Huỷ giữa chừng không để lại file dở."),
             new("4. Xem kết quả", "Nhật ký ở cuối trang ghi kết quả từng bước (mới nhất ở trên cùng). Mở kết quả = mở file / thư mục vừa tạo; Mở thư mục = mở Explorer và chọn sẵn file."),
             new("Mở lại hướng dẫn này", "Mục Hướng dẫn cuối menu trái, nút ? trên cùng, hoặc phím F1 (mở thẳng phần của trang đang xem).", "F1"),
@@ -27,9 +28,9 @@ public static class HelpContent
         new("Tuỳ chọn dùng chung", "", "Các ô xuất hiện trên nhiều trang.", null,
         [
             new("Encoding đầu ra", "Mặc định UTF-8 (không BOM). Chọn UTF-8 có BOM nếu file sẽ mở bằng Excel (Excel cần BOM để đọc đúng tiếng Việt / Nhật trong CSV); Shift-JIS cho hệ thống Nhật cũ; \"Giữ như file nguồn\" để không đổi gì."),
-            new("Encoding file nguồn", "Tự nhận: BOM → UTF-16 → UTF-8 → Shift-JIS. Nhận sai (chữ bị lỗi font) thì dùng trang Đổi encoding với ô \"Đọc file nguồn theo\" để ép đúng."),
+            new("Encoding file nguồn", "Tự nhận: BOM → UTF-16 → UTF-8 → Shift-JIS. Nhận sai (chữ bị lỗi font) thì dùng trang Đổi encoding / xuống dòng với ô \"Đọc file nguồn theo\" để ép đúng."),
             new("Xuống dòng", "Giữ như nguồn (mặc định), CRLF (Windows) hoặc LF (Unix / Linux)."),
-            new("File tạm", "Trích dòng, Tìm (xuất dòng khớp), So sánh (báo cáo) ghi vào %TEMP%\\AppSuite\\FileTools. Nút \"Mở thư mục tạm\" ở trang Trích dòng."),
+            new("File tạm", "Trích dòng, Tìm (xuất dòng khớp), So sánh (báo cáo) ghi vào %TEMP%\\AppSuite\\FileTools. Nút \"Mở thư mục tạm\" ở trang Xem file."),
             new("Mở kết quả CSV", "File CSV / TSV mở bằng CsvEditor nếu có trong cùng bộ AppSuite, ngược lại bằng ứng dụng mặc định của Windows."),
             new("Mẫu (preset)", "Thanh Mẫu ở đầu cửa sổ: Lưu mẫu... ghi lại mọi tuỳ chọn đang chọn trên trang (không lưu danh sách file); chọn mẫu + Nạp để dùng lại; Xoá để bỏ. Mỗi trang có danh sách mẫu riêng."),
             new("An toàn dữ liệu", "Không bao giờ sửa file gốc trừ khi bạn chọn \"Ghi đè file gốc\" - khi đó bản cũ luôn được giữ thành <tên>.bak. File đang ghi dở có đuôi .partial và bị xoá nếu huỷ / lỗi."),
@@ -52,26 +53,23 @@ public static class HelpContent
             new("Tên các phần", "<tên>.part001.csv, part002... Nối lại đúng bản gốc bằng trang Nối file (encoding \"Giữ như file nguồn\")."),
         ]),
 
-        new("Thông tin file", "", "Xem nhanh file trước khi xử lý.", "InfoPage",
+        new("Xem file", "", "Thông tin file + trích 1 đoạn dòng ra file tạm để mở xem.", "InfoPage",
         [
-            new("Cách dùng", "Chọn hoặc kéo-thả file là tự phân tích (1 lượt đọc); bấm Phân tích lại nếu file vừa đổi."),
-            new("Thông tin hiện", "Dung lượng, encoding, số dòng và dòng trống, kiểu xuống dòng (CRLF / LF / lẫn lộn), dòng cuối có xuống dòng không, dòng dài nhất."),
+            new("Thông tin file", "Chọn hoặc kéo-thả file là tự phân tích (1 lượt đọc); bấm Phân tích lại nếu file vừa đổi. Hiện dung lượng, encoding, số dòng và dòng trống, kiểu xuống dòng (CRLF / LF / lẫn lộn), dòng cuối có xuống dòng không, dòng dài nhất."),
             new("File dạng bảng", "Dấu phân cách, tên cột, số bản ghi và các bản ghi lệch số cột so với dòng tiêu đề (kèm số thứ tự vài bản ghi đầu) - dùng để tìm dòng lỗi trước khi nhập vào hệ thống."),
-        ]),
-
-        new("Trích dòng", "", "Lấy 1 đoạn dòng của file lớn ra file tạm để mở xem.", "ExtractPage",
-        [
-            new("3 cách lấy", "N dòng đầu; từ dòng X đến dòng Y; N dòng cuối. Chỉ đọc đúng phần cần: file vài GB vẫn gần như tức thì (N dòng cuối đọc ngược từ cuối file)."),
+            new("Trích dòng: 3 cách lấy", "N dòng đầu; từ dòng X đến dòng Y; N dòng cuối, rồi bấm Trích dòng. Chỉ đọc đúng phần cần: file vài GB vẫn gần như tức thì (N dòng cuối đọc ngược từ cuối file)."),
             new("Kèm dòng tiêu đề", "Chèn dòng 1 lên đầu khi lấy đoạn giữa / cuối của CSV để mở bằng Excel vẫn có tên cột."),
             new("Mở file sau khi trích", "Tự mở file vừa trích (CSV bằng CsvEditor nếu có). File nằm ở thư mục tạm, xem bằng nút Mở thư mục tạm."),
         ]),
 
-        new("Tìm", "", "Tìm chữ / regex trong file lớn.", "SearchPage",
+        new("Tìm / Lọc dòng", "", "Tìm chữ / regex trong file lớn, hoặc giữ / bỏ các dòng khớp rồi ghi ra file mới.", "SearchPage",
         [
-            new("Cách dùng", "Chọn file, gõ chữ cần tìm, Enter hoặc bấm Tìm. Kết quả: số dòng + nội dung dòng khớp.", "Enter"),
+            new("Từ khoá", "Mỗi dòng 1 từ khoá; chọn dòng khớp khi chứa 1 trong / tất cả các từ. Enter = Tìm, Shift+Enter = thêm dòng từ khoá.", "Enter", "Shift+Enter"),
+            new("Tìm", "Bấm Tìm: hiện số dòng + nội dung dòng khớp. Chỉ hiện N dòng đầu (mặc định 10.000) nhưng vẫn đếm hết; tick Xuất dòng khớp ra file tạm để lấy toàn bộ (kèm số dòng gốc nếu tick)."),
+            new("Lọc ra file mới", "Chọn Giữ dòng khớp / Bỏ dòng khớp, file kết quả (mặc định <tên>_loc cạnh file gốc), bấm Lọc ra file. Ví dụ: giữ các dòng ERROR hoặc WARN của log; bỏ các dòng \"healthcheck\"; giữ đơn hàng của 3 mã khách hàng."),
+            new("CSV", "Lọc theo bản ghi (ô nhiều dòng không bị tách); tick Luôn giữ dòng tiêu đề để file kết quả vẫn có tên cột."),
             new("Không phân biệt dấu (mặc định bật)", "\"thanh toan\" khớp \"Thanh toán\", \"da\" khớp \"đã\". Tắt khi cần khớp đúng dấu."),
-            new("Regex", "Tick Regex để tìm theo biểu thức, vd ^ERROR, \\d{4}-\\d{2}-\\d{2}, (timeout|refused). Regex sai thì báo lỗi trong nhật ký."),
-            new("Hiện tối đa / xuất file", "Chỉ hiện N dòng đầu (mặc định 10.000) nhưng vẫn đếm hết. Tick Xuất dòng khớp ra file tạm để lấy toàn bộ (kèm số dòng gốc nếu tick)."),
+            new("Regex", "Tick Regex để tìm theo biểu thức, vd ^ERROR, \\d{4}-\\d{2}-\\d{2}, (timeout|refused) - chỉ dùng dòng đầu của ô từ khoá. Regex sai thì báo lỗi trong nhật ký."),
         ]),
 
         new("So sánh 2 file", "", "Tìm dòng thêm / bớt / sửa giữa 2 file text.", "ComparePage",
@@ -92,27 +90,14 @@ public static class HelpContent
             new("Lưu ý", "Không khoá file - chương trình ghi log vẫn chạy bình thường. Dòng đang ghi dở chỉ hiện khi ghi xong. Log bị xoá nội dung / xoay vòng sang file mới cùng tên thì tự đọc lại từ đầu và báo."),
         ]),
 
-        new("Lọc dòng", "", "Giữ hoặc bỏ các dòng chứa từ khoá, ghi ra file mới.", "FilterPage",
+        new("Đổi encoding / xuống dòng", "", "Chuyển nhiều file sang 1 encoding (vd Shift-JIS → UTF-8) và / hoặc đổi CRLF ↔ LF.", "EncodingPage",
         [
-            new("Các bước", "1) Chọn file. 2) Nhập từ khoá, mỗi dòng 1 từ. 3) Chọn khớp khi chứa 1 trong / tất cả các từ, và dòng khớp thì Giữ lại / Bỏ đi. 4) Lọc dòng."),
-            new("Ví dụ", "Giữ các dòng chứa ERROR hoặc WARN của log; bỏ các dòng chứa \"healthcheck\"; giữ đơn hàng của 3 mã khách hàng."),
-            new("CSV", "Lọc theo bản ghi (ô nhiều dòng không bị tách); tick Luôn giữ dòng tiêu đề để file kết quả vẫn có tên cột."),
-            new("Regex", "Tick Regex thì chỉ dùng dòng đầu tiên của ô từ khoá làm biểu thức."),
-        ]),
-
-        new("Đổi encoding", "", "Chuyển nhiều file sang 1 encoding, vd Shift-JIS → UTF-8.", "EncodingPage",
-        [
-            new("Thêm file", "Dán đường dẫn file / thư mục rồi bấm Thêm, Thêm file..., Thêm thư mục... (theo mẫu lọc, có / không thư mục con), hoặc kéo-thả. Cột bên phải là encoding tự nhận của từng file.", "Kéo-thả"),
-            new("Ghi kết quả", "Ra thư mục khác (mặc định converted, file gốc giữ nguyên) hoặc ghi đè file gốc (bản cũ giữ thành .bak; file đã đúng encoding thì bỏ qua)."),
+            new("Thêm file", "Dán đường dẫn file / thư mục rồi bấm Thêm, Thêm file..., Thêm thư mục... (theo mẫu lọc, có / không thư mục con), hoặc kéo-thả. Cột bên phải: encoding tự nhận + kiểu xuống dòng hiện tại của từng file.", "Kéo-thả"),
+            new("Chọn đổi gì", "Ô Encoding đầu ra và Xuống dòng: cái nào không cần đổi thì chọn \"Giữ như file nguồn\" / \"Giữ như nguồn\". Vd chỉ đổi sang LF: Encoding = Giữ như file nguồn, Xuống dòng = LF. Bấm Đổi."),
+            new("Ghi kết quả", "Ra thư mục khác (mặc định converted, file gốc giữ nguyên) hoặc ghi đè file gốc (bản cũ giữ thành .bak; file đã đúng thì bỏ qua, không tạo .bak thừa)."),
+            new("Khi nào đổi xuống dòng", "Script / file cấu hình đưa lên server Linux (cần LF); file từ Linux mở trên Windows bị dính dòng (cần CRLF)."),
             new("Đọc file nguồn theo", "Để Tự nhận; chỉ chọn tay khi encoding tự nhận sai (vd file Windows-1258 tiếng Việt cũ)."),
             new("Mất ký tự", "Chữ không có trong encoding đích (vd tiếng Việt → Shift-JIS) được thay bằng \"?\" và nhật ký báo số ký tự bị mất - kiểm tra trước khi dùng file."),
-        ]),
-
-        new("Đổi xuống dòng", "", "Đổi CRLF (Windows) ↔ LF (Unix / Linux) cho nhiều file.", "NewlinePage",
-        [
-            new("Cách dùng", "Thêm file (như trang Đổi encoding), chọn Đổi thành CRLF hoặc LF, bấm Đổi xuống dòng. Cột bên phải xem trước kiểu xuống dòng hiện tại."),
-            new("Khi nào cần", "Script / file cấu hình đưa lên server Linux (cần LF); file từ Linux mở trên Windows bị dính dòng (cần CRLF)."),
-            new("Lưu ý", "Giữ nguyên encoding. File đã đúng kiểu được bỏ qua, không tạo .bak thừa."),
         ]),
 
         new("Thay thế hàng loạt", "", "Tìm và thay chữ / regex trên nhiều file.", "ReplacePage",
@@ -138,17 +123,12 @@ public static class HelpContent
             new("RAM", "So cả dòng phải nhớ mỗi dòng ~14 byte: 25 triệu dòng ≈ 360 MB. Không đủ RAM thì báo lỗi rõ - khi đó so theo cột hoặc tách file trước."),
         ]),
 
-        new("CSV: Chọn / sắp cột", "", "Giữ các cột cần dùng, đổi thứ tự cột.", "ColumnsPage",
+        new("CSV: Chọn cột / đổi dấu phân cách", "", "Giữ các cột cần dùng, đổi thứ tự cột, và / hoặc đổi , ↔ Tab ↔ ; ↔ |.", "ColumnsPage",
         [
-            new("Cách dùng", "Bỏ tick cột không cần; chọn 1 cột rồi ▲ Lên / ▼ Xuống để đổi thứ tự (thứ tự trong danh sách = thứ tự ghi ra). Tích tất cả / Bỏ tích tất cả / Thứ tự như gốc để làm lại."),
-            new("Dấu phân cách ghi ra", "Giữ như nguồn hoặc đổi luôn (vd chọn cột + đổi sang Tab trong 1 lần). Bọc mọi ô trong \"\" nếu hệ thống nhận yêu cầu vậy."),
+            new("Chọn / sắp cột", "Bỏ tick cột không cần; chọn 1 cột rồi ▲ Lên / ▼ Xuống để đổi thứ tự (thứ tự trong danh sách = thứ tự ghi ra). Tích tất cả / Bỏ tích tất cả / Thứ tự như gốc để làm lại."),
+            new("Đổi dấu phân cách", "Chọn ở ô Dấu phân cách ghi ra (dấu hiện tại tự nhận - chọn tay ở ô Dấu phân cách nếu sai). Chỉ đổi dấu phân cách: để nguyên mọi cột như gốc - khi đó giữ cả ô thừa của bản ghi dài hơn tiêu đề. Đổi sang Tab thì file kết quả đuôi .tsv."),
+            new("Ngoặc kép", "Ô có chứa dấu phân cách mới / ngoặc kép / xuống dòng tự được bọc ngoặc kép cho đúng chuẩn CSV; tick Bọc mọi ô trong \"\" để bọc hết."),
             new("Lưu ý", "Bản ghi thiếu cột đã chọn thì ô đó để trống và nhật ký báo số bản ghi thiếu."),
-        ]),
-
-        new("CSV: Đổi dấu phân cách", "", "Đổi , ↔ Tab ↔ ; ↔ | cho cả file.", "DelimiterPage",
-        [
-            new("Cách dùng", "Chọn file (dấu phân cách hiện tại tự nhận - chọn tay ở ô Dấu phân cách nếu sai), chọn Đổi thành, bấm Đổi dấu phân cách. Đổi sang Tab thì file kết quả đuôi .tsv."),
-            new("Ngoặc kép", "Ô có chứa dấu phân cách mới / ngoặc kép / xuống dòng tự được bọc ngoặc kép cho đúng chuẩn CSV; tick Bọc mọi ô để bọc hết."),
         ]),
 
         new("Tìm file trùng", "", "Tìm các file có nội dung giống hệt nhau (không cần cùng tên).", "DuplicatesPage",
@@ -163,7 +143,7 @@ public static class HelpContent
             new("Chỉ file chữ", "FileTools dành cho text / CSV / log. File nhị phân (zip, ảnh, Excel .xlsx) không xử lý được - riêng Tìm file trùng thì dùng được cho mọi loại file."),
             new("Tốc độ tham khảo (file 2 GB, 26 triệu dòng)", "Trích dòng đầu / cuối < 0,2 s; thông tin file ~15 s; tìm / lọc ~15-25 s; tách 10 phần ~20 s; chọn cột ~30 s. Ổ SSD nhanh hơn ổ HDD nhiều lần."),
             new("RAM", "Mọi thao tác dùng dưới ~80 MB dù file lớn cỡ nào, trừ Bỏ dòng trùng theo cả dòng (~14 byte / dòng)."),
-            new("Mở file vài GB bằng Excel / CsvEditor", "Đừng mở thẳng: dùng Trích dòng để lấy 1 đoạn, hoặc Tách file theo 1 triệu dòng / phần."),
+            new("Mở file vài GB bằng Excel / CsvEditor", "Đừng mở thẳng: dùng Trích dòng (trang Xem file) để lấy 1 đoạn, hoặc Tách file theo 1 triệu dòng / phần."),
             new("Nhật ký lỗi", "Lỗi được ghi vào Logs\\filetools-<ngày>.log cạnh FileTools.exe (giữ 14 ngày) - gửi kèm khi báo lỗi."),
         ]),
     ];

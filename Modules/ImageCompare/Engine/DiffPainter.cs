@@ -29,9 +29,13 @@ public sealed class DiffPainter : IDiffView
     public DiffStats Stats => _note is null ? _result.Stats : _result.Stats with { AlignNote = $"{_note} (B lệch ({_result.OffsetB.X}, {_result.OffsetB.Y}) px)" };
     public IReadOnlyList<DiffRegion> Regions => _result.Regions;
 
-    public (SKRectI? InA, SKRectI? InB) SourceRects(DiffRegion region) =>
-        (region.Bounds, new SKRectI(region.Bounds.Left - _result.OffsetB.X, region.Bounds.Top - _result.OffsetB.Y,
-            region.Bounds.Right - _result.OffsetB.X, region.Bounds.Bottom - _result.OffsetB.Y));
+    /// <remarks>Soi 1 vùng: vùng ở B lấy theo độ lệch của dải chứa tâm vùng.</remarks>
+    public (SKRectI? InA, SKRectI? InB) SourceRects(DiffRegion region)
+    {
+        var offset = _result.OffsetAt(region.Bounds.MidX, region.Bounds.MidY);
+        return (region.Bounds, new SKRectI(region.Bounds.Left - offset.X, region.Bounds.Top - offset.Y,
+            region.Bounds.Right - offset.X, region.Bounds.Bottom - offset.Y));
+    }
 
     /// <summary>Khung bao toàn bộ (A ∪ B) theo toạ độ ảnh A.</summary>
     public SKRectI Bounds => SKRectI.Union(SKRectI.Create(_a.Width, _a.Height),
@@ -47,6 +51,12 @@ public sealed class DiffPainter : IDiffView
         using (var image = new SKPaint { FilterQuality = quality })
         {
             canvas.DrawBitmap(_b, rectB, image);
+            // Soi 1 vùng: trong vùng vẽ B đã nắn theo từng dải - đúng thứ đã đem so với A.
+            if (_result is { Focus: { } f, FocusMatch: { } match })
+            {
+                using var src = new SKPaint { FilterQuality = quality };
+                canvas.DrawBitmap(match.Warped, (SKRect)f, src);
+            }
         }
         using (var wash = new SKPaint { Color = SKColors.White.WithAlpha(165) })
         {
@@ -54,6 +64,10 @@ public sealed class DiffPainter : IDiffView
         }
 
         DrawOnlyIn(canvas, pixelSize);
+        if (_result.Focus is { } focus)
+        {
+            DrawOutsideFocus(canvas, focus, Bounds);
+        }
         DrawIgnoreRects(canvas, _result.IgnoreRects, pixelSize);
 
         if (!_result.Overlap.IsEmpty && _result.DiffPixels > 0)
@@ -64,6 +78,33 @@ public sealed class DiffPainter : IDiffView
         }
 
         DrawRegionBoxes(canvas, _result.Regions, pixelSize, highlight, Bounds.Top);
+        if (_result.Focus is { } focusRect)
+        {
+            DrawFocusFrame(canvas, focusRect, pixelSize);
+        }
+    }
+
+    public static readonly SKColor FocusColor = new(0x1E, 0x88, 0xE5);
+
+    /// <summary>Soi 1 vùng: phần ngoài vùng không được so (và B chỉ căn đúng cho vùng đó) → phủ xám đậm.</summary>
+    private static void DrawOutsideFocus(SKCanvas canvas, SKRectI focus, SKRectI bounds)
+    {
+        canvas.Save();
+        canvas.ClipRect(focus, SKClipOperation.Difference);
+        using var veil = new SKPaint { Color = new SKColor(0x30, 0x30, 0x30, 150) };
+        canvas.DrawRect(bounds, veil);
+        canvas.Restore();
+    }
+
+    /// <summary>Viền xanh nét đứt quanh vùng soi (cả lúc đang kéo chuột khoanh vùng).</summary>
+    public static void DrawFocusFrame(SKCanvas canvas, SKRectI focus, float pixelSize)
+    {
+        using var border = new SKPaint
+        {
+            Color = FocusColor, Style = SKPaintStyle.Stroke, StrokeWidth = 2 * pixelSize, IsAntialias = true,
+            PathEffect = SKPathEffect.CreateDash([8 * pixelSize, 4 * pixelSize], 0),
+        };
+        canvas.DrawRect(SKRect.Inflate(focus, pixelSize, pixelSize), border);
     }
 
     public static SKColor ColorOf(RegionKind kind) => kind switch

@@ -6,7 +6,7 @@ using FileTools.Services;
 namespace FileTools.ViewModels;
 
 /// <summary>Trang làm việc trên 1 file nguồn: chọn / kéo-thả file, hiện dung lượng + encoding nhận được.</summary>
-public abstract partial class SourceFileViewModel : JobViewModel
+public abstract partial class SourceFileViewModel : JobViewModel, IUsesSharedFile
 {
     [ObservableProperty]
     private string _sourcePath = string.Empty;
@@ -27,8 +27,17 @@ public abstract partial class SourceFileViewModel : JobViewModel
 
     partial void OnSourcePathChanged(string value)
     {
+        SharedFile.Set(value);
         OnSourceChanged(value);
         _ = RefreshInfoAsync(value);
+    }
+
+    public void ApplySharedFile(string path)
+    {
+        if (!IsBusy && !SharedFile.SamePath(path, SourcePath))
+        {
+            SourcePath = path;
+        }
     }
 
     /// <summary>Đặt giá trị mặc định theo file mới (thư mục đầu ra, lặp tiêu đề CSV...).</summary>

@@ -11,27 +11,23 @@
 
     <!-- Mỗi mục 1 trang; Tag = tên class trang trong FileTools.Views. -->
     <NavigationView x:Name="Nav" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" PaneDisplayMode="Left"
-                    OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked">
+                    OpenPaneLength="250" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked">
         <NavigationView.MenuItems>
             <NavigationViewItemHeader Content="Gộp / tách" />
             <NavigationViewItem Content="Nối file" Tag="MergePage" Icon="Add" />
             <NavigationViewItem Content="Tách file" Tag="SplitPage" Icon="Cut" />
             <NavigationViewItemHeader Content="Xem" />
-            <NavigationViewItem Content="Thông tin file" Tag="InfoPage" Icon="Document" />
-            <NavigationViewItem Content="Trích dòng" Tag="ExtractPage" Icon="Preview" />
-            <NavigationViewItem Content="Tìm" Tag="SearchPage" Icon="Find" />
+            <NavigationViewItem Content="Xem file" Tag="InfoPage" Icon="Document" />
+            <NavigationViewItem Content="Tìm / Lọc dòng" Tag="SearchPage" Icon="Find" />
             <NavigationViewItem Content="So sánh 2 file" Tag="ComparePage" Icon="TwoPage" />
             <NavigationViewItem Content="Theo dõi log" Tag="TailPage" Icon="Clock" />
             <NavigationViewItemHeader Content="Biến đổi" />
-            <NavigationViewItem Content="Lọc dòng" Tag="FilterPage" Icon="Filter" />
-            <NavigationViewItem Content="Đổi encoding" Tag="EncodingPage" Icon="Font" />
-            <NavigationViewItem Content="Đổi xuống dòng" Tag="NewlinePage" Icon="Switch" />
+            <NavigationViewItem Content="Đổi encoding / xuống dòng" Tag="EncodingPage" Icon="Font" />
             <NavigationViewItem Content="Thay thế hàng loạt" Tag="ReplacePage" Icon="Edit" />
             <NavigationViewItemHeader Content="CSV" />
             <NavigationViewItem Content="Tách theo cột" Tag="CsvSplitPage" Icon="ViewAll" />
             <NavigationViewItem Content="Bỏ dòng trùng" Tag="DedupePage" Icon="Remove" />
-            <NavigationViewItem Content="Chọn / sắp cột" Tag="ColumnsPage" Icon="List" />
-            <NavigationViewItem Content="Đổi dấu phân cách" Tag="DelimiterPage" Icon="Sync" />
+            <NavigationViewItem Content="Chọn cột / đổi dấu phân cách" Tag="ColumnsPage" Icon="List" />
             <NavigationViewItemHeader Content="Thư mục" />
             <NavigationViewItem Content="Tìm file trùng" Tag="DuplicatesPage" Icon="Copy" />
         </NavigationView.MenuItems>

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- "Tìm / Lọc dòng" (gộp 2 trang cũ Tìm + Lọc dòng): cùng ô từ khoá + kiểu so khớp; Tìm = xem dòng khớp, Lọc ra file = ghi file mới. -->
 <Page
     x:Class="FileTools.Views.SearchPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -15,13 +16,14 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="2*" MinHeight="200" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" MinHeight="120" />
         </Grid.RowDefinitions>
 
         <StackPanel Spacing="2">
-            <TextBlock Text="Tìm trong file" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Text="Tìm / Lọc dòng" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock Opacity="0.7" TextWrapping="Wrap"
-                       Text="Tìm chữ / regex trong file lớn. Hiện tối đa N dòng khớp (vẫn đếm hết), có thể xuất mọi dòng khớp ra file tạm để mở xem." />
+                       Text="Tìm chữ / regex trong file lớn (hiện tối đa N dòng khớp, vẫn đếm hết), hoặc lọc: giữ / bỏ các dòng khớp rồi ghi ra file mới. File CSV lọc theo bản ghi (ô nhiều dòng không bị tách)." />
         </StackPanel>
 
         <StackPanel Grid.Row="1" Spacing="4">
@@ -36,29 +38,35 @@
             <TextBlock Text="{x:Bind ViewModel.SourceInfo, Mode=OneWay}" Opacity="0.7" />
         </StackPanel>
 
-        <Grid Grid.Row="2" ColumnSpacing="8">
+        <!-- Từ khoá + kiểu so khớp (dùng chung cho Tìm và Lọc) -->
+        <Grid Grid.Row="2" ColumnSpacing="24">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="QueryBox" Header="Tìm" PlaceholderText="chữ cần tìm, hoặc regex"
-                     Text="{x:Bind ViewModel.Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" KeyDown="QueryBox_KeyDown" />
-            <NumberBox Grid.Column="1" Header="Hiện tối đa (dòng)" Width="150" Minimum="1" SpinButtonPlacementMode="Compact"
-                       Value="{x:Bind ViewModel.MaxResults, Mode=TwoWay}" />
-            <Button Grid.Column="2" VerticalAlignment="Bottom" Content="Tìm" MinWidth="100" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.SearchCommand}" />
-        </Grid>
-
-        <StackPanel Grid.Row="3" Spacing="0">
-            <StackPanel Orientation="Horizontal" Spacing="20">
+            <TextBox x:Name="TermsBox" VerticalAlignment="Top" Height="96" AcceptsReturn="True" TextWrapping="Wrap"
+                     Header="Từ khoá (mỗi dòng 1 từ; regex: chỉ dùng dòng đầu) - Enter = Tìm, Shift+Enter = thêm dòng"
+                     PlaceholderText="chữ cần tìm, hoặc regex"
+                     Text="{x:Bind ViewModel.Terms, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PreviewKeyDown="TermsBox_PreviewKeyDown" />
+            <RadioButtons Grid.Column="1" Header="Dòng khớp khi" SelectedIndex="{x:Bind ViewModel.MatchAllIndex, Mode=TwoWay}">
+                <x:String>Chứa 1 trong các từ</x:String>
+                <x:String>Chứa tất cả các từ</x:String>
+            </RadioButtons>
+            <StackPanel Grid.Column="2" Spacing="0" Margin="0,24,0,0">
                 <CheckBox Content="Không phân biệt dấu (tiếng Việt)" IsChecked="{x:Bind ViewModel.IgnoreDiacritics, Mode=TwoWay}" />
                 <CheckBox Content="Phân biệt hoa / thường" IsChecked="{x:Bind ViewModel.MatchCase, Mode=TwoWay}" />
                 <CheckBox Content="Regex" IsChecked="{x:Bind ViewModel.IsRegex, Mode=TwoWay}" />
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="20">
-                <CheckBox Content="Xuất dòng khớp ra file tạm" IsChecked="{x:Bind ViewModel.ExportMatches, Mode=TwoWay}" />
-                <CheckBox Content="Kèm số dòng khi xuất" IsChecked="{x:Bind ViewModel.ExportLineNumbers, Mode=TwoWay}" />
-            </StackPanel>
+        </Grid>
+
+        <!-- Tìm: xem dòng khớp -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="20">
+            <Button VerticalAlignment="Bottom" Content="Tìm" MinWidth="100" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.SearchCommand}" />
+            <NumberBox Header="Hiện tối đa (dòng)" Width="150" Minimum="1" SpinButtonPlacementMode="Compact"
+                       Value="{x:Bind ViewModel.MaxResults, Mode=TwoWay}" />
+            <CheckBox VerticalAlignment="Bottom" Content="Xuất dòng khớp ra file tạm" IsChecked="{x:Bind ViewModel.ExportMatches, Mode=TwoWay}" />
+            <CheckBox VerticalAlignment="Bottom" Content="Kèm số dòng khi xuất" IsChecked="{x:Bind ViewModel.ExportLineNumbers, Mode=TwoWay}" />
         </StackPanel>
 
         <Border Grid.Row="4" BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
@@ -97,7 +105,41 @@
             </Grid>
         </Border>
 
-        <views:JobPanel Grid.Row="5" Job="{x:Bind ViewModel}" />
+        <!-- Lọc ra file: giữ / bỏ dòng khớp → file mới -->
+        <Border Grid.Row="5" BorderThickness="1" CornerRadius="4" Padding="12,8,12,12" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid ColumnSpacing="16" RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.ColumnSpan="3" Orientation="Horizontal" Spacing="24">
+                    <TextBlock Text="Lọc ra file mới" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <RadioButtons MaxColumns="2" SelectedIndex="{x:Bind ViewModel.ActionIndex, Mode=TwoWay}">
+                        <x:String>Giữ dòng khớp</x:String>
+                        <x:String>Bỏ dòng khớp</x:String>
+                    </RadioButtons>
+                    <CheckBox VerticalAlignment="Center" Content="Luôn giữ dòng tiêu đề (dòng 1)" IsChecked="{x:Bind ViewModel.KeepHeader, Mode=TwoWay}" />
+                </StackPanel>
+                <Grid Grid.Row="1" ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Header="File kết quả" Text="{x:Bind ViewModel.OutputPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseOutputCommand}" />
+                </Grid>
+                <views:OutputPanel Grid.Row="1" Grid.Column="1" Settings="{x:Bind ViewModel.Output}" />
+                <Button Grid.Row="1" Grid.Column="2" VerticalAlignment="Bottom" Content="Lọc ra file" MinWidth="110"
+                        Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.FilterCommand}" />
+            </Grid>
+        </Border>
+
+        <views:JobPanel Grid.Row="6" Job="{x:Bind ViewModel}" />
     </Grid>
     </ScrollViewer>
 </Page>

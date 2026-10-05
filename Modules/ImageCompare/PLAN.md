@@ -273,3 +273,23 @@ không đọc ra), nhãn `胴ｻｲｽﾞ` ở cả 2 ảnh (A không đọc ra,
   (`RightTapped` → `MenuFlyout`, mọi chế độ): Copy mục này / Copy cả danh sách — So chữ ra dòng Tab, chế độ khác `số⇥chữ`.
 - Kiểm: unit test 77/77; GUI trong Sandbox (job tự động): menu hiện đúng 2 mục, clipboard đúng 1 dòng / 46 dòng, nút
   Copy = menu, hộp thoại lưu (gõ đường dẫn) → CSV có BOM, HTML 45 dòng bảng + ảnh cắt.
+
+### Bổ sung: căn "Soi 1 vùng" cho 2 ảnh lệch bố cục dần — 2026-10-05
+- Người dùng chọn phương án B (khoanh 1 vùng) thay vì A (tự căn từng vùng cả trang). `AlignMode.Focus` +
+  `DiffOptions.FocusRect`; `Engine/RegionAligner`: (1) dò độ lệch cả vùng trong ±10% cạnh dài B (64–400 px) bằng MAD
+  trên ảnh xám thu nhỏ (f chọn để vị trí × pixel ≲ 2·10⁸), hoà điểm → chỗ gần vị trí cũ nhất, tinh chỉnh ở mức gốc;
+  (2) chia vùng thành dải ngang theo dòng trống của A rồi thành ô theo cột trống (gộp đoạn cách < 8 px), dải dò ±8
+  dọc / ±6 ngang quanh dải kề, ô dò ±10 ngang / ±3 dọc quanh ô kề, lan từ tâm vùng ra; (3) ghép các ô của B thành ảnh
+  "đã nắn" cỡ vùng, `PixelDiff` / SSIM so A với ảnh đó. `DiffPainter` vẽ ảnh nắn trong vùng, phủ tối ngoài vùng, viền
+  xanh nét đứt; `SourceRects` (báo cáo HTML) và màu B dưới con trỏ lấy theo ô chứa điểm.
+- Bản đầu dùng `TemplateMatcher` (NCC) + 1 độ lệch cho cả vùng → hỏng 2 chỗ: nội dung lặp đều (sọc / dòng bảng) bị
+  gộp chỗ khớp nên chọn nhầm chỗ xa; trong vùng 3 dòng B vẫn lệch thêm 2 px / dòng → vẫn báo khác. Dòng trống ban đầu
+  xét "chênh sáng cả dòng ≤ 12" → khối có khung viền không có dòng trống nào → đổi sang đếm pixel có mực (bỏ qua vài
+  đường kẻ).
+- Ảnh thật của khách (IE ↔ Edge, 1021 × 836): Tự căn 74,6% giống, 1 vùng phủ 99%. Soi khối 受注数量 590 × 100: 1 dải
+  → 80%, theo ô → 89% (B lệch x −30…11, y 12…28 px qua 67 ô, khớp đo tay). Phần đỏ còn lại là khác cách vẽ (nét chữ,
+  viền ô nhập 3D, ô nhập ở B rộng hơn) — so pixel không thể coi là giống; ngưỡng 35% chỉ lên 92%. Với cặp này *So chữ*
+  vẫn là công cụ chính; Soi 1 vùng hợp với ảnh cùng cách vẽ mà bố cục trôi (thêm dòng, chữ dài hơn đẩy ô).
+- Unit test `FocusTests` (8): trang giả B lệch thêm 2 px mỗi dòng — cả trang < 95% giống, khoanh 3 dòng ở đầu / cuối
+  trang → 100%, đúng độ lệch từng dòng; 1 chỗ đổi thật trong vùng = đúng 1 vùng khác, chỗ đổi ngoài vùng bị bỏ; sọc lặp
+  đều → chọn chỗ gần nhất; chưa khoanh / vùng ngoài ảnh → như Tự căn; ảnh xuất phủ tối ngoài vùng. Tổng 85/85.

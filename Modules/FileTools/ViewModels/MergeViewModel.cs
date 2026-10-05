@@ -26,7 +26,7 @@ public sealed class FileItem(FileInfo info)
 }
 
 /// <summary>Trang "Nối file": liệt kê file trong thư mục (mẫu lọc, thư mục con, thứ tự) → nối thành 1 file.</summary>
-public sealed partial class MergeViewModel : JobViewModel
+public sealed partial class MergeViewModel : JobViewModel, IUsesSharedFile
 {
     public static readonly string[] SortNames = ["Tên (hiểu số: 2 trước 10)", "Ngày sửa", "Dung lượng"];
 
@@ -108,6 +108,15 @@ public sealed partial class MergeViewModel : JobViewModel
         if (string.IsNullOrEmpty(OutputPath) && Files.Count > 0)
         {
             OutputPath = Path.Combine(SourceFolder, $"merged_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(Files[0].Name)}");
+        }
+    }
+
+    /// <summary>Danh sách đang trống → thêm file đang làm chung (đã có file thì giữ nguyên danh sách người dùng chọn).</summary>
+    public void ApplySharedFile(string path)
+    {
+        if (!IsBusy && Files.Count == 0)
+        {
+            AddPaths([path]);
         }
     }
 

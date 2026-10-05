@@ -81,6 +81,10 @@ public sealed partial class CompareViewModel : ObservableObject
     /// <summary>Vùng bỏ qua (toạ độ ảnh A), người dùng vẽ trên canvas ở chế độ Khác biệt.</summary>
     public ObservableCollection<SKRectI> IgnoreRects { get; } = [];
 
+    /// <summary>Vùng cần soi (toạ độ ảnh A) khi căn "Soi 1 vùng" - người dùng kéo chuột khoanh trên canvas; null = chưa khoanh.</summary>
+    [ObservableProperty]
+    private SKRectI? _focusRect;
+
     // ---- Kết quả Khác biệt ----
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanExport))]
@@ -183,6 +187,7 @@ public sealed partial class CompareViewModel : ObservableObject
         ThresholdPercent = ThresholdPercent,
         IgnoreAntialiasing = IgnoreAntialiasing,
         IgnoreRects = IgnoreRects.ToList(),
+        FocusRect = FocusRect,
     };
 
     /// <summary>Các mục So chữ đang hiện (bỏ "gần giống" nếu không bật <see cref="TextDiffShowSimilar"/>) - cùng thứ tự
@@ -212,6 +217,7 @@ public sealed partial class CompareViewModel : ObservableObject
         {
             ImageA = image;
             IgnoreRects.Clear(); // vùng bỏ qua vẽ theo ảnh A cũ
+            FocusRect = null;
         }
         else
         {
@@ -238,6 +244,7 @@ public sealed partial class CompareViewModel : ObservableObject
         {
             ImageA = null;
             IgnoreRects.Clear();
+            FocusRect = null;
         }
         else
         {
@@ -260,6 +267,7 @@ public sealed partial class CompareViewModel : ObservableObject
         (ImageA, ImageB) = (ImageB, ImageA);
         OffsetB = new SKPointI(-OffsetB.X, -OffsetB.Y);
         IgnoreRects.Clear();
+        FocusRect = null;
         StatusText = "Đã đổi chỗ ảnh A và B.";
         Refresh();
     }
@@ -308,6 +316,14 @@ public sealed partial class CompareViewModel : ObservableObject
         if (Mode == ViewMode.TextDiff)
         {
             RequestTextDiff(); // chỉnh tay ↔ tự căn: đổi độ lệch dùng để ghép
+        }
+    }
+
+    partial void OnFocusRectChanged(SKRectI? value)
+    {
+        if (Align == AlignMode.Focus)
+        {
+            RequestCompare();
         }
     }
 
@@ -725,6 +741,10 @@ public sealed partial class CompareViewModel : ObservableObject
             lines.Add($"SSIM: {s.Ssim.ToString("0.####", Vi)} (1 = giống hệt)");
         }
         lines.Add(s.AlignNote);
+        if (Align == AlignMode.Focus && FocusRect is null)
+        {
+            lines.Insert(0, "Kéo chuột trái trên ảnh để khoanh vùng cần soi - đang so cả trang như Tự căn chỉnh.");
+        }
         if (s.Align != AlignMode.Rows && (s.OnlyInA > 0 || s.OnlyInB > 0))
         {
             lines.Add($"Chỉ có ở A: {s.OnlyInA.ToString("N0", Vi)} px · chỉ ở B: {s.OnlyInB.ToString("N0", Vi)} px (sọc)");
@@ -743,7 +763,9 @@ public sealed partial class CompareViewModel : ObservableObject
         }
         lines.Add($"{(int)s.Elapsed.TotalMilliseconds} ms");
         SummaryDetail = string.Join(Environment.NewLine, lines);
-        StatusText = $"{SummaryTitle}. Bấm 1 vùng trong danh sách bên phải để phóng tới vùng đó.";
+        StatusText = Align == AlignMode.Focus
+            ? $"{SummaryTitle}. Kéo chuột trái để khoanh vùng khác; chuột phải / giữa để cuộn ảnh."
+            : $"{SummaryTitle}. Bấm 1 vùng trong danh sách bên phải để phóng tới vùng đó.";
     }
 
     private void ShowFindPanel()
@@ -846,7 +868,7 @@ public sealed partial class CompareViewModel : ObservableObject
         double largest = view.Regions.Max(r => (double)r.Bounds.Width * r.Bounds.Height);
         double share = largest / area;
         return share >= 0.6
-            ? $"⚠ 1 vùng phủ {(share * 100).ToString("0", Vi)}% ảnh: 2 ảnh lệch bố cục (khác font / trình duyệt?) nên so pixel tô gần hết. Thử chế độ \"So chữ\" để xem chữ / giá trị nào khác."
+            ? $"⚠ 1 vùng phủ {(share * 100).ToString("0", Vi)}% ảnh: 2 ảnh lệch bố cục (khác font / trình duyệt?) nên so pixel tô gần hết. Thử chế độ \"So chữ\" để xem chữ / giá trị nào khác, hoặc căn \"Soi 1 vùng\" rồi khoanh từng chỗ cần xem."
             : null;
     }
 

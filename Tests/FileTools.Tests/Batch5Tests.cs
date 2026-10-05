@@ -357,4 +357,35 @@ public class PresetTests
 
         Assert.Empty(new PresetStore(path).List("SplitPage"));
     }
+
+    [Fact]
+    public void Presets_of_merged_pages_move_to_the_new_page_with_renamed_options()
+    {
+        using var temp = new TempDir();
+        var store = new PresetStore(temp.File("presets.json"));
+        store.Save("SearchPage", new Preset("Lỗi", new() { ["Query"] = "ERROR", ["IsRegex"] = "False" }));
+        store.Save("FilterPage", new Preset("Lỗi", new() { ["Terms"] = "ERROR\nWARN", ["ActionIndex"] = "1" }));
+        store.Save("NewlinePage", new Preset("Sang LF", new() { ["TargetIndex"] = "1", ["Recursive"] = "True" }));
+        store.Save("DelimiterPage", new Preset("Sang Tab", new() { ["TargetIndex"] = "1", ["QuoteAll"] = "True" }));
+        store.Save("ExtractPage", new Preset("1000 cuối", new() { ["ModeIndex"] = "2" }));
+
+        Assert.Equal(5, store.MigrateMergedPages());
+        Assert.Equal(0, store.MigrateMergedPages()); // lần sau không còn gì để chuyển
+
+        var search = store.List("SearchPage");
+        Assert.Equal(["Lỗi", "Lỗi (Lọc dòng)"], search.Select(p => p.Name));
+        Assert.Equal("ERROR", search[0].Values["Terms"]);
+        Assert.False(search[0].Values.ContainsKey("Query"));
+        Assert.Equal("1", search[1].Values["ActionIndex"]);
+        var newline = Assert.Single(store.List("EncodingPage")).Values;
+        Assert.Equal("2", newline["Output.NewlineIndex"]); // LF
+        Assert.Equal(((int)OutputEncoding.SameAsSource).ToString(), newline["Output.EncodingIndex"]);
+        Assert.Equal("True", newline["Recursive"]);
+        var delimiter = Assert.Single(store.List("ColumnsPage")).Values;
+        Assert.Equal("2", delimiter["OutputDelimiterIndex"]); // Tab
+        Assert.Equal("True", delimiter["QuoteAll"]);
+        Assert.Single(store.List("InfoPage"));
+        Assert.Empty(store.List("FilterPage"));
+        Assert.Empty(store.List("NewlinePage"));
+    }
 }

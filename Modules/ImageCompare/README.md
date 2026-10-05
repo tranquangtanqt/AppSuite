@@ -93,6 +93,11 @@ pixel ở A và B dưới con trỏ.
   - *Căn theo dòng (trang dài)*: trang dài mà B **thêm / bớt 1 đoạn ở giữa** so với A (tự căn dịch chuyển
     chỉ khớp được 1 phần). Kết quả là ảnh ghép: dải **cam** = chỉ có ở B (thêm vào), dải **xanh** = chỉ có ở
     A (bị bỏ), phần còn lại so từng pixel. 2 ảnh khác nhau quá nhiều thì tự lui về *Tự căn chỉnh*.
+  - *Soi 1 vùng (khoanh trên ảnh)*: 2 ảnh **lệch bố cục dần** (B dùng font / trình duyệt khác: dòng cao hơn, ô rộng
+    hơn — không có 1 độ lệch nào khớp cả trang). Kéo chuột trái khoanh 1 vùng trên ảnh (chuột phải / giữa để cuộn):
+    chỉ so vùng đó, vùng tự tìm chỗ khớp ở B và **từng ô** (nhãn, ô nhập — tách theo khoảng trống) căn riêng; ngoài
+    vùng phủ tối. Khoanh vùng vừa phải (1 khối / 1 bảng). Lưu ý: 2 trình duyệt vẽ chữ / viền ô khác nhau thì dù căn
+    đúng, so pixel vẫn tô đỏ chỗ đó — xem chữ nào khác thì dùng *So chữ*.
   - *Không căn*: trùng góc trên-trái.
   - *Chỉnh tay*: `Alt` + phím mũi tên dịch B 1 px (`Alt+Shift` + mũi tên: 10 px).
 - **Ngưỡng** (0–50%, mặc định 8%): chênh lệch màu tối thiểu để tính là khác. Ảnh PNG chụp màn hình: 5–10%.

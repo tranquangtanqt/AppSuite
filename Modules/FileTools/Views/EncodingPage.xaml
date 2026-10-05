@@ -17,18 +17,18 @@
         </Grid.RowDefinitions>
 
         <StackPanel Spacing="2">
-            <TextBlock Text="Đổi encoding (hàng loạt)" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Text="Đổi encoding / xuống dòng (hàng loạt)" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock Opacity="0.7" TextWrapping="Wrap"
-                       Text="Chuyển nhiều file sang 1 encoding (vd Shift-JIS → UTF-8). Cột bên phải là encoding tự nhận của từng file. Ký tự không có trong encoding đích sẽ được báo trong nhật ký. Kéo-thả file / thư mục vào danh sách." />
+                       Text="Đổi encoding (vd Shift-JIS → UTF-8) và / hoặc kiểu xuống dòng (CRLF ↔ LF) cho nhiều file trong 1 lần. Cái nào không cần đổi thì chọn &quot;Giữ như file nguồn&quot;; file đã đúng sẽ được bỏ qua. Cột bên phải: encoding tự nhận + xuống dòng (64 KB đầu). Ký tự không có trong encoding đích được báo trong nhật ký. Kéo-thả file / thư mục vào danh sách." />
         </StackPanel>
 
-        <views:BatchFilesPanel Grid.Row="1" Batch="{x:Bind ViewModel}" DetailHeader="Encoding hiện tại" />
+        <views:BatchFilesPanel Grid.Row="1" Batch="{x:Bind ViewModel}" DetailHeader="Encoding · xuống dòng hiện tại" />
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="16">
             <ComboBox Header="Đọc file nguồn theo" MinWidth="190" ItemsSource="{x:Bind vm:EncodingViewModel.SourceEncodingNames}"
                       SelectedIndex="{x:Bind ViewModel.SourceEncodingIndex, Mode=TwoWay}" />
             <views:OutputPanel Settings="{x:Bind ViewModel.Output}" />
-            <Button VerticalAlignment="Bottom" Content="Đổi encoding" MinWidth="120" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.ConvertCommand}" />
+            <Button VerticalAlignment="Bottom" Content="Đổi" MinWidth="120" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.ConvertCommand}" />
         </StackPanel>
 
         <views:JobPanel Grid.Row="3" Job="{x:Bind ViewModel}" />

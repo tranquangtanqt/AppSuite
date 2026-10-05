@@ -10,7 +10,7 @@ public sealed partial class InfoPage : Page
     public InfoPage()
     {
         InitializeComponent();
-        ScrollFit.Attach(Scroller, Root, 620);
+        ScrollFit.Attach(Scroller, Root, 960);
         DropHelper.Attach(Root, paths => ViewModel.SourcePath = paths[0]);
     }
 }

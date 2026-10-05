@@ -144,6 +144,8 @@
                           ToolTipService.ToolTip="Căn 2 ảnh trước khi so. Alt + phím mũi tên: dịch ảnh B 1 px (thêm Shift: 10 px)">
                     <ComboBoxItem Content="Tự căn chỉnh" Tag="Translate" ToolTipService.ToolTip="Tự tìm độ lệch - ảnh chụp lệch vài px, khác lề" />
                     <ComboBoxItem Content="Căn theo dòng (trang dài)" Tag="Rows" ToolTipService.ToolTip="Trang dài mà B thêm / bớt 1 đoạn ở giữa so với A" />
+                    <ComboBoxItem Content="Soi 1 vùng (khoanh trên ảnh)" Tag="Focus"
+                                  ToolTipService.ToolTip="Kéo chuột khoanh 1 vùng: chỉ so vùng đó, vùng tự tìm chỗ khớp ở B (từng ô căn riêng) - cho 2 ảnh lệch bố cục dần (B giãn / dịch khác nhau ở từng chỗ)" />
                     <ComboBoxItem Content="Không căn" Tag="None" />
                     <ComboBoxItem Content="Chỉnh tay (Alt+↑↓←→)" Tag="Manual" />
                 </ComboBox>

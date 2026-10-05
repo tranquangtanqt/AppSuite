@@ -235,7 +235,9 @@ public sealed partial class DedupeViewModel : CsvSourceViewModel
     }
 }
 
-/// <summary>Trang "Chọn / sắp cột": tích cột cần giữ, đổi thứ tự bằng Lên / Xuống, tuỳ chọn đổi luôn dấu phân cách.</summary>
+/// <summary>Trang "CSV: Chọn cột / đổi dấu phân cách" (gộp 2 trang cũ Chọn / sắp cột + Đổi dấu phân cách): tích cột cần giữ,
+/// đổi thứ tự bằng Lên / Xuống, và / hoặc đổi dấu phân cách khi ghi ra. Giữ mọi cột như gốc = chỉ đổi dấu phân cách (giữ
+/// cả các ô thừa của bản ghi dài hơn tiêu đề, như trang Đổi dấu phân cách cũ).</summary>
 public sealed partial class ColumnsViewModel : CsvSourceViewModel
 {
     public static readonly string[] OutputDelimiterNames = ["Giữ như nguồn", "Dấu phẩy (,)", "Tab", "Dấu chấm phẩy (;)", "Gạch đứng (|)"];
@@ -253,6 +255,22 @@ public sealed partial class ColumnsViewModel : CsvSourceViewModel
     protected override string OutputSuffix => "_cot";
 
     protected override bool CheckByDefault => true;
+
+    /// <summary>Ghi ra Tab → .tsv; dấu khác → .csv; giữ như nguồn → đuôi của file nguồn.</summary>
+    protected override string OutputExtension(string sourcePath) => OutputDelimiterIndex switch
+    {
+        2 => ".tsv",
+        1 or 3 or 4 => ".csv",
+        _ => Path.GetExtension(sourcePath),
+    };
+
+    partial void OnOutputDelimiterIndexChanged(int value)
+    {
+        if (File.Exists(SourcePath))
+        {
+            OutputPath = DefaultOutput(SourcePath);
+        }
+    }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void MoveUp() => Move(-1);
@@ -313,69 +331,32 @@ public sealed partial class ColumnsViewModel : CsvSourceViewModel
             AddMessage("✖ Chưa tích cột nào.");
             return Task.CompletedTask;
         }
+        // Mọi cột, đúng thứ tự gốc → không chọn cột (null): chỉ đổi dấu phân cách / ngoặc kép, ô thừa vẫn giữ.
+        bool allColumns = picked.Count == Columns.Count && picked.SequenceEqual(Enumerable.Range(0, picked.Count));
         var options = new CsvTransformOptions
         {
             SourcePath = SourcePath,
             OutputPath = OutputPath,
             InputDelimiter = ChosenDelimiter,
             OutputDelimiter = OutputDelimiterIndex > 0 ? DelimiterChars[OutputDelimiterIndex - 1] : null,
-            Columns = picked,
+            Columns = allColumns ? null : picked,
             QuoteAll = QuoteAll,
             Encoding = Output.Encoding,
             Newline = Output.Newline,
         };
-        return RunAsync($"Ghi {picked.Count} cột", (progress, ct) =>
+        return RunAsync(allColumns ? "Ghi lại CSV" : $"Ghi {picked.Count} cột", (progress, ct) =>
         {
             var r = CsvTransformer.Transform(options, progress, ct);
-            var notes = new List<string> { $"{r.Records:N0} bản ghi, {picked.Count} cột → {options.OutputPath}" };
+            var notes = new List<string>
+            {
+                $"{Csv.Describe(r.InputDelimiter)} → {Csv.Describe(r.OutputDelimiter)}: {r.Records:N0} bản ghi, "
+                    + (allColumns ? "giữ mọi cột" : $"{picked.Count} cột") + $" → {options.OutputPath}",
+            };
             if (r.ShortRecords > 0)
             {
                 notes.Add($"   ⚠ {r.ShortRecords:N0} bản ghi thiếu cột đã chọn - ô thiếu để trống");
             }
             return (options.OutputPath, notes);
-        });
-    }
-}
-
-/// <summary>Trang "Đổi dấu phân cách": , ↔ Tab ↔ ; ↔ |, giữ nguyên mọi cột.</summary>
-public sealed partial class DelimiterViewModel : CsvSourceViewModel
-{
-    public static readonly string[] TargetNames = ["Dấu phẩy (,)", "Tab", "Dấu chấm phẩy (;)", "Gạch đứng (|)"];
-
-    [ObservableProperty]
-    private int _targetIndex = 1;
-
-    [ObservableProperty]
-    private bool _quoteAll;
-
-    protected override string OutputSuffix => "_doi";
-
-    protected override string OutputExtension(string sourcePath) => TargetIndex == 1 ? ".tsv" : ".csv";
-
-    partial void OnTargetIndexChanged(int value)
-    {
-        if (File.Exists(SourcePath))
-        {
-            OutputPath = DefaultOutput(SourcePath);
-        }
-    }
-
-    protected override Task RunCoreAsync()
-    {
-        var options = new CsvTransformOptions
-        {
-            SourcePath = SourcePath,
-            OutputPath = OutputPath,
-            InputDelimiter = ChosenDelimiter,
-            OutputDelimiter = DelimiterChars[Math.Clamp(TargetIndex, 0, 3)],
-            QuoteAll = QuoteAll,
-            Encoding = Output.Encoding,
-            Newline = Output.Newline,
-        };
-        return RunAsync("Đổi dấu phân cách", (progress, ct) =>
-        {
-            var r = CsvTransformer.Transform(options, progress, ct);
-            return (options.OutputPath, [$"{Csv.Describe(r.InputDelimiter)} → {Csv.Describe(r.OutputDelimiter)}: {r.Records:N0} bản ghi → {options.OutputPath}"]);
         });
     }
 }

@@ -20,9 +20,9 @@
         </Grid.RowDefinitions>
 
         <StackPanel Spacing="2">
-            <TextBlock Text="Chọn / sắp xếp cột" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Text="CSV: Chọn cột / đổi dấu phân cách" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock Opacity="0.7" TextWrapping="Wrap"
-                       Text="Tích cột cần giữ, đổi thứ tự bằng Lên / Xuống (thứ tự trong danh sách = thứ tự ghi ra). Có thể đổi luôn dấu phân cách." />
+                       Text="Tích cột cần giữ, đổi thứ tự bằng Lên / Xuống (thứ tự trong danh sách = thứ tự ghi ra), và / hoặc đổi dấu phân cách , ↔ Tab ↔ ; ↔ | khi ghi ra. Chỉ đổi dấu phân cách: để nguyên mọi cột như gốc." />
         </StackPanel>
 
         <views:CsvSourcePanel Grid.Row="1" Source="{x:Bind ViewModel}" />
@@ -67,7 +67,7 @@
             <views:OutputPanel Grid.Column="2" Settings="{x:Bind ViewModel.Output}" />
         </Grid>
 
-        <Button Grid.Row="5" Content="Ghi các cột đã chọn" MinWidth="120" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.RunCommand}" />
+        <Button Grid.Row="5" Content="Ghi file CSV" MinWidth="120" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.RunCommand}" />
 
         <views:JobPanel Grid.Row="6" Job="{x:Bind ViewModel}" />
     </Grid>

@@ -28,7 +28,18 @@ public sealed partial class PresetBarViewModel : ObservableObject
     private object? _target;
     private string _key = string.Empty;
 
-    public PresetBarViewModel(PresetStore? store = null) => _store = store ?? new PresetStore(PresetStore.DefaultPath);
+    public PresetBarViewModel(PresetStore? store = null)
+    {
+        _store = store ?? new PresetStore(PresetStore.DefaultPath);
+        try
+        {
+            _store.MigrateMergedPages(); // mẫu của các trang đã gộp (Lọc dòng, Đổi xuống dòng...) → trang mới
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Không ghi được file mẫu (thư mục chỉ đọc) - mẫu cũ vẫn còn nguyên, lần sau thử lại.
+        }
+    }
 
     public ObservableCollection<string> Names { get; } = [];
 

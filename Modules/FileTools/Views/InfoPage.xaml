@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- "Xem file" (gộp 2 trang cũ Thông tin file + Trích dòng): thông tin file ở trên, trích 1 đoạn dòng ra file tạm ở dưới. -->
 <Page
     x:Class="FileTools.Views.InfoPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -13,13 +14,14 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="2*" MinHeight="200" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" MinHeight="120" />
         </Grid.RowDefinitions>
 
         <StackPanel Spacing="2">
-            <TextBlock Text="Thông tin file" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Text="Xem file" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock Opacity="0.7" TextWrapping="Wrap"
-                       Text="Số dòng, encoding, kiểu xuống dòng, dòng dài nhất; file dạng bảng thêm dấu phân cách, số cột và các bản ghi lệch số cột. Chọn hoặc kéo-thả file là tự phân tích." />
+                       Text="Số dòng, encoding, kiểu xuống dòng, dòng dài nhất; file dạng bảng thêm dấu phân cách, số cột và các bản ghi lệch số cột - chọn hoặc kéo-thả file là tự phân tích. Bên dưới: lấy 1 đoạn dòng của file lớn ra file tạm để mở xem (chỉ đọc đúng phần cần - file vài GB vẫn gần như tức thì)." />
         </StackPanel>
 
         <StackPanel Grid.Row="1" Spacing="4">
@@ -31,7 +33,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBox Header="File" Text="{x:Bind ViewModel.SourcePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                 <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseSourceCommand}" />
-                <Button Grid.Column="2" VerticalAlignment="Bottom" Content="Phân tích lại" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.InspectCommand}" />
+                <Button Grid.Column="2" VerticalAlignment="Bottom" Content="Phân tích lại" Command="{x:Bind ViewModel.InspectCommand}" />
             </Grid>
         </StackPanel>
 
@@ -52,7 +54,46 @@
             </ListView>
         </Border>
 
-        <views:JobPanel Grid.Row="3" Job="{x:Bind ViewModel}" />
+        <!-- Trích dòng ra file tạm -->
+        <Border Grid.Row="3" BorderThickness="1" CornerRadius="4" Padding="12,8,12,12" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Trích dòng ra file tạm" FontWeight="SemiBold" />
+                <StackPanel Orientation="Horizontal" Spacing="32">
+                    <RadioButtons Header="Lấy" SelectedIndex="{x:Bind ViewModel.ModeIndex, Mode=TwoWay}">
+                        <x:String>N dòng đầu</x:String>
+                        <x:String>Từ dòng X đến dòng Y</x:String>
+                        <x:String>N dòng cuối</x:String>
+                    </RadioButtons>
+                    <StackPanel Spacing="8">
+                        <NumberBox Header="N (số dòng)" Width="200" Minimum="1" SmallChange="1000" SpinButtonPlacementMode="Compact"
+                                   Value="{x:Bind ViewModel.Count, Mode=TwoWay}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <NumberBox Header="Từ dòng X" Width="160" Minimum="1" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.From, Mode=TwoWay}" />
+                            <NumberBox Header="Đến dòng Y" Width="160" Minimum="1" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.To, Mode=TwoWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Spacing="8" Margin="0,24,0,0">
+                        <CheckBox Content="Kèm dòng tiêu đề (dòng 1)" IsChecked="{x:Bind ViewModel.IncludeHeader, Mode=TwoWay}" />
+                        <CheckBox Content="Mở file sau khi trích" IsChecked="{x:Bind ViewModel.OpenAfter, Mode=TwoWay}" />
+                    </StackPanel>
+                </StackPanel>
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Header="Lưu vào thư mục tạm" Text="{x:Bind ViewModel.TempFolder}" IsReadOnly="True" />
+                    <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Mở thư mục tạm" Command="{x:Bind ViewModel.OpenTempFolderCommand}" />
+                    <views:OutputPanel Grid.Column="2" Settings="{x:Bind ViewModel.Output}" />
+                    <Button Grid.Column="3" VerticalAlignment="Bottom" Content="Trích dòng" MinWidth="110"
+                            Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.ExtractCommand}" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <views:JobPanel Grid.Row="4" Job="{x:Bind ViewModel}" />
     </Grid>
     </ScrollViewer>
 </Page>

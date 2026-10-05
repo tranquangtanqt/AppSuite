@@ -22,7 +22,7 @@ public sealed partial class BatchFileItem(FileInfo info) : ObservableObject
 /// Nền cho trang xử lý hàng loạt (Đổi encoding / Đổi xuống dòng): danh sách file (thêm file, thêm cả thư mục theo mẫu
 /// lọc, kéo-thả), đầu ra = thư mục khác hoặc ghi đè file gốc (giữ .bak), rồi chạy <see cref="FileRewriter"/>.
 /// </summary>
-public abstract partial class BatchViewModel : JobViewModel
+public abstract partial class BatchViewModel : JobViewModel, IUsesSharedFile
 {
     public ObservableCollection<BatchFileItem> Files { get; } = [];
 
@@ -101,8 +101,23 @@ public abstract partial class BatchViewModel : JobViewModel
         }
     }
 
+    /// <summary>Danh sách đang trống → thêm file đang làm chung (đã có file thì giữ nguyên danh sách người dùng chọn).</summary>
+    public void ApplySharedFile(string path)
+    {
+        if (!IsBusy && Files.Count == 0)
+        {
+            AddPaths([path]);
+        }
+    }
+
     public void AddPaths(IEnumerable<string> paths)
     {
+        var list = paths.ToList();
+        if (list.Count == 1)
+        {
+            SharedFile.Set(list[0]); // thêm đúng 1 file → thành file đang làm chung
+        }
+        paths = list;
         var added = new List<BatchFileItem>();
         foreach (var path in paths)
         {
@@ -253,7 +268,8 @@ public abstract partial class BatchViewModel : JobViewModel
     }
 }
 
-/// <summary>Trang "Đổi encoding" (hàng loạt): encoding đích lấy từ khối Đầu ra; đọc nguồn tự nhận hoặc ép.</summary>
+/// <summary>Trang "Đổi encoding / xuống dòng" (hàng loạt; gộp 2 trang cũ Đổi encoding + Đổi xuống dòng): encoding và kiểu
+/// xuống dòng đích lấy từ khối Đầu ra - chọn "Giữ như file nguồn" cho cái không cần đổi; đọc nguồn tự nhận hoặc ép.</summary>
 public sealed partial class EncodingViewModel : BatchViewModel
 {
     public static readonly string[] SourceEncodingNames = ["Tự nhận", "UTF-8", "Shift-JIS", "UTF-16 LE", "Windows-1258 (Việt)"];
@@ -261,12 +277,12 @@ public sealed partial class EncodingViewModel : BatchViewModel
     [ObservableProperty]
     private int _sourceEncodingIndex;
 
-    protected override string Title => "Đổi encoding";
+    protected override string Title => "Đổi encoding / xuống dòng";
 
     protected override string Describe(string path)
     {
         var sniff = EncodingSniffer.Detect(path);
-        return sniff.Name + (sniff.Confidence == SniffConfidence.High ? string.Empty : " (đoán)");
+        return sniff.Name + (sniff.Confidence == SniffConfidence.High ? string.Empty : " (đoán)") + " · " + SampleNewlines(path);
     }
 
     protected override RewriteOptions BuildOptions(IReadOnlyList<string> files, string? outputFolder) => new()
@@ -283,25 +299,5 @@ public sealed partial class EncodingViewModel : BatchViewModel
             4 => Encoding.GetEncoding(1258),
             _ => null,
         },
-    };
-}
-
-/// <summary>Trang "Đổi xuống dòng" (hàng loạt): CRLF ↔ LF, giữ nguyên encoding của từng file.</summary>
-public sealed partial class NewlineViewModel : BatchViewModel
-{
-    /// <summary>0 = CRLF, 1 = LF.</summary>
-    [ObservableProperty]
-    private int _targetIndex;
-
-    protected override string Title => "Đổi xuống dòng";
-
-    protected override string Describe(string path) => SampleNewlines(path);
-
-    protected override RewriteOptions BuildOptions(IReadOnlyList<string> files, string? outputFolder) => new()
-    {
-        Files = files,
-        OutputFolder = outputFolder,
-        Encoding = OutputEncoding.SameAsSource,
-        Newline = TargetIndex == 0 ? NewlineMode.CrLf : NewlineMode.Lf,
     };
 }
