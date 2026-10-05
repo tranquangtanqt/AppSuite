@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- "Đổi cỡ ảnh": co giãn cả ảnh (cùng các shape) theo % hoặc theo px - khác kéo khung ảnh (chỉ nới / cắt khung). -->
+<ContentDialog
+    x:Class="ScreenCapture.Views.ResizeImageDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Đổi cỡ ảnh"
+    PrimaryButtonText="Đổi cỡ"
+    CloseButtonText="Hủy"
+    DefaultButton="Primary">
+
+    <StackPanel Spacing="14" MinWidth="340">
+        <TextBlock x:Name="SummaryText" Opacity="0.8" TextWrapping="Wrap" />
+
+        <StackPanel x:Name="PercentPanel" Orientation="Horizontal" Spacing="8">
+            <NumberBox x:Name="PercentXBox" Header="Ngang (%)" Width="140" SpinButtonPlacementMode="Compact"
+                       ValueChanged="PercentBox_ValueChanged" />
+            <NumberBox x:Name="PercentYBox" Header="Dọc (%)" Width="140" SpinButtonPlacementMode="Compact"
+                       ValueChanged="PercentBox_ValueChanged" />
+        </StackPanel>
+
+        <StackPanel x:Name="PixelPanel" Orientation="Horizontal" Spacing="8">
+            <NumberBox x:Name="WidthBox" Header="Rộng (px)" Width="140" SpinButtonPlacementMode="Compact"
+                       ValueChanged="PixelBox_ValueChanged" />
+            <NumberBox x:Name="HeightBox" Header="Cao (px)" Width="140" SpinButtonPlacementMode="Compact"
+                       ValueChanged="PixelBox_ValueChanged" />
+        </StackPanel>
+
+        <CheckBox x:Name="KeepRatioBox" Content="Giữ tỉ lệ rộng / cao" IsChecked="True" Click="KeepRatioBox_Click" />
+    </StackPanel>
+</ContentDialog>

@@ -214,6 +214,30 @@ public sealed partial class EditorViewModel : ObservableObject
             -newRect.Left, -newRect.Top));
     }
 
+    /// <summary>Xoay / lật cả ảnh (cùng mọi shape) - 1 bước Undo.</summary>
+    public void Transform(ImageTransformKind kind) =>
+        ApplyTransform(ImageTransform.Create(kind, Bitmap.Width, Bitmap.Height));
+
+    /// <summary>Co giãn cả ảnh (cùng mọi shape) về <paramref name="width"/> × <paramref name="height"/> px.</summary>
+    public void ResizeImage(int width, int height)
+    {
+        if (width != Bitmap.Width || height != Bitmap.Height)
+        {
+            ApplyTransform(ImageTransform.CreateResize(Bitmap.Width, Bitmap.Height, width, height));
+        }
+    }
+
+    private void ApplyTransform(ImageTransform transform)
+    {
+        var command = new TransformImageCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, transform);
+        // Phần đã Cắt trước đó không còn khớp hướng / tỉ lệ ảnh mới → ảnh mới là gốc của chính nó (không kế thừa
+        // nguồn cắt của ảnh cũ trong OnBitmapChanged). Undo trả lại ảnh cũ thì nguồn cắt cũ vẫn còn.
+        CropSources.AddOrUpdate(command.NewBitmap, new CropSource(command.NewBitmap, SKPointI.Empty));
+        SelectedAnnotation = null;
+        UndoRedo.Do(command);
+        StatusText = $"{transform.Description}: ảnh giờ là {Bitmap.Width} × {Bitmap.Height} px.";
+    }
+
     // ---- Tool Select: thao tác trên vùng chọn (toạ độ pixel ảnh, đã kẹp trong khung ảnh) ----
 
     /// <summary>Copy đúng những gì đang thấy trong vùng (ảnh nền + annotation) vào clipboard.</summary>

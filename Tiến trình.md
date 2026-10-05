@@ -14,9 +14,11 @@ Mục ghi **[Đề xuất · Cao / Nên có / Có thể]** là tính năng còn 
 Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công sức. Chi tiết từng việc nằm ở mục của module.
 
 **Bước 0 — người dùng thử tay** (Sandbox không tự kiểm được; nên làm trước khi phát hành bản mới):
-kéo-thả file từ Explorer vào ScreenCapture / CsvEditor; mở file `.xlsx` CsvEditor xuất ra bằng Excel thật; ImageCompare
-bản Release từ MainLauncher (Tìm chữ, *Lưu PNG*, *Xuất báo cáo HTML*); FileTools đợt 1–5 trên file thật + chạy từ
-MainLauncher; Mcf.CrudDiagram chạy UI thật.
+- [x] Kéo-thả file từ Explorer vào ScreenCapture / CsvEditor — OK (2026-10-05)
+- [x] Mở file `.xlsx` CsvEditor xuất ra bằng Excel thật — OK (2026-10-05)
+- [ ] ImageCompare bản Release từ MainLauncher (Tìm chữ, *Lưu PNG*, *Xuất báo cáo HTML*)
+- [ ] FileTools đợt 1–5 trên file thật + chạy từ MainLauncher
+- [ ] Mcf.CrudDiagram chạy UI thật (xuất lại HTML để có header bảng cố định khi cuộn)
 
 **Ưu tiên 1 — nhỏ, lợi ngay:** ✅ xong cả 3 (2026-10-02)
 1. ~~Icon riêng (exe + taskbar) cho các module còn lại~~ — 12 project có icon, xem mục Chung
@@ -26,7 +28,7 @@ MainLauncher; Mcf.CrudDiagram chạy UI thật.
 **Ưu tiên 2 — tính năng nên có, giải quyết vấn đề thật:**
 1. ImageCompare: so ảnh lệch bố cục dần — phương án A *Căn từng vùng* hoặc B *Soi 1 vùng* trong tab Khác biệt (người
    dùng chưa chọn A / B). Lý do: ảnh thật của khách (B giãn 7 → 46 px) làm tab Khác biệt báo sai gần cả trang
-2. ScreenCapture: xoay 90° / lật / đổi cỡ ảnh theo % hoặc px — thao tác dùng hằng ngày, nối tiếp Mở ảnh / Lưu
+2. ~~ScreenCapture: xoay 90° / lật / đổi cỡ ảnh theo % hoặc px~~ — code xong 2026-10-05, còn test GUI Sandbox
 3. Hướng dẫn F1 cho 4 module HtmlGenerator, ModuleB/C — dùng `SharedUI.Help.HelpWindow` (mỗi module chỉ viết nội dung)
 
 **Ưu tiên 3 — có thì tốt, làm khi có nhu cầu:**
@@ -157,8 +159,8 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Mở ảnh có sẵn vào Editor: nút *Mở* ở tab Tệp, `Ctrl+O`, nút *Mở ảnh* ở cửa sổ chính, kéo-thả file; PNG / JPG / BMP /
   GIF / WEBP, nhiều file → nhiều tab, xoay theo EXIF, tab coi như đã lưu. Kèm sửa: tiêu đề cửa sổ chính mất khi hẹp (hàng
   nút giờ xuống dòng). GUI Sandbox 15/15 (2026-10-02)
-- [ ] Người dùng thử **kéo-thả** file ảnh vào Editor / cửa sổ chính trên máy thật (Sandbox không kiểm tự động được: agent
-  chạy quyền admin nên Windows chặn thả từ Explorer)
+- [x] Người dùng thử **kéo-thả** file ảnh vào Editor / cửa sổ chính trên máy thật (Sandbox không kiểm tự động được: agent
+  chạy quyền admin nên Windows chặn thả từ Explorer) — OK (2026-10-05)
 - [x] Lưu / Lưu thành: *Lưu* (`Ctrl+S`) ghi đè file đang gắn với tab (đã lưu / mở từ file / tự lưu, nhớ qua phiên), chưa
   có thì hỏi; *Lưu thành…* (`Ctrl+Shift+S`) PNG / JPG / BMP, chất lượng JPG trong Cài đặt > Lưu ảnh; ghi an toàn qua file
   tạm, lỗi IO báo không văng. Kèm sửa: gõ `x.jpg` ra `x.jpg.png`; lưu Cài đặt làm mất màu nền Ảnh mới. GUI Sandbox 14/14
@@ -170,8 +172,13 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   `ApplicationIcon` của exe + `AppWindow.SetIcon` cho cửa sổ chính / Editor / Cài đặt / Hướng dẫn. Sandbox: taskbar,
   thanh tiêu đề, icon exe đều hiện (2026-10-02)
 - [x] Các module khác cũng chưa có icon riêng (exe + taskbar) — đã làm cho mọi project, xem mục Chung (2026-10-02)
-- [ ] **[Đề xuất · Nên có]** Xoay 90° / lật ngang - dọc; đổi kích thước ảnh theo % hoặc px (co giãn nội dung — khác
-  kéo khung ảnh hiện có)
+- [x] **[Đề xuất · Nên có]** Xoay 90° / lật ngang - dọc; đổi kích thước ảnh theo % hoặc px (co giãn nội dung — khác
+  kéo khung ảnh hiện có). Nút *Xoay* (nhóm Cắt & Sửa): xoay phải / trái 90° (`Ctrl+R` / `Ctrl+Shift+R`), 180°, lật
+  ngang / dọc, *Đổi cỡ ảnh…* (`Ctrl+E`, ô % và px đồng bộ, giữ tỉ lệ). Shape được thay bằng bản sao đã biến đổi (vẫn
+  sửa được, 1 bước Undo); chữ / stamp giữ chiều đứng, stamp mũi tên đổi hướng, ảnh dán xoay theo; co giãn → nét, cỡ
+  chữ, stamp co theo. Phần đã Cắt không khôi phục được sau khi xoay / đổi cỡ. Kiểm tra logic 24/24, build 0 warning
+  (2026-10-05)
+- [ ] Test GUI trong Sandbox: menu Xoay, Ctrl+R / Ctrl+E, hộp thoại Đổi cỡ ảnh, Undo / Redo, lưu phiên rồi mở lại
 - [ ] **[Đề xuất · Nên có]** Nền trong suốt cho Ảnh mới (cần sửa Cắt / đổi khung đang tô nền trắng)
 - [ ] **[Đề xuất · Nên có]** Hiệu ứng ảnh: viền (border), đổ bóng, làm xám, độ sáng / tương phản; watermark chữ
 - [ ] **[Đề xuất · Có thể]** Công cụ phụ như PicPick: hút màu trên màn hình, kính lúp, thước đo pixel
@@ -262,6 +269,6 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   thành số, mã `00123` / 16 chữ số / `=…` giữ dạng chữ; tiêu đề đậm + cố định + nút lọc; báo khi vượt giới hạn Excel.
   *Go To* `Ctrl+G` (theo số dòng đang hiện). Copy / Paste dạng Tab bọc `"…"` như Excel (ô nhiều dòng dán sang Excel đúng
   1 ô). Unit test 120/120 (2026-10-02)
-- [ ] Thử tay trên máy thật: kéo-thả file từ Explorer vào CsvEditor (Sandbox không tự động hoá được: UIPI chặn thả từ
-  Explorer vào app chạy quyền cao); mở file .xlsx vừa xuất bằng Excel thật (Sandbox không có Excel)
+- [x] Thử tay trên máy thật: kéo-thả file từ Explorer vào CsvEditor (Sandbox không tự động hoá được: UIPI chặn thả từ
+  Explorer vào app chạy quyền cao); mở file .xlsx vừa xuất bằng Excel thật (Sandbox không có Excel) — OK (2026-10-05)
 - [ ] **[Đề xuất · Có thể]** Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột; tự giãn độ rộng cột

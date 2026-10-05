@@ -1644,6 +1644,20 @@ public sealed partial class EditorWindow : Window
                 return;
             }
 
+            // Ctrl+R / Ctrl+Shift+R: xoay phải / trái 90°; Ctrl+E: đổi cỡ ảnh (như Paint).
+            Action? transformAction = e.Key switch
+            {
+                Windows.System.VirtualKey.R => () => TransformImage(shift ? ImageTransformKind.RotateLeft : ImageTransformKind.RotateRight),
+                Windows.System.VirtualKey.E => () => _ = ShowResizeImageDialogAsync(),
+                _ => null,
+            };
+            if (transformAction is not null)
+            {
+                transformAction();
+                e.Handled = true;
+                return;
+            }
+
             System.Windows.Input.ICommand? command = e.Key switch
             {
                 Windows.System.VirtualKey.Z when shift => _viewModel.RedoCommand,
@@ -1773,6 +1787,54 @@ public sealed partial class EditorWindow : Window
             {
                 btn.IsChecked = false;
             }
+        }
+    }
+
+    // ---- Xoay / lật / đổi cỡ cả ảnh ----
+
+    private void TransformItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string tag } && Enum.TryParse<ImageTransformKind>(tag, out var kind))
+        {
+            TransformImage(kind);
+        }
+    }
+
+    private void ResizeImageItem_Click(object sender, RoutedEventArgs e) => _ = ShowResizeImageDialogAsync();
+
+    private void TransformImage(ImageTransformKind kind)
+    {
+        _viewModel.Transform(kind); // đổi Bitmap → PropertyChanged → bỏ vùng chọn, UpdateCanvasLayout()
+        Canvas.Invalidate();
+    }
+
+    private bool _resizeDialogOpen;
+
+    private async Task ShowResizeImageDialogAsync()
+    {
+        if (_resizeDialogOpen)
+        {
+            return; // ContentDialog thứ 2 cùng lúc sẽ ném lỗi
+        }
+        _resizeDialogOpen = true;
+        try
+        {
+            var vm = _viewModel;
+            var dialog = new ResizeImageDialog(vm.Bitmap.Width, vm.Bitmap.Height) { XamlRoot = Content.XamlRoot };
+            if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+            {
+                vm.ResizeImage(dialog.NewWidth, dialog.NewHeight);
+                Canvas.Invalidate();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Không đổi được cỡ ảnh");
+            _viewModel.StatusText = $"Không đổi được cỡ ảnh: {ex.Message}";
+        }
+        finally
+        {
+            _resizeDialogOpen = false;
         }
     }
 

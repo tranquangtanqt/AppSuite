@@ -124,10 +124,12 @@ public static class HelpContent
             new("Lưu ý", "Chỉ che ảnh chụp bên dưới, không che các hình (chữ, mũi tên...) đã vẽ ở cùng chỗ."),
         ]),
 
-        new("Cắt, khung ảnh & dán", "\uE7A8", "Nhóm Cắt & Sửa ở tab Trang chủ.",
+        new("Cắt, khung ảnh & dán", "\uE7A8", "Nhóm Cắt & Sửa ở tab Trang chủ: Cắt, Xoay (xoay / lật / đổi cỡ ảnh), Undo / Redo, Dán.",
         [
             new("Cắt", "Kéo khung vùng cần giữ; hình nằm ngoài vùng cắt bị bỏ. Khôi phục được: kéo handle khung ảnh ra lại là hiện lại phần đã cắt, kể cả sau khi tắt mở lại app."),
             new("Đổi kích thước khung ảnh", "Công cụ Move, không chọn hình nào → kéo 1 trong 8 handle quanh ảnh: kéo ra = mở rộng (nền trắng), kéo vào = cắt bớt cạnh đó. Hình đã vẽ giữ nguyên vị trí."),
+            new("Xoay / lật ảnh", "Nút Xoay: xoay phải / trái 90°, xoay 180°, lật ngang, lật dọc cả ảnh. Các hình đã vẽ xoay theo và vẫn sửa được; chữ và stamp giữ chiều đứng, stamp mũi tên tự đổi hướng. Phần đã Cắt trước đó không khôi phục được nữa (Undo thì được).", "Ctrl+R", "Ctrl+Shift+R"),
+            new("Đổi cỡ ảnh", "Nút Xoay > Đổi cỡ ảnh…: co giãn cả nội dung ảnh theo % hoặc theo px (giữ tỉ lệ hoặc không) - khác kéo khung ảnh. Hình vẽ, nét, cỡ chữ, stamp co giãn theo.", "Ctrl+E"),
             new("Dán ảnh", "Dán ảnh trong clipboard (ảnh copy từ app khác hoặc file ảnh copy trong Explorer) thành 1 hình ảnh, kéo / co giãn được (giữ Shift = đúng tỉ lệ). Ảnh dán lớn hơn thì khung ảnh tự nới ra.", "Ctrl+V"),
         ]),
 
@@ -169,6 +171,8 @@ public static class HelpContent
             new("Dán ảnh", "Dán ảnh từ clipboard.", "Ctrl+V"),
             new("Ảnh mới", "Tạo ảnh trống thành tab mới.", "Ctrl+N"),
             new("Mở ảnh", "Mở ảnh có sẵn thành tab mới.", "Ctrl+O"),
+            new("Xoay ảnh", "Xoay phải / trái 90°.", "Ctrl+R", "Ctrl+Shift+R"),
+            new("Đổi cỡ ảnh", "Co giãn ảnh theo % hoặc px.", "Ctrl+E"),
             new("Xoá", "Xoá hình đang chọn (hoặc xoá vùng chọn).", "Delete", "Backspace"),
             new("Bỏ chọn", "Bỏ chọn hình / vùng chọn.", "Esc"),
             new("Vùng chọn", "Cut vùng / Cắt ảnh theo vùng.", "Ctrl+X", "Enter"),

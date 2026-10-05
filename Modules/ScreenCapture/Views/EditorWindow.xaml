@@ -299,6 +299,57 @@
                                         <TextBlock Text="Cắt" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
+                                <!-- Xoay / lật / co giãn cả ảnh (cùng các shape) - khác kéo khung ảnh (chỉ nới / cắt khung). -->
+                                <Button x:Name="TransformButton" Style="{StaticResource ToolButtonStyle}"
+                                        ToolTipService.ToolTip="Xoay, lật, đổi cỡ ảnh">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE7AD;" />
+                                        <TextBlock Text="Xoay" FontSize="10" />
+                                    </StackPanel>
+                                    <Button.Flyout>
+                                        <MenuFlyout Placement="Bottom">
+                                            <MenuFlyoutItem x:Name="RotateRightItem" Text="Xoay phải 90°" Tag="RotateRight"
+                                                            KeyboardAcceleratorTextOverride="Ctrl+R" Click="TransformItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE7AD;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutItem x:Name="RotateLeftItem" Text="Xoay trái 90°" Tag="RotateLeft"
+                                                            KeyboardAcceleratorTextOverride="Ctrl+Shift+R" Click="TransformItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE7AD;" RenderTransformOrigin="0.5,0.5">
+                                                        <FontIcon.RenderTransform>
+                                                            <ScaleTransform ScaleX="-1" />
+                                                        </FontIcon.RenderTransform>
+                                                    </FontIcon>
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutItem x:Name="Rotate180Item" Text="Xoay 180°" Tag="Rotate180" Click="TransformItem_Click" />
+                                            <MenuFlyoutSeparator />
+                                            <MenuFlyoutItem x:Name="FlipHorizontalItem" Text="Lật ngang" Tag="FlipHorizontal" Click="TransformItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE8AB;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutItem x:Name="FlipVerticalItem" Text="Lật dọc" Tag="FlipVertical" Click="TransformItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE8AB;" RenderTransformOrigin="0.5,0.5">
+                                                        <FontIcon.RenderTransform>
+                                                            <RotateTransform Angle="90" />
+                                                        </FontIcon.RenderTransform>
+                                                    </FontIcon>
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutSeparator />
+                                            <MenuFlyoutItem x:Name="ResizeImageItem" Text="Đổi cỡ ảnh…"
+                                                            KeyboardAcceleratorTextOverride="Ctrl+E" Click="ResizeImageItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE740;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
                                 <StackPanel Spacing="1" VerticalAlignment="Center">
                                     <Button x:Name="UndoButton" Style="{StaticResource SmallToolButtonStyle}" Click="UndoButton_Click" ToolTipService.ToolTip="Undo (Ctrl+Z)">
                                         <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
