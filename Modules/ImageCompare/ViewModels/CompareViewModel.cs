@@ -34,6 +34,9 @@ public sealed partial class CompareViewModel : ObservableObject
 
     private CancellationTokenSource? _textDiffCts;
     private string? _textDiffError;
+    /// <summary>Bộ đọc của lần Tìm chữ gần nhất + ghi chú khi phải dùng dự phòng (hiện ở bảng kết quả).</summary>
+    private string? _textReaderName;
+    private string? _textReaderNote;
     private string? _textDiffReaderName;
     private string? _textDiffReaderNote;
 
@@ -356,6 +359,10 @@ public sealed partial class CompareViewModel : ObservableObject
         {
             RequestTextDiff();
         }
+        if (Mode == ViewMode.Text)
+        {
+            RequestOcr(); // Tìm chữ dùng chung ô ngôn ngữ - đọc lại ảnh theo ngôn ngữ mới (có cache thì tức thì)
+        }
     }
 
     partial void OnTextDiffShowSimilarChanged(bool value)
@@ -514,8 +521,16 @@ public sealed partial class CompareViewModel : ObservableObject
             UpdateTextMatches();
             return;
         }
-        if (_ocrCache.TryGetValue(target, out var cached))
+        // Tiếng Nhật: cùng bộ đọc form của So chữ (Windows OCR "ja", dự phòng Tesseract "jpn") và cùng cache - đã So chữ
+        // rồi thì Tìm chữ tức thì. Tiếng Việt / Anh: Tesseract "vie" như trước. (Bản cũ luôn đọc "vie" → chữ Nhật ra rác,
+        // tìm 確定状況 không thấy.)
+        var language = TextDiffLanguage;
+        var cached = language == FormLanguage.Japanese
+            ? CachedFormOcr(target, language)
+            : _ocrCache.TryGetValue(target, out var vie) ? vie : null;
+        if (cached is not null)
         {
+            _textReaderName = language == FormLanguage.Japanese ? _textReaderName ?? _textDiffReaderName : "Tesseract (tiếng Việt / Anh)";
             Ocr = cached;
             UpdateTextMatches();
             return;
@@ -533,12 +548,33 @@ public sealed partial class CompareViewModel : ObservableObject
         });
         try
         {
-            var result = await Task.Run(() => TextRecognizer.Recognize(target.Bitmap, cts.Token, progress), cts.Token);
+            IProgress<double> report = progress;
+            OcrResult result;
+            if (language == FormLanguage.Japanese)
+            {
+                var reader = FormReaders.Create(language, out var note);
+                _textReaderName = reader.Name;
+                _textReaderNote = note;
+                result = await Task.Run(() => reader.Read(target.Bitmap, cts.Token, new SyncProgress(report.Report)), cts.Token);
+            }
+            else
+            {
+                _textReaderName = "Tesseract (tiếng Việt / Anh)";
+                _textReaderNote = null;
+                result = await Task.Run(() => TextRecognizer.Recognize(target.Bitmap, cts.Token, progress), cts.Token);
+            }
             if (cts.IsCancellationRequested)
             {
                 return;
             }
-            _ocrCache.AddOrUpdate(target, result);
+            if (language == FormLanguage.Japanese)
+            {
+                StoreFormOcr(target, language, result);
+            }
+            else
+            {
+                _ocrCache.AddOrUpdate(target, result);
+            }
             Ocr = result;
             UpdateTextMatches();
             Log.LogInformation("Đọc chữ {Name} ({W}x{H}): {Lines} dòng, {Ms} ms",
@@ -830,30 +866,42 @@ public sealed partial class CompareViewModel : ObservableObject
                 Items.Add(new ResultItem(i + 1, ocr.Lines[i].Text, ocr.Lines[i].Bounds, "#6E7781"));
             }
             SummaryTitle = ocr.Lines.Count == 0 ? "Không thấy chữ nào" : $"Đọc được {ocr.Lines.Count} dòng";
-            SummaryDetail = $"Ảnh {slot}: {target.Name}{Environment.NewLine}Gõ vào ô Tìm để khoanh chỗ có chữ đó.{Environment.NewLine}{(int)ocr.Elapsed.TotalMilliseconds} ms";
+            SummaryDetail = $"Ảnh {slot}: {target.Name}{Environment.NewLine}Gõ vào ô Tìm để khoanh chỗ có chữ đó.{Environment.NewLine}{ReaderLine()} · {(int)ocr.Elapsed.TotalMilliseconds} ms"
+                + (_textReaderNote is null ? string.Empty : Environment.NewLine + _textReaderNote);
             StatusText = ocr.Lines.Count == 0 ? "Không đọc được chữ nào trong ảnh." : $"{SummaryTitle} trong ảnh {slot}.";
             return;
         }
+        bool approximate = matches.Count > 0 && matches[0].Approximate;
         foreach (var m in matches)
         {
-            Items.Add(new ResultItem(m.Number, m.LineText, m.Bounds, "#BF8700"));
+            Items.Add(new ResultItem(m.Number, (m.Approximate ? "≈ " : string.Empty) + m.LineText, m.Bounds, m.Approximate ? "#8250DF" : "#BF8700"));
         }
         SummaryTitle = matches.Count switch
         {
             0 => $"Không thấy \"{TextQuery.Trim()}\"",
+            _ when approximate => $"Không thấy chính xác - {matches.Count} chỗ gần đúng",
             1 => "Tìm thấy 1 chỗ",
             _ => $"Tìm thấy {matches.Count} chỗ",
         };
         var lines = new List<string> { $"Ảnh {slot}: {target.Name}" };
+        if (approximate)
+        {
+            lines.Add("Chữ đọc từ ảnh sai 1–2 ký tự so với chữ cần tìm (≈) - soi lại trên ảnh.");
+        }
         if (matches.Count == 0)
         {
             lines.Add(TextMatchDiacritics || TextMatchCase
                 ? "Thử bỏ \"Phân biệt dấu\" / \"Phân biệt hoa thường\" - chữ đọc từ ảnh có thể sai dấu."
                 : "Chữ đọc từ ảnh có thể sai vài ký tự - thử tìm 1 đoạn ngắn hơn.");
+            lines.Add(ReaderLine() + (TextDiffLanguage == FormLanguage.VietnameseEnglish ? " - chữ Nhật thì chọn \"Tiếng Nhật\" ở ô ngôn ngữ." : "."));
         }
         SummaryDetail = string.Join(Environment.NewLine, lines);
         StatusText = $"{SummaryTitle}. Bấm 1 kết quả để phóng tới.";
     }
+
+    /// <summary>"Đọc bằng …" - người dùng thấy ngay đang đọc theo tiếng gì (chọn nhầm ngôn ngữ = toàn chữ rác).</summary>
+    private string ReaderLine() =>
+        $"Đọc bằng {_textReaderName ?? (TextDiffLanguage == FormLanguage.Japanese ? "OCR tiếng Nhật" : "OCR tiếng Việt / Anh")}";
 
     /// <summary>1 vùng khác phủ ≥ 60% ảnh: 2 ảnh lệch bố cục cục bộ (khác font / trình duyệt...) mà tự căn 1 độ lệch
     /// chung không bù được → so pixel tô đỏ gần hết, không còn chỉ ra chỗ khác thật. Chỉ thêm lời nhắc, không đổi

@@ -32,8 +32,10 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 
 **Ưu tiên 3 — có thì tốt, làm khi có nhu cầu:**
 - ImageCompare: so sánh hàng loạt 2 thư mục ảnh
-- ScreenCapture: nền trong suốt cho Ảnh mới; hiệu ứng ảnh (viền, đổ bóng, độ sáng, watermark); hút màu / kính lúp / thước;
-  in ảnh, chụp kèm con trỏ, mẫu tên file tự lưu
+- ScreenCapture: còn thiếu so với PicPick, chia 3 đợt (rà 2026-10-05, chi tiết ở mục ScreenCapture): **1. chữ & hình vẽ**
+  (font / đậm / nền chữ, sửa chữ trên ảnh, tô nền hình, nét đứt, callout) · **2. hiệu ứng ảnh** (viền, đổ bóng, mép rách,
+  độ sáng, làm xám, nền trong suốt, watermark) · **3. chụp & công cụ** (lasso, cửa sổ con, 1 màn hình, con trỏ, hút màu,
+  kính lúp / thước, in, mẫu tên file, PDF / GIF)
 - CsvEditor: freeze cột đầu, ẩn / hiện cột, tự giãn độ rộng cột
 - Chung: nhớ kích thước / vị trí cửa sổ + file gần đây cho mọi module (helper chung trong `Common`); nhớ thư mục nguồn
   ModuleB / ModuleC / Mcf.DbDef; chuyển Hướng dẫn của ScreenCapture / FileTools sang bản dùng chung
@@ -189,10 +191,35 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   chữ, stamp co theo. Phần đã Cắt không khôi phục được sau khi xoay / đổi cỡ. Kiểm tra logic 24/24, build 0 warning
   (2026-10-05)
 - [ ] Test GUI trong Sandbox: menu Xoay, Ctrl+R / Ctrl+E, hộp thoại Đổi cỡ ảnh, Undo / Redo, lưu phiên rồi mở lại
-- [ ] **[Đề xuất · Nên có]** Nền trong suốt cho Ảnh mới (cần sửa Cắt / đổi khung đang tô nền trắng)
-- [ ] **[Đề xuất · Nên có]** Hiệu ứng ảnh: viền (border), đổ bóng, làm xám, độ sáng / tương phản; watermark chữ
-- [ ] **[Đề xuất · Có thể]** Công cụ phụ như PicPick: hút màu trên màn hình, kính lúp, thước đo pixel
-- [ ] **[Đề xuất · Có thể]** In ảnh; tuỳ chọn chụp kèm con trỏ chuột; mẫu tên file khi tự lưu (vd `{date}_{window}`)
+
+### Còn thiếu so với PicPick (rà 2026-10-05) — làm theo 3 đợt, chờ người dùng chọn đợt / tính năng
+
+Đã tương đương: chụp toàn màn hình / cửa sổ / vùng / vùng cố định / cuộn dọc-ngang / lặp lần trước / hẹn giờ, phím tắt,
+khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung ảnh, dán, vùng chọn, zoom, Undo, xoay / lật /
+đổi cỡ, lưu / tự lưu / copy. (★ = mức nên làm)
+
+**Đợt 1 — Chữ & hình vẽ** (dùng hằng ngày khi viết tài liệu / báo lỗi):
+- [ ] ★★★ Chữ: chọn font, đậm / nghiêng, nền ô chữ, viền chữ; gõ / sửa chữ ngay trên ảnh (hiện nhập qua hộp thoại)
+- [ ] ★★ Hình: tô nền cho chữ nhật / elip, nét đứt, bo góc, độ trong suốt, nhiều kiểu đầu mũi tên
+- [ ] ★★ Khung chú thích (callout / bong bóng lời nói)
+
+**Đợt 2 — Hiệu ứng ảnh:**
+- [ ] ★★★ Viền ảnh (border), đổ bóng, mép rách (torn edge)
+- [ ] ★★ Độ sáng / tương phản, làm xám, đảo màu, sepia, làm nét
+- [ ] ★★ Nền trong suốt cho Ảnh mới (cần sửa Cắt / đổi khung đang tô nền trắng)
+- [ ] ★ Watermark chữ / ảnh
+
+**Đợt 3 — Chụp, công cụ phụ, lưu & chia sẻ:**
+- [ ] ★★ Chụp tự do (lasso - vẽ đường viền bất kỳ)
+- [ ] ★★ Chụp 1 màn hình (màn đang có chuột) khi dùng nhiều màn hình — "Toàn màn hình" hiện gộp mọi màn hình
+- [ ] ★★ Hút màu trên màn hình + bảng màu
+- [ ] ★★ In ảnh
+- [ ] ★★ Mẫu tên file khi tự lưu (vd `{date}_{window}`)
+- [ ] ★ Tuỳ chọn chụp kèm con trỏ chuột
+- [ ] ★ Kính lúp, thước đo pixel, đường chữ thập, thước đo góc, bảng trắng vẽ lên màn hình
+- [ ] ★ Lưu PDF / GIF; gửi email / Office / mở bằng chương trình khác; chọn việc tự làm sau khi chụp (Editor / lưu /
+  copy / in)
+- (Trỏ-chọn cửa sổ con ★★ — đã có mục riêng ở trên)
 
 ## ImageCompare
 
@@ -228,6 +255,12 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   Unit test 85/85, build 0 warning. Ảnh thật IE ↔ Edge: khối 受注数量 74,6% → 89% giống; phần đỏ còn lại là khác cách
   vẽ chữ / viền ô (so pixel không bỏ được — dùng So chữ) (2026-10-05)
 - [ ] Test GUI *Soi 1 vùng* trong Sandbox: chọn mục căn, kéo khoanh, khoanh lại, Lưu PNG / báo cáo HTML
+- [x] Bug (người dùng báo): **Tìm chữ không thấy chữ Nhật** (tìm 確定状況 → "Không thấy", danh sách dòng toàn ký tự rác) -
+  Tìm chữ luôn đọc OCR tiếng Việt / Anh. Thêm ô ngôn ngữ ở Tìm chữ (dùng chung với So chữ, cùng bộ đọc + cache: Tiếng
+  Nhật = Windows OCR `ja`, dự phòng Tesseract `jpn`), bảng kết quả ghi "Đọc bằng …". Kèm **tìm gần đúng (≈)**: không khớp
+  chính xác thì cho sai / thiếu / thừa 1 ký tự (OCR đọc 受注数量 → 受淺数量, 受注金額合計 → 受注金合計). Ảnh của người
+  dùng: 9 / 9 nhãn thử đều tìm thấy (5 chính xác, 4 gần đúng; trước: 0). Unit test 90/90, build 0 warning (2026-10-05)
+- [ ] Người dùng thử lại Tìm chữ trên máy thật với ảnh tiếng Nhật (Sandbox không có gói OCR tiếng Nhật của Windows)
 - [ ] **[Đề xuất · Có thể]** Phương án A *Căn từng vùng* cả trang (tự chia ô như Soi 1 vùng nhưng không cần khoanh)
 - [ ] **[Đề xuất · Nên có]** So sánh hàng loạt 2 thư mục ảnh (ghép theo tên file) → bảng tổng hợp giống / khác + báo
   cáo HTML — cho kiểm thử hồi quy nhiều màn hình 1 lần

@@ -178,6 +178,13 @@
                     <ComboBoxItem Content="Ảnh A" />
                     <ComboBoxItem Content="Ảnh B" />
                 </ComboBox>
+                <!-- Cùng ngôn ngữ với So chữ (1 thuộc tính ViewModel.TextDiffLanguage, 2 ô đồng bộ qua SyncOptionControls). -->
+                <ComboBox x:Name="TextLanguageBox" SelectionChanged="TextLanguageBox_SelectionChanged" VerticalAlignment="Center" MinWidth="170"
+                          AutomationProperties.Name="Ngôn ngữ chữ"
+                          ToolTipService.ToolTip="Ngôn ngữ chữ trong ảnh - chọn sai thì đọc ra toàn ký tự rác, tìm không thấy">
+                    <ComboBoxItem Content="Tiếng Nhật" Tag="Japanese" ToolTipService.ToolTip="Windows OCR (tiếng Nhật); máy chưa có gói OCR tiếng Nhật thì dùng Tesseract" />
+                    <ComboBoxItem Content="Tiếng Việt / English" Tag="VietnameseEnglish" ToolTipService.ToolTip="Tesseract - đọc cả tiếng Việt lẫn tiếng Anh" />
+                </ComboBox>
                 <TextBox x:Name="TextQueryBox" Width="220" VerticalAlignment="Center" PlaceholderText="Tìm chữ… (Ctrl+F)"
                          TextChanged="TextQueryBox_TextChanged" AutomationProperties.Name="Tìm chữ"
                          ToolTipService.ToolTip="Gõ chữ cần tìm - các chỗ có chữ đó được tô vàng. Để trống: liệt kê mọi dòng đọc được." />

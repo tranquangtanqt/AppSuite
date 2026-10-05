@@ -125,6 +125,7 @@ public sealed partial class MainWindow : Window
         TextDiacriticsBox.IsChecked = ViewModel.TextMatchDiacritics;
         TextCaseBox.IsChecked = ViewModel.TextMatchCase;
         TextDiffLanguageBox.SelectedItem = TextDiffLanguageBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == ViewModel.TextDiffLanguage.ToString());
+        TextLanguageBox.SelectedItem = TextLanguageBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == ViewModel.TextDiffLanguage.ToString());
         TextDiffSimilarBox.IsChecked = ViewModel.TextDiffShowSimilar;
         _syncingOptions = false;
     }
@@ -136,6 +137,16 @@ public sealed partial class MainWindow : Window
         if (!_syncingOptions && TextDiffLanguageBox.SelectedItem is ComboBoxItem { Tag: string tag } && Enum.TryParse<FormLanguage>(tag, out var language))
         {
             ViewModel.TextDiffLanguage = language;
+            SyncOptionControls(); // ô ngôn ngữ của Tìm chữ đổi theo
+        }
+    }
+
+    private void TextLanguageBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncingOptions && TextLanguageBox.SelectedItem is ComboBoxItem { Tag: string tag } && Enum.TryParse<FormLanguage>(tag, out var language))
+        {
+            ViewModel.TextDiffLanguage = language;
+            SyncOptionControls(); // ô ngôn ngữ của So chữ đổi theo
         }
     }
 

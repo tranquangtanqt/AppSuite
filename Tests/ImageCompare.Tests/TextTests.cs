@@ -69,6 +69,58 @@ public class TextSearchTests
         Assert.Equal(new SKRectI(10, 60, 200, 80), m[1].Bounds);  // 2 từ
     }
 
+    /// <summary>OCR chữ Nhật trên ảnh chụp màn hình đọc nhầm 1 chữ (ảnh thật: 受注数量 → 受淺数量; chữ cách nhau 1 dấu cách).</summary>
+    private static readonly OcrResult Japanese = new(
+    [
+        Line(0, "受", "淺", "数", "量"),
+        Line(30, "確", "定", "状", "況"),
+        Line(60, "納", "品", "指", "示", "数", "量", "過", "不", "足", "不", "可"),
+        Line(90, "受", "注", "金", "合", "計"),                  // ảnh thật: 受注金額合計 thiếu chữ 額
+        Line(120, "前", "回", "受", "注", "x", "番", "号"),     // thừa 1 chữ
+    ], TimeSpan.Zero);
+
+    [Theory]
+    [InlineData("受注金額合計", 90, 10, 500)]  // OCR bỏ sót 1 chữ
+    [InlineData("前回受注番号", 120, 10, 700)] // OCR đọc thừa 1 chữ
+    public void Approximate_search_tolerates_one_missing_or_extra_character(string query, int top, int left, int right)
+    {
+        var hit = Assert.Single(TextSearch.Find(Japanese, query, false, false));
+
+        Assert.True(hit.Approximate);
+        Assert.Equal(new SKRectI(left, top, right, top + 20), hit.Bounds);
+    }
+
+    [Fact]
+    public void Japanese_text_split_into_single_characters_matches_exactly()
+    {
+        var hit = Assert.Single(TextSearch.Find(Japanese, "確定状況", false, false));
+        Assert.False(hit.Approximate);
+        Assert.Equal(new SKRectI(10, 30, 400, 50), hit.Bounds);
+    }
+
+    [Fact]
+    public void No_exact_match_falls_back_to_one_wrong_character()
+    {
+        var hit = Assert.Single(TextSearch.Find(Japanese, "受注数量", false, false));
+
+        Assert.True(hit.Approximate);
+        Assert.Equal(new SKRectI(10, 0, 400, 20), hit.Bounds);
+    }
+
+    [Fact]
+    public void Approximate_search_is_off_when_exact_matches_exist_or_strict_options_are_on()
+    {
+        // Có chỗ khớp chính xác → chỉ trả về chỗ đó, không thêm chỗ gần đúng.
+        Assert.All(TextSearch.Find(Japanese, "数量", false, false), m => Assert.False(m.Approximate));
+        // Bật phân biệt dấu / hoa thường = muốn khớp đúng từng ký tự.
+        Assert.Empty(TextSearch.Find(Japanese, "受注数量", false, matchDiacritics: true));
+        Assert.Empty(TextSearch.Find(Japanese, "受注数量", matchCase: true, false));
+        // Cụm ngắn (< 3 ký tự) không tìm gần đúng - khớp bừa.
+        Assert.Empty(TextSearch.Find(Japanese, "確況", false, false)); // chỉ sai 1 so với "確定" nhưng quá ngắn
+        // Sai 2 ký tự trong cụm 4 ký tự → không khớp.
+        Assert.Empty(TextSearch.Find(Japanese, "受注数額", false, false));
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData("   ")]

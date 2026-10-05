@@ -2,7 +2,7 @@
 
 So khớp 2 hình ảnh (ảnh chụp màn hình, file PNG/JPG, ảnh xuất từ tool khác): tìm chỗ khác nhau, xem
 trực quan, tìm ảnh con trong ảnh lớn, đánh giá độ giống — rồi xuất ảnh / báo cáo HTML gửi người khác.
-Kèm **Tìm chữ**: đọc chữ trong 1 ảnh (OCR tiếng Việt / tiếng Anh) và tìm chữ trong đó; **So chữ**: đọc chữ cả 2
+Kèm **Tìm chữ**: đọc chữ trong 1 ảnh (tiếng Nhật / Việt / Anh) và tìm chữ trong đó; **So chữ**: đọc chữ cả 2
 ảnh (tiếng Nhật / Việt / Anh) và liệt kê chữ / giá trị khác nhau — cho 2 ảnh cùng 1 màn hình chụp ở môi trường
 khác (font, trình duyệt) mà so pixel tô đỏ gần hết.
 
@@ -73,6 +73,12 @@ nhắc thử *So chữ*; số liệu so pixel không đổi.
 ### Tìm chữ
 
 - `Ctrl+F`: sang chế độ Tìm chữ và đặt con trỏ vào ô tìm. Ảnh vừa mở / dán / kéo-thả ở chế độ này được đọc luôn.
+- **Ngôn ngữ** (ô cạnh *Ảnh A / B*, dùng chung với So chữ): *Tiếng Nhật* = cùng bộ đọc với So chữ (Windows OCR `ja`, dự
+  phòng Tesseract `jpn`; dùng chung cache - đã So chữ thì Tìm chữ tức thì), *Tiếng Việt / English* = Tesseract `vie`.
+  Bảng kết quả ghi "Đọc bằng …". (Trước 2026-10-05 Tìm chữ luôn đọc `vie` → màn hình tiếng Nhật ra toàn chữ rác.)
+- **Gần đúng (≈)**: không thấy chỗ khớp chính xác thì tìm chỗ sai / thiếu / thừa 1 ký tự (cụm ≥ 7 ký tự: 2) bằng
+  khoảng cách chỉnh sửa (Sellers) trên từng dòng - OCR hay nhầm / sót 1 chữ (`受注数量` → `受淺数量`,
+  `受注金額合計` → `受注金合計`). Chỉ khi tắt *Phân biệt dấu / hoa thường* và cụm ≥ 3 ký tự; kết quả màu tím, có `≈`.
 - Tìm được cụm nhiều từ; mặc định **không phân biệt hoa / thường và dấu** (`thanh toan` khớp `Thanh toán`) —
   bật *Phân biệt dấu* / *Phân biệt hoa/thường* khi cần. Khoảng trắng không tính khi so (OCR hay dính từ).
 - Đọc tiếng Việt có dấu và tiếng Anh / code / đường dẫn; giao diện nền tối, chữ trắng trên nút / tiêu đề màu.
