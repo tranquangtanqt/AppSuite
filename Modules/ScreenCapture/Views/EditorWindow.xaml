@@ -571,7 +571,7 @@
                     <Border x:Name="StrokeStyleGroup" Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Spacing="2">
-                                <ComboBox x:Name="DashBox" Width="132" Height="30" SelectionChanged="DashBox_SelectionChanged"
+                                <ComboBox x:Name="DashBox" Width="172" Height="30" SelectionChanged="DashBox_SelectionChanged"
                                           ToolTipService.ToolTip="Kiểu nét">
                                     <ComboBoxItem Content="━━━  Nét liền" />
                                     <ComboBoxItem Content="╍╍╍  Nét đứt" />
@@ -579,7 +579,7 @@
                                 </ComboBox>
                                 <StackPanel Orientation="Horizontal" Spacing="6" ToolTipService.ToolTip="Độ đục: 100% = không trong suốt">
                                     <TextBlock Text="Độ đục" FontSize="12" VerticalAlignment="Center" />
-                                    <Slider x:Name="OpacitySlider" Width="84" ValueChanged="OpacitySlider_ValueChanged" />
+                                    <Slider x:Name="OpacitySlider" Width="116" ValueChanged="OpacitySlider_ValueChanged" />
                                 </StackPanel>
                             </StackPanel>
                             <TextBlock Text="Nét &amp; độ trong suốt" Style="{StaticResource RibbonGroupLabelStyle}" />
@@ -598,14 +598,14 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Text="Đầu" FontSize="12" VerticalAlignment="Center" />
-                                <ComboBox x:Name="StartHeadBox" Grid.Column="1" Width="140" Height="30" SelectionChanged="ArrowHeadBox_SelectionChanged">
+                                <ComboBox x:Name="StartHeadBox" Grid.Column="1" Width="164" Height="30" SelectionChanged="ArrowHeadBox_SelectionChanged">
                                     <ComboBoxItem Content="Không" />
                                     <ComboBoxItem Content="◀  Tam giác" />
                                     <ComboBoxItem Content="&lt;  Chữ V" />
                                     <ComboBoxItem Content="●  Chấm tròn" />
                                 </ComboBox>
                                 <TextBlock Grid.Row="1" Text="Cuối" FontSize="12" VerticalAlignment="Center" />
-                                <ComboBox x:Name="EndHeadBox" Grid.Row="1" Grid.Column="1" Width="140" Height="30" SelectionChanged="ArrowHeadBox_SelectionChanged">
+                                <ComboBox x:Name="EndHeadBox" Grid.Row="1" Grid.Column="1" Width="164" Height="30" SelectionChanged="ArrowHeadBox_SelectionChanged">
                                     <ComboBoxItem Content="Không" />
                                     <ComboBoxItem Content="▶  Tam giác" />
                                     <ComboBoxItem Content="&gt;  Chữ V" />

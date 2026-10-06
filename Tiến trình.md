@@ -215,6 +215,11 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
   Test bắt được và đã sửa 2 lỗi: chữ nhiều dòng mất dòng 2 khi sửa lại; ô gõ chữ tự đóng do vùng ảnh giành focus
   (2026-10-06)
 - [ ] Người dùng thử tay Đợt 1 (font khác, viền chữ, co giãn chữ bằng handle, xoay ảnh có khung chú thích)
+- [x] Tab Định dạng: ô Kiểu nét bị cắt chữ ("Nét lì") ở DPI 150% → nới ô Kiểu nét / Đầu mũi tên, kiểm tra ảnh chụp Sandbox
+  150% hiện đủ chữ (người dùng báo, 2026-10-06)
+- [x] Vẽ xong hình → tab Định dạng; bấm chỗ trống / Esc để bỏ chọn → tự về Trang chủ để chọn công cụ khác (người dùng
+  góp ý). Tự mở Định dạng khi chưa chọn hình (đặt định dạng trước khi vẽ) thì giữ nguyên. Test GUI Sandbox 10/10, bộ
+  test Đợt 1 vẫn 12/12 (2026-10-06)
 - [x] Thanh trạng thái Editor (góc phải, cạnh zoom): "Ảnh x / n" = tab ảnh đang mở là thứ mấy trên tổng số tab, đổi
   theo khi chuyển / đóng / thêm tab. Test GUI Sandbox 5/5 (mở phiên 3 tab, chọn tab, đóng tab khác / tab đang mở)
   (2026-10-06)

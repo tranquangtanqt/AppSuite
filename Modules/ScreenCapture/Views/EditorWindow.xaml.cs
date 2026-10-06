@@ -409,7 +409,14 @@ public sealed partial class EditorWindow : Window
         {
             UpdateSelectionButtons();
             UpdateNumberStampTab();
-            UpdateFormatTab(switchToTab: _viewModel.SelectedAnnotation is { } selected && IsFormattable(selected));
+            bool formattableSelected = _viewModel.SelectedAnnotation is { } selected && IsFormattable(selected);
+            UpdateFormatTab(switchToTab: formattableSelected);
+            // Bỏ chọn hình (bấm chỗ trống / Esc) → về Trang chủ để chọn công cụ khác (như tab Number Stamp). Tab Định dạng
+            // vẫn hiện nếu đang cầm công cụ vẽ - bấm vào để chỉnh định dạng trước khi vẽ.
+            if (!formattableSelected && FormatTabHeader.IsChecked == true)
+            {
+                SelectRibbonTab(RibbonTab.Home);
+            }
         }
     }
 
