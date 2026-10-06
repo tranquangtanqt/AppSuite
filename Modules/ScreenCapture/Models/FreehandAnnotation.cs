@@ -82,6 +82,7 @@ public sealed class FreehandAnnotation : AnnotationShape
         {
             return;
         }
+        using var dash = CreateDashEffect(roundCap: true);
         using var paint = new SKPaint
         {
             Color = Color,
@@ -89,6 +90,7 @@ public sealed class FreehandAnnotation : AnnotationShape
             Style = SKPaintStyle.Stroke,
             StrokeCap = SKStrokeCap.Round,
             StrokeJoin = SKStrokeJoin.Round,
+            PathEffect = dash,
             IsAntialias = true,
         };
         if (points.Count == 1)

@@ -112,7 +112,6 @@ public sealed class ImageTransform
             RedactAnnotation redact => new RedactAnnotation { Mode = redact.Mode, Bounds = MapRect(shape.Bounds) },
             LineArrowAnnotation line => new LineArrowAnnotation
             {
-                IsArrow = line.IsArrow,
                 Bounds = LineArrowAnnotation.FromPoints(MapPoint(line.Start), MapPoint(line.End)),
             },
             FreehandAnnotation freehand => TransformFreehand(freehand),
@@ -120,7 +119,8 @@ public sealed class ImageTransform
             {
                 Bounds = MapRect(shape.Bounds),
             },
-            TextAnnotation text => TransformText(text),
+            TextAnnotation => new TextAnnotation(),
+            CalloutAnnotation => new CalloutAnnotation { Bounds = MapRect(shape.Bounds) },
             StampAnnotation stamp => new StampAnnotation
             {
                 Kind = MapStampKind(stamp.Kind),
@@ -135,9 +135,28 @@ public sealed class ImageTransform
         {
             return null;
         }
-        copy.Color = shape.Color;
+        copy.CopyPropertiesFrom(shape);
         // Mosaic / Blur: StrokeWidth là mức độ che, không phải độ dày nét → giữ nguyên.
         copy.StrokeWidth = shape is RedactAnnotation ? shape.StrokeWidth : shape.StrokeWidth * LengthScale;
+        switch (copy)
+        {
+            case RectangleAnnotation rectangle:
+                rectangle.CornerRadius *= LengthScale;
+                break;
+            case TextAnnotation text:
+                // Chữ vẫn nằm ngang: dời tâm khung chữ theo ảnh rồi đặt khung (đúng cỡ chữ mới) quanh tâm đó.
+                text.FontSize *= LengthScale;
+                text.FitBounds();
+                text.Bounds = CenteredAt(MapPoint(new SKPoint(shape.NormalizedBounds.MidX, shape.NormalizedBounds.MidY)),
+                    text.Bounds.Width, text.Bounds.Height);
+                break;
+            case CalloutAnnotation callout:
+                // Khung xoay theo ảnh (chữ vẫn nằm ngang, tự xuống dòng theo bề rộng mới), đầu đuôi đi theo điểm nó chỉ.
+                callout.FontSize *= LengthScale;
+                callout.CornerRadius *= LengthScale;
+                callout.TailTip = MapPoint(((CalloutAnnotation)shape).TailTip);
+                break;
+        }
         return copy;
     }
 
@@ -150,25 +169,6 @@ public sealed class ImageTransform
         copy.SetPoints(freehand.CurrentPoints().Select(MapPoint));
         copy.Bounds = copy.PointsBounds;
         return copy;
-    }
-
-    /// <summary>Chữ vẽ từ góc trên-trái Bounds (Bounds không theo đúng cỡ chữ) → lấy tâm của phần chữ thật sự, dời tâm đó
-    /// theo ảnh rồi đặt chữ (vẫn nằm ngang) quanh tâm mới.</summary>
-    private TextAnnotation TransformText(TextAnnotation text)
-    {
-        using var paint = new SKPaint { Typeface = SKTypeface.Default, TextSize = text.FontSize };
-        float width = paint.MeasureText(text.Text);
-        float height = text.FontSize * 1.2f;
-        var center = MapPoint(new SKPoint(text.Bounds.Left + width / 2, text.Bounds.Top + height / 2));
-        float fontSize = text.FontSize * LengthScale;
-        var size = new SKSize(text.Bounds.Width * LengthScale, text.Bounds.Height * LengthScale);
-        float left = center.X - width * LengthScale / 2, top = center.Y - fontSize * 1.2f / 2;
-        return new TextAnnotation
-        {
-            Text = text.Text,
-            FontSize = fontSize,
-            Bounds = SKRect.Create(left, top, size.Width, size.Height),
-        };
     }
 
     private static SKRect CenteredAt(SKPoint center, float width, float height) =>

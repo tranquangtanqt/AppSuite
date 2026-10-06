@@ -95,8 +95,20 @@ public static class HelpContent
             new("Đường thẳng, Mũi tên", "Kéo từ điểm đầu tới điểm cuối. Giữ Shift = khoá hướng theo bội số 45°. Khi đang chọn: bấm gần 1 đầu rồi kéo để đổi hướng / độ dài, bấm khúc giữa để di chuyển cả đường.", "Shift"),
             new("Bút", "Vẽ tự do (khoanh tròn, gạch chân...). Luôn vẽ nét mới kể cả khi bắt đầu trên hình khác; sửa nét đã vẽ bằng Move."),
             new("Highlight", "Bút dạ quang tô trong mờ lên chữ cần làm nổi bật."),
-            new("Text", "Click vào ảnh, nhập chữ trong hộp thoại."),
-            new("Màu & cỡ nét", "Color1 (màu nét / màu chính), Color2 (màu nền / highlight), Size. Đổi khi đang chọn 1 hình sẽ áp luôn cho hình đó."),
+            new("Text", "Bấm vào ảnh rồi gõ chữ ngay tại chỗ - Enter xuống dòng; Esc, Ctrl+Enter hoặc bấm ra ngoài là xong. Sửa chữ đã có: nhấp đúp lên chữ (hoặc chọn rồi F2 / Enter). Kéo handle góc của chữ = đổi cỡ chữ. Chữ Nhật / Trung / Hàn tự lấy phông Windows có ký tự đó.", "Nhấp đúp", "F2", "Esc", "Ctrl+Enter"),
+            new("Khung chú thích", "Bong bóng lời nói: kéo khung (hoặc bấm 1 cái để có khung cỡ mặc định) rồi gõ chữ luôn - chữ tự xuống dòng theo bề rộng khung, khung tự cao thêm khi chữ dài. Khi đang chọn: kéo chấm tròn ở đầu đuôi để chỉ vào chỗ cần chú thích. Viền + chữ màu Color1, nền Color2."),
+            new("Màu & cỡ nét", "Color1 (màu nét / màu chữ), Color2 (màu nền: Highlight, tô nền hình, nền ô chữ, nền khung chú thích), Size. Đổi khi đang chọn 1 hình sẽ áp luôn cho hình đó."),
+        ]),
+
+        new("Tab Định dạng", "", "Tự hiện khi chọn chữ, khung chú thích, chữ nhật, elip, đường, mũi tên, nét bút - hoặc khi đang cầm công cụ vẽ chúng. Chỉ hiện các nhóm hợp với loại hình đó.",
+        [
+            new("Áp cho hình nào", "Đang chọn 1 hình: đổi gì áp luôn cho hình đó (Undo được). Đồng thời là định dạng cho các hình vẽ tiếp theo bằng công cụ đang cầm - mỗi công cụ nhớ riêng (vd Đường thẳng và Mũi tên có đầu mũi tên khác nhau)."),
+            new("Phông chữ", "Chọn phông (gõ vài chữ đầu để nhảy tới), cỡ chữ, chữ đậm (B), nghiêng (I) - cho Text và Khung chú thích."),
+            new("Nền & viền chữ", "Nền ô chữ: ô màu Color2 phía sau chữ. Viền chữ: viền quanh từng nét chữ (chọn màu ở ô bên cạnh) - chữ đọc rõ trên ảnh nhiều màu."),
+            new("Hình", "Tô nền (màu Color2) cho Chữ nhật / Elip / Khung chú thích; hình có tô nền thì bấm đâu bên trong cũng chọn được. Bo góc cho Chữ nhật / Khung chú thích."),
+            new("Nét & độ trong suốt", "Nét liền / đứt / chấm. Độ đục 10-100%: hình mờ đi để vẫn thấy ảnh bên dưới."),
+            new("Đầu mũi tên", "Kiểu đầu ở điểm đầu và điểm cuối của Đường / Mũi tên: không có, tam giác, chữ V, chấm tròn - vd mũi tên 2 đầu. Đầu mũi tên to theo Size."),
+            new("Màu & cỡ nét", "Nhóm Color1 / Color2 / Size cũng nằm đầu tab này - không phải quay về Trang chủ."),
         ]),
 
         new("Tô màu & Stamps", "\uE790", "Nhóm Tô & Dấu ở tab Trang chủ.",

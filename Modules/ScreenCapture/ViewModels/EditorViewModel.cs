@@ -79,11 +79,10 @@ public sealed partial class EditorViewModel : ObservableObject
     public void RemoveAnnotation(AnnotationShape shape) =>
         UndoRedo.Do(new RemoveAnnotationCommand(Annotations, shape));
 
-    public void MoveResizeAnnotation(AnnotationShape shape, SKRect oldBounds, SKRect newBounds) =>
-        UndoRedo.Do(new MoveResizeAnnotationCommand(shape, oldBounds, newBounds));
-
-    public void EditText(TextAnnotation shape, string newText) =>
-        UndoRedo.Do(new EditTextAnnotationCommand(shape, shape.Text, newText));
+    /// <summary>Ghi 1 thay đổi đã làm trên shape (di chuyển, đổi màu / nét / phông, sửa chữ...) thành 1 bước Undo.
+    /// <paramref name="before"/> / <paramref name="after"/> là <see cref="AnnotationShape.Snapshot"/> trước và sau khi đổi.</summary>
+    public void ChangeShape(AnnotationShape shape, AnnotationShape before, AnnotationShape after, string description) =>
+        UndoRedo.Do(new ChangeShapeCommand(shape, before, after, description));
 
     public void DeleteSelectedAnnotation()
     {
@@ -110,14 +109,6 @@ public sealed partial class EditorViewModel : ObservableObject
         if (oldIndex > 0)
         {
             UndoRedo.Do(new ReorderAnnotationCommand(Annotations, oldIndex, 0));
-        }
-    }
-
-    public void ChangeAnnotationStyle(AnnotationShape shape, SKColor newColor, float newStrokeWidth)
-    {
-        if (shape.Color != newColor || shape.StrokeWidth != newStrokeWidth)
-        {
-            UndoRedo.Do(new ChangeAnnotationStyleCommand(shape, shape.Color, newColor, shape.StrokeWidth, newStrokeWidth));
         }
     }
 
@@ -437,7 +428,7 @@ public sealed partial class EditorViewModel : ObservableObject
         canvas.DrawBitmap(Bitmap, 0, 0);
         foreach (var shape in Annotations)
         {
-            shape.Render(canvas, Bitmap);
+            shape.Draw(canvas, Bitmap);
         }
         return result;
     }

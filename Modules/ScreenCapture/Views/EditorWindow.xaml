@@ -86,6 +86,8 @@
                           Click="RibbonTabHeader_Click" Visibility="Collapsed" />
             <ToggleButton x:Name="RegionTabHeader" Content="Vùng chọn" Style="{StaticResource RibbonTabHeaderStyle}"
                           Click="RibbonTabHeader_Click" Visibility="Collapsed" />
+            <ToggleButton x:Name="FormatTabHeader" Content="Định dạng" Style="{StaticResource RibbonTabHeaderStyle}"
+                          Click="RibbonTabHeader_Click" Visibility="Collapsed" />
         </StackPanel>
         <!-- Nút "?" góc phải hàng tab (giống nút Help của Office/PicPick). -->
         <Button x:Name="HelpHeaderButton" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center"
@@ -189,10 +191,18 @@
                                         <TextBlock Text="Highlight" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <ToggleButton x:Name="TextToolButton" Style="{StaticResource ToolButtonStyle}" Click="TextToolButton_Click">
+                                <ToggleButton x:Name="TextToolButton" Style="{StaticResource ToolButtonStyle}" Click="TextToolButton_Click"
+                                              ToolTipService.ToolTip="Bấm lên ảnh rồi gõ chữ ngay tại chỗ (Enter = xuống dòng, Esc / bấm ra ngoài = xong). Nhấp đúp chữ đã có để sửa. Phông, cỡ, đậm / nghiêng, nền, viền chữ ở tab Định dạng.">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8D2;" />
                                         <TextBlock Text="Text" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <ToggleButton x:Name="CalloutToolButton" Style="{StaticResource ToolButtonStyle}" Click="CalloutToolButton_Click"
+                                              ToolTipService.ToolTip="Khung chú thích (bong bóng lời nói): kéo khung (hoặc bấm 1 cái) rồi gõ chữ; kéo chấm tròn ở đầu đuôi để chỉ vào chỗ cần chú thích. Viền + chữ màu Color1, nền Color2.">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE90A;" />
+                                        <TextBlock Text="Chú thích" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
                             </StackPanel>
@@ -375,7 +385,8 @@
                         </StackPanel>
                     </Border>
 
-                    <Border Style="{StaticResource RibbonGroupStyle}">
+                    <!-- Dùng chung cho tab Trang chủ và Định dạng: code chuyển nhóm này sang tab đang mở (SelectRibbonTab). -->
+                    <Border x:Name="ColorSizeGroup" Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
@@ -488,6 +499,120 @@
                                 </Button>
                             </StackPanel>
                             <TextBlock Text="Cửa sổ" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+
+                <!-- Tab contextual "Định dạng": hiện khi đang chọn / đang vẽ chữ, khung chú thích, hình, đường, bút. Đổi gì
+                     cũng áp cho shape đang chọn (nếu có) và cho các shape vẽ tiếp bằng công cụ đang dùng. Mỗi nhóm chỉ hiện
+                     khi hợp với loại shape (UpdateFormatTab). Nhóm Màu & Cỡ nét được chuyển sang đầu tab này khi mở. -->
+                <StackPanel x:Name="FormatRibbonPanel" Orientation="Horizontal" Visibility="Collapsed">
+
+                    <Border x:Name="FontGroup" Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Spacing="4">
+                                <ComboBox x:Name="FontFamilyBox" Width="176" Height="30" SelectionChanged="FontFamilyBox_SelectionChanged"
+                                          ToolTipService.ToolTip="Phông chữ (gõ vài chữ đầu để nhảy tới phông)" />
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <NumberBox x:Name="FontSizeBox" Width="92" SpinButtonPlacementMode="Compact"
+                                               ValueChanged="FontSizeBox_ValueChanged" ToolTipService.ToolTip="Cỡ chữ (px)" />
+                                    <ToggleButton x:Name="BoldButton" Width="36" Height="32" Padding="0" Click="BoldButton_Click"
+                                                  ToolTipService.ToolTip="Chữ đậm">
+                                        <TextBlock Text="B" FontWeight="Bold" />
+                                    </ToggleButton>
+                                    <ToggleButton x:Name="ItalicButton" Width="36" Height="32" Padding="0" Click="ItalicButton_Click"
+                                                  ToolTipService.ToolTip="Chữ nghiêng">
+                                        <TextBlock Text="I" FontStyle="Italic" FontFamily="Times New Roman" FontSize="16" />
+                                    </ToggleButton>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="Phông chữ" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="TextDecorGroup" Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Spacing="2">
+                                <CheckBox x:Name="TextBackgroundCheck" Content="Nền ô chữ (Color2)" MinWidth="0"
+                                          Click="TextBackgroundCheck_Click" />
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <CheckBox x:Name="TextOutlineCheck" Content="Viền chữ" MinWidth="0" Click="TextOutlineCheck_Click"
+                                              ToolTipService.ToolTip="Viền quanh từng nét chữ - chữ dễ đọc trên ảnh nhiều màu" />
+                                    <Button x:Name="TextOutlineColorButton" Width="28" Height="28" Padding="0" VerticalAlignment="Center"
+                                            ToolTipService.ToolTip="Màu viền chữ">
+                                        <Rectangle x:Name="TextOutlineSwatch" Width="18" Height="18" Fill="White" Stroke="Gray" StrokeThickness="1" />
+                                        <Button.Flyout>
+                                            <Flyout>
+                                                <ColorPicker x:Name="TextOutlineColorPicker" ColorChanged="TextOutlineColorPicker_ColorChanged"
+                                                             IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                            </Flyout>
+                                        </Button.Flyout>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="Nền &amp; viền chữ" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="ShapeFillGroup" Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Spacing="2">
+                                <CheckBox x:Name="ShapeFillCheck" Content="Tô nền (Color2)" MinWidth="0" Click="ShapeFillCheck_Click" />
+                                <StackPanel x:Name="CornerRadiusRow" Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="Bo góc" FontSize="12" VerticalAlignment="Center" />
+                                    <Slider x:Name="CornerRadiusSlider" Width="96" ValueChanged="CornerRadiusSlider_ValueChanged" />
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="Hình" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="StrokeStyleGroup" Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <StackPanel Spacing="2">
+                                <ComboBox x:Name="DashBox" Width="132" Height="30" SelectionChanged="DashBox_SelectionChanged"
+                                          ToolTipService.ToolTip="Kiểu nét">
+                                    <ComboBoxItem Content="━━━  Nét liền" />
+                                    <ComboBoxItem Content="╍╍╍  Nét đứt" />
+                                    <ComboBoxItem Content="┅┅┅  Nét chấm" />
+                                </ComboBox>
+                                <StackPanel Orientation="Horizontal" Spacing="6" ToolTipService.ToolTip="Độ đục: 100% = không trong suốt">
+                                    <TextBlock Text="Độ đục" FontSize="12" VerticalAlignment="Center" />
+                                    <Slider x:Name="OpacitySlider" Width="84" ValueChanged="OpacitySlider_ValueChanged" />
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Text="Nét &amp; độ trong suốt" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Border x:Name="ArrowHeadGroup" Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <Grid RowSpacing="4" ColumnSpacing="6">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Đầu" FontSize="12" VerticalAlignment="Center" />
+                                <ComboBox x:Name="StartHeadBox" Grid.Column="1" Width="140" Height="30" SelectionChanged="ArrowHeadBox_SelectionChanged">
+                                    <ComboBoxItem Content="Không" />
+                                    <ComboBoxItem Content="◀  Tam giác" />
+                                    <ComboBoxItem Content="&lt;  Chữ V" />
+                                    <ComboBoxItem Content="●  Chấm tròn" />
+                                </ComboBox>
+                                <TextBlock Grid.Row="1" Text="Cuối" FontSize="12" VerticalAlignment="Center" />
+                                <ComboBox x:Name="EndHeadBox" Grid.Row="1" Grid.Column="1" Width="140" Height="30" SelectionChanged="ArrowHeadBox_SelectionChanged">
+                                    <ComboBoxItem Content="Không" />
+                                    <ComboBoxItem Content="▶  Tam giác" />
+                                    <ComboBoxItem Content="&gt;  Chữ V" />
+                                    <ComboBoxItem Content="●  Chấm tròn" />
+                                </ComboBox>
+                            </Grid>
+                            <TextBlock Text="Đầu mũi tên" Style="{StaticResource RibbonGroupLabelStyle}" />
                         </StackPanel>
                     </Border>
 
@@ -706,16 +831,22 @@
             </TabView.TabStripFooter>
         </TabView>
 
+        <!-- IsTabStop: nhận lại focus khi đóng ô gõ chữ trên ảnh, để phím tắt của Editor vẫn chạy. -->
         <ScrollViewer x:Name="CanvasScroller" Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      IsTabStop="True" UseSystemFocusVisuals="False"
                       HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Margin="0,0,0,8">
             <!-- Viền ảnh + 8 handle khung ảnh vẽ trong Skia (có lề CanvasPad), không dùng viền Border. -->
-            <Border HorizontalAlignment="Left" VerticalAlignment="Top">
+            <Grid HorizontalAlignment="Left" VerticalAlignment="Top">
                 <skia:SKXamlCanvas x:Name="Canvas"
                                     PaintSurface="Canvas_PaintSurface"
                                     PointerPressed="Canvas_PointerPressed"
                                     PointerMoved="Canvas_PointerMoved"
-                                    PointerReleased="Canvas_PointerReleased" />
-            </Border>
+                                    PointerReleased="Canvas_PointerReleased"
+                                    DoubleTapped="Canvas_DoubleTapped" />
+                <!-- Ô gõ chữ ngay trên ảnh (Text / Khung chú thích) được thêm vào đây khi đang gõ. Không có Background nên
+                     phần trống không chặn chuột của Canvas. -->
+                <Grid x:Name="InlineEditorHost" />
+            </Grid>
         </ScrollViewer>
 
         <!-- Row 4: thanh trạng thái - trái: thông báo; phải: zoom của ảnh đang mở (kiểu PicPick).

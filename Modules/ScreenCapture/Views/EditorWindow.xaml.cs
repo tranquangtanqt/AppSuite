@@ -53,9 +53,15 @@ public sealed partial class EditorWindow : Window
     // Move tool drag state.
     private AnnotationShape? _movingShape;
     private SKRect _movingOldBounds;
+    /// <summary>Trạng thái shape lúc bắt đầu kéo - thả chuột thì ghi thay đổi thành 1 bước Undo (ChangeShape).</summary>
+    private AnnotationShape? _movingBefore;
+    /// <summary>Chuột đã thực sự di chuyển trong lần kéo shape (chỉ bấm để chọn thì không ghi Undo).</summary>
+    private bool _dragChanged;
     private SKPoint _moveDragStart;
     private int _resizingHandle = -1; // -1 = none, 0..3 = TL/TR/BL/BR
     private int _lineEndpointHandle = -1; // -1 = none, 0 = điểm đầu, 1 = điểm cuối của Line/Arrow
+    private bool _calloutTailDrag; // đang kéo đầu đuôi của khung chú thích
+    private SKPoint? _pendingNewText; // công cụ Text: đã nhấn chuột ở chỗ trống, thả chuột thì mở ô gõ chữ tại đây
 
     // Kích thước stamp đặt tiếp theo: nhớ theo stamp vừa được kéo to/nhỏ, về mặc định khi chọn lại
     // stamp từ flyout Stamps (bắt đầu đặt từ đầu).
@@ -69,7 +75,7 @@ public sealed partial class EditorWindow : Window
     // Flyout property) - nó không có IsChecked nên không nằm trong danh sách bật/tắt dưới đây.
     private List<ToggleButton> ToolButtons => [
         MoveToolButton, SelectToolButton, RectangleToolButton, EllipseToolButton, LineToolButton, ArrowToolButton,
-        PenToolButton, HighlightToolButton, TextToolButton, FillToolButton, MosaicToolButton, BlurToolButton,
+        PenToolButton, HighlightToolButton, TextToolButton, CalloutToolButton, FillToolButton, MosaicToolButton, BlurToolButton,
     ];
 
     /// <param name="restored">Các tab của phiên trước (SessionService.Load), có thể rỗng.</param>
@@ -158,6 +164,7 @@ public sealed partial class EditorWindow : Window
         NextNumberBox.SmallChange = 1;
         NextNumberBox.Value = _numberStampCounter;
 
+        InitFormatControls();
         PopulateStampPickers();
         // Mở ảnh ra ở tool Move (con trỏ) giống PicPick: bấm nhầm không vẽ ra gì, và thấy ngay 8 handle
         // để đổi kích thước khung ảnh.
@@ -323,6 +330,10 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (_viewModel is not null)
+        {
+            CommitInlineText(select: false); // chữ đang gõ thuộc ảnh cũ
+        }
         var previous = _viewModel;
         if (previous is not null)
         {
@@ -345,6 +356,8 @@ public sealed partial class EditorWindow : Window
         _movingShape = null;
         _resizingHandle = -1;
         _lineEndpointHandle = -1;
+        _calloutTailDrag = false;
+        _pendingNewText = null;
         _canvasHandle = -1;
         _isDraggingRegion = false;
         _regionHandle = -1;
@@ -354,13 +367,19 @@ public sealed partial class EditorWindow : Window
         StatusText.Text = vm.StatusText;
         UpdateSelectionButtons();
         UpdateNumberStampTab();
+        UpdateFormatTab();
         _zoom = vm.Zoom;
         UpdateZoomLabel();
         UpdateCanvasLayout();
         CanvasScroller.ChangeView(0, 0, null, true);
     }
 
-    private void ViewModel_RequestRedraw(object? sender, EventArgs e) => Canvas.Invalidate();
+    private void ViewModel_RequestRedraw(object? sender, EventArgs e)
+    {
+        Canvas.Invalidate();
+        // Undo / Redo có thể đổi định dạng của shape đang chọn → cập nhật lại các control của tab Định dạng.
+        UpdateFormatTab();
+    }
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
@@ -381,6 +400,7 @@ public sealed partial class EditorWindow : Window
         {
             UpdateSelectionButtons();
             UpdateNumberStampTab();
+            UpdateFormatTab(switchToTab: _viewModel.SelectedAnnotation is { } selected && IsFormattable(selected));
         }
     }
 
@@ -414,6 +434,7 @@ public sealed partial class EditorWindow : Window
         {
             return;
         }
+        CommitInlineText(select: false);
         _closingTab = true;
         try
         {
@@ -548,6 +569,7 @@ public sealed partial class EditorWindow : Window
     /// Launcher cũng gọi hàm này khi Thoát từ menu khay. Trả false nếu người dùng bấm Huỷ.</summary>
     public async Task<bool> RequestCloseAsync()
     {
+        CommitInlineText(select: false);
         int unsaved = DocumentTabs.TabItems.OfType<TabViewItem>().Count(t => t.Tag is EditorViewModel { NeedsSave: true });
         bool saved = TrySaveSession(); // tắt "nhớ tab" thì lần ghi này chỉ dọn sạch thư mục tạm
         bool persisted = saved && _session.Enabled;
@@ -636,9 +658,9 @@ public sealed partial class EditorWindow : Window
         }
         foreach (var shape in _viewModel.Annotations)
         {
-            shape.Render(canvas, _viewModel.Bitmap);
+            shape.Draw(canvas, _viewModel.Bitmap);
         }
-        _draftShape?.Render(canvas, _viewModel.Bitmap);
+        _draftShape?.Draw(canvas, _viewModel.Bitmap);
 
         if (_viewModel.SelectedAnnotation is { } selected)
         {
@@ -675,6 +697,12 @@ public sealed partial class EditorWindow : Window
                 {
                     canvas.DrawRect(new SKRect(x - HandleSize / 2, y - HandleSize / 2, x + HandleSize / 2, y + HandleSize / 2), handleFill);
                     canvas.DrawRect(new SKRect(x - HandleSize / 2, y - HandleSize / 2, x + HandleSize / 2, y + HandleSize / 2), handleStroke);
+                }
+                if (selected is CalloutAnnotation callout)
+                {
+                    // Handle tròn ở đầu đuôi: kéo để chỉ vào chỗ khác.
+                    canvas.DrawCircle(callout.TailTip, HandleSize / 2 + Px(1), handleFill);
+                    canvas.DrawCircle(callout.TailTip, HandleSize / 2 + Px(1), handleStroke);
                 }
             }
         }
@@ -829,6 +857,7 @@ public sealed partial class EditorWindow : Window
         {
             return;
         }
+        CommitInlineText(); // ô gõ chữ đặt theo zoom cũ
 
         double scale = CurrentScale;
         var a = anchor ?? new Point(CanvasScroller.ViewportWidth / 2, CanvasScroller.ViewportHeight / 2);
@@ -1073,12 +1102,17 @@ public sealed partial class EditorWindow : Window
             BeginLineEndpointDrag(selectedLine, selectedEndpoint, e);
             return true;
         }
+        if (selected is CalloutAnnotation selectedCallout && SKPoint.Distance(pos, selectedCallout.TailTip) <= HandleSize)
+        {
+            _calloutTailDrag = true;
+            BeginShapeDrag(selectedCallout, e);
+            return true;
+        }
         if (selected is not null and not LineArrowAnnotation && HitTestHandle(selected.NormalizedBounds, pos) is { } handleIndex)
         {
             _resizingHandle = handleIndex;
-            _movingShape = selected;
             _movingOldBounds = selected.NormalizedBounds;
-            Canvas.CapturePointer(e.Pointer);
+            BeginShapeDrag(selected, e);
             return true;
         }
 
@@ -1101,10 +1135,9 @@ public sealed partial class EditorWindow : Window
         }
         else
         {
-            _movingShape = hit;
             _movingOldBounds = hit.Bounds;
             _moveDragStart = pos;
-            Canvas.CapturePointer(e.Pointer);
+            BeginShapeDrag(hit, e);
         }
         Canvas.Invalidate();
         return true;
@@ -1113,8 +1146,16 @@ public sealed partial class EditorWindow : Window
     private void BeginLineEndpointDrag(LineArrowAnnotation line, int endpoint, PointerRoutedEventArgs e)
     {
         _lineEndpointHandle = endpoint;
-        _movingShape = line;
         _movingOldBounds = line.Bounds;
+        BeginShapeDrag(line, e);
+    }
+
+    /// <summary>Bắt đầu kéo shape (di chuyển / handle / đầu mút / đuôi): nhớ trạng thái trước để thả chuột ghi Undo.</summary>
+    private void BeginShapeDrag(AnnotationShape shape, PointerRoutedEventArgs e)
+    {
+        _movingShape = shape;
+        _movingBefore = shape.Snapshot();
+        _dragChanged = false;
         Canvas.CapturePointer(e.Pointer);
     }
 
@@ -1135,6 +1176,13 @@ public sealed partial class EditorWindow : Window
     {
         var pos = ToCanvasPoint(e.GetCurrentPoint(Canvas).Position);
         _dragStartPoint = pos;
+
+        // Đang gõ chữ trên ảnh: bấm ra ngoài = xong (không vẽ / chọn gì thêm ở lần bấm này).
+        if (_inlineEditor is not null)
+        {
+            CommitInlineText(select: false);
+            return;
+        }
 
         if (_isCropping)
         {
@@ -1205,23 +1253,24 @@ public sealed partial class EditorWindow : Window
         switch (_viewModel.SelectedTool)
         {
             case CaptureTool.Rectangle:
-                _draftShape = new RectangleAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y), Color = _viewModel.StrokeColor, StrokeWidth = _viewModel.StrokeWidth };
+                _draftShape = Styled(new RectangleAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y) });
                 Canvas.CapturePointer(e.Pointer);
                 break;
             case CaptureTool.Ellipse:
-                _draftShape = new EllipseAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y), Color = _viewModel.StrokeColor, StrokeWidth = _viewModel.StrokeWidth };
+                _draftShape = Styled(new EllipseAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y) });
                 Canvas.CapturePointer(e.Pointer);
                 break;
-            case CaptureTool.Line:
-                _draftShape = new LineArrowAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y), Color = _viewModel.StrokeColor, StrokeWidth = _viewModel.StrokeWidth, IsArrow = false };
+            case CaptureTool.Line or CaptureTool.Arrow:
+                // Đầu mũi tên theo định dạng của từng công cụ (Đường: không đầu, Mũi tên: tam giác ở điểm cuối).
+                _draftShape = Styled(new LineArrowAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y) });
                 Canvas.CapturePointer(e.Pointer);
                 break;
-            case CaptureTool.Arrow:
-                _draftShape = new LineArrowAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y), Color = _viewModel.StrokeColor, StrokeWidth = _viewModel.StrokeWidth };
+            case CaptureTool.Callout:
+                _draftShape = Styled(new CalloutAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y) });
                 Canvas.CapturePointer(e.Pointer);
                 break;
             case CaptureTool.Pen:
-                var stroke = new FreehandAnnotation { Color = _viewModel.StrokeColor, StrokeWidth = _viewModel.StrokeWidth };
+                var stroke = Styled(new FreehandAnnotation());
                 stroke.AddPoint(pos);
                 _draftShape = stroke;
                 Canvas.CapturePointer(e.Pointer);
@@ -1241,9 +1290,12 @@ public sealed partial class EditorWindow : Window
                 break;
             case CaptureTool.Text:
                 // Đang chọn shape mà bấm ra vùng trống = chỉ bỏ chọn, không bật hộp nhập text ngoài ý muốn.
+                // Mở ô gõ chữ lúc THẢ chuột (như Khung chú thích): mở ngay lúc nhấn thì xử lý focus của chính cú bấm
+                // này làm ô nhập mất focus và tự đóng.
                 if (!hadSelection)
                 {
-                    PromptForText(pos);
+                    _pendingNewText = pos;
+                    Canvas.CapturePointer(e.Pointer);
                 }
                 break;
             case CaptureTool.Stamp:
@@ -1337,6 +1389,25 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (_movingShape is not null && pos != _dragStartPoint)
+        {
+            _dragChanged = true;
+        }
+
+        if (_movingShape is CalloutAnnotation tailCallout && _calloutTailDrag)
+        {
+            tailCallout.TailTip = pos;
+            Canvas.Invalidate();
+            return;
+        }
+
+        if (_movingShape is TextAnnotation text && _resizingHandle >= 0)
+        {
+            ResizeText(text, pos);
+            Canvas.Invalidate();
+            return;
+        }
+
         if (_movingShape is not null && _lineEndpointHandle >= 0)
         {
             var old = _movingOldBounds;
@@ -1377,6 +1448,10 @@ public sealed partial class EditorWindow : Window
             else
             {
                 _movingShape.Bounds = ResizeFromHandle(_movingOldBounds, _resizingHandle, pos);
+                if (_movingShape is CalloutAnnotation resizedCallout && _movingBefore is CalloutAnnotation original)
+                {
+                    resizedCallout.TailTip = original.TailTip; // co giãn khung không làm đuôi chỉ lệch chỗ
+                }
             }
             Canvas.Invalidate();
             return;
@@ -1411,7 +1486,32 @@ public sealed partial class EditorWindow : Window
             RectangleAnnotation or EllipseAnnotation when shift => MakeRect(_dragStartPoint, SnapToSquare(_dragStartPoint, pos)),
             _ => MakeRect(_dragStartPoint, pos),
         };
+        if (_draftShape is CalloutAnnotation draftCallout)
+        {
+            draftCallout.ResetTail();
+        }
         Canvas.Invalidate();
+    }
+
+    /// <summary>Kéo handle góc của chữ = đổi cỡ chữ (theo chiều cao khung kéo được), khung luôn vừa khít chữ và giữ nguyên
+    /// góc đối diện handle đang kéo.</summary>
+    private void ResizeText(TextAnnotation text, SKPoint pos)
+    {
+        if (_movingBefore is not TextAnnotation original)
+        {
+            return;
+        }
+        var o = original.NormalizedBounds;
+        var r = ResizeFromHandle(o, _resizingHandle, pos);
+        text.FontSize = Math.Clamp(original.FontSize * r.Height / Math.Max(1f, o.Height), 4f, 400f);
+        text.FitBounds();
+        var size = text.Bounds.Size;
+        SKPoint[] corners = [new(o.Left, o.Top), new(o.Right, o.Top), new(o.Left, o.Bottom), new(o.Right, o.Bottom)];
+        var anchor = corners[3 - _resizingHandle];
+        float left = _resizingHandle is 0 or 2 ? anchor.X - size.Width : anchor.X;
+        float top = _resizingHandle is 0 or 1 ? anchor.Y - size.Height : anchor.Y;
+        text.Bounds = SKRect.Create(left, top, size.Width, size.Height);
+        StatusText.Text = $"Cỡ chữ: {text.FontSize:0.#} px";
     }
 
     /// <summary>Bắt hướng anchor→pos về bội số 45° gần nhất (8 hướng). Độ dài lấy theo hình chiếu
@@ -1493,24 +1593,36 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
-        if (_movingShape is not null)
+        if (_movingShape is { } moved)
         {
-            var newBounds = _movingShape.Bounds;
-            _movingShape.Bounds = _movingOldBounds; // MoveResizeAnnotation's Execute() re-applies newBounds
             // Chỉ bấm để chọn (không kéo) thì không ghi command rỗng vào lịch sử Undo.
-            if (newBounds != _movingOldBounds)
+            if (_dragChanged && _movingBefore is { } before)
             {
-                _viewModel.MoveResizeAnnotation(_movingShape, _movingOldBounds, newBounds);
+                var after = moved.Snapshot();
+                moved.RestoreFrom(before); // ChangeShape's Execute() áp lại trạng thái sau khi kéo
+                string description = _calloutTailDrag ? "Kéo đuôi khung chú thích"
+                    : _resizingHandle >= 0 ? $"Đổi cỡ {moved.DisplayName}"
+                    : $"Di chuyển {moved.DisplayName}";
+                _viewModel.ChangeShape(moved, before, after, description);
 
-                if (_resizingHandle >= 0 && _movingShape is StampAnnotation)
+                if (_resizingHandle >= 0 && moved is StampAnnotation)
                 {
-                    _stampSize = Math.Max(8f, newBounds.Standardized.Width);
+                    _stampSize = Math.Max(8f, after.NormalizedBounds.Width);
                 }
             }
             _movingShape = null;
+            _movingBefore = null;
             _resizingHandle = -1;
             _lineEndpointHandle = -1;
+            _calloutTailDrag = false;
             Canvas.Invalidate();
+            return;
+        }
+
+        if (_pendingNewText is { } textPosition)
+        {
+            _pendingNewText = null;
+            BeginNewText(textPosition);
             return;
         }
 
@@ -1519,12 +1631,24 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (_draftShape is CalloutAnnotation draftCallout && draftCallout.NormalizedBounds.Width < 10 && draftCallout.NormalizedBounds.Height < 10)
+        {
+            // Bấm 1 cái (không kéo) = khung cỡ mặc định theo cỡ chữ, góc trên-trái tại chỗ bấm.
+            draftCallout.Bounds = SKRect.Create(_dragStartPoint.X, _dragStartPoint.Y, draftCallout.FontSize * 11, draftCallout.FontSize * 4);
+            draftCallout.ResetTail();
+        }
+
         if (_draftShape.NormalizedBounds.Width > 2 || _draftShape.NormalizedBounds.Height > 2 || _draftShape is FreehandAnnotation)
         {
             _viewModel.AddAnnotation(_draftShape);
+            if (_draftShape is CalloutAnnotation newCallout)
+            {
+                // Vẽ khung xong là gõ chữ luôn (như PicPick).
+                BeginInlineEdit(newCallout);
+            }
             // Vẽ xong là ở chế độ chỉnh sửa luôn (handle + tab contextual nếu có), bấm vùng trống mới thoát.
             // Bút thì không: vẽ liền nhiều nét, handle của nét trước chỉ gây rối.
-            if (_draftShape is not FreehandAnnotation)
+            else if (_draftShape is not FreehandAnnotation)
             {
                 _viewModel.SelectedAnnotation = _draftShape;
             }
@@ -1536,38 +1660,15 @@ public sealed partial class EditorWindow : Window
     private static SKRect MakeRect(SKPoint a, SKPoint b) =>
         new(Math.Min(a.X, b.X), Math.Min(a.Y, b.Y), Math.Max(a.X, b.X), Math.Max(a.Y, b.Y));
 
-    private async void PromptForText(SKPoint position)
-    {
-        var textBox = new TextBox { PlaceholderText = "Nhập text...", Width = 240 };
-        var dialog = new ContentDialog
-        {
-            XamlRoot = Content.XamlRoot,
-            Title = "Thêm text",
-            Content = textBox,
-            PrimaryButtonText = "Thêm",
-            CloseButtonText = "Huỷ",
-            DefaultButton = ContentDialogButton.Primary,
-        };
-
-        var result = await dialog.ShowAsync();
-        if (result == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(textBox.Text))
-        {
-            var shape = new TextAnnotation
-            {
-                Bounds = new SKRect(position.X, position.Y, position.X + 200, position.Y + 30),
-                Text = textBox.Text,
-                Color = _viewModel.StrokeColor,
-            };
-            _viewModel.AddAnnotation(shape);
-            _viewModel.SelectedAnnotation = shape;
-            Canvas.Invalidate();
-        }
-    }
-
     /// <summary>Phím tắt của Editor. Chỉ nhận phím mà control đang focus chưa xử lý (TextBox trong
     /// NumberBox tự xử lý Ctrl+Z/Ctrl+C/Backspace của nó), nên không cướp phím khi đang gõ số.</summary>
     private void Content_KeyDown(object sender, KeyRoutedEventArgs e)
     {
+        if (_inlineEditor is not null)
+        {
+            return; // đang gõ chữ trên ảnh: mọi phím thuộc về ô nhập (Esc / Ctrl+Enter xử lý ở InlineEditor_PreviewKeyDown)
+        }
+
         bool ctrl = IsKeyDown(Windows.System.VirtualKey.Control);
         bool shift = IsKeyDown(Windows.System.VirtualKey.Shift);
 
@@ -1687,6 +1788,15 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        // F2 / Enter trên chữ hoặc khung chú thích đang chọn = sửa chữ ngay trên ảnh (như nhấp đúp).
+        if (e.Key is Windows.System.VirtualKey.F2 or Windows.System.VirtualKey.Enter
+            && _viewModel.SelectedAnnotation is { } textShape and ITextShape)
+        {
+            BeginInlineEdit(textShape);
+            e.Handled = true;
+            return;
+        }
+
         if (e.Key is Windows.System.VirtualKey.Delete or Windows.System.VirtualKey.Back &&
             _viewModel.SelectedAnnotation is not null)
         {
@@ -1733,6 +1843,7 @@ public sealed partial class EditorWindow : Window
     private void PenToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Pen, PenToolButton);
     private void HighlightToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Highlight, HighlightToolButton);
     private void TextToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Text, TextToolButton);
+    private void CalloutToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Callout, CalloutToolButton);
     private void FillToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Fill, FillToolButton);
     private void MosaicToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Mosaic, MosaicToolButton);
     private void BlurToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Blur, BlurToolButton);
@@ -1763,6 +1874,7 @@ public sealed partial class EditorWindow : Window
 
     private void SelectTool(CaptureTool tool, ButtonBase? pressedButton)
     {
+        CommitInlineText(select: false);
         _viewModel.SelectedTool = tool;
         _viewModel.SelectedAnnotation = null;
         SetRegion(null);
@@ -1772,11 +1884,13 @@ public sealed partial class EditorWindow : Window
         {
             btn.IsChecked = ReferenceEquals(btn, pressedButton);
         }
+        UpdateFormatTab();
         Canvas.Invalidate();
     }
 
     private void CropToolButton_Click(object sender, RoutedEventArgs e)
     {
+        CommitInlineText(select: false);
         _isCropping = CropToolButton.IsChecked == true;
         if (_isCropping)
         {
@@ -1838,44 +1952,6 @@ public sealed partial class EditorWindow : Window
         }
     }
 
-    private void SizeSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
-    {
-        _viewModel.StrokeWidth = (float)e.NewValue;
-        ApplyStyleToSelectionIfAny();
-    }
-
-    private void Color1ColorPicker_ColorChanged(ColorPicker sender, ColorChangedEventArgs args)
-    {
-        _viewModel.StrokeColor = ToSkColor(args.NewColor);
-        Color1Swatch.Fill = new SolidColorBrush(args.NewColor);
-        ApplyStyleToSelectionIfAny();
-    }
-
-    private void Color2ColorPicker_ColorChanged(ColorPicker sender, ColorChangedEventArgs args)
-    {
-        _viewModel.FillColor = ToSkColor(args.NewColor);
-        Color2Swatch.Fill = new SolidColorBrush(args.NewColor);
-        ApplyStyleToSelectionIfAny();
-    }
-
-    /// <summary>Khi đang có 1 shape được chọn (Move tool), đổi Color1/Size áp dụng luôn lên shape đó
-    /// thay vì chỉ ảnh hưởng shape vẽ tiếp theo - đúng hành vi "sửa lại shape đã đặt" người dùng yêu
-    /// cầu. Color2 (fill) chỉ có ý nghĩa với Highlight nên không áp cho shape khác qua đường này.</summary>
-    private void ApplyStyleToSelectionIfAny()
-    {
-        if (_viewModel.SelectedAnnotation is { } shape)
-        {
-            var color = shape switch
-            {
-                HighlightAnnotation => _viewModel.FillColor.WithAlpha(90),
-                RedactAnnotation => shape.Color, // không dùng màu - chỉ Size (mức độ che) áp dụng
-                _ => _viewModel.StrokeColor,
-            };
-            _viewModel.ChangeAnnotationStyle(shape, color, _viewModel.StrokeWidth);
-            Canvas.Invalidate();
-        }
-    }
-
     private void UndoButton_Click(object sender, RoutedEventArgs e) => _viewModel.UndoCommand.Execute(null);
     private void RedoButton_Click(object sender, RoutedEventArgs e) => _viewModel.RedoCommand.Execute(null);
     private void SaveButton_Click(object sender, RoutedEventArgs e) => _viewModel.SaveCommand.Execute(null);
@@ -1883,7 +1959,7 @@ public sealed partial class EditorWindow : Window
     private void CopyButton_Click(object sender, RoutedEventArgs e) => _viewModel.CopyToClipboardCommand.Execute(null);
     private async void CloseButton_Click(object sender, RoutedEventArgs e) => await RequestCloseAsync();
 
-    private enum RibbonTab { Home, File, NumberStamp, Region }
+    private enum RibbonTab { Home, File, NumberStamp, Region, Format }
 
     private void RibbonTabHeader_Click(object sender, RoutedEventArgs e)
     {
@@ -1892,6 +1968,7 @@ public sealed partial class EditorWindow : Window
             _ when ReferenceEquals(sender, FileTabHeader) => RibbonTab.File,
             _ when ReferenceEquals(sender, NumberStampTabHeader) => RibbonTab.NumberStamp,
             _ when ReferenceEquals(sender, RegionTabHeader) => RibbonTab.Region,
+            _ when ReferenceEquals(sender, FormatTabHeader) => RibbonTab.Format,
             _ => RibbonTab.Home,
         };
         SelectRibbonTab(tab);
@@ -1903,10 +1980,31 @@ public sealed partial class EditorWindow : Window
         FileTabHeader.IsChecked = tab == RibbonTab.File;
         NumberStampTabHeader.IsChecked = tab == RibbonTab.NumberStamp;
         RegionTabHeader.IsChecked = tab == RibbonTab.Region;
+        FormatTabHeader.IsChecked = tab == RibbonTab.Format;
         RegionRibbonPanel.Visibility = tab == RibbonTab.Region ? Visibility.Visible : Visibility.Collapsed;
         HomeRibbonPanel.Visibility = tab == RibbonTab.Home ? Visibility.Visible : Visibility.Collapsed;
         FileRibbonPanel.Visibility = tab == RibbonTab.File ? Visibility.Visible : Visibility.Collapsed;
         NumberStampRibbonPanel.Visibility = tab == RibbonTab.NumberStamp ? Visibility.Visible : Visibility.Collapsed;
+        FormatRibbonPanel.Visibility = tab == RibbonTab.Format ? Visibility.Visible : Visibility.Collapsed;
+
+        // Nhóm Màu & Cỡ nét dùng chung: ở cuối tab Trang chủ, ở đầu tab Định dạng (đổi màu chữ / nét không phải quay về
+        // Trang chủ). Chỉ 1 bộ control nên không phải đồng bộ 2 ColorPicker.
+        if (tab is RibbonTab.Home or RibbonTab.Format)
+        {
+            var host = tab == RibbonTab.Format ? FormatRibbonPanel : HomeRibbonPanel;
+            if (ColorSizeGroup.Parent is Panel current && !ReferenceEquals(current, host))
+            {
+                current.Children.Remove(ColorSizeGroup);
+                if (tab == RibbonTab.Format)
+                {
+                    host.Children.Insert(0, ColorSizeGroup);
+                }
+                else
+                {
+                    host.Children.Add(ColorSizeGroup);
+                }
+            }
+        }
     }
 
     /// <summary>Hiện/ẩn tab contextual "Number Stamp" theo SelectedAnnotation (giống PicPick: chọn 1

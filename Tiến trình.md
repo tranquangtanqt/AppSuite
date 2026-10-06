@@ -32,8 +32,8 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 
 **Ưu tiên 3 — có thì tốt, làm khi có nhu cầu:**
 - ImageCompare: so sánh hàng loạt 2 thư mục ảnh
-- ScreenCapture: còn thiếu so với PicPick, chia 3 đợt (rà 2026-10-05, chi tiết ở mục ScreenCapture): **1. chữ & hình vẽ**
-  (font / đậm / nền chữ, sửa chữ trên ảnh, tô nền hình, nét đứt, callout) · **2. hiệu ứng ảnh** (viền, đổ bóng, mép rách,
+- ScreenCapture: còn thiếu so với PicPick, chia 3 đợt (rà 2026-10-05, chi tiết ở mục ScreenCapture): ~~**1. chữ & hình
+  vẽ**~~ — code xong 2026-10-06, còn test GUI Sandbox · **2. hiệu ứng ảnh** (viền, đổ bóng, mép rách,
   độ sáng, làm xám, nền trong suốt, watermark) · **3. chụp & công cụ** (lasso, cửa sổ con, 1 màn hình, con trỏ, hút màu,
   kính lúp / thước, in, mẫu tên file, PDF / GIF)
 - CsvEditor: freeze cột đầu, ẩn / hiện cột, tự giãn độ rộng cột
@@ -199,9 +199,22 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
 đổi cỡ, lưu / tự lưu / copy. (★ = mức nên làm)
 
 **Đợt 1 — Chữ & hình vẽ** (dùng hằng ngày khi viết tài liệu / báo lỗi):
-- [ ] ★★★ Chữ: chọn font, đậm / nghiêng, nền ô chữ, viền chữ; gõ / sửa chữ ngay trên ảnh (hiện nhập qua hộp thoại)
-- [ ] ★★ Hình: tô nền cho chữ nhật / elip, nét đứt, bo góc, độ trong suốt, nhiều kiểu đầu mũi tên
-- [ ] ★★ Khung chú thích (callout / bong bóng lời nói)
+- [x] ★★★ Chữ: chọn font, đậm / nghiêng, nền ô chữ, viền chữ; gõ / sửa chữ ngay trên ảnh (hiện nhập qua hộp thoại).
+  Ô gõ đặt đè đúng chỗ chữ (Enter xuống dòng, Esc / Ctrl+Enter / bấm ra ngoài = xong, nhấp đúp hoặc F2 / Enter để
+  sửa), chữ nhiều dòng; kéo handle góc = đổi cỡ chữ; chữ Nhật / Trung / Hàn tự lấy phông Windows có ký tự đó (trước
+  ra ô vuông) (2026-10-06)
+- [x] ★★ Hình: tô nền cho chữ nhật / elip, nét đứt, bo góc, độ trong suốt, nhiều kiểu đầu mũi tên — tab contextual
+  *Định dạng* (chỉ hiện nhóm hợp với loại hình; áp cho hình đang chọn + nhớ riêng cho từng công cụ); nhóm Màu & Cỡ nét
+  chuyển theo sang tab này; đầu mũi tên: không / tam giác / chữ V / chấm tròn ở cả 2 đầu, to theo Size (2026-10-06)
+- [x] ★★ Khung chú thích (callout / bong bóng lời nói) — công cụ *Chú thích*: kéo khung hoặc bấm 1 cái, gõ chữ luôn
+  (tự xuống dòng, khung tự cao thêm), kéo chấm ở đầu đuôi để chỉ chỗ khác; viền + chữ Color1, nền Color2, bo góc /
+  nét đứt / độ đục; xoay / lật ảnh, Cắt, lưu phiên đều giữ (2026-10-06)
+- [x] Test GUI Đợt 1 trong Sandbox (bản Release): bấm Text lên ảnh → gõ (Enter xuống dòng, dán chữ Nhật) → Esc; đậm +
+  cỡ 40 ở tab Định dạng; nhấp đúp sửa chữ nhiều dòng và chữ của phiên cũ; khung chú thích (kéo khung, gõ chữ, kéo đuôi);
+  chữ nhật tô nền / nét đứt / độ đục 50% / bo góc 12; mũi tên 2 đầu; Undo / Redo; đóng → session.json → mở lại: 12/12.
+  Test bắt được và đã sửa 2 lỗi: chữ nhiều dòng mất dòng 2 khi sửa lại; ô gõ chữ tự đóng do vùng ảnh giành focus
+  (2026-10-06)
+- [ ] Người dùng thử tay Đợt 1 (font khác, viền chữ, co giãn chữ bằng handle, xoay ảnh có khung chú thích)
 
 **Đợt 2 — Hiệu ứng ảnh:**
 - [ ] ★★★ Viền ảnh (border), đổ bóng, mép rách (torn edge)

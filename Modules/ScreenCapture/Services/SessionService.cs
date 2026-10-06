@@ -211,16 +211,36 @@ public sealed class SessionService
             Bottom = shape.Bounds.Bottom,
             Color = (uint)shape.Color,
             StrokeWidth = shape.StrokeWidth,
+            FillColor = (uint?)shape.FillColor,
+            Dash = shape.Dash == LineDash.Solid ? null : shape.Dash.ToString(),
+            Opacity = shape.Opacity >= 1f ? null : shape.Opacity,
             Image = imageFile,
         };
+        if (shape is ITextShape textShape)
+        {
+            dto.Text = textShape.Text;
+            dto.FontSize = textShape.FontSize;
+            dto.FontFamily = textShape.FontFamily;
+            dto.Bold = textShape.Bold ? true : null;
+            dto.Italic = textShape.Italic ? true : null;
+        }
         switch (shape)
         {
+            case RectangleAnnotation rectangle:
+                dto.CornerRadius = rectangle.CornerRadius > 0 ? rectangle.CornerRadius : null;
+                break;
             case LineArrowAnnotation line:
-                dto.IsArrow = line.IsArrow;
+                dto.StartHead = line.StartHead.ToString();
+                dto.EndHead = line.EndHead.ToString();
                 break;
             case TextAnnotation text:
-                dto.Text = text.Text;
-                dto.FontSize = text.FontSize;
+                dto.TextBackground = (uint?)text.BackgroundColor;
+                dto.TextOutline = (uint?)text.OutlineColor;
+                break;
+            case CalloutAnnotation callout:
+                dto.CornerRadius = callout.CornerRadius;
+                dto.TailX = callout.TailOffset.X;
+                dto.TailY = callout.TailOffset.Y;
                 break;
             case StampAnnotation stamp:
                 dto.StampKind = stamp.Kind.ToString();
@@ -242,15 +262,29 @@ public sealed class SessionService
     {
         AnnotationShape? shape = dto.Type switch
         {
-            nameof(RectangleAnnotation) => new RectangleAnnotation(),
+            nameof(RectangleAnnotation) => new RectangleAnnotation { CornerRadius = dto.CornerRadius ?? 0 },
             nameof(EllipseAnnotation) => new EllipseAnnotation(),
             nameof(HighlightAnnotation) => new HighlightAnnotation(),
             nameof(RedactAnnotation) => new RedactAnnotation
             {
                 Mode = Enum.TryParse<RedactMode>(dto.RedactMode, out var mode) ? mode : RedactMode.Mosaic,
             },
-            nameof(LineArrowAnnotation) => new LineArrowAnnotation { IsArrow = dto.IsArrow ?? true },
-            nameof(TextAnnotation) => new TextAnnotation { Text = dto.Text ?? string.Empty, FontSize = dto.FontSize ?? 20f },
+            // Phiên cũ chỉ có IsArrow (mũi tên ở điểm cuối hoặc không có đầu nào).
+            nameof(LineArrowAnnotation) => new LineArrowAnnotation
+            {
+                StartHead = ParseEnum(dto.StartHead, ArrowHead.None),
+                EndHead = ParseEnum(dto.EndHead, dto.IsArrow ?? true ? ArrowHead.Arrow : ArrowHead.None),
+            },
+            nameof(TextAnnotation) => new TextAnnotation
+            {
+                BackgroundColor = ToColor(dto.TextBackground),
+                OutlineColor = ToColor(dto.TextOutline),
+            },
+            nameof(CalloutAnnotation) => new CalloutAnnotation
+            {
+                CornerRadius = dto.CornerRadius ?? 10f,
+                TailOffset = new SKPoint(dto.TailX ?? 0, dto.TailY ?? 0),
+            },
             nameof(StampAnnotation) when Enum.TryParse<StampKind>(dto.StampKind, out var kind) => new StampAnnotation
             {
                 Kind = kind,
@@ -269,12 +303,32 @@ public sealed class SessionService
         shape.Bounds = new SKRect(dto.Left, dto.Top, dto.Right, dto.Bottom);
         shape.Color = new SKColor(dto.Color);
         shape.StrokeWidth = dto.StrokeWidth;
+        shape.FillColor = ToColor(dto.FillColor);
+        shape.Dash = ParseEnum(dto.Dash, LineDash.Solid);
+        shape.Opacity = Math.Clamp(dto.Opacity ?? 1f, 0.1f, 1f);
+        if (shape is ITextShape textShape)
+        {
+            textShape.Text = dto.Text ?? string.Empty;
+            textShape.FontSize = dto.FontSize ?? textShape.FontSize;
+            textShape.FontFamily = dto.FontFamily ?? textShape.FontFamily;
+            textShape.Bold = dto.Bold ?? false;
+            textShape.Italic = dto.Italic ?? false;
+        }
+        if (shape is TextAnnotation text)
+        {
+            text.FitBounds(); // phiên cũ lưu khung chữ cố định 200 × 30
+        }
         if (shape is FreehandAnnotation freehandShape && dto.Points is { } points)
         {
             freehandShape.SetPoints(Enumerable.Range(0, points.Count / 2).Select(i => new SKPoint(points[2 * i], points[2 * i + 1])));
         }
         return shape;
     }
+
+    private static SKColor? ToColor(uint? value) => value is { } v ? new SKColor(v) : null;
+
+    private static T ParseEnum<T>(string? value, T fallback) where T : struct, Enum =>
+        Enum.TryParse<T>(value, out var parsed) ? parsed : fallback;
 
     private ImageAnnotation? LoadImageShape(string? fileName)
     {
@@ -319,9 +373,23 @@ public sealed class SessionService
         public float Bottom { get; set; }
         public uint Color { get; set; }
         public float StrokeWidth { get; set; }
+        public uint? FillColor { get; set; }
+        public string? Dash { get; set; }
+        public float? Opacity { get; set; }
+        public float? CornerRadius { get; set; }
+        /// <summary>Phiên cũ (trước khi có <see cref="StartHead"/> / <see cref="EndHead"/>) - chỉ còn đọc.</summary>
         public bool? IsArrow { get; set; }
+        public string? StartHead { get; set; }
+        public string? EndHead { get; set; }
         public string? Text { get; set; }
         public float? FontSize { get; set; }
+        public string? FontFamily { get; set; }
+        public bool? Bold { get; set; }
+        public bool? Italic { get; set; }
+        public uint? TextBackground { get; set; }
+        public uint? TextOutline { get; set; }
+        public float? TailX { get; set; }
+        public float? TailY { get; set; }
         public string? StampKind { get; set; }
         public int? NumberValue { get; set; }
         public uint? OutlineColor { get; set; }

@@ -7,7 +7,8 @@ public sealed class EllipseAnnotation : AnnotationShape
     public override string DisplayName => "Hình elip";
 
     /// <summary>Chỉ trúng khi bấm lên viền elip (giống <see cref="RectangleAnnotation.HitTest"/>): nằm
-    /// trong elip ngoài (nới thêm t) nhưng không nằm trong elip trong (thu lại t).</summary>
+    /// trong elip ngoài (nới thêm t) nhưng không nằm trong elip trong (thu lại t). Elip có tô nền thì bấm đâu bên trong
+    /// cũng trúng.</summary>
     public override bool HitTest(SKPoint point, float tolerance)
     {
         float t = tolerance + StrokeWidth / 2;
@@ -21,15 +22,23 @@ public sealed class EllipseAnnotation : AnnotationShape
         {
             return false;
         }
-        return rx - t <= 0 || ry - t <= 0 || Norm(dx, dy, rx - t, ry - t) >= 1;
+        return FillColor is not null || rx - t <= 0 || ry - t <= 0 || Norm(dx, dy, rx - t, ry - t) >= 1;
     }
+
     public override void Render(SKCanvas canvas)
     {
+        if (FillColor is { } fill)
+        {
+            using var fillPaint = new SKPaint { Color = fill, Style = SKPaintStyle.Fill, IsAntialias = true };
+            canvas.DrawOval(Bounds, fillPaint);
+        }
+        using var dash = CreateDashEffect(roundCap: false);
         using var paint = new SKPaint
         {
             Color = Color,
             StrokeWidth = StrokeWidth,
             Style = SKPaintStyle.Stroke,
+            PathEffect = dash,
             IsAntialias = true,
         };
         canvas.DrawOval(Bounds, paint);

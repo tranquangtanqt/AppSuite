@@ -15,6 +15,8 @@ public enum CaptureTool
     /// <summary>Bút vẽ tự do (FreehandAnnotation).</summary>
     Pen,
     Text,
+    /// <summary>Khung chú thích / bong bóng lời nói (CalloutAnnotation).</summary>
+    Callout,
     Fill,
     Stamp,
     /// <summary>Che vùng bằng ô vuông pixel / làm mờ (RedactAnnotation).</summary>
