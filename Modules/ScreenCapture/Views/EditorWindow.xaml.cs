@@ -368,10 +368,19 @@ public sealed partial class EditorWindow : Window
         UpdateSelectionButtons();
         UpdateNumberStampTab();
         UpdateFormatTab();
+        UpdateTabPosition();
         _zoom = vm.Zoom;
         UpdateZoomLabel();
         UpdateCanvasLayout();
         CanvasScroller.ChangeView(0, 0, null, true);
+    }
+
+    /// <summary>"Ảnh 3 / 6" ở thanh trạng thái: thứ tự tab ảnh đang mở trên tổng số tab.</summary>
+    private void UpdateTabPosition()
+    {
+        var tabs = DocumentTabs.TabItems.OfType<TabViewItem>().ToList();
+        int index = tabs.FindIndex(t => ReferenceEquals(t.Tag, _viewModel));
+        TabPositionText.Text = index >= 0 ? $"Ảnh {index + 1} / {tabs.Count}" : string.Empty;
     }
 
     private void ViewModel_RequestRedraw(object? sender, EventArgs e)
@@ -449,6 +458,7 @@ public sealed partial class EditorWindow : Window
         }
 
         DocumentTabs.TabItems.Remove(tab);
+        UpdateTabPosition(); // đóng tab khác tab đang mở: thứ tự / tổng số vẫn đổi
         // Ghi lại phiên ngay: file tạm của tab vừa đóng bị xoá luôn khỏi ổ đĩa.
         TrySaveSession();
         if (DocumentTabs.TabItems.Count == 0)

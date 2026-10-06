@@ -215,6 +215,9 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
   Test bắt được và đã sửa 2 lỗi: chữ nhiều dòng mất dòng 2 khi sửa lại; ô gõ chữ tự đóng do vùng ảnh giành focus
   (2026-10-06)
 - [ ] Người dùng thử tay Đợt 1 (font khác, viền chữ, co giãn chữ bằng handle, xoay ảnh có khung chú thích)
+- [x] Thanh trạng thái Editor (góc phải, cạnh zoom): "Ảnh x / n" = tab ảnh đang mở là thứ mấy trên tổng số tab, đổi
+  theo khi chuyển / đóng / thêm tab. Test GUI Sandbox 5/5 (mở phiên 3 tab, chọn tab, đóng tab khác / tab đang mở)
+  (2026-10-06)
 
 **Đợt 2 — Hiệu ứng ảnh:**
 - [ ] ★★★ Viền ảnh (border), đổ bóng, mép rách (torn edge)

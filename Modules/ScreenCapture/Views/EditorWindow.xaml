@@ -858,6 +858,9 @@
             </Grid.ColumnDefinitions>
             <TextBlock x:Name="StatusText" Opacity="0.7" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
+                <!-- Thứ tự tab ảnh đang mở / tổng số tab (UpdateTabPosition). -->
+                <TextBlock x:Name="TabPositionText" VerticalAlignment="Center" Margin="0,0,14,0" Opacity="0.8"
+                           ToolTipService.ToolTip="Ảnh đang mở / tổng số ảnh (tab) trong Editor" />
                 <Button x:Name="ZoomFitButton" Style="{StaticResource SmallToolButtonStyle}" Click="ZoomFitButton_Click"
                         ToolTipService.ToolTip="Vừa cửa sổ">
                     <FontIcon Glyph="&#xE9A6;" FontSize="14" />

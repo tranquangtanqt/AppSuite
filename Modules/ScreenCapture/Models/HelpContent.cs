@@ -70,7 +70,7 @@ public static class HelpContent
 
         new("Editor: tab ảnh & phiên làm việc", "\uE8A5", "Chỉ có 1 cửa sổ Editor; mỗi lần chụp mở thêm 1 tab.",
         [
-            new("Nhiều ảnh dạng tab", "Mỗi ảnh chụp là 1 tab (tên = thời điểm chụp). Mỗi tab giữ riêng hình đã vẽ, lịch sử Undo và mức zoom; công cụ / màu / cỡ nét dùng chung."),
+            new("Nhiều ảnh dạng tab", "Mỗi ảnh chụp là 1 tab (tên = thời điểm chụp). Mỗi tab giữ riêng hình đã vẽ, lịch sử Undo và mức zoom; công cụ / màu / cỡ nét dùng chung. Góc phải thanh trạng thái ghi ảnh đang mở là ảnh thứ mấy trên tổng số tab (vd \"Ảnh 3 / 6\")."),
             new("Mở ảnh có sẵn", "Tab Tệp > Mở (hoặc nút Mở ảnh ở cửa sổ chính, hoặc kéo-thả file vào Editor / cửa sổ chính): mở ảnh PNG, JPG, BMP, GIF (khung đầu), WEBP thành tab mới để ghi chú - chọn được nhiều file, mỗi file 1 tab, tên tab = tên file. Ảnh chụp điện thoại tự xoay đúng chiều theo EXIF. Tab mở từ file coi như đã lưu: không sửa gì thì đóng không hỏi. Lưu (Ctrl+S) ghi đè chính file đó (ảnh gốc mất - muốn giữ thì dùng Lưu thành…); GIF / WEBP thì Lưu hỏi nơi lưu mới.", "Ctrl+O"),
             new("Ảnh mới", "Tab Tệp > Ảnh mới (hoặc nút Ảnh mới ở cửa sổ chính): tạo ảnh trống thành 1 tab - chọn cỡ theo mẫu (ảnh trong clipboard, ảnh đang mở, màn hình chính, 640×480 … 1920×1080) hoặc nhập rộng / cao (nút ⇄ đổi ngang ↔ dọc), và màu nền (Trắng, Đen, màu bất kỳ - nhớ cho lần sau). Dùng làm nền để ghép nhiều ảnh dán vào.", "Ctrl+N"),
             new("Đóng 1 tab", "Bấm × trên tab, hoặc Ctrl+W / Ctrl+F4 để đóng tab đang mở. Ảnh chưa lưu hoặc đã sửa sau lần lưu cuối → hỏi Lưu / Không lưu / Huỷ. Đóng tab cuối cùng = đóng Editor.", "Ctrl+W", "Ctrl+F4"),
