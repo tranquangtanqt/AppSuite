@@ -30,7 +30,7 @@ internal static class HelpContent
         new("Khác biệt", "", "So từng pixel: chỗ khác tô đỏ, mỗi vùng khác có khung và số.",
         [
             new("Đọc kết quả", "Ảnh B làm nhạt, pixel khác tô đỏ, mỗi vùng khác có khung + số. Bảng bên phải: kết luận, % pixel giống, SSIM (độ giống về cấu trúc), danh sách vùng - bấm 1 vùng để phóng tới (khung vàng)."),
-            new("Căn chỉnh: Tự căn chỉnh", "Mặc định. Tự tìm độ lệch - ảnh chụp lệch vài px, khác lề, trang cuộn 1 đoạn."),
+            new("Căn chỉnh: Tự căn chỉnh", "Mặc định. Tự tìm độ lệch - ảnh chụp lệch vài px, khác lề, trang cuộn 1 đoạn. Lệch đều chỉ vài px (vd IE mode ↔ Edge: IE mode có viền 2px quanh trang) thì khung tóm tắt ghi chú ℹ - đó là vùng trang bắt đầu lệch nhau, không phải bố cục lệch."),
             new("Căn chỉnh: Căn theo dòng (trang dài)", "Trang dài mà B thêm / bớt 1 đoạn ở giữa. Dải cam = chỉ có ở B (thêm vào), dải xanh = chỉ có ở A (bị bỏ), phần còn lại so từng pixel."),
             new("Căn chỉnh: Soi 1 vùng (khoanh trên ảnh)", "2 ảnh lệch bố cục dần (khác font / trình duyệt: dòng cao hơn, ô rộng hơn) mà Tự căn tô đỏ gần hết. Kéo chuột trái khoanh 1 vùng (1 khối, 1 bảng): chỉ so vùng đó, vùng tự tìm chỗ khớp ở B và từng ô (nhãn, ô nhập) căn riêng; ngoài vùng phủ tối. Khoanh lại bất cứ lúc nào. Chữ / viền ô vẽ khác nhau giữa 2 trình duyệt thì vẫn bị tô đỏ - xem chữ nào khác bằng So chữ.", "Kéo chuột trái", "Chuột phải / giữa: cuộn"),
             new("Căn chỉnh: Không căn / Chỉnh tay", "Không căn: trùng góc trên-trái. Chỉnh tay: Alt + mũi tên dịch ảnh B 1 px, Alt+Shift + mũi tên dịch 10 px.", "Alt+←↑→↓", "Alt+Shift+←↑→↓"),

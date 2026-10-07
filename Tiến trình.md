@@ -200,7 +200,7 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Menu Xoay > **Về hướng ban đầu**: xoay / lật ngược mọi lần Xoay / Lật trước đó trong 1 bước Undo (tối đa 2 phép),
   hình vẽ đi theo ảnh, mờ khi ảnh chưa xoay; hướng ảnh (`ImageOrientation`) lưu qua phiên → mở lại app vẫn về được.
   Kiểm tra logic: mọi chuỗi ≤ 5 phép xoay / lật (3906) về đúng từng pixel; GUI Sandbox `sct_orient` 6/6 (người dùng đề
-  xuất, 2026-10-07) — cần thử tay
+  xuất, 2026-10-07); GUI `sct_extra`: Ctrl+R → Lật dọc → Xoay 180° → về ban đầu → Undo → Redo đúng, lưu phiên OK
 
 ### Còn thiếu so với PicPick (rà 2026-10-05) — làm theo 3 đợt: Đợt 1, 2 xong (2026-10-06, chờ thử tay), Đợt 3 chưa làm
 
@@ -245,7 +245,7 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
 - [x] Đang gõ / sửa chữ trên ảnh (Text, Khung chú thích) → tự mở tab Định dạng với phông / cỡ / màu của chữ đó; gõ xong
   bấm chỗ trống → về Trang chủ, Esc → giữ chọn chữ ở tab Định dạng (người dùng báo, 2026-10-07) — người dùng thử tay Sandbox OK (2026-10-07)
 - [x] Tab Định dạng: ô Cỡ chữ (NumberBox Compact) bật khung ▲▼ nổi đè lên ô phông / nút B I → đổi thành ô xổ xuống gõ được
-  như Word (8…128, gõ số khác 6–400 rồi Enter) (người dùng báo, 2026-10-07) — cần thử tay trong Sandbox
+  như Word (8…128, gõ số khác 6–400 rồi Enter) (người dùng báo, 2026-10-07); GUI `sct_extra` 13/13: đổi cỡ khi đang gõ chữ, bấm chuột chọn 36 trong danh sách, chọn lại chữ hiện đúng cỡ
 - [x] Ô Cỡ chữ: gõ 50 + Enter thì ô trắng (ComboBox gõ được hiện lại chữ của SelectedItem, 50 không có trong danh sách)
   → cỡ lẻ được chèn tạm vào danh sách, áp cỡ sau khi ComboBox xong lượt gõ. GUI Sandbox `sct_fontsize` 7/7: gõ 50 / abc /
   33.5, chọn 8, cỡ tạm bỏ khỏi danh sách, lưu phiên FontSize 72 (người dùng báo, 2026-10-07)
@@ -331,6 +331,11 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   Unit test 85/85, build 0 warning. Ảnh thật IE ↔ Edge: khối 受注数量 74,6% → 89% giống; phần đỏ còn lại là khác cách
   vẽ chữ / viền ô (so pixel không bỏ được — dùng So chữ) (2026-10-05)
 - [ ] Test GUI *Soi 1 vùng* trong Sandbox: chọn mục căn, kéo khoanh, khoanh lại, Lưu PNG / báo cáo HTML
+- [x] Ảnh IE mode ↔ Edge chồng mờ trông lệch 2px dù DOM trùng (người dùng hỏi, 2026-10-07): đo trên 2 ảnh → thanh tiêu đề
+  trùng (0, 0), nội dung trang lệch đều (2, 2) = viền 2px quanh trang của IE mode; riêng cột phải (受注金額, 厚物,
+  リサイクル) còn lệch thật thêm ~4–5px ngang. Thêm ghi chú ℹ trong khung tóm tắt khi Tự căn ra lệch ≤ 4px + dòng F1.
+  GUI Sandbox `ic_shift` 3/3: 2 ảnh mẫu → Tự căn (2, 2) + có ℹ; ảnh giống hệt → không có ℹ; Chồng mờ: khối trái khít
+  (ảnh mẫu trong Sandbox `C:\sbx\files\A_IE-mode.png`, `B_Edge.png`)
 - [x] Bug (người dùng báo): **Tìm chữ không thấy chữ Nhật** (tìm 確定状況 → "Không thấy", danh sách dòng toàn ký tự rác) -
   Tìm chữ luôn đọc OCR tiếng Việt / Anh. Thêm ô ngôn ngữ ở Tìm chữ (dùng chung với So chữ, cùng bộ đọc + cache: Tiếng
   Nhật = Windows OCR `ja`, dự phòng Tesseract `jpn`), bảng kết quả ghi "Đọc bằng …". Kèm **tìm gần đúng (≈)**: không khớp

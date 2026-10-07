@@ -777,6 +777,10 @@ public sealed partial class CompareViewModel : ObservableObject
             lines.Add($"SSIM: {s.Ssim.ToString("0.####", Vi)} (1 = giống hệt)");
         }
         lines.Add(s.AlignNote);
+        if (SmallShiftHint(s) is { } shiftHint)
+        {
+            lines.Add(shiftHint);
+        }
         if (Align == AlignMode.Focus && FocusRect is null)
         {
             lines.Insert(0, "Kéo chuột trái trên ảnh để khoanh vùng cần soi - đang so cả trang như Tự căn chỉnh.");
@@ -906,6 +910,22 @@ public sealed partial class CompareViewModel : ObservableObject
     /// <summary>1 vùng khác phủ ≥ 60% ảnh: 2 ảnh lệch bố cục cục bộ (khác font / trình duyệt...) mà tự căn 1 độ lệch
     /// chung không bù được → so pixel tô đỏ gần hết, không còn chỉ ra chỗ khác thật. Chỉ thêm lời nhắc, không đổi
     /// kết quả so.</summary>
+    /// <summary>Tự căn ra độ lệch chỉ vài px: thường cả trang dịch đều do vùng trang của 2 trình duyệt bắt đầu lệch nhau
+    /// (IE mode có viền lõm 2px quanh trang - document.documentElement.clientLeft / clientTop = 2), không phải bố cục lệch:
+    /// số đo DOM vẫn trùng. Báo để người xem không hiểu nhầm (gặp 2026-10-07: IE mode ↔ Edge lệch (2, 2)).</summary>
+    private static string? SmallShiftHint(DiffStats s)
+    {
+        const int MaxSmallShift = 4;
+        if (s.Align != AlignMode.Translate || s.OffsetB == SKPointI.Empty
+            || Math.Abs(s.OffsetB.X) > MaxSmallShift || Math.Abs(s.OffsetB.Y) > MaxSmallShift)
+        {
+            return null;
+        }
+        return $"ℹ Cả trang B lệch ({s.OffsetB.X}, {s.OffsetB.Y}) px so với A: phần lệch đều này thường do vùng trang của 2 trình duyệt " +
+            "bắt đầu lệch nhau (vd IE mode có viền 2px quanh trang) hoặc chụp lệch vài px - số đo DOM vẫn trùng - và đã được tự căn bù. " +
+            "Chỗ còn khác sau khi căn mới là khác thật; khối nào lệch riêng thì khoanh bằng \"Soi 1 vùng\".";
+    }
+
     private string? LayoutShiftWarning(IDiffView view)
     {
         if (view.Stats.Align == AlignMode.Rows || view.Regions.Count == 0 || ImageA is not { } a)
