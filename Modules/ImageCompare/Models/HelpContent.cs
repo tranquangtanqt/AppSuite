@@ -70,6 +70,7 @@ internal static class HelpContent
             new("Cách đọc kết quả", "A trái, B phải; khung màu quanh chỗ khác: đỏ = đổi chữ, xanh = chỉ có ở A, cam = chỉ có ở B, tím = khác màu chữ (vd ô bị khoá chữ xám ↔ chữ đen). Danh sách bên phải dạng 「A」→「B」 - bấm để phóng tới chỗ đó trên cả 2 ảnh."),
             new("Ngôn ngữ", "Chọn Tiếng Nhật (mặc định) hoặc Tiếng Việt / English theo chữ trên màn hình."),
             new("Gần giống", "Ẩn mặc định (tick Hiện gần giống để xem): lệch ít ký tự mà chữ số giống hệt - thường do OCR đọc lệch. Chữ số khác (giá trị, ngày, số tiền) luôn báo là đổi chữ."),
+            new("So nét chữ (So chữ)", "Bật sẵn. Ngoài OCR còn so pixel nét chữ 2 phía: chỗ OCR đọc mỗi phía 1 kiểu (chữ xám trong ô bị khoá, IE mode ↔ Edge: \"検査Ｓ１\" → \"桝査こ\" / \"梹査。\") mà nét chữ trùng khít từng chữ thì ẩn đi. Xét từng chữ dọc dòng nên 1 chữ số đổi trong dòng dài vẫn báo. Bỏ tick = chỉ dựa vào OCR như trước; các chỗ đó hiện với dấu ≡. Bật / tắt không phải đọc lại."),
             new("Kiểm tra lại từng chỗ", "Sau khi so, mỗi chỗ nghi khác được cắt riêng và đọc lại vài cách; đọc lại ra giống thì bỏ khỏi danh sách. Bảng kết quả ghi số chỗ đã bỏ."),
             new("Xuất kết quả", "Copy (cả danh sách, dán thẳng vào Excel), Lưu CSV (mở bằng Excel), Xuất báo cáo HTML (bảng các chỗ khác kèm ảnh cắt A | B). Chỉ xuất các mục đang hiện."),
             new("Chuột phải danh sách", "Copy mục này / Copy cả danh sách (dùng được ở mọi chế độ có danh sách).", "Chuột phải"),

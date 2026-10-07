@@ -54,10 +54,15 @@ nhắc thử *So chữ*; số liệu so pixel không đổi.
   phía), bỏ khỏi danh sách; còn khác thì hiện cặp cách đọc sát nhau nhất thay cho chữ rác. Bảng kết quả ghi số chỗ đã
   bỏ theo cách này. Thanh tiến độ: *Đang đọc chữ…* → *Đang kiểm tra lại từng chỗ…*.
   Đọc lại ra giống nhưng màu nét khác → *khác màu chữ*; chỗ OCR bỏ sót hẳn 1 phía thì so hình nét chữ (không OCR).
+- **So nét chữ** (tick sẵn): chỗ OCR đọc lại vẫn mỗi phía 1 kiểu (hay gặp: chữ xám trong ô bị khoá, IE mode ↔ Edge chỉ
+  khác viền ô — `検査Ｓ１` đọc thành `桝査こ` / `梹査。`) thì so thêm hình nét chữ 2 phía bằng pixel; trùng khít **từng
+  chữ** (xét từng khung ~1 chữ dọc dòng, nên 1 chữ số đổi trong dòng dài vẫn báo) → ẩn khỏi danh sách, khung tóm tắt ghi
+  "Ẩn N chỗ…". Bỏ tick = chỉ dựa vào OCR như trước; các chỗ đó hiện với dấu `≡`. Bật / tắt không phải đọc lại.
+  Chưa áp cho mục chỉ có ở 1 phía.
 - **Xuất kết quả**: nút *Copy* (cả danh sách, tách cột bằng Tab — dán thẳng vào Excel), *Lưu CSV* (UTF-8 có BOM,
   mở bằng Excel), *Xuất báo cáo HTML* (1 file: bảng các chỗ khác kèm ảnh cắt A | B từng chỗ). Cột: #, loại, chữ A, chữ B,
   ghi chú màu, vị trí A / B (mục chỉ có ở 1 phía: vị trí phía kia là chỗ dự đoán, ghi `≈`). Chỉ xuất các mục đang hiện
-  (theo *Hiện gần giống*). **Chuột phải** 1 mục trong danh sách (mọi chế độ): *Copy mục này* / *Copy cả danh sách*.
+  (theo *Hiện gần giống* / *So nét chữ*). **Chuột phải** 1 mục trong danh sách (mọi chế độ): *Copy mục này* / *Copy cả danh sách*.
 - **Chữ đọc từ ảnh có thể sai** — danh sách là "các chỗ cần soi lại", không phải kết luận cuối cùng. Thử trên 2 ảnh
   màn hình nghiệp vụ tiếng Nhật (cùng dữ liệu, IE ↔ Edge): Windows OCR ghép được 158 đoạn giống, báo 26 chỗ khác
   (gồm 9 chỗ khác màu chữ thật — ô bị khoá chữ xám ↔ chữ đen; 7 chỗ là thanh tiêu đề / URL trình duyệt); còn vài chỗ
@@ -95,7 +100,9 @@ pixel ở A và B dưới con trỏ.
 ## Tuỳ chọn (chế độ Khác biệt)
 
 - **Căn chỉnh**
-  - *Tự căn chỉnh* (mặc định): tự tìm độ lệch (dx, dy) — ảnh chụp lệch vài px, khác lề, trang cuộn 1 đoạn.
+  - *Tự căn chỉnh* (mặc định): tự tìm độ lệch (dx, dy) — ảnh chụp lệch vài px, khác lề, trang cuộn 1 đoạn. Lệch đều
+    chỉ ≤ 4 px thì khung tóm tắt ghi chú `ℹ`: thường là vùng trang của 2 trình duyệt bắt đầu lệch nhau (IE mode có viền
+    2 px quanh trang — `document.documentElement.clientLeft` = 2), số đo DOM vẫn trùng; phần lệch đó đã được căn bù.
   - *Căn theo dòng (trang dài)*: trang dài mà B **thêm / bớt 1 đoạn ở giữa** so với A (tự căn dịch chuyển
     chỉ khớp được 1 phần). Kết quả là ảnh ghép: dải **cam** = chỉ có ở B (thêm vào), dải **xanh** = chỉ có ở
     A (bị bỏ), phần còn lại so từng pixel. 2 ảnh khác nhau quá nhiều thì tự lui về *Tự căn chỉnh*.
@@ -154,7 +161,7 @@ bỏ khoảng trắng, đ → d), **OCR thật** (chữ tiếng Việt vẽ bằ
 **so chữ** (khoá so toàn/nửa độ rộng + ký tự hay nhầm, tách đoạn, bố cục trôi dần, đổi giá trị, gần giống vs đổi
 chữ số, chỉ A / chỉ B, OCR cắt đoạn khác nhau, nhãn lặp, vùng bỏ qua, màu chữ xám ↔ đen), **xử lý ảnh form** (xoá
 viền ô, tách cụm, chữ xám nét mảnh không mất, nền sáng không thành mực), **kiểm tra lại** (bỏ chỗ đọc lại thì giống, giữ
-đổi thật kể cả khi 2 phía cùng dính nhãn bên cạnh, hiện cặp đọc sát nhau nhất), **đọc form bằng Tesseract** (tiếng Nhật / tiếng Việt, đầu-cuối: phát hiện giá trị bị đổi).
+đổi thật kể cả khi 2 phía cùng dính nhãn bên cạnh, hiện cặp đọc sát nhau nhất), **so nét chữ** (nét trùng khít đánh dấu ẩn được, "１" → "２" và 1 chữ số đổi trong dòng dài vẫn báo), **đọc form bằng Tesseract** (tiếng Nhật / tiếng Việt, đầu-cuối: phát hiện giá trị bị đổi).
 Windows OCR (nhánh chính của So chữ tiếng Nhật) cần WinRT nên không có trong test — kiểm chứng bằng chạy app.
 
 ```powershell

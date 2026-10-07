@@ -127,6 +127,7 @@ public sealed partial class MainWindow : Window
         TextDiffLanguageBox.SelectedItem = TextDiffLanguageBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == ViewModel.TextDiffLanguage.ToString());
         TextLanguageBox.SelectedItem = TextLanguageBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == ViewModel.TextDiffLanguage.ToString());
         TextDiffSimilarBox.IsChecked = ViewModel.TextDiffShowSimilar;
+        TextDiffSameGlyphsBox.IsChecked = ViewModel.TextDiffHideSameGlyphs;
         _syncingOptions = false;
     }
 
@@ -167,6 +168,14 @@ public sealed partial class MainWindow : Window
         if (!_syncingOptions)
         {
             ViewModel.TextDiffShowSimilar = TextDiffSimilarBox.IsChecked == true;
+        }
+    }
+
+    private void TextDiffSameGlyphsBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_syncingOptions)
+        {
+            ViewModel.TextDiffHideSameGlyphs = TextDiffSameGlyphsBox.IsChecked == true;
         }
     }
 

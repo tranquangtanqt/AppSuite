@@ -207,6 +207,8 @@
                 </ComboBox>
                 <CheckBox x:Name="TextDiffSimilarBox" Content="Hiện gần giống" Checked="TextDiffSimilarBox_Changed" Unchecked="TextDiffSimilarBox_Changed" MinWidth="0"
                           ToolTipService.ToolTip="Hiện cả các chỗ chỉ lệch 1 ký tự - thường do OCR đọc lệch chứ không phải khác thật" />
+                <CheckBox x:Name="TextDiffSameGlyphsBox" Content="So nét chữ" Checked="TextDiffSameGlyphsBox_Changed" Unchecked="TextDiffSameGlyphsBox_Changed" MinWidth="0"
+                          ToolTipService.ToolTip="Bật: ngoài OCR còn so pixel nét chữ - chỗ OCR đọc mỗi phía 1 kiểu mà nét chữ 2 phía trùng khít từng chữ (vd chữ xám trong ô bị khoá, IE mode ↔ Edge) thì ẩn đi. Tắt: chỉ dựa vào OCR như trước (các chỗ đó hiện với dấu ≡)." />
                 <TextBlock VerticalAlignment="Center" Opacity="0.75"
                            Text="Đỏ: đổi chữ · Xanh: chỉ A · Cam: chỉ B · Tím: khác màu chữ" />
             </StackPanel>

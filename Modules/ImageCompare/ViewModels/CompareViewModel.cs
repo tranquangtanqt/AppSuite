@@ -142,6 +142,11 @@ public sealed partial class CompareViewModel : ObservableObject
     [ObservableProperty]
     private bool _textDiffShowSimilar;
 
+    /// <summary>Ẩn các chỗ OCR đọc mỗi phía 1 kiểu nhưng nét chữ trùng khít (<see cref="TextDiffItem.SameGlyphs"/>). Tắt =
+    /// chỉ dựa vào OCR như trước.</summary>
+    [ObservableProperty]
+    private bool _textDiffHideSameGlyphs = true;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanExportTextDiff))]
     private TextDiffResult? _textDiffResult;
@@ -193,10 +198,11 @@ public sealed partial class CompareViewModel : ObservableObject
         FocusRect = FocusRect,
     };
 
-    /// <summary>Các mục So chữ đang hiện (bỏ "gần giống" nếu không bật <see cref="TextDiffShowSimilar"/>) - cùng thứ tự
-    /// và số như danh sách bên phải, để canvas vẽ đúng các khung đó.</summary>
+    /// <summary>Các mục So chữ đang hiện (bỏ "gần giống" nếu không bật <see cref="TextDiffShowSimilar"/>, bỏ chỗ nét chữ trùng
+    /// nếu bật <see cref="TextDiffHideSameGlyphs"/>) - cùng thứ tự và số như danh sách bên phải, để canvas vẽ đúng các khung đó.</summary>
     public IReadOnlyList<TextDiffItem> VisibleTextDiffItems =>
-        TextDiffResult?.Items.Where(i => TextDiffShowSimilar || i.Kind != TextDiffKind.Similar).ToList() ?? [];
+        TextDiffResult?.Items.Where(i => (TextDiffShowSimilar || i.Kind != TextDiffKind.Similar) && !(TextDiffHideSameGlyphs && i.SameGlyphs))
+            .ToList() ?? [];
 
     public CompareViewModel()
     {
@@ -366,6 +372,14 @@ public sealed partial class CompareViewModel : ObservableObject
     }
 
     partial void OnTextDiffShowSimilarChanged(bool value)
+    {
+        if (Mode == ViewMode.TextDiff)
+        {
+            UpdatePanel();
+        }
+    }
+
+    partial void OnTextDiffHideSameGlyphsChanged(bool value)
     {
         if (Mode == ViewMode.TextDiff)
         {
@@ -959,8 +973,10 @@ public sealed partial class CompareViewModel : ObservableObject
         {
             Items.Add(new ResultItem(item.Number, DescribeTextDiff(item), item.BoundsInA(r.OffsetB), TextDiffColor(item.Kind)));
         }
-        int changed = r.Count(TextDiffKind.Changed), onlyA = r.Count(TextDiffKind.OnlyInA), onlyB = r.Count(TextDiffKind.OnlyInB);
-        int color = r.Count(TextDiffKind.ColorChanged), similar = r.Count(TextDiffKind.Similar);
+        // Đếm theo mục đang hiện (đã ẩn chỗ nét chữ trùng nếu bật) - khớp với tiêu đề và danh sách.
+        int VisibleCount(TextDiffKind kind) => visible.Count(i => i.Kind == kind);
+        int changed = VisibleCount(TextDiffKind.Changed), onlyA = VisibleCount(TextDiffKind.OnlyInA), onlyB = VisibleCount(TextDiffKind.OnlyInB);
+        int color = VisibleCount(TextDiffKind.ColorChanged), similar = r.Count(TextDiffKind.Similar);
         int shown = visible.Count;
         SummaryTitle = shown == 0 ? (similar > 0 ? "Chữ giống nhau (trừ vài ký tự nghi do OCR)" : "Chữ giống nhau") : $"{shown} chỗ khác về chữ";
         var lines = new List<string>
@@ -973,6 +989,13 @@ public sealed partial class CompareViewModel : ObservableObject
             lines.Add(TextDiffShowSimilar
                 ? $"Đang hiện {similar} chỗ gần giống (nghi OCR đọc lệch)."
                 : $"Ẩn {similar} chỗ gần giống (nghi OCR đọc lệch).");
+        }
+        int sameGlyphs = r.Items.Count(i => i.SameGlyphs && (TextDiffShowSimilar || i.Kind != TextDiffKind.Similar));
+        if (sameGlyphs > 0)
+        {
+            lines.Add(TextDiffHideSameGlyphs
+                ? $"Ẩn {sameGlyphs} chỗ OCR đọc mỗi phía 1 kiểu nhưng nét chữ trùng khít (chữ xám ô bị khoá…) - tắt \"So nét chữ\" để xem."
+                : $"Có {sameGlyphs} chỗ (≡) nét chữ trùng khít - nhiều khả năng OCR đọc sai, không phải khác thật.");
         }
         if (IgnoreRects.Count > 0)
         {
@@ -987,7 +1010,7 @@ public sealed partial class CompareViewModel : ObservableObject
         StatusText = $"{SummaryTitle}. Bấm 1 mục bên phải để phóng tới chỗ đó trên cả 2 ảnh.";
     }
 
-    private static string DescribeTextDiff(TextDiffItem item) => item.Kind switch
+    private static string DescribeTextDiff(TextDiffItem item) => (item.SameGlyphs ? "≡ " : string.Empty) + item.Kind switch
     {
         TextDiffKind.Changed => $"「{item.A!.Text}」→「{item.B!.Text}」",
         TextDiffKind.Similar => $"≈ 「{item.A!.Text}」→「{item.B!.Text}」",

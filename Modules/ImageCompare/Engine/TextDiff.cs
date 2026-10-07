@@ -27,6 +27,11 @@ public sealed record TextSegment(string Text, string Key, SKRectI Bounds);
 /// <see cref="Other"/>: với mục chỉ có ở 1 phía - chỗ dự đoán ở ảnh kia (toạ độ ảnh kia).</summary>
 public sealed record TextDiffItem(int Number, TextDiffKind Kind, TextSegment? A, TextSegment? B, string? Note = null, SKRectI? Other = null)
 {
+    /// <summary>Mục 2 phía mà OCR đọc mỗi phía 1 kiểu nhưng nét chữ 2 phía trùng khít từng chữ (<see
+    /// cref="TextDiffVerifier.SameShapeStrict"/>) - gần như chắc chắn là chữ giống (chữ xám ô bị khoá, viền ô IE mode ↔ Edge
+    /// khác nhau). Màn hình ẩn các mục này khi bật "So nét chữ".</summary>
+    public bool SameGlyphs { get; init; }
+
     /// <summary>Khung bao cả 2 phía theo toạ độ ảnh A (B dịch <paramref name="offsetB"/>) - để phóng tới.</summary>
     public SKRectI BoundsInA(SKPointI offsetB)
     {

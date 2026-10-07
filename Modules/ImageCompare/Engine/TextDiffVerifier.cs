@@ -51,7 +51,10 @@ public static class TextDiffVerifier
             stop: reads => Matches(item, readsA, reads) is not null);
         if (Matches(item, readsA, readsB) is not { } same)
         {
-            return Closest(item, readsA, readsB);
+            // OCR đọc lại vẫn mỗi phía 1 kiểu: đánh dấu nếu nét chữ trùng khít từng chữ - màn hình chọn ẩn hay hiện (tuỳ
+            // chọn "So nét chữ"), không phải đọc lại.
+            var kept = Closest(item, readsA, readsB);
+            return SameShapeStrict(a, item.A!.Bounds, b, item.B!.Bounds) ? kept with { SameGlyphs = true } : kept;
         }
         // Đọc lại thì giống - nhưng màu chữ vẫn có thể khác: ô bị khoá ở A (chữ xám nét mảnh, OCR cả trang chỉ đọc
         // được 1 phần: "受注" → "三") mà ở B chữ đen (đã gặp 4 chỗ trên ảnh thật). Màu đo trong khung gốc của mục, không
@@ -127,7 +130,21 @@ public static class TextDiffVerifier
     /// Không dùng OCR: font bitmap cũ mà OCR đọc sai mỗi phía 1 kiểu ("胴ｻｲｽﾞ": A "胴サれ。", B "鋼サイス。") vẫn so được khi 2
     /// phía cùng font. Vùng ảnh 2 nới 3 px (vị trí dự đoán lệch vài px); dính viền / chữ bên cạnh thì khung nét lệch cỡ →
     /// không trùng (an toàn: mục vẫn giữ).</summary>
-    internal static SKRectI? SameShape(SKBitmap bitmap1, SKRectI box, SKBitmap bitmap2, SKRectI near)
+    internal static SKRectI? SameShape(SKBitmap bitmap1, SKRectI box, SKBitmap bitmap2, SKRectI near) =>
+        MatchShape(bitmap1, box, bitmap2, near) is { } match && match.Cost <= 0.3 * match.Ink ? match.Bounds2 : null;
+
+    /// <summary>Chặt hơn <see cref="SameShape"/>, cho mục "đổi chữ" mà OCR 2 phía đọc ra 2 kiểu (chữ xám ô bị khoá: "検査Ｓ１"
+    /// → "桝査こ" / "梹査。"): ngoài tổng lệch, xét từng khung rộng ~1 chữ trượt dọc dòng - dòng dài chỉ khác 1 chữ
+    /// ("受注合計数 200" → "300", icon đầu thanh tiêu đề IE ↔ Edge) thì tổng lệch nhỏ nhưng khung chữ đó lệch nhiều → vẫn là
+    /// khác. Ngưỡng: tổng ≤ 20%, mỗi khung ≤ 35% số pixel nét.</summary>
+    internal static bool SameShapeStrict(SKBitmap bitmap1, SKRectI box, SKBitmap bitmap2, SKRectI near) =>
+        MatchShape(bitmap1, box, bitmap2, near) is { } match && match.Cost <= 0.2 * match.Ink && match.WorstWindow <= 0.35;
+
+    /// <summary>Kết quả dóng 2 mặt nạ nét: tổng pixel lệch, số pixel nét trung bình 2 phía, tỉ lệ lệch lớn nhất trong 1 khung
+    /// ~1 chữ dọc đường dóng tốt nhất, khung nét ở ảnh 2.</summary>
+    internal sealed record ShapeMatch(int Cost, double Ink, double WorstWindow, SKRectI Bounds2);
+
+    internal static ShapeMatch? MatchShape(SKBitmap bitmap1, SKRectI box, SKBitmap bitmap2, SKRectI near)
     {
         if (GrownMask(bitmap1, SKRectI.Inflate(box, 1, 1)) is not { } m1 || GrownMask(bitmap2, SKRectI.Inflate(near, 3, 3)) is not { } m2
             || Math.Abs(m1.Bounds.Height - m2.Bounds.Height) > 2
@@ -139,15 +156,20 @@ public static class TextDiffVerifier
         // duyệt dựng cùng font nhưng khoảng cách chữ lệch 1 px, cộng dồn qua từng chữ ("胴ｻｲｽﾞ" ở A hẹp hơn B 2 px, "ｲ" và
         // "ｽ" dính nhau nên không tách theo cột trống được). Chi phí = số pixel lệch (cả cột của mặt nạ 2 bị bỏ qua khi d tăng).
         const int MaxShift = 4;
+        const int K = 2 * MaxShift + 1;
         int w1 = m1.Bounds.Width, w2 = m2.Bounds.Width, ink1 = m1.Ink.Count(p => p), ink2 = m2.Ink.Count(p => p);
         int best = int.MaxValue;
+        double bestWorst = 0;
         for (int dy = -2; dy <= 2; dy++)
         {
-            var dp = new int[2 * MaxShift + 1];
+            var dp = new int[K];
+            // Lưu đường dóng để đo lệch theo từng khung (SameShapeStrict): chi phí cột, nguồn (k trước đó).
+            var columnCost = new int[w1, K];
+            var from = new int[w1, K];
             for (int x = 0; x < w1; x++)
             {
-                var next = new int[dp.Length];
-                for (int k = 0; k < dp.Length; k++)
+                var next = new int[K];
+                for (int k = 0; k < K; k++)
                 {
                     int d = k - MaxShift;
                     int cost = 0;
@@ -158,30 +180,77 @@ public static class TextDiffVerifier
                     if (x == 0)
                     {
                         next[k] = Math.Abs(d) <= 1 ? cost : int.MaxValue / 2;
+                        columnCost[x, k] = cost;
+                        from[x, k] = k;
                         continue;
                     }
-                    int prev = dp[k];
-                    if (k > 0)
+                    int prev = dp[k], source = k, extra = 0;
+                    if (k > 0 && dp[k - 1] + ColumnInk(m2, x + d - 1) < prev)
                     {
-                        prev = Math.Min(prev, dp[k - 1] + ColumnInk(m2, x + d - 1)); // d tăng: bỏ qua 1 cột mặt nạ 2
+                        extra = ColumnInk(m2, x + d - 1); // d tăng: bỏ qua 1 cột mặt nạ 2
+                        prev = dp[k - 1] + extra;
+                        source = k - 1;
                     }
-                    if (k < dp.Length - 1)
+                    if (k < K - 1 && dp[k + 1] < prev)
                     {
-                        prev = Math.Min(prev, dp[k + 1]);
+                        prev = dp[k + 1];
+                        source = k + 1;
+                        extra = 0;
                     }
                     next[k] = prev + cost;
+                    columnCost[x, k] = cost + extra;
+                    from[x, k] = source;
                 }
                 dp = next;
             }
-            for (int k = 0; k < dp.Length; k++)
+            for (int k = 0; k < K; k++)
             {
-                if (Math.Abs(w1 - 1 + k - MaxShift - (w2 - 1)) <= 1)
+                if (Math.Abs(w1 - 1 + k - MaxShift - (w2 - 1)) <= 1 && dp[k] < best)
                 {
-                    best = Math.Min(best, dp[k]);
+                    best = dp[k];
+                    bestWorst = WorstWindow(columnCost, from, k);
                 }
             }
         }
-        return best <= 0.3 * (ink1 + ink2) / 2 ? m2.Bounds : null;
+        return best == int.MaxValue ? null : new ShapeMatch(best, (ink1 + ink2) / 2.0, bestWorst, m2.Bounds);
+
+        // Tỉ lệ lệch lớn nhất trong khung rộng ~1 chữ (= chiều cao dòng) dọc đường dóng kết thúc ở endK.
+        double WorstWindow(int[,] columnCost, int[,] from, int endK)
+        {
+            var costs = new int[w1];
+            var inks = new double[w1];
+            int k = endK;
+            for (int x = w1 - 1; x >= 0; x--)
+            {
+                int d = k - MaxShift;
+                costs[x] = columnCost[x, k];
+                int columnInk1 = 0, columnInk2 = 0;
+                for (int y = 0; y < m1.Bounds.Height; y++)
+                {
+                    columnInk1 += m1.At(x, y) ? 1 : 0;
+                }
+                for (int y = 0; y < m2.Bounds.Height; y++)
+                {
+                    columnInk2 += m2.At(x + d, y) ? 1 : 0;
+                }
+                inks[x] = (columnInk1 + columnInk2) / 2.0;
+                k = from[x, k];
+            }
+            int window = Math.Max(4, m1.Bounds.Height);
+            double worst = 0;
+            for (int start = 0; start + window <= Math.Max(window, w1); start++)
+            {
+                double c = 0, ink = 0;
+                for (int x = start; x < Math.Min(w1, start + window); x++)
+                {
+                    c += costs[x];
+                    ink += inks[x];
+                }
+                // Khung gần như trống (khoảng cách giữa 2 cụm chữ) chỉ tính khi lệch nhiều tuyệt đối (1 phía có nét).
+                worst = Math.Max(worst, c / Math.Max(ink, window));
+            }
+            return worst;
+        }
 
         static int ColumnInk(Mask m, int x)
         {

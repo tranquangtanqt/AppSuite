@@ -261,6 +261,15 @@ public class TextDiffVerifierTests
         }
     }
 
+    /// <summary>Như <see cref="FixedReader"/> nhưng chọn theo màu nền ở góc vùng cắt (vùng rộng thì giữa vùng có thể trúng nét
+    /// chữ): nền trắng = ảnh A.</summary>
+    private sealed class BackgroundReader(string textA, string textB) : IFormTextReader
+    {
+        public string Name => "background";
+        public OcrResult Read(SKBitmap bitmap, CancellationToken ct = default, IProgress<double>? progress = null) => new([], TimeSpan.Zero);
+        public string ReadText(SKBitmap crop, int scale, int? threshold = null) => crop.GetPixel(0, 0).Red == 0xFF ? textA : textB;
+    }
+
     private static TextSegment Seg(string text, int x, int y) => new(text, TextDiff.Key(text), SKRectI.Create(x, y, text.Length * 12, 12));
 
     private static readonly SKBitmap Blank = Images.New(400, 200, SKColors.White);
@@ -390,6 +399,45 @@ public class TextDiffVerifierTests
         var item = Assert.Single(result.Items);
         Assert.Equal("用途区分", item.A!.Text); // cách đọc lại sát B nhất thay cho chữ rác
         Assert.Equal("用途区分商印", item.B!.Text);
+    }
+
+    [Fact]
+    public void Misread_both_sides_with_identical_glyphs_is_marked_same_glyphs()
+    {
+        // Ô bị khoá IE mode ↔ Edge (2026-10-07): "検査Ｓ１" xám cả 2 phía, OCR đọc A "桝査こ", B "梹査。" kể cả khi đọc lại.
+        var a = Images.New(200, 60, SKColors.White);
+        var b = Images.New(200, 60, new SKColor(0xF0, 0xF0, 0xF0)); // nền khác → FixedReader trả cách đọc thứ 2
+        var c = Images.New(200, 60, new SKColor(0xF0, 0xF0, 0xF0));
+        var grey = new SKColor(0x90, 0x90, 0x90);
+        TextDiffTests.DrawText(a, "検査Ｓ１", 20, 32, grey);
+        TextDiffTests.DrawText(b, "検査Ｓ１", 22, 34, grey);
+        TextDiffTests.DrawText(c, "検査Ｓ２", 22, 34, grey);
+        var reader = new BackgroundReader("桝査こ", "梹査。");
+
+        // Khung OCR bao cả 4 chữ (OCR đọc ra 3 ký tự nhưng khung vẫn phủ cả dòng chữ).
+        var segA = new TextSegment("桝査こ", TextDiff.Key("桝査こ"), SKRectI.Create(18, 18, 58, 16));
+        var segB = new TextSegment("梹査。", TextDiff.Key("梹査。"), SKRectI.Create(20, 20, 58, 16));
+        var same = new TextDiffResult([new TextDiffItem(1, TextDiffKind.Changed, segA, segB)], 5, 5, 4, SKPointI.Empty);
+        Assert.True(Assert.Single(TextDiffVerifier.Verify(same, a, b, [reader]).Items).SameGlyphs);
+
+        // Khác 1 chữ thật ("１" → "２") thì không đánh dấu - vẫn hiện như khác.
+        Assert.False(Assert.Single(TextDiffVerifier.Verify(same, a, c, [reader]).Items).SameGlyphs);
+    }
+
+    [Fact]
+    public void Strict_shape_check_catches_one_changed_digit_in_a_long_line()
+    {
+        // Dòng dài chỉ khác 1 chữ số: tổng pixel lệch nhỏ so với cả dòng, nhưng khung quanh chữ số đó lệch nhiều.
+        var a = Images.New(300, 40, SKColors.White);
+        var b = Images.New(300, 40, SKColors.White);
+        var c = Images.New(300, 40, SKColors.White);
+        TextDiffTests.DrawText(a, "受注合計数量 1,360,200", 10, 26, SKColors.Black);
+        TextDiffTests.DrawText(b, "受注合計数量 1,360,200", 11, 27, SKColors.Black);
+        TextDiffTests.DrawText(c, "受注合計数量 1,360,300", 11, 27, SKColors.Black);
+        var box = SKRectI.Create(8, 10, 200, 20);
+        var near = SKRectI.Create(9, 11, 200, 20);
+        Assert.True(TextDiffVerifier.SameShapeStrict(a, box, b, near));
+        Assert.False(TextDiffVerifier.SameShapeStrict(a, box, c, near));
     }
 }
 

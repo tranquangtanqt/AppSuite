@@ -249,6 +249,9 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
 - [x] Ô Cỡ chữ: gõ 50 + Enter thì ô trắng (ComboBox gõ được hiện lại chữ của SelectedItem, 50 không có trong danh sách)
   → cỡ lẻ được chèn tạm vào danh sách, áp cỡ sau khi ComboBox xong lượt gõ. GUI Sandbox `sct_fontsize` 7/7: gõ 50 / abc /
   33.5, chọn 8, cỡ tạm bỏ khỏi danh sách, lưu phiên FontSize 72 (người dùng báo, 2026-10-07)
+- [x] README ScreenCapture cập nhật theo Đợt 1 + 2 + các sửa 2026-10-07 (trước đó còn ghi Text "nhập qua dialog"): gõ chữ
+  trên ảnh, Chú thích, tab Định dạng, menu Xoay (cả Về hướng ban đầu), Hiệu ứng, nền trong suốt, "Ảnh x / n", phím tắt
+  Ctrl+R / Ctrl+E / F2 (2026-10-07)
 - [x] Vẽ xong hình → tab Định dạng; bấm chỗ trống / Esc để bỏ chọn → tự về Trang chủ để chọn công cụ khác (người dùng
   góp ý). Tự mở Định dạng khi chưa chọn hình (đặt định dạng trước khi vẽ) thì giữ nguyên. Test GUI Sandbox 10/10, bộ
   test Đợt 1 vẫn 12/12 (2026-10-06)
@@ -336,6 +339,15 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   リサイクル) còn lệch thật thêm ~4–5px ngang. Thêm ghi chú ℹ trong khung tóm tắt khi Tự căn ra lệch ≤ 4px + dòng F1.
   GUI Sandbox `ic_shift` 3/3: 2 ảnh mẫu → Tự căn (2, 2) + có ℹ; ảnh giống hệt → không có ℹ; Chồng mờ: khối trái khít
   (ảnh mẫu trong Sandbox `C:\sbx\files\A_IE-mode.png`, `B_Edge.png`)
+- [x] So chữ báo nhầm chữ xám ô bị khoá (IE mode ↔ Edge: 用途区分 "他", FSC認証製品, 検査Ｓ１ - chữ y hệt, chỉ khác viền ô;
+  OCR đọc mỗi phía 1 kiểu kể cả khi đọc lại) (người dùng hỏi, 2026-10-07) → tuỳ chọn **So nét chữ** (bật sẵn): mục 2 phía
+  mà nét chữ trùng khít từng chữ (`TextDiffVerifier.SameShapeStrict`: tổng lệch ≤ 20%, mỗi khung ~1 chữ ≤ 35%) được đánh
+  dấu `SameGlyphs` và ẩn; bỏ tick = như trước, hiện với dấu ≡; bật / tắt không đọc lại. Ảnh thật (Windows OCR, 2 lần):
+  ẩn FSC認証製品 / 検査Ｓ１ / ページ数, giữ 7 chỗ khác thật (icon tiêu đề: khung lệch 200%). Unit test 92/92 (thêm "１→２"
+  không ẩn, 1 chữ số đổi trong dòng dài vẫn báo); GUI Sandbox `ic_glyphs` 4/4 (Tesseract: 17 ↔ 29 chỗ);
+  GUI máy thật (Windows OCR) 4/4: bật 6 chỗ (đều khác thật) ↔ tắt 8 (≡ FSC認証製品, 検査Ｓ１). README + F1 cập nhật
+- [ ] So nét chữ chưa áp cho mục chỉ 1 phía (vd "chỉ B: 他" khi OCR bỏ sót 1 phía - đã có `SameShape` thường, ngưỡng lỏng)
+- [ ] Thanh tuỳ chọn So chữ ở cửa sổ hẹp (Sandbox 150%) bị tràn: nhãn "So nét chữ" bị cắt, phải cuộn ngang
 - [x] Bug (người dùng báo): **Tìm chữ không thấy chữ Nhật** (tìm 確定状況 → "Không thấy", danh sách dòng toàn ký tự rác) -
   Tìm chữ luôn đọc OCR tiếng Việt / Anh. Thêm ô ngôn ngữ ở Tìm chữ (dùng chung với So chữ, cùng bộ đọc + cache: Tiếng
   Nhật = Windows OCR `ja`, dự phòng Tesseract `jpn`), bảng kết quả ghi "Đọc bằng …". Kèm **tìm gần đúng (≈)**: không khớp
