@@ -50,7 +50,7 @@ tuỳ chọn về ban đầu.
 
 | Trang | Tuỳ chọn |
 |---|---|
-| Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard; chạy ngầm ở khay hệ thống; khởi động cùng Windows |
+| Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard; **chụp kèm con trỏ chuột** (vẽ con trỏ đúng hình / vị trí lúc chụp — Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước; không áp cho vùng chọn / vùng cố định / chụp cuộn vì con trỏ đang ở góc vùng kéo hoặc đang lăn trang); chạy ngầm ở khay hệ thống; khởi động cùng Windows |
 | Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lại |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |

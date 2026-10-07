@@ -9,8 +9,9 @@ namespace ScreenCapture.Services;
 /// </summary>
 public interface ICaptureService
 {
-    /// <summary>Captures a rect (virtual-screen-relative device pixels) from the composited desktop.</summary>
-    SKBitmap CaptureRect(RECT rectPx);
+    /// <summary>Captures a rect (virtual-screen-relative device pixels) from the composited desktop.
+    /// <paramref name="includeCursor"/>: vẽ thêm con trỏ chuột (đúng hình + vị trí lúc chụp) nếu nó nằm trong vùng.</summary>
+    SKBitmap CaptureRect(RECT rectPx, bool includeCursor = false);
 
     /// <summary>Bounds of the entire virtual screen (all monitors), device pixels.</summary>
     RECT GetVirtualScreenRect();

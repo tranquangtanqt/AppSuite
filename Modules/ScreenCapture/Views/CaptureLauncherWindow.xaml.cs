@@ -531,7 +531,7 @@ public sealed partial class CaptureLauncherWindow : Window
         }
         try
         {
-            var bitmap = _captureService.CaptureRect(_captureService.GetVirtualScreenRect());
+            var bitmap = _captureService.CaptureRect(_captureService.GetVirtualScreenRect(), _settings.IncludeCursor);
             _lastKind = LastCaptureKind.FullScreen;
             await FinishCaptureAsync(bitmap, CaptureTarget.Describe(CaptureTarget.ActiveOrUnderCursor(), CaptureMode.FullScreen));
         }
@@ -555,7 +555,7 @@ public sealed partial class CaptureLauncherWindow : Window
             {
                 monitor = _captureService.GetVirtualScreenRect();
             }
-            var bitmap = _captureService.CaptureRect(monitor);
+            var bitmap = _captureService.CaptureRect(monitor, _settings.IncludeCursor);
             _lastKind = LastCaptureKind.Monitor;
             Log.LogInformation("Chụp màn hình hiện tại: ({Left}, {Top}) {Width}x{Height}", monitor.Left, monitor.Top, monitor.Width, monitor.Height);
             await FinishCaptureAsync(bitmap, CaptureTarget.Describe(CaptureTarget.ActiveOrUnderCursor(monitor), CaptureMode.Monitor));
@@ -581,7 +581,7 @@ public sealed partial class CaptureLauncherWindow : Window
                 CancelCapture("Không tìm thấy cửa sổ để chụp.", InfoBarSeverity.Warning);
                 return;
             }
-            var bitmap = _captureService.CaptureRect(rect.Value);
+            var bitmap = _captureService.CaptureRect(rect.Value, _settings.IncludeCursor);
             _lastKind = LastCaptureKind.ActiveWindow;
             await FinishCaptureAsync(bitmap, CaptureTarget.Describe(hwnd, CaptureMode.Window));
         }
@@ -700,7 +700,7 @@ public sealed partial class CaptureLauncherWindow : Window
                 try
                 {
                     var target = CaptureTarget.WindowAtCenter(WindowEnumerator.GetVisibleWindows(), _lastRect);
-                    await FinishCaptureAsync(_captureService.CaptureRect(_lastRect), CaptureTarget.Describe(target, _lastRectMode));
+                    await FinishCaptureAsync(_captureService.CaptureRect(_lastRect, _settings.IncludeCursor), CaptureTarget.Describe(target, _lastRectMode));
                 }
                 finally
                 {

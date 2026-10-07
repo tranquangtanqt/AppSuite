@@ -63,6 +63,11 @@
                         </StackPanel>
                         <CheckBox x:Name="CopyAfterCaptureBox" Content="Chụp xong tự copy ảnh vào clipboard" />
                         <StackPanel Spacing="4">
+                            <CheckBox x:Name="IncludeCursorBox" Content="Chụp kèm con trỏ chuột" />
+                            <TextBlock Style="{StaticResource HintStyle}"
+                                       Text="Vẽ con trỏ (đúng hình, đúng chỗ lúc chụp) vào ảnh khi chụp Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước - để chỉ cho người xem đang bấm vào đâu. Vùng chọn / chụp cuộn thì không." />
+                        </StackPanel>
+                        <StackPanel Spacing="4">
                             <CheckBox x:Name="RunInTrayBox" Content="Chạy ngầm ở khay hệ thống" />
                             <TextBlock Style="{StaticResource HintStyle}"
                                        Text="Hiện icon ở khay (góc phải thanh taskbar). Bấm X ở cửa sổ chính thì ẩn xuống khay thay vì thoát - phím tắt vẫn dùng được. Bấm icon để mở lại, chuột phải để chụp nhanh hoặc Thoát." />

@@ -210,7 +210,7 @@ public static class HelpContent
 
         new("Cài đặt", "\uE713", "Nút Cài đặt ở cửa sổ chính, tab Tệp của Editor hoặc menu khay. Bấm OK mới lưu; Mặc định đưa mọi tuỳ chọn về ban đầu.",
         [
-            new("Chung", "Hẹn giờ trước khi chụp; tự copy ảnh sau khi chụp; chạy ngầm ở khay hệ thống; khởi động cùng Windows."),
+            new("Chung", "Hẹn giờ trước khi chụp; tự copy ảnh sau khi chụp; chụp kèm con trỏ chuột (Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước - không áp cho vùng chọn / chụp cuộn); chạy ngầm ở khay hệ thống; khởi động cùng Windows."),
             new("Tự động lưu", "Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục."),
             new("Mẫu tên file", "Tên file khi tự lưu, chọn mẫu có sẵn hoặc gõ tuỳ ý (có dòng xem trước). Thẻ: {date} ngày 2026-10-07, {time} giờ 10-31-10, {app} chương trình bị chụp (EXCEL, msedge - mọi trang web cùng 1 trình duyệt ra cùng tên, phân biệt bằng {window}), {window} tiêu đề cửa sổ (≤ 50 ký tự), {mode} kiểu chụp, {size} rộng x cao, {n} số thứ tự 001, 002… trong thư mục. Dấu \\ = thư mục con, vd {date}\\{time}. Ký tự cấm thành _; trùng tên thêm (2). Gõ kèm .png ở cuối cũng được (tự bỏ) - vd {date}\\{date}_{time}_{app}.png → thư mục 2026-10-07, file 2026-10-07_10-31-10_EXCEL.png."),
             new("Phiên làm việc", "Bật/tắt nhớ tab khi tắt app; giới hạn số tab / dung lượng; xem dung lượng và mở thư mục tạm."),

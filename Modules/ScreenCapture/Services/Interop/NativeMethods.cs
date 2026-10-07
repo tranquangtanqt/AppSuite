@@ -251,6 +251,42 @@ internal static partial class NativeMethods
     [LibraryImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")]
     public static partial int DwmGetWindowAttributeInt(IntPtr hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
 
+    // ---- Chụp kèm con trỏ chuột (CaptureService.CaptureRect) ----
+    public const int CURSOR_SHOWING = 0x1;
+    public const int DI_NORMAL = 0x3;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct CURSORINFO
+    {
+        public int cbSize;
+        public int flags;
+        public IntPtr hCursor;
+        public POINT ptScreenPos;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct ICONINFO
+    {
+        public int fIcon;
+        public int xHotspot;
+        public int yHotspot;
+        public IntPtr hbmMask;
+        public IntPtr hbmColor;
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetCursorInfo(ref CURSORINFO pci);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool DrawIconEx(IntPtr hdc, int xLeft, int yTop, IntPtr hIcon, int cxWidth, int cyWidth,
+        uint istepIfAniCur, IntPtr hbrFlickerFreeDraw, int diFlags);
+
     // ---- Chụp màn hình hiện tại + tên app / tiêu đề cửa sổ cho mẫu tên file (Services/CaptureTarget.cs) ----
     public const uint MONITOR_DEFAULTTONEAREST = 2;
 

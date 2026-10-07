@@ -93,6 +93,7 @@ public sealed partial class SettingsWindow : Window
     {
         DelayBox.Value = s.CaptureDelaySeconds;
         CopyAfterCaptureBox.IsChecked = s.CopyToClipboardAfterCapture;
+        IncludeCursorBox.IsChecked = s.IncludeCursor;
         RunInTrayBox.IsChecked = s.RunInTray;
         StartWithWindowsBox.IsChecked = s.StartWithWindows;
         AutoSaveBox.IsChecked = s.AutoSave;
@@ -125,6 +126,7 @@ public sealed partial class SettingsWindow : Window
         {
             CaptureDelaySeconds = Int(DelayBox, 0),
             CopyToClipboardAfterCapture = CopyAfterCaptureBox.IsChecked == true,
+            IncludeCursor = IncludeCursorBox.IsChecked == true,
             RunInTray = RunInTrayBox.IsChecked == true,
             StartWithWindows = StartWithWindowsBox.IsChecked == true,
             AutoSave = AutoSaveBox.IsChecked == true,

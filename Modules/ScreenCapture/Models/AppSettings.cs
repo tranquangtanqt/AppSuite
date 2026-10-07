@@ -11,6 +11,10 @@ public sealed class AppSettings
     /// <summary>Chụp xong tự copy ảnh vào clipboard (ngoài việc mở trong Editor).</summary>
     public bool CopyToClipboardAfterCapture { get; set; }
 
+    /// <summary>Vẽ cả con trỏ chuột vào ảnh - Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Chụp lại lần trước.
+    /// Vùng chọn, vùng cố định, chụp cuộn thì không (con trỏ đang ở góc vùng kéo / đang lăn trang).</summary>
+    public bool IncludeCursor { get; set; }
+
     /// <summary>Hiện icon ở khay hệ thống; bấm X ở cửa sổ chính thì ẩn xuống khay (phím tắt vẫn chạy)
     /// thay vì thoát. Thoát hẳn qua menu chuột phải của icon.</summary>
     public bool RunInTray { get; set; } = true;

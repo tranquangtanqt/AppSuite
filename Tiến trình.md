@@ -306,7 +306,10 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   lại tay trường hợp Explorer ở màn kia
 - [x] Thử tay lại (bản sau 15:48): Màn hình hiện tại khi cửa sổ active ở màn kia → `{app}` = app dưới con trỏ — người
   dùng xác nhận OK (2026-10-07)
-- [ ] ★ Tuỳ chọn chụp kèm con trỏ chuột
+- [x] ★ Tuỳ chọn chụp kèm con trỏ chuột — Cài đặt > Chung > *Chụp kèm con trỏ chuột* (mặc định tắt): vẽ con trỏ đúng
+  hình + vị trí (trừ hotspot) bằng DrawIconEx sau BitBlt, ép alpha 255; áp cho Toàn màn hình / Màn hình hiện tại / Cửa
+  sổ hiện tại / Chụp lại lần trước, không áp cho vùng chọn / chụp cuộn. GUI Sandbox `sct_cursor` 5/5: tắt → không có
+  con trỏ; bật → mũi tên đúng chỗ, chỗ khác sạch, không lỗ trong suốt; cả Toàn màn hình. F1 + README (2026-10-07)
 - [ ] ★ Chọn việc tự làm sau khi chụp — đã thống nhất 2026-10-07: nhóm "Sau khi chụp" ô tick độc lập: Mở trong Editor
   (tắt được), Copy, Tự lưu, Thông báo nhỏ (ảnh thu nhỏ, bấm → Editor / Mở thư mục); tắt Editor thì phải bật ≥ 1 việc
   khác. *Mở bằng app khác* / *In* để sau (In đi cùng ★★ In ảnh)
