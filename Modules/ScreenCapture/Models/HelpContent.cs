@@ -17,6 +17,7 @@ public static class HelpContent
     public static readonly (HotkeyAction Action, string Label)[] HotkeyLabels =
     [
         (HotkeyAction.FullScreen, "Chụp toàn màn hình"),
+        (HotkeyAction.CurrentMonitor, "Chụp màn hình hiện tại"),
         (HotkeyAction.ActiveWindow, "Chụp cửa sổ hiện tại"),
         (HotkeyAction.Region, "Chụp vùng chọn"),
         (HotkeyAction.FixedRegion, "Chụp vùng cố định"),
@@ -29,7 +30,7 @@ public static class HelpContent
     [
         new("Bắt đầu nhanh", "\uE768", "Chụp → chỉnh sửa → lưu hoặc copy, chỉ trong vài bước.",
         [
-            new("1. Chụp", "Bấm 1 thẻ ở cửa sổ chính (Toàn màn hình, Cửa sổ hiện tại, Vùng chọn...), dùng phím tắt, hoặc click phải icon ở khay hệ thống. Cửa sổ ScreenCapture tự thu nhỏ để không lọt vào ảnh."),
+            new("1. Chụp", "Bấm 1 thẻ ở cửa sổ chính (Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Vùng chọn...), dùng phím tắt, hoặc click phải icon ở khay hệ thống. Cửa sổ ScreenCapture tự thu nhỏ để không lọt vào ảnh."),
             new("2. Chỉnh sửa", "Ảnh mở ngay trong Editor: vẽ khung, mũi tên, chữ, đánh số, che thông tin nhạy cảm, cắt ảnh... Mọi thao tác đều Undo được."),
             new("3. Lưu hoặc chia sẻ", "Lưu (PNG / JPG / BMP), hoặc copy ảnh vào clipboard rồi dán vào chat/email/tài liệu.", "Ctrl+S", "Ctrl+C"),
             new("Mở lại hướng dẫn này", "Nút Hướng dẫn ở cửa sổ chính, tab Tệp hoặc nút ? của Editor, menu khay, hoặc phím F1.", "F1"),
@@ -38,12 +39,13 @@ public static class HelpContent
         new("Chế độ chụp", "\uE722", "Các kiểu chụp ở cửa sổ chính, menu khay và phím tắt.",
         [
             new("Toàn màn hình", "Chụp toàn bộ màn hình - gồm mọi màn hình nếu dùng nhiều màn hình."),
+            new("Màn hình hiện tại", "Chụp 1 màn hình - màn đang có con trỏ chuột (dùng nhiều màn hình). Mặc định chưa có phím tắt - gán trong Cài đặt > Phím tắt."),
             new("Cửa sổ hiện tại", "Chụp cửa sổ đang active của bất kỳ ứng dụng nào (kể cả trình duyệt, app đồ hoạ)."),
             new("Vùng chọn", "Kéo-thả chọn 1 vùng, thả chuột là chụp ngay. Hoặc di chuột lên 1 cửa sổ (được tô viền) rồi click (không kéo) để chụp đúng khung cửa sổ đó.", "Kéo chuột", "Click"),
             new("Vùng cố định", "Chọn vùng, chỉnh kích thước bằng 4 handle góc, nhấn Enter để chụp (Esc để huỷ). Vùng được nhớ lại cho lần sau, kể cả khi tắt mở lại app.", "Enter", "Esc"),
             new("Chụp cuộn dọc", "Kéo chọn vùng nội dung cần cuộn (trang web, tài liệu, danh sách...). App tự lăn chuột, chụp từng khung và ghép thành 1 ảnh dài. Dừng khi tới cuối trang, khi bấm Esc hoặc chạm giới hạn trong Cài đặt > Chụp cuộn. Nên để thanh menu cố định nằm ngoài vùng chọn.", "Esc"),
             new("Chụp cuộn ngang", "Như cuộn dọc nhưng cuộn sang phải và ghép thành 1 ảnh rộng (bảng tính, timeline...). Cửa sổ không cuộn ngang được bằng bánh xe thì app tự dùng Shift + lăn chuột. Nên để cột cố định bên trái nằm ngoài vùng chọn."),
-            new("Chụp lại lần gần nhất", "Lặp lại kiểu chụp gần nhất; với vùng chọn / vùng cố định thì chụp lại đúng vùng đó ngay. Mặc định chưa có phím tắt - gán trong Cài đặt > Phím tắt."),
+            new("Chụp lại lần gần nhất", "Lặp lại kiểu chụp gần nhất; với vùng chọn / vùng cố định thì chụp lại đúng vùng đó ngay. Mặc định chưa có phím tắt - gán trong Cài đặt > Phím tắt; hoặc thẻ \"Chụp lại lần trước\" ở cửa sổ chính."),
             new("Hẹn giờ trước khi chụp", "Chờ 0-10 giây rồi mới chụp, để kịp mở menu / tooltip cần chụp. Đặt trong Cài đặt > Chung."),
         ]),
 
@@ -73,7 +75,7 @@ public static class HelpContent
             new("Nhiều ảnh dạng tab", "Mỗi ảnh chụp là 1 tab (tên = thời điểm chụp). Mỗi tab giữ riêng hình đã vẽ, lịch sử Undo và mức zoom; công cụ / màu / cỡ nét dùng chung. Góc phải thanh trạng thái ghi ảnh đang mở là ảnh thứ mấy trên tổng số tab (vd \"Ảnh 3 / 6\")."),
             new("Mở ảnh có sẵn", "Tab Tệp > Mở (hoặc nút Mở ảnh ở cửa sổ chính, hoặc kéo-thả file vào Editor / cửa sổ chính): mở ảnh PNG, JPG, BMP, GIF (khung đầu), WEBP thành tab mới để ghi chú - chọn được nhiều file, mỗi file 1 tab, tên tab = tên file. Ảnh chụp điện thoại tự xoay đúng chiều theo EXIF. Tab mở từ file coi như đã lưu: không sửa gì thì đóng không hỏi. Lưu (Ctrl+S) ghi đè chính file đó (ảnh gốc mất - muốn giữ thì dùng Lưu thành…); GIF / WEBP thì Lưu hỏi nơi lưu mới.", "Ctrl+O"),
             new("Ảnh mới", "Tab Tệp > Ảnh mới (hoặc nút Ảnh mới ở cửa sổ chính): tạo ảnh trống thành 1 tab - chọn cỡ theo mẫu (ảnh trong clipboard, ảnh đang mở, màn hình chính, 640×480 … 1920×1080) hoặc nhập rộng / cao (nút ⇄ đổi ngang ↔ dọc), và màu nền (Trắng, Đen, màu bất kỳ - nhớ cho lần sau). Dùng làm nền để ghép nhiều ảnh dán vào.", "Ctrl+N"),
-            new("Đóng 1 tab", "Bấm × trên tab, hoặc Ctrl+W / Ctrl+F4 để đóng tab đang mở. Ảnh chưa lưu hoặc đã sửa sau lần lưu cuối → hỏi Lưu / Không lưu / Huỷ. Đóng tab cuối cùng = đóng Editor.", "Ctrl+W", "Ctrl+F4"),
+            new("Đóng 1 tab", "Bấm × trên tab, hoặc Ctrl+W / Ctrl+F4 để đóng tab đang mở. Ảnh chưa lưu, đã sửa sau lần lưu cuối, hoặc file đã lưu (kể cả ảnh tự lưu) bị xoá / đổi tên → hỏi Lưu / Không lưu / Huỷ (Lưu = ghi lại đúng chỗ cũ). Đóng tab cuối cùng = đóng Editor.", "Ctrl+W", "Ctrl+F4"),
             new("Đóng tất cả", "Nút cuối thanh tab. Còn ảnh chưa lưu → hỏi Lưu tất cả (chọn 1 thư mục, tên file = tên tab, không ghi đè file có sẵn) / Đóng không lưu / Huỷ."),
             new("Nhớ tab khi tắt app", "Đóng cửa sổ Editor không hỏi gì: mọi tab được lưu tạm và mở lại y như cũ ở lần sau (hình đã vẽ vẫn sửa được, lịch sử Undo thì không giữ). Tối đa 30 tab / 300 MB, đổi hoặc tắt trong Cài đặt > Phiên làm việc."),
             new("Lưu ý thư mục tạm", "Tab được lưu tạm trong %TEMP% - Windows có thể dọn thư mục này. Ảnh quan trọng vẫn nên Lưu ra file."),
@@ -181,7 +183,7 @@ public static class HelpContent
             new("Lưu", "Tab đã gắn với 1 file (đã lưu trước đó, hoặc mở từ PNG / JPG / BMP) → ghi đè file đó, không hỏi. Ảnh chụp chưa lưu → hỏi nơi lưu như Lưu thành. Nhớ qua lần tắt mở app.", "Ctrl+S"),
             new("Lưu thành…", "Chọn nơi lưu và định dạng PNG / JPG / BMP (chọn sẵn định dạng của file hiện tại, chưa có thì PNG); tên điền sẵn = tên file hoặc tên tab. JPG / BMP ghép nền trắng. Chất lượng JPG: Cài đặt > Lưu ảnh (mặc định 90).", "Ctrl+Shift+S"),
             new("Copy ảnh", "Copy ảnh (đã gộp mọi hình vẽ, vùng che) vào clipboard để dán sang app khác.", "Ctrl+C"),
-            new("Tự động lưu", "Cài đặt > Lưu ảnh: mỗi ảnh chụp tự lưu thành PNG vào 1 thư mục (mặc định Pictures\\ScreenCapture); đóng tab không hỏi lại."),
+            new("Tự động lưu", "Cài đặt > Lưu ảnh: mỗi ảnh chụp tự lưu thành PNG vào 1 thư mục (mặc định Pictures\\ScreenCapture), tên theo mẫu (mặc định {date}_{time}_{app} → 2026-10-07_10-31-10_EXCEL.png - đổi ở Cài đặt > Lưu ảnh > Mẫu tên file); đóng tab không hỏi lại."),
             new("Tự copy sau khi chụp", "Cài đặt > Chung: chụp xong tự copy ảnh vào clipboard."),
         ]),
 
@@ -210,6 +212,7 @@ public static class HelpContent
         [
             new("Chung", "Hẹn giờ trước khi chụp; tự copy ảnh sau khi chụp; chạy ngầm ở khay hệ thống; khởi động cùng Windows."),
             new("Tự động lưu", "Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục."),
+            new("Mẫu tên file", "Tên file khi tự lưu, chọn mẫu có sẵn hoặc gõ tuỳ ý (có dòng xem trước). Thẻ: {date} ngày 2026-10-07, {time} giờ 10-31-10, {app} chương trình bị chụp (EXCEL, msedge - mọi trang web cùng 1 trình duyệt ra cùng tên, phân biệt bằng {window}), {window} tiêu đề cửa sổ (≤ 50 ký tự), {mode} kiểu chụp, {size} rộng x cao, {n} số thứ tự 001, 002… trong thư mục. Dấu \\ = thư mục con, vd {date}\\{time}. Ký tự cấm thành _; trùng tên thêm (2). Gõ kèm .png ở cuối cũng được (tự bỏ) - vd {date}\\{date}_{time}_{app}.png → thư mục 2026-10-07, file 2026-10-07_10-31-10_EXCEL.png."),
             new("Phiên làm việc", "Bật/tắt nhớ tab khi tắt app; giới hạn số tab / dung lượng; xem dung lượng và mở thư mục tạm."),
             new("Chụp cuộn", "Số lần cuộn tối đa, độ dài ảnh tối đa, thời gian chờ sau mỗi lần cuộn (tăng lên cho trang tải chậm)."),
             new("Phím tắt", "Gán phím tắt toàn cục cho từng kiểu chụp: Shift/Ctrl/Alt + 1 phím (PrintScreen, A-Z, 0-9, F1-F12). Không cho 2 thao tác trùng phím."),

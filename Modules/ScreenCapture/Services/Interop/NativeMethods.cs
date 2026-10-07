@@ -251,6 +251,31 @@ internal static partial class NativeMethods
     [LibraryImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")]
     public static partial int DwmGetWindowAttributeInt(IntPtr hwnd, int dwAttribute, out int pvAttribute, int cbAttribute);
 
+    // ---- Chụp màn hình hiện tại + tên app / tiêu đề cửa sổ cho mẫu tên file (Services/CaptureTarget.cs) ----
+    public const uint MONITOR_DEFAULTTONEAREST = 2;
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct MONITORINFO
+    {
+        public int cbSize;
+        public RECT rcMonitor;
+        public RECT rcWork;
+        public uint dwFlags;
+    }
+
+    [LibraryImport("user32.dll")]
+    public static partial IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+    [LibraryImport("user32.dll", EntryPoint = "GetWindowTextW")]
+    public static unsafe partial int GetWindowText(IntPtr hWnd, char* lpString, int nMaxCount);
+
+    [LibraryImport("user32.dll", EntryPoint = "FindWindowExW", StringMarshalling = StringMarshalling.Utf16)]
+    public static partial IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string? lpszClass, string? lpszWindow);
+
     [LibraryImport("user32.dll")]
     public static partial IntPtr GetDC(IntPtr hWnd);
 

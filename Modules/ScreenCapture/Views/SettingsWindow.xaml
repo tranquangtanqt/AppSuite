@@ -84,8 +84,14 @@
                                 <TextBox x:Name="AutoSaveFolderBox" />
                                 <Button Grid.Column="1" Content="Chọn..." Click="BrowseAutoSaveFolder_Click" />
                             </Grid>
+                            <TextBlock Text="Mẫu tên file" Margin="0,6,0,0" />
+                            <ComboBox x:Name="FileNameTemplateBox" IsEditable="True" HorizontalAlignment="Stretch"
+                                      TextSubmitted="FileNameTemplateBox_TextSubmitted" SelectionChanged="FileNameTemplateBox_SelectionChanged"
+                                      ToolTipService.ToolTip="Chọn mẫu có sẵn hoặc gõ mẫu tuỳ ý" />
+                            <TextBlock x:Name="FileNameTemplatePreview" Style="{StaticResource HintStyle}" />
+                            <TextBlock x:Name="FileNameTemplateHelp" Style="{StaticResource HintStyle}" />
                             <TextBlock Style="{StaticResource HintStyle}"
-                                       Text="Tên file = thời điểm chụp (vd 2026-09-24 13 36 14.png), trùng tên thì thêm (2). Ảnh đã tự lưu được coi là đã lưu nên đóng tab không hỏi lại (trừ khi sửa thêm)." />
+                                       Text="Trùng tên thì thêm (2). Ảnh đã tự lưu được coi là đã lưu nên đóng tab không hỏi lại (trừ khi sửa thêm)." />
                         </StackPanel>
                         <StackPanel Spacing="6" Margin="0,12,0,0">
                             <TextBlock Text="Chất lượng JPG" />

@@ -46,6 +46,9 @@ public sealed partial class SettingsWindow : Window
         ScrollSettleHint.Text = $"Thời gian chờ trang cuộn xong và vẽ lại trước khi chụp khung tiếp. Tăng lên nếu trang tải chậm, cuộn mượt lâu, ảnh bị thiếu hoặc lặp/lệch; dưới 300 ms chỉ nên dùng cho app không cuộn mượt. Mặc định {defaults.ScrollSettleMs}, từ {AppSettings.ScrollSettleMsRange.Min} tới {AppSettings.ScrollSettleMsRange.Max}.";
         JpegQualityHint.Text = $"Dùng khi Lưu / Lưu thành ảnh JPG trong Editor. Cao = ảnh nét hơn, file lớn hơn; ảnh chụp màn hình có chữ nên để ≥ 85. Mặc định {defaults.JpegQuality}, từ {AppSettings.JpegQualityRange.Min} tới {AppSettings.JpegQualityRange.Max}.";
 
+        FileNameTemplateBox.ItemsSource = _fileNameTemplates;
+        FileNameTemplateHelp.Text = "Thẻ: " + FileNameTemplate.TokenHelp;
+
         BuildHotkeyGrid();
         FillFrom(current);
         ShowHotkeyStatus(failedHotkeys);
@@ -95,6 +98,7 @@ public sealed partial class SettingsWindow : Window
         AutoSaveBox.IsChecked = s.AutoSave;
         AutoSaveFolderBox.Text = s.AutoSaveFolder;
         AutoSaveFolderPanel.Opacity = s.AutoSave ? 1 : 0.5;
+        ShowFileNameTemplate(s.AutoSaveFileName);
         RememberTabsBox.IsChecked = s.RememberTabs;
         MaxTabsBox.Value = s.SessionMaxTabs;
         MaxMegabytesBox.Value = s.SessionMaxMegabytes;
@@ -125,6 +129,7 @@ public sealed partial class SettingsWindow : Window
             StartWithWindows = StartWithWindowsBox.IsChecked == true,
             AutoSave = AutoSaveBox.IsChecked == true,
             AutoSaveFolder = AutoSaveFolderBox.Text.Trim(),
+            AutoSaveFileName = string.IsNullOrWhiteSpace(_fileNameTemplate) ? FileNameTemplate.Default : _fileNameTemplate.Trim(),
             RememberTabs = RememberTabsBox.IsChecked == true,
             SessionMaxTabs = Int(MaxTabsBox, 30),
             SessionMaxMegabytes = Int(MaxMegabytesBox, 300),
@@ -179,6 +184,42 @@ public sealed partial class SettingsWindow : Window
 
     private void AutoSaveBox_Changed(object sender, RoutedEventArgs e) =>
         AutoSaveFolderPanel.Opacity = AutoSaveBox.IsChecked == true ? 1 : 0.5;
+
+    /// <summary>Mẫu tên file đang chọn / gõ (ô ComboBox gõ được: chữ trong ô chỉ chắc chắn sau TextSubmitted).</summary>
+    private string _fileNameTemplate = FileNameTemplate.Default;
+
+    private readonly System.Collections.ObjectModel.ObservableCollection<string> _fileNameTemplates = new(FileNameTemplate.Presets);
+
+    /// <summary>Mẫu tự gõ được thêm vào cuối danh sách: ComboBox gõ được luôn hiện lại chữ của SelectedItem - SelectedItem
+    /// null thì ô trắng (như ô Cỡ chữ của Editor).</summary>
+    private void ShowFileNameTemplate(string template)
+    {
+        _fileNameTemplate = template;
+        if (!_fileNameTemplates.Contains(template))
+        {
+            _fileNameTemplates.Add(template);
+        }
+        FileNameTemplateBox.SelectedItem = template;
+        FileNameTemplatePreview.Text = "Ví dụ (chụp Excel): " + FileNameTemplate.Preview(template);
+    }
+
+    private void FileNameTemplateBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (FileNameTemplateBox.SelectedItem is string template)
+        {
+            _fileNameTemplate = template;
+            FileNameTemplatePreview.Text = "Ví dụ (chụp Excel): " + FileNameTemplate.Preview(template);
+        }
+    }
+
+    /// <summary>Gõ mẫu tuỳ ý rồi Enter / rời ô. Tự xử lý để ô không tìm mục trùng; hiện lại sau khi ComboBox xong lượt gõ
+    /// (nó đặt lại chữ theo SelectedItem - xem ô Cỡ chữ của Editor).</summary>
+    private void FileNameTemplateBox_TextSubmitted(ComboBox sender, ComboBoxTextSubmittedEventArgs args)
+    {
+        args.Handled = true;
+        string template = string.IsNullOrWhiteSpace(args.Text) ? FileNameTemplate.Default : args.Text.Trim();
+        DispatcherQueue.TryEnqueue(() => ShowFileNameTemplate(template));
+    }
 
     private async void BrowseAutoSaveFolder_Click(object sender, RoutedEventArgs e)
     {

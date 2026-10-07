@@ -32,9 +32,10 @@ public sealed partial class CaptureLauncherWindow : Window
     private bool _isCapturing;
 
     // "Chụp lại lần gần nhất": nhớ kiểu chụp + vùng (toạ độ màn hình) của lần chụp thành công gần nhất.
-    private enum LastCaptureKind { None, FullScreen, ActiveWindow, Rect }
+    private enum LastCaptureKind { None, FullScreen, Monitor, ActiveWindow, Rect }
     private LastCaptureKind _lastKind;
     private RECT _lastRect;
+    private CaptureMode _lastRectMode = CaptureMode.Region;
 
     private readonly TrayIconService _tray;
     private bool _exiting;
@@ -49,10 +50,10 @@ public sealed partial class CaptureLauncherWindow : Window
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
 
-        // Kích thước vừa đủ cho lưới thẻ 2 cột - AppWindow.Resize nhận pixel vật lý nên nhân theo DPI.
+        // Kích thước vừa đủ cho lưới thẻ 2 cột × 4 hàng - AppWindow.Resize nhận pixel vật lý nên nhân theo DPI.
         var hwnd = WindowNative.GetWindowHandle(this);
         var scale = NativeMethods.GetDpiForWindow(hwnd) / 96.0;
-        AppWindow.Resize(new SizeInt32((int)(720 * scale), (int)(520 * scale)));
+        AppWindow.Resize(new SizeInt32((int)(720 * scale), (int)(620 * scale)));
 
         _settings = _settingsStore.Load();
         _session.ApplySettings(_settings);
@@ -134,7 +135,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor }
 
     private void ShowTrayMenu()
     {
@@ -142,6 +143,7 @@ public sealed partial class CaptureLauncherWindow : Window
         var command = (TrayCommand)_tray.ShowMenu(
         [
             ((int)TrayCommand.FullScreen, "Chụp toàn màn hình", true),
+            ((int)TrayCommand.CurrentMonitor, "Chụp màn hình hiện tại", true),
             ((int)TrayCommand.ActiveWindow, "Chụp cửa sổ hiện tại", true),
             ((int)TrayCommand.Region, "Chụp vùng chọn", true),
             ((int)TrayCommand.FixedRegion, "Chụp vùng cố định", true),
@@ -159,6 +161,7 @@ public sealed partial class CaptureLauncherWindow : Window
         switch (command)
         {
             case TrayCommand.FullScreen: RunInBackground(CaptureFullScreenAsync); break;
+            case TrayCommand.CurrentMonitor: RunInBackground(CaptureMonitorAsync); break;
             case TrayCommand.ActiveWindow: RunInBackground(CaptureActiveWindowAsync); break;
             case TrayCommand.Region: RunInBackground(() => CaptureRegionAsync(isFixed: false)); break;
             case TrayCommand.FixedRegion: RunInBackground(() => CaptureRegionAsync(isFixed: true)); break;
@@ -430,6 +433,7 @@ public sealed partial class CaptureLauncherWindow : Window
     private void Hotkeys_Pressed(object? sender, HotkeyAction action) => RunInBackground(action switch
     {
         HotkeyAction.FullScreen => CaptureFullScreenAsync,
+        HotkeyAction.CurrentMonitor => CaptureMonitorAsync,
         HotkeyAction.ActiveWindow => CaptureActiveWindowAsync,
         HotkeyAction.Region => () => CaptureRegionAsync(isFixed: false),
         HotkeyAction.FixedRegion => () => CaptureRegionAsync(isFixed: true),
@@ -460,6 +464,8 @@ public sealed partial class CaptureLauncherWindow : Window
     }
 
     private async void FullScreenButton_Click(object sender, RoutedEventArgs e) => await CaptureFullScreenAsync();
+    private async void MonitorButton_Click(object sender, RoutedEventArgs e) => await CaptureMonitorAsync();
+    private async void RepeatLastButton_Click(object sender, RoutedEventArgs e) => await RepeatLastCaptureAsync();
     private async void WindowButton_Click(object sender, RoutedEventArgs e) => await CaptureActiveWindowAsync();
     private async void RegionButton_Click(object sender, RoutedEventArgs e) => await CaptureRegionAsync(isFixed: false);
     private async void FixedRegionButton_Click(object sender, RoutedEventArgs e) => await CaptureRegionAsync(isFixed: true);
@@ -479,6 +485,7 @@ public sealed partial class CaptureLauncherWindow : Window
         {
             var virtualRect = _captureService.GetVirtualScreenRect();
             var frozenScreen = _captureService.CaptureRect(virtualRect);
+            var windows = WindowEnumerator.GetVisibleWindows(); // cửa sổ bị cuộn (mẫu tên file)
             var overlay = new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: false, null, horizontal
                 ? "Chụp cuộn NGANG →: kéo chọn vùng nội dung cần cuộn sang phải (bỏ cột cố định bên trái) — thả chuột để bắt đầu. Esc để dừng."
                 : "Chụp cuộn DỌC ↓: kéo chọn vùng nội dung cần cuộn xuống (bỏ thanh menu cố định) — thả chuột để bắt đầu. Esc để dừng.");
@@ -490,12 +497,13 @@ public sealed partial class CaptureLauncherWindow : Window
             }
 
             await Task.Delay(250); // chờ overlay đóng hẳn, cửa sổ bên dưới vẽ lại
+            var info = CaptureTarget.Describe(CaptureTarget.WindowAtCenter(windows, selection.Value), CaptureMode.Scroll);
             var scroller = new ScrollCaptureService(_captureService, _settings);
             var result = await scroller.CaptureAsync(selection.Value, direction);
             Log.LogInformation("Chụp cuộn {Direction}: vùng {W}x{H}, {Frames} khung, ảnh {Width}x{Height}, dừng: {Reason}",
                 direction, selection.Value.Right - selection.Value.Left, selection.Value.Bottom - selection.Value.Top,
                 result.Frames, result.Image.Width, result.Image.Height, result.Reason);
-            await FinishCaptureAsync(result.Image);
+            await FinishCaptureAsync(result.Image, info);
 
             string reason = result.Reason switch
             {
@@ -525,7 +533,32 @@ public sealed partial class CaptureLauncherWindow : Window
         {
             var bitmap = _captureService.CaptureRect(_captureService.GetVirtualScreenRect());
             _lastKind = LastCaptureKind.FullScreen;
-            await FinishCaptureAsync(bitmap);
+            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(CaptureTarget.ActiveOrUnderCursor(), CaptureMode.FullScreen));
+        }
+        finally
+        {
+            _isCapturing = false;
+        }
+    }
+
+    /// <summary>Chụp màn hình đang có con trỏ chuột (dùng nhiều màn hình - Toàn màn hình gộp mọi màn hình thành 1 ảnh).</summary>
+    private async Task CaptureMonitorAsync()
+    {
+        if (!await BeginCaptureAsync())
+        {
+            return;
+        }
+        try
+        {
+            var monitor = CaptureTarget.MonitorAtCursor();
+            if (monitor.Width <= 0 || monitor.Height <= 0)
+            {
+                monitor = _captureService.GetVirtualScreenRect();
+            }
+            var bitmap = _captureService.CaptureRect(monitor);
+            _lastKind = LastCaptureKind.Monitor;
+            Log.LogInformation("Chụp màn hình hiện tại: ({Left}, {Top}) {Width}x{Height}", monitor.Left, monitor.Top, monitor.Width, monitor.Height);
+            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(CaptureTarget.ActiveOrUnderCursor(monitor), CaptureMode.Monitor));
         }
         finally
         {
@@ -541,6 +574,7 @@ public sealed partial class CaptureLauncherWindow : Window
         }
         try
         {
+            var hwnd = NativeMethods.GetForegroundWindow(); // cùng cửa sổ GetForegroundWindowRectAsync chụp
             var rect = await _captureService.GetForegroundWindowRectAsync();
             if (rect is null)
             {
@@ -549,7 +583,7 @@ public sealed partial class CaptureLauncherWindow : Window
             }
             var bitmap = _captureService.CaptureRect(rect.Value);
             _lastKind = LastCaptureKind.ActiveWindow;
-            await FinishCaptureAsync(bitmap);
+            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(hwnd, CaptureMode.Window));
         }
         finally
         {
@@ -569,12 +603,13 @@ public sealed partial class CaptureLauncherWindow : Window
             var frozenScreen = _captureService.CaptureRect(virtualRect);
 
             // Vùng chọn: kéo = chọn vùng, click = chụp cả cửa sổ đang tô viền dưới con trỏ. Liệt kê cửa sổ
-            // cùng lúc chụp ảnh nền đứng yên để khung khớp với ảnh.
+            // cùng lúc chụp ảnh nền đứng yên để khung khớp với ảnh (và biết cửa sổ nào bị chụp - mẫu tên file).
+            var windows = WindowEnumerator.GetVisibleWindows();
             var overlay = isFixed
                 ? new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: true, LastFixedRegionOn(virtualRect))
                 : new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: false, null,
                     "Kéo chuột để chọn vùng — hoặc click để chụp cả cửa sổ đang tô viền. Esc: huỷ",
-                    WindowEnumerator.GetVisibleWindowRects());
+                    windows.Select(w => w.Rect).ToList());
             var selection = await overlay.SelectRegionAsync();
             if (selection is null)
             {
@@ -588,6 +623,9 @@ public sealed partial class CaptureLauncherWindow : Window
             }
             _lastKind = LastCaptureKind.Rect;
             _lastRect = selection.Value;
+            var mode = isFixed ? CaptureMode.FixedRegion : CaptureMode.Region;
+            _lastRectMode = mode;
+            var info = CaptureTarget.Describe(CaptureTarget.WindowAtCenter(windows, selection.Value), mode);
 
             var cropRect = new SKRectI(
                 selection.Value.Left - virtualRect.Left,
@@ -600,7 +638,7 @@ public sealed partial class CaptureLauncherWindow : Window
             {
                 canvas.DrawBitmap(frozenScreen, cropRect, new SKRect(0, 0, cropRect.Width, cropRect.Height));
             }
-            await FinishCaptureAsync(cropped);
+            await FinishCaptureAsync(cropped, info);
         }
         finally
         {
@@ -648,6 +686,9 @@ public sealed partial class CaptureLauncherWindow : Window
             case LastCaptureKind.FullScreen:
                 await CaptureFullScreenAsync();
                 break;
+            case LastCaptureKind.Monitor:
+                await CaptureMonitorAsync();
+                break;
             case LastCaptureKind.ActiveWindow:
                 await CaptureActiveWindowAsync();
                 break;
@@ -658,7 +699,8 @@ public sealed partial class CaptureLauncherWindow : Window
                 }
                 try
                 {
-                    await FinishCaptureAsync(_captureService.CaptureRect(_lastRect));
+                    var target = CaptureTarget.WindowAtCenter(WindowEnumerator.GetVisibleWindows(), _lastRect);
+                    await FinishCaptureAsync(_captureService.CaptureRect(_lastRect), CaptureTarget.Describe(target, _lastRectMode));
                 }
                 finally
                 {
@@ -692,10 +734,10 @@ public sealed partial class CaptureLauncherWindow : Window
         ShowStatus(message, severity);
     }
 
-    /// <summary>Mở ảnh trong Editor rồi chạy các tuỳ chọn sau khi chụp (tự lưu, tự copy).</summary>
-    private async Task FinishCaptureAsync(SKBitmap bitmap)
+    /// <summary>Mở ảnh trong Editor rồi chạy các tuỳ chọn sau khi chụp (tự lưu theo mẫu tên file, tự copy).</summary>
+    private async Task FinishCaptureAsync(SKBitmap bitmap, CaptureInfo info)
     {
-        Log.LogInformation("Chụp xong: {Width}x{Height}", bitmap.Width, bitmap.Height);
+        Log.LogInformation("Chụp xong: {Width}x{Height}, {Mode}, app {App}", bitmap.Width, bitmap.Height, info.Mode, info.App);
         RestoreLauncherAfterCapture();
         OpenEditor(bitmap);
 
@@ -705,7 +747,9 @@ public sealed partial class CaptureLauncherWindow : Window
             try
             {
                 Directory.CreateDirectory(_settings.AutoSaveFolder);
-                document.SaveToFolder(_settings.AutoSaveFolder);
+                var name = FileNameTemplate.Resolve(_settings.AutoSaveFileName, info, bitmap.Width, bitmap.Height, _settings.AutoSaveFolder);
+                var path = document.SaveToFolder(_settings.AutoSaveFolder, name);
+                document.StatusText = $"Đã tự lưu: {path}";
                 _editor?.PersistSession(); // ghi lại cờ "đã lưu" vào phiên tạm
             }
             catch (Exception ex)

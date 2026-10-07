@@ -567,7 +567,10 @@ public sealed partial class EditorWindow : Window
         {
             XamlRoot = Content.XamlRoot,
             Title = "Ảnh chưa được lưu",
-            Content = $"Lưu ảnh \"{vm.Title}\" trước khi đóng?",
+            // File đã lưu bị xoá ngoài app (đã sửa gì thêm thì là "chưa lưu" bình thường): nói rõ, Lưu = ghi lại đúng chỗ cũ.
+            Content = vm.FileMissing && !vm.UndoRedo.IsDirty
+                ? $"File đã lưu không còn trên ổ (bị xoá hoặc đổi tên):\n{vm.FilePath}\n\nLưu lại ảnh \"{vm.Title}\" vào đó trước khi đóng?"
+                : $"Lưu ảnh \"{vm.Title}\" trước khi đóng?",
             PrimaryButtonText = "Lưu",
             SecondaryButtonText = "Không lưu",
             CloseButtonText = "Huỷ",

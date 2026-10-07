@@ -22,6 +22,8 @@ public sealed class AppSettings
     public bool AutoSave { get; set; }
     public string AutoSaveFolder { get; set; } =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ScreenCapture");
+    /// <summary>Mẫu tên file khi tự lưu (xem <see cref="FileNameTemplate"/>), vd "{date}_{time}_{app}".</summary>
+    public string AutoSaveFileName { get; set; } = FileNameTemplate.Default;
 
     // ---- Phiên làm việc (nhớ tab khi tắt app, xem SessionService) ----
     public bool RememberTabs { get; set; } = true;
@@ -64,6 +66,7 @@ public sealed class AppSettings
     public static List<HotkeyBinding> DefaultHotkeys() =>
     [
         new() { Action = HotkeyAction.FullScreen, Key = "PrintScreen" },
+        new() { Action = HotkeyAction.CurrentMonitor, Key = HotkeyBinding.NoKey },
         new() { Action = HotkeyAction.ActiveWindow, Alt = true, Key = "PrintScreen" },
         new() { Action = HotkeyAction.Region, Shift = true, Key = "PrintScreen" },
         new() { Action = HotkeyAction.FixedRegion, Shift = true, Ctrl = true, Key = "PrintScreen" },
@@ -101,6 +104,8 @@ public enum HotkeyAction
     RepeatLast,
     ScrollCapture,
     ScrollCaptureHorizontal,
+    /// <summary>Màn hình đang có con trỏ chuột (thêm 2026-10-07 - đặt cuối để giá trị số của các action cũ không đổi).</summary>
+    CurrentMonitor,
 }
 
 public sealed class HotkeyBinding

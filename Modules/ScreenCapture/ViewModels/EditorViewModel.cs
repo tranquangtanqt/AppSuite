@@ -393,9 +393,13 @@ public sealed partial class EditorViewModel : ObservableObject
         _savedToFile = savedToFile;
     }
 
-    /// <summary>Ảnh chưa từng lưu ra file, hoặc đã sửa sau lần lưu gần nhất → đóng tab/cửa sổ phải hỏi,
-    /// tránh mất ảnh chụp (kể cả ảnh vừa chụp chưa sửa gì).</summary>
-    public bool NeedsSave => !_savedToFile || UndoRedo.IsDirty;
+    /// <summary>Ảnh chưa từng lưu ra file, đã sửa sau lần lưu gần nhất, hoặc file đã lưu không còn (bị xoá / đổi tên
+    /// ngoài app - vd xoá ảnh tự lưu rồi mới đóng tab) → đóng tab/cửa sổ phải hỏi, tránh mất ảnh chụp (kể cả ảnh vừa chụp
+    /// chưa sửa gì).</summary>
+    public bool NeedsSave => !_savedToFile || UndoRedo.IsDirty || FileMissing;
+
+    /// <summary>Tab đã gắn 1 file nhưng file đó không còn trên ổ.</summary>
+    public bool FileMissing => FilePath is { } path && !File.Exists(path);
 
     /// <summary>File gắn với tab: lần lưu gần nhất (Lưu / Lưu thành / tự lưu / Lưu tất cả) hoặc file đã mở. Null = ảnh chụp
     /// chưa lưu. Lưu (Ctrl+S) ghi thẳng vào file này nếu định dạng ghi được (PNG / JPG / BMP).</summary>
@@ -412,9 +416,17 @@ public sealed partial class EditorViewModel : ObservableObject
     private async Task SaveAsAsync() => await SaveAsToFileAsync();
 
     /// <summary>Ghi PNG (ảnh + shape) vào thư mục đã chọn sẵn, tên file = tên tab. Dùng cho "Lưu tất cả" / tự lưu.</summary>
-    public string SaveToFolder(string folder)
+    /// <param name="relativeName">Tên file (chưa có đuôi), có thể kèm thư mục con - vd theo mẫu tên khi tự lưu
+    /// (<see cref="FileNameTemplate"/>); null = tên tab.</param>
+    public string SaveToFolder(string folder, string? relativeName = null)
     {
-        var path = _fileService.SavePngToFolder(RenderComposited(), folder, Title);
+        if (relativeName is not null && Path.GetDirectoryName(relativeName) is { Length: > 0 } subfolder)
+        {
+            folder = Path.Combine(folder, subfolder);
+            Directory.CreateDirectory(folder);
+            relativeName = Path.GetFileName(relativeName);
+        }
+        var path = _fileService.SavePngToFolder(RenderComposited(), folder, relativeName ?? Title);
         MarkSaved(path);
         return path;
     }
@@ -444,6 +456,11 @@ public sealed partial class EditorViewModel : ObservableObject
         var composited = RenderComposited();
         try
         {
+            // Lưu lại vào file đã bị xoá cùng thư mục (vd thư mục ngày của mẫu {date}\...) → tạo lại thư mục.
+            if (Path.GetDirectoryName(path) is { Length: > 0 } folder)
+            {
+                Directory.CreateDirectory(folder);
+            }
             await Task.Run(() => _fileService.WriteImage(composited, path));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

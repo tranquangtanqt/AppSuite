@@ -123,7 +123,42 @@
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
+
+            <Button x:Name="MonitorButton" Grid.Row="0" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
+                    Click="MonitorButton_Click">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardIconBadgeStyle}">
+                        <FontIcon Glyph="&#xE7F4;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Màn hình hiện tại" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Chụp 1 màn hình - màn đang có con trỏ chuột." Style="{StaticResource CardDescriptionStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Button>
+
+            <Button x:Name="RepeatLastButton" Grid.Row="3" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
+                    Click="RepeatLastButton_Click">
+                <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource CardIconBadgeStyle}">
+                        <FontIcon Glyph="&#xE72C;" FontSize="20" Foreground="{StaticResource LauncherAccentBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="Chụp lại lần trước" Style="{StaticResource CardTitleStyle}" />
+                        <TextBlock Text="Lặp lại kiểu chụp gần nhất (vùng chọn: đúng vùng đó)." Style="{StaticResource CardDescriptionStyle}" />
+                    </StackPanel>
+                </Grid>
+            </Button>
 
             <Button x:Name="FullScreenButton" Grid.Row="0" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
                     Click="FullScreenButton_Click">
@@ -142,7 +177,7 @@
                 </Grid>
             </Button>
 
-            <Button x:Name="WindowButton" Grid.Row="0" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
+            <Button x:Name="WindowButton" Grid.Row="1" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
                     Click="WindowButton_Click">
                 <Grid ColumnSpacing="14">
                     <Grid.ColumnDefinitions>
@@ -159,7 +194,7 @@
                 </Grid>
             </Button>
 
-            <Button x:Name="RegionButton" Grid.Row="1" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
+            <Button x:Name="RegionButton" Grid.Row="1" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
                     Click="RegionButton_Click">
                 <Grid ColumnSpacing="14">
                     <Grid.ColumnDefinitions>
@@ -176,7 +211,7 @@
                 </Grid>
             </Button>
 
-            <Button x:Name="FixedRegionButton" Grid.Row="1" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
+            <Button x:Name="FixedRegionButton" Grid.Row="2" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
                     Click="FixedRegionButton_Click">
                 <Grid ColumnSpacing="14">
                     <Grid.ColumnDefinitions>
@@ -193,7 +228,7 @@
                 </Grid>
             </Button>
 
-            <Button x:Name="ScrollButton" Grid.Row="2" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
+            <Button x:Name="ScrollButton" Grid.Row="2" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
                     Click="ScrollButton_Click">
                 <Grid ColumnSpacing="14">
                     <Grid.ColumnDefinitions>
@@ -210,7 +245,7 @@
                 </Grid>
             </Button>
 
-            <Button x:Name="ScrollHorizontalButton" Grid.Row="2" Grid.Column="1" Style="{StaticResource CaptureCardStyle}"
+            <Button x:Name="ScrollHorizontalButton" Grid.Row="3" Grid.Column="0" Style="{StaticResource CaptureCardStyle}"
                     Click="ScrollHorizontalButton_Click">
                 <Grid ColumnSpacing="14">
                     <Grid.ColumnDefinitions>

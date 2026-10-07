@@ -7,10 +7,11 @@ chiếu nào tới `MainLauncher`; chỉ `ProjectReference` tới `Common` và `
 
 ### Cửa sổ chính — chọn chế độ chụp
 
-`CaptureLauncherWindow`: lưới thẻ 2 cột (icon + tên + mô tả), màu nhấn `#D86445`. Thông báo (huỷ
+`CaptureLauncherWindow`: lưới thẻ 2 cột × 4 hàng (icon + tên + mô tả; thêm thẻ *Chụp lại lần trước*), màu nhấn `#D86445`. Thông báo (huỷ
 chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cuối cửa sổ.
 
 - **Toàn màn hình** — chụp toàn bộ virtual screen (mọi màn hình).
+- **Màn hình hiện tại** — chụp 1 màn hình: màn đang có con trỏ chuột (dùng nhiều màn hình). Mặc định chưa có phím tắt.
 - **Cửa sổ hiện tại** — chụp cửa sổ đang active (bất kỳ ứng dụng nào, kể cả app render bằng
   DirectX như trình duyệt).
 - **Vùng chọn** — kéo-thả chọn 1 vùng màn hình, thả chuột là chụp ngay. Hoặc **chụp 1 cửa sổ bất
@@ -50,13 +51,13 @@ tuỳ chọn về ban đầu.
 | Trang | Tuỳ chọn |
 |---|---|
 | Chung | Hẹn giờ trước khi chụp (0–10 giây); chụp xong tự copy ảnh vào clipboard; chạy ngầm ở khay hệ thống; khởi động cùng Windows |
-| Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên = thời điểm chụp; ảnh đã tự lưu đóng tab không hỏi lại |
+| Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lại |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |
-| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
+| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
 
 - Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`,
-  `Ctrl+Alt+PrtSc` (chụp cuộn dọc). Chụp cuộn ngang và Chụp lại lần gần nhất mặc định không có phím.
+  `Ctrl+Alt+PrtSc` (chụp cuộn dọc). Màn hình hiện tại, Chụp cuộn ngang và Chụp lại lần gần nhất mặc định không có phím.
 - Dùng được cả khi app đang thu nhỏ, ẩn ở khay hệ thống hoặc đang ở app khác. Chụp bằng phím tắt
   khi cửa sổ chính đang thu nhỏ / ẩn thì chụp xong nó vẫn giữ nguyên, không bật lên.
 - Phím đã bị app khác giữ (vd PicPick đang chạy) → đánh dấu ⚠ trong trang Phím tắt + thông báo ở
@@ -67,7 +68,7 @@ tuỳ chọn về ban đầu.
 **Chạy ngầm ở khay hệ thống** (bật mặc định, tắt được trong Cài đặt → Chung):
 
 - Icon ScreenCapture ở khay (góc phải taskbar; có thể nằm trong nhóm icon ẩn `^`). Click trái → mở
-  cửa sổ chính. Click phải → menu: Chụp toàn màn hình / cửa sổ / vùng chọn / vùng cố định, Mở cửa sổ
+  cửa sổ chính. Click phải → menu: Chụp toàn màn hình / màn hình hiện tại / cửa sổ / vùng chọn / vùng cố định / cuộn, Mở cửa sổ
   chính, Mở Editor, Cài đặt..., Hướng dẫn, **Thoát**.
 - Bấm X ở cửa sổ chính → ẩn xuống khay (lần đầu có bong bóng thông báo), phím tắt vẫn dùng được.
   Thoát hẳn bằng *Thoát* ở menu khay (Editor vẫn lưu tạm / hỏi lưu ảnh như khi đóng bình thường).
@@ -75,9 +76,27 @@ tuỳ chọn về ban đầu.
 - *Khởi động cùng Windows*: ghi `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (không cần quyền
   admin), chạy với `--tray` → chỉ hiện icon ở khay, không bật cửa sổ chính; tab của phiên trước được nạp
   lại ở lần chụp / mở Editor đầu tiên.
-- *Chụp lại lần gần nhất*: lặp lại kiểu chụp gần nhất; vùng chọn / vùng cố định thì chụp lại đúng
-  vùng đó ngay, không hiện màn chọn vùng.
+- *Chụp lại lần gần nhất* (cũng là thẻ *Chụp lại lần trước* ở cửa sổ chính): lặp lại kiểu chụp gần nhất; vùng chọn /
+  vùng cố định thì chụp lại đúng vùng đó ngay, không hiện màn chọn vùng.
 - Không cho 2 thao tác dùng chung 1 tổ hợp phím.
+
+**Mẫu tên file khi tự lưu** (Cài đặt > Lưu ảnh, `Models/FileNameTemplate`): ô chọn mẫu có sẵn hoặc gõ tuỳ ý + dòng xem
+trước. Mặc định `{date}_{time}_{app}` → `2026-10-07_10-31-10_EXCEL.png` (`{date}_{time}` = `yyyy-MM-dd_HH-mm-ss`).
+
+| Thẻ | Giá trị |
+|---|---|
+| `{date}` / `{time}` | Ngày `yyyy-MM-dd` / giờ `HH-mm-ss` lúc chụp |
+| `{app}` | Tên tiến trình của cửa sổ bị chụp (`EXCEL`, `msedge`; app Store lấy app bên trong khung `ApplicationFrameHost`); không có cửa sổ → `Desktop`. Mọi trang web trong cùng trình duyệt ra cùng 1 tên — phân biệt bằng `{window}` |
+| `{window}` | Tiêu đề cửa sổ bị chụp (≤ 50 ký tự) |
+| `{mode}` | Kiểu chụp: `ToanManHinh`, `ManHinh`, `CuaSo`, `Vung`, `VungCoDinh`, `Cuon` |
+| `{size}` | `rộng x cao` px |
+| `{n}` | Số thứ tự `001`, `002`… = số lớn nhất của các file cùng mẫu trong thư mục đích + 1 |
+
+Dấu `\` (hoặc `/`) = thư mục con, vd `{date}\{time}_{app}` → mỗi ngày 1 thư mục; `..` bị bỏ. Ký tự cấm trong tên file →
+`_`; trùng tên thêm ` (2)`; mẫu rỗng → mặc định; đuôi ảnh gõ kèm ở cuối (`.png`, `.jpg`…) tự bỏ (tự lưu luôn là PNG) —
+vd `{date}\{date}_{time}_{app}.png` → `2026-10-07\2026-10-07_10-31-10_EXCEL.png` (có sẵn trong danh sách mẫu). Cửa sổ bị chụp (`Services/CaptureTarget`): *Cửa sổ hiện tại* = cửa sổ
+đó; vùng chọn / vùng cố định / cuộn = cửa sổ trên cùng chứa **tâm vùng** (danh sách cửa sổ lấy cùng lúc chụp ảnh nền
+đứng yên); toàn màn hình / màn hình hiện tại = cửa sổ đang active (là của ScreenCapture thì cửa sổ dưới con trỏ).
 
 ### Trình chỉnh sửa (`EditorWindow`)
 
@@ -98,7 +117,8 @@ mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để kh
   → *Tuỳ chỉnh*), màu nền (*Trắng* / *Đen* / *Trong suốt* / màu bất kỳ qua ô màu; lần đầu *Đen* như gợi ý của PicPick,
   sau đó nhớ màu lần trước — `NewImageBackColor` trong settings.json). Xem *Nền trong suốt* ở nhóm *Cắt & Sửa*.
 - Đóng 1 tab (`×`, hoặc `Ctrl+W` / `Ctrl+F4` cho tab đang mở) khi ảnh chưa lưu ra file (kể cả ảnh vừa chụp chưa sửa gì) hoặc đã sửa sau lần lưu
-  cuối → hỏi *Lưu* / *Không lưu* / *Huỷ*. Đóng tab cuối cùng = đóng Editor.
+  cuối, hoặc file đã lưu (kể cả ảnh tự lưu) bị xoá / đổi tên ngoài app → hỏi *Lưu* / *Không lưu* / *Huỷ* (*Lưu* ghi lại đúng
+  chỗ cũ, tạo lại thư mục nếu cần). Đóng tab cuối cùng = đóng Editor.
 - **Đóng tất cả** (nút cuối thanh tab): còn ảnh chưa lưu → hỏi *Lưu tất cả...* (chọn 1 thư mục, lưu
   mọi ảnh chưa lưu vào đó, tên file = tên tab, trùng tên thì thêm " (2)" — không ghi đè file có sẵn) /
   *Đóng không lưu* / *Huỷ*. Xong thì đóng mọi tab và Editor, thư mục lưu tạm được dọn sạch. Huỷ chọn

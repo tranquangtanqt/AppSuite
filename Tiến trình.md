@@ -284,11 +284,32 @@ Undo; mục có "…" mở hộp thoại tuỳ chọn + xem trước (kể cả 
 dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 
 *Lượt 3a — việc nhỏ, dùng ngay:*
-- [ ] ★★ Chụp 1 màn hình (màn đang có chuột) khi dùng nhiều màn hình — "Toàn màn hình" hiện gộp mọi màn hình thành 1
-  ảnh rất rộng
-- [ ] ★★ Mẫu tên file khi tự lưu (vd `{date}_{window}` → `2026-10-06_Excel.png`)
+- [x] ★★ Chụp 1 màn hình (màn đang có chuột) khi dùng nhiều màn hình — kiểu chụp **Màn hình hiện tại**: thẻ ở cửa sổ
+  chính (lưới thành 2 × 4, thêm thẻ *Chụp lại lần trước*), menu khay, phím tắt (mặc định chưa gán), Chụp lại lần gần
+  nhất (2026-10-07)
+- [x] ★★ Mẫu tên file khi tự lưu — Cài đặt > Lưu ảnh > *Mẫu tên file* (chọn mẫu / gõ tuỳ ý + xem trước), mặc định
+  `{date}_{time}_{app}` → `2026-10-07_10-31-10_EXCEL.png` (theo người dùng); thẻ {date} {time} {app} {window} {mode} {size}
+  {n}, `\` = thư mục con. Cửa sổ bị chụp: vùng = cửa sổ trên cùng chứa tâm vùng (liệt kê cùng lúc ảnh nền đứng yên).
+  Console 16/16 (`FileNameTemplate`); GUI Sandbox `sct_3a` 10/10: ảnh = đúng 1 màn hình 1514×900, tên
+  `…_powershell.png`, `{window}_{n}` 001 → 002 (cả Chụp lại lần trước), `{date}\{mode}_{n}` thư mục con, gõ mẫu tuỳ ý
+  trong Cài đặt không trắng ô + lưu settings.json. F1 + README cập nhật (2026-10-07) — cần thử tay trên máy 2 màn hình
+- [x] Mẫu `{date}\{date}_{time}_{app}.png` (người dùng đề xuất, 2026-10-07): thêm vào danh sách mẫu; đuôi ảnh gõ kèm ở
+  cuối mẫu tự bỏ (trước đó ra `….png.png`). Console 18/18. Người dùng thử tay Vùng chọn trên Teams →
+  `2026-10-07_14-51-14_ms-teams.png` OK
+- [x] Bug (người dùng báo): xoá ảnh tự lưu ngoài app rồi Ctrl+W → không hỏi lưu (tab bị coi là đã lưu) →
+  `NeedsSave` tính cả file đã lưu không còn trên ổ; hộp thoại ghi rõ "File đã lưu không còn trên ổ…", Lưu ghi lại đúng
+  chỗ cũ (tạo lại thư mục ngày). Đóng tất cả cũng tính tab này là chưa lưu. GUI Sandbox `sct_missing` 5/5 (2026-10-07)
+- [x] Người dùng thử tay máy 2 màn hình khác DPI (chính 1920×1200 @150%, phụ 1920×1080 @100% bên phải): Màn hình hiện
+  tại ra đúng kích thước từng màn; `{app}` EXCEL / CalculatorApp / Code đúng. Bug: chụp màn có chuột (VS Code) mà cửa
+  sổ active (Explorer) ở màn kia → tên `…_explorer.png` → Màn hình hiện tại chỉ lấy cửa sổ active nếu tâm nó nằm trên màn
+  được chụp, không thì cửa sổ dưới con trỏ. Hồi quy Sandbox `sct_3a` 10/10 + `sct_missing` 5/5 (2026-10-07) — cần thử
+  lại tay trường hợp Explorer ở màn kia
+- [x] Thử tay lại (bản sau 15:48): Màn hình hiện tại khi cửa sổ active ở màn kia → `{app}` = app dưới con trỏ — người
+  dùng xác nhận OK (2026-10-07)
 - [ ] ★ Tuỳ chọn chụp kèm con trỏ chuột
-- [ ] ★ Chọn việc tự làm sau khi chụp (mở Editor / lưu / copy / in)
+- [ ] ★ Chọn việc tự làm sau khi chụp — đã thống nhất 2026-10-07: nhóm "Sau khi chụp" ô tick độc lập: Mở trong Editor
+  (tắt được), Copy, Tự lưu, Thông báo nhỏ (ảnh thu nhỏ, bấm → Editor / Mở thư mục); tắt Editor thì phải bật ≥ 1 việc
+  khác. *Mở bằng app khác* / *In* để sau (In đi cùng ★★ In ảnh)
 
 *Lượt 3b — trung bình:*
 - [ ] ★★ Hút màu trên màn hình (mã #RRGGBB) + bảng màu nhớ các màu đã hút

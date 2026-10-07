@@ -13,19 +13,23 @@ public static class WindowEnumerator
 {
     [ThreadStatic] private static List<IntPtr>? _collected;
 
-    public static unsafe List<RECT> GetVisibleWindowRects()
+    public static List<RECT> GetVisibleWindowRects() => GetVisibleWindows().Select(w => w.Rect).ToList();
+
+    /// <summary>Như <see cref="GetVisibleWindowRects"/> kèm handle - để biết cửa sổ nào bị chụp (mẫu tên file {app} /
+    /// {window}, xem <see cref="CaptureTarget"/>).</summary>
+    public static unsafe List<(IntPtr Hwnd, RECT Rect)> GetVisibleWindows()
     {
         _collected = [];
         try
         {
             NativeMethods.EnumWindows(&Collect, IntPtr.Zero);
             uint ownPid = (uint)Environment.ProcessId;
-            var result = new List<RECT>();
+            var result = new List<(IntPtr, RECT)>();
             foreach (var hWnd in _collected)
             {
                 if (IsCandidate(hWnd, ownPid) && TryGetBounds(hWnd, out var rect))
                 {
-                    result.Add(rect);
+                    result.Add((hWnd, rect));
                 }
             }
             return result;
