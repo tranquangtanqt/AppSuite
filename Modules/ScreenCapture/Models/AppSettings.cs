@@ -8,8 +8,20 @@ public sealed class AppSettings
     /// <summary>Chờ thêm N giây trước khi chụp (để kịp mở menu, hover...). 0 = chụp ngay.</summary>
     public int CaptureDelaySeconds { get; set; }
 
-    /// <summary>Chụp xong tự copy ảnh vào clipboard (ngoài việc mở trong Editor).</summary>
+    // ---- Sau khi chụp: các việc tự làm, chọn độc lập (Cài đặt > Chung). Tắt Editor thì phải bật ≥ 1 việc khác. ----
+
+    /// <summary>Mở ảnh chụp trong Editor (tab mới). Tắt = chụp nhanh liên tục, ảnh chỉ được copy / tự lưu / thông báo.</summary>
+    public bool OpenEditorAfterCapture { get; set; } = true;
+
+    /// <summary>Chụp xong tự copy ảnh vào clipboard.</summary>
     public bool CopyToClipboardAfterCapture { get; set; }
+
+    /// <summary>Hiện thông báo nhỏ ở góc màn hình (ảnh thu nhỏ, Mở trong Editor / Mở thư mục), tự ẩn sau vài giây.</summary>
+    public bool NotifyAfterCapture { get; set; }
+
+    /// <summary>Còn ít nhất 1 việc sau khi chụp - không thì ảnh chụp biến mất không dấu vết.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool HasAfterCaptureAction => OpenEditorAfterCapture || CopyToClipboardAfterCapture || AutoSave || NotifyAfterCapture;
 
     /// <summary>Vẽ cả con trỏ chuột vào ảnh - Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Chụp lại lần trước.
     /// Vùng chọn, vùng cố định, chụp cuộn thì không (con trỏ đang ở góc vùng kéo / đang lăn trang).</summary>

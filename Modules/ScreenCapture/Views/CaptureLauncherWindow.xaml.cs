@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using ScreenCapture.Models;
 using ScreenCapture.Services;
 using ScreenCapture.Services.Interop;
+using ScreenCapture.ViewModels;
 using SkiaSharp;
 using Windows.Graphics;
 using WinRT.Interop;
@@ -503,7 +504,7 @@ public sealed partial class CaptureLauncherWindow : Window
             Log.LogInformation("Chụp cuộn {Direction}: vùng {W}x{H}, {Frames} khung, ảnh {Width}x{Height}, dừng: {Reason}",
                 direction, selection.Value.Right - selection.Value.Left, selection.Value.Bottom - selection.Value.Top,
                 result.Frames, result.Image.Width, result.Image.Height, result.Reason);
-            await FinishCaptureAsync(result.Image, info);
+            var scrolled = await FinishCaptureAsync(result.Image, info);
 
             string reason = result.Reason switch
             {
@@ -512,7 +513,7 @@ public sealed partial class CaptureLauncherWindow : Window
                 ScrollStopReason.LimitReached => $"chạm giới hạn ({scroller.MaxSteps} lần cuộn / {scroller.MaxLength}px — đổi trong Cài đặt > Chụp cuộn)",
                 _ => "không ghép tiếp được (nội dung thay đổi hoặc cuộn quá xa) - đã giữ phần ghép được",
             };
-            if (_editor?.CurrentDocument is { } document)
+            if (scrolled is { } document)
             {
                 document.StatusText = $"Chụp cuộn {(horizontal ? "ngang" : "dọc")}: {result.Frames} khung, {result.Image.Width} × {result.Image.Height} px — {reason}.";
             }
@@ -722,6 +723,7 @@ public sealed partial class CaptureLauncherWindow : Window
             return false;
         }
         _isCapturing = true;
+        CloseCaptureToast(); // thông báo lần chụp trước không được lọt vào ảnh
         MinimizeForCapture(WindowNative.GetWindowHandle(this));
         await Task.Delay(200 + Math.Clamp(_settings.CaptureDelaySeconds, 0, 10) * 1000);
         return true;
@@ -734,28 +736,52 @@ public sealed partial class CaptureLauncherWindow : Window
         ShowStatus(message, severity);
     }
 
-    /// <summary>Mở ảnh trong Editor rồi chạy các tuỳ chọn sau khi chụp (tự lưu theo mẫu tên file, tự copy).</summary>
-    private async Task FinishCaptureAsync(SKBitmap bitmap, CaptureInfo info)
+    /// <summary>Chạy các việc "Sau khi chụp" (Cài đặt > Chung): mở Editor, tự lưu theo mẫu tên file, copy, thông báo nhỏ.
+    /// Trả tab Editor của ảnh này, null nếu không mở Editor.</summary>
+    private async Task<EditorViewModel?> FinishCaptureAsync(SKBitmap bitmap, CaptureInfo info)
     {
         Log.LogInformation("Chụp xong: {Width}x{Height}, {Mode}, app {App}", bitmap.Width, bitmap.Height, info.Mode, info.App);
         RestoreLauncherAfterCapture();
-        OpenEditor(bitmap);
+        // Cài đặt cũ / sửa tay tắt hết mọi việc → vẫn mở Editor, không để ảnh chụp mất không dấu vết.
+        bool openEditor = _settings.OpenEditorAfterCapture || !_settings.HasAfterCaptureAction;
+        EditorViewModel? document = null;
+        if (openEditor)
+        {
+            OpenEditor(bitmap);
+            document = _editor?.CurrentDocument;
+        }
+        else
+        {
+            RestoreEditorAfterCancel(); // Editor đang mở bị thu nhỏ lúc chụp → trả lại như cũ
+        }
 
-        var document = _editor?.CurrentDocument;
-        if (_settings.AutoSave && document is not null)
+        var lines = new List<string>();
+        bool failed = false;
+        string? savedPath = null;
+        if (_settings.AutoSave)
         {
             try
             {
-                Directory.CreateDirectory(_settings.AutoSaveFolder);
                 var name = FileNameTemplate.Resolve(_settings.AutoSaveFileName, info, bitmap.Width, bitmap.Height, _settings.AutoSaveFolder);
-                var path = document.SaveToFolder(_settings.AutoSaveFolder, name);
-                document.StatusText = $"Đã tự lưu: {path}";
-                _editor?.PersistSession(); // ghi lại cờ "đã lưu" vào phiên tạm
+                savedPath = document is not null
+                    ? document.SaveToFolder(_settings.AutoSaveFolder, name)
+                    : _fileService.SavePngToFolder(bitmap, _settings.AutoSaveFolder, name);
+                lines.Add($"Đã lưu: {Path.GetFileName(savedPath)}");
+                if (document is not null)
+                {
+                    document.StatusText = $"Đã tự lưu: {savedPath}";
+                    _editor?.PersistSession(); // ghi lại cờ "đã lưu" vào phiên tạm
+                }
             }
             catch (Exception ex)
             {
                 Log.LogError(ex, "Tự động lưu thất bại ({Folder})", _settings.AutoSaveFolder);
-                document.StatusText = $"Tự động lưu thất bại: {ex.Message}";
+                failed = true;
+                lines.Add($"Tự lưu thất bại: {ex.Message}");
+                if (document is not null)
+                {
+                    document.StatusText = $"Tự động lưu thất bại: {ex.Message}";
+                }
             }
         }
         if (_settings.CopyToClipboardAfterCapture)
@@ -763,6 +789,7 @@ public sealed partial class CaptureLauncherWindow : Window
             try
             {
                 await _clipboardService.CopyBitmapAsync(bitmap);
+                lines.Add("Đã copy vào clipboard");
                 if (document is not null && !_settings.AutoSave)
                 {
                     document.StatusText = "Đã copy ảnh chụp vào clipboard.";
@@ -771,12 +798,49 @@ public sealed partial class CaptureLauncherWindow : Window
             catch (Exception ex)
             {
                 Log.LogError(ex, "Không copy được ảnh chụp vào clipboard");
+                failed = true;
+                lines.Add($"Không copy được: {ex.Message}");
                 if (document is not null)
                 {
                     document.StatusText = $"Không copy được vào clipboard: {ex.Message}";
                 }
             }
         }
+
+        // Thông báo: khi bật, hoặc khi lỗi mà Editor không mở (không thì lỗi bị bỏ qua không ai thấy).
+        if (_settings.NotifyAfterCapture || (failed && document is null))
+        {
+            ShowCaptureToast(bitmap, info, lines, openEditor ? null : savedPath, savedPath, editorOpened: openEditor);
+        }
+        return document;
+    }
+
+    private CaptureToastWindow? _toast;
+
+    private void ShowCaptureToast(SKBitmap bitmap, CaptureInfo info, IReadOnlyList<string> lines, string? editorFilePath, string? savedPath,
+        bool editorOpened)
+    {
+        CloseCaptureToast();
+        string title = $"Đã chụp {bitmap.Width} × {bitmap.Height}" + (info.App.Length > 0 ? $" · {info.App}" : string.Empty);
+        Action? openEditor = editorOpened ? null : () => OpenEditor(bitmap, filePath: editorFilePath);
+        var toast = new CaptureToastWindow(bitmap, title, lines.Count > 0 ? lines : [editorOpened ? "Đã mở trong Editor" : "Bấm Mở trong Editor để ghi chú / lưu."], openEditor, savedPath);
+        toast.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_toast, toast))
+            {
+                _toast = null;
+            }
+        };
+        _toast = toast;
+        toast.ShowWithoutFocus();
+    }
+
+    /// <summary>Đóng thông báo đang hiện - trước mỗi lần chụp (không lọt vào ảnh).</summary>
+    private void CloseCaptureToast()
+    {
+        var toast = _toast;
+        _toast = null;
+        toast?.Close();
     }
 
     /// <summary>1 cửa sổ Editor duy nhất (giống PicPick): lần chụp đầu mở Editor, các lần sau thêm tab

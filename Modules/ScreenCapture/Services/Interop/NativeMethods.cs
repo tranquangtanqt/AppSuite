@@ -302,6 +302,16 @@ internal static partial class NativeMethods
     [LibraryImport("user32.dll")]
     public static partial IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
 
+    /// <summary>Tắt hiệu ứng mở / đóng (mờ dần) của cửa sổ - thông báo sau khi chụp phải biến mất ngay trước lần chụp sau.</summary>
+    public const int DWMWA_TRANSITIONS_FORCEDISABLED = 3;
+
+    [LibraryImport("dwmapi.dll", EntryPoint = "DwmSetWindowAttribute")]
+    public static partial int DwmSetWindowAttributeInt(IntPtr hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
+
+    /// <summary>dpiType 0 = MDT_EFFECTIVE_DPI. Trả 0 (S_OK) nếu được.</summary>
+    [LibraryImport("shcore.dll")]
+    public static partial int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out uint dpiX, out uint dpiY);
+
     [LibraryImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);

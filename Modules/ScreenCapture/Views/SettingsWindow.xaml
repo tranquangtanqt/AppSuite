@@ -61,7 +61,18 @@
                             <TextBlock Text="Chờ thêm vài giây trước khi chụp để kịp mở menu, rê chuột lên tooltip... (0 = chụp ngay)."
                                        Style="{StaticResource HintStyle}" />
                         </StackPanel>
-                        <CheckBox x:Name="CopyAfterCaptureBox" Content="Chụp xong tự copy ảnh vào clipboard" />
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Sau khi chụp" FontWeight="SemiBold" />
+                            <TextBlock Style="{StaticResource HintStyle}"
+                                       Text="Chọn những việc tự làm ngay khi chụp xong - chọn được nhiều việc cùng lúc." />
+                            <CheckBox x:Name="OpenEditorAfterCaptureBox" Content="Mở trong Editor" Margin="0,4,0,0" />
+                            <CheckBox x:Name="CopyAfterCaptureBox" Content="Copy vào clipboard" />
+                            <CheckBox x:Name="AfterCaptureAutoSaveBox" Content="Tự lưu file (thư mục, mẫu tên: trang Lưu ảnh)"
+                                      Checked="AfterCaptureAutoSaveBox_Changed" Unchecked="AfterCaptureAutoSaveBox_Changed" />
+                            <CheckBox x:Name="NotifyAfterCaptureBox" Content="Hiện thông báo nhỏ ở góc màn hình (ảnh thu nhỏ, nút Mở trong Editor / Mở thư mục)" />
+                            <TextBlock Style="{StaticResource HintStyle}"
+                                       Text="Tắt Editor để chụp nhanh nhiều tấm liên tục (vd Copy + Thông báo để dán ngay, hoặc Tự lưu + Thông báo để chụp hàng loạt). Phải chọn ít nhất 1 việc. Lưu / copy bị lỗi thì luôn hiện thông báo." />
+                        </StackPanel>
                         <StackPanel Spacing="4">
                             <CheckBox x:Name="IncludeCursorBox" Content="Chụp kèm con trỏ chuột" />
                             <TextBlock Style="{StaticResource HintStyle}"

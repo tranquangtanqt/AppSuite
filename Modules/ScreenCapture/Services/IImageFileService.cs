@@ -21,6 +21,7 @@ public interface IImageFileService
     Task<string?> PickFolderAsync(IntPtr ownerHwnd);
 
     /// <summary>Ghi PNG vào <paramref name="folder"/> với tên <paramref name="baseName"/>.png; trùng tên
-    /// thì thêm " (2)", " (3)"... - không bao giờ ghi đè file có sẵn. Trả về đường dẫn đã ghi.</summary>
+    /// thì thêm " (2)", " (3)"... - không bao giờ ghi đè file có sẵn. <paramref name="baseName"/> có thể kèm thư mục
+    /// con ("2026-10-07\ảnh") - tự tạo. Trả về đường dẫn đã ghi.</summary>
     string SavePngToFolder(SKBitmap bitmap, string folder, string baseName);
 }

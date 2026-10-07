@@ -92,7 +92,9 @@ public sealed partial class SettingsWindow : Window
     private void FillFrom(AppSettings s)
     {
         DelayBox.Value = s.CaptureDelaySeconds;
+        OpenEditorAfterCaptureBox.IsChecked = s.OpenEditorAfterCapture;
         CopyAfterCaptureBox.IsChecked = s.CopyToClipboardAfterCapture;
+        NotifyAfterCaptureBox.IsChecked = s.NotifyAfterCapture;
         IncludeCursorBox.IsChecked = s.IncludeCursor;
         RunInTrayBox.IsChecked = s.RunInTray;
         StartWithWindowsBox.IsChecked = s.StartWithWindows;
@@ -125,7 +127,9 @@ public sealed partial class SettingsWindow : Window
         var s = new AppSettings
         {
             CaptureDelaySeconds = Int(DelayBox, 0),
+            OpenEditorAfterCapture = OpenEditorAfterCaptureBox.IsChecked == true,
             CopyToClipboardAfterCapture = CopyAfterCaptureBox.IsChecked == true,
+            NotifyAfterCapture = NotifyAfterCaptureBox.IsChecked == true,
             IncludeCursor = IncludeCursorBox.IsChecked == true,
             RunInTray = RunInTrayBox.IsChecked == true,
             StartWithWindows = StartWithWindowsBox.IsChecked == true,
@@ -184,8 +188,24 @@ public sealed partial class SettingsWindow : Window
         box.Minimum = range.Min; box.Maximum = range.Max; box.SmallChange = step; box.LargeChange = step * 10;
     }
 
-    private void AutoSaveBox_Changed(object sender, RoutedEventArgs e) =>
+    /// <summary>"Tự lưu file" ở nhóm Sau khi chụp (trang Chung) và "Tự động lưu" ở trang Lưu ảnh là cùng 1 cài đặt - giữ
+    /// 2 ô luôn giống nhau.</summary>
+    private void AutoSaveBox_Changed(object sender, RoutedEventArgs e)
+    {
         AutoSaveFolderPanel.Opacity = AutoSaveBox.IsChecked == true ? 1 : 0.5;
+        if (AfterCaptureAutoSaveBox.IsChecked != AutoSaveBox.IsChecked)
+        {
+            AfterCaptureAutoSaveBox.IsChecked = AutoSaveBox.IsChecked;
+        }
+    }
+
+    private void AfterCaptureAutoSaveBox_Changed(object sender, RoutedEventArgs e)
+    {
+        if (AutoSaveBox.IsChecked != AfterCaptureAutoSaveBox.IsChecked)
+        {
+            AutoSaveBox.IsChecked = AfterCaptureAutoSaveBox.IsChecked;
+        }
+    }
 
     /// <summary>Mẫu tên file đang chọn / gõ (ô ComboBox gõ được: chữ trong ô chỉ chắc chắn sau TextSubmitted).</summary>
     private string _fileNameTemplate = FileNameTemplate.Default;
@@ -250,6 +270,12 @@ public sealed partial class SettingsWindow : Window
     {
         var settings = ReadSettings();
 
+        if (!settings.HasAfterCaptureAction)
+        {
+            ValidationText.Text = "Sau khi chụp: chọn ít nhất 1 việc (Mở trong Editor, Copy, Tự lưu hoặc Thông báo) - không thì ảnh chụp không đi đâu cả.";
+            SelectCategory("General");
+            return;
+        }
         if (settings.AutoSave && string.IsNullOrWhiteSpace(settings.AutoSaveFolder))
         {
             ValidationText.Text = "Chọn thư mục cho Tự động lưu.";

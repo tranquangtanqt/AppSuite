@@ -310,9 +310,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   hình + vị trí (trừ hotspot) bằng DrawIconEx sau BitBlt, ép alpha 255; áp cho Toàn màn hình / Màn hình hiện tại / Cửa
   sổ hiện tại / Chụp lại lần trước, không áp cho vùng chọn / chụp cuộn. GUI Sandbox `sct_cursor` 5/5: tắt → không có
   con trỏ; bật → mũi tên đúng chỗ, chỗ khác sạch, không lỗ trong suốt; cả Toàn màn hình. F1 + README (2026-10-07)
-- [ ] ★ Chọn việc tự làm sau khi chụp — đã thống nhất 2026-10-07: nhóm "Sau khi chụp" ô tick độc lập: Mở trong Editor
-  (tắt được), Copy, Tự lưu, Thông báo nhỏ (ảnh thu nhỏ, bấm → Editor / Mở thư mục); tắt Editor thì phải bật ≥ 1 việc
-  khác. *Mở bằng app khác* / *In* để sau (In đi cùng ★★ In ảnh)
+- [x] ★ Chọn việc tự làm sau khi chụp — Cài đặt > Chung > nhóm **Sau khi chụp**: Mở trong Editor (tắt được), Copy, Tự
+  lưu (đồng bộ với ô ở trang Lưu ảnh), Hiện thông báo nhỏ (`CaptureToastWindow`: góc dưới-phải màn có con trỏ, ảnh thu
+  nhỏ, Mở trong Editor / Mở thư mục, không giành focus, tự ẩn 6 giây, tắt hiệu ứng mờ dần, đóng trước lần chụp sau);
+  bỏ hết 4 việc → không cho OK; lỗi lưu / copy khi không mở Editor → luôn hiện thông báo. Tắt Editor: tự lưu ảnh gốc
+  thẳng ra file (`SavePngToFolder` tự tạo thư mục con). GUI Sandbox `sct_after` 18/18. F1 + README (2026-10-07) — cần
+  thử tay
+- [ ] Sau khi chụp: *Mở bằng app khác* / *In* (In đi cùng ★★ In ảnh)
 
 *Lượt 3b — trung bình:*
 - [ ] ★★ Hút màu trên màn hình (mã #RRGGBB) + bảng màu nhớ các màu đã hút

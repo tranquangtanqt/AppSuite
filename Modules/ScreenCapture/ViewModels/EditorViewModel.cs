@@ -420,12 +420,6 @@ public sealed partial class EditorViewModel : ObservableObject
     /// (<see cref="FileNameTemplate"/>); null = tên tab.</param>
     public string SaveToFolder(string folder, string? relativeName = null)
     {
-        if (relativeName is not null && Path.GetDirectoryName(relativeName) is { Length: > 0 } subfolder)
-        {
-            folder = Path.Combine(folder, subfolder);
-            Directory.CreateDirectory(folder);
-            relativeName = Path.GetFileName(relativeName);
-        }
         var path = _fileService.SavePngToFolder(RenderComposited(), folder, relativeName ?? Title);
         MarkSaved(path);
         return path;

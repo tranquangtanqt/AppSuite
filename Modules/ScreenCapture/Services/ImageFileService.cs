@@ -249,8 +249,16 @@ public sealed class ImageFileService : IImageFileService
         return name;
     }
 
+    /// <param name="baseName">Tên file chưa có đuôi; có thể kèm thư mục con (vd theo mẫu tên khi tự lưu "{date}\..." -
+    /// <see cref="Models.FileNameTemplate"/>) → tạo thư mục con nếu chưa có.</param>
     public string SavePngToFolder(SKBitmap bitmap, string folder, string baseName)
     {
+        if (Path.GetDirectoryName(baseName) is { Length: > 0 } subfolder)
+        {
+            folder = Path.Combine(folder, subfolder);
+            baseName = Path.GetFileName(baseName);
+        }
+        Directory.CreateDirectory(folder);
         baseName = SanitizeFileName(baseName);
         var path = Path.Combine(folder, baseName + ".png");
         for (int i = 2; File.Exists(path); i++)
