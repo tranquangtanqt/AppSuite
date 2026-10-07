@@ -8,7 +8,7 @@ namespace ScreenCapture.Services;
 
 /// <summary>1 tab ảnh trong Editor, dạng dữ liệu thuần để ghi/đọc phiên làm việc.</summary>
 public sealed record SessionDocument(Guid Id, string Title, SKBitmap Bitmap, IReadOnlyList<AnnotationShape> Shapes, bool SavedToFile,
-    SessionCropSource? CropSource = null, string? FilePath = null);
+    SessionCropSource? CropSource = null, string? FilePath = null, ImageOrientation Orientation = default);
 
 /// <summary>Ảnh gốc trước lần Cắt / đổi khung đầu tiên của tab + vị trí góc trên-trái của nó theo toạ độ
 /// ảnh hiện tại - lưu qua phiên để mở lại app vẫn kéo khung ra lấy lại được phần đã cắt.</summary>
@@ -93,7 +93,8 @@ public sealed class SessionService
                     _written.AddOrUpdate(cropBitmap, tab.CropOriginal!);
                     crop = new SessionCropSource(cropBitmap, tab.CropOffsetX, tab.CropOffsetY);
                 }
-                documents.Add(new SessionDocument(tab.Id, tab.Title, bitmap, shapes, tab.SavedToFile, crop, tab.FilePath));
+                documents.Add(new SessionDocument(tab.Id, tab.Title, bitmap, shapes, tab.SavedToFile, crop, tab.FilePath,
+                    new ImageOrientation(((tab.QuarterTurns % 4) + 4) % 4, tab.Flipped)));
             }
             return (documents, manifest?.ActiveId);
         }
@@ -127,6 +128,8 @@ public sealed class SessionService
                 SavedToFile = doc.SavedToFile,
                 FilePath = doc.FilePath,
                 Image = WriteBitmap(doc.Bitmap, doc.Id),
+                QuarterTurns = doc.Orientation.QuarterTurns,
+                Flipped = doc.Orientation.Flipped,
             };
             files.Add(dto.Image);
             if (doc.CropSource is { } crop)
@@ -236,6 +239,7 @@ public sealed class SessionService
             case TextAnnotation text:
                 dto.TextBackground = (uint?)text.BackgroundColor;
                 dto.TextOutline = (uint?)text.OutlineColor;
+                dto.TextFixedWidth = text.FixedWidth ? true : null;
                 break;
             case CalloutAnnotation callout:
                 dto.CornerRadius = callout.CornerRadius;
@@ -279,6 +283,7 @@ public sealed class SessionService
             {
                 BackgroundColor = ToColor(dto.TextBackground),
                 OutlineColor = ToColor(dto.TextOutline),
+                FixedWidth = dto.TextFixedWidth ?? false,
             },
             nameof(CalloutAnnotation) => new CalloutAnnotation
             {
@@ -316,7 +321,7 @@ public sealed class SessionService
         }
         if (shape is TextAnnotation text)
         {
-            text.FitBounds(); // phiên cũ lưu khung chữ cố định 200 × 30
+            text.FitBounds(); // phiên cũ lưu khung chữ cố định 200 × 30 (khung tự vừa khít), khung cố định thì chỉ cao thêm nếu cần
         }
         if (shape is FreehandAnnotation freehandShape && dto.Points is { } points)
         {
@@ -361,6 +366,10 @@ public sealed class SessionService
         public string? CropOriginal { get; set; }
         public int CropOffsetX { get; set; }
         public int CropOffsetY { get; set; }
+        /// <summary>Hướng ảnh so với lúc chụp / mở (<see cref="ImageOrientation"/>) - để "Về hướng ban đầu" sau khi mở lại
+        /// app. Phiên cũ không có = hướng ban đầu.</summary>
+        public int QuarterTurns { get; set; }
+        public bool Flipped { get; set; }
         public List<ShapeDto> Shapes { get; set; } = [];
     }
 
@@ -388,6 +397,7 @@ public sealed class SessionService
         public bool? Italic { get; set; }
         public uint? TextBackground { get; set; }
         public uint? TextOutline { get; set; }
+        public bool? TextFixedWidth { get; set; }
         public float? TailX { get; set; }
         public float? TailY { get; set; }
         public string? StampKind { get; set; }

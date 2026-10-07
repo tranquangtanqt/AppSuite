@@ -317,7 +317,7 @@
                                         <TextBlock Text="Xoay" FontSize="10" />
                                     </StackPanel>
                                     <Button.Flyout>
-                                        <MenuFlyout Placement="Bottom">
+                                        <MenuFlyout Placement="Bottom" Opening="TransformFlyout_Opening">
                                             <MenuFlyoutItem x:Name="RotateRightItem" Text="Xoay phải 90°" Tag="RotateRight"
                                                             KeyboardAcceleratorTextOverride="Ctrl+R" Click="TransformItem_Click">
                                                 <MenuFlyoutItem.Icon>
@@ -350,11 +350,60 @@
                                                     </FontIcon>
                                                 </MenuFlyoutItem.Icon>
                                             </MenuFlyoutItem>
+                                            <MenuFlyoutItem x:Name="ResetOrientationItem" Text="Về hướng ban đầu" Click="ResetOrientationItem_Click"
+                                                            ToolTipService.ToolTip="Xoay / lật ngược lại mọi lần Xoay / Lật trước đó (hình vẽ đi theo ảnh)">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE777;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
                                             <MenuFlyoutSeparator />
                                             <MenuFlyoutItem x:Name="ResizeImageItem" Text="Đổi cỡ ảnh…"
                                                             KeyboardAcceleratorTextOverride="Ctrl+E" Click="ResizeImageItem_Click">
                                                 <MenuFlyoutItem.Icon>
                                                     <FontIcon Glyph="&#xE740;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                        </MenuFlyout>
+                                    </Button.Flyout>
+                                </Button>
+                                <!-- Hiệu ứng ảnh (áp lên ảnh nền, các hình đã vẽ giữ nguyên): mục có "…" mở hộp thoại xem trước. -->
+                                <Button x:Name="EffectsButton" Style="{StaticResource ToolButtonStyle}"
+                                        ToolTipService.ToolTip="Hiệu ứng ảnh: viền, đổ bóng, mép rách, độ sáng / tương phản, làm xám, sepia, đảo màu, làm nét, watermark">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE790;" />
+                                        <TextBlock Text="Hiệu ứng" FontSize="10" />
+                                    </StackPanel>
+                                    <Button.Flyout>
+                                        <MenuFlyout Placement="Bottom">
+                                            <MenuFlyoutItem Text="Viền ảnh…" Tag="Border" Click="EffectItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE739;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutItem Text="Đổ bóng…" Tag="Shadow" Click="EffectItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE81E;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutItem Text="Mép rách…" Tag="Torn" Click="EffectItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE8C6;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutSeparator />
+                                            <MenuFlyoutItem Text="Độ sáng / tương phản…" Tag="Brightness" Click="EffectItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE706;" />
+                                                </MenuFlyoutItem.Icon>
+                                            </MenuFlyoutItem>
+                                            <MenuFlyoutItem Text="Làm xám" Tag="Grayscale" Click="EffectItem_Click" />
+                                            <MenuFlyoutItem Text="Sepia (ảnh cũ)" Tag="Sepia" Click="EffectItem_Click" />
+                                            <MenuFlyoutItem Text="Đảo màu" Tag="Invert" Click="EffectItem_Click" />
+                                            <MenuFlyoutItem Text="Làm nét" Tag="Sharpen" Click="EffectItem_Click" />
+                                            <MenuFlyoutSeparator />
+                                            <MenuFlyoutItem Text="Watermark…" Tag="Watermark" Click="EffectItem_Click">
+                                                <MenuFlyoutItem.Icon>
+                                                    <FontIcon Glyph="&#xE8D4;" />
                                                 </MenuFlyoutItem.Icon>
                                             </MenuFlyoutItem>
                                         </MenuFlyout>
@@ -515,8 +564,9 @@
                                 <ComboBox x:Name="FontFamilyBox" Width="176" Height="30" SelectionChanged="FontFamilyBox_SelectionChanged"
                                           ToolTipService.ToolTip="Phông chữ (gõ vài chữ đầu để nhảy tới phông)" />
                                 <StackPanel Orientation="Horizontal" Spacing="4">
-                                    <NumberBox x:Name="FontSizeBox" Width="92" SpinButtonPlacementMode="Compact"
-                                               ValueChanged="FontSizeBox_ValueChanged" ToolTipService.ToolTip="Cỡ chữ (px)" />
+                                    <ComboBox x:Name="FontSizeBox" Width="84" IsEditable="True" MaxDropDownHeight="320"
+                                              SelectionChanged="FontSizeBox_SelectionChanged" TextSubmitted="FontSizeBox_TextSubmitted"
+                                              ToolTipService.ToolTip="Cỡ chữ (px) - chọn trong danh sách hoặc gõ số rồi Enter" />
                                     <ToggleButton x:Name="BoldButton" Width="36" Height="32" Padding="0" Click="BoldButton_Click"
                                                   ToolTipService.ToolTip="Chữ đậm">
                                         <TextBlock Text="B" FontWeight="Bold" />

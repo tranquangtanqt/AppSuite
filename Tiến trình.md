@@ -19,6 +19,11 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 - [ ] ImageCompare bản Release từ MainLauncher (Tìm chữ, *Lưu PNG*, *Xuất báo cáo HTML*)
 - [ ] FileTools đợt 1–5 trên file thật + chạy từ MainLauncher
 - [ ] Mcf.CrudDiagram chạy UI thật (xuất lại HTML để có header bảng cố định khi cuộn)
+- [ ] ScreenCapture Đợt 1 (chữ & hình vẽ) + Đợt 2 (hiệu ứng ảnh) — danh sách thử tay chi tiết ở mục ScreenCapture >
+  "Người dùng thử tay Đợt 1 / Đợt 2"; đã OK: gõ chữ (Unikey / IME), Enter / Esc / nhấp đúp / F2, đổi định dạng khi
+  đang gõ, gõ khi zoom, kéo góc chữ (2026-10-06)
+- [ ] **Commit** toàn bộ thay đổi ScreenCapture ngày 2026-10-06 (Đợt 1, Đợt 2, ô "Ảnh x / n", tab Định dạng tự về
+  Trang chủ, nới ô Kiểu nét, kéo khung chữ) — nên commit trước khi bắt đầu Đợt 3
 
 **Ưu tiên 1 — nhỏ, lợi ngay:** ✅ xong cả 3 (2026-10-02)
 1. ~~Icon riêng (exe + taskbar) cho các module còn lại~~ — 12 project có icon, xem mục Chung
@@ -33,9 +38,9 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 **Ưu tiên 3 — có thì tốt, làm khi có nhu cầu:**
 - ImageCompare: so sánh hàng loạt 2 thư mục ảnh
 - ScreenCapture: còn thiếu so với PicPick, chia 3 đợt (rà 2026-10-05, chi tiết ở mục ScreenCapture): ~~**1. chữ & hình
-  vẽ**~~ — code xong 2026-10-06, còn test GUI Sandbox · **2. hiệu ứng ảnh** (viền, đổ bóng, mép rách,
-  độ sáng, làm xám, nền trong suốt, watermark) · **3. chụp & công cụ** (lasso, cửa sổ con, 1 màn hình, con trỏ, hút màu,
-  kính lúp / thước, in, mẫu tên file, PDF / GIF)
+  vẽ**~~ · ~~**2. hiệu ứng ảnh**~~ — cả 2 xong + test GUI Sandbox 2026-10-06, còn người dùng thử tay ·
+  **3. chụp & công cụ** — đề xuất làm 3 lượt (2026-10-06): (a) 1 màn hình, mẫu tên file, kèm con trỏ, việc tự làm sau
+  khi chụp · (b) hút màu + bảng màu, in, lưu PDF · (c) lasso, cửa sổ con, kính lúp / thước…
 - CsvEditor: freeze cột đầu, ẩn / hiện cột, tự giãn độ rộng cột
 - Chung: nhớ kích thước / vị trí cửa sổ + file gần đây cho mọi module (helper chung trong `Common`); nhớ thư mục nguồn
   ModuleB / ModuleC / Mcf.DbDef; chuyển Hướng dẫn của ScreenCapture / FileTools sang bản dùng chung
@@ -191,8 +196,13 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   chữ, stamp co theo. Phần đã Cắt không khôi phục được sau khi xoay / đổi cỡ. Kiểm tra logic 24/24, build 0 warning
   (2026-10-05)
 - [ ] Test GUI trong Sandbox: menu Xoay, Ctrl+R / Ctrl+E, hộp thoại Đổi cỡ ảnh, Undo / Redo, lưu phiên rồi mở lại
+  (một phần đã chạy trong `sct_orient`: menu Xoay phải / trái, Lật ngang, Undo, lưu phiên rồi mở lại)
+- [x] Menu Xoay > **Về hướng ban đầu**: xoay / lật ngược mọi lần Xoay / Lật trước đó trong 1 bước Undo (tối đa 2 phép),
+  hình vẽ đi theo ảnh, mờ khi ảnh chưa xoay; hướng ảnh (`ImageOrientation`) lưu qua phiên → mở lại app vẫn về được.
+  Kiểm tra logic: mọi chuỗi ≤ 5 phép xoay / lật (3906) về đúng từng pixel; GUI Sandbox `sct_orient` 6/6 (người dùng đề
+  xuất, 2026-10-07) — cần thử tay
 
-### Còn thiếu so với PicPick (rà 2026-10-05) — làm theo 3 đợt, chờ người dùng chọn đợt / tính năng
+### Còn thiếu so với PicPick (rà 2026-10-05) — làm theo 3 đợt: Đợt 1, 2 xong (2026-10-06, chờ thử tay), Đợt 3 chưa làm
 
 Đã tương đương: chụp toàn màn hình / cửa sổ / vùng / vùng cố định / cuộn dọc-ngang / lặp lần trước / hẹn giờ, phím tắt,
 khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung ảnh, dán, vùng chọn, zoom, Undo, xoay / lật /
@@ -201,8 +211,8 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
 **Đợt 1 — Chữ & hình vẽ** (dùng hằng ngày khi viết tài liệu / báo lỗi):
 - [x] ★★★ Chữ: chọn font, đậm / nghiêng, nền ô chữ, viền chữ; gõ / sửa chữ ngay trên ảnh (hiện nhập qua hộp thoại).
   Ô gõ đặt đè đúng chỗ chữ (Enter xuống dòng, Esc / Ctrl+Enter / bấm ra ngoài = xong, nhấp đúp hoặc F2 / Enter để
-  sửa), chữ nhiều dòng; kéo handle góc = đổi cỡ chữ; chữ Nhật / Trung / Hàn tự lấy phông Windows có ký tự đó (trước
-  ra ô vuông) (2026-10-06)
+  sửa), chữ nhiều dòng; kéo handle góc = đổi khung chữ (Ctrl + kéo = đổi cỡ chữ, xem mục thử tay bên dưới); chữ Nhật /
+  Trung / Hàn tự lấy phông Windows có ký tự đó (trước ra ô vuông) (2026-10-06)
 - [x] ★★ Hình: tô nền cho chữ nhật / elip, nét đứt, bo góc, độ trong suốt, nhiều kiểu đầu mũi tên — tab contextual
   *Định dạng* (chỉ hiện nhóm hợp với loại hình; áp cho hình đang chọn + nhớ riêng cho từng công cụ); nhóm Màu & Cỡ nét
   chuyển theo sang tab này; đầu mũi tên: không / tam giác / chữ V / chấm tròn ở cả 2 đầu, to theo Size (2026-10-06)
@@ -214,9 +224,31 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
   chữ nhật tô nền / nét đứt / độ đục 50% / bo góc 12; mũi tên 2 đầu; Undo / Redo; đóng → session.json → mở lại: 12/12.
   Test bắt được và đã sửa 2 lỗi: chữ nhiều dòng mất dòng 2 khi sửa lại; ô gõ chữ tự đóng do vùng ảnh giành focus
   (2026-10-06)
-- [ ] Người dùng thử tay Đợt 1 (font khác, viền chữ, co giãn chữ bằng handle, xoay ảnh có khung chú thích)
+- Người dùng thử tay Đợt 1 (máy thật, chạy từ MainLauncher):
+  - [x] Gõ tiếng Việt (Unikey / EVKey Telex) và tiếng Nhật (IME, chọn chữ Hán) trong ô gõ chữ trên ảnh — OK (2026-10-06)
+  - [x] Enter xuống dòng; Esc / Ctrl+Enter / bấm ra ngoài = xong; nhấp đúp / F2 sửa chữ (cả nhiều dòng); đang gõ bấm
+    sang ô Phông / màu → chữ được ghi và định dạng áp lên chữ đó — OK (2026-10-06)
+  - [x] Gõ chữ khi zoom 50% / 200% (ô gõ đúng chỗ, đúng cỡ); kéo handle góc đổi cỡ chữ — OK (2026-10-06)
+  - [x] Người dùng muốn kéo góc chữ = đổi KHUNG chữ như PicPick → kéo góc: khung cố định bề rộng, chữ tự xuống dòng,
+    cỡ chữ giữ nguyên, khung không thấp hơn chữ (nền ô chữ phủ cả khung); giữ Ctrl khi kéo = đổi cỡ chữ (cách cũ).
+    Lưu phiên / xoay ảnh / ô gõ chữ (tự xuống dòng) theo khung. GUI Sandbox: thu khung "old text" còn 50 px → 2 dòng cỡ
+    20; Ctrl + kéo → cỡ 40.8; bộ Đợt 1 vẫn 12/12 (2026-10-06)
+  - [ ] **[Đề xuất · Có thể]** Định dạng riêng từng phần chữ trong 1 khung (đậm / màu 1 từ) - hiện phông, cỡ, màu áp cho
+    cả khung (người dùng ghi nhận khi thử, 2026-10-06)
+  - [ ] Tab Định dạng: vài phông (Meiryo, Yu Gothic, Times), đậm / nghiêng, nền ô chữ, viền chữ + màu viền; chữ nhật /
+    elip tô nền, bo góc, nét đứt / chấm, độ đục; các kiểu đầu mũi tên, mũi tên 2 đầu, Size lớn; chữ trên tab không bị
+    cắt; vẽ xong → Định dạng, bấm chỗ trống → Trang chủ
+  - [ ] Khung chú thích: bấm 1 cái / kéo khung, chữ dài tự cao khung, kéo đuôi, co giãn khung, xoay / lật ảnh có khung
+  - [ ] Ô "Ảnh x / n" khi chuyển / đóng tab; tắt mở lại app → hình (phông, khung chú thích, mũi tên 2 đầu) còn nguyên
 - [x] Tab Định dạng: ô Kiểu nét bị cắt chữ ("Nét lì") ở DPI 150% → nới ô Kiểu nét / Đầu mũi tên, kiểm tra ảnh chụp Sandbox
   150% hiện đủ chữ (người dùng báo, 2026-10-06)
+- [x] Đang gõ / sửa chữ trên ảnh (Text, Khung chú thích) → tự mở tab Định dạng với phông / cỡ / màu của chữ đó; gõ xong
+  bấm chỗ trống → về Trang chủ, Esc → giữ chọn chữ ở tab Định dạng (người dùng báo, 2026-10-07) — người dùng thử tay Sandbox OK (2026-10-07)
+- [x] Tab Định dạng: ô Cỡ chữ (NumberBox Compact) bật khung ▲▼ nổi đè lên ô phông / nút B I → đổi thành ô xổ xuống gõ được
+  như Word (8…128, gõ số khác 6–400 rồi Enter) (người dùng báo, 2026-10-07) — cần thử tay trong Sandbox
+- [x] Ô Cỡ chữ: gõ 50 + Enter thì ô trắng (ComboBox gõ được hiện lại chữ của SelectedItem, 50 không có trong danh sách)
+  → cỡ lẻ được chèn tạm vào danh sách, áp cỡ sau khi ComboBox xong lượt gõ. GUI Sandbox `sct_fontsize` 7/7: gõ 50 / abc /
+  33.5, chọn 8, cỡ tạm bỏ khỏi danh sách, lưu phiên FontSize 72 (người dùng báo, 2026-10-07)
 - [x] Vẽ xong hình → tab Định dạng; bấm chỗ trống / Esc để bỏ chọn → tự về Trang chủ để chọn công cụ khác (người dùng
   góp ý). Tự mở Định dạng khi chưa chọn hình (đặt định dạng trước khi vẽ) thì giữ nguyên. Test GUI Sandbox 10/10, bộ
   test Đợt 1 vẫn 12/12 (2026-10-06)
@@ -225,22 +257,45 @@ khay; Editor tab, hình vẽ, tô màu, stamps, Mosaic / làm mờ, cắt, khung
   (2026-10-06)
 
 **Đợt 2 — Hiệu ứng ảnh:**
-- [ ] ★★★ Viền ảnh (border), đổ bóng, mép rách (torn edge)
-- [ ] ★★ Độ sáng / tương phản, làm xám, đảo màu, sepia, làm nét
-- [ ] ★★ Nền trong suốt cho Ảnh mới (cần sửa Cắt / đổi khung đang tô nền trắng)
-- [ ] ★ Watermark chữ / ảnh
+Nút *Hiệu ứng* (nhóm Cắt & Sửa) - chỉ áp lên ảnh nền, hình đã vẽ giữ nguyên (dời theo khi ảnh nới ra), mỗi lần 1 bước
+Undo; mục có "…" mở hộp thoại tuỳ chọn + xem trước (kể cả hình đã vẽ), tuỳ chọn nhớ trong lúc app chạy.
+- [x] ★★★ Viền ảnh (border), đổ bóng, mép rách (torn edge) — viền màu / độ dày; bóng mờ dưới-phải theo đúng hình ảnh
+  (mép rách trước rồi đổ bóng thì bóng theo răng cưa), nền quanh bóng trong suốt; xé cạnh chọn, độ sâu (2026-10-06)
+- [x] ★★ Độ sáng / tương phản, làm xám, đảo màu, sepia, làm nét (2026-10-06)
+- [x] ★★ Nền trong suốt cho Ảnh mới (cần sửa Cắt / đổi khung đang tô nền trắng) — Ảnh mới có nền "Trong suốt"; ảnh có
+  phần trong suốt thì nới khung / xoá vùng / Cut / dán nới ảnh tô trong suốt; Editor hiện ô caro (2026-10-06)
+- [x] ★ Watermark chữ / ảnh — chữ (phông, cỡ, đậm, màu) hoặc ảnh (cỡ %), độ đục, giữa / 4 góc / lặp chéo kín ảnh;
+  chỉ in lên phần ảnh, không ra nền trong suốt (2026-10-06)
+- [x] Kiểm tra: console 18/18 (số liệu từng hiệu ứng, ma trận màu Skia dịch theo thang 0-1); GUI Sandbox 15/15 (viền →
+  mép rách → đổ bóng → làm xám → watermark → Undo / Redo → session: cỡ 1063 × 583, góc bóng trong suốt, chữ dời đúng
+  27 px). Test bắt được: SKXamlCanvas trong ContentDialog không vẽ → xem trước dùng Image + WriteableBitmap (2026-10-06)
+- Người dùng thử tay Đợt 2:
+  - [ ] Từng hiệu ứng trên ảnh chụp thật (ảnh lớn / 4K): xem trước hiện, kéo thanh trượt mượt; Undo / Redo
+  - [ ] Mép rách + đổ bóng → lưu PNG (mở bằng Photos: nền trong suốt) và JPG (nền trắng)
+  - [ ] Copy ảnh có bóng rồi dán vào Word / Excel / Teams / Outlook — nền trong suốt có ra đen / caro không
+  - [ ] Watermark chữ (4 góc, lặp chéo) và ảnh logo PNG thật
+  - [ ] Ảnh mới nền Trong suốt → vẽ, nới khung, Select → Cut: phần mới trong suốt chứ không trắng
+  - [ ] F1: các mục mới (Text, Khung chú thích, Tab Định dạng, Hiệu ứng ảnh, Nền trong suốt)
 
-**Đợt 3 — Chụp, công cụ phụ, lưu & chia sẻ:**
-- [ ] ★★ Chụp tự do (lasso - vẽ đường viền bất kỳ)
-- [ ] ★★ Chụp 1 màn hình (màn đang có chuột) khi dùng nhiều màn hình — "Toàn màn hình" hiện gộp mọi màn hình
-- [ ] ★★ Hút màu trên màn hình + bảng màu
-- [ ] ★★ In ảnh
-- [ ] ★★ Mẫu tên file khi tự lưu (vd `{date}_{window}`)
+**Đợt 3 — Chụp, công cụ phụ, lưu & chia sẻ** (chưa làm; đề xuất chia 3 lượt theo công sức, 2026-10-06 — chờ người
+dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
+
+*Lượt 3a — việc nhỏ, dùng ngay:*
+- [ ] ★★ Chụp 1 màn hình (màn đang có chuột) khi dùng nhiều màn hình — "Toàn màn hình" hiện gộp mọi màn hình thành 1
+  ảnh rất rộng
+- [ ] ★★ Mẫu tên file khi tự lưu (vd `{date}_{window}` → `2026-10-06_Excel.png`)
 - [ ] ★ Tuỳ chọn chụp kèm con trỏ chuột
+- [ ] ★ Chọn việc tự làm sau khi chụp (mở Editor / lưu / copy / in)
+
+*Lượt 3b — trung bình:*
+- [ ] ★★ Hút màu trên màn hình (mã #RRGGBB) + bảng màu nhớ các màu đã hút
+- [ ] ★★ In ảnh
+- [ ] ★ Lưu PDF (GIF tuỳ nhu cầu); gửi email / Office / mở bằng chương trình khác
+
+*Lượt 3c — khó hơn:*
+- [ ] ★★ Chụp tự do (lasso - vẽ đường viền bất kỳ, phần ngoài thành trong suốt)
+- [ ] ★★ Trỏ-chọn cửa sổ con (nút, ô, khung nội dung) — đã có mục riêng ở trên
 - [ ] ★ Kính lúp, thước đo pixel, đường chữ thập, thước đo góc, bảng trắng vẽ lên màn hình
-- [ ] ★ Lưu PDF / GIF; gửi email / Office / mở bằng chương trình khác; chọn việc tự làm sau khi chụp (Editor / lưu /
-  copy / in)
-- (Trỏ-chọn cửa sổ con ★★ — đã có mục riêng ở trên)
 
 ## ImageCompare
 

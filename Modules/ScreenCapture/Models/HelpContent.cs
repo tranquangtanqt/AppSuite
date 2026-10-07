@@ -95,7 +95,7 @@ public static class HelpContent
             new("Đường thẳng, Mũi tên", "Kéo từ điểm đầu tới điểm cuối. Giữ Shift = khoá hướng theo bội số 45°. Khi đang chọn: bấm gần 1 đầu rồi kéo để đổi hướng / độ dài, bấm khúc giữa để di chuyển cả đường.", "Shift"),
             new("Bút", "Vẽ tự do (khoanh tròn, gạch chân...). Luôn vẽ nét mới kể cả khi bắt đầu trên hình khác; sửa nét đã vẽ bằng Move."),
             new("Highlight", "Bút dạ quang tô trong mờ lên chữ cần làm nổi bật."),
-            new("Text", "Bấm vào ảnh rồi gõ chữ ngay tại chỗ - Enter xuống dòng; Esc, Ctrl+Enter hoặc bấm ra ngoài là xong. Sửa chữ đã có: nhấp đúp lên chữ (hoặc chọn rồi F2 / Enter). Kéo handle góc của chữ = đổi cỡ chữ. Chữ Nhật / Trung / Hàn tự lấy phông Windows có ký tự đó.", "Nhấp đúp", "F2", "Esc", "Ctrl+Enter"),
+            new("Text", "Bấm vào ảnh rồi gõ chữ ngay tại chỗ - Enter xuống dòng; Esc, Ctrl+Enter hoặc bấm ra ngoài là xong. Sửa chữ đã có: nhấp đúp lên chữ (hoặc chọn rồi F2 / Enter). Kéo handle góc của chữ = đổi khung chữ (chữ tự xuống dòng theo bề rộng khung, cỡ chữ giữ nguyên, như PicPick); giữ Ctrl khi kéo = đổi cỡ chữ. Chữ Nhật / Trung / Hàn tự lấy phông Windows có ký tự đó.", "Nhấp đúp", "F2", "Esc", "Ctrl+Enter", "Ctrl + kéo góc"),
             new("Khung chú thích", "Bong bóng lời nói: kéo khung (hoặc bấm 1 cái để có khung cỡ mặc định) rồi gõ chữ luôn - chữ tự xuống dòng theo bề rộng khung, khung tự cao thêm khi chữ dài. Khi đang chọn: kéo chấm tròn ở đầu đuôi để chỉ vào chỗ cần chú thích. Viền + chữ màu Color1, nền Color2."),
             new("Màu & cỡ nét", "Color1 (màu nét / màu chữ), Color2 (màu nền: Highlight, tô nền hình, nền ô chữ, nền khung chú thích), Size. Đổi khi đang chọn 1 hình sẽ áp luôn cho hình đó."),
         ]),
@@ -136,13 +136,25 @@ public static class HelpContent
             new("Lưu ý", "Chỉ che ảnh chụp bên dưới, không che các hình (chữ, mũi tên...) đã vẽ ở cùng chỗ."),
         ]),
 
-        new("Cắt, khung ảnh & dán", "\uE7A8", "Nhóm Cắt & Sửa ở tab Trang chủ: Cắt, Xoay (xoay / lật / đổi cỡ ảnh), Undo / Redo, Dán.",
+        new("Cắt, khung ảnh & dán", "\uE7A8", "Nhóm Cắt & Sửa ở tab Trang chủ: Cắt, Xoay (xoay / lật / đổi cỡ ảnh), Hiệu ứng, Undo / Redo, Dán.",
         [
             new("Cắt", "Kéo khung vùng cần giữ; hình nằm ngoài vùng cắt bị bỏ. Khôi phục được: kéo handle khung ảnh ra lại là hiện lại phần đã cắt, kể cả sau khi tắt mở lại app."),
-            new("Đổi kích thước khung ảnh", "Công cụ Move, không chọn hình nào → kéo 1 trong 8 handle quanh ảnh: kéo ra = mở rộng (nền trắng), kéo vào = cắt bớt cạnh đó. Hình đã vẽ giữ nguyên vị trí."),
-            new("Xoay / lật ảnh", "Nút Xoay: xoay phải / trái 90°, xoay 180°, lật ngang, lật dọc cả ảnh. Các hình đã vẽ xoay theo và vẫn sửa được; chữ và stamp giữ chiều đứng, stamp mũi tên tự đổi hướng. Phần đã Cắt trước đó không khôi phục được nữa (Undo thì được).", "Ctrl+R", "Ctrl+Shift+R"),
+            new("Đổi kích thước khung ảnh", "Công cụ Move, không chọn hình nào → kéo 1 trong 8 handle quanh ảnh: kéo ra = mở rộng (nền trắng, ảnh nền trong suốt thì trong suốt), kéo vào = cắt bớt cạnh đó. Hình đã vẽ giữ nguyên vị trí."),
+            new("Xoay / lật ảnh", "Nút Xoay: xoay phải / trái 90°, xoay 180°, lật ngang, lật dọc cả ảnh. Các hình đã vẽ xoay theo và vẫn sửa được; chữ và stamp giữ chiều đứng, stamp mũi tên tự đổi hướng. Về hướng ban đầu: xoay / lật ngược lại mọi lần Xoay / Lật trước đó trong 1 bước (cả sau khi mở lại app), hình vẽ đi theo ảnh. Phần đã Cắt trước đó không khôi phục được nữa (Undo thì được).", "Ctrl+R", "Ctrl+Shift+R"),
             new("Đổi cỡ ảnh", "Nút Xoay > Đổi cỡ ảnh…: co giãn cả nội dung ảnh theo % hoặc theo px (giữ tỉ lệ hoặc không) - khác kéo khung ảnh. Hình vẽ, nét, cỡ chữ, stamp co giãn theo.", "Ctrl+E"),
             new("Dán ảnh", "Dán ảnh trong clipboard (ảnh copy từ app khác hoặc file ảnh copy trong Explorer) thành 1 hình ảnh, kéo / co giãn được (giữ Shift = đúng tỉ lệ). Ảnh dán lớn hơn thì khung ảnh tự nới ra.", "Ctrl+V"),
+            new("Nền trong suốt", "Ảnh mới chọn màu nền \"Trong suốt\", hoặc ảnh đã Đổ bóng / Mép rách: phần trong suốt hiện ô caro trong Editor. Nới khung, xoá vùng, Cut của ảnh đó tô trong suốt thay vì trắng. Lưu PNG / copy giữ nền trong suốt; JPG / BMP nền trắng."),
+        ]),
+
+        new("Hiệu ứng ảnh", "", "Nút Hiệu ứng (nhóm Cắt & Sửa). Chỉ áp lên ảnh nền - các hình đã vẽ giữ nguyên, vẫn sửa được. Mỗi lần áp là 1 bước Undo.",
+        [
+            new("Có hộp thoại xem trước", "Mục có \"…\" mở hộp thoại: chỉnh tuỳ chọn bên trái, xem trước bên phải (kể cả các hình đã vẽ), bấm Áp dụng. Tuỳ chọn lần trước được nhớ trong lúc app chạy."),
+            new("Viền ảnh", "Viền màu bất kỳ, dày 1-60 px bao quanh ảnh; ảnh to thêm, các hình dời theo."),
+            new("Đổ bóng", "Bóng mờ xuống dưới-phải, chỉnh độ lan / độ đậm; nền quanh bóng trong suốt. Làm Mép rách trước rồi Đổ bóng thì bóng theo đúng răng cưa."),
+            new("Mép rách", "Xé răng cưa các cạnh chọn (trên / dưới / trái / phải), chỉnh độ sâu; phần bị xé thành trong suốt."),
+            new("Độ sáng / tương phản", "2 thanh trượt -100 … +100."),
+            new("Làm xám, Sepia, Đảo màu, Làm nét", "Áp ngay, không hỏi. Làm nét lặp lại nhiều lần để nét hơn."),
+            new("Watermark", "Đóng dấu chữ (phông, cỡ, đậm, màu) hoặc ảnh (logo, chỉnh cỡ %) mờ lên ảnh: ở giữa, 1 trong 4 góc, hoặc lặp kín ảnh theo đường chéo; chỉnh độ đục."),
         ]),
 
         new("Vùng chọn", "\uE8B3", "Công cụ Select + tab contextual \"Vùng chọn\" (tự hiện khi có vùng chọn).",

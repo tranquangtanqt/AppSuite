@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.Globalization;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -33,14 +35,26 @@ public sealed partial class EditorWindow
 
     private IReadOnlyList<string> _fontFamilies = [];
 
+    /// <summary>Cỡ chữ có sẵn trong ô Cỡ chữ (như Word); gõ số khác trong khoảng MinFontSize..MaxFontSize vẫn được.</summary>
+    private static readonly double[] FontSizePresets = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 96, 128];
+    private const double MinFontSize = 6;
+    private const double MaxFontSize = 400;
+
+    private static string FormatFontSize(double size) => size.ToString("0.#", CultureInfo.InvariantCulture);
+
+    private readonly ObservableCollection<string> _fontSizeItems = new(FontSizePresets.Select(FormatFontSize));
+    /// <summary>Cỡ không có sẵn đang được chèn tạm vào _fontSizeItems (xem ShowFontSize).</summary>
+    private string? _customFontSize;
+
     private static bool IsFormattable(AnnotationShape shape) =>
         shape is RectangleAnnotation or EllipseAnnotation or LineArrowAnnotation or FreehandAnnotation or TextAnnotation or CalloutAnnotation;
 
-    /// <summary>Shape mà tab Định dạng đang hiển thị / sửa: shape đang chọn, không có thì bộ định dạng của công cụ đang dùng.</summary>
+    /// <summary>Shape mà tab Định dạng đang hiển thị / sửa: chữ đang gõ trên ảnh, shape đang chọn, không có thì bộ định dạng
+    /// của công cụ đang dùng.</summary>
     private AnnotationShape? FormatTarget =>
-        _viewModel.SelectedAnnotation is { } selected && IsFormattable(selected)
+        _inlineTarget ?? (_viewModel.SelectedAnnotation is { } selected && IsFormattable(selected)
             ? selected
-            : _toolDefaults.GetValueOrDefault(_viewModel.SelectedTool);
+            : _toolDefaults.GetValueOrDefault(_viewModel.SelectedTool));
 
     private void InitFormatControls()
     {
@@ -50,10 +64,7 @@ public sealed partial class EditorWindow
             _fontFamilies = FontCache.InstalledFamilies();
             FontFamilyBox.ItemsSource = _fontFamilies;
             // Minimum / Maximum gán qua code (gán trong XAML từng gây XamlParseException - xem SizeSlider).
-            FontSizeBox.Minimum = 6;
-            FontSizeBox.Maximum = 400;
-            FontSizeBox.SmallChange = 2;
-            FontSizeBox.LargeChange = 10;
+            FontSizeBox.ItemsSource = _fontSizeItems;
             CornerRadiusSlider.Minimum = 0;
             CornerRadiusSlider.Maximum = 40;
             OpacitySlider.Minimum = 10;
@@ -117,7 +128,7 @@ public sealed partial class EditorWindow
             if (target is ITextShape text)
             {
                 FontFamilyBox.SelectedItem = _fontFamilies.FirstOrDefault(f => string.Equals(f, text.FontFamily, StringComparison.OrdinalIgnoreCase));
-                FontSizeBox.Value = Math.Round(text.FontSize, 1);
+                ShowFontSize(text.FontSize);
                 BoldButton.IsChecked = text.Bold;
                 ItalicButton.IsChecked = text.Italic;
             }
@@ -258,14 +269,69 @@ public sealed partial class EditorWindow
         }
     }
 
-    private void FontSizeBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    /// <summary>Hiện cỡ chữ lên ô Cỡ chữ. Cỡ không có sẵn (gõ 50, Ctrl + kéo ra 40.8) được chèn tạm vào danh sách (bỏ khi
+    /// sang cỡ khác): ComboBox gõ được luôn hiện lại chữ của SelectedItem sau khi gõ - SelectedItem null thì ô trắng.</summary>
+    private void ShowFontSize(double size)
     {
-        if (double.IsNaN(args.NewValue))
+        string text = FormatFontSize(Math.Round(size, 1));
+        if (_customFontSize is { } old && old != text)
         {
-            return;
+            _fontSizeItems.Remove(old);
+            _customFontSize = null;
         }
-        float size = (float)Math.Clamp(args.NewValue, sender.Minimum, sender.Maximum);
+        if (!_fontSizeItems.Contains(text))
+        {
+            double value = double.Parse(text, CultureInfo.InvariantCulture);
+            int index = _fontSizeItems.TakeWhile(s => double.Parse(s, CultureInfo.InvariantCulture) < value).Count();
+            _fontSizeItems.Insert(index, text);
+            _customFontSize = text;
+        }
+        FontSizeBox.SelectedItem = text;
+    }
+
+    private void FontSizeBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (FontSizeBox.SelectedItem is string text)
+        {
+            ApplyFontSize(text);
+        }
+    }
+
+    /// <summary>Gõ số vào ô Cỡ chữ rồi Enter / rời ô. Tự xử lý (Handled) để ô không đổi SelectedItem thành chữ lạ; áp cỡ
+    /// SAU khi ComboBox xong lượt gõ (nó còn đặt lại chữ trong ô sau sự kiện này).</summary>
+    private void FontSizeBox_TextSubmitted(ComboBox sender, ComboBoxTextSubmittedEventArgs args)
+    {
+        args.Handled = true;
+        string submitted = args.Text;
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            ApplyFontSize(submitted);
+            // Áp được thì ApplyFormat đã hiện lại cỡ mới; gõ sai (chữ, số âm...) / cỡ không đổi → hiện lại cỡ hiện tại.
+            if (FormatTarget is ITextShape text)
+            {
+                _syncingFormat = true;
+                try
+                {
+                    ShowFontSize(text.FontSize);
+                }
+                finally
+                {
+                    _syncingFormat = false;
+                }
+            }
+        });
+    }
+
+    private bool ApplyFontSize(string text)
+    {
+        if (!double.TryParse(text.Trim().Replace(',', '.'), NumberStyles.Float, CultureInfo.InvariantCulture, out double value)
+            || double.IsNaN(value) || value <= 0)
+        {
+            return false;
+        }
+        float size = (float)Math.Clamp(value, MinFontSize, MaxFontSize);
         ApplyFormat("Đổi cỡ chữ", s => s is ITextShape t && Set(t.FontSize, size, v => t.FontSize = v));
+        return true;
     }
 
     private void BoldButton_Click(object sender, RoutedEventArgs e)

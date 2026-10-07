@@ -59,7 +59,7 @@ public sealed partial class EditorWindow
         {
             AcceptsReturn = true,
             IsSpellCheckEnabled = false,
-            TextWrapping = shape is CalloutAnnotation ? TextWrapping.Wrap : TextWrapping.NoWrap,
+            TextWrapping = shape is CalloutAnnotation or TextAnnotation { FixedWidth: true } ? TextWrapping.Wrap : TextWrapping.NoWrap,
             FontFamily = new FontFamily(textShape.FontFamily),
             FontSize = Math.Max(1, textShape.FontSize * k),
             FontWeight = textShape.Bold ? FontWeights.Bold : FontWeights.Normal,
@@ -75,9 +75,10 @@ public sealed partial class EditorWindow
         // Gán chữ SAU AcceptsReturn (ô 1 dòng cắt mất mọi thứ sau dấu xuống dòng đầu tiên); TextBox của WinUI xuống dòng
         // bằng '\r'.
         box.Text = textShape.Text.Replace("\n", "\r");
-        if (shape is CalloutAnnotation)
+        if (shape is CalloutAnnotation or TextAnnotation { FixedWidth: true })
         {
-            // Chữ tự xuống dòng đúng bề rộng khung; khung vẫn vẽ trên Canvas phía dưới (ô nhập trong suốt).
+            // Chữ tự xuống dòng đúng bề rộng khung (khung chú thích / chữ đã kéo khung); khung chú thích vẫn vẽ trên Canvas
+            // phía dưới (ô nhập trong suốt).
             box.Width = Math.Max(24, r.Width * k);
             box.MinHeight = r.Height * k;
         }
@@ -128,6 +129,9 @@ public sealed partial class EditorWindow
         _inlineEditor = box;
         InlineEditorHost.Children.Add(box);
         _viewModel.StatusText = "Gõ chữ: Enter = xuống dòng, Esc / Ctrl+Enter / bấm ra ngoài = xong.";
+        // Đang gõ = đang sửa chữ đó → mở tab Định dạng với phông / cỡ / màu của nó (bấm control trên tab sẽ ghi chữ rồi
+        // áp định dạng lên shape - xem LostFocus ở trên).
+        UpdateFormatTab(switchToTab: true);
         Canvas.Invalidate();
     }
 
@@ -204,6 +208,15 @@ public sealed partial class EditorWindow
         else
         {
             _viewModel.SelectedAnnotation = select ? shape : null;
+        }
+        // Xong mà không chọn shape (bấm chỗ trống, đổi công cụ...) → như bỏ chọn hình: về Trang chủ.
+        if (_viewModel.SelectedAnnotation is null)
+        {
+            UpdateFormatTab();
+            if (FormatTabHeader.IsChecked == true)
+            {
+                SelectRibbonTab(RibbonTab.Home);
+            }
         }
         _viewModel.StatusText = "Sẵn sàng.";
         Canvas.Invalidate();

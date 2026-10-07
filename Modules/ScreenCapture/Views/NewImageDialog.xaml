@@ -30,6 +30,7 @@
         <ComboBox x:Name="ColorBox" Header="Màu nền" HorizontalAlignment="Stretch" SelectionChanged="ColorBox_SelectionChanged">
             <ComboBoxItem Content="Trắng" Tag="#FFFFFF" />
             <ComboBoxItem Content="Đen" Tag="#000000" />
+            <ComboBoxItem Content="Trong suốt (lưu PNG giữ nền trong suốt)" Tag="transparent" />
             <ComboBoxItem Content="Màu khác… (bấm ô màu bên dưới)" Tag="custom" />
         </ComboBox>
 

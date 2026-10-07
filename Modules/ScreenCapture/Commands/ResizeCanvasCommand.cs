@@ -4,7 +4,7 @@ using SkiaSharp;
 
 namespace ScreenCapture.Commands;
 
-/// <summary>Đổi kích thước khung ảnh (kéo 8 handle quanh ảnh bằng tool Move, giống PicPick): thay bitmap
+/// <summary>Đổi kích thước khung ảnh (kéo 8 handle quanh ảnh bằng tool Move, giống PicPick) hoặc áp hiệu ứng ảnh: thay bitmap
 /// bằng bitmap mới (phần mở rộng tô nền trắng, phần thu lại bị cắt) và dịch mọi annotation theo
 /// (dx, dy) để chúng giữ nguyên vị trí so với nội dung ảnh khi khung mở rộng/cắt ở cạnh trái/trên.</summary>
 public sealed class ResizeCanvasCommand : IEditCommand
@@ -17,7 +17,7 @@ public sealed class ResizeCanvasCommand : IEditCommand
     private readonly float _dy;
 
     public ResizeCanvasCommand(Action<SKBitmap> setBitmap, ObservableCollection<AnnotationShape> annotations,
-        SKBitmap oldBitmap, SKBitmap newBitmap, float dx, float dy)
+        SKBitmap oldBitmap, SKBitmap newBitmap, float dx, float dy, string description = "Đổi kích thước ảnh")
     {
         _setBitmap = setBitmap;
         _annotations = annotations;
@@ -25,9 +25,10 @@ public sealed class ResizeCanvasCommand : IEditCommand
         _newBitmap = newBitmap;
         _dx = dx;
         _dy = dy;
+        Description = description;
     }
 
-    public string Description => "Đổi kích thước ảnh";
+    public string Description { get; }
     public bool ChangesStructure => true;
 
     public void Execute()

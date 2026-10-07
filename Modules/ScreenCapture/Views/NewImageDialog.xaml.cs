@@ -108,7 +108,7 @@ public sealed partial class NewImageDialog : ContentDialog
     {
         if (!_syncing && ColorBox.SelectedItem is ComboBoxItem { Tag: string tag } && tag != "custom")
         {
-            SetColor(SKColor.Parse(tag), syncPicker: true);
+            SetColor(tag == TransparentTag ? SKColors.Transparent : SKColor.Parse(tag), syncPicker: true);
         }
     }
 
@@ -121,19 +121,36 @@ public sealed partial class NewImageDialog : ContentDialog
         }
     }
 
+    private const string TransparentTag = "transparent";
+
+    /// <summary>Alpha = 0 → nền trong suốt; màu khác luôn đục hẳn.</summary>
     private void SetColor(SKColor color, bool syncPicker)
     {
-        BackColor = color.WithAlpha(255);
+        bool transparent = color.Alpha == 0;
+        BackColor = transparent ? SKColors.Transparent : color.WithAlpha(255);
         _syncing = true;
-        if (syncPicker)
+        if (syncPicker && !transparent)
         {
             BackColorPicker.Color = Windows.UI.Color.FromArgb(255, color.Red, color.Green, color.Blue);
         }
-        string hex = $"#{color.Red:X2}{color.Green:X2}{color.Blue:X2}";
-        ColorBox.SelectedItem = ColorBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == hex)
+        string tag = transparent ? TransparentTag : $"#{color.Red:X2}{color.Green:X2}{color.Blue:X2}";
+        ColorBox.SelectedItem = ColorBox.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == tag)
             ?? ColorBox.Items.OfType<ComboBoxItem>().Last();
         _syncing = false;
-        Swatch.Background = new SolidColorBrush(Windows.UI.Color.FromArgb(255, color.Red, color.Green, color.Blue));
+        Swatch.Background = transparent
+            ? CheckerBrush()
+            : new SolidColorBrush(Windows.UI.Color.FromArgb(255, color.Red, color.Green, color.Blue));
+    }
+
+    /// <summary>Sọc chéo trắng - xám nhạt: ô xem trước cho nền "Trong suốt".</summary>
+    private static Brush CheckerBrush()
+    {
+        var gradient = new LinearGradientBrush { StartPoint = new Windows.Foundation.Point(0, 0), EndPoint = new Windows.Foundation.Point(8, 8), MappingMode = BrushMappingMode.Absolute, SpreadMethod = GradientSpreadMethod.Repeat };
+        gradient.GradientStops.Add(new GradientStop { Color = Microsoft.UI.Colors.White, Offset = 0 });
+        gradient.GradientStops.Add(new GradientStop { Color = Microsoft.UI.Colors.White, Offset = 0.5 });
+        gradient.GradientStops.Add(new GradientStop { Color = Microsoft.UI.Colors.LightGray, Offset = 0.5 });
+        gradient.GradientStops.Add(new GradientStop { Color = Microsoft.UI.Colors.LightGray, Offset = 1 });
+        return gradient;
     }
 
     private bool IsValid =>

@@ -97,7 +97,7 @@ public sealed partial class EditorWindow : Window
                 Id = doc.Id,
                 Title = doc.Title,
             };
-            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile, doc.CropSource, doc.FilePath);
+            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile, doc.CropSource, doc.FilePath, doc.Orientation);
             AddTab(vm);
         }
         if (capture is not null)
@@ -295,7 +295,7 @@ public sealed partial class EditorWindow : Window
         {
             var documents = DocumentTabs.TabItems.OfType<TabViewItem>()
                 .Select(t => (EditorViewModel)t.Tag)
-                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile, vm.CropSourceForSession, vm.FilePath))
+                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile, vm.CropSourceForSession, vm.FilePath, vm.Orientation))
                 .ToList();
             _session.Save(documents, _viewModel?.Id);
             return true;
@@ -653,6 +653,20 @@ public sealed partial class EditorWindow : Window
         }
     }
 
+    /// <summary>2 × 2 ô trắng / xám nhạt, lặp lại làm nền caro cho phần trong suốt của ảnh.</summary>
+    private static readonly SKBitmap CheckerTile = CreateCheckerTile();
+
+    private static SKBitmap CreateCheckerTile()
+    {
+        var tile = new SKBitmap(2, 2, SKColorType.Bgra8888, SKAlphaType.Premul);
+        var light = new SKColor(0xE6, 0xE6, 0xE6);
+        tile.SetPixel(0, 0, SKColors.White);
+        tile.SetPixel(1, 1, SKColors.White);
+        tile.SetPixel(1, 0, light);
+        tile.SetPixel(0, 1, light);
+        return tile;
+    }
+
     private void Canvas_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
@@ -667,6 +681,13 @@ public sealed partial class EditorWindow : Window
         using (var edgePaint = new SKPaint { Color = new SKColor(0, 0, 0, 70), Style = SKPaintStyle.Stroke, StrokeWidth = Px(1) })
         {
             canvas.DrawRect(SKRect.Inflate(imageRect, Px(0.5f), Px(0.5f)), edgePaint);
+        }
+        // Nền caro dưới ảnh: chỉ lộ ra ở phần trong suốt (Ảnh mới "Trong suốt", đổ bóng, mép rách); ô luôn 8px trên màn hình.
+        using (var checkerShader = SKShader.CreateBitmap(CheckerTile, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat,
+                   SKMatrix.CreateScale(Px(8), Px(8))))
+        using (var checkerPaint = new SKPaint { Shader = checkerShader })
+        {
+            canvas.DrawRect(imageRect, checkerPaint);
         }
         // Phóng to: lấy mẫu nearest để thấy rõ từng pixel; thu nhỏ: lọc mượt cho khỏi răng cưa.
         using (var bitmapPaint = new SKPaint { FilterQuality = _zoom < 1f ? SKFilterQuality.Medium : SKFilterQuality.None })
@@ -1420,7 +1441,7 @@ public sealed partial class EditorWindow : Window
 
         if (_movingShape is TextAnnotation text && _resizingHandle >= 0)
         {
-            ResizeText(text, pos);
+            ResizeText(text, pos, scaleFont: e.KeyModifiers.HasFlag(Windows.System.VirtualKeyModifiers.Control));
             Canvas.Invalidate();
             return;
         }
@@ -1510,9 +1531,10 @@ public sealed partial class EditorWindow : Window
         Canvas.Invalidate();
     }
 
-    /// <summary>Kéo handle góc của chữ = đổi cỡ chữ (theo chiều cao khung kéo được), khung luôn vừa khít chữ và giữ nguyên
-    /// góc đối diện handle đang kéo.</summary>
-    private void ResizeText(TextAnnotation text, SKPoint pos)
+    /// <summary>Kéo handle góc của chữ = đổi khung chữ như PicPick (chữ tự xuống dòng theo bề rộng mới, cỡ chữ giữ nguyên,
+    /// khung không thấp hơn chữ). Giữ Ctrl (<paramref name="scaleFont"/>) = đổi cỡ chữ theo chiều cao kéo được, khung co
+    /// giãn theo. Luôn giữ nguyên góc đối diện handle đang kéo.</summary>
+    private void ResizeText(TextAnnotation text, SKPoint pos, bool scaleFont)
     {
         if (_movingBefore is not TextAnnotation original)
         {
@@ -1520,15 +1542,30 @@ public sealed partial class EditorWindow : Window
         }
         var o = original.NormalizedBounds;
         var r = ResizeFromHandle(o, _resizingHandle, pos);
-        text.FontSize = Math.Clamp(original.FontSize * r.Height / Math.Max(1f, o.Height), 4f, 400f);
-        text.FitBounds();
+        if (scaleFont)
+        {
+            float ratio = Math.Max(r.Height, 1f) / Math.Max(1f, o.Height);
+            text.FontSize = Math.Clamp(original.FontSize * ratio, 4f, 400f);
+            text.FixedWidth = original.FixedWidth;
+            // Khung cố định: bề rộng co giãn cùng tỉ lệ, chiều cao để FitBounds tính lại theo chữ.
+            text.Bounds = SKRect.Create(o.Width * ratio, 0);
+            text.FitBounds();
+            StatusText.Text = $"Cỡ chữ: {text.FontSize:0.#} px";
+        }
+        else
+        {
+            text.FontSize = original.FontSize;
+            text.FixedWidth = true;
+            text.Bounds = SKRect.Create(Math.Max(r.Width, text.MinBoxWidth), r.Height);
+            text.FitBounds(); // cao thêm nếu chữ không đủ chỗ
+            StatusText.Text = $"Khung chữ: {text.Bounds.Width:0} × {text.Bounds.Height:0} px (giữ Ctrl khi kéo = đổi cỡ chữ)";
+        }
         var size = text.Bounds.Size;
         SKPoint[] corners = [new(o.Left, o.Top), new(o.Right, o.Top), new(o.Left, o.Bottom), new(o.Right, o.Bottom)];
         var anchor = corners[3 - _resizingHandle];
         float left = _resizingHandle is 0 or 2 ? anchor.X - size.Width : anchor.X;
         float top = _resizingHandle is 0 or 1 ? anchor.Y - size.Height : anchor.Y;
         text.Bounds = SKRect.Create(left, top, size.Width, size.Height);
-        StatusText.Text = $"Cỡ chữ: {text.FontSize:0.#} px";
     }
 
     /// <summary>Bắt hướng anchor→pos về bội số 45° gần nhất (8 hướng). Độ dài lấy theo hình chiếu
@@ -1932,6 +1969,16 @@ public sealed partial class EditorWindow : Window
     }
 
     private void ResizeImageItem_Click(object sender, RoutedEventArgs e) => _ = ShowResizeImageDialogAsync();
+
+    /// <summary>"Về hướng ban đầu" chỉ bấm được khi ảnh đã bị xoay / lật.</summary>
+    private void TransformFlyout_Opening(object sender, object e) =>
+        ResetOrientationItem.IsEnabled = !_viewModel.Orientation.IsOriginal;
+
+    private void ResetOrientationItem_Click(object sender, RoutedEventArgs e)
+    {
+        _viewModel.ResetOrientation(); // đổi Bitmap → PropertyChanged → bỏ vùng chọn, UpdateCanvasLayout()
+        Canvas.Invalidate();
+    }
 
     private void TransformImage(ImageTransformKind kind)
     {

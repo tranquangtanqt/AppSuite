@@ -146,6 +146,11 @@ public sealed class ImageTransform
             case TextAnnotation text:
                 // Chữ vẫn nằm ngang: dời tâm khung chữ theo ảnh rồi đặt khung (đúng cỡ chữ mới) quanh tâm đó.
                 text.FontSize *= LengthScale;
+                if (text.FixedWidth)
+                {
+                    // Khung cố định co giãn theo ảnh (không xoay theo - chữ vẫn nằm ngang), rồi cao thêm nếu cần.
+                    text.Bounds = SKRect.Create(shape.NormalizedBounds.Width * LengthScale, shape.NormalizedBounds.Height * LengthScale);
+                }
                 text.FitBounds();
                 text.Bounds = CenteredAt(MapPoint(new SKPoint(shape.NormalizedBounds.MidX, shape.NormalizedBounds.MidY)),
                     text.Bounds.Width, text.Bounds.Height);

@@ -2,7 +2,7 @@ using SkiaSharp;
 
 namespace ScreenCapture.Commands;
 
-/// <summary>Xoá (tô trắng) 1 vùng chữ nhật trên ảnh nền - dùng cho "Xoá vùng" và "Cut" của tool
+/// <summary>Xoá (tô trắng, hoặc trong suốt với ảnh nền trong suốt) 1 vùng chữ nhật trên ảnh nền - dùng cho "Xoá vùng" và "Cut" của tool
 /// Select. Chỉ đổi pixel ảnh nền, không đụng tới annotation (giống FloodFillCommand).</summary>
 public sealed class EraseRegionCommand : IEditCommand
 {
@@ -10,13 +10,13 @@ public sealed class EraseRegionCommand : IEditCommand
     private readonly SKBitmap _oldBitmap;
     private readonly SKBitmap _newBitmap;
 
-    public EraseRegionCommand(Action<SKBitmap> setBitmap, SKBitmap oldBitmap, SKRectI region)
+    public EraseRegionCommand(Action<SKBitmap> setBitmap, SKBitmap oldBitmap, SKRectI region, SKColor fill)
     {
         _setBitmap = setBitmap;
         _oldBitmap = oldBitmap;
         _newBitmap = oldBitmap.Copy();
         using var canvas = new SKCanvas(_newBitmap);
-        using var paint = new SKPaint { Color = SKColors.White, Style = SKPaintStyle.Fill };
+        using var paint = new SKPaint { Color = fill, Style = SKPaintStyle.Fill, BlendMode = SKBlendMode.Src };
         canvas.DrawRect(SKRect.Create(region.Left, region.Top, region.Width, region.Height), paint);
     }
 

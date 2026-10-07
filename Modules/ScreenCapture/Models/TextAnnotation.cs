@@ -18,8 +18,9 @@ public interface ITextShape
 /// <summary>Chữ trên ảnh: nhiều dòng (Enter), chọn phông / cỡ / đậm / nghiêng, nền ô chữ (<see cref="BackgroundColor"/>)
 /// và viền quanh nét chữ (<see cref="OutlineColor"/>) cho dễ đọc trên ảnh nhiều màu. Màu chữ = <see cref="AnnotationShape.Color"/>.
 ///
-/// <see cref="AnnotationShape.Bounds"/> luôn vừa khít chữ + lề (<see cref="FitBounds"/>) - kéo handle góc đổi cỡ chữ chứ
-/// không kéo giãn khung.</summary>
+/// Mặc định khung tự vừa khít chữ (chỉ xuống dòng ở Enter). Kéo handle góc → khung cố định bề rộng
+/// (<see cref="FixedWidth"/>, như PicPick): chữ tự xuống dòng theo bề rộng khung, cỡ chữ giữ nguyên, khung tự cao thêm
+/// khi chữ không đủ chỗ (<see cref="FitBounds"/>). Giữ Ctrl khi kéo handle = đổi cỡ chữ.</summary>
 public sealed class TextAnnotation : AnnotationShape, ITextShape
 {
     public const string DefaultFontFamily = "Segoe UI";
@@ -34,6 +35,8 @@ public sealed class TextAnnotation : AnnotationShape, ITextShape
     public SKColor? BackgroundColor { get; set; }
     /// <summary>Màu viền quanh nét chữ, null = không viền.</summary>
     public SKColor? OutlineColor { get; set; }
+    /// <summary>Khung do người dùng kéo: bề rộng giữ nguyên, chữ tự xuống dòng theo bề rộng đó. False = khung vừa khít chữ.</summary>
+    public bool FixedWidth { get; set; }
     public bool IsEditingText { get; set; }
 
     public TextFont Font => new(FontFamily, FontSize, Bold, Italic);
@@ -43,12 +46,24 @@ public sealed class TextAnnotation : AnnotationShape, ITextShape
 
     private float OutlineWidth => Math.Max(1f, FontSize / 12f);
 
-    /// <summary>Khung vừa khít chữ, giữ nguyên góc trên-trái.</summary>
+    /// <summary>Bề rộng tối thiểu của khung cố định: vừa 1 chữ.</summary>
+    public float MinBoxWidth => FontSize + 2 * Padding;
+
+    /// <summary>Bề rộng dành cho chữ (vô hạn khi khung tự vừa khít).</summary>
+    private float WrapWidth => FixedWidth ? Math.Max(1f, NormalizedBounds.Width - 2 * Padding) : float.PositiveInfinity;
+
+    private TextLayout CreateLayout() => TextLayout.Create(Text, Font, WrapWidth);
+
+    /// <summary>Khung tự vừa khít: vừa khít chữ. Khung cố định: giữ bề rộng, cao thêm nếu chữ không đủ chỗ (không tự thấp
+    /// lại - người dùng kéo khung cao hơn chữ để có nền rộng thì giữ nguyên). Luôn giữ góc trên-trái.</summary>
     public void FitBounds()
     {
-        var layout = TextLayout.Create(Text, Font);
+        var layout = CreateLayout();
         var r = NormalizedBounds;
-        Bounds = SKRect.Create(r.Left, r.Top, layout.Width + 2 * Padding, layout.Height + 2 * Padding);
+        float neededHeight = layout.Height + 2 * Padding;
+        Bounds = FixedWidth
+            ? SKRect.Create(r.Left, r.Top, Math.Max(r.Width, MinBoxWidth), Math.Max(r.Height, neededHeight))
+            : SKRect.Create(r.Left, r.Top, layout.Width + 2 * Padding, neededHeight);
     }
 
     public override void CopyPropertiesFrom(AnnotationShape source)
@@ -63,6 +78,7 @@ public sealed class TextAnnotation : AnnotationShape, ITextShape
             Italic = text.Italic;
             BackgroundColor = text.BackgroundColor;
             OutlineColor = text.OutlineColor;
+            FixedWidth = text.FixedWidth;
         }
     }
 
@@ -80,7 +96,7 @@ public sealed class TextAnnotation : AnnotationShape, ITextShape
             canvas.DrawRoundRect(r, radius, radius, backgroundPaint);
         }
 
-        var layout = TextLayout.Create(Text, Font);
+        var layout = CreateLayout();
         if (OutlineColor is { } outline)
         {
             using var outlinePaint = new SKPaint

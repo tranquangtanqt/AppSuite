@@ -193,7 +193,7 @@ public sealed partial class EditorViewModel : ObservableObject
         var source = SourceAfterReframe(new SKPointI(newRect.Left, newRect.Top));
         using (var canvas = new SKCanvas(resized))
         {
-            canvas.Clear(SKColors.White);
+            canvas.Clear(BackgroundFill);
             if (!ReferenceEquals(source.Original, Bitmap))
             {
                 canvas.DrawBitmap(source.Original, source.Offset.X, source.Offset.Y);
@@ -209,6 +209,38 @@ public sealed partial class EditorViewModel : ObservableObject
     public void Transform(ImageTransformKind kind) =>
         ApplyTransform(ImageTransform.Create(kind, Bitmap.Width, Bitmap.Height));
 
+    /// <summary>Hướng ảnh so với lúc chụp / mở - đổi theo Xoay / Lật (cả Undo / Redo), lưu qua phiên.</summary>
+    [ObservableProperty]
+    private ImageOrientation _orientation;
+
+    /// <summary>Xoay / lật ngược mọi lần Xoay / Lật trước đó (tối đa 2 bước, gộp 1 bước Undo); hình vẽ đi theo ảnh như khi
+    /// xoay / lật thường. Cắt / đổi khung / đổi cỡ ảnh giữa chừng vẫn giữ.</summary>
+    public void ResetOrientation()
+    {
+        var steps = Orientation.UndoSteps();
+        if (steps.Count == 0)
+        {
+            StatusText = "Ảnh đang ở hướng ban đầu.";
+            return;
+        }
+        // Mỗi bước tính trên kết quả bước trước → chạy thử lần lượt rồi trả lại, sau đó Do cả nhóm (Execute lại chỉ gán
+        // ảnh / danh sách shape đã tính sẵn).
+        var commands = new List<IEditCommand>();
+        foreach (var kind in steps)
+        {
+            var command = CreateTransformCommand(ImageTransform.Create(kind, Bitmap.Width, Bitmap.Height));
+            command.Execute();
+            commands.Add(command);
+        }
+        for (int i = commands.Count - 1; i >= 0; i--)
+        {
+            commands[i].Undo();
+        }
+        SelectedAnnotation = null;
+        UndoRedo.Do(new CompositeEditCommand(commands, "Về hướng ban đầu"));
+        StatusText = $"Về hướng ban đầu: ảnh giờ là {Bitmap.Width} × {Bitmap.Height} px.";
+    }
+
     /// <summary>Co giãn cả ảnh (cùng mọi shape) về <paramref name="width"/> × <paramref name="height"/> px.</summary>
     public void ResizeImage(int width, int height)
     {
@@ -220,13 +252,20 @@ public sealed partial class EditorViewModel : ObservableObject
 
     private void ApplyTransform(ImageTransform transform)
     {
-        var command = new TransformImageCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, transform);
-        // Phần đã Cắt trước đó không còn khớp hướng / tỉ lệ ảnh mới → ảnh mới là gốc của chính nó (không kế thừa
-        // nguồn cắt của ảnh cũ trong OnBitmapChanged). Undo trả lại ảnh cũ thì nguồn cắt cũ vẫn còn.
-        CropSources.AddOrUpdate(command.NewBitmap, new CropSource(command.NewBitmap, SKPointI.Empty));
+        var command = CreateTransformCommand(transform);
         SelectedAnnotation = null;
         UndoRedo.Do(command);
         StatusText = $"{transform.Description}: ảnh giờ là {Bitmap.Width} × {Bitmap.Height} px.";
+    }
+
+    private TransformImageCommand CreateTransformCommand(ImageTransform transform)
+    {
+        var command = new TransformImageCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, transform,
+            orientation => Orientation = orientation, Orientation);
+        // Phần đã Cắt trước đó không còn khớp hướng / tỉ lệ ảnh mới → ảnh mới là gốc của chính nó (không kế thừa
+        // nguồn cắt của ảnh cũ trong OnBitmapChanged). Undo trả lại ảnh cũ thì nguồn cắt cũ vẫn còn.
+        CropSources.AddOrUpdate(command.NewBitmap, new CropSource(command.NewBitmap, SKPointI.Empty));
+        return command;
     }
 
     // ---- Tool Select: thao tác trên vùng chọn (toạ độ pixel ảnh, đã kẹp trong khung ảnh) ----
@@ -274,7 +313,7 @@ public sealed partial class EditorViewModel : ObservableObject
             var resized = new SKBitmap(new SKImageInfo(needed.Width, needed.Height, SKColorType.Bgra8888, SKAlphaType.Premul));
             using (var canvas = new SKCanvas(resized))
             {
-                canvas.Clear(SKColors.White);
+                canvas.Clear(BackgroundFill);
                 canvas.DrawBitmap(Bitmap, 0, 0);
             }
             UndoRedo.Do(new CompositeEditCommand(
@@ -289,7 +328,23 @@ public sealed partial class EditorViewModel : ObservableObject
     }
 
     public void EraseRegion(SKRectI region) =>
-        UndoRedo.Do(new EraseRegionCommand(newBitmap => Bitmap = newBitmap, Bitmap, region));
+        UndoRedo.Do(new EraseRegionCommand(newBitmap => Bitmap = newBitmap, Bitmap, region, BackgroundFill));
+
+    /// <summary>Màu tô phần ảnh mới sinh ra (nới khung, xoá vùng, dán làm ảnh to ra): trắng như PicPick, riêng ảnh có nền
+    /// trong suốt (Ảnh mới "Trong suốt", đã đổ bóng / xé mép) thì tô trong suốt.</summary>
+    private SKColor BackgroundFill => ImageEffects.HasTransparency(Bitmap) ? SKColors.Transparent : SKColors.White;
+
+    /// <summary>Áp 1 hiệu ứng ảnh (xem <see cref="ImageEffects"/>) lên ảnh nền - 1 bước Undo. Các hình đã vẽ giữ nguyên
+    /// (không bị hiệu ứng), dời theo <see cref="EffectResult.Offset"/> khi ảnh nới ra (viền, bóng).</summary>
+    public void ApplyEffect(EffectResult result, string description)
+    {
+        // Phần đã Cắt trước đó không còn khớp ảnh đã áp hiệu ứng → ảnh mới là gốc của chính nó (như xoay / đổi cỡ ảnh).
+        CropSources.AddOrUpdate(result.Bitmap, new CropSource(result.Bitmap, SKPointI.Empty));
+        SelectedAnnotation = null;
+        UndoRedo.Do(new ResizeCanvasCommand(newBitmap => Bitmap = newBitmap, Annotations, Bitmap, result.Bitmap,
+            result.Offset.X, result.Offset.Y, description));
+        StatusText = $"{description}: ảnh giờ là {Bitmap.Width} × {Bitmap.Height} px.";
+    }
 
     public void FloodFill(SKPointI seed) =>
         UndoRedo.Do(new FloodFillCommand(newBitmap => Bitmap = newBitmap, Bitmap, seed, StrokeColor));
@@ -322,9 +377,11 @@ public sealed partial class EditorViewModel : ObservableObject
             : null;
 
     /// <param name="filePath">File gắn với tab (xem <see cref="FilePath"/>), null nếu chưa có.</param>
-    public void RestoreFromSession(IEnumerable<AnnotationShape> shapes, bool savedToFile, SessionCropSource? crop = null, string? filePath = null)
+    public void RestoreFromSession(IEnumerable<AnnotationShape> shapes, bool savedToFile, SessionCropSource? crop = null, string? filePath = null,
+        ImageOrientation orientation = default)
     {
         FilePath = filePath;
+        Orientation = orientation;
         if (crop is not null)
         {
             CropSources.AddOrUpdate(Bitmap, new CropSource(crop.Original, new SKPointI(crop.OffsetX, crop.OffsetY)));

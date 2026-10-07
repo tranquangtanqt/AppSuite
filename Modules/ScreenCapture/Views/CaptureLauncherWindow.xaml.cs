@@ -352,7 +352,8 @@ public sealed partial class CaptureLauncherWindow : Window
             }
 
             var color = dialog.BackColor;
-            _settings.NewImageBackColor = $"#{color.Red:X2}{color.Green:X2}{color.Blue:X2}";
+            // Nền trong suốt lưu dạng #AARRGGBB (alpha 00), màu đục giữ #RRGGBB như cũ.
+            _settings.NewImageBackColor = color.Alpha == 0 ? "#00FFFFFF" : $"#{color.Red:X2}{color.Green:X2}{color.Blue:X2}";
             _settingsStore.Save(_settings);
             OpenEditor(dialog.CreateBitmap(), "Ảnh mới");
         }
