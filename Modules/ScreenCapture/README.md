@@ -95,8 +95,8 @@ mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để kh
 - **Ảnh mới** (`Ctrl+N`, tab *Tệp* > *Ảnh mới*, hoặc nút *Ảnh mới* ở cửa sổ chính — giống *New* của PicPick): tạo ảnh
   trống thành 1 tab tên `Ảnh mới`. Hộp thoại: mẫu kích thước (*Ảnh trong clipboard*, *Ảnh đang mở*, *Màn hình chính*,
   640×480 … 1920×1080; mặc định là ảnh trong clipboard nếu có), rộng / cao (1–16384 px, nút ⇄ đổi ngang ↔ dọc, nhập tay
-  → *Tuỳ chỉnh*), màu nền (*Trắng* / *Đen* / màu bất kỳ qua ô màu; lần đầu *Đen* như gợi ý của PicPick, sau đó nhớ
-  màu lần trước — `NewImageBackColor` trong settings.json). Chưa có nền trong suốt (cắt / đổi khung ảnh tô nền trắng).
+  → *Tuỳ chỉnh*), màu nền (*Trắng* / *Đen* / *Trong suốt* / màu bất kỳ qua ô màu; lần đầu *Đen* như gợi ý của PicPick,
+  sau đó nhớ màu lần trước — `NewImageBackColor` trong settings.json). Xem *Nền trong suốt* ở nhóm *Cắt & Sửa*.
 - Đóng 1 tab (`×`, hoặc `Ctrl+W` / `Ctrl+F4` cho tab đang mở) khi ảnh chưa lưu ra file (kể cả ảnh vừa chụp chưa sửa gì) hoặc đã sửa sau lần lưu
   cuối → hỏi *Lưu* / *Không lưu* / *Huỷ*. Đóng tab cuối cùng = đóng Editor.
 - **Đóng tất cả** (nút cuối thanh tab): còn ảnh chưa lưu → hỏi *Lưu tất cả...* (chọn 1 thư mục, lưu
@@ -126,7 +126,8 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   (dán 1 ảnh to vẫn vẽ thêm được); chọn / kéo chúng bằng *Di chuyển* (handle góc của shape đang chọn vẫn kéo được).
 - **Bấm vào vùng trống** (hoặc nhấn `Esc`) → thoát chỉnh sửa. Với công cụ vẽ hình, bấm-kéo ở vùng
   trống thì vẽ shape mới luôn. Riêng *Text* và *Stamps*: nếu đang chọn shape, lần bấm vùng trống đầu
-  chỉ bỏ chọn; lần bấm sau mới bật hộp nhập text / đặt stamp. Ví dụ Number Stamps: bấm → stamp 1 (đang
+  chỉ bỏ chọn; lần bấm sau mới bắt đầu gõ chữ / đặt stamp. Bỏ chọn (bấm vùng trống / `Esc`) thì ribbon tự về tab
+  *Trang chủ* để chọn công cụ khác. Ví dụ Number Stamps: bấm → stamp 1 (đang
   sửa, tab *Number Stamp*) → bấm ra ngoài (thoát sửa) → bấm → stamp 2 → ... Công cụ Stamps giữ nguyên
   cho tới khi chọn công cụ khác.
 - **Kích thước stamp**: kéo handle góc để phóng to/thu nhỏ stamp (luôn giữ tròn/vuông). Stamp đặt
@@ -144,8 +145,15 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   `Shift` = vùng vuông) → hiện tab contextual **"Vùng chọn"** (xem dưới). Vùng đã chọn có 8 handle:
   kéo handle để chỉnh kích thước, kéo bên trong vùng để di chuyển; bấm ngoài vùng = chọn lại / bỏ chọn.
   *Xoá* (hoặc phím `Delete`/`Backspace`), *Lên trên* / *Xuống dưới* (đổi thứ tự lớp).
-- **Vẽ hình** — Chữ nhật, Elip, Đường thẳng, Mũi tên, Bút, Highlight (marker tô trong mờ), Text
-  (click vào canvas, nhập text qua dialog).
+- **Vẽ hình** — Chữ nhật, Elip, Đường thẳng, Mũi tên, Bút, Highlight (marker tô trong mờ), Text, Chú thích.
+  - *Text* — bấm vào ảnh rồi **gõ chữ ngay tại chỗ** (gõ được Unikey / IME tiếng Nhật): `Enter` xuống dòng; `Esc`,
+    `Ctrl+Enter` hoặc bấm ra ngoài là xong (1 bước Undo). Sửa chữ đã có: nhấp đúp lên chữ, hoặc chọn rồi `F2` / `Enter`.
+    Trong lúc gõ, ribbon tự mở tab *Định dạng* với phông / cỡ / màu của chữ đó — đổi gì áp luôn cho chữ đang gõ. Kéo
+    handle góc = đổi **khung** chữ (chữ tự xuống dòng theo bề rộng, cỡ chữ giữ nguyên, như PicPick); giữ `Ctrl` khi kéo
+    = đổi cỡ chữ. Chữ Nhật / Trung / Hàn mà phông đang chọn không có thì tự lấy phông Windows có ký tự đó.
+  - *Chú thích* — bong bóng lời nói: kéo khung (hoặc bấm 1 cái = khung cỡ mặc định) rồi gõ chữ luôn; chữ tự xuống dòng
+    theo bề rộng khung, khung tự cao thêm khi chữ dài. Khi đang chọn: kéo chấm tròn ở đầu đuôi để chỉ vào chỗ cần chú
+    thích. Viền + chữ màu Color1, nền Color2.
   - *Bút* — vẽ tự do (khoanh tròn, gạch chân...), màu Color1, cỡ theo *Size*. Luôn vẽ nét mới kể cả
     khi bắt đầu trên hình khác; sửa nét đã vẽ (di chuyển, co giãn, đổi màu, xoá) bằng công cụ *Move*.
   - Đường thẳng / Mũi tên giữ đúng hướng kéo chuột. Khi đang chọn: hiện 2 handle tròn ở
@@ -177,6 +185,17 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   1 đối tượng ảnh — đặt ở góc trên-trái vùng chọn (nếu có) hoặc phần ảnh đang nhìn thấy, được chọn sẵn
   để kéo / co giãn (giữ `Shift` = đúng tỉ lệ) / Flatten. Ảnh dán lớn hơn ảnh hiện tại → khung ảnh tự
   nới ra (nền trắng), cùng 1 bước Undo.
+  - *Xoay* (menu): *Xoay phải 90°* (`Ctrl+R`), *Xoay trái 90°* (`Ctrl+Shift+R`), *Xoay 180°*, *Lật ngang*, *Lật dọc*,
+    **Về hướng ban đầu** (xoay / lật ngược mọi lần Xoay / Lật trước đó trong 1 bước Undo — kể cả sau khi tắt mở lại app;
+    mờ khi ảnh chưa xoay / lật), *Đổi cỡ ảnh…* (`Ctrl+E`: co giãn cả nội dung theo % hoặc px, giữ tỉ lệ hoặc không — khác
+    kéo khung ảnh). Hình đã vẽ xoay / co giãn theo và vẫn sửa được; chữ và stamp giữ chiều đứng, stamp mũi tên tự đổi
+    hướng. Phần đã Cắt trước đó không khôi phục được nữa sau khi xoay / đổi cỡ (Undo thì được).
+  - *Hiệu ứng* (menu, chỉ áp lên ảnh nền — hình đã vẽ giữ nguyên; mỗi lần áp 1 bước Undo): *Độ sáng / tương phản…*,
+    *Làm xám*, *Sepia*, *Đảo màu*, *Làm nét*, *Viền ảnh…* (màu, dày 1–60 px), *Đổ bóng…* (độ lan / độ đậm, nền quanh bóng
+    trong suốt), *Mép rách…* (chọn cạnh, độ sâu), *Watermark…* (chữ hoặc ảnh logo; giữa / 4 góc / lặp chéo; độ đục).
+    Mục có "…" mở hộp thoại có xem trước.
+  - **Nền trong suốt**: ảnh mới nền *Trong suốt*, hoặc ảnh đã Đổ bóng / Mép rách — phần trong suốt hiện ô caro; nới
+    khung, xoá vùng, Cut tô trong suốt thay vì trắng. Lưu PNG / Copy giữ trong suốt; JPG / BMP nền trắng.
 - **Màu & Cỡ nét** — *Color1* (màu nét/màu chính) / *Color2* (màu fill/highlight), color picker.
   *Size* — slider 1-20px. Đổi màu / Size khi đang chọn 1 shape sẽ áp luôn cho shape đó.
 - Ribbon vừa cửa sổ rộng ~1100px logic (vd màn 1920px ở 150%). Cửa sổ hẹp hơn: rê chuột lên ribbon
@@ -185,7 +204,8 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
 **Zoom** (góc phải thanh trạng thái): *Vừa cửa sổ* / `−` / `100% ▾` (25–800%) / `+`; `Ctrl` + lăn
 chuột zoom quanh con trỏ; `Ctrl++` / `Ctrl+-` / `Ctrl+0`. Mỗi tab nhớ mức zoom riêng (không lưu qua
 phiên); zoom không ảnh hưởng ảnh khi lưu / copy. Phóng to hiện rõ từng pixel. Ảnh lớn có giới hạn
-zoom tối đa (ảnh 1920×1080 ≈ 400%) để không tốn quá nhiều bộ nhớ.
+zoom tối đa (ảnh 1920×1080 ≈ 400%) để không tốn quá nhiều bộ nhớ. Cạnh ô zoom là ô **"Ảnh x / n"** (tab đang xem / số
+tab đang mở).
 
 **Tab "Tệp"** — *Mở*, *Ảnh mới*; *Lưu* (`Ctrl+S`): tab đã gắn với 1 file (đã lưu, tự lưu, hoặc mở từ PNG / JPG / BMP) →
 ghi đè file đó, không hỏi; chưa có → như *Lưu thành…* (`Ctrl+Shift+S`): chọn nơi lưu + định dạng PNG / JPG / BMP (chọn sẵn
@@ -205,6 +225,19 @@ bị app khác khoá → báo ở thanh trạng thái),
 
 Cut/Xoá vùng chỉ đổi pixel ảnh nền, shape (mũi tên, chữ...) nằm trong vùng vẫn giữ nguyên. Tất cả
 Undo được.
+
+**Tab "Định dạng"** (contextual) — tự hiện khi chọn (hoặc đang vẽ / đang gõ) chữ, khung chú thích, chữ nhật, elip,
+đường, mũi tên, nét bút, hoặc khi đang cầm công cụ vẽ chúng; chỉ hiện các nhóm hợp với loại hình đó. Vẽ xong / bắt đầu
+gõ chữ là tự chuyển sang tab này; bỏ chọn thì về *Trang chủ*. Đổi gì áp luôn cho hình đang chọn (Undo được), đồng thời là
+định dạng cho hình vẽ tiếp theo bằng công cụ đang cầm (mỗi công cụ nhớ riêng).
+
+- **Màu & Cỡ nét** — dùng chung với tab Trang chủ (đổi màu chữ / nét không phải quay lại).
+- **Phông chữ** — phông (gõ vài chữ đầu để nhảy tới; mặc định Segoe UI), **cỡ chữ** (ô xổ xuống như Word: 8…128, hoặc
+  gõ số 6–400 rồi `Enter`), đậm (B), nghiêng (I).
+- **Nền & viền chữ** — nền ô chữ (Color2), viền quanh từng nét chữ + màu viền (chữ rõ trên ảnh nhiều màu).
+- **Hình** — tô nền (Color2) cho chữ nhật / elip / khung chú thích, bo góc.
+- **Nét & độ trong suốt** — nét liền / đứt / chấm, độ đục 10–100%.
+- **Đầu mũi tên** — kiểu đầu ở 2 đầu đường / mũi tên: không có, tam giác, chữ V, chấm tròn (vd mũi tên 2 đầu).
 
 **Tab "Number Stamp"** (contextual) — tự hiện và tự chuyển sang khi chọn 1 Number Stamp đã đặt,
 tự ẩn khi bỏ chọn:
@@ -231,6 +264,10 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | `Ctrl+V` | Dán ảnh từ clipboard |
 | `Ctrl+N` | Ảnh mới (ảnh trống thành tab mới) |
 | `Ctrl+O` | Mở ảnh có sẵn thành tab mới |
+| `Ctrl+R` / `Ctrl+Shift+R` | Xoay ảnh phải / trái 90° |
+| `Ctrl+E` | Đổi cỡ ảnh… |
+| Nhấp đúp lên chữ / `F2` | Sửa chữ ngay trên ảnh (`Esc` / `Ctrl+Enter` = xong) |
+| `Ctrl` + kéo góc chữ | Đổi cỡ chữ (kéo thường = đổi khung chữ) |
 | `Delete` / `Backspace` | Xoá shape đang chọn |
 | `Esc` | Bỏ chọn shape (thoát chỉnh sửa) / bỏ vùng chọn |
 | Khi có vùng chọn (*Select*): `Ctrl+C` / `Ctrl+X` / `Delete` / `Enter` | Copy / Cut / Xoá vùng / Cắt ảnh theo vùng |
