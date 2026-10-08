@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>Common.Ocr</RootNamespace>
+    <AssemblyName>Common.Ocr</AssemblyName>
+    <Platforms>x86;x64;ARM64</Platforms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!--
+      Common.Ocr: đọc chữ trong ảnh (Windows OCR / Tesseract) + tìm chữ trong kết quả - dùng chung cho ImageCompare
+      (Tìm chữ, So chữ) và ScreenCapture (Tìm chữ trong Editor). Thư viện thường (không UseWinUI), chỉ module nào cần OCR
+      mới tham chiếu - không đặt trong Common / SharedUI vì 2 project đó mọi module đều tham chiếu, sẽ kéo theo ~10 MB
+      Tesseract + tessdata vào cả những module không dùng.
+
+      App dùng thư viện này: ProjectReference tới đây + <Import Project="..\..\Common.Ocr\Common.Ocr.targets" /> (chép
+      native Tesseract đúng kiến trúc, tessdata, VC++ runtime - xem file đó vì sao không để ở đây).
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" />
+    <!-- Chỉ cần API để biên dịch; ExcludeAssets="build": không để gói thêm native x86 + x64 vào thư viện (sẽ lan sang app
+         cả 2 bản) - app tự lấy native qua Common.Ocr.targets. -->
+    <PackageReference Include="Tesseract" ExcludeAssets="build" />
+  </ItemGroup>
+</Project>

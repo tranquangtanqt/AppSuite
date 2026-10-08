@@ -140,16 +140,14 @@ Phần 2 ảnh không chồng lên nhau (khác kích thước / bị dịch) tô
   `PixelDiff` (so pixel, bỏ qua răng cưa kiểu pixelmatch, gom vùng), `Similarity` (SSIM),
   `TemplateMatcher` (tìm ảnh con, NCC thô → tinh), `ImageComparer` (điểm vào), `IDiffView` +
   `DiffPainter` / `RowDiffView` (vẽ / xuất kết quả — dùng chung cho màn hình và báo cáo), `HtmlReport`,
-  `TextRecognizer` (OCR Tesseract: phóng ×2, cắt dải đọc song song, đảo màu nền tối) + `TextSearch`;
-  So chữ: `FormPreprocess` (phóng ×3, Otsu, xoá viền ô, tách cụm chữ), `IFormTextReader` +
-  `TesseractFormReader` (đọc từng cụm), `TextDiff` (tách đoạn, khoá so, ghép theo độ lệch cục bộ, màu chữ),
-  `TextDiffVerifier` (đọc lại riêng từng chỗ nghi khác, song song), `TextDiffReport` (xuất Tab / CSV / HTML).
-- `Services/FormReaders` — chọn bộ đọc cho So chữ; `WindowsFormReader` (Windows.Media.Ocr — cần WinRT nên nằm ở app,
-  không ở Engine).
-- `Ocr/` — dữ liệu OCR `tessdata\vie.traineddata` + `jpn.traineddata` (tessdata_fast; jpn chỉ dùng làm dự phòng của
-  So chữ tiếng Nhật) và VC++ runtime chép kèm
-  (`vcruntime\win-x64|win-x86`, cần cho `tesseract50.dll` trên máy chưa cài VC++ Redistributable); build chép
-  ra `tessdata\` và cạnh exe.
+  So chữ: `TextDiff` (tách đoạn, khoá so, ghép theo độ lệch cục bộ, màu chữ), `TextDiffVerifier` (đọc lại riêng từng chỗ
+  nghi khác, song song; so nét chữ), `TextDiffReport` (xuất Tab / CSV / HTML).
+- **Đọc chữ (OCR) ở thư viện dùng chung `Common.Ocr`** (2026-10-08, dùng chung với *Tìm chữ* của ScreenCapture):
+  `TextRecognizer` (Tesseract `vie` cả trang: phóng ×2, cắt dải đọc song song, đảo màu nền tối) + `TextSearch`;
+  `FormPreprocess` (phóng ×3, Otsu, xoá viền ô, tách cụm chữ), `IFormTextReader` + `TesseractFormReader` (đọc từng cụm),
+  `WindowsFormReader` (Windows.Media.Ocr), `FormReaders` (chọn bộ đọc), `OcrText`. Dữ liệu `tessdata\vie|jpn.traineddata`
+  (tessdata_fast) + VC++ runtime (`vcruntime\win-x64|win-x86`, cần cho `tesseract50.dll` trên máy chưa cài VC++
+  Redistributable) nằm ở `Common.Ocr\Ocr\`; csproj import `Common.Ocr.targets` để chép ra `tessdata\` / cạnh exe.
 - `ViewModels/CompareViewModel` — trạng thái + chạy so sánh / tìm ở nền (huỷ khi đổi ảnh / tuỳ chọn).
 - `MainWindow` — canvas `SKXamlCanvas`, zoom / cuộn, kéo-thả, hộp thoại, clipboard.
 - `Services/` — `ImageFileService`, `ClipboardService`, `AppLog` (chép từ ScreenCapture — module không

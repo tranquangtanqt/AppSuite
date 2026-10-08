@@ -1,3 +1,4 @@
+using Common.Ocr;
 using ImageCompare.Engine;
 using SkiaSharp;
 
@@ -69,11 +70,21 @@ public class TextDiffTests
     }
 
     [Fact]
-    public void JoinWords_adds_spaces_only_between_latin_words()
+    public void OcrText_JoinLine_drops_spaces_only_next_to_cjk()
     {
-        Assert.Equal("受注番号", TextDiff.JoinWords(["受", "注", "番", "号"]));
-        Assert.Equal("Microsoft Edge", TextDiff.JoinWords(["Microsoft", "Edge"]));
-        Assert.Equal("商品ID", TextDiff.JoinWords(["商", "品", "ID"]));
+        // Windows OCR tiếng Nhật: mỗi ký tự 1 "từ" → liền; tiếng Việt / Anh giữ dấu cách, kể cả sau dấu câu.
+        Assert.Equal("受注番号", OcrText.JoinLine(["受", "注", "番", "号"]));
+        Assert.Equal("商品ID 1234", OcrText.JoinLine(["商", "品", "ID", "1234"]));
+        Assert.Equal("Trạng thái: Đã giao", OcrText.JoinLine(["Trạng", "thái:", "Đã", "giao"]));
+        Assert.Equal("受注番号", new OcrLine([new OcrWord("受注", SKRectI.Empty, 90), new OcrWord("番号", SKRectI.Empty, 90)], SKRectI.Empty).Text);
+    }
+
+    [Fact]
+    public void OcrText_JoinWords_adds_spaces_only_between_latin_words()
+    {
+        Assert.Equal("受注番号", OcrText.JoinWords(["受", "注", "番", "号"]));
+        Assert.Equal("Microsoft Edge", OcrText.JoinWords(["Microsoft", "Edge"]));
+        Assert.Equal("商品ID", OcrText.JoinWords(["商", "品", "ID"]));
     }
 
     [Fact]

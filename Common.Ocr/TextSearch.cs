@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text;
 using SkiaSharp;
 
-namespace ImageCompare.Engine;
+namespace Common.Ocr;
 
 /// <summary>1 chỗ tìm thấy: khung bao các từ chứa cụm cần tìm (toạ độ ảnh gốc) + dòng chứa nó.
 /// <paramref name="Approximate"/>: khớp gần đúng (OCR đọc sai 1–2 ký tự), không phải khớp chính xác.</summary>

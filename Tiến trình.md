@@ -30,20 +30,20 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 2. ~~Mcf.CrudDiagram: header bảng giữ nguyên khi cuộn~~
 3. ~~Chạy 4 project test mới (ImageCompare, Mcf.*) trong Windows Sandbox~~ — 138/138
 
-**Ưu tiên 2 — tính năng nên có, giải quyết vấn đề thật:**
-1. ~~ImageCompare: so ảnh lệch bố cục dần~~ — làm phương án B *Soi 1 vùng* 2026-10-05, còn test GUI Sandbox
-2. ~~ScreenCapture: xoay 90° / lật / đổi cỡ ảnh theo % hoặc px~~ — code xong 2026-10-05, còn test GUI Sandbox
-3. ~~Hướng dẫn F1 cho 4 module HtmlGenerator, ModuleB/C~~ — xong 2026-10-05, còn test GUI Sandbox
+**Ưu tiên 2 — tính năng nên có, giải quyết vấn đề thật:** ✅ xong cả 3 (test GUI 2026-10-08)
+1. ~~ImageCompare: so ảnh lệch bố cục dần~~ — làm phương án B *Soi 1 vùng* 2026-10-05, test GUI Sandbox xong 2026-10-08
+2. ~~ScreenCapture: xoay 90° / lật / đổi cỡ ảnh theo % hoặc px~~ — code xong 2026-10-05, test GUI Sandbox xong 2026-10-08
+3. ~~Hướng dẫn F1 cho 4 module HtmlGenerator, ModuleB/C~~ — xong 2026-10-05, test GUI Sandbox xong 2026-10-08
 
 **Ưu tiên 3 — có thì tốt, làm khi có nhu cầu:**
 - ImageCompare: so sánh hàng loạt 2 thư mục ảnh
 - ScreenCapture: còn thiếu so với PicPick, chia 3 đợt (rà 2026-10-05, chi tiết ở mục ScreenCapture): ~~**1. chữ & hình
   vẽ**~~ · ~~**2. hiệu ứng ảnh**~~ — cả 2 xong + test GUI Sandbox 2026-10-06, còn người dùng thử tay ·
-  **3. chụp & công cụ** — đề xuất làm 3 lượt (2026-10-06): (a) 1 màn hình, mẫu tên file, kèm con trỏ, việc tự làm sau
-  khi chụp · (b) hút màu + bảng màu, in, lưu PDF · (c) lasso, cửa sổ con, kính lúp / thước…
+  **3. chụp & công cụ** — đề xuất làm 3 lượt (2026-10-06): ~~(a) 1 màn hình, mẫu tên file, kèm con trỏ, việc tự làm sau
+  khi chụp~~ (xong 2026-10-07) · (b) hút màu + bảng màu, in, lưu PDF · (c) lasso, cửa sổ con, kính lúp / thước…
 - CsvEditor: freeze cột đầu, ẩn / hiện cột, tự giãn độ rộng cột
 - Chung: nhớ kích thước / vị trí cửa sổ + file gần đây cho mọi module (helper chung trong `Common`); nhớ thư mục nguồn
-  ModuleB / ModuleC / Mcf.DbDef; chuyển Hướng dẫn của ScreenCapture / FileTools sang bản dùng chung
+  ModuleB / ModuleC / Mcf.DbDef; ~~chuyển Hướng dẫn của ScreenCapture / FileTools sang bản dùng chung~~ (2026-10-08)
 - Kỹ thuật: giảm tiếp dung lượng publish (runtime chung), unit test còn thiếu (Rdbms.HtmlGenerator, ModuleB/C, ScreenCapture),
   `codegraph upgrade`
 
@@ -346,6 +346,20 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] ★★ Chụp tự do (lasso - vẽ đường viền bất kỳ, phần ngoài thành trong suốt)
 - [ ] ★★ Trỏ-chọn cửa sổ con (nút, ô, khung nội dung) — đã có mục riêng ở trên
 - [ ] ★ Kính lúp, thước đo pixel, đường chữ thập, thước đo góc, bảng trắng vẽ lên màn hình
+
+*Ngoài lộ trình (người dùng đề xuất, 2026-10-08):*
+- [x] **Tìm chữ** giống ImageCompare — nút *Tìm chữ* (nhóm Chữ, tab Trang chủ) / `Ctrl+F` mở khung bên phải ảnh: ô ngôn
+  ngữ (Tiếng Nhật = Windows OCR, dự phòng Tesseract; Tiếng Việt / English = Tesseract cả trang; nhớ trong settings.json
+  `OcrLanguage`), đọc ảnh nền 1 lần / tab (đọc lại khi ảnh đổi), tìm không dấu / hoa thường + gần đúng ≈, chỗ khớp tô vàng
+  đè lên ảnh, danh sách bấm để cuộn tới, `Enter` / `Shift+Enter` / `Esc`; **Copy chữ** cả ảnh; **Tô Highlight (N)** →
+  hình Highlight thật (1 bước Undo); tab Vùng chọn có **Copy chữ** (đã đọc ảnh thì lấy chữ trong vùng, chưa thì đọc riêng
+  vùng). OCR tách khỏi ImageCompare thành thư viện chung **`Common.Ocr`** (+ `Common.Ocr.targets` chép native Tesseract đúng
+  kiến trúc + tessdata + VC++ runtime — để trong thư viện thì bản publish thiếu VC++ runtime và thừa native x86). Kèm sửa:
+  dòng OCR tiếng Nhật không chen dấu cách (`OcrText.JoinLine`; Copy chữ của ImageCompare trước ra "受 注 番 号").
+  Build solution 0 warning; ImageCompare.Tests 104/104; Sandbox `sct_ocr` 17/17 (Tesseract vie: đọc đúng 6/6 dòng, tìm
+  'giao' 2, 'khach hang' 1, 'Delivred' ≈, Enter, Copy chữ, Highlight 3 → phiên lưu 3 hình, Copy chữ vùng 2 cách, nhớ /
+  lưu ngôn ngữ); máy thật Windows OCR tiếng Nhật: 140 dòng 0,45 s, 受注番号 / 受注数量 khớp, 用途区分 ≈ (OCR đọc 厓途区分).
+  Bản publish ScreenCapture 62 → 72 MB. F1 + README (2026-10-08) — cần thử tay trên ảnh thật
 
 ## ImageCompare
 

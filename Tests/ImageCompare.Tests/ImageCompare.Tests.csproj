@@ -4,11 +4,12 @@
     tìm chữ trong kết quả OCR, OCR tiếng Việt, báo cáo HTML.
 
     Giống CsvEditor.Tests: ImageCompare là app WinUI nên không ProjectReference được; Engine\ không phụ thuộc
-    WinUI (chỉ SkiaSharp + Tesseract) → biên dịch kèm trực tiếp. Chỉ x64: OCR cần native tesseract50.dll.
+    WinUI (chỉ SkiaSharp) → biên dịch kèm trực tiếp. Phần OCR (Tesseract + tessdata) nằm ở thư viện Common.Ocr →
+    ProjectReference (TFM windows vì Common.Ocr có Windows OCR). Chỉ x64: OCR cần native tesseract50.dll.
   -->
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PlatformTarget>x64</PlatformTarget>
@@ -21,18 +22,21 @@
 
   <ItemGroup>
     <Compile Include="..\..\Modules\ImageCompare\Engine\**\*.cs" Link="ImageCompare\Engine\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="..\..\Modules\ImageCompare\Ocr\tessdata\*.traineddata" Link="tessdata\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\Modules\ImageCompare\Ocr\vcruntime\win-x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="TestData\*.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SkiaSharp" />
-    <PackageReference Include="Tesseract" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common.Ocr\Common.Ocr.csproj" />
+  </ItemGroup>
+  <!-- Native Tesseract x64 + tessdata + VC++ runtime cạnh exe test (PlatformTarget x64 ở trên). -->
+  <Import Project="..\..\Common.Ocr\Common.Ocr.targets" />
 
   <ItemGroup>
     <Using Include="Xunit" />

@@ -300,6 +300,20 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Đọc chữ trong ảnh (OCR, thư viện Common.Ocr dùng chung với ImageCompare): khung Tìm chữ bên phải ảnh. -->
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <StackPanel>
+                            <ToggleButton x:Name="TextSearchButton" Style="{StaticResource ToolButtonStyle}" Click="TextSearchButton_Click"
+                                          ToolTipService.ToolTip="Tìm chữ trong ảnh (Ctrl+F): đọc chữ (tiếng Nhật / Việt / Anh), tô các chỗ khớp, copy toàn bộ chữ, biến chỗ khớp thành Highlight">
+                                <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                    <FontIcon Glyph="&#xE721;" />
+                                    <TextBlock Text="Tìm chữ" FontSize="10" />
+                                </StackPanel>
+                            </ToggleButton>
+                            <TextBlock Text="Chữ" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </StackPanel>
+                    </Border>
+
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="2">
@@ -687,6 +701,13 @@
                                         <TextBlock Text="Copy" FontSize="10" />
                                     </StackPanel>
                                 </Button>
+                                <Button x:Name="RegionCopyTextButton" Style="{StaticResource ToolButtonStyle}" Click="RegionCopyTextButton_Click"
+                                        ToolTipService.ToolTip="Đọc chữ trong vùng chọn và copy vào clipboard (ngôn ngữ theo khung Tìm chữ)">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xE8E9;" />
+                                        <TextBlock Text="Copy chữ" FontSize="10" />
+                                    </StackPanel>
+                                </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="RegionCutButton_Click"
                                         ToolTipService.ToolTip="Copy rồi xoá trắng vùng chọn (Ctrl+X)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
@@ -881,8 +902,14 @@
             </TabView.TabStripFooter>
         </TabView>
 
+        <!-- Row 3: ảnh (trái) + khung Tìm chữ (phải, ẩn cho tới khi bấm Tìm chữ / Ctrl+F). -->
+        <Grid Grid.Row="3" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
         <!-- IsTabStop: nhận lại focus khi đóng ô gõ chữ trên ảnh, để phím tắt của Editor vẫn chạy. -->
-        <ScrollViewer x:Name="CanvasScroller" Grid.Row="3" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+        <ScrollViewer x:Name="CanvasScroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                       IsTabStop="True" UseSystemFocusVisuals="False"
                       HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Margin="0,0,0,8">
             <!-- Viền ảnh + 8 handle khung ảnh vẽ trong Skia (có lề CanvasPad), không dùng viền Border. -->
@@ -898,6 +925,75 @@
                 <Grid x:Name="InlineEditorHost" />
             </Grid>
         </ScrollViewer>
+
+        <!-- Khung Tìm chữ (EditorWindow.TextSearch.cs): đọc chữ ảnh của tab đang mở 1 lần (nhớ theo ảnh + ngôn ngữ), tìm
+             không phân biệt dấu / hoa thường (+ gần đúng ≈), chỗ khớp tô vàng đè lên ảnh (không vẽ vào ảnh). -->
+        <Border x:Name="TextSearchPanel" Grid.Column="1" Width="320" Margin="0,0,0,8" Padding="12,10" Visibility="Collapsed"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="6">
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <FontIcon Glyph="&#xE721;" FontSize="16" />
+                        <TextBlock Text="Tìm chữ" FontWeight="SemiBold" FontSize="15" />
+                    </StackPanel>
+                    <Button x:Name="TextSearchCloseButton" HorizontalAlignment="Right" Padding="6" Background="Transparent" BorderThickness="0"
+                            Click="TextSearchCloseButton_Click" ToolTipService.ToolTip="Đóng (Esc)" AutomationProperties.Name="Đóng Tìm chữ">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                    </Button>
+                </Grid>
+                <ComboBox x:Name="OcrLanguageBox" Grid.Row="1" HorizontalAlignment="Stretch" SelectionChanged="OcrLanguageBox_SelectionChanged"
+                          AutomationProperties.Name="Ngôn ngữ chữ"
+                          ToolTipService.ToolTip="Ngôn ngữ chữ trong ảnh - chọn đúng thì đọc chính xác hơn (chọn sai: danh sách toàn ký tự rác)">
+                    <ComboBoxItem Content="Tiếng Nhật" Tag="Japanese"
+                                  ToolTipService.ToolTip="Windows OCR (tiếng Nhật); máy chưa có gói OCR tiếng Nhật của Windows thì dùng Tesseract" />
+                    <ComboBoxItem Content="Tiếng Việt / English" Tag="VietnameseEnglish" ToolTipService.ToolTip="Tesseract - đọc cả tiếng Việt lẫn tiếng Anh" />
+                </ComboBox>
+                <TextBox x:Name="TextSearchBox" Grid.Row="2" PlaceholderText="Chữ cần tìm (trống: xem mọi dòng)"
+                         AutomationProperties.Name="Chữ cần tìm" TextChanged="TextSearchBox_TextChanged" KeyDown="TextSearchBox_KeyDown"
+                         ToolTipService.ToolTip="Enter: chỗ khớp kế tiếp · Shift+Enter: chỗ trước · Esc: đóng" />
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="12">
+                    <CheckBox x:Name="TextMatchDiacriticsBox" Content="Phân biệt dấu" MinWidth="0" Click="TextSearchOption_Click" />
+                    <CheckBox x:Name="TextMatchCaseBox" Content="Hoa / thường" MinWidth="0" Click="TextSearchOption_Click" />
+                </StackPanel>
+                <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8">
+                    <ProgressRing x:Name="TextSearchProgress" Width="16" Height="16" IsActive="False" Visibility="Collapsed" />
+                    <TextBlock x:Name="TextSearchStatus" TextWrapping="Wrap" Opacity="0.75" FontSize="12" MaxWidth="290" />
+                </StackPanel>
+                <Grid Grid.Row="5" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="CopyAllTextButton" HorizontalAlignment="Stretch" Click="CopyAllTextButton_Click" IsEnabled="False"
+                            ToolTipService.ToolTip="Copy toàn bộ chữ đọc được của ảnh, mỗi dòng 1 dòng">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                            <TextBlock Text="Copy chữ" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="HighlightMatchesButton" Grid.Column="1" HorizontalAlignment="Stretch" Click="HighlightMatchesButton_Click" IsEnabled="False"
+                            ToolTipService.ToolTip="Tô Highlight vàng lên mọi chỗ khớp (thành hình Highlight thật trên ảnh, 1 bước Undo)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE7E6;" FontSize="14" />
+                            <TextBlock Text="Tô Highlight" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <ListView x:Name="TextResultList" Grid.Row="6" SelectionMode="Single" SelectionChanged="TextResultList_SelectionChanged"
+                          AutomationProperties.Name="Kết quả tìm chữ" Margin="-12,0" />
+            </Grid>
+        </Border>
+        </Grid>
 
         <!-- Row 4: thanh trạng thái - trái: thông báo; phải: zoom của ảnh đang mở (kiểu PicPick).
              Ctrl + lăn chuột trên ảnh, Ctrl + '+' / '-' / '0' cũng zoom. -->

@@ -7,7 +7,7 @@
   <!--
     ScreenCapture is a fully standalone WinUI 3 app: it opens, builds and runs on its own (right-click
     ScreenCapture.csproj > Set as Startup Project, or `dotnet run` from this folder). It only references
-    Common for the shared IModuleInfo-style contracts/logging - never MainLauncher.
+    Common for the shared IModuleInfo-style contracts/logging, SharedUI and Common.Ocr (Tìm chữ) - never MainLauncher.
   -->
 
   <ItemGroup>
@@ -22,5 +22,9 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\SharedUI\SharedUI.csproj" />
+    <!-- Tìm chữ / Copy chữ trong vùng chọn: đọc chữ (Windows OCR / Tesseract + tessdata) - thư viện dùng chung với ImageCompare. -->
+    <ProjectReference Include="..\..\Common.Ocr\Common.Ocr.csproj" />
   </ItemGroup>
+  <!-- Native Tesseract đúng kiến trúc + tessdata + VC++ runtime cạnh exe. -->
+  <Import Project="..\..\Common.Ocr\Common.Ocr.targets" />
 </Project>

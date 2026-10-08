@@ -3,7 +3,7 @@ using System.Diagnostics;
 using SkiaSharp;
 using Tesseract;
 
-namespace ImageCompare.Engine;
+namespace Common.Ocr;
 
 /// <summary>1 từ đọc được. <see cref="Bounds"/> theo toạ độ ảnh gốc.</summary>
 public sealed record OcrWord(string Text, SKRectI Bounds, float Confidence);
@@ -11,7 +11,8 @@ public sealed record OcrWord(string Text, SKRectI Bounds, float Confidence);
 /// <summary>1 dòng chữ = các từ liền nhau trên cùng dòng (theo Tesseract).</summary>
 public sealed record OcrLine(IReadOnlyList<OcrWord> Words, SKRectI Bounds)
 {
-    public string Text => string.Join(" ", Words.Select(w => w.Text));
+    /// <summary>Chữ của dòng (xem <see cref="OcrText.JoinLine"/>: chữ Nhật không chen dấu cách).</summary>
+    public string Text => OcrText.JoinLine(Words.Select(w => w.Text));
 }
 
 public sealed record OcrResult(IReadOnlyList<OcrLine> Lines, TimeSpan Elapsed)

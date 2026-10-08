@@ -14,7 +14,8 @@ AppSuite là "Application Hub" WinUI 3: `MainLauncher` khởi động/điều kh
 2. **Mỗi Module chỉ `ProjectReference` tới `Common`** (model/logging dùng chung), **không bao giờ**
    reference `MainLauncher`. Đây là điều kiện để mở/build/chạy module hoàn toàn độc lập.
 3. **`SharedUI` không tính vào luật #2** — mọi project (MainLauncher lẫn Module) đều được phép
-   `ProjectReference` tới `SharedUI` mà không phá vỡ tính độc lập.
+   `ProjectReference` tới `SharedUI` mà không phá vỡ tính độc lập. Tương tự **`Common.Ocr`** (OCR + tìm chữ): chỉ module cần
+   OCR tham chiếu, kèm `<Import Project="..\..\Common.Ocr\Common.Ocr.targets" />` (native Tesseract + tessdata cạnh exe).
 
 ## Thêm Module mới
 

@@ -1,13 +1,13 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices.WindowsRuntime;
-using ImageCompare.Engine;
 using SkiaSharp;
 using Windows.Graphics.Imaging;
 using Windows.Media.Ocr;
-using OcrResult = ImageCompare.Engine.OcrResult;
-using OcrWord = ImageCompare.Engine.OcrWord;
+using OcrLine = Common.Ocr.OcrLine;
+using OcrResult = Common.Ocr.OcrResult;
+using OcrWord = Common.Ocr.OcrWord;
 
-namespace ImageCompare.Services;
+namespace Common.Ocr;
 
 /// <summary>Ngôn ngữ chữ trên màn hình cần so (chế độ So chữ).</summary>
 public enum FormLanguage
@@ -40,9 +40,23 @@ public static class FormReaders
         return new TesseractFormReader("jpn", "Tesseract (tiếng Nhật, dự phòng)");
     }
 
-    /// <summary>Bộ đọc dùng để đọc lại từng chỗ nghi khác (Engine/TextDiffVerifier): bộ đọc chính, cộng Tesseract jpn khi
-    /// bộ chính là Windows OCR - font bitmap mà engine này đọc sai thì engine kia có khi đúng. Đo trên ảnh thật: chỉ
-    /// Windows OCR còn 31 chỗ khác (+1,2 s); thêm Tesseract còn 28 (+3,5 s).</summary>
+    /// <summary>Bộ đọc cho Tìm chữ (đọc cả ảnh bất kỳ, không riêng màn hình form) - cùng lựa chọn với Tìm chữ của ImageCompare:
+    /// tiếng Nhật dùng bộ đọc form như <see cref="Create"/> (Windows OCR "ja", dự phòng Tesseract "jpn"); tiếng Việt / Anh dùng
+    /// <see cref="TextRecognizer"/> (Tesseract "vie" đọc cả trang) - bộ đọc form "vie" (nhị phân hoá + cắt cụm chữ cho form) đọc
+    /// chữ thường trên ảnh ra rác (đã gặp: 6 dòng Segoe UI 20pt → 17 dòng ký tự lạ).</summary>
+    public static IFormTextReader CreateForSearch(FormLanguage language, out string? note)
+    {
+        if (language == FormLanguage.Japanese)
+        {
+            return Create(language, out note);
+        }
+        note = null;
+        return new PageTextReader();
+    }
+
+    /// <summary>Bộ đọc dùng để đọc lại từng chỗ nghi khác (TextDiffVerifier của ImageCompare): bộ đọc chính, cộng
+    /// Tesseract jpn khi bộ chính là Windows OCR - font bitmap mà engine này đọc sai thì engine kia có khi đúng. Đo trên
+    /// ảnh thật: chỉ Windows OCR còn 31 chỗ khác (+1,2 s); thêm Tesseract còn 28 (+3,5 s).</summary>
     public static IReadOnlyList<IFormTextReader> VerifyReaders(IFormTextReader primary, FormLanguage language) =>
         primary is WindowsFormReader && language == FormLanguage.Japanese && TesseractFormReader.HasData("jpn")
             ? [primary, new TesseractFormReader("jpn", "Tesseract (tiếng Nhật)")]
@@ -81,13 +95,13 @@ public sealed class WindowsFormReader : IFormTextReader
         }
     }
 
-    public Engine.OcrResult Read(SKBitmap bitmap, CancellationToken ct = default, IProgress<double>? progress = null)
+    public OcrResult Read(SKBitmap bitmap, CancellationToken ct = default, IProgress<double>? progress = null)
     {
         var sw = Stopwatch.StartNew();
         int max = (int)OcrEngine.MaxImageDimension;
         int scale = Math.Clamp(max / Math.Max(1, bitmap.Width), 1, FormPreprocess.DefaultScale);
         int stripHeight = Math.Max(200, max / scale - 2 * StripOverlap);
-        var lines = new List<Engine.OcrLine>();
+        var lines = new List<OcrLine>();
         for (int core = 0; core < bitmap.Height; core += stripHeight)
         {
             ct.ThrowIfCancellationRequested();
@@ -113,13 +127,13 @@ public sealed class WindowsFormReader : IFormTextReader
         int pad = 8 * scale; // Windows OCR bỏ sót chữ sát mép ảnh
         var gray = FormPreprocess.Crop(image, SKRectI.Create(image.Width, image.Height), pad, out int w, out int h);
         using var softwareBitmap = ToSoftwareBitmap(gray, w, h);
-        // Kiểm tra lại chạy song song (Engine/TextDiffVerifier) - tài liệu không nói OcrEngine an toàn đa luồng → khoá.
+        // Đọc lại chạy song song (TextDiffVerifier của ImageCompare) - tài liệu không nói OcrEngine an toàn đa luồng → khoá.
         Windows.Media.Ocr.OcrResult result;
         lock (_engine)
         {
             result = _engine.RecognizeAsync(softwareBitmap).AsTask().GetAwaiter().GetResult();
         }
-        return TextDiff.JoinWords(result.Lines.SelectMany(l => l.Words).Select(w => w.Text));
+        return OcrText.JoinWords(result.Lines.SelectMany(l => l.Words).Select(w => w.Text));
     }
 
     private static SoftwareBitmap ToSoftwareBitmap(byte[] gray, int width, int height)
@@ -134,12 +148,12 @@ public sealed class WindowsFormReader : IFormTextReader
         return SoftwareBitmap.CreateCopyFromBuffer(bgra.AsBuffer(), BitmapPixelFormat.Bgra8, width, height, BitmapAlphaMode.Premultiplied);
     }
 
-    private List<Engine.OcrLine> ReadStrip(SKBitmap strip, int scale, int top, CancellationToken ct)
+    private List<OcrLine> ReadStrip(SKBitmap strip, int scale, int top, CancellationToken ct)
     {
         var image = FormPreprocess.Prepare(strip, scale);
         using var softwareBitmap = ToSoftwareBitmap(image.Pixels, image.Width, image.Height);
         var result = _engine.RecognizeAsync(softwareBitmap).AsTask(ct).GetAwaiter().GetResult();
-        var lines = new List<Engine.OcrLine>();
+        var lines = new List<OcrLine>();
         foreach (var line in result.Lines)
         {
             var words = line.Words.Select(w => new OcrWord(w.Text, new SKRectI(
@@ -156,14 +170,14 @@ public sealed class WindowsFormReader : IFormTextReader
             {
                 bounds.Union(w.Bounds);
             }
-            lines.Add(new Engine.OcrLine(words, bounds));
+            lines.Add(new OcrLine(words, bounds));
         }
         return lines;
     }
 
     private static SKBitmap Crop(SKBitmap source, int top, int bottom)
     {
-        var strip = new SKBitmap(new SKImageInfo(source.Width, bottom - top, ImageUtil.ColorType, ImageUtil.AlphaType));
+        var strip = new SKBitmap(new SKImageInfo(source.Width, bottom - top, OcrText.ColorType, OcrText.AlphaType));
         using var canvas = new SKCanvas(strip);
         canvas.Clear(SKColors.White);
         canvas.DrawBitmap(source, SKRect.Create(0, top, source.Width, bottom - top), SKRect.Create(source.Width, bottom - top));

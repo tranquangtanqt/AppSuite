@@ -1,0 +1,46 @@
+<Project>
+  <!--
+    Phần "triển khai" của Common.Ocr - app nào dùng OCR (ImageCompare, ScreenCapture, ImageCompare.Tests) import file này
+    ở cuối csproj, cạnh ProjectReference tới Common.Ocr.csproj:
+
+      <Import Project="..\..\Common.Ocr\Common.Ocr.targets" />
+
+    Vì sao không để trong Common.Ocr.csproj: khi app publish `-r win-x64`, thư viện được build qua tham chiếu không biết
+    Platform / RID của app → không chọn được VC++ runtime đúng kiến trúc (bản publish thiếu msvcp140 → Tesseract lỗi trên máy
+    chưa cài VC++ Redistributable) và chép thừa native x86 (~5 MB). Ở đây các điều kiện được đánh giá trong chính app.
+  -->
+
+  <ItemGroup>
+    <!-- Wrapper + tesseract50.dll / leptonica native: gói tự thêm vào x64\ / x86\ cạnh exe (Common.Ocr.csproj loại phần
+         build của gói nên native chỉ đến từ đây). -->
+    <PackageReference Include="Tesseract" />
+  </ItemGroup>
+
+  <!--
+    Dữ liệu OCR (tessdata_fast: jpn, vie - "vie" đọc được cả chữ tiếng Anh) → tessdata\ cạnh exe.
+    tesseract50.dll cần VC++ runtime (msvcp140 / vcruntime140) - chép kèm cạnh exe (app-local, được phép phân phối lại) để
+    chạy được cả máy chưa cài VC++ Redistributable. ARM64: gói Tesseract không có bản native → Tesseract báo lỗi (Windows
+    OCR vẫn chạy).
+  -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)Ocr\tessdata\*.traineddata" Link="tessdata\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)' == 'x64' or '$(RuntimeIdentifier)' == 'win-x64' or '$(PlatformTarget)' == 'x64'">
+    <None Include="$(MSBuildThisFileDirectory)Ocr\vcruntime\win-x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86' or '$(PlatformTarget)' == 'x86'">
+    <None Include="$(MSBuildThisFileDirectory)Ocr\vcruntime\win-x86\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Gói Tesseract chép native cả x86\ lẫn x64\ - bỏ bản của kiến trúc kia (~5 MB). Làm trong target vì item của gói được
+       thêm sau phần thân csproj. -->
+  <Target Name="DropOtherArchTesseract" BeforeTargets="AssignTargetPaths">
+    <PropertyGroup>
+      <_TesseractOtherArch Condition="'$(Platform)' == 'x64' or '$(RuntimeIdentifier)' == 'win-x64' or '$(PlatformTarget)' == 'x64'">x86\</_TesseractOtherArch>
+      <_TesseractOtherArch Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86' or '$(PlatformTarget)' == 'x86'">x64\</_TesseractOtherArch>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(_TesseractOtherArch)' != ''">
+      <None Remove="@(None)" Condition="$([System.String]::Copy('%(None.Link)').StartsWith('$(_TesseractOtherArch)'))" />
+    </ItemGroup>
+  </Target>
+</Project>

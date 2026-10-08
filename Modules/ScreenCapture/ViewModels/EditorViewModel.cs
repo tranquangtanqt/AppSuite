@@ -76,6 +76,17 @@ public sealed partial class EditorViewModel : ObservableObject
     public void AddAnnotation(AnnotationShape shape) =>
         UndoRedo.Do(new AddAnnotationCommand(Annotations, shape));
 
+    /// <summary>Tìm chữ → "Tô Highlight": mỗi chỗ khớp thành 1 hình Highlight vàng (màu mặc định của Highlight - không lấy
+    /// Color2 như công cụ Highlight vì Color2 mặc định là trắng), cả nhóm 1 bước Undo.</summary>
+    public void AddHighlights(IReadOnlyList<SKRect> areas, string description)
+    {
+        var commands = areas
+            .Select(area => (IEditCommand)new AddAnnotationCommand(Annotations, new HighlightAnnotation { Bounds = area }))
+            .ToList();
+        UndoRedo.Do(new CompositeEditCommand(commands, description));
+        StatusText = $"{description}.";
+    }
+
     public void RemoveAnnotation(AnnotationShape shape) =>
         UndoRedo.Do(new RemoveAnnotationCommand(Annotations, shape));
 

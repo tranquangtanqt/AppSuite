@@ -33,6 +33,13 @@ public sealed class ClipboardService : IClipboardService
         Clipboard.SetContent(package);
     }
 
+    public void CopyText(string text)
+    {
+        var package = new DataPackage();
+        package.SetText(text);
+        Clipboard.SetContent(package);
+    }
+
     private static readonly string[] ImageExtensions = [".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"];
 
     public async Task<SKBitmap?> GetBitmapAsync()

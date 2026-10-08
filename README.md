@@ -33,6 +33,9 @@ AppSuite.sln
 |   |-- Communication/          IModuleCommunicationChannel + Named Pipe reference impl
 |   `-- Logging/                RollingFileLoggerProvider, InMemoryLoggerProvider
 |
+|-- Common.Ocr/                 Doc chu trong anh (Windows OCR / Tesseract) + tim chu - ImageCompare, ScreenCapture
+|   `-- Common.Ocr.targets      App dung OCR import: chep native Tesseract dung kien truc + tessdata + VC++ runtime
+|
 |-- SharedUI/                   WinUI 3 Class Library - control tai su dung (tu WinUI Gallery)
 |   |-- Controls/                ColorSelector, CopyButton, Tile, OpacityMaskView, v.v.
 |   `-- Themes/Generic.xaml      Style mac dinh cho CopyButton/OpacityMaskView (custom controls)
@@ -88,6 +91,9 @@ AppSuite.sln
   `MainLauncher`, không cấm reference project dùng chung khác. `MainLauncher` và bất kỳ Module nào
   đều có thể `ProjectReference` tới `SharedUI` mà không phá vỡ tính độc lập. Xem `SharedUI/README.md`
   để biết danh sách control đã port từ WinUI Gallery và cách merge `Themes/Generic.xaml`.
+- **`Common.Ocr`** (đọc chữ trong ảnh + tìm chữ) cũng là project dùng chung như `SharedUI`, nhưng chỉ module cần OCR mới
+  tham chiếu (ImageCompare, ScreenCapture) — kèm `<Import Project="..\..\Common.Ocr\Common.Ocr.targets" />` để có native
+  Tesseract + `tessdata` cạnh exe (~10 MB, nên không đặt trong `Common` / `SharedUI` mà mọi module đều tham chiếu).
 - **Giao tiếp launcher <-> module** được trừu tượng hoá qua `Common.Communication.IModuleCommunicationChannel`
   để sau này đổi từ Named Pipe (cài đặt mẫu có sẵn) sang REST local API hay gRPC mà không phải sửa
   code gọi nó.

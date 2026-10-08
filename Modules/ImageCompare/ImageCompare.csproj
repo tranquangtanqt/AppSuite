@@ -6,7 +6,7 @@
   <!--
     ImageCompare (So sánh ảnh) is a fully standalone WinUI 3 app: it opens, builds and runs on its own
     (right-click ImageCompare.csproj > Set as Startup Project, or `dotnet run` from this folder). It only
-    references Common (logging) and SharedUI - never MainLauncher, never another module (image file /
+    references Common (logging), Common.Ocr (OCR) and SharedUI - never MainLauncher, never another module (image file /
     clipboard helpers are copied from ScreenCapture, not referenced).
   -->
 
@@ -17,39 +17,14 @@
     <!-- SkiaSharp.Views.WinUI kéo metapackage Microsoft.WindowsAppSDK 1.1.5 (nguyên khối, xung đột với WinUI 2.2.1):
          ghim đúng 1.1.5 + ExcludeAssets=all để bỏ hẳn asset của nó; WinUI 2.2.1 từ Modules/Directory.Build.props cung cấp runtime. -->
     <PackageReference Include="Microsoft.WindowsAppSDK" ExcludeAssets="all" />
-    <!-- Tìm chữ (OCR): wrapper + tesseract50.dll / leptonica native (tự chép vào x64\ / x86\ cạnh exe). -->
-    <PackageReference Include="Tesseract" />
   </ItemGroup>
-
-  <!--
-    Dữ liệu OCR tiếng Việt (tessdata_fast, cũng đọc được chữ tiếng Anh) → tessdata\ cạnh exe.
-    tesseract50.dll cần VC++ runtime (msvcp140 / vcruntime140) - chép kèm cạnh exe (app-local, được phép phân
-    phối lại) để chạy được cả máy chưa cài VC++ Redistributable. ARM64: gói Tesseract không có bản native → chế độ
-    Tìm chữ báo lỗi, các chế độ khác vẫn chạy.
-  -->
-  <ItemGroup>
-    <None Include="Ocr\tessdata\*.traineddata" Link="tessdata\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(Platform)' == 'x64' or '$(RuntimeIdentifier)' == 'win-x64'">
-    <None Include="Ocr\vcruntime\win-x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'">
-    <None Include="Ocr\vcruntime\win-x86\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  <!-- Gói Tesseract chép native cả x86\ lẫn x64\ - bỏ bản của kiến trúc kia (~5 MB). Làm trong target vì item của
-       gói được thêm sau phần thân csproj. -->
-  <Target Name="DropOtherArchTesseract" BeforeTargets="AssignTargetPaths">
-    <PropertyGroup>
-      <_TesseractOtherArch Condition="'$(Platform)' == 'x64' or '$(RuntimeIdentifier)' == 'win-x64'">x86\</_TesseractOtherArch>
-      <_TesseractOtherArch Condition="'$(Platform)' == 'x86' or '$(RuntimeIdentifier)' == 'win-x86'">x64\</_TesseractOtherArch>
-    </PropertyGroup>
-    <ItemGroup Condition="'$(_TesseractOtherArch)' != ''">
-      <None Remove="@(None)" Condition="$([System.String]::Copy('%(None.Link)').StartsWith('$(_TesseractOtherArch)'))" />
-    </ItemGroup>
-  </Target>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\SharedUI\SharedUI.csproj" />
+    <!-- Đọc chữ (Windows OCR / Tesseract + tessdata) cho Tìm chữ / So chữ - thư viện dùng chung với ScreenCapture. -->
+    <ProjectReference Include="..\..\Common.Ocr\Common.Ocr.csproj" />
   </ItemGroup>
+  <!-- Native Tesseract đúng kiến trúc + tessdata + VC++ runtime cạnh exe. -->
+  <Import Project="..\..\Common.Ocr\Common.Ocr.targets" />
 </Project>

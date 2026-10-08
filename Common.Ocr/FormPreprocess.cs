@@ -1,6 +1,6 @@
 using SkiaSharp;
 
-namespace ImageCompare.Engine;
+namespace Common.Ocr;
 
 /// <summary>Ảnh đen trắng sau xử lý: <see cref="Pixels"/> 0 = nét chữ, 255 = nền; đã phóng <see cref="Scale"/> lần so
 /// với ảnh gốc.</summary>
@@ -35,7 +35,7 @@ public static class FormPreprocess
     private const int MinThreshold = 185, MaxThreshold = 200;
 
     /// <param name="threshold">Ngưỡng cố định thay cho Otsu - đọc lại vùng có chữ xám nét mảnh ở ngưỡng cao hơn để nét
-    /// không bị đứt (xem <see cref="TextDiffVerifier"/>).</param>
+    /// không bị đứt (xem TextDiffVerifier của ImageCompare).</param>
     public static BinaryImage Prepare(SKBitmap bitmap, int scale = DefaultScale, int? threshold = null)
     {
         var gray = ScaledGray(bitmap, scale, out int w, out int h);
@@ -102,7 +102,7 @@ public static class FormPreprocess
             {
                 uint p = row[x];
                 // Pixel trong suốt (premul = 0) coi là nền trắng.
-                src[y * sw + x] = (p >> 24) == 0 ? (byte)255 : (byte)ImageUtil.Luma(p);
+                src[y * sw + x] = (p >> 24) == 0 ? (byte)255 : (byte)OcrText.Luma(p);
             }
         }
         w = sw * scale;

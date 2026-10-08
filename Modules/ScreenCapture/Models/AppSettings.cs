@@ -50,6 +50,10 @@ public sealed class AppSettings
     /// <summary>Màu nền lần tạo ảnh mới gần nhất (#RRGGBB). Mặc định đen như gợi ý ban đầu (giống PicPick).</summary>
     public string NewImageBackColor { get; set; } = "#000000";
 
+    // ---- Tìm chữ (không có trên cửa sổ Cài đặt - nhớ ô ngôn ngữ của khung Tìm chữ lần trước) ----
+    /// <summary>Ngôn ngữ đọc chữ (Tìm chữ, Copy chữ trong vùng chọn).</summary>
+    public Common.Ocr.FormLanguage OcrLanguage { get; set; } = Common.Ocr.FormLanguage.Japanese;
+
     // ---- Lưu ảnh ----
     /// <summary>Chất lượng khi lưu JPG (30–100; cao = đẹp hơn, file lớn hơn).</summary>
     public int JpegQuality { get; set; } = 90;

@@ -134,6 +134,16 @@ public static class HelpContent
             new("Lưu ý", "Chỉ che ảnh chụp bên dưới, không che các hình (chữ, mũi tên...) đã vẽ ở cùng chỗ."),
         ]),
 
+        new("Tìm chữ", "", "Nút Tìm chữ (nhóm Chữ, tab Trang chủ) hoặc Ctrl+F: đọc chữ trong ảnh (OCR, chạy offline) và tìm - khung bên phải ảnh.",
+        [
+            new("Ngôn ngữ", "Tiếng Nhật (Windows OCR; máy chưa có gói OCR tiếng Nhật của Windows thì dùng Tesseract, kém chính xác hơn) hoặc Tiếng Việt / English (Tesseract). Chọn sai ngôn ngữ thì danh sách toàn ký tự rác. App nhớ ngôn ngữ lần trước."),
+            new("Cách dùng", "Mỗi ảnh chỉ đọc 1 lần (1 màn hình ~0,5–2 giây); ảnh đổi (cắt, xoay, hiệu ứng, Undo...) thì tự đọc lại. Ô tìm trống: liệt kê mọi dòng đọc được. Gõ chữ: các chỗ khớp tô vàng trên ảnh (chỉ để xem, không vẽ vào ảnh), danh sách bên dưới - bấm để cuộn tới.", "Ctrl+F", "Enter", "Shift+Enter"),
+            new("Cách so khớp", "Mặc định không phân biệt dấu / hoa thường (\"khach hang\" khớp \"Khách hàng\"), bỏ qua khoảng trắng. Không thấy chỗ khớp chính xác thì tự tìm gần đúng (sai / thiếu 1 ký tự - OCR hay đọc nhầm), đánh dấu ≈."),
+            new("Copy chữ", "Copy toàn bộ chữ đọc được của ảnh, mỗi dòng 1 dòng (chữ Nhật không chen dấu cách). Chỉ 1 phần ảnh: chọn vùng bằng Select rồi bấm Copy chữ ở tab Vùng chọn."),
+            new("Tô Highlight", "Biến mọi chỗ khớp thành hình Highlight vàng thật trên ảnh (1 bước Undo) - giữ lại khi lưu / copy, chỉnh / xoá từng cái như hình Highlight thường."),
+            new("Lưu ý", "Chỉ đọc ảnh chụp, không đọc chữ / hình đã vẽ lên. Chữ đọc từ ảnh có thể sai vài ký tự - không thấy thì thử tìm đoạn ngắn hơn. Đóng khung: nút ✕ hoặc Esc."),
+        ]),
+
         new("Cắt, khung ảnh & dán", "\uE7A8", "Nhóm Cắt & Sửa ở tab Trang chủ: Cắt, Xoay (xoay / lật / đổi cỡ ảnh), Hiệu ứng, Undo / Redo, Dán.",
         [
             new("Cắt", "Kéo khung vùng cần giữ; hình nằm ngoài vùng cắt bị bỏ. Khôi phục được: kéo handle khung ảnh ra lại là hiện lại phần đã cắt, kể cả sau khi tắt mở lại app."),
@@ -162,6 +172,7 @@ public static class HelpContent
             new("Copy vùng", "Copy vùng (ảnh + hình đang thấy) vào clipboard.", "Ctrl+C"),
             new("Cut vùng", "Copy vùng rồi tô trắng vùng đó trên ảnh nền.", "Ctrl+X"),
             new("Xoá vùng", "Tô trắng vùng đó trên ảnh nền (hình vẽ bên trong vẫn giữ).", "Delete"),
+            new("Copy chữ", "Đọc chữ trong vùng chọn (OCR) và copy vào clipboard - ngôn ngữ theo ô ngôn ngữ của khung Tìm chữ. Ảnh đã đọc chữ (khung Tìm chữ) thì lấy luôn các chữ nằm trong vùng, không phải đọc lại."),
             new("Bỏ chọn", "Bỏ vùng chọn.", "Esc"),
         ]),
 
@@ -195,6 +206,7 @@ public static class HelpContent
             new("Mở ảnh", "Mở ảnh có sẵn thành tab mới.", "Ctrl+O"),
             new("Xoay ảnh", "Xoay phải / trái 90°.", "Ctrl+R", "Ctrl+Shift+R"),
             new("Đổi cỡ ảnh", "Co giãn ảnh theo % hoặc px.", "Ctrl+E"),
+            new("Tìm chữ", "Mở khung Tìm chữ (đang mở: về ô tìm). Trong ô tìm: Enter / Shift+Enter = chỗ khớp kế tiếp / trước, Esc = đóng.", "Ctrl+F"),
             new("Xoá", "Xoá hình đang chọn (hoặc xoá vùng chọn).", "Delete", "Backspace"),
             new("Bỏ chọn", "Bỏ chọn hình / vùng chọn.", "Esc"),
             new("Vùng chọn", "Cut vùng / Cắt ảnh theo vùng.", "Ctrl+X", "Enter"),

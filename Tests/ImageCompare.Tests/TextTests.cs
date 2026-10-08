@@ -1,3 +1,4 @@
+using Common.Ocr;
 using ImageCompare.Engine;
 using SkiaSharp;
 

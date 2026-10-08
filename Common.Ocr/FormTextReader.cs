@@ -3,11 +3,11 @@ using System.Diagnostics;
 using SkiaSharp;
 using Tesseract;
 
-namespace ImageCompare.Engine;
+namespace Common.Ocr;
 
 /// <summary>Bộ đọc chữ cho chế độ So chữ: ảnh chụp màn hình form → các cụm chữ kèm khung (toạ độ ảnh gốc).
-/// Có 2 cài đặt: <see cref="TesseractFormReader"/> (Engine, chạy mọi máy) và Windows OCR (lớp
-/// <c>Services/WindowsFormReader</c> của app - cần API WinRT nên không nằm trong Engine).</summary>
+/// Có 2 cài đặt: <see cref="TesseractFormReader"/> (chạy mọi máy x86 / x64) và <see cref="WindowsFormReader"/> (Windows OCR,
+/// cần gói ngôn ngữ OCR của Windows) - chọn bằng <see cref="FormReaders.Create"/>.</summary>
 public interface IFormTextReader
 {
     /// <summary>Tên hiển thị cho người dùng, vd "Windows OCR (tiếng Nhật)".</summary>
@@ -17,7 +17,7 @@ public interface IFormTextReader
     OcrResult Read(SKBitmap bitmap, CancellationToken ct = default, IProgress<double>? progress = null);
 
     /// <summary>Đọc 1 vùng nhỏ cắt ra (1 nhãn / 1 ô) như 1 dòng, phóng <paramref name="scale"/> lần - dùng khi kiểm tra
-    /// lại 1 chỗ nghi khác (<see cref="TextDiffVerifier"/>). Chuỗi rỗng nếu không đọc ra gì.</summary>
+    /// lại 1 chỗ nghi khác (TextDiffVerifier của ImageCompare). Chuỗi rỗng nếu không đọc ra gì.</summary>
     string ReadText(SKBitmap crop, int scale, int? threshold = null);
 }
 

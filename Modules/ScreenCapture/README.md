@@ -199,6 +199,17 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   - Vùng che là 1 shape: chọn lại để di chuyển / co giãn / đổi Size / xoá, Undo được, nhớ qua phiên
     làm việc. Ảnh xuất ra khi *Lưu* / *Copy* là ảnh đã che (ảnh gốc trong Editor vẫn giữ để sửa
     tiếp). Chỉ che ảnh chụp bên dưới, không che các shape (chữ, mũi tên...) vẽ trước đó ở cùng chỗ.
+- **Chữ** — *Tìm chữ* (`Ctrl+F`): khung bên phải ảnh, đọc chữ trong ảnh (OCR, offline) rồi tìm — cùng cách tìm với
+  *Tìm chữ* của ImageCompare (thư viện dùng chung `Common.Ocr`):
+  - *Ngôn ngữ*: Tiếng Nhật (Windows OCR; máy chưa có gói OCR tiếng Nhật của Windows thì Tesseract dự phòng) hoặc Tiếng
+    Việt / English (Tesseract). Nhớ qua lần mở app (`OcrLanguage` trong settings.json).
+  - Mỗi ảnh đọc 1 lần (nhớ theo tab + ảnh + ngôn ngữ); ảnh đổi (cắt, xoay, hiệu ứng, Undo...) thì đọc lại. Chỉ đọc ảnh
+    chụp, không đọc hình đã vẽ lên.
+  - Ô tìm trống: danh sách mọi dòng đọc được. Gõ chữ: không phân biệt dấu / hoa thường (2 ô tick để bật), bỏ qua khoảng
+    trắng, không thấy thì tự tìm gần đúng (sai / thiếu 1 ký tự, dấu `≈`). Chỗ khớp tô vàng đè lên ảnh (chỉ để xem), bấm 1
+    dòng trong danh sách để cuộn tới; `Enter` / `Shift+Enter` = chỗ kế tiếp / trước, `Esc` = đóng khung.
+  - *Copy chữ*: toàn bộ chữ của ảnh, mỗi dòng 1 dòng (chữ Nhật không chen dấu cách).
+  - *Tô Highlight (N)*: mọi chỗ khớp thành hình Highlight vàng thật (1 bước Undo, lưu / copy kèm ảnh).
 - **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ; **khôi phục được**: kéo handle khung
   ảnh ra lại là hiện lại phần đã cắt — kể cả sau khi tắt mở lại app), *Undo* / *Redo*
   từng bước, *Dán*
@@ -243,6 +254,8 @@ bị app khác khoá → báo ở thanh trạng thái),
 - *Copy* (`Ctrl+C`) — copy vùng (ảnh + shape đang thấy) vào clipboard.
 - *Cut* (`Ctrl+X`) — copy vùng rồi tô trắng vùng đó trên ảnh nền.
 - *Xoá vùng* (`Delete`) — tô trắng vùng đó trên ảnh nền.
+- *Copy chữ* — đọc chữ trong vùng (OCR, ngôn ngữ theo khung *Tìm chữ*) rồi copy vào clipboard; ảnh đã đọc chữ thì lấy
+  luôn các chữ nằm trong vùng, không đọc lại.
 - *Bỏ chọn* (`Esc`).
 
 Cut/Xoá vùng chỉ đổi pixel ảnh nền, shape (mũi tên, chữ...) nằm trong vùng vẫn giữ nguyên. Tất cả
@@ -288,6 +301,7 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | `Ctrl+O` | Mở ảnh có sẵn thành tab mới |
 | `Ctrl+R` / `Ctrl+Shift+R` | Xoay ảnh phải / trái 90° |
 | `Ctrl+E` | Đổi cỡ ảnh… |
+| `Ctrl+F` | Tìm chữ trong ảnh (trong ô tìm: `Enter` / `Shift+Enter` = chỗ khớp kế tiếp / trước, `Esc` = đóng) |
 | Nhấp đúp lên chữ / `F2` | Sửa chữ ngay trên ảnh (`Esc` / `Ctrl+Enter` = xong) |
 | `Ctrl` + kéo góc chữ | Đổi cỡ chữ (kéo thường = đổi khung chữ) |
 | `Delete` / `Backspace` | Xoá shape đang chọn |
@@ -323,6 +337,9 @@ làm Startup Project, F5. Không cần mở `MainLauncher` hay `AppSuite.sln`.
   `LineArrowAnnotation` lưu điểm đầu/cuối nên **không chuẩn hoá** — code cần khung thật dùng
   `NormalizedBounds`; hit-test qua `AnnotationShape.HitTest` (đường thẳng override theo khoảng cách
   tới đoạn thẳng).
+- **Tìm chữ** (`Views/EditorWindow.TextSearch.cs`): OCR + tìm chữ dùng thư viện chung `Common.Ocr` (cùng ImageCompare);
+  csproj import `Common.Ocr.targets` để chép native Tesseract x64 + tessdata + VC++ runtime cạnh exe (bản publish nặng
+  thêm ~10 MB). Kết quả đọc nhớ theo tab (`ConditionalWeakTable`), đọc trên bản sao ảnh ở luồng nền.
 - Không có DI container, giống mọi module khác trong AppSuite — service khởi tạo thủ công trong
   code-behind của View.
 - **Log**: `Logs\screencapture-yyyy-MM-dd.log` cạnh exe (`Services/AppLog.cs`, qua

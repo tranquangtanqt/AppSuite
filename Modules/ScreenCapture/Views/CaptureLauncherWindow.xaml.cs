@@ -397,10 +397,11 @@ public sealed partial class CaptureLauncherWindow : Window
     /// tắt đăng ký lỗi để cửa sổ Cài đặt đánh dấu ⚠.</summary>
     private IReadOnlyList<HotkeyBinding> ApplySettings(AppSettings settings)
     {
-        // Cửa sổ Cài đặt không có mục Vùng cố định / màu nền Ảnh mới (ReadSettings tạo AppSettings mới) → giữ giá trị đã
-        // lưu (thiếu dòng màu nền thì mỗi lần OK ở Cài đặt màu nền Ảnh mới về lại Đen - đã gặp).
+        // Cửa sổ Cài đặt không có mục Vùng cố định / màu nền Ảnh mới / ngôn ngữ Tìm chữ (ReadSettings tạo AppSettings mới) →
+        // giữ giá trị đã lưu (thiếu dòng màu nền thì mỗi lần OK ở Cài đặt màu nền Ảnh mới về lại Đen - đã gặp).
         settings.LastFixedRegion = _settings.LastFixedRegion;
         settings.NewImageBackColor = _settings.NewImageBackColor;
+        settings.OcrLanguage = _settings.OcrLanguage;
         _settings = settings;
         _fileService.JpegQuality = settings.JpegQuality;
         try
@@ -913,6 +914,13 @@ public sealed partial class CaptureLauncherWindow : Window
         editor.SettingsRequested += (_, _) => OpenSettings();
         editor.HelpRequested += (_, _) => OpenHelp();
         editor.NewImageRequested += (_, size) => _ = NewImageAsync(editor.Content.XamlRoot, size);
+        // Tìm chữ: nhớ ngôn ngữ đọc chữ lần trước.
+        editor.OcrLanguage = _settings.OcrLanguage;
+        editor.OcrLanguageChanged += (_, language) =>
+        {
+            _settings.OcrLanguage = language;
+            _settingsStore.Save(_settings);
+        };
         return editor;
     }
 

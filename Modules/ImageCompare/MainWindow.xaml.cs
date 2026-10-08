@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Common.Ocr;
 using ImageCompare.Models;
 using ImageCompare.Services;
 using ImageCompare.ViewModels;

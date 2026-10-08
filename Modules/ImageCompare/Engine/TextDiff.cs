@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using Common.Ocr;
 using SkiaSharp;
 
 namespace ImageCompare.Engine;
@@ -426,7 +427,7 @@ public static class TextDiff
 
         void Add(List<OcrWord> words)
         {
-            string text = JoinWords(words.Select(w => w.Text));
+            string text = OcrText.JoinWords(words.Select(w => w.Text));
             string key = Key(text);
             if (key.Length == 0)
             {
@@ -439,24 +440,6 @@ public static class TextDiff
             }
             result.Add(new TextSegment(text, key, bounds));
         }
-    }
-
-    /// <summary>Nối các từ để hiển thị: chỉ chèn dấu cách giữa 2 chữ Latin / số (OCR tiếng Nhật trả từng ký tự là 1
-    /// "từ" - "受 注 番 号" → "受注番号").</summary>
-    public static string JoinWords(IEnumerable<string> words)
-    {
-        var sb = new StringBuilder();
-        foreach (var word in words)
-        {
-            if (sb.Length > 0 && IsLatin(sb[^1]) && IsLatin(word[0]))
-            {
-                sb.Append(' ');
-            }
-            sb.Append(word);
-        }
-        return sb.ToString();
-
-        static bool IsLatin(char c) => c < 0x3000 && char.IsLetterOrDigit(c);
     }
 
     /// <summary>Khoá so: NFKC (toàn / nửa độ rộng: "ｵｰﾊﾞｰ" = "オーバー", "１" = "1"), chữ thường, bỏ khoảng trắng và vết
@@ -566,7 +549,7 @@ public static class TextDiff
         {
             bounds.Union(p.Bounds);
         }
-        return new TextSegment(JoinWords(ordered.Select(p => p.Text)), string.Concat(ordered.Select(p => p.Key)), bounds);
+        return new TextSegment(OcrText.JoinWords(ordered.Select(p => p.Text)), string.Concat(ordered.Select(p => p.Key)), bounds);
     }
 
     private static bool Ignored(SKRectI bounds, SKPointI offset, IReadOnlyList<SKRectI> ignoreRects)

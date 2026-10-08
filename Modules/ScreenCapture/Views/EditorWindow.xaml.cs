@@ -165,6 +165,7 @@ public sealed partial class EditorWindow : Window
         NextNumberBox.Value = _numberStampCounter;
 
         InitFormatControls();
+        InitTextSearch();
         PopulateStampPickers();
         // Mở ảnh ra ở tool Move (con trỏ) giống PicPick: bấm nhầm không vẽ ra gì, và thấy ngay 8 handle
         // để đổi kích thước khung ảnh.
@@ -373,6 +374,7 @@ public sealed partial class EditorWindow : Window
         UpdateZoomLabel();
         UpdateCanvasLayout();
         CanvasScroller.ChangeView(0, 0, null, true);
+        OnTextSearchImageChanged(); // khung Tìm chữ đang mở: đọc / tìm trên ảnh của tab mới
     }
 
     /// <summary>"Ảnh 3 / 6" ở thanh trạng thái: thứ tự tab ảnh đang mở trên tổng số tab.</summary>
@@ -400,6 +402,7 @@ public sealed partial class EditorWindow : Window
             _zoom = _viewModel.Zoom = Math.Min(_zoom, EffectiveMaxZoom);
             UpdateZoomLabel();
             UpdateCanvasLayout();
+            OnTextSearchImageChanged(); // chỗ khớp cũ không còn đúng với ảnh mới
         }
         if (e.PropertyName == nameof(EditorViewModel.StatusText))
         {
@@ -702,6 +705,7 @@ public sealed partial class EditorWindow : Window
             shape.Draw(canvas, _viewModel.Bitmap);
         }
         _draftShape?.Draw(canvas, _viewModel.Bitmap);
+        DrawTextSearchOverlay(canvas); // chỗ khớp của khung Tìm chữ (không vẽ vào ảnh)
 
         if (_viewModel.SelectedAnnotation is { } selected)
         {
@@ -1734,6 +1738,17 @@ public sealed partial class EditorWindow : Window
             HelpRequested?.Invoke(this, EventArgs.Empty);
             e.Handled = true;
             return;
+        }
+
+        if (ctrl && e.Key == Windows.System.VirtualKey.F)
+        {
+            OpenTextSearch();
+            e.Handled = true;
+            return;
+        }
+        if (FocusInTextSearch())
+        {
+            return; // đang gõ / chọn trong khung Tìm chữ: phím thuộc về ô tìm, danh sách (Backspace không xoá hình đang chọn)
         }
 
         // Đang có vùng chọn (tool Select): Ctrl+C/Ctrl+X/Delete/Enter/Esc tác động lên vùng đó.
