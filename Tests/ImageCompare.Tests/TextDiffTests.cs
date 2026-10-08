@@ -424,6 +424,34 @@ public class TextDiffVerifierTests
         Assert.False(Assert.Single(TextDiffVerifier.Verify(same, a, c, [reader]).Items).SameGlyphs);
     }
 
+    [Theory]
+    [InlineData("厚物・薄物共通", 0x00, false, true)]   // cùng chữ, cùng màu → ≡ (So nét chữ ẩn)
+    [InlineData("厚物・薄物専用", 0x00, false, false)]  // khác chữ thật → giữ "chỉ có ở B"
+    [InlineData("厚物・薄物共通", 0x60, true, false)]   // cùng chữ, A xám ↔ B đen → khác màu chữ
+    public void Only_in_b_next_to_a_cell_border_in_a_is_checked_by_glyph_shape(string textA, byte grey, bool colorChange, bool sameGlyphs)
+    {
+        // Tesseract (IE mode ↔ Edge, 2026-10-08): "厚物・薄物共通" chỉ đọc ra ở B; ở A có vạch viền ô sát trái chữ nên
+        // SameShape (nới vùng dự đoán 3 px) dính vạch → khung nét lệch cỡ → không trùng.
+        var a = Images.New(220, 50, SKColors.White);
+        var b = Images.New(220, 50, new SKColor(0xF0, 0xF0, 0xF0)); // nền khác → BackgroundReader đọc 2 phía 2 kiểu
+        using (var canvas = new SKCanvas(a))
+        using (var line = new SKPaint { Color = new SKColor(0x40, 0x40, 0x40), StrokeWidth = 1 })
+        {
+            canvas.DrawLine(19.5f, 2, 19.5f, 48, line);
+        }
+        TextDiffTests.DrawText(a, textA, 22, 32, new SKColor(grey, grey, grey));
+        TextDiffTests.DrawText(b, "厚物・薄物共通", 20, 30, SKColors.Black);
+        var segB = new TextSegment("厚物・薄物共通", TextDiff.Key("厚物・薄物共通"), SKRectI.Create(19, 15, 100, 19));
+        var predicted = SKRectI.Create(21, 17, 100, 19);
+        Assert.Null(TextDiffVerifier.SameShape(b, segB.Bounds, a, predicted)); // tiền đề: cách so cũ không bắt được
+
+        var diff = new TextDiffResult([new TextDiffItem(1, TextDiffKind.OnlyInB, null, segB, Other: predicted)], 5, 5, 4, SKPointI.Empty);
+        var item = Assert.Single(TextDiffVerifier.Verify(diff, a, b, [new BackgroundReader("xa", "xb")]).Items);
+
+        Assert.Equal(colorChange ? TextDiffKind.ColorChanged : TextDiffKind.OnlyInB, item.Kind);
+        Assert.Equal(sameGlyphs, item.SameGlyphs);
+    }
+
     [Fact]
     public void Strict_shape_check_catches_one_changed_digit_in_a_long_line()
     {

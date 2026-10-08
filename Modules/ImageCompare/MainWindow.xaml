@@ -112,12 +112,17 @@
             </Border>
         </Grid>
 
-        <!-- Row 1: chế độ xem + tuỳ chọn của chế độ đang chọn -->
-        <Grid Grid.Row="1" ColumnSpacing="12">
+        <!-- Row 1: chế độ xem + tuỳ chọn của chế độ đang chọn. Không đủ chỗ cạnh các tab thì tuỳ chọn xuống dòng 2 của lưới
+             này (UpdateOptionsPlacement). -->
+        <Grid x:Name="ModeRow" Grid.Row="1" ColumnSpacing="12" RowSpacing="2" SizeChanged="Options_SizeChanged">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
             <SelectorBar x:Name="ModeBar" SelectionChanged="ModeBar_SelectionChanged">
                 <SelectorBarItem Text="Khác biệt" Tag="Diff" IsSelected="True" ToolTipService.ToolTip="Tô đỏ chỗ khác nhau, đánh số từng vùng" />
                 <SelectorBarItem Text="Cạnh nhau" Tag="SideBySide" ToolTipService.ToolTip="A bên trái, B bên phải - zoom và cuộn đồng bộ" />
@@ -127,12 +132,14 @@
                 <SelectorBarItem Text="Tìm chữ" Tag="Text" ToolTipService.ToolTip="Đọc chữ trong ảnh (OCR tiếng Nhật hoặc tiếng Việt / Anh) và tìm chữ trong đó - chỉ cần 1 ảnh" />
                 <SelectorBarItem Text="So chữ" Tag="TextDiff" ToolTipService.ToolTip="Đọc chữ cả 2 ảnh và liệt kê chữ / giá trị khác nhau - cho 2 ảnh cùng màn hình chụp ở môi trường khác (font, trình duyệt) mà so pixel tô đỏ gần hết" />
             </SelectorBar>
-            <!-- Tuỳ chọn của chế độ đang chọn; cửa sổ hẹp thì cuộn ngang được (rê chuột lên để hiện thanh cuộn). -->
+            <!-- Tuỳ chọn của chế độ đang chọn; cửa sổ hẹp thì xuống dòng dưới các tab, hẹp nữa thì cuộn ngang được (rê chuột
+                 lên để hiện thanh cuộn). -->
             <!-- Thanh cuộn ngang của WinUI nổi đè lên nội dung → khi tràn, OptionsHost được chừa lề dưới cho thanh cuộn
                  (UpdateOptionsScrollRoom), không tràn thì giữ nguyên chiều cao. -->
             <ScrollViewer x:Name="OptionsScroller" Grid.Column="1" HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Enabled" SizeChanged="Options_SizeChanged"
                           VerticalScrollBarVisibility="Disabled" VerticalScrollMode="Disabled" VerticalAlignment="Center">
-            <Grid x:Name="OptionsHost" SizeChanged="Options_SizeChanged">
+            <!-- Left: bề rộng = nội dung (không giãn theo ô xem) - UpdateOptionsPlacement so bề rộng này với chỗ cạnh tab. -->
+            <Grid x:Name="OptionsHost" HorizontalAlignment="Left" SizeChanged="Options_SizeChanged">
             <StackPanel x:Name="OverlayOptions" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Visibility="Collapsed">
                 <TextBlock Text="A" VerticalAlignment="Center" Foreground="#2B7BD6" FontWeight="SemiBold" />
                 <Slider x:Name="OpacitySlider" Width="200" VerticalAlignment="Center" ValueChanged="OpacitySlider_ValueChanged"

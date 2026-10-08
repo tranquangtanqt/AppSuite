@@ -23,6 +23,7 @@
     <Compile Include="..\..\Modules\ImageCompare\Engine\**\*.cs" Link="ImageCompare\Engine\%(RecursiveDir)%(Filename)%(Extension)" />
     <None Include="..\..\Modules\ImageCompare\Ocr\tessdata\*.traineddata" Link="tessdata\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\Modules\ImageCompare\Ocr\vcruntime\win-x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="TestData\*.png" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

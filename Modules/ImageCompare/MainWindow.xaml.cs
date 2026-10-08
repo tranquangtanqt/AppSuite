@@ -40,6 +40,7 @@ public sealed partial class MainWindow : Window
     private bool _fitPending;
     private bool _fitted; // đang "vừa cửa sổ" (chưa tự zoom / cuộn) → cửa sổ đổi cỡ thì vừa lại
     private SKRect _lastFitBounds; // khung nội dung lúc "vừa cửa sổ" gần nhất
+    private (LoadedImage? A, LoadedImage? B, Engine.AlignMode Align) _painterKey; // 2 ảnh + cách căn của kết quả gần nhất
     private bool _syncingOptions; // đang đồng bộ control từ ViewModel - bỏ qua sự kiện của control
 
     private enum DragKind { None, Pan, Swipe, Ignore, Focus }
@@ -146,12 +147,36 @@ public sealed partial class MainWindow : Window
     /// dung (che mép dưới ô tìm, ô chọn). Khi tràn thì chừa lề dưới cho thanh cuộn; không tràn thì bỏ, hàng giữ chiều cao cũ.</summary>
     private void Options_SizeChanged(object sender, SizeChangedEventArgs e)
     {
+        UpdateOptionsPlacement();
         // So chiều rộng thật (nội dung trong ScrollViewer ngang không bị bó) - ScrollableWidth có thể chưa cập nhật lúc này.
         double bottom = OptionsHost.ActualWidth > OptionsScroller.ActualWidth + 0.5 ? 14 : 0;
         if (OptionsHost.Margin.Bottom != bottom)
         {
             OptionsHost.Margin = new Thickness(0, 0, 0, bottom);
         }
+    }
+
+    private bool _optionsBelow; // thanh tuỳ chọn đang ở dòng riêng dưới các tab chế độ
+
+    /// <summary>Thanh tuỳ chọn của chế độ đang chọn không đủ chỗ cạnh các tab (cửa sổ hẹp, màn hình 150%: chữ "So nét chữ"
+    /// bị cắt) → chuyển xuống 1 dòng riêng dưới các tab, rộng hết cửa sổ; đủ chỗ thì đưa về cạnh tab. Vẫn tràn nữa thì
+    /// còn thanh cuộn ngang. So bằng bề rộng tự nhiên của thanh (trong ScrollViewer ngang không bị bó) nên không bập bênh.</summary>
+    private void UpdateOptionsPlacement()
+    {
+        if (ModeRow is null || ModeBar is null || OptionsScroller is null || OptionsHost is null || ModeRow.ActualWidth <= 0)
+        {
+            return;
+        }
+        double beside = ModeRow.ActualWidth - ModeBar.ActualWidth - ModeRow.ColumnSpacing;
+        bool below = OptionsHost.ActualWidth > beside + 0.5;
+        if (below == _optionsBelow)
+        {
+            return;
+        }
+        _optionsBelow = below;
+        Grid.SetRow(OptionsScroller, below ? 1 : 0);
+        Grid.SetColumn(OptionsScroller, below ? 0 : 1);
+        Grid.SetColumnSpan(OptionsScroller, below ? 2 : 1);
     }
 
     private void TextLanguageBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -373,7 +398,18 @@ public sealed partial class MainWindow : Window
                 break;
             // Kết quả mới mà khung nội dung đổi (ảnh mới, đổi sang / từ căn theo dòng...) → vừa cửa sổ lại; chỉ đổi
             // ngưỡng thì giữ nguyên zoom / vị trí đang soi.
-            case nameof(CompareViewModel.Painter) or nameof(CompareViewModel.FindResult) when ContentBounds() != _lastFitBounds:
+            // Soi 1 vùng: khoanh vùng khác chỉ đổi độ lệch của B (khung nội dung xê dịch vài px) → giữ zoom / vị trí, không
+            // thì ảnh nhảy dưới con trỏ ngay sau khi thả chuột.
+            case nameof(CompareViewModel.Painter):
+                var painterKey = (ViewModel.ImageA, ViewModel.ImageB, ViewModel.Align);
+                bool focusOnly = painterKey.Align == Engine.AlignMode.Focus && painterKey == _painterKey;
+                _painterKey = painterKey;
+                if (!focusOnly && ContentBounds() != _lastFitBounds)
+                {
+                    FitToWindow();
+                }
+                break;
+            case nameof(CompareViewModel.FindResult) when ContentBounds() != _lastFitBounds:
                 FitToWindow();
                 break;
             case nameof(CompareViewModel.TextTarget) when ViewModel.Mode == ViewMode.Text && ContentBounds() != _lastFitBounds:

@@ -58,7 +58,8 @@ nhắc thử *So chữ*; số liệu so pixel không đổi.
   khác viền ô — `検査Ｓ１` đọc thành `桝査こ` / `梹査。`) thì so thêm hình nét chữ 2 phía bằng pixel; trùng khít **từng
   chữ** (xét từng khung ~1 chữ dọc dòng, nên 1 chữ số đổi trong dòng dài vẫn báo) → ẩn khỏi danh sách, khung tóm tắt ghi
   "Ẩn N chỗ…". Bỏ tick = chỉ dựa vào OCR như trước; các chỗ đó hiện với dấu `≡`. Bật / tắt không phải đọc lại.
-  Chưa áp cho mục chỉ có ở 1 phía.
+  Áp cả cho mục chỉ có ở 1 phía (OCR bỏ sót hẳn 1 phía, vd Tesseract không đọc ra `厚物・薄物共通` ở ô có viền sát chữ): dò
+  khung cùng cỡ quanh chỗ dự đoán ở ảnh kia — trùng khít + cùng màu → `≡`; trùng hình mà khác màu → *khác màu chữ*.
 - **Xuất kết quả**: nút *Copy* (cả danh sách, tách cột bằng Tab — dán thẳng vào Excel), *Lưu CSV* (UTF-8 có BOM,
   mở bằng Excel), *Xuất báo cáo HTML* (1 file: bảng các chỗ khác kèm ảnh cắt A | B từng chỗ). Cột: #, loại, chữ A, chữ B,
   ghi chú màu, vị trí A / B (mục chỉ có ở 1 phía: vị trí phía kia là chỗ dự đoán, ghi `≈`). Chỉ xuất các mục đang hiện
@@ -95,7 +96,8 @@ nhắc thử *So chữ*; số liệu so pixel không đổi.
 Mọi chế độ: `Ctrl` + lăn chuột = zoom quanh con trỏ, lăn = cuộn dọc, `Shift` + lăn = cuộn ngang, kéo chuột
 (phải / giữa, hoặc trái ở chế độ không dùng chuột trái) = cuộn; *Vừa cửa sổ* (`Ctrl+0`), *100%*
 (`Ctrl+1`). Từ 200% trở lên ảnh vẽ không nội suy để thấy rõ từng pixel. Thanh trạng thái hiện toạ độ + màu
-pixel ở A và B dưới con trỏ.
+pixel ở A và B dưới con trỏ. Tuỳ chọn của chế độ đang chọn nằm cạnh các tab; cửa sổ hẹp (hoặc màn hình phóng 150%) không
+đủ chỗ thì tự xuống 1 dòng riêng dưới các tab, hẹp nữa thì cuộn ngang.
 
 ## Tuỳ chọn (chế độ Khác biệt)
 
@@ -103,13 +105,16 @@ pixel ở A và B dưới con trỏ.
   - *Tự căn chỉnh* (mặc định): tự tìm độ lệch (dx, dy) — ảnh chụp lệch vài px, khác lề, trang cuộn 1 đoạn. Lệch đều
     chỉ ≤ 4 px thì khung tóm tắt ghi chú `ℹ`: thường là vùng trang của 2 trình duyệt bắt đầu lệch nhau (IE mode có viền
     2 px quanh trang — `document.documentElement.clientLeft` = 2), số đo DOM vẫn trùng; phần lệch đó đã được căn bù.
+    Bảng nhiều dòng giống nhau mà B lệch dần (không độ lệch nào khớp hẳn): giữ độ lệch nhỏ / (0, 0), không ghép dòng 0
+    của B với dòng 3 của A.
   - *Căn theo dòng (trang dài)*: trang dài mà B **thêm / bớt 1 đoạn ở giữa** so với A (tự căn dịch chuyển
     chỉ khớp được 1 phần). Kết quả là ảnh ghép: dải **cam** = chỉ có ở B (thêm vào), dải **xanh** = chỉ có ở
     A (bị bỏ), phần còn lại so từng pixel. 2 ảnh khác nhau quá nhiều thì tự lui về *Tự căn chỉnh*.
   - *Soi 1 vùng (khoanh trên ảnh)*: 2 ảnh **lệch bố cục dần** (B dùng font / trình duyệt khác: dòng cao hơn, ô rộng
     hơn — không có 1 độ lệch nào khớp cả trang). Kéo chuột trái khoanh 1 vùng trên ảnh (chuột phải / giữa để cuộn):
     chỉ so vùng đó, vùng tự tìm chỗ khớp ở B và **từng ô** (nhãn, ô nhập — tách theo khoảng trống) căn riêng; ngoài
-    vùng phủ tối. Khoanh vùng vừa phải (1 khối / 1 bảng). Lưu ý: 2 trình duyệt vẽ chữ / viền ô khác nhau thì dù căn
+    vùng phủ tối; khoanh lại giữ nguyên zoom / vị trí đang xem. Khoanh vùng vừa phải (1 khối / 1 bảng). Vùng là bảng nhiều dòng giống nhau (chỉ khác chữ số) có 1
+    dòng khác thật vẫn khớp đúng dòng (chấm điểm theo dải, bỏ ¼ dải khớp tệ nhất). Lưu ý: 2 trình duyệt vẽ chữ / viền ô khác nhau thì dù căn
     đúng, so pixel vẫn tô đỏ chỗ đó — xem chữ nào khác thì dùng *So chữ*.
   - *Không căn*: trùng góc trên-trái.
   - *Chỉnh tay*: `Alt` + phím mũi tên dịch B 1 px (`Alt+Shift` + mũi tên: 10 px).

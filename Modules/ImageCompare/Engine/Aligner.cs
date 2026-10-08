@@ -74,15 +74,21 @@ public static class Aligner
             }
         }
         double atZero = MeanAbsDiff(a, b, 0, 0, step);
-        return atZero <= fineScore + 0.05 ? SKPointI.Empty : new SKPointI(fine.X, fine.Y);
+        return CloseEnough(atZero, fineScore) ? SKPointI.Empty : new SKPointI(fine.X, fine.Y);
     }
 
     private static SKPointI PreferZero(GrayImage a, GrayImage b, (int X, int Y) best, int step)
     {
         double atBest = MeanAbsDiff(a, b, best.X, best.Y, step);
         double atZero = MeanAbsDiff(a, b, 0, 0, step);
-        return atZero <= atBest + 0.05 ? SKPointI.Empty : new SKPointI(best.X, best.Y);
+        return CloseEnough(atZero, atBest) ? SKPointI.Empty : new SKPointI(best.X, best.Y);
     }
+
+    /// <summary>(0, 0) khớp gần bằng chỗ tốt nhất (kém ≤ 3% + 0.05 mức sáng) → giữ (0, 0). Tương đối chứ không tuyệt đối: trang
+    /// lệch bố cục dần (dòng B cao hơn A) thì không độ dịch nào khớp hẳn, mọi chỗ đều sai lệch ~7 mức sáng và chỗ "tốt nhất"
+    /// có khi ghép dòng 0 của B với dòng 3 của A (bảng nhiều dòng giống nhau) - chỉ hơn (0, 0) ~1%. Ảnh lệch thật thì (0, 0)
+    /// kém hẳn (vd 20 ↔ 0.5), không bị ảnh hưởng.</summary>
+    private static bool CloseEnough(double atZero, double atBest) => atZero <= atBest * 1.03 + 0.05;
 
     /// <summary>Như <see cref="MeanAbsDiff(GrayImage, GrayImage, int, int, int)"/> nhưng đọc thẳng độ sáng
     /// từ 2 bitmap gốc.</summary>
@@ -142,16 +148,18 @@ public static class Aligner
     }
 
     /// <summary>Độ dịch s ∈ [−range, range] để b[i − s] khớp a[i] nhất (hệ số tương quan chuẩn hoá trên phần
-    /// chồng nhau, yêu cầu chồng ≥ 30% chiều ngắn hơn).</summary>
+    /// chồng nhau, yêu cầu chồng ≥ 30% chiều ngắn hơn). Nội dung lặp lại đều (bảng nhiều dòng giống nhau) cho nhiều đỉnh
+    /// gần bằng nhau, cách nhau 1 dòng → lấy đỉnh có |s| nhỏ nhất trong các đỉnh kém tốt nhất ≤ <see cref="PeakTolerance"/>.</summary>
     private static int BestShift(float[] a, float[] b, int range)
     {
         int minOverlap = Math.Max(4, (int)(Math.Min(a.Length, b.Length) * MinOverlapRatio));
-        int bestShift = 0;
+        var corrs = new double[2 * range + 1];
         double bestCorr = double.MinValue;
         for (int s = -range; s <= range; s++)
         {
             int start = Math.Max(0, s), end = Math.Min(a.Length, b.Length + s);
             int n = end - start;
+            corrs[s + range] = double.MinValue;
             if (n < minOverlap)
             {
                 continue;
@@ -173,16 +181,25 @@ public static class Aligner
                 vb += db * db;
             }
             double corr = va > 0 && vb > 0 ? cov / Math.Sqrt(va * vb) : (va == 0 && vb == 0 ? 1 : 0);
-            // Ưu tiên nhẹ độ dịch nhỏ khi tương quan xấp xỉ bằng nhau (nội dung lặp lại đều như bảng).
-            corr -= Math.Abs(s) * 1e-6;
-            if (corr > bestCorr)
+            corrs[s + range] = corr;
+            bestCorr = Math.Max(bestCorr, corr);
+        }
+        // Từ 0 ra 2 phía: độ dịch đầu tiên đủ gần đỉnh cao nhất.
+        for (int d = 0; d <= range; d++)
+        {
+            foreach (int s in d == 0 ? new[] { 0 } : new[] { -d, d })
             {
-                bestCorr = corr;
-                bestShift = s;
+                if (corrs[s + range] >= bestCorr - PeakTolerance)
+                {
+                    return s;
+                }
             }
         }
-        return bestShift;
+        return 0;
     }
+
+    /// <summary>Đỉnh tương quan kém đỉnh cao nhất chừng này vẫn coi là ngang nhau (xem <see cref="BestShift"/>).</summary>
+    private const double PeakTolerance = 0.02;
 
     /// <summary>Sai lệch tuyệt đối trung bình giữa A(x, y) và B(x − dx, y − dy) trên phần chồng nhau (lấy mẫu
     /// cách <paramref name="step"/>). Phần chồng quá nhỏ → +∞.</summary>

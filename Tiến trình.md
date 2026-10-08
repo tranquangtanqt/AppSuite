@@ -22,8 +22,8 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 - [ ] ScreenCapture Đợt 1 (chữ & hình vẽ) + Đợt 2 (hiệu ứng ảnh) — danh sách thử tay chi tiết ở mục ScreenCapture >
   "Người dùng thử tay Đợt 1 / Đợt 2"; đã OK: gõ chữ (Unikey / IME), Enter / Esc / nhấp đúp / F2, đổi định dạng khi
   đang gõ, gõ khi zoom, kéo góc chữ (2026-10-06)
-- [ ] **Commit** toàn bộ thay đổi ScreenCapture ngày 2026-10-06 (Đợt 1, Đợt 2, ô "Ảnh x / n", tab Định dạng tự về
-  Trang chủ, nới ô Kiểu nét, kéo khung chữ) — nên commit trước khi bắt đầu Đợt 3
+- [x] **Commit** toàn bộ thay đổi ScreenCapture ngày 2026-10-06 (Đợt 1, Đợt 2, ô "Ảnh x / n", tab Định dạng tự về
+  Trang chủ, nới ô Kiểu nét, kéo khung chữ) — đã commit (2026-10-07, trước Đợt 3a)
 
 **Ưu tiên 1 — nhỏ, lợi ngay:** ✅ xong cả 3 (2026-10-02)
 1. ~~Icon riêng (exe + taskbar) cho các module còn lại~~ — 12 project có icon, xem mục Chung
@@ -104,7 +104,8 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
   tìm trong HTML sinh ra) + nút Hướng dẫn và phím F1; ModuleC gắn vào nút "Huong dan su dung" có sẵn. Build 6 module
   0 warning (2026-10-05). README / PLAN của ModuleB còn tả bản cũ (đọc .docx, không chỉ mục) - Hướng dẫn viết theo
   code thật
-- [ ] Test GUI Hướng dẫn F1 của 6 module (Sandbox): mở bằng nút / F1, tìm kiếm trong cửa sổ, đóng app đóng theo
+- [x] Test GUI Hướng dẫn F1 của 6 module (Sandbox, bản Release): mở bằng nút / F1, bấm lần 2 không mở thêm, tìm không
+  dấu ("tim") + từ vô nghĩa → "Không tìm thấy", đóng app → Hướng dẫn đóng theo, process thoát. `help6` 42/42 (2026-10-08)
 - [ ] **[Đề xuất · Có thể]** Chuyển Hướng dẫn của ScreenCapture / FileTools sang `SharedUI.Help.HelpWindow` (đang là 2
   bản chép riêng cùng bố cục)
 - [ ] **[Đề xuất · Có thể]** Nhớ kích thước / vị trí cửa sổ và danh sách file / thư mục gần đây cho mọi module —
@@ -143,8 +144,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   file cũ). **Gộp 8 trang thành 4** (16 → 12): Xem file (Thông tin + Trích dòng), Tìm / Lọc dòng, Đổi encoding /
   xuống dòng, CSV: Chọn cột / đổi dấu phân cách; mẫu đã lưu của trang cũ tự chuyển sang trang mới. Unit test 132/132,
   build 0 warning (2026-10-05)
-- [ ] Test GUI FileTools sau khi gộp trang (Sandbox): chuyển trang giữ file, 4 trang gộp, Enter / Shift+Enter ở ô từ
-  khoá, nạp mẫu cũ đã chuyển
+- [x] Test GUI FileTools sau khi gộp trang (Sandbox, bản Release): mẫu cũ của 4 trang bỏ tự chuyển (Query → Terms, trùng
+  tên thêm "(Lọc dòng)", Đổi xuống dòng → Xuống dòng LF + Encoding giữ như nguồn, Đổi dấu phân cách → Tab), chuyển trang
+  giữ file đang làm (Xem file → Tìm → Đổi encoding → CSV, đổi file ở trang khác thì trang kia đổi theo), Shift+Enter
+  thêm dòng / Enter = Tìm (10 dòng khớp), Lọc ra file giữ tiêu đề, CSV ghi ra .tsv. `ft_merge` 19/19 (2026-10-08)
 
 ## MainLauncher
 
@@ -195,8 +198,17 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   sửa được, 1 bước Undo); chữ / stamp giữ chiều đứng, stamp mũi tên đổi hướng, ảnh dán xoay theo; co giãn → nét, cỡ
   chữ, stamp co theo. Phần đã Cắt không khôi phục được sau khi xoay / đổi cỡ. Kiểm tra logic 24/24, build 0 warning
   (2026-10-05)
-- [ ] Test GUI trong Sandbox: menu Xoay, Ctrl+R / Ctrl+E, hộp thoại Đổi cỡ ảnh, Undo / Redo, lưu phiên rồi mở lại
-  (một phần đã chạy trong `sct_orient`: menu Xoay phải / trái, Lật ngang, Undo, lưu phiên rồi mở lại)
+- [x] Test GUI trong Sandbox: menu Xoay, Ctrl+R / Ctrl+E, hộp thoại Đổi cỡ ảnh, Undo / Redo, lưu phiên rồi mở lại
+  (`sct_orient`: Xoay phải / trái, Lật ngang, Undo, mở lại; `sct_resize` 13/13: menu + Ctrl+E mở hộp thoại, 50% giữ tỉ
+  lệ → 500 × 260 + hình co theo, bỏ giữ tỉ lệ → 800 × 520, Ctrl+E lần 2 khi đang mở không lỗi, Undo / Redo, mở lại app
+  giữ cỡ, Hủy không đổi gì) (2026-10-08)
+- [x] Thanh trạng thái không cập nhật sau Undo / Redo (Đổi cỡ ảnh → Undo: ảnh về 1000 × 520 nhưng vẫn ghi "ảnh giờ là
+  500 × 260 px") → giờ ghi bước vừa làm: "Undo: Đổi cỡ ảnh - ảnh giờ là 1000 × 520 px." / "Redo: Thêm Mũi tên." (cỡ ảnh
+  chỉ ghi khi ảnh đổi cỡ). Sandbox `sct_resize` (2026-10-08)
+- [x] Hộp thoại Đổi cỡ ảnh: gõ rộng 99999 → px kẹp 16384 × 8520 nhưng ô % dừng ở 1000 (thật ~1638%) và nút Đổi cỡ vẫn
+  bật → ô % tối đa theo đúng cạnh 16384 px của từng chiều (khớp px); thêm giới hạn **64 triệu pixel** (~256 MB / ảnh,
+  vd 8000 × 8000) cho cả Đổi cỡ ảnh lẫn Ảnh mới: quá thì nút mờ + ghi "… triệu pixel - quá lớn". Sandbox `sct_resize`
+  18/18 (2026-10-08)
 - [x] Menu Xoay > **Về hướng ban đầu**: xoay / lật ngược mọi lần Xoay / Lật trước đó trong 1 bước Undo (tối đa 2 phép),
   hình vẽ đi theo ảnh, mờ khi ảnh chưa xoay; hướng ảnh (`ImageOrientation`) lưu qua phiên → mở lại app vẫn về được.
   Kiểm tra logic: mọi chuỗi ≤ 5 phép xoay / lật (3906) về đúng từng pixel; GUI Sandbox `sct_orient` 6/6 (người dùng đề
@@ -361,7 +373,21 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   chuột khoanh vùng → vùng tự tìm chỗ khớp ở B, từng ô (nhãn / ô nhập) căn riêng, chỉ so vùng đó (`RegionAligner`).
   Unit test 85/85, build 0 warning. Ảnh thật IE ↔ Edge: khối 受注数量 74,6% → 89% giống; phần đỏ còn lại là khác cách
   vẽ chữ / viền ô (so pixel không bỏ được — dùng So chữ) (2026-10-05)
-- [ ] Test GUI *Soi 1 vùng* trong Sandbox: chọn mục căn, kéo khoanh, khoanh lại, Lưu PNG / báo cáo HTML
+- [x] Test GUI *Soi 1 vùng* trong Sandbox (bản Release): chọn mục căn → nhắc kéo chuột, kéo khoanh → "Soi vùng 530 × 170
+  tại (10, 161)" đúng chỗ kéo, bấm không kéo giữ vùng cũ, khoanh lại thay vùng, Lưu PNG + Xuất báo cáo HTML (có dòng
+  "Soi vùng …"). `ic_focus` 9/9 (2026-10-08)
+- [x] Soi 1 vùng / Tự căn khớp nhầm dòng ở **bảng nhiều dòng giống nhau** (ảnh thử: 10 dòng "Item i / value i", B mỗi
+  dòng cao hơn 4px): Tự căn ra (0, 138); khoanh dòng 3–6 ra lệch y 30…42 thay vì −12…−24 (lệch đúng 1 dòng = 54px) →
+  báo đỏ cả các chữ số. Nguyên nhân: ở bảng như vậy mọi cách ghép dòng đều sai lệch gần ngang nhau (~7 mức sáng), và
+  chính dòng khác thật ("value 5 CHANGED") làm cách ghép đúng bị điểm xấu hơn. Sửa: Tự căn - nhiều đỉnh tương quan gần
+  bằng nhau thì lấy độ dịch nhỏ nhất, giữ (0, 0) khi chỉ kém ≤ 3% (trước: +0.05 tuyệt đối); Soi 1 vùng - chấm điểm cả
+  vùng theo 8 dải ngang, bỏ ¼ dải khớp tệ nhất. Unit test 100/100 (+8 `RepeatedRowsTests`: ảnh Skia + ảnh System.Drawing
+  y như Sandbox trong `TestData\`), ảnh thật IE ↔ Edge trước / sau giống hệt (Tự căn (2, 2), 3 vùng soi không đổi);
+  Sandbox `ic_focus` 12/12: Tự căn (0, 0), dòng 3–6 lệch y −24…−12, chỉ còn chữ CHANGED bị tô. README + F1 (2026-10-08)
+- [x] Soi 1 vùng: sau mỗi lần khoanh, khung xem tự co giãn lại (78,5% → 81,6%) vì khung nội dung = A ∪ B đặt theo độ
+  lệch ở tâm vùng soi (đổi theo vùng) → ảnh nhảy nhẹ dưới con trỏ ngay sau khi thả chuột. Sửa: kết quả mới cùng 2 ảnh và
+  vẫn Soi 1 vùng thì giữ zoom / vị trí (đổi ảnh / cách căn vẫn vừa cửa sổ lại như cũ). Sandbox `ic_focus` 13/13: 2 lần
+  khoanh, zoom 83,1% + gốc ảnh (217, 214) không đổi. README + F1 (2026-10-08)
 - [x] Ảnh IE mode ↔ Edge chồng mờ trông lệch 2px dù DOM trùng (người dùng hỏi, 2026-10-07): đo trên 2 ảnh → thanh tiêu đề
   trùng (0, 0), nội dung trang lệch đều (2, 2) = viền 2px quanh trang của IE mode; riêng cột phải (受注金額, 厚物,
   リサイクル) còn lệch thật thêm ~4–5px ngang. Thêm ghi chú ℹ trong khung tóm tắt khi Tự căn ra lệch ≤ 4px + dòng F1.
@@ -374,8 +400,20 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   ẩn FSC認証製品 / 検査Ｓ１ / ページ数, giữ 7 chỗ khác thật (icon tiêu đề: khung lệch 200%). Unit test 92/92 (thêm "１→２"
   không ẩn, 1 chữ số đổi trong dòng dài vẫn báo); GUI Sandbox `ic_glyphs` 4/4 (Tesseract: 17 ↔ 29 chỗ);
   GUI máy thật (Windows OCR) 4/4: bật 6 chỗ (đều khác thật) ↔ tắt 8 (≡ FSC認証製品, 検査Ｓ１). README + F1 cập nhật
-- [ ] So nét chữ chưa áp cho mục chỉ 1 phía (vd "chỉ B: 他" khi OCR bỏ sót 1 phía - đã có `SameShape` thường, ngưỡng lỏng)
-- [ ] Thanh tuỳ chọn So chữ ở cửa sổ hẹp (Sandbox 150%) bị tràn: nhãn "So nét chữ" bị cắt, phải cuộn ngang
+- [x] So nét chữ chưa áp cho mục chỉ 1 phía (vd "chỉ B: 他" khi OCR bỏ sót 1 phía - đã có `SameShape` thường, ngưỡng lỏng)
+  → dò lại cặp IE ↔ Edge: Windows OCR không còn mục 1 phía nào là chữ (4 mục đều thanh địa chỉ - khác thật); Tesseract
+  còn `厚物・薄物共通` (chỉ B, chữ y hệt): `SameShape` nới vùng dự đoán 3 px dính **vạch viền ô** sát trái ở A → khung nét
+  lệch cỡ. Sửa: mục 1 phía mà OCR + `SameShape` không chốt được thì `SameShapeNear` dò khung cùng cỡ ±4 px quanh chỗ dự
+  đoán (chỉ nới 1 px): trùng theo ngưỡng chặt + cùng màu → `SameGlyphs` (ẩn khi bật So nét chữ, tắt hiện ≡); trùng hình
+  mà khác màu → khác màu chữ. Unit test 103/103 (+3: cùng chữ / khác chữ / khác màu cạnh vạch viền); cặp thật Windows OCR
+  không đổi, Tesseract thêm 3 mục ≡ (`厚物・薄物共通`, `6` = chữ "C" xám ô combo, mũi tên combo #6D6D6D ↔ #949799 -
+  dưới ngưỡng khác màu, như các mũi tên 2 phía vốn đã ≡). Sandbox `ic_glyphs` 4/4: 17 → 14 chỗ (tắt vẫn 29). README +
+  F1 (2026-10-08)
+- [x] Thanh tuỳ chọn So chữ ở cửa sổ hẹp (Sandbox 150%) bị tràn: nhãn "So nét chữ" bị cắt, phải cuộn ngang → tuỳ chọn
+  của chế độ không đủ chỗ cạnh các tab thì tự xuống 1 dòng riêng dưới tab (`UpdateOptionsPlacement`, so bề rộng nội dung
+  với chỗ cạnh tab - không bập bênh), đủ chỗ thì về lại; hẹp nữa vẫn cuộn ngang như cũ. Áp cho mọi chế độ. Sandbox
+  `ic_legend` 6/6 (150% phóng to: So chữ + Khác biệt xuống dòng, hiện đủ, không cuộn; Thanh trượt về cạnh tab; cửa sổ
+  800 px vẫn cuộn ngang; phóng to lại hiện đủ). README (2026-10-08)
 - [x] Bug (người dùng báo): **Tìm chữ không thấy chữ Nhật** (tìm 確定状況 → "Không thấy", danh sách dòng toàn ký tự rác) -
   Tìm chữ luôn đọc OCR tiếng Việt / Anh. Thêm ô ngôn ngữ ở Tìm chữ (dùng chung với So chữ, cùng bộ đọc + cache: Tiếng
   Nhật = Windows OCR `ja`, dự phòng Tesseract `jpn`), bảng kết quả ghi "Đọc bằng …". Kèm **tìm gần đúng (≈)**: không khớp

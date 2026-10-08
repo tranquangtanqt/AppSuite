@@ -136,21 +136,45 @@ public static class RegionAligner
         return best;
     }
 
-    /// <summary>MAD giữa ảnh xám <paramref name="t"/> và vùng cùng cỡ của <paramref name="img"/> đặt tại (x, y).</summary>
+    /// <summary>Số dải ngang khi chấm điểm cả vùng (xem <see cref="Mad(GrayImage, GrayImage, int, int, int)"/>).</summary>
+    private const int ScoreStrips = 8;
+
+    /// <summary>MAD giữa ảnh xám <paramref name="t"/> và vùng cùng cỡ của <paramref name="img"/> đặt tại (x, y) - tính riêng
+    /// từng dải ngang rồi bỏ ¼ số dải khớp tệ nhất. Chỗ khác thật (1 dòng đổi chữ) chỉ làm xấu 1-2 dải; nếu tính trung bình cả
+    /// vùng thì nó có thể kéo vùng sang khớp nhầm dòng kề ở bảng nhiều dòng giống nhau (ở đó dòng kề chỉ khác chữ số).</summary>
     private static double Mad(GrayImage t, GrayImage img, int x, int y, int sample)
     {
-        double sum = 0;
-        long n = 0;
+        int strips = Math.Clamp(t.Height / Math.Max(1, sample * 2), 1, ScoreStrips);
+        Span<double> sums = stackalloc double[strips];
+        Span<long> counts = stackalloc long[strips];
         for (int ty = 0; ty < t.Height; ty += sample)
         {
+            int strip = ty * strips / t.Height;
             int tr = ty * t.Width, ir = (y + ty) * img.Width + x;
             for (int tx = 0; tx < t.Width; tx += sample)
             {
-                sum += Math.Abs(t.Data[tr + tx] - img.Data[ir + tx]);
-                n++;
+                sums[strip] += Math.Abs(t.Data[tr + tx] - img.Data[ir + tx]);
+                counts[strip]++;
             }
         }
-        return sum / n;
+        Span<double> means = stackalloc double[strips];
+        int used = 0;
+        for (int i = 0; i < strips; i++)
+        {
+            if (counts[i] > 0)
+            {
+                means[used++] = sums[i] / counts[i];
+            }
+        }
+        means = means[..used];
+        means.Sort();
+        int keep = Math.Max(1, used - used / 4);
+        double total = 0;
+        for (int i = 0; i < keep; i++)
+        {
+            total += means[i];
+        }
+        return total / keep;
     }
 
     /// <summary>MAD giữa phần <paramref name="area"/> của A và B đặt tại <paramref name="offset"/>, đọc thẳng pixel gốc. Chỉ tính

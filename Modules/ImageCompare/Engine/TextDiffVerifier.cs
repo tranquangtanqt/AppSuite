@@ -110,7 +110,23 @@ public static class TextDiffVerifier
         }
         if (same is not { } text)
         {
-            return item;
+            // OCR bỏ sót hẳn 1 phía mà SameShape (nới vùng dự đoán 3 px) không trùng vì dính viền ô cạnh chữ (Tesseract:
+            // "厚物・薄物共通" chỉ đọc ra ở B, A có vạch viền ô sát trái). Dò khung cùng cỡ quanh vị trí dự đoán: hình trùng mà
+            // màu nét khác → "khác màu chữ" (như SameShape ở trên); cùng màu và trùng theo ngưỡng chặt của So nét chữ → đánh
+            // dấu như mục 2 phía, màn hình ẩn khi bật "So nét chữ".
+            if (SameShapeNear(own, segment.Bounds, other, predicted) is not { } near)
+            {
+                return item;
+            }
+            var (glyphA, glyphB) = inA ? (segment.Bounds, near.Bounds2) : (near.Bounds2, segment.Bounds);
+            if (TextDiff.InkColor(a, glyphA) is { } ga && TextDiff.InkColor(b, glyphB) is { } gb
+                && Luma(ga) < 200 && Luma(gb) < 200 && TextDiff.ColorsDiffer(ga, gb))
+            {
+                var sa = new TextSegment(segment.Text, segment.Key, glyphA);
+                var sb = new TextSegment(segment.Text, segment.Key, glyphB);
+                return item with { Kind = TextDiffKind.ColorChanged, A = sa, B = sb, Other = null, Note = $"{Hex(ga)} → {Hex(gb)}" };
+            }
+            return near.Strict ? item with { SameGlyphs = true } : item;
         }
         // Màu: khung của mục ↔ vùng dự đoán (đã khớp chữ nên vùng dự đoán là ô đó).
         var (boxA, boxB) = inA ? (segment.Bounds, predicted) : (predicted, segment.Bounds);
@@ -138,15 +154,50 @@ public static class TextDiffVerifier
     /// ("受注合計数 200" → "300", icon đầu thanh tiêu đề IE ↔ Edge) thì tổng lệch nhỏ nhưng khung chữ đó lệch nhiều → vẫn là
     /// khác. Ngưỡng: tổng ≤ 20%, mỗi khung ≤ 35% số pixel nét.</summary>
     internal static bool SameShapeStrict(SKBitmap bitmap1, SKRectI box, SKBitmap bitmap2, SKRectI near) =>
-        MatchShape(bitmap1, box, bitmap2, near) is { } match && match.Cost <= 0.2 * match.Ink && match.WorstWindow <= 0.35;
+        IsStrict(MatchShape(bitmap1, box, bitmap2, near));
+
+    private static bool IsStrict(ShapeMatch? match) => match is { } m && m.Cost <= 0.2 * m.Ink && m.WorstWindow <= 0.35;
+
+    /// <summary>So hình cho mục chỉ có ở 1 phía: vị trí dự đoán ở ảnh 2 lệch vài px, nới 3 px như <see cref="SameShape"/> thì
+    /// dễ dính viền ô / chữ cạnh bên → thử các khung cùng cỡ <paramref name="box"/> dời ±<paramref name="search"/> px quanh
+    /// <paramref name="predicted"/>, mỗi khung chỉ nới 1 px. Trả khung trùng theo ngưỡng chặt (<see cref="SameShapeStrict"/>,
+    /// Strict = true) nếu có, không thì khung trùng theo ngưỡng của <see cref="SameShape"/> (Strict = false); null nếu không
+    /// khung nào trùng.</summary>
+    internal static (SKRectI Bounds2, bool Strict)? SameShapeNear(SKBitmap bitmap1, SKRectI box, SKBitmap bitmap2, SKRectI predicted, int search = 4)
+    {
+        var start = SKRectI.Create(predicted.Left, predicted.Top, box.Width, box.Height);
+        (SKRectI, bool)? loose = null;
+        for (int dy = -search; dy <= search; dy++)
+        {
+            for (int dx = -search; dx <= search; dx++)
+            {
+                var window = start;
+                window.Offset(dx, dy);
+                if (MatchShape(bitmap1, box, bitmap2, window, inflate2: 1) is not { } match)
+                {
+                    continue;
+                }
+                if (IsStrict(match))
+                {
+                    return (match.Bounds2, true);
+                }
+                if (loose is null && match.Cost <= 0.3 * match.Ink)
+                {
+                    loose = (match.Bounds2, false);
+                }
+            }
+        }
+        return loose;
+    }
 
     /// <summary>Kết quả dóng 2 mặt nạ nét: tổng pixel lệch, số pixel nét trung bình 2 phía, tỉ lệ lệch lớn nhất trong 1 khung
     /// ~1 chữ dọc đường dóng tốt nhất, khung nét ở ảnh 2.</summary>
     internal sealed record ShapeMatch(int Cost, double Ink, double WorstWindow, SKRectI Bounds2);
 
-    internal static ShapeMatch? MatchShape(SKBitmap bitmap1, SKRectI box, SKBitmap bitmap2, SKRectI near)
+    /// <param name="inflate2">Nới vùng <paramref name="near"/> bao nhiêu px trước khi lấy mặt nạ nét.</param>
+    internal static ShapeMatch? MatchShape(SKBitmap bitmap1, SKRectI box, SKBitmap bitmap2, SKRectI near, int inflate2 = 3)
     {
-        if (GrownMask(bitmap1, SKRectI.Inflate(box, 1, 1)) is not { } m1 || GrownMask(bitmap2, SKRectI.Inflate(near, 3, 3)) is not { } m2
+        if (GrownMask(bitmap1, SKRectI.Inflate(box, 1, 1)) is not { } m1 || GrownMask(bitmap2, SKRectI.Inflate(near, inflate2, inflate2)) is not { } m2
             || Math.Abs(m1.Bounds.Height - m2.Bounds.Height) > 2
             || Math.Abs(m1.Bounds.Width - m2.Bounds.Width) > Math.Max(2, m1.Bounds.Width / 8))
         {
