@@ -113,7 +113,8 @@ mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để kh
   (`Ctrl+S`) **ghi đè file gốc** (PNG / JPG / BMP; GIF / WEBP thì hỏi nơi lưu) — muốn giữ ảnh gốc thì dùng *Lưu thành…*. File không phải ảnh / đọc lỗi → báo ở thanh trạng thái, các file khác vẫn mở. Tối đa 250 triệu pixel.
 - **Ảnh mới** (`Ctrl+N`, tab *Tệp* > *Ảnh mới*, hoặc nút *Ảnh mới* ở cửa sổ chính — giống *New* của PicPick): tạo ảnh
   trống thành 1 tab tên `Ảnh mới`. Hộp thoại: mẫu kích thước (*Ảnh trong clipboard*, *Ảnh đang mở*, *Màn hình chính*,
-  640×480 … 1920×1080; mặc định là ảnh trong clipboard nếu có), rộng / cao (1–16384 px, nút ⇄ đổi ngang ↔ dọc, nhập tay
+  640×480 … 1920×1080; mặc định là ảnh trong clipboard nếu có), rộng / cao (1–16384 px, tối đa 64 triệu pixel ~ 8000 × 8000;
+  nút ⇄ đổi ngang ↔ dọc, nhập tay
   → *Tuỳ chỉnh*), màu nền (*Trắng* / *Đen* / *Trong suốt* / màu bất kỳ qua ô màu; lần đầu *Đen* như gợi ý của PicPick,
   sau đó nhớ màu lần trước — `NewImageBackColor` trong settings.json). Xem *Nền trong suốt* ở nhóm *Cắt & Sửa*.
 - Đóng 1 tab (`×`, hoặc `Ctrl+W` / `Ctrl+F4` cho tab đang mở) khi ảnh chưa lưu ra file (kể cả ảnh vừa chụp chưa sửa gì) hoặc đã sửa sau lần lưu
@@ -207,7 +208,8 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   nới ra (nền trắng), cùng 1 bước Undo.
   - *Xoay* (menu): *Xoay phải 90°* (`Ctrl+R`), *Xoay trái 90°* (`Ctrl+Shift+R`), *Xoay 180°*, *Lật ngang*, *Lật dọc*,
     **Về hướng ban đầu** (xoay / lật ngược mọi lần Xoay / Lật trước đó trong 1 bước Undo — kể cả sau khi tắt mở lại app;
-    mờ khi ảnh chưa xoay / lật), *Đổi cỡ ảnh…* (`Ctrl+E`: co giãn cả nội dung theo % hoặc px, giữ tỉ lệ hoặc không — khác
+    mờ khi ảnh chưa xoay / lật), *Đổi cỡ ảnh…* (`Ctrl+E`: co giãn cả nội dung theo % hoặc px, giữ tỉ lệ hoặc không, tối
+    đa 16384 px mỗi cạnh và 64 triệu pixel — khác
     kéo khung ảnh). Hình đã vẽ xoay / co giãn theo và vẫn sửa được; chữ và stamp giữ chiều đứng, stamp mũi tên tự đổi
     hướng. Phần đã Cắt trước đó không khôi phục được nữa sau khi xoay / đổi cỡ (Undo thì được).
   - *Hiệu ứng* (menu, chỉ áp lên ảnh nền — hình đã vẽ giữ nguyên; mỗi lần áp 1 bước Undo): *Độ sáng / tương phản…*,

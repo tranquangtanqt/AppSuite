@@ -14,8 +14,25 @@ public sealed record NewImagePreset(string Label, int Width, int Height)
 /// lần trước; bấm Tạo → <see cref="CreateBitmap"/>.</summary>
 public sealed partial class NewImageDialog : ContentDialog
 {
-    /// <summary>Cạnh tối đa: 16384 × 16384 BGRA ≈ 1 GB - lớn hơn nữa dễ hết bộ nhớ khi vẽ / lưu.</summary>
+    /// <summary>Cạnh tối đa (1 chiều dài như ảnh chụp cuộn trang vẫn được).</summary>
     public const int MaxSide = 16384;
+
+    /// <summary>Tổng số pixel tối đa: 64 triệu BGRA ≈ 256 MB / ảnh (vd 8000 × 8000; ảnh 4K = 8,3 triệu). 16384 × 16384 ≈ 1 GB
+    /// mỗi bản, cộng bản giữ cho Undo → dễ hết bộ nhớ khi vẽ / lưu.</summary>
+    public const long MaxPixels = 64_000_000;
+
+    /// <summary>Lý do cỡ ảnh không hợp lệ (để hiện trong hộp thoại), null = hợp lệ. Dùng chung với Đổi cỡ ảnh.</summary>
+    public static string? SizeError(double width, double height)
+    {
+        if (double.IsNaN(width) || double.IsNaN(height) || width is < 1 or > MaxSide || height is < 1 or > MaxSide)
+        {
+            return $"Nhập rộng / cao từ 1 đến {MaxSide} px.";
+        }
+        double pixels = Math.Round(width) * Math.Round(height);
+        return pixels > MaxPixels
+            ? $"Ảnh {Math.Round(width)} × {Math.Round(height)} px = {pixels / 1e6:0.#} triệu pixel - quá lớn (tối đa {MaxPixels / 1_000_000} triệu, vd 8000 × 8000)."
+            : null;
+    }
 
     private const string CustomLabel = "Tuỳ chỉnh";
 
@@ -83,7 +100,7 @@ public sealed partial class NewImageDialog : ContentDialog
             sender.Value = Math.Round(sender.Value); // px nguyên - gọi lại handler này
             return;
         }
-        if (IsValid)
+        if (!double.IsNaN(WidthBox.Value) && !double.IsNaN(HeightBox.Value)) // cả cỡ quá lớn cũng đổi ô mẫu sang Tuỳ chỉnh
         {
             _syncing = true;
             var match = PresetBox.SelectedItem is NewImagePreset selected && selected.Width == ImageWidth && selected.Height == ImageHeight
@@ -153,15 +170,12 @@ public sealed partial class NewImageDialog : ContentDialog
         return gradient;
     }
 
-    private bool IsValid =>
-        !double.IsNaN(WidthBox.Value) && !double.IsNaN(HeightBox.Value)
-        && WidthBox.Value is >= 1 and <= MaxSide && HeightBox.Value is >= 1 and <= MaxSide;
+    private bool IsValid => SizeError(WidthBox.Value, HeightBox.Value) is null;
 
     private void UpdateSummary()
     {
-        IsPrimaryButtonEnabled = IsValid;
-        SummaryText.Text = IsValid
-            ? $"Tạo ảnh trống {ImageWidth} × {ImageHeight} px thành 1 tab mới trong Editor."
-            : $"Nhập rộng / cao từ 1 đến {MaxSide} px.";
+        var error = SizeError(WidthBox.Value, HeightBox.Value);
+        IsPrimaryButtonEnabled = error is null;
+        SummaryText.Text = error ?? $"Tạo ảnh trống {ImageWidth} × {ImageHeight} px thành 1 tab mới trong Editor.";
     }
 }

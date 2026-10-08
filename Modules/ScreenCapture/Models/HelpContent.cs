@@ -88,7 +88,7 @@ public static class HelpContent
             new("Bỏ chọn", "Bấm vào vùng trống hoặc nhấn Esc.", "Esc"),
             new("Move", "Công cụ mặc định: chỉ chọn / kéo hình, bấm vùng trống không vẽ gì. Khi không chọn hình nào, quanh ảnh có 8 handle để đổi kích thước khung ảnh (xem mục Cắt, khung ảnh & dán)."),
             new("Xoá, đổi thứ tự lớp", "Xoá hình đang chọn; Lên trên / Xuống dưới để đưa hình lên trên hoặc xuống dưới hình khác.", "Delete", "Backspace"),
-            new("Undo / Redo", "Mọi thao tác (vẽ, di chuyển, đổi kích thước, đổi màu, cắt, tô màu, xoá...) đều hoàn tác được từng bước.", "Ctrl+Z", "Ctrl+Y", "Ctrl+Shift+Z"),
+            new("Undo / Redo", "Mọi thao tác (vẽ, di chuyển, đổi kích thước, đổi màu, cắt, tô màu, xoá...) đều hoàn tác được từng bước; thanh trạng thái ghi bước vừa Undo / Redo (và cỡ ảnh mới nếu ảnh đổi cỡ).", "Ctrl+Z", "Ctrl+Y", "Ctrl+Shift+Z"),
         ]),
 
         new("Vẽ hình", "\uE70F", "Nhóm Vẽ hình ở tab Trang chủ. Màu nét = Color1, màu nền = Color2, độ dày = Size (1-20px).",
@@ -143,7 +143,7 @@ public static class HelpContent
             new("Cắt", "Kéo khung vùng cần giữ; hình nằm ngoài vùng cắt bị bỏ. Khôi phục được: kéo handle khung ảnh ra lại là hiện lại phần đã cắt, kể cả sau khi tắt mở lại app."),
             new("Đổi kích thước khung ảnh", "Công cụ Move, không chọn hình nào → kéo 1 trong 8 handle quanh ảnh: kéo ra = mở rộng (nền trắng, ảnh nền trong suốt thì trong suốt), kéo vào = cắt bớt cạnh đó. Hình đã vẽ giữ nguyên vị trí."),
             new("Xoay / lật ảnh", "Nút Xoay: xoay phải / trái 90°, xoay 180°, lật ngang, lật dọc cả ảnh. Các hình đã vẽ xoay theo và vẫn sửa được; chữ và stamp giữ chiều đứng, stamp mũi tên tự đổi hướng. Về hướng ban đầu: xoay / lật ngược lại mọi lần Xoay / Lật trước đó trong 1 bước (cả sau khi mở lại app), hình vẽ đi theo ảnh. Phần đã Cắt trước đó không khôi phục được nữa (Undo thì được).", "Ctrl+R", "Ctrl+Shift+R"),
-            new("Đổi cỡ ảnh", "Nút Xoay > Đổi cỡ ảnh…: co giãn cả nội dung ảnh theo % hoặc theo px (giữ tỉ lệ hoặc không) - khác kéo khung ảnh. Hình vẽ, nét, cỡ chữ, stamp co giãn theo.", "Ctrl+E"),
+            new("Đổi cỡ ảnh", "Nút Xoay > Đổi cỡ ảnh…: co giãn cả nội dung ảnh theo % hoặc theo px (giữ tỉ lệ hoặc không) - khác kéo khung ảnh. Hình vẽ, nét, cỡ chữ, stamp co giãn theo. Tối đa 16384 px mỗi cạnh và 64 triệu pixel (~8000 × 8000).", "Ctrl+E"),
             new("Dán ảnh", "Dán ảnh trong clipboard (ảnh copy từ app khác hoặc file ảnh copy trong Explorer) thành 1 hình ảnh, kéo / co giãn được (giữ Shift = đúng tỉ lệ). Ảnh dán lớn hơn thì khung ảnh tự nới ra.", "Ctrl+V"),
             new("Nền trong suốt", "Ảnh mới chọn màu nền \"Trong suốt\", hoặc ảnh đã Đổ bóng / Mép rách: phần trong suốt hiện ô caro trong Editor. Nới khung, xoá vùng, Cut của ảnh đó tô trong suốt thay vì trắng. Lưu PNG / copy giữ nền trong suốt; JPG / BMP nền trắng."),
         ]),

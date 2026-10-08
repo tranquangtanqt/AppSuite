@@ -350,10 +350,24 @@ public sealed partial class EditorViewModel : ObservableObject
         UndoRedo.Do(new FloodFillCommand(newBitmap => Bitmap = newBitmap, Bitmap, seed, StrokeColor));
 
     [RelayCommand(CanExecute = nameof(CanUndo))]
-    private void Undo() => UndoRedo.Undo();
+    private void Undo() => UndoRedoStep("Undo", UndoRedo.Undo);
 
     [RelayCommand(CanExecute = nameof(CanRedo))]
-    private void Redo() => UndoRedo.Redo();
+    private void Redo() => UndoRedoStep("Redo", UndoRedo.Redo);
+
+    /// <summary>Undo / Redo 1 bước rồi ghi thanh trạng thái theo bước đó - không thì vẫn hiện thông báo của thao tác cũ (vd
+    /// "Đổi cỡ ảnh: ảnh giờ là 500 × 260 px" dù Undo đã đưa ảnh về 1000 × 520).</summary>
+    private void UndoRedoStep(string verb, Func<IEditCommand?> step)
+    {
+        var size = (Bitmap.Width, Bitmap.Height);
+        if (step() is not { } command)
+        {
+            return;
+        }
+        StatusText = (Bitmap.Width, Bitmap.Height) == size
+            ? $"{verb}: {command.Description}."
+            : $"{verb}: {command.Description} - ảnh giờ là {Bitmap.Width} × {Bitmap.Height} px.";
+    }
 
     /// <summary>Tên tab của ảnh trong Editor (thời điểm chụp, kiểu PicPick "2026-09-24 13 36 14").</summary>
     public string Title { get; init; } = string.Empty;

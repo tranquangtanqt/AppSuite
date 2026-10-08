@@ -7,8 +7,6 @@ namespace ScreenCapture.Views;
 /// được); kết quả là <see cref="NewWidth"/> × <see cref="NewHeight"/> px.</summary>
 public sealed partial class ResizeImageDialog : ContentDialog
 {
-    private const double MaxPercent = 1000;
-
     private readonly int _width;
     private readonly int _height;
     private bool _syncing;
@@ -27,10 +25,12 @@ public sealed partial class ResizeImageDialog : ContentDialog
             box.SmallChange = 10;
             box.LargeChange = 100;
         }
+        // % tối đa = đúng cạnh tối đa (px) theo từng chiều - không thì gõ px lớn, ô % bị kẹp ở 1000 trong khi px là 1638%.
+        PercentXBox.Maximum = Math.Max(100, Math.Floor(NewImageDialog.MaxSide * 100.0 / width));
+        PercentYBox.Maximum = Math.Max(100, Math.Floor(NewImageDialog.MaxSide * 100.0 / height));
         foreach (var box in new[] { PercentXBox, PercentYBox })
         {
             box.Minimum = 1;
-            box.Maximum = MaxPercent;
             box.SmallChange = 5;
             box.LargeChange = 25;
         }
@@ -122,15 +122,10 @@ public sealed partial class ResizeImageDialog : ContentDialog
         PercentYBox.Value = Math.Round(HeightBox.Value * 100.0 / _height, 1);
     }
 
-    private bool IsValid =>
-        !double.IsNaN(WidthBox.Value) && !double.IsNaN(HeightBox.Value)
-        && WidthBox.Value is >= 1 and <= NewImageDialog.MaxSide && HeightBox.Value is >= 1 and <= NewImageDialog.MaxSide;
-
     private void UpdateSummary()
     {
-        IsPrimaryButtonEnabled = IsValid;
-        SummaryText.Text = IsValid
-            ? $"Ảnh {_width} × {_height} px → {NewWidth} × {NewHeight} px. Co giãn cả nội dung lẫn các hình đã vẽ."
-            : $"Nhập rộng / cao từ 1 đến {NewImageDialog.MaxSide} px.";
+        var error = NewImageDialog.SizeError(WidthBox.Value, HeightBox.Value);
+        IsPrimaryButtonEnabled = error is null;
+        SummaryText.Text = error ?? $"Ảnh {_width} × {_height} px → {NewWidth} × {NewHeight} px. Co giãn cả nội dung lẫn các hình đã vẽ.";
     }
 }
