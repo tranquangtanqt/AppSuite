@@ -106,8 +106,15 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
   code thật
 - [x] Test GUI Hướng dẫn F1 của 6 module (Sandbox, bản Release): mở bằng nút / F1, bấm lần 2 không mở thêm, tìm không
   dấu ("tim") + từ vô nghĩa → "Không tìm thấy", đóng app → Hướng dẫn đóng theo, process thoát. `help6` 42/42 (2026-10-08)
-- [ ] **[Đề xuất · Có thể]** Chuyển Hướng dẫn của ScreenCapture / FileTools sang `SharedUI.Help.HelpWindow` (đang là 2
-  bản chép riêng cùng bố cục)
+- [x] **[Đề xuất · Có thể]** Chuyển Hướng dẫn của ScreenCapture / FileTools sang `SharedUI.Help.HelpWindow` (đang là 2
+  bản chép riêng cùng bố cục) → bỏ `Views\HelpWindow.xaml(.cs)` của cả 2. Bản chung thêm `UpdateSections` (ScreenCapture:
+  đổi phím tắt trong Cài đặt), `ShowSection` cuộn danh mục tới mục đang chọn (FileTools: F1 mở đúng trang), tuỳ chọn
+  `searchSummary` (FileTools tìm cả tóm tắt trang: "healthcheck"). ScreenCapture dùng record `HelpSection` / `HelpItem`
+  của SharedUI; FileTools giữ `Core\HelpContent` (không phụ thuộc WinUI, có unit test) và đổi sang record SharedUI lúc
+  mở cửa sổ. Sửa thêm: đóng FileTools giờ đóng luôn cửa sổ Hướng dẫn (trước đó process còn chạy). Build 0 warning,
+  FileTools.Tests 131/131; Sandbox `help_scft` 22/22 (FileTools: ? / chân menu / F1 mở đúng mục + cuộn tới, tìm không
+  dấu + tóm tắt, 1 cửa sổ, đóng app đóng theo; ScreenCapture: nút cửa sổ chính / ? Editor / F1, phím tắt theo cài đặt,
+  tìm "cat" / "mui ten", 1 cửa sổ). README SharedUI / ScreenCapture / FileTools (2026-10-08)
 - [ ] **[Đề xuất · Có thể]** Nhớ kích thước / vị trí cửa sổ và danh sách file / thư mục gần đây cho mọi module —
   đưa 1 helper dùng chung vào `Common` (hiện mỗi module tự lưu hoặc không lưu)
 

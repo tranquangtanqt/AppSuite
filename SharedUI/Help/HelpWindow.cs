@@ -22,15 +22,15 @@ public sealed record HelpSection(string Title, string Glyph, string Summary, IRe
 /// <summary>
 /// Cửa sổ Hướng dẫn (F1) dùng chung: danh mục bên trái, nội dung bên phải, ô tìm kiếm không phân biệt hoa thường / dấu
 /// tiếng Việt ("cat" khớp "Cắt"). Mỗi module chỉ cung cấp nội dung (<see cref="HelpSection"/>).
-/// Dựng hoàn toàn bằng code (không .xaml) để thư viện không cần XBF / .pri riêng cho cửa sổ này. Bố cục giống bản
-/// ScreenCapture.Views.HelpWindow / FileTools (2 module đó có bản riêng từ trước).
+/// Dựng hoàn toàn bằng code (không .xaml) để thư viện không cần XBF / .pri riêng cho cửa sổ này.
 /// </summary>
 public sealed class HelpWindow : Window
 {
     [DllImport("user32.dll")]
     private static extern uint GetDpiForWindow(IntPtr hwnd);
 
-    private readonly IReadOnlyList<HelpSection> _sections;
+    private IReadOnlyList<HelpSection> _sections;
+    private readonly bool _searchSummary;
     private readonly Brush _accent;
     private readonly ListView _sectionList;
     private readonly TextBox _searchBox;
@@ -42,10 +42,13 @@ public sealed class HelpWindow : Window
     /// <param name="accent">Màu nhấn của module (ô icon trên cùng, icon danh mục); null = màu nhấn của Windows.</param>
     /// <param name="searchPlaceholder">Gợi ý trong ô tìm, vd "Tìm tính năng, vd: lọc, Ctrl+G...".</param>
     /// <param name="iconPath">File .ico cho thanh tiêu đề / taskbar (null = icon của app, xem <see cref="Helpers.WindowIcon"/>).</param>
+    /// <param name="searchSummary">Tìm cả trong dòng tóm tắt của danh mục (từ khớp tóm tắt → mọi mục của danh mục đó khớp
+    /// từ đó) - cho danh mục mỗi cái là 1 trang / 1 công cụ (FileTools: "healthcheck" chỉ có trong tóm tắt trang Tìm / Lọc dòng).</param>
     public HelpWindow(string appName, string subtitle, IReadOnlyList<HelpSection> sections, Color? accent = null,
-        string searchPlaceholder = "Tìm tính năng...", string? iconPath = null)
+        string searchPlaceholder = "Tìm tính năng...", string? iconPath = null, bool searchSummary = false)
     {
         _sections = sections;
+        _searchSummary = searchSummary;
         _accent = accent is { } color
             ? new SolidColorBrush(color)
             : (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"];
@@ -105,7 +108,8 @@ public sealed class HelpWindow : Window
         _sectionList.SelectedIndex = 0;
     }
 
-    /// <summary>Mở danh mục có tiêu đề <paramref name="title"/> (vd mở Hướng dẫn đúng phần đang dùng). Không có thì bỏ qua.</summary>
+    /// <summary>Mở danh mục có tiêu đề <paramref name="title"/> (vd mở Hướng dẫn đúng phần đang dùng) và cuộn danh sách
+    /// danh mục tới đó. Không có thì bỏ qua.</summary>
     public void ShowSection(string title)
     {
         _searchBox.Text = string.Empty;
@@ -113,7 +117,21 @@ public sealed class HelpWindow : Window
         if (item is not null)
         {
             _sectionList.SelectedItem = item;
+            // Sau khi danh sách đã bố cục - gọi ngay lúc vừa tạo cửa sổ thì không có tác dụng.
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => _sectionList.ScrollIntoView(item));
         }
+    }
+
+    /// <summary>Thay nội dung khi cửa sổ đang mở (vd ScreenCapture: đổi phím tắt trong Cài đặt → mục "Phím tắt chụp" đổi
+    /// theo). Cùng danh sách danh mục, chỉ khác nội dung: giữ danh mục / ô tìm đang xem.</summary>
+    public void UpdateSections(IReadOnlyList<HelpSection> sections)
+    {
+        _sections = sections;
+        for (int i = 0; i < _sections.Count && i < _sectionList.Items.Count; i++)
+        {
+            ((ListViewItem)_sectionList.Items[i]).Tag = _sections[i];
+        }
+        Render();
     }
 
     private Grid BuildLayout(string appName, string subtitle)
@@ -214,13 +232,14 @@ public sealed class HelpWindow : Window
             return;
         }
 
-        // Mọi từ trong ô tìm kiếm đều phải xuất hiện (ở tên, mô tả, phím hoặc tên danh mục).
+        // Mọi từ trong ô tìm kiếm đều phải xuất hiện (ở tên, mô tả, phím hoặc tên danh mục - và tóm tắt nếu bật).
         var words = query.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         int count = 0;
         foreach (var section in _sections)
         {
+            string sectionText = _searchSummary ? $"{section.Title} {section.Summary}" : section.Title;
             var matches = section.Items
-                .Where(item => words.All(Normalize($"{section.Title} {item.Name} {item.Description} {string.Join(' ', item.Keys)}").Contains))
+                .Where(item => words.All(Normalize($"{sectionText} {item.Name} {item.Description} {string.Join(' ', item.Keys)}").Contains))
                 .ToList();
             if (matches.Count == 0)
             {

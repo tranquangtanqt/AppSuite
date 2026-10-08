@@ -1,14 +1,10 @@
-﻿namespace ScreenCapture.Models;
+﻿using SharedUI.Help;
 
-/// <summary>1 tính năng trong cửa sổ Hướng dẫn. <paramref name="Keys"/>: phím tắt / thao tác chuột hiện
-/// thành các "phím" nhỏ (vd "Ctrl+Z"), null nếu không có.</summary>
-public sealed record HelpItem(string Name, string Description, params string[] Keys);
-
-public sealed record HelpSection(string Title, string Glyph, string Summary, IReadOnlyList<HelpItem> Items);
+namespace ScreenCapture.Models;
 
 /// <summary>
-/// Nội dung cửa sổ Hướng dẫn (nút "Hướng dẫn" / F1) - liệt kê mọi tính năng của ScreenCapture cho
-/// người dùng cuối. Nguồn: README.md mục "Chức năng"; thêm/đổi tính năng thì cập nhật cả 2 chỗ.
+/// Nội dung cửa sổ Hướng dẫn dùng chung (<see cref="HelpWindow"/>, nút "Hướng dẫn" / F1) - liệt kê mọi tính năng của
+/// ScreenCapture cho người dùng cuối. Nguồn: README.md mục "Chức năng"; thêm/đổi tính năng thì cập nhật cả 2 chỗ.
 /// Riêng phím tắt chụp lấy theo cài đặt hiện tại (người dùng có thể đã đổi).
 /// </summary>
 public static class HelpContent

@@ -55,14 +55,17 @@ bên phải, ô tìm không phân biệt hoa thường / dấu tiếng Việt (`
 ```csharp
 var help = new SharedUI.Help.HelpWindow("CsvEditor", "Mô tả 1 dòng", HelpContent.Sections,
     accent: null /* màu nhấn của Windows */, searchPlaceholder: "Tìm tính năng, vd: ...");
-help.ShowSection("So chữ"); // tuỳ chọn: mở đúng danh mục theo tiêu đề
+help.ShowSection("So chữ"); // tuỳ chọn: mở đúng danh mục theo tiêu đề (và cuộn danh sách danh mục tới đó)
 help.Activate();
+help.UpdateSections(newSections); // tuỳ chọn: thay nội dung khi đang mở (cùng danh sách danh mục)
 ```
 
 `HelpSection(Title, Glyph, Summary, Items)` / `HelpItem(Name, Description, params Keys)` — `Keys` hiện thành các "phím"
-nhỏ; `Description` rỗng thì chỉ hiện tên + phím (dùng cho danh mục *Phím tắt*). Dựng hoàn toàn bằng code (không
-`.xaml`) nên không cần merge `Generic.xaml`. Đang dùng: CsvEditor, ImageCompare (2026-10-02). ScreenCapture / FileTools
-có bản riêng từ trước (cùng bố cục) — chuyển sang bản chung khi tiện.
+nhỏ; `Description` rỗng thì chỉ hiện tên + phím (dùng cho danh mục *Phím tắt*). `searchSummary: true` = tìm cả trong
+dòng tóm tắt của danh mục (danh mục mỗi cái là 1 trang / công cụ, như FileTools). Dựng hoàn toàn bằng code (không
+`.xaml`) nên không cần merge `Generic.xaml`. Đang dùng: mọi module có Hướng dẫn — CsvEditor, ImageCompare (2026-10-02),
+4 HtmlGenerator, ModuleB / C (2026-10-05), ScreenCapture (`UpdateSections` khi đổi phím tắt) và FileTools (`ShowSection`
+theo trang đang xem, `searchSummary`) (2026-10-08, thay 2 bản riêng trước đó).
 
 ## Những control KHÔNG port và lý do
 

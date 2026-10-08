@@ -34,7 +34,7 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   ứng thì tự chuyển sang **Shift + lăn chuột** (cách trình duyệt, Excel cuộn ngang). Dừng khi tới
   mép phải, Esc, hoặc cùng giới hạn như cuộn dọc (độ dài ảnh tính theo chiều rộng).
 
-### Hướng dẫn (`HelpWindow`)
+### Hướng dẫn (cửa sổ dùng chung `SharedUI.Help.HelpWindow`)
 
 Liệt kê mọi tính năng cho người dùng cuối, chia 16 danh mục (chế độ chụp, phím tắt, khay, Editor,
 vẽ, che, cắt, zoom, lưu, cài đặt...). Có ô tìm kiếm không phân biệt dấu ("cat" ra "Cắt"). Mục *Phím

@@ -20,6 +20,7 @@ public sealed partial class MainWindow : Window
         AppWindow.Resize(new SizeInt32(1280, 880));
         AppLog.For("App").LogInformation("Khởi động FileTools");
         Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().First();
+        Closed += (_, _) => _help?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
     }
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
@@ -43,7 +44,7 @@ public sealed partial class MainWindow : Window
         SharedFile.ApplyTo(viewModel); // file đang làm ở trang trước → trang này, khỏi chọn lại
     }
 
-    private HelpWindow? _help;
+    private SharedUI.Help.HelpWindow? _help;
 
     private void Nav_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
@@ -55,21 +56,25 @@ public sealed partial class MainWindow : Window
 
     private void Help_Click(object sender, RoutedEventArgs e) => OpenHelp();
 
-    /// <summary>Mở (hoặc đưa lên trước) cửa sổ Hướng dẫn ở đúng mục của trang đang xem.</summary>
+    /// <summary>Mở (hoặc đưa lên trước) cửa sổ Hướng dẫn dùng chung ở đúng mục của trang đang xem.</summary>
     private void OpenHelp()
     {
-        var page = ContentFrame.Content?.GetType().Name;
         if (_help is null)
         {
-            _help = new HelpWindow(page);
+            _help = new SharedUI.Help.HelpWindow("FileTools", "Từng trang: dùng khi nào, các bước, ý nghĩa tuỳ chọn và lưu ý.",
+                HelpSections, accent: Windows.UI.Color.FromArgb(0xFF, 0x2B, 0x7B, 0xD6),
+                searchPlaceholder: "Tìm, vd: tach cot, shift-jis, trung...", searchSummary: true);
             _help.Closed += (_, _) => _help = null;
         }
-        else
-        {
-            _help.ShowPage(page);
-        }
+        _help.ShowSection(Core.HelpContent.ForPage(ContentFrame.Content?.GetType().Name).Title);
         _help.Activate();
     }
+
+    /// <summary>Nội dung Hướng dẫn (Core\HelpContent - không phụ thuộc WinUI, có unit test) theo kiểu của cửa sổ dùng chung.</summary>
+    private static IReadOnlyList<SharedUI.Help.HelpSection> HelpSections { get; } = Core.HelpContent.Sections
+        .Select(s => new SharedUI.Help.HelpSection(s.Title, s.Glyph, s.Summary,
+            s.Items.Select(i => new SharedUI.Help.HelpItem(i.Name, i.Description, i.Keys)).ToList()))
+        .ToList();
 
     private async void SavePreset_Click(object sender, RoutedEventArgs e)
     {

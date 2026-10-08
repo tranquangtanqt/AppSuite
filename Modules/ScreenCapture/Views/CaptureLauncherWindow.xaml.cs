@@ -27,7 +27,7 @@ public sealed partial class CaptureLauncherWindow : Window
     private readonly HotkeyService _hotkeys;
     private IReadOnlyList<HotkeyBinding> _failedHotkeys = [];
     private SettingsWindow? _settingsWindow;
-    private HelpWindow? _helpWindow;
+    private SharedUI.Help.HelpWindow? _helpWindow;
 
     /// <summary>Đang trong 1 lần chụp (chờ hẹn giờ / overlay chọn vùng) - bỏ qua phím tắt bấm chồng.</summary>
     private bool _isCapturing;
@@ -380,7 +380,9 @@ public sealed partial class CaptureLauncherWindow : Window
     {
         if (_helpWindow is null)
         {
-            _helpWindow = new HelpWindow(_settings);
+            _helpWindow = new SharedUI.Help.HelpWindow("ScreenCapture", "Tất cả tính năng: chụp, chỉnh sửa, lưu, phím tắt và cài đặt.",
+                HelpContent.Build(_settings), accent: Windows.UI.Color.FromArgb(0xFF, 0xD8, 0x64, 0x45),
+                searchPlaceholder: "Tìm tính năng, vd: cắt, mũi tên, Ctrl+V...");
             _helpWindow.Closed += (_, _) => _helpWindow = null;
         }
         var hwnd = WindowNative.GetWindowHandle(_helpWindow);
@@ -423,7 +425,7 @@ public sealed partial class CaptureLauncherWindow : Window
             ShowStatus($"Không đặt được khởi động cùng Windows: {ex.Message}", InfoBarSeverity.Error);
         }
         _failedHotkeys = _hotkeys.Apply(settings.Hotkeys);
-        _helpWindow?.UpdateSettings(settings); // mục "Phím tắt chụp" hiện theo phím vừa đổi
+        _helpWindow?.UpdateSections(HelpContent.Build(settings)); // mục "Phím tắt chụp" hiện theo phím vừa đổi
         StatusInfoBar.IsOpen = false;
         ReportFailedHotkeys();
         return _failedHotkeys;

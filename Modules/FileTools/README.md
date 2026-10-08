@@ -30,7 +30,7 @@ dotnet run --project Modules\FileTools\FileTools.csproj -p:Platform=x64
 | **Tìm file trùng** | File cùng nội dung (không cần cùng tên) trong 1 hoặc nhiều thư mục: gom theo dung lượng → băm 64 KB đầu → băm toàn bộ (XxHash128). Tích các bản thừa (nút "giữ bản đầu mỗi nhóm") rồi chuyển vào **Thùng rác** (khôi phục được) - luôn giữ ≥ 1 bản / nhóm. |
 | **File đang làm dùng chung** | Chọn / kéo-thả / gõ đường dẫn file ở 1 trang thì mở trang khác file đó đã điền sẵn (luôn theo file chọn gần nhất; `ViewModels/SharedFile.cs`). Trang danh sách nhiều file (Nối file, Đổi encoding, Thay thế) chỉ tự thêm khi danh sách trống; So sánh 2 file điền ô A; trang đang chạy / Theo dõi log đang theo dõi giữ file cũ. |
 | **Mẫu (preset)** | Thanh "Mẫu" ở đầu cửa sổ: lưu / nạp / xoá bộ tuỳ chọn của trang đang mở (`Data\Config\presets.json` cạnh exe).. Mẫu của 4 trang đã gộp tự chuyển sang trang mới lần đầu mở bản này (`PresetMigration`). |
-| **Hướng dẫn** | Mục "Hướng dẫn (F1)" cuối menu, nút **?** trên cùng hoặc phím **F1** (mở thẳng phần của trang đang xem): từng trang dùng khi nào, các bước, ý nghĩa tuỳ chọn, lưu ý; tìm không dấu ("tach cot" ra Tách theo cột). Nội dung ở `CoreHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả README này. |
+| **Hướng dẫn** | Mục "Hướng dẫn (F1)" cuối menu, nút **?** trên cùng hoặc phím **F1** (mở thẳng phần của trang đang xem): từng trang dùng khi nào, các bước, ý nghĩa tuỳ chọn, lưu ý; tìm không dấu ("tach cot" ra Tách theo cột). Cửa sổ dùng chung `SharedUI.Help.HelpWindow`; nội dung ở `Core\HelpContent.cs` - thêm / đổi tính năng thì cập nhật cả README này. |
 
 Các trang CSV đọc theo **bản ghi** (ô trong ngoặc kép có xuống dòng không bị cắt); dấu phân cách tự nhận hoặc chọn tay,
 tuỳ chọn "Dòng 1 là tiêu đề".
