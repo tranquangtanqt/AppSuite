@@ -19,25 +19,13 @@ public sealed class OracleSchemaImporter
     public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
         OracleConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
-        var dataSource = BuildDataSource(settings);
-        var builder = new OracleConnectionStringBuilder
-        {
-            DataSource = dataSource,
-            UserID = settings.Username,
-            Password = settings.Password,
-            ConnectionTimeout = options.EffectiveConnectTimeoutSeconds,
-        };
-
-        var owner = string.IsNullOrWhiteSpace(settings.Schema)
-            ? settings.Username.ToUpperInvariant()
-            : settings.Schema.Trim().ToUpperInvariant();
-
+        var owner = ResolveOwner(settings);
         var sourceLabel = settings.ConnectBySid
             ? $"{settings.Host}:{settings.Port}:{settings.Sid}"
             : $"{settings.Host}:{settings.Port}/{settings.ServiceName}";
 
         log($"Dang ket noi {sourceLabel} (schema {owner}, toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
-        await using var connection = new OracleConnection(builder.ConnectionString);
+        await using var connection = CreateConnection(settings, options);
         await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
 
         // ODP.NET has no connection-string default for command timeout - CreateCommand sets it per command.
@@ -49,6 +37,39 @@ public sealed class OracleSchemaImporter
 
         log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
         return (tables, columns, foreignKeys);
+    }
+
+    /// <summary>"Thu ket noi": opens a connection and counts the tables/views an import would read.</summary>
+    public async Task<ConnectionTestResult> TestConnectionAsync(
+        OracleConnectionSettings settings, AppOptions options, CancellationToken cancellationToken = default)
+    {
+        await using var connection = CreateConnection(settings, options);
+        await DatabaseConnectException.OpenAsync(connection, _ => { }, cancellationToken);
+
+        var owner = ResolveOwner(settings);
+        const string sql =
+            "SELECT (SELECT COUNT(*) FROM ALL_TABLES WHERE OWNER = :owner) + (SELECT COUNT(*) FROM ALL_VIEWS WHERE OWNER = :owner) FROM DUAL";
+        await using var command = CreateCommand(connection, sql, owner, options.EffectiveCommandTimeoutSeconds);
+        var count = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        return new ConnectionTestResult($"Oracle {connection.ServerVersion}", count, $"schema {owner}");
+    }
+
+    /// <summary>Blank Schema = the user's own schema (Oracle convention), always upper-case.</summary>
+    private static string ResolveOwner(OracleConnectionSettings settings) =>
+        string.IsNullOrWhiteSpace(settings.Schema)
+            ? settings.Username.ToUpperInvariant()
+            : settings.Schema.Trim().ToUpperInvariant();
+
+    private static OracleConnection CreateConnection(OracleConnectionSettings settings, AppOptions options)
+    {
+        var builder = new OracleConnectionStringBuilder
+        {
+            DataSource = BuildDataSource(settings),
+            UserID = settings.Username,
+            Password = settings.Password,
+            ConnectionTimeout = options.EffectiveConnectTimeoutSeconds,
+        };
+        return new OracleConnection(builder.ConnectionString);
     }
 
     /// <summary>SID has no EZ Connect shorthand (that syntax only carries a service name), so SID
@@ -69,6 +90,9 @@ public sealed class OracleSchemaImporter
         var command = connection.CreateCommand();
         command.CommandText = sql;
         command.CommandTimeout = commandTimeout;
+        // ODP.NET binds by position by default, so a query using :owner twice (tables UNION views) would need
+        // 2 parameters (ORA-01008). Bind by name: 1 parameter serves every :owner.
+        command.BindByName = true;
         command.Parameters.Add(new OracleParameter("owner", owner));
         return command;
     }

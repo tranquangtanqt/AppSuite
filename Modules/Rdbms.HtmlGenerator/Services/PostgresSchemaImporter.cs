@@ -20,19 +20,8 @@ public sealed class PostgresSchemaImporter
     public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
         PostgresConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
-        var builder = new NpgsqlConnectionStringBuilder
-        {
-            Host = settings.Host,
-            Port = settings.Port,
-            Database = settings.Database,
-            Username = settings.Username,
-            Password = settings.Password,
-            Timeout = options.EffectiveConnectTimeoutSeconds,
-            CommandTimeout = options.EffectiveCommandTimeoutSeconds,
-        };
-
         log($"Dang ket noi {settings.Host}:{settings.Port}/{settings.Database} (toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
-        await using var connection = new NpgsqlConnection(builder.ConnectionString);
+        await using var connection = CreateConnection(settings, options);
         await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
 
         var sourceLabel = $"{settings.Host}:{settings.Port}/{settings.Database}";
@@ -45,6 +34,41 @@ public sealed class PostgresSchemaImporter
 
         log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
         return (tables, columns, foreignKeys);
+    }
+
+    /// <summary>"Thu ket noi": opens a connection and counts the tables/views an import would read.</summary>
+    public async Task<ConnectionTestResult> TestConnectionAsync(
+        PostgresConnectionSettings settings, AppOptions options, CancellationToken cancellationToken = default)
+    {
+        await using var connection = CreateConnection(settings, options);
+        await DatabaseConnectException.OpenAsync(connection, _ => { }, cancellationToken);
+
+        var schemaFilter = string.IsNullOrWhiteSpace(settings.Schema) ? null : settings.Schema.Trim();
+        await using var command = connection.CreateCommand();
+        var schemaClause = ApplySchemaFilter(command, schemaFilter, "n.nspname");
+        command.CommandText =
+            $"""
+            SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind IN ('r', 'v', 'm', 'p', 'f') AND {schemaClause}
+            """;
+        var count = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        return new ConnectionTestResult($"PostgreSQL {connection.ServerVersion}", count,
+            schemaFilter is null ? "mọi schema" : $"schema {schemaFilter}");
+    }
+
+    private static NpgsqlConnection CreateConnection(PostgresConnectionSettings settings, AppOptions options)
+    {
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = settings.Host,
+            Port = settings.Port,
+            Database = settings.Database,
+            Username = settings.Username,
+            Password = settings.Password,
+            Timeout = options.EffectiveConnectTimeoutSeconds,
+            CommandTimeout = options.EffectiveCommandTimeoutSeconds,
+        };
+        return new NpgsqlConnection(builder.ConnectionString);
     }
 
     /// <summary>Returns the schema-filter SQL fragment ("n.nspname = @schema" or an exclusion list

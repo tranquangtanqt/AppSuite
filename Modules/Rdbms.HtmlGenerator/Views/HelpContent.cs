@@ -26,6 +26,7 @@ internal static class HelpContent
             new("Oracle", "Host, Port (mặc định 1521), chọn kết nối bằng Service Name hoặc SID rồi nhập ô tương ứng, Username, Password, Schema (để trống = schema trùng tên Username, theo quy ước Oracle)."),
             new("MySQL", "Host, Port (mặc định 3306), Database, Username, Password. Dùng được cho cả MariaDB. Không có ô Schema vì trong MySQL schema chính là database."),
             new("SQL Server", "Host (hoặc MAYCHU\\TenInstance - khi đó bỏ qua Port), Port (mặc định 1433), Database, Schema (vd dbo, để trống = mọi schema). Tích \"Windows Authentication\" để đăng nhập bằng tài khoản Windows đang dùng (không cần Username / Password). Mô tả bảng / cột lấy từ MS_Description (phần Description trong SSMS)."),
+            new("Thử kết nối", "Nút \"Thử kết nối\" cuối hộp thoại: kết nối thử bằng thông tin đang nhập ở tab hiện tại (chưa cần Lưu). Thành công (xanh) báo phiên bản máy chủ và số bảng / view sẽ đọc; 0 bảng (vàng) thường là sai Schema hoặc thiếu quyền; lỗi (đỏ) kèm gợi ý cần sửa - sai mật khẩu, sai database, sai Service Name / SID, không tới được máy chủ. Đổi tab hoặc đóng hộp thoại thì kết quả cũ bị xoá."),
             new("Lưu ý mật khẩu", "Mật khẩu lưu dạng chữ thường trong Data\\Config\\config.xml cạnh exe - chỉ dùng trên máy cá nhân, không chép file này ra ngoài."),
         ]),
 

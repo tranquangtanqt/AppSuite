@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -199,7 +200,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         catch (Exception ex)
         {
             NextStep = 1;
-            var hint = DescribeConnectionError(ex);
+            var hint = DescribeConnectionError(ex, SettingsFor(SelectedSource));
             StatusText = $"Loi khi doc database: {ex.Message}";
             AppendLog($"LOI: {ex.Message}");
             ErrorOccurred?.Invoke("Không đọc được database", $"{hint}\n\nChi tiết: {ex.Message}");
@@ -210,15 +211,65 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         }
     }
 
-    /// <summary>Turns the driver exception into a plain-language reason + what to check.</summary>
-    private string DescribeConnectionError(Exception ex)
+    private object SettingsFor(DatabaseSourceType source) => source switch
     {
-        var target = SelectedSource switch
+        DatabaseSourceType.Oracle => OracleConnectionSettings,
+        DatabaseSourceType.MySql => MySqlConnectionSettings,
+        DatabaseSourceType.SqlServer => SqlServerConnectionSettings,
+        _ => PostgresConnectionSettings,
+    };
+
+    /// <summary>
+    /// "Thu ket noi" in the settings dialog: connects with the values currently typed in (not yet saved) and
+    /// returns a message for the dialog - server version + how many tables/views "1. Doc Database" would read
+    /// (0 usually means a wrong Schema), or the same plain-language hint the import error dialog shows.
+    /// </summary>
+    /// <param name="settings">One of the four *ConnectionSettings types, built from the dialog's boxes.</param>
+    /// <returns>Success = connected; TableCount = null when not connected (0 = connected but nothing to read).</returns>
+    public async Task<(bool Success, int? TableCount, string Message)> TestConnectionAsync(object settings, CancellationToken cancellationToken)
+    {
+        var options = Options;
+        try
         {
-            DatabaseSourceType.Oracle => $"{OracleConnectionSettings.Host}:{OracleConnectionSettings.Port}",
-            DatabaseSourceType.MySql => $"{MySqlConnectionSettings.Host}:{MySqlConnectionSettings.Port}",
-            DatabaseSourceType.SqlServer => SqlServerSchemaImporter.BuildDataSource(SqlServerConnectionSettings),
-            _ => $"{PostgresConnectionSettings.Host}:{PostgresConnectionSettings.Port}",
+            var result = settings switch
+            {
+                OracleConnectionSettings o => await Task.Run(() => _oracleImporter.TestConnectionAsync(o, options, cancellationToken), cancellationToken),
+                MySqlConnectionSettings m => await Task.Run(() => _mySqlImporter.TestConnectionAsync(m, options, cancellationToken), cancellationToken),
+                SqlServerConnectionSettings s => await Task.Run(() => _sqlServerImporter.TestConnectionAsync(s, options, cancellationToken), cancellationToken),
+                PostgresConnectionSettings p => await Task.Run(() => _postgresImporter.TestConnectionAsync(p, options, cancellationToken), cancellationToken),
+                _ => throw new ArgumentException("Unknown settings type", nameof(settings)),
+            };
+
+            var message = $"Kết nối thành công - {result.ServerVersion}.\nSẽ đọc {result.TableCount} bảng / view ({result.Scope}).";
+            if (result.TableCount == 0)
+            {
+                message += "\nKhông có bảng nào để đọc - kiểm tra lại Schema (Oracle: để trống = trùng tên Username) hoặc quyền của tài khoản.";
+            }
+
+            return (true, result.TableCount, message);
+        }
+        catch (OperationCanceledException)
+        {
+            return (false, null, "Đã huỷ.");
+        }
+        catch (Exception ex)
+        {
+            return (false, null, $"{DescribeConnectionError(ex, settings)}\n\nChi tiết: {ex.Message}");
+        }
+    }
+
+    /// <summary>Turns the driver exception into a plain-language reason + what to check.</summary>
+    /// <param name="settings">The connection settings that were used (saved ones for an import, the dialog's
+    /// unsaved values for "Thu ket noi") - one of the four *ConnectionSettings types.</param>
+    private string DescribeConnectionError(Exception ex, object settings)
+    {
+        var (target, database) = settings switch
+        {
+            OracleConnectionSettings o => ($"{o.Host}:{o.Port}", o.ConnectBySid ? o.Sid : o.ServiceName),
+            MySqlConnectionSettings m => ($"{m.Host}:{m.Port}", m.Database),
+            SqlServerConnectionSettings s => (SqlServerSchemaImporter.BuildDataSource(s), s.Database),
+            PostgresConnectionSettings p => ($"{p.Host}:{p.Port}", p.Database),
+            _ => ("máy chủ", ""),
         };
         var unreachable = $"Không kết nối được tới {target} (đã chờ tối đa {Options.EffectiveConnectTimeoutSeconds} giây).\n" +
                           "Kiểm tra: Host / Port đúng chưa, máy chủ database có đang chạy không, đã bật VPN / cùng mạng chưa, firewall có chặn cổng không. " +
@@ -242,24 +293,40 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         return connectError switch
         {
             Npgsql.PostgresException { SqlState: "28P01" or "28000" } => wrongLogin,
-            Npgsql.PostgresException { SqlState: "3D000" } => $"Database \"{PostgresConnectionSettings.Database}\" không tồn tại trên máy chủ.",
+            Npgsql.PostgresException { SqlState: "3D000" } => $"Database \"{database}\" không tồn tại trên máy chủ.",
             Npgsql.PostgresException => "Máy chủ PostgreSQL từ chối kết nối.",
 
             Oracle.ManagedDataAccess.Client.OracleException { Number: 1017 } => wrongLogin,
-            Oracle.ManagedDataAccess.Client.OracleException { Number: 12514 or 12505 } =>
-                "Máy chủ không biết Service Name / SID này - kiểm tra lại ô Service Name hoặc SID.",
+            // ODP.NET reports a wrong service as ORA-50201 with the real ORA-12514 / 12505 nested inside.
+            Oracle.ManagedDataAccess.Client.OracleException o when o.Number is 12514 or 12505
+                    || ChainContains(o, "ORA-12514") || ChainContains(o, "ORA-12505") =>
+                $"Listener ở {target} đang chạy nhưng không có Service Name / SID \"{database}\" - kiểm tra lại ô Service Name hoặc SID " +
+                "(Service Name thường có cả tên miền, vd orcl.congty.local; xem bằng lệnh lsnrctl status trên máy chủ).",
 
             MySqlConnector.MySqlException { ErrorCode: MySqlConnector.MySqlErrorCode.AccessDenied } => wrongLogin,
             MySqlConnector.MySqlException { ErrorCode: MySqlConnector.MySqlErrorCode.UnknownDatabase } =>
-                $"Database \"{MySqlConnectionSettings.Database}\" không tồn tại trên máy chủ.",
+                $"Database \"{database}\" không tồn tại trên máy chủ.",
 
             Microsoft.Data.SqlClient.SqlException { Number: 18456 } => wrongLogin,
             Microsoft.Data.SqlClient.SqlException { Number: 4060 } =>
-                $"Không mở được database \"{SqlServerConnectionSettings.Database}\" (không tồn tại hoặc tài khoản không có quyền).",
+                $"Không mở được database \"{database}\" (không tồn tại hoặc tài khoản không có quyền).",
 
             // Everything else while opening: host unreachable / refused / timed out / DNS / TLS.
             _ => unreachable,
         };
+    }
+
+    private static bool ChainContains(Exception ex, string text)
+    {
+        for (Exception? e = ex; e is not null; e = e.InnerException)
+        {
+            if (e.Message.Contains(text, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     [RelayCommand(CanExecute = nameof(CanExport))]

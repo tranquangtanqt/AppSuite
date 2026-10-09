@@ -479,6 +479,16 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   là nút 1); mở lại module tự tính bước từ file .db / .html có sẵn. Cài đặt thêm "Tự mở thư mục chứa file HTML sau khi
   xuất" (Explorer chọn sẵn file). Build 0 warning, app khởi động OK (2026-10-09)
 - [ ] Thử tay: đọc DB → nút 2 xanh → xuất → nút "Mo file HTML" xanh; bật tuỳ chọn mở thư mục → Explorer chọn sẵn file
+- [x] Nút **Thử kết nối** trong hộp thoại thiết lập (thanh nút Luu | Thử kết nối | Huy): thử bằng thông tin đang nhập
+  ở tab hiện tại, chưa cần Lưu; báo phiên bản máy chủ + số bảng / view sẽ đọc (0 bảng = cảnh báo vàng), lỗi đỏ kèm gợi ý.
+  Sửa kèm: Oracle sai Service Name trước đây bị báo nhầm "không tới được máy chủ" (ORA-12514 nằm trong ORA-50201);
+  `BindByName = true` cho mọi lệnh Oracle (câu đọc bảng dùng `:owner` 2 lần - có thể lỗi ORA-01008 từ trước).
+  Thử GUI bằng UI Automation trên LocalDB: thiếu Host / OK 2 bảng / OK 0 bảng / sai database; console: PostgreSQL sai
+  mật khẩu (28P01), Oracle sai mật khẩu (1017) / sai Service Name (12514). Build 0 warning (2026-10-09)
+- [ ] Thử Oracle với tài khoản thật sau khi thêm `BindByName` (máy dev không có mật khẩu Oracle / PostgreSQL để thử
+  đường thành công)
+- [ ] **[Đề xuất · Có thể]** Thông báo lỗi PostgreSQL lúc đăng nhập bị lỗi font khi máy chủ dùng locale tiếng Nhật
+  (máy chủ gửi trước khi thống nhất bảng mã) - phần gợi ý tiếng Việt vẫn đúng
 - [ ] Thử MySQL với máy chủ thật (máy dev không có MySQL — mới thử được trường hợp không kết nối được)
 - [ ] Thử tay GUI: combobox đổi nguồn, hộp thoại kết nối 4 tab (tích Windows Authentication khoá ô user/pass),
   hộp thoại Cài đặt (Lưu / Mặc định / Huỷ), tự mở HTML; regression PostgreSQL + Oracle với DB thật

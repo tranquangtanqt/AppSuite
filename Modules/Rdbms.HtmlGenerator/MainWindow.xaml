@@ -73,12 +73,20 @@
         <ContentDialog x:Name="DatabaseSettingsDialog"
                        Title="Thiet lap thong tin database"
                        PrimaryButtonText="Luu"
+                       SecondaryButtonText="Thử kết nối"
                        CloseButtonText="Huy"
                        DefaultButton="Primary"
-                       PrimaryButtonClick="DatabaseSettingsDialog_PrimaryButtonClick">
-            <Pivot x:Name="SettingsPivot" MinWidth="420">
+                       PrimaryButtonClick="DatabaseSettingsDialog_PrimaryButtonClick"
+                       SecondaryButtonClick="TestConnection_Click"
+                       Closed="DatabaseSettingsDialog_Closed">
+          <StackPanel Spacing="8">
+            <!-- Kết quả "Thử kết nối" (thông tin đang nhập ở tab hiện tại, chưa cần Lưu) - đặt trên cùng để luôn thấy -->
+            <InfoBar x:Name="TestConnectionInfoBar" IsOpen="False" IsClosable="False" MaxWidth="460" HorizontalAlignment="Stretch">
+                <ProgressBar x:Name="TestConnectionProgress" IsIndeterminate="True" Visibility="Collapsed" Margin="0,0,0,8" />
+            </InfoBar>
+            <Pivot x:Name="SettingsPivot" MinWidth="420" SelectionChanged="SettingsPivot_SelectionChanged">
                 <PivotItem Header="PostgreSQL">
-                    <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
                             <TextBox x:Name="PgHostBox" Header="Host" PlaceholderText="vd: localhost" />
                             <TextBox x:Name="PgPortBox" Header="Port" PlaceholderText="5432" />
@@ -90,7 +98,7 @@
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem Header="Oracle">
-                    <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
                             <TextBox x:Name="OraHostBox" Header="Host" PlaceholderText="vd: localhost" />
                             <TextBox x:Name="OraPortBox" Header="Port" PlaceholderText="1521" />
@@ -108,7 +116,7 @@
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem Header="MySQL">
-                    <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
                             <TextBox x:Name="MyHostBox" Header="Host" PlaceholderText="vd: localhost" />
                             <TextBox x:Name="MyPortBox" Header="Port" PlaceholderText="3306" />
@@ -119,7 +127,7 @@
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem Header="SQL Server">
-                    <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
                             <TextBox x:Name="MsHostBox" Header="Host (hoac Host\TenInstance)" PlaceholderText="vd: localhost hoac MAYCHU\SQLEXPRESS" />
                             <TextBox x:Name="MsPortBox" Header="Port (bo qua khi nhap ten instance)" PlaceholderText="1433" />
@@ -133,6 +141,7 @@
                     </ScrollViewer>
                 </PivotItem>
             </Pivot>
+          </StackPanel>
         </ContentDialog>
 
         <!-- "Cài đặt" dialog -->

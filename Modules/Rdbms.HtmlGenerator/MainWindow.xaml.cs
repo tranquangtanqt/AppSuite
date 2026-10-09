@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Rdbms.HtmlGenerator.Models;
@@ -99,46 +100,133 @@ public sealed partial class MainWindow : Window
 
     private void DatabaseSettingsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
-        ViewModel.SaveConnectionSettings(
-            new PostgresConnectionSettings
-            {
-                Host = PgHostBox.Text.Trim(),
-                Port = ParsePort(PgPortBox.Text, 5432),
-                Database = PgDatabaseBox.Text.Trim(),
-                Username = PgUsernameBox.Text.Trim(),
-                Password = PgPasswordBox.Password,
-                Schema = PgSchemaBox.Text.Trim(),
-            },
-            new OracleConnectionSettings
-            {
-                Host = OraHostBox.Text.Trim(),
-                Port = ParsePort(OraPortBox.Text, 1521),
-                ConnectBySid = OraBySidRadio.IsChecked == true,
-                ServiceName = OraServiceNameBox.Text.Trim(),
-                Sid = OraSidBox.Text.Trim(),
-                Username = OraUsernameBox.Text.Trim(),
-                Password = OraPasswordBox.Password,
-                Schema = OraSchemaBox.Text.Trim(),
-            },
-            new MySqlConnectionSettings
-            {
-                Host = MyHostBox.Text.Trim(),
-                Port = ParsePort(MyPortBox.Text, 3306),
-                Database = MyDatabaseBox.Text.Trim(),
-                Username = MyUsernameBox.Text.Trim(),
-                Password = MyPasswordBox.Password,
-            },
-            new SqlServerConnectionSettings
-            {
-                Host = MsHostBox.Text.Trim(),
-                Port = ParsePort(MsPortBox.Text, 1433),
-                Database = MsDatabaseBox.Text.Trim(),
-                UseWindowsAuthentication = MsWindowsAuthCheckBox.IsChecked == true,
-                Username = MsUsernameBox.Text.Trim(),
-                Password = MsPasswordBox.Password,
-                Schema = MsSchemaBox.Text.Trim(),
-            });
+        ViewModel.SaveConnectionSettings(ReadPostgresBoxes(), ReadOracleBoxes(), ReadMySqlBoxes(), ReadSqlServerBoxes());
     }
+
+    private PostgresConnectionSettings ReadPostgresBoxes() => new()
+    {
+        Host = PgHostBox.Text.Trim(),
+        Port = ParsePort(PgPortBox.Text, 5432),
+        Database = PgDatabaseBox.Text.Trim(),
+        Username = PgUsernameBox.Text.Trim(),
+        Password = PgPasswordBox.Password,
+        Schema = PgSchemaBox.Text.Trim(),
+    };
+
+    private OracleConnectionSettings ReadOracleBoxes() => new()
+    {
+        Host = OraHostBox.Text.Trim(),
+        Port = ParsePort(OraPortBox.Text, 1521),
+        ConnectBySid = OraBySidRadio.IsChecked == true,
+        ServiceName = OraServiceNameBox.Text.Trim(),
+        Sid = OraSidBox.Text.Trim(),
+        Username = OraUsernameBox.Text.Trim(),
+        Password = OraPasswordBox.Password,
+        Schema = OraSchemaBox.Text.Trim(),
+    };
+
+    private MySqlConnectionSettings ReadMySqlBoxes() => new()
+    {
+        Host = MyHostBox.Text.Trim(),
+        Port = ParsePort(MyPortBox.Text, 3306),
+        Database = MyDatabaseBox.Text.Trim(),
+        Username = MyUsernameBox.Text.Trim(),
+        Password = MyPasswordBox.Password,
+    };
+
+    private SqlServerConnectionSettings ReadSqlServerBoxes() => new()
+    {
+        Host = MsHostBox.Text.Trim(),
+        Port = ParsePort(MsPortBox.Text, 1433),
+        Database = MsDatabaseBox.Text.Trim(),
+        UseWindowsAuthentication = MsWindowsAuthCheckBox.IsChecked == true,
+        Username = MsUsernameBox.Text.Trim(),
+        Password = MsPasswordBox.Password,
+        Schema = MsSchemaBox.Text.Trim(),
+    };
+
+    // ----- Thử kết nối (trong hộp thoại thiết lập) -----
+
+    private CancellationTokenSource? _testConnectionCts;
+
+    /// <summary>Dialog's secondary button: connects with the values typed in the current tab (unsaved) and shows
+    /// the result in the InfoBar above the tabs. Cancel = keep the dialog open.</summary>
+    private async void TestConnection_Click(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+    {
+        args.Cancel = true; // must be set before the first await
+        object settings = (DatabaseSourceType)SettingsPivot.SelectedIndex switch
+        {
+            DatabaseSourceType.Oracle => ReadOracleBoxes(),
+            DatabaseSourceType.MySql => ReadMySqlBoxes(),
+            DatabaseSourceType.SqlServer => ReadSqlServerBoxes(),
+            _ => ReadPostgresBoxes(),
+        };
+
+        var missing = settings switch
+        {
+            PostgresConnectionSettings { Host: "" } or OracleConnectionSettings { Host: "" }
+                or MySqlConnectionSettings { Host: "" } or SqlServerConnectionSettings { Host: "" } => "Host",
+            PostgresConnectionSettings { Database: "" } or MySqlConnectionSettings { Database: "" }
+                or SqlServerConnectionSettings { Database: "" } => "Database",
+            OracleConnectionSettings { ConnectBySid: true, Sid: "" } => "SID",
+            OracleConnectionSettings { ConnectBySid: false, ServiceName: "" } => "Service Name",
+            _ => null,
+        };
+        if (missing is not null)
+        {
+            ShowTestResult(InfoBarSeverity.Warning, $"Chưa nhập {missing}.");
+            return;
+        }
+
+        // Already testing: ignore the click. (Not disabling the button - that moves keyboard focus to "Huy",
+        // and an Enter pressed while waiting would then close the dialog without saving.)
+        if (_testConnectionCts is not null)
+        {
+            return;
+        }
+
+        var cts = _testConnectionCts = new CancellationTokenSource();
+        TestConnectionProgress.Visibility = Visibility.Visible;
+        ShowTestResult(InfoBarSeverity.Informational,
+            $"Đang kết nối (tối đa {ViewModel.Options.EffectiveConnectTimeoutSeconds} giây)...");
+
+        var (success, tableCount, message) = await ViewModel.TestConnectionAsync(settings, cts.Token);
+
+        if (cts.IsCancellationRequested)
+        {
+            return; // dialog closed or tab switched meanwhile - the result no longer belongs on screen
+        }
+
+        _testConnectionCts = null;
+        TestConnectionProgress.Visibility = Visibility.Collapsed;
+        ShowTestResult(!success ? InfoBarSeverity.Error : tableCount == 0 ? InfoBarSeverity.Warning : InfoBarSeverity.Success, message);
+    }
+
+    private void ShowTestResult(InfoBarSeverity severity, string message)
+    {
+        TestConnectionInfoBar.Severity = severity;
+        TestConnectionInfoBar.Message = message;
+        TestConnectionInfoBar.IsOpen = true;
+    }
+
+    /// <summary>A result belongs to the tab it was run on - switching tab or closing the dialog drops it.</summary>
+    private void ResetTestConnection()
+    {
+        _testConnectionCts?.Cancel();
+        _testConnectionCts = null;
+        TestConnectionProgress.Visibility = Visibility.Collapsed;
+        TestConnectionInfoBar.IsOpen = false;
+    }
+
+    private void SettingsPivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (TestConnectionInfoBar is not null) // fires during InitializeComponent, before the InfoBar exists
+        {
+            ResetTestConnection();
+        }
+    }
+
+    private void DatabaseSettingsDialog_Closed(ContentDialog sender, ContentDialogClosedEventArgs args) => ResetTestConnection();
 
     private void MsWindowsAuth_Changed(object sender, RoutedEventArgs e) => UpdateSqlServerLoginBoxes();
 

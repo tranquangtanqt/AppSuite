@@ -17,10 +17,45 @@ public sealed class SqlServerSchemaImporter
     public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
         SqlServerConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
-        var dataSource = BuildDataSource(settings);
+        var sourceLabel = $"{BuildDataSource(settings)}/{settings.Database}";
+        log($"Dang ket noi {sourceLabel} (toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
+        await using var connection = CreateConnection(settings, options);
+        await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
+
+        var schemaFilter = string.IsNullOrWhiteSpace(settings.Schema) ? null : settings.Schema.Trim();
+        var tables = await ReadTablesAsync(connection, schemaFilter, sourceLabel, log, cancellationToken);
+        var primaryKeys = await ReadPrimaryKeysAsync(connection, schemaFilter, cancellationToken);
+        var columns = await ReadColumnsAsync(connection, schemaFilter, primaryKeys, log, cancellationToken);
+        var foreignKeys = await ReadForeignKeysAsync(connection, schemaFilter, log, cancellationToken);
+
+        log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
+        return (tables, columns, foreignKeys);
+    }
+
+    /// <summary>"Thu ket noi": opens a connection and counts the tables/views an import would read.</summary>
+    public async Task<ConnectionTestResult> TestConnectionAsync(
+        SqlServerConnectionSettings settings, AppOptions options, CancellationToken cancellationToken = default)
+    {
+        await using var connection = CreateConnection(settings, options);
+        await DatabaseConnectException.OpenAsync(connection, _ => { }, cancellationToken);
+
+        var schemaFilter = string.IsNullOrWhiteSpace(settings.Schema) ? null : settings.Schema.Trim();
+        const string sql =
+            """
+            SELECT COUNT(*) FROM sys.objects o JOIN sys.schemas s ON s.schema_id = o.schema_id
+            WHERE o.type IN ('U', 'V') AND o.is_ms_shipped = 0 AND {schemaClause}
+            """;
+        await using var command = CreateCommand(connection, sql, schemaFilter);
+        var count = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        return new ConnectionTestResult($"SQL Server {connection.ServerVersion}", count,
+            schemaFilter is null ? "mọi schema" : $"schema {schemaFilter}");
+    }
+
+    private static SqlConnection CreateConnection(SqlServerConnectionSettings settings, AppOptions options)
+    {
         var builder = new SqlConnectionStringBuilder
         {
-            DataSource = dataSource,
+            DataSource = BuildDataSource(settings),
             InitialCatalog = settings.Database,
             IntegratedSecurity = settings.UseWindowsAuthentication,
             ConnectTimeout = options.EffectiveConnectTimeoutSeconds,
@@ -36,19 +71,7 @@ public sealed class SqlServerSchemaImporter
             builder.Password = settings.Password;
         }
 
-        var sourceLabel = $"{dataSource}/{settings.Database}";
-        log($"Dang ket noi {sourceLabel} (toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
-        await using var connection = new SqlConnection(builder.ConnectionString);
-        await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
-
-        var schemaFilter = string.IsNullOrWhiteSpace(settings.Schema) ? null : settings.Schema.Trim();
-        var tables = await ReadTablesAsync(connection, schemaFilter, sourceLabel, log, cancellationToken);
-        var primaryKeys = await ReadPrimaryKeysAsync(connection, schemaFilter, cancellationToken);
-        var columns = await ReadColumnsAsync(connection, schemaFilter, primaryKeys, log, cancellationToken);
-        var foreignKeys = await ReadForeignKeysAsync(connection, schemaFilter, log, cancellationToken);
-
-        log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
-        return (tables, columns, foreignKeys);
+        return new SqlConnection(builder.ConnectionString);
     }
 
     /// <summary>"host,port" - except a named instance ("server\SQLEXPRESS"), whose port SQL Browser resolves.</summary>

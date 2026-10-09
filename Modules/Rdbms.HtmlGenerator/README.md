@@ -32,6 +32,15 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
      schema). Kết nối luôn `TrustServerCertificate=true` vì SqlClient mặc định mã hoá và từ chối chứng chỉ
      tự ký của máy chủ nội bộ.
 
+   **"Thử kết nối"** (nút phụ của ContentDialog, `args.Cancel = true` để giữ hộp thoại mở): đọc các ô của tab đang
+   chọn (chưa lưu) → `RdbmsHtmlGeneratorViewModel.TestConnectionAsync` → `*SchemaImporter.TestConnectionAsync` (mở kết
+   nối qua cùng `CreateConnection` với lúc import + đếm bảng / view trong phạm vi sẽ đọc, trả `ConnectionTestResult`).
+   Kết quả hiện ở InfoBar trên các tab: xanh = OK, vàng = kết nối được nhưng 0 bảng, đỏ = lỗi (cùng
+   `DescribeConnectionError` với hộp thoại lỗi lúc import). Đang thử thì bấm lại bị bỏ qua (không tắt nút vì focus
+   sẽ nhảy sang "Huy" và Enter sẽ đóng hộp thoại); đổi tab / đóng hộp thoại thì huỷ lần thử đang chạy và xoá kết quả.
+   Oracle: sai Service Name trả ORA-50201 bọc ORA-12514 bên trong - `DescribeConnectionError` dò cả chuỗi
+   InnerException. Mọi `OracleCommand` đặt `BindByName = true` (câu đọc bảng dùng `:owner` 2 lần).
+
    Bấm "Luu" sẽ lưu **cả 4 tab** cùng lúc vào `Data\Config\config.xml`
    (`Services\ConnectionSettingsStore`, dùng `System.Xml.Serialization.XmlSerializer`, root
    `DatabaseConnectionsConfig` chứa `Postgres` / `Oracle` / `MySql` / `SqlServer` + `SelectedSource` +

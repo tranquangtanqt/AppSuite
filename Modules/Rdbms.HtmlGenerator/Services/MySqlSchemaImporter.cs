@@ -17,6 +17,36 @@ public sealed class MySqlSchemaImporter
     public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
         MySqlConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
+        var sourceLabel = $"{settings.Host}:{settings.Port}/{settings.Database}";
+        log($"Dang ket noi {sourceLabel} (toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
+        await using var connection = CreateConnection(settings, options);
+        await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
+
+        var schema = settings.Database.Trim();
+        var tables = await ReadTablesAsync(connection, schema, sourceLabel, log, cancellationToken);
+        var columns = await ReadColumnsAsync(connection, schema, log, cancellationToken);
+        var foreignKeys = await ReadForeignKeysAsync(connection, schema, log, cancellationToken);
+
+        log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
+        return (tables, columns, foreignKeys);
+    }
+
+    /// <summary>"Thu ket noi": opens a connection and counts the tables/views an import would read.</summary>
+    public async Task<ConnectionTestResult> TestConnectionAsync(
+        MySqlConnectionSettings settings, AppOptions options, CancellationToken cancellationToken = default)
+    {
+        await using var connection = CreateConnection(settings, options);
+        await DatabaseConnectException.OpenAsync(connection, _ => { }, cancellationToken);
+
+        var schema = settings.Database.Trim();
+        await using var command = CreateCommand(connection,
+            "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = @schema", schema);
+        var count = Convert.ToInt32(await command.ExecuteScalarAsync(cancellationToken));
+        return new ConnectionTestResult($"MySQL {connection.ServerVersion}", count, $"database {schema}");
+    }
+
+    private static MySqlConnection CreateConnection(MySqlConnectionSettings settings, AppOptions options)
+    {
         var builder = new MySqlConnectionStringBuilder
         {
             Server = settings.Host,
@@ -27,19 +57,7 @@ public sealed class MySqlSchemaImporter
             ConnectionTimeout = (uint)options.EffectiveConnectTimeoutSeconds,
             DefaultCommandTimeout = (uint)options.EffectiveCommandTimeoutSeconds,
         };
-
-        var sourceLabel = $"{settings.Host}:{settings.Port}/{settings.Database}";
-        log($"Dang ket noi {sourceLabel} (toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
-        await using var connection = new MySqlConnection(builder.ConnectionString);
-        await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
-
-        var schema = settings.Database.Trim();
-        var tables = await ReadTablesAsync(connection, schema, sourceLabel, log, cancellationToken);
-        var columns = await ReadColumnsAsync(connection, schema, log, cancellationToken);
-        var foreignKeys = await ReadForeignKeysAsync(connection, schema, log, cancellationToken);
-
-        log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
-        return (tables, columns, foreignKeys);
+        return new MySqlConnection(builder.ConnectionString);
     }
 
     private static MySqlCommand CreateCommand(MySqlConnection connection, string sql, string schema)
