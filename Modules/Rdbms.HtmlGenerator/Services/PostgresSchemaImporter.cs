@@ -193,6 +193,7 @@ public sealed class PostgresSchemaImporter
                 columns.Add(new DbColumnRecord
                 {
                     TableName = tableName,
+                    Schema = schemaName,
                     OrdinalPosition = reader.GetInt32(3),
                     Level = isPrimaryKey ? 0 : 1,
                     ColumnName = columnName,
@@ -218,26 +219,33 @@ public sealed class PostgresSchemaImporter
         try
         {
             await using var command = connection.CreateCommand();
-            var schemaClause = ApplySchemaFilter(command, schemaFilter, "tc.table_schema");
+            var schemaClause = ApplySchemaFilter(command, schemaFilter, "n.nspname");
+            // pg_constraint keeps the local / referenced column numbers as 2 parallel arrays (conkey / confkey):
+            // unnest them together so column i pairs with referenced column i. (information_schema's
+            // constraint_column_usage has no position, so joining it paired every column with every other one
+            // for a composite key, and constraint names are only unique per table - not per schema.)
             command.CommandText =
                 $"""
-                SELECT tc.table_name, tc.constraint_name,
-                       kcu.column_name AS local_column, kcu.ordinal_position,
-                       ccu.table_name AS ref_table, ccu.column_name AS ref_column
-                FROM information_schema.table_constraints tc
-                JOIN information_schema.key_column_usage kcu
-                    ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
-                JOIN information_schema.constraint_column_usage ccu
-                    ON tc.constraint_name = ccu.constraint_name AND tc.table_schema = ccu.table_schema
-                WHERE tc.constraint_type = 'FOREIGN KEY' AND {schemaClause}
-                ORDER BY tc.table_name, tc.constraint_name, kcu.ordinal_position
+                SELECT n.nspname, cl.relname, con.conname, la.attname, k.ord,
+                       rn.nspname, rcl.relname, ra.attname
+                FROM pg_constraint con
+                JOIN pg_class cl ON cl.oid = con.conrelid
+                JOIN pg_namespace n ON n.oid = cl.relnamespace
+                JOIN pg_class rcl ON rcl.oid = con.confrelid
+                JOIN pg_namespace rn ON rn.oid = rcl.relnamespace
+                CROSS JOIN LATERAL unnest(con.conkey, con.confkey) WITH ORDINALITY AS k(lnum, rnum, ord)
+                JOIN pg_attribute la ON la.attrelid = con.conrelid AND la.attnum = k.lnum
+                JOIN pg_attribute ra ON ra.attrelid = con.confrelid AND ra.attnum = k.rnum
+                WHERE con.contype = 'f' AND {schemaClause}
+                ORDER BY n.nspname, cl.relname, con.conname, k.ord
                 """;
 
-            var rows = new List<(string TableName, string ConstraintName, string LocalColumn, string RefTable, string RefColumn)>();
+            var rows = new List<ForeignKeyColumnRow>();
             await using var reader = await command.ExecuteReaderAsync(ct);
             while (await reader.ReadAsync(ct))
             {
-                rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(4), reader.GetString(5)));
+                rows.Add(new ForeignKeyColumnRow(reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.GetString(5), reader.GetString(6), reader.GetString(7)));
             }
 
             foreignKeys = ForeignKeyGrouper.Group(rows);

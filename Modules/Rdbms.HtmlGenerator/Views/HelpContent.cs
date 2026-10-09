@@ -49,6 +49,7 @@ internal static class HelpContent
 
         new("Nhiều database và cập nhật", "", "Mỗi database có file dữ liệu riêng.",
         [
+            new("Bảng trùng tên ở nhiều schema", "Để trống Schema mà 2 schema có bảng cùng tên (vd public.orders và audit.orders) thì chỉ những bảng trùng đó hiện dạng schema.bảng trong trang HTML (cột, khoá ngoại đổi theo); bảng không trùng giữ tên ngắn. Khung log ghi rõ bảng nào được đổi. Khoá ngoại trỏ sang schema không đọc cũng hiện dạng schema.bảng."),
             new("Tên file theo database", "File .db / .html đặt theo tên database (PostgreSQL / MySQL / SQL Server) hoặc Service Name / SID (Oracle) - đọc nhiều database khác nhau không ghi đè lên nhau."),
             new("Đã đọc trước đó", "Mở lại module (hoặc đổi Nguon) vẫn nhận file .db / .html đã có của database đang chọn - không cần đọc lại nếu schema chưa đổi."),
             new("Lấy dữ liệu mới nhất", "Bấm lại \"1. Doc Database -> SQLite\" rồi \"2. Xuat HTML\". Mỗi lần đọc là dựng lại toàn bộ."),

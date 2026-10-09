@@ -27,32 +27,48 @@
             <TextBlock Text="Đọc schema từ PostgreSQL / Oracle / MySQL / SQL Server -> lưu Data\Database\{tên database}.db -> xuất Data\Database\{tên database}.html" Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-            <TextBlock Text="Nguon:" VerticalAlignment="Center" Opacity="0.7" />
-            <!-- Thứ tự mục = thứ tự enum DatabaseSourceType (SelectedIndex <-> enum) -->
-            <ComboBox x:Name="SourceComboBox" MinWidth="140" VerticalAlignment="Center"
-                      SelectionChanged="SourceComboBox_SelectionChanged" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}">
-                <x:String>PostgreSQL</x:String>
-                <x:String>Oracle</x:String>
-                <x:String>MySQL</x:String>
-                <x:String>SQL Server</x:String>
-            </ComboBox>
-            <Button Content="Thiet lap thong tin database" Click="OpenSettingsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" />
+        <!-- 2 hàng để cửa sổ hẹp (~650 px) vẫn thấy đủ nút: hàng trên = nguồn + nút phụ (dồn phải),
+             hàng dưới = 3 bước theo thứ tự. -->
+        <StackPanel Grid.Row="1" Spacing="10">
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Nguon:" VerticalAlignment="Center" Opacity="0.7" />
+                <!-- Thứ tự mục = thứ tự enum DatabaseSourceType (SelectedIndex <-> enum) -->
+                <ComboBox x:Name="SourceComboBox" Grid.Column="1" MinWidth="140" VerticalAlignment="Center"
+                          SelectionChanged="SourceComboBox_SelectionChanged" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}">
+                    <x:String>PostgreSQL</x:String>
+                    <x:String>Oracle</x:String>
+                    <x:String>MySQL</x:String>
+                    <x:String>SQL Server</x:String>
+                </ComboBox>
+                <Button Grid.Column="2" Content="Thiet lap thong tin database" Click="OpenSettingsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" />
+                <Button Grid.Column="4" Click="OpenOptionsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" ToolTipService.ToolTip="Cài đặt: giới hạn thời gian kết nối / truy vấn, tự mở HTML">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE713;" FontSize="14" />
+                        <TextBlock Text="Cài đặt" />
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="5" Content="Huong dan (F1)" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F1" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+            </Grid>
             <!-- Nút của bước nên bấm tiếp (ViewModel.NextStep) có màu nhấn -->
-            <Button Content="1. Doc Database -> SQLite" Command="{x:Bind ViewModel.ImportDatabaseCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 1), Mode=OneWay}" />
-            <Button Content="2. Xuat HTML" Command="{x:Bind ViewModel.ExportHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 2), Mode=OneWay}" />
-            <Button Content="Mo file HTML" Command="{x:Bind ViewModel.OpenHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 3), Mode=OneWay}" />
-            <Button Click="OpenOptionsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" ToolTipService.ToolTip="Cài đặt: giới hạn thời gian kết nối / truy vấn, tự mở HTML">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <FontIcon Glyph="&#xE713;" FontSize="14" />
-                    <TextBlock Text="Cài đặt" />
-                </StackPanel>
-            </Button>
-            <Button Content="Huong dan (F1)" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
-                <Button.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="F1" />
-                </Button.KeyboardAccelerators>
-            </Button>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="1. Doc Database -> SQLite" Command="{x:Bind ViewModel.ImportDatabaseCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 1), Mode=OneWay}" />
+                <FontIcon Glyph="&#xE76C;" FontSize="10" Opacity="0.5" VerticalAlignment="Center" />
+                <Button Content="2. Xuat HTML" Command="{x:Bind ViewModel.ExportHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 2), Mode=OneWay}" />
+                <FontIcon Glyph="&#xE76C;" FontSize="10" Opacity="0.5" VerticalAlignment="Center" />
+                <Button Content="Mo file HTML" Command="{x:Bind ViewModel.OpenHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 3), Mode=OneWay}" />
+            </StackPanel>
         </StackPanel>
 
         <ProgressBar Grid.Row="2" IsIndeterminate="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />

@@ -197,6 +197,7 @@ public sealed class SqlServerSchemaImporter
                 columns.Add(new DbColumnRecord
                 {
                     TableName = tableName,
+                    Schema = schemaName,
                     OrdinalPosition = reader.GetInt32(3),
                     Level = primaryKeys.Contains((schemaName, tableName, columnName)) ? 0 : 1,
                     ColumnName = columnName,
@@ -241,24 +242,26 @@ public sealed class SqlServerSchemaImporter
         {
             const string sql =
                 """
-                SELECT tp.name, fk.name, cp.name, fkc.constraint_column_id, tr.name, cr.name
+                SELECT tp.name, fk.name, cp.name, fkc.constraint_column_id, tr.name, cr.name, s.name, rs.name
                 FROM sys.foreign_keys fk
                 JOIN sys.foreign_key_columns fkc ON fkc.constraint_object_id = fk.object_id
                 JOIN sys.objects tp ON tp.object_id = fkc.parent_object_id
                 JOIN sys.schemas s ON s.schema_id = tp.schema_id
                 JOIN sys.columns cp ON cp.object_id = fkc.parent_object_id AND cp.column_id = fkc.parent_column_id
                 JOIN sys.objects tr ON tr.object_id = fkc.referenced_object_id
+                JOIN sys.schemas rs ON rs.schema_id = tr.schema_id
                 JOIN sys.columns cr ON cr.object_id = fkc.referenced_object_id AND cr.column_id = fkc.referenced_column_id
                 WHERE {schemaClause}
-                ORDER BY tp.name, fk.name, fkc.constraint_column_id
+                ORDER BY s.name, tp.name, fk.name, fkc.constraint_column_id
                 """;
 
-            var rows = new List<(string TableName, string ConstraintName, string LocalColumn, string RefTable, string RefColumn)>();
+            var rows = new List<ForeignKeyColumnRow>();
             await using var command = CreateCommand(connection, sql, schemaFilter);
             await using var reader = await command.ExecuteReaderAsync(ct);
             while (await reader.ReadAsync(ct))
             {
-                rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(4), reader.GetString(5)));
+                rows.Add(new ForeignKeyColumnRow(reader.GetString(6), reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                    reader.GetString(7), reader.GetString(4), reader.GetString(5)));
             }
 
             return ForeignKeyGrouper.Group(rows);

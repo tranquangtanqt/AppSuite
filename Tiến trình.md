@@ -489,8 +489,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   ScreenCapture (Cài đặt) đổi sang `CompactAccentButtonStyle` — cùng cỡ với nút bên cạnh. Build solution 0 warning;
   Sandbox: mở từng module + mọi trang FileTools + cửa sổ Cài đặt ScreenCapture, không app nào văng, ảnh chụp đồng nhất
   (2026-10-09)
-- [ ] Cửa sổ hẹp (vd Sandbox ~1000 px): hàng nút bị cắt, không thấy "Mo file HTML" / "Cài đặt" / "Huong dan" (ảnh
-  người dùng gửi cũng mất nút Hướng dẫn) — cho hàng nút xuống dòng hoặc gom nút phụ sang phải
+- [x] Cửa sổ hẹp: hàng nút bị cắt → tách 2 hàng (trên: Nguồn + Thiết lập, Cài đặt / Hướng dẫn dồn phải; dưới: 3 bước
+  nối bằng mũi tên). Sandbox: cửa sổ ~650 px logic vẫn thấy đủ 7 nút, 21/21 (2026-10-09)
+- [x] Bảng trùng tên ở 2 schema làm **cả lần đọc lỗi** (`UNIQUE constraint failed: Tables.TableName`) → chỉ tên trùng
+  đổi thành `schema.bảng` (`TableNameQualifier`). Sửa kèm: khoá ngoại nhiều cột của PostgreSQL bị nhân chéo (đọc từ
+  `pg_constraint` thay vì information_schema); gom khoá ngoại theo cả schema. Thử console: PostgreSQL 17 tạm (cổng riêng,
+  đã xoá) + SQL Server LocalDB, đọc → SQLite → HTML OK (2026-10-09)
+- [ ] Đọc DB lỗi thì nút "2. Xuat HTML" tắt dù file .db cũ vẫn còn (phải đổi nguồn / mở lại mới xuất được bản cũ)
 - [x] Nút **Thử kết nối** trong hộp thoại thiết lập (thanh nút Luu | Thử kết nối | Huy): thử bằng thông tin đang nhập
   ở tab hiện tại, chưa cần Lưu; báo phiên bản máy chủ + số bảng / view sẽ đọc (0 bảng = cảnh báo vàng), lỗi đỏ kèm gợi ý.
   Sửa kèm: Oracle sai Service Name trước đây bị báo nhầm "không tới được máy chủ" (ORA-12514 nằm trong ORA-50201);
@@ -504,8 +509,8 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] Thử MySQL với máy chủ thật (máy dev không có MySQL — mới thử được trường hợp không kết nối được)
 - [ ] Thử tay GUI: combobox đổi nguồn, hộp thoại kết nối 4 tab (tích Windows Authentication khoá ô user/pass),
   hộp thoại Cài đặt (Lưu / Mặc định / Huỷ), tự mở HTML; regression PostgreSQL + Oracle với DB thật
-- [ ] **[Đề xuất · Có thể]** Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X) đang bị gộp vì HTML chỉ dùng
-  TableName — có từ trước với PostgreSQL, giờ thêm SQL Server
+- [x] ~~Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X)~~ — thực tế không phải bị gộp mà làm cả lần đọc lỗi;
+  đã sửa 2026-10-09 (xem mục bên trên)
 
 ## ModuleC
 

@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -189,6 +190,14 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
                 DatabaseSourceType.SqlServer => await Task.Run(() => _sqlServerImporter.ImportAsync(SqlServerConnectionSettings, options, AppendLog)),
                 _ => await Task.Run(() => _postgresImporter.ImportAsync(PostgresConnectionSettings, options, AppendLog)),
             };
+
+            // Same table name in 2+ schemas -> "schema.table" for those only (SQLite / HTML key tables by name).
+            List<string> duplicateNames;
+            (tables, columns, foreignKeys, duplicateNames) = TableNameQualifier.QualifyDuplicates(tables, columns, foreignKeys);
+            if (duplicateNames.Count > 0)
+            {
+                AppendLog($"{duplicateNames.Count} ten bang trung o nhieu schema -> dat ten dang schema.bang: {string.Join(", ", duplicateNames)}");
+            }
 
             StatusText = $"Dang luu {tables.Count} bang / {columns.Count} cot vao SQLite...";
             await _database.ReplaceAllAsync(tables, columns, foreignKeys);

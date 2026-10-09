@@ -3,7 +3,7 @@ namespace Rdbms.HtmlGenerator.Models;
 /// <summary>One table/view read from a PostgreSQL schema. Fields with no Postgres equivalent
 /// (JapaneseName, ManagementType, CautionItems, RevisionHistory, Alias, Note) stay empty - kept only
 /// so this shape matches Mcf.DbDef.HtmlGenerator's and the HTML report can be reused unchanged.</summary>
-public sealed class DbTableRecord
+public sealed record DbTableRecord
 {
     public required string TableName { get; init; }
     public string Alias { get; init; } = string.Empty;

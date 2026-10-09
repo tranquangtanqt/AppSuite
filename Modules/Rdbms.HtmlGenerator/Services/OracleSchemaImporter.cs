@@ -200,6 +200,7 @@ public sealed class OracleSchemaImporter
                 columns.Add(new DbColumnRecord
                 {
                     TableName = tableName,
+                    Schema = owner,
                     OrdinalPosition = reader.IsDBNull(2) ? 0 : reader.GetInt32(2),
                     Level = isPrimaryKey ? 0 : 1,
                     ColumnName = columnName,
@@ -245,7 +246,7 @@ public sealed class OracleSchemaImporter
             const string sql =
                 """
                 SELECT ac.TABLE_NAME, ac.CONSTRAINT_NAME, acc.COLUMN_NAME AS LOCAL_COLUMN, acc.POSITION,
-                       rac.TABLE_NAME AS REF_TABLE, racc.COLUMN_NAME AS REF_COLUMN
+                       rac.TABLE_NAME AS REF_TABLE, racc.COLUMN_NAME AS REF_COLUMN, rac.OWNER AS REF_OWNER
                 FROM ALL_CONSTRAINTS ac
                 JOIN ALL_CONS_COLUMNS acc
                     ON acc.OWNER = ac.OWNER AND acc.CONSTRAINT_NAME = ac.CONSTRAINT_NAME
@@ -258,12 +259,13 @@ public sealed class OracleSchemaImporter
                 ORDER BY ac.TABLE_NAME, ac.CONSTRAINT_NAME, acc.POSITION
                 """;
 
-            var rows = new List<(string TableName, string ConstraintName, string LocalColumn, string RefTable, string RefColumn)>();
+            var rows = new List<ForeignKeyColumnRow>();
             await using var command = CreateCommand(connection, sql, owner, commandTimeout);
             await using var reader = await command.ExecuteReaderAsync(ct);
             while (await reader.ReadAsync(ct))
             {
-                rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(4), reader.GetString(5)));
+                rows.Add(new ForeignKeyColumnRow(owner, reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                    reader.GetString(6), reader.GetString(4), reader.GetString(5)));
             }
 
             foreignKeys = ForeignKeyGrouper.Group(rows);

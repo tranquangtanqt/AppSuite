@@ -131,6 +131,7 @@ public sealed class MySqlSchemaImporter
                 columns.Add(new DbColumnRecord
                 {
                     TableName = reader.GetString(0),
+                    Schema = schema,
                     ColumnName = reader.GetString(1),
                     OrdinalPosition = Convert.ToInt32(reader.GetValue(2)),
                     DataType = reader.GetString(3),
@@ -157,18 +158,19 @@ public sealed class MySqlSchemaImporter
             const string sql =
                 """
                 SELECT TABLE_NAME, CONSTRAINT_NAME, COLUMN_NAME, ORDINAL_POSITION,
-                       REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
+                       REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME, REFERENCED_TABLE_SCHEMA
                 FROM information_schema.KEY_COLUMN_USAGE
                 WHERE TABLE_SCHEMA = @schema AND REFERENCED_TABLE_NAME IS NOT NULL
                 ORDER BY TABLE_NAME, CONSTRAINT_NAME, ORDINAL_POSITION
                 """;
 
-            var rows = new List<(string TableName, string ConstraintName, string LocalColumn, string RefTable, string RefColumn)>();
+            var rows = new List<ForeignKeyColumnRow>();
             await using var command = CreateCommand(connection, sql, schema);
             await using var reader = await command.ExecuteReaderAsync(ct);
             while (await reader.ReadAsync(ct))
             {
-                rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(4), reader.GetString(5)));
+                rows.Add(new ForeignKeyColumnRow(schema, reader.GetString(0), reader.GetString(1), reader.GetString(2),
+                    reader.GetString(6), reader.GetString(4), reader.GetString(5)));
             }
 
             return ForeignKeyGrouper.Group(rows);

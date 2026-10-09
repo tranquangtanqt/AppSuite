@@ -121,7 +121,16 @@ Các importer đọc thẳng vào catalog/data dictionary của DB (không qua `
   ghi). `DataType` dựng như SSMS hiển thị: `nvarchar(50)` (max_length tính theo byte nên chia 2 cho kiểu n),
   `varchar(max)`, `decimal(10,2)`, `datetime2(3)`. Đã thử với SQL Server LocalDB: bảng / view / khóa chính ghép /
   khóa ngoại 2 cột / mô tả tiếng Việt / lọc schema.
-- Chung cho cả 4: khóa ngoại đọc theo từng cặp cột rồi gộp theo constraint ở `Services\ForeignKeyGrouper`.
+- **Bảng trùng tên ở nhiều schema** (`Services\TableNameQualifier`, gọi trong `ImportDatabaseAsync` trước khi lưu SQLite):
+  SQLite (`Tables.TableName` là PRIMARY KEY) và HTML khoá bảng theo tên, nên trước đây 2 schema có bảng cùng tên làm
+  cả lần đọc lỗi `UNIQUE constraint failed`. Giờ chỉ các tên trùng đổi thành `schema.bảng` (bảng, cột, khoá ngoại, bảng
+  tham chiếu); khoá ngoại trỏ sang schema không đọc cũng hiện `schema.bảng`. Schema lấy từ `DbTableRecord.SourceSheet`,
+  `DbColumnRecord.Schema`, `DbForeignKeyRecord.Schema / ReferencedSchema` (2 field sau không lưu SQLite). Các model là
+  `record` để đổi tên bằng `with`.
+- PostgreSQL khoá ngoại đọc từ `pg_constraint` (`unnest(conkey, confkey) WITH ORDINALITY`): bản cũ join
+  `information_schema.constraint_column_usage` (không có vị trí cột) nên khoá ngoại nhiều cột bị nhân chéo
+  (`cust_id,cust_id,cust_branch,cust_branch -> branch,id,branch,id`). Đã thử với PostgreSQL 17 tạm và SQL Server LocalDB.
+- Chung cho cả 4: khóa ngoại đọc theo từng cặp cột rồi gộp theo (schema, bảng, constraint) ở `Services\ForeignKeyGrouper`.
   `Level` tái dùng đúng quy ước của Mcf.DbDef.HtmlGenerator (`0` = cột khóa chính, `1` = cột thường)
   để phần tô màu "khoa chinh" trong HTML dùng lại được mà không cần sửa gì; khóa ngoại nhiều cột nối
   `LocalColumns`/`ReferencedColumns` bằng dấu phẩy. Các field đặc thù workbook tiếng Nhật của Mcf.DbDef.HtmlGenerator
