@@ -10,20 +10,31 @@ internal static class HelpContent
 {
     public static IReadOnlyList<HelpSection> Sections { get; } =
     [
-        new("Bắt đầu nhanh", "", "Đọc cấu trúc bảng / cột / khoá từ PostgreSQL hoặc Oracle, xuất thành 1 trang HTML tra cứu mở trong trình duyệt.",
+        new("Bắt đầu nhanh", "", "Đọc cấu trúc bảng / cột / khoá từ PostgreSQL, Oracle, MySQL hoặc SQL Server, xuất thành 1 trang HTML tra cứu mở trong trình duyệt.",
         [
-            new("1. Thiết lập kết nối", "Nút \"Thiet lap thong tin database\": nhập thông tin ở tab PostgreSQL và / hoặc Oracle, bấm Luu (lưu cả 2 tab, tự điền lại lần mở sau)."),
-            new("2. Chọn Nguon", "PostgreSQL hoặc Oracle. Nút \"1. Doc Database -> SQLite\" chỉ bật khi nguồn đang chọn đã có đủ thông tin (PostgreSQL: Host + Database; Oracle: Host + Service Name hoặc SID)."),
-            new("3. Bấm \"1. Doc Database -> SQLite\"", "Kết nối, đọc schema, lưu vào Data\\Database\\{tên database}.db. Khung log bên dưới hiện tiến trình và lỗi kết nối (nếu có)."),
+            new("1. Chọn Nguon", "Combobox \"Nguon\": PostgreSQL / Oracle / MySQL / SQL Server. Nguồn đã chọn được nhớ cho lần mở sau."),
+            new("2. Thiết lập kết nối", "Nút \"Thiet lap thong tin database\" (mở sẵn tab của nguồn đang chọn): nhập thông tin, bấm Luu (lưu cả 4 tab, tự điền lại lần mở sau). Nút \"1. Doc Database -> SQLite\" chỉ bật khi nguồn đang chọn đã có Host + Database (Oracle: Host + Service Name hoặc SID)."),
+            new("3. Bấm \"1. Doc Database -> SQLite\"", "Kết nối, đọc schema, lưu vào Data\\Database\\{tên database}.db. Khung log bên dưới hiện tiến trình. Không kết nối được (sai Host / Port, chưa bật VPN, firewall chặn...) thì sau thời gian chờ (mặc định 10 giây, đổi trong Cài đặt) hiện hộp thoại báo lỗi kèm gợi ý cần kiểm tra; sai mật khẩu / sai tên database / Service Name cũng được báo rõ."),
             new("4. Bấm \"2. Xuat HTML\" rồi \"Mo file HTML\"", "Sinh và mở Data\\Database\\{tên database}.html - 1 file tự chứa, không cần mạng, gửi cho người khác được."),
+            new("Nút màu xanh = bước tiếp theo", "Chưa đọc database: nút 1 xanh. Đọc xong: nút \"2. Xuat HTML\" xanh. Xuất xong: nút \"Mo file HTML\" xanh. Mở lại module cũng tự nhận đang ở bước nào (HTML cũ hơn dữ liệu vừa đọc thì vẫn là bước 2)."),
             new("Mở lại hướng dẫn này", "Nút Hướng dẫn trên cùng, hoặc phím F1.", "F1"),
         ]),
 
-        new("Thiết lập kết nối", "", "Hộp thoại có 2 tab, mỗi tab lưu riêng thông tin của 1 loại database.",
+        new("Thiết lập kết nối", "", "Hộp thoại có 4 tab, mỗi tab lưu riêng thông tin của 1 loại database.",
         [
             new("PostgreSQL", "Host, Port (mặc định 5432), Database, Username, Password, Schema (để trống = mọi schema)."),
             new("Oracle", "Host, Port (mặc định 1521), chọn kết nối bằng Service Name hoặc SID rồi nhập ô tương ứng, Username, Password, Schema (để trống = schema trùng tên Username, theo quy ước Oracle)."),
+            new("MySQL", "Host, Port (mặc định 3306), Database, Username, Password. Dùng được cho cả MariaDB. Không có ô Schema vì trong MySQL schema chính là database."),
+            new("SQL Server", "Host (hoặc MAYCHU\\TenInstance - khi đó bỏ qua Port), Port (mặc định 1433), Database, Schema (vd dbo, để trống = mọi schema). Tích \"Windows Authentication\" để đăng nhập bằng tài khoản Windows đang dùng (không cần Username / Password). Mô tả bảng / cột lấy từ MS_Description (phần Description trong SSMS)."),
             new("Lưu ý mật khẩu", "Mật khẩu lưu dạng chữ thường trong Data\\Config\\config.xml cạnh exe - chỉ dùng trên máy cá nhân, không chép file này ra ngoài."),
+        ]),
+
+        new("Cài đặt", "", "Nút \"Cài đặt\" trên thanh nút. Bấm Lưu để áp dụng, \"Mặc định\" để điền lại giá trị gốc.",
+        [
+            new("Giới hạn thời gian kết nối", "Số giây chờ kết nối tới máy chủ (mặc định 10). Quá thời gian thì báo lỗi thay vì chờ mãi. Mạng chậm / qua VPN xa thì tăng lên."),
+            new("Giới hạn thời gian truy vấn", "Số giây tối đa cho mỗi câu đọc schema (mặc định 120). Database rất nhiều bảng / máy chủ chậm mà báo \"truy vấn quá giờ\" thì tăng lên, hoặc nhập Schema để đọc ít hơn."),
+            new("Tự mở file HTML sau khi xuất", "Bật thì \"2. Xuat HTML\" xong tự mở trang trong trình duyệt."),
+            new("Tự mở thư mục chứa file HTML sau khi xuất", "Bật thì \"2. Xuat HTML\" xong mở Explorer tại Data\\Database, chọn sẵn file vừa xuất - tiện để gửi file cho người khác. Bật được cùng lúc với tuỳ chọn trên."),
         ]),
 
         new("Tra cứu trong trang HTML", "", "Menu trái là danh sách bảng (bấm để xem), bên phải là định nghĩa bảng đang chọn. Ô \"Ten bang...\" và \"Ten cot (tuy chon)...\" + nút Tim kiem kết hợp như dưới đây.",
@@ -37,7 +48,7 @@ internal static class HelpContent
 
         new("Nhiều database và cập nhật", "", "Mỗi database có file dữ liệu riêng.",
         [
-            new("Tên file theo database", "File .db / .html đặt theo tên database (PostgreSQL) hoặc Service Name / SID (Oracle) - đọc nhiều database khác nhau không ghi đè lên nhau."),
+            new("Tên file theo database", "File .db / .html đặt theo tên database (PostgreSQL / MySQL / SQL Server) hoặc Service Name / SID (Oracle) - đọc nhiều database khác nhau không ghi đè lên nhau."),
             new("Đã đọc trước đó", "Mở lại module (hoặc đổi Nguon) vẫn nhận file .db / .html đã có của database đang chọn - không cần đọc lại nếu schema chưa đổi."),
             new("Lấy dữ liệu mới nhất", "Bấm lại \"1. Doc Database -> SQLite\" rồi \"2. Xuat HTML\". Mỗi lần đọc là dựng lại toàn bộ."),
         ]),

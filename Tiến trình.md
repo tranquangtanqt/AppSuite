@@ -460,6 +460,31 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   chừa 44px cho header. Kiểm bằng Edge: cuộn tới dòng 33 header vẫn ở trên, `#blk-...` không bị che. Cần xuất lại HTML
   để trang cũ có CSS mới (2026-10-02)
 
+## Rdbms.HtmlGenerator (ModuleE)
+
+- [x] Đổi tiêu đề cửa sổ "Module E" → "Rdbms.HtmlGenerator - Từ điển dữ liệu (PostgreSQL / Oracle)", tiêu đề trong
+  trang bỏ "Module E", dòng mô tả sửa đúng tên file `{tên database}.db/.html` (2026-10-09)
+- [x] Không kết nối được thì báo hộp thoại thay vì trông như treo: timeout 10 giây (Postgres + Oracle), lỗi ghi vào
+  log + ContentDialog kèm gợi ý (không tới được host / sai user-password / sai database, Service Name, SID).
+  Build 0 warning (2026-10-09)
+- [ ] Thử tay: bấm "1. Doc Database" với host không tới được (vd 192.168.145.107:1400) → hộp thoại sau ~10 giây
+- [x] Thêm nguồn **MySQL / MariaDB** (`MySqlConnector`) và **SQL Server** (`Microsoft.Data.SqlClient` 7, không kéo
+  Azure.Identity; Windows Authentication, `Host\Instance`). Nguồn đổi từ radio → **combobox** (nhớ lựa chọn); hộp thoại
+  kết nối 4 tab, mở sẵn tab đang chọn. Tiêu đề đổi thành "Từ điển dữ liệu database". Thử bằng console: cả 4 nguồn ngắt
+  đúng timeout khi host không tới được / cổng đóng; SQL Server đọc đúng trên LocalDB (khóa chính ghép, khóa ngoại 2 cột,
+  view, MS_Description tiếng Việt, lọc schema, sai database → 4060). Build 0 warning (2026-10-09)
+- [x] Nút **Cài đặt**: giới hạn thời gian kết nối (mặc định 10 giây), giới hạn thời gian truy vấn (mặc định 120 giây),
+  tự mở HTML sau khi xuất; nút "Mặc định". Hộp thoại lỗi phân biệt không kết nối được / truy vấn quá giờ (2026-10-09)
+- [x] Nút màu xanh chạy theo bước: đọc xong → "2. Xuat HTML" xanh, xuất xong → "Mo file HTML" xanh (trước đây luôn
+  là nút 1); mở lại module tự tính bước từ file .db / .html có sẵn. Cài đặt thêm "Tự mở thư mục chứa file HTML sau khi
+  xuất" (Explorer chọn sẵn file). Build 0 warning, app khởi động OK (2026-10-09)
+- [ ] Thử tay: đọc DB → nút 2 xanh → xuất → nút "Mo file HTML" xanh; bật tuỳ chọn mở thư mục → Explorer chọn sẵn file
+- [ ] Thử MySQL với máy chủ thật (máy dev không có MySQL — mới thử được trường hợp không kết nối được)
+- [ ] Thử tay GUI: combobox đổi nguồn, hộp thoại kết nối 4 tab (tích Windows Authentication khoá ô user/pass),
+  hộp thoại Cài đặt (Lưu / Mặc định / Huỷ), tự mở HTML; regression PostgreSQL + Oracle với DB thật
+- [ ] **[Đề xuất · Có thể]** Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X) đang bị gộp vì HTML chỉ dùng
+  TableName — có từ trước với PostgreSQL, giờ thêm SQL Server
+
 ## ModuleC
 
 - [ ] Nút "Huong dan su dung" vẫn là placeholder chưa gắn hành vi (PLAN.md ghi cố ý để sau)

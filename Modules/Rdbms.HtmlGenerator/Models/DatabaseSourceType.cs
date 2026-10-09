@@ -5,4 +5,6 @@ public enum DatabaseSourceType
 {
     Postgres,
     Oracle,
+    MySql,
+    SqlServer,
 }

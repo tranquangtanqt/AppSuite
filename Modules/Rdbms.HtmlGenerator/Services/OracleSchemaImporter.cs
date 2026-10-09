@@ -17,7 +17,7 @@ namespace Rdbms.HtmlGenerator.Services;
 public sealed class OracleSchemaImporter
 {
     public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
-        OracleConnectionSettings settings, Action<string> log, CancellationToken cancellationToken = default)
+        OracleConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
         var dataSource = BuildDataSource(settings);
         var builder = new OracleConnectionStringBuilder
@@ -25,6 +25,7 @@ public sealed class OracleSchemaImporter
             DataSource = dataSource,
             UserID = settings.Username,
             Password = settings.Password,
+            ConnectionTimeout = options.EffectiveConnectTimeoutSeconds,
         };
 
         var owner = string.IsNullOrWhiteSpace(settings.Schema)
@@ -35,14 +36,16 @@ public sealed class OracleSchemaImporter
             ? $"{settings.Host}:{settings.Port}:{settings.Sid}"
             : $"{settings.Host}:{settings.Port}/{settings.ServiceName}";
 
-        log($"Dang ket noi {sourceLabel} (schema {owner})...");
+        log($"Dang ket noi {sourceLabel} (schema {owner}, toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
         await using var connection = new OracleConnection(builder.ConnectionString);
-        await connection.OpenAsync(cancellationToken);
+        await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
 
-        var tables = await ReadTablesAsync(connection, owner, sourceLabel, log, cancellationToken);
-        var primaryKeys = await ReadPrimaryKeysAsync(connection, owner, cancellationToken);
-        var columns = await ReadColumnsAsync(connection, owner, primaryKeys, log, cancellationToken);
-        var foreignKeys = await ReadForeignKeysAsync(connection, owner, log, cancellationToken);
+        // ODP.NET has no connection-string default for command timeout - CreateCommand sets it per command.
+        var commandTimeout = options.EffectiveCommandTimeoutSeconds;
+        var tables = await ReadTablesAsync(connection, owner, commandTimeout, sourceLabel, log, cancellationToken);
+        var primaryKeys = await ReadPrimaryKeysAsync(connection, owner, commandTimeout, cancellationToken);
+        var columns = await ReadColumnsAsync(connection, owner, commandTimeout, primaryKeys, log, cancellationToken);
+        var foreignKeys = await ReadForeignKeysAsync(connection, owner, commandTimeout, log, cancellationToken);
 
         log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
         return (tables, columns, foreignKeys);
@@ -61,16 +64,17 @@ public sealed class OracleSchemaImporter
         return $"{settings.Host}:{settings.Port}/{settings.ServiceName}";
     }
 
-    private static OracleCommand CreateCommand(OracleConnection connection, string sql, string owner)
+    private static OracleCommand CreateCommand(OracleConnection connection, string sql, string owner, int commandTimeout)
     {
         var command = connection.CreateCommand();
         command.CommandText = sql;
+        command.CommandTimeout = commandTimeout;
         command.Parameters.Add(new OracleParameter("owner", owner));
         return command;
     }
 
     private static async Task<List<DbTableRecord>> ReadTablesAsync(
-        OracleConnection connection, string owner, string sourceLabel, Action<string> log, CancellationToken ct)
+        OracleConnection connection, string owner, int commandTimeout, string sourceLabel, Action<string> log, CancellationToken ct)
     {
         const string sql =
             """
@@ -87,7 +91,7 @@ public sealed class OracleSchemaImporter
             """;
 
         var tables = new List<DbTableRecord>();
-        await using var command = CreateCommand(connection, sql, owner);
+        await using var command = CreateCommand(connection, sql, owner, commandTimeout);
         await using var reader = await command.ExecuteReaderAsync(ct);
         while (await reader.ReadAsync(ct))
         {
@@ -112,7 +116,7 @@ public sealed class OracleSchemaImporter
     }
 
     private static async Task<HashSet<(string Table, string Column)>> ReadPrimaryKeysAsync(
-        OracleConnection connection, string owner, CancellationToken ct)
+        OracleConnection connection, string owner, int commandTimeout, CancellationToken ct)
     {
         const string sql =
             """
@@ -123,7 +127,7 @@ public sealed class OracleSchemaImporter
             """;
 
         var result = new HashSet<(string, string)>();
-        await using var command = CreateCommand(connection, sql, owner);
+        await using var command = CreateCommand(connection, sql, owner, commandTimeout);
         await using var reader = await command.ExecuteReaderAsync(ct);
         while (await reader.ReadAsync(ct))
         {
@@ -136,6 +140,7 @@ public sealed class OracleSchemaImporter
     private static async Task<List<DbColumnRecord>> ReadColumnsAsync(
         OracleConnection connection,
         string owner,
+        int commandTimeout,
         HashSet<(string Table, string Column)> primaryKeys,
         Action<string> log,
         CancellationToken ct)
@@ -153,7 +158,7 @@ public sealed class OracleSchemaImporter
             """;
 
         var columns = new List<DbColumnRecord>();
-        await using var command = CreateCommand(connection, sql, owner);
+        await using var command = CreateCommand(connection, sql, owner, commandTimeout);
         await using var reader = await command.ExecuteReaderAsync(ct);
         while (await reader.ReadAsync(ct))
         {
@@ -208,7 +213,7 @@ public sealed class OracleSchemaImporter
     }
 
     private static async Task<List<DbForeignKeyRecord>> ReadForeignKeysAsync(
-        OracleConnection connection, string owner, Action<string> log, CancellationToken ct)
+        OracleConnection connection, string owner, int commandTimeout, Action<string> log, CancellationToken ct)
     {
         var foreignKeys = new List<DbForeignKeyRecord>();
         try
@@ -230,26 +235,14 @@ public sealed class OracleSchemaImporter
                 """;
 
             var rows = new List<(string TableName, string ConstraintName, string LocalColumn, string RefTable, string RefColumn)>();
-            await using var command = CreateCommand(connection, sql, owner);
+            await using var command = CreateCommand(connection, sql, owner, commandTimeout);
             await using var reader = await command.ExecuteReaderAsync(ct);
             while (await reader.ReadAsync(ct))
             {
                 rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(4), reader.GetString(5)));
             }
 
-            var ordinal = 0;
-            foreach (var group in rows.GroupBy(r => (r.TableName, r.ConstraintName)))
-            {
-                var groupRows = group.ToList();
-                foreignKeys.Add(new DbForeignKeyRecord
-                {
-                    TableName = group.Key.TableName,
-                    OrdinalPosition = ordinal++,
-                    LocalColumns = string.Join(",", groupRows.Select(r => r.LocalColumn)),
-                    ReferencedTable = groupRows[0].RefTable,
-                    ReferencedColumns = string.Join(",", groupRows.Select(r => r.RefColumn)),
-                });
-            }
+            foreignKeys = ForeignKeyGrouper.Group(rows);
         }
         catch (Exception ex)
         {

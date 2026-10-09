@@ -7,7 +7,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="Module E">
+    Title="Rdbms.HtmlGenerator - Từ điển dữ liệu database">
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
@@ -23,20 +23,31 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Spacing="2">
-            <TextBlock Text="Module E - Tu dien du lieu (PostgreSQL)" Style="{StaticResource TitleLargeTextBlockStyle}" />
-            <TextBlock Text="Doc schema tu PostgreSQL -> luu Data\Database\Rdbms.HtmlGenerator.db -> xuat Data\Database\Rdbms.HtmlGenerator.html" Opacity="0.7" />
+            <TextBlock Text="Từ điển dữ liệu database" Style="{StaticResource TitleLargeTextBlockStyle}" />
+            <TextBlock Text="Đọc schema từ PostgreSQL / Oracle / MySQL / SQL Server -> lưu Data\Database\{tên database}.db -> xuất Data\Database\{tên database}.html" Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-            <Button Content="Thiet lap thong tin database" Click="OpenSettingsDialog_Click" />
-            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="8,0">
-                <TextBlock Text="Nguon:" VerticalAlignment="Center" Opacity="0.7" />
-                <RadioButton x:Name="SourcePostgresRadio" Content="PostgreSQL" GroupName="Source" IsChecked="True" Checked="SourceRadio_Checked" />
-                <RadioButton x:Name="SourceOracleRadio" Content="Oracle" GroupName="Source" Checked="SourceRadio_Checked" />
-            </StackPanel>
-            <Button Content="1. Doc Database -> SQLite" Command="{x:Bind ViewModel.ImportDatabaseCommand}" Style="{StaticResource AccentButtonStyle}" />
-            <Button Content="2. Xuat HTML" Command="{x:Bind ViewModel.ExportHtmlCommand}" />
-            <Button Content="Mo file HTML" Command="{x:Bind ViewModel.OpenHtmlCommand}" />
+            <TextBlock Text="Nguon:" VerticalAlignment="Center" Opacity="0.7" />
+            <!-- Thứ tự mục = thứ tự enum DatabaseSourceType (SelectedIndex <-> enum) -->
+            <ComboBox x:Name="SourceComboBox" MinWidth="140" VerticalAlignment="Center"
+                      SelectionChanged="SourceComboBox_SelectionChanged" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}">
+                <x:String>PostgreSQL</x:String>
+                <x:String>Oracle</x:String>
+                <x:String>MySQL</x:String>
+                <x:String>SQL Server</x:String>
+            </ComboBox>
+            <Button Content="Thiet lap thong tin database" Click="OpenSettingsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" />
+            <!-- Nút của bước nên bấm tiếp (ViewModel.NextStep) có màu nhấn -->
+            <Button Content="1. Doc Database -> SQLite" Command="{x:Bind ViewModel.ImportDatabaseCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 1), Mode=OneWay}" />
+            <Button Content="2. Xuat HTML" Command="{x:Bind ViewModel.ExportHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 2), Mode=OneWay}" />
+            <Button Content="Mo file HTML" Command="{x:Bind ViewModel.OpenHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 3), Mode=OneWay}" />
+            <Button Click="OpenOptionsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" ToolTipService.ToolTip="Cài đặt: giới hạn thời gian kết nối / truy vấn, tự mở HTML">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                    <TextBlock Text="Cài đặt" />
+                </StackPanel>
+            </Button>
             <Button Content="Huong dan (F1)" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
                 <Button.KeyboardAccelerators>
                     <KeyboardAccelerator Key="F1" />
@@ -65,7 +76,7 @@
                        CloseButtonText="Huy"
                        DefaultButton="Primary"
                        PrimaryButtonClick="DatabaseSettingsDialog_PrimaryButtonClick">
-            <Pivot MinWidth="380">
+            <Pivot x:Name="SettingsPivot" MinWidth="420">
                 <PivotItem Header="PostgreSQL">
                     <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
@@ -96,7 +107,53 @@
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
+                <PivotItem Header="MySQL">
+                    <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="10" Margin="0,12,0,0">
+                            <TextBox x:Name="MyHostBox" Header="Host" PlaceholderText="vd: localhost" />
+                            <TextBox x:Name="MyPortBox" Header="Port" PlaceholderText="3306" />
+                            <TextBox x:Name="MyDatabaseBox" Header="Database (= schema trong MySQL)" />
+                            <TextBox x:Name="MyUsernameBox" Header="Username" />
+                            <PasswordBox x:Name="MyPasswordBox" Header="Password" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </PivotItem>
+                <PivotItem Header="SQL Server">
+                    <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="10" Margin="0,12,0,0">
+                            <TextBox x:Name="MsHostBox" Header="Host (hoac Host\TenInstance)" PlaceholderText="vd: localhost hoac MAYCHU\SQLEXPRESS" />
+                            <TextBox x:Name="MsPortBox" Header="Port (bo qua khi nhap ten instance)" PlaceholderText="1433" />
+                            <TextBox x:Name="MsDatabaseBox" Header="Database" />
+                            <CheckBox x:Name="MsWindowsAuthCheckBox" Content="Dung Windows Authentication (tai khoan Windows dang dang nhap)"
+                                      Checked="MsWindowsAuth_Changed" Unchecked="MsWindowsAuth_Changed" />
+                            <TextBox x:Name="MsUsernameBox" Header="Username" />
+                            <PasswordBox x:Name="MsPasswordBox" Header="Password" />
+                            <TextBox x:Name="MsSchemaBox" Header="Schema (tuy chon, vd dbo; de trong = tat ca schema)" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </PivotItem>
             </Pivot>
+        </ContentDialog>
+
+        <!-- "Cài đặt" dialog -->
+        <ContentDialog x:Name="OptionsDialog"
+                       Title="Cài đặt"
+                       PrimaryButtonText="Lưu"
+                       SecondaryButtonText="Mặc định"
+                       CloseButtonText="Huỷ"
+                       DefaultButton="Primary"
+                       PrimaryButtonClick="OptionsDialog_PrimaryButtonClick"
+                       SecondaryButtonClick="OptionsDialog_SecondaryButtonClick">
+            <StackPanel Spacing="14" MinWidth="380">
+                <NumberBox x:Name="ConnectTimeoutBox" Header="Giới hạn thời gian kết nối (giây)"
+                           Minimum="1" Maximum="600" SmallChange="5" LargeChange="30" SpinButtonPlacementMode="Inline"
+                           Description="Quá thời gian này mà chưa kết nối được (sai IP, chưa bật VPN, firewall chặn...) thì báo lỗi. Mạng chậm thì tăng lên." />
+                <NumberBox x:Name="CommandTimeoutBox" Header="Giới hạn thời gian truy vấn (giây)"
+                           Minimum="1" Maximum="3600" SmallChange="30" LargeChange="300" SpinButtonPlacementMode="Inline"
+                           Description="Cho mỗi câu truy vấn đọc schema. Database rất nhiều bảng / máy chủ chậm thì tăng lên." />
+                <ToggleSwitch x:Name="OpenHtmlAfterExportSwitch" Header="Tự mở file HTML sau khi xuất" OffContent="Tắt" OnContent="Bật" />
+                <ToggleSwitch x:Name="OpenFolderAfterExportSwitch" Header="Tự mở thư mục chứa file HTML sau khi xuất" OffContent="Tắt" OnContent="Bật" />
+            </StackPanel>
         </ContentDialog>
     </Grid>
 </Window>

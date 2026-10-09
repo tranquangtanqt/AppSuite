@@ -1,7 +1,7 @@
 # Rdbms.HtmlGenerator
 
 Ứng dụng WinUI 3 độc lập - module "E": công cụ tra cứu từ điển dữ liệu (database dictionary), giống
-hệt Mcf.DbDef.HtmlGenerator về kết quả cuối nhưng đọc dữ liệu trực tiếp từ **PostgreSQL hoặc Oracle** thay vì file
+hệt Mcf.DbDef.HtmlGenerator về kết quả cuối nhưng đọc dữ liệu trực tiếp từ **PostgreSQL, Oracle, MySQL / MariaDB hoặc SQL Server** thay vì file
 Excel. Không có bất kỳ tham chiếu nào tới `MainLauncher`; chỉ `ProjectReference` tới
 `..\..\Common\Common.csproj`.
 
@@ -15,9 +15,9 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
 
 ## Chức năng
 
-1. **"Thiet lap thong tin database"** - mở modal có 2 tab **PostgreSQL** / **Oracle**
+1. **"Thiet lap thong tin database"** - mở modal có 4 tab **PostgreSQL** / **Oracle** / **MySQL** / **SQL Server**
    (`Microsoft.UI.Xaml.Controls.Pivot`, mỗi tab bọc trong `ScrollViewer` để không bao giờ bị cắt mất
-   trường nào kể cả khi dialog thấp), mỗi tab nhập thông tin kết nối riêng:
+   trường nào kể cả khi dialog thấp; mở sẵn tab của nguồn đang chọn), mỗi tab nhập thông tin kết nối riêng:
    - Postgres: Host/Port/Database/Username/Password/Schema.
    - Oracle: Host/Port, radio **"Ket noi bang: Service Name / SID"** (mặc định Service Name) rồi
      tương ứng 1 trong 2 ô Service Name hoặc SID (ô còn lại bị disable), Username/Password/Schema.
@@ -25,25 +25,39 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
      connection string khác nhau: Service Name dùng EZ Connect `host:port/serviceName`, SID dùng
      connect descriptor đầy đủ `(DESCRIPTION=...(CONNECT_DATA=(SID=...)))` vì EZ Connect không có
      cú pháp ngắn cho SID.
+   - MySQL: Host/Port (3306)/Database/Username/Password - không có ô Schema vì trong MySQL schema chính
+     là database.
+   - SQL Server: Host (hoặc `Host\TenInstance` - khi đó bỏ qua Port, SQL Browser tự tìm cổng), Port (1433),
+     Database, checkbox **Windows Authentication** (bật thì khoá ô Username/Password), Schema (trống = mọi
+     schema). Kết nối luôn `TrustServerCertificate=true` vì SqlClient mặc định mã hoá và từ chối chứng chỉ
+     tự ký của máy chủ nội bộ.
 
-   Bấm "Luu" sẽ lưu **cả 2 tab** cùng lúc vào `Data\Config\config.xml`
+   Bấm "Luu" sẽ lưu **cả 4 tab** cùng lúc vào `Data\Config\config.xml`
    (`Services\ConnectionSettingsStore`, dùng `System.Xml.Serialization.XmlSerializer`, root
-   `DatabaseConnectionsConfig` chứa `Postgres` + `Oracle`) và tự điền lại sẵn ở những lần mở module
+   `DatabaseConnectionsConfig` chứa `Postgres` / `Oracle` / `MySql` / `SqlServer` + `SelectedSource` +
+   `Options`; config.xml cũ thiếu phần nào thì phần đó lấy mặc định) và tự điền lại sẵn ở những lần mở module
    sau. **Lưu ý**: mật khẩu lưu dưới dạng plain text trong file này (không có tiện ích mã hóa nào sẵn
    có trong repo để dùng) - phù hợp với công cụ nội bộ, 1 người dùng, chạy cục bộ; không copy
    `config.xml` này ra ngoài máy.
-2. **Chọn "Nguon: PostgreSQL / Oracle"** (radio button cạnh nút import) - quyết định
-   `ImportDatabaseCommand` sẽ dùng `Services\PostgresSchemaImporter` hay `Services\OracleSchemaImporter`.
+2. **Combobox "Nguon"** (PostgreSQL / Oracle / MySQL / SQL Server - thứ tự mục = thứ tự enum
+   `DatabaseSourceType`) - quyết định `ImportDatabaseCommand` dùng importer nào trong `Services\*SchemaImporter`.
+   Nguồn đã chọn được lưu vào config.xml, mở lại module chọn sẵn. Khoá khi đang đọc / xuất.
    Nút "1. Doc Database → SQLite" chỉ bật khi nguồn đang chọn có đủ thông tin tối thiểu đã lưu
-   (Postgres: Host+Database; Oracle: Host + Service Name hoặc SID tùy chế độ đang chọn).
+   (Host + Database; Oracle: Host + Service Name hoặc SID tùy chế độ đang chọn).
 3. **"1. Doc Database → SQLite"** - kết nối theo nguồn đã chọn, đọc schema, lưu vào SQLite tại
    `Data\Database\{ten_database}.db` (`Services\RdbmsHtmlGeneratorDatabase` - bản sao gần như nguyên vẹn của
    `McfDbDefHtmlGeneratorDatabase`, cùng schema 3 bảng `Tables`/`Columns`/`ForeignKeys`). Tên file lấy đúng tên
-   database/service đang kết nối (Postgres: field `Database`; Oracle: `Service Name` hoặc `SID` tùy
+   database/service đang kết nối (Postgres / MySQL / SQL Server: field `Database`; Oracle: `Service Name` hoặc `SID` tùy
    chế độ đang chọn), ký tự không
    hợp lệ trên Windows bị thay bằng `_` (`RdbmsHtmlGeneratorDatabase.SanitizeFileName`). Nhờ đặt tên theo DB,
    import từ nhiều database khác nhau giữ cache SQLite riêng biệt thay vì ghi đè lên nhau. Mỗi lần
    chạy sẽ rebuild toàn bộ (drop + create + insert lại).
+   Giới hạn thời gian kết nối / truy vấn lấy từ **Cài đặt** (`AppOptions`). Mọi importer mở kết nối qua
+   `DatabaseConnectException.OpenAsync` - lỗi lúc mở kết nối được bọc trong `DatabaseConnectException`, nhờ đó
+   phân biệt "không kết nối được" với "kết nối được nhưng truy vấn lỗi / quá giờ" mà không phải dò message của
+   từng driver. Lỗi → ghi vào log + `ErrorOccurred` → `MainWindow` hiện ContentDialog; `DescribeConnectionError`
+   dịch lỗi thường gặp (không tới được host, sai user/password, database / Service Name không tồn tại, truy vấn
+   quá giờ) thành gợi ý dễ hiểu.
 4. **"2. Xuat HTML"** - đọc lại `{ten_database}.db`, sinh 1 file HTML tĩnh, tự chứa tại
    `Data\Database\{ten_database}.html` (cùng quy ước đặt tên như bước 3;
    `Services\HtmlReportGenerator`, có sửa riêng so với Mcf.DbDef.HtmlGenerator: cột "STT" thay cho "Level", bỏ cột
@@ -53,13 +67,26 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
 5. **"Mo file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định. Đóng rồi mở lại module vẫn
    nhận đúng file `.db`/`.html` đã có sẵn cho database/nguồn đang chọn (`RdbmsHtmlGeneratorViewModel.RefreshDatabaseTarget`
    kiểm tra lại mỗi khi đổi nguồn hoặc lưu settings), không cần import lại nếu đã có cache từ trước.
+6. **"Cài đặt"** - modal chỉnh `AppOptions` (lưu trong `config.xml`, phần `Options`):
+   - *Giới hạn thời gian kết nối* (giây, mặc định 10, 1-600).
+   - *Giới hạn thời gian truy vấn* (giây, mặc định 120, 1-3600) - cho mỗi câu đọc schema; Postgres / MySQL /
+     SQL Server đặt qua connection string, Oracle đặt trên từng `OracleCommand`.
+   - *Tự mở file HTML sau khi xuất*.
+   - *Tự mở thư mục chứa file HTML sau khi xuất* (`explorer.exe /select,"…html"` - chọn sẵn file).
+
+   Nút "Mặc định" điền lại giá trị mặc định (chưa lưu cho tới khi bấm Lưu). Giá trị sửa tay ngoài khoảng
+   trong config.xml bị kẹp lại (`EffectiveConnectTimeoutSeconds` / `EffectiveCommandTimeoutSeconds`).
+
+**Nút màu nhấn theo bước**: `RdbmsHtmlGeneratorViewModel.NextStep` (1 = Doc Database, 2 = Xuat HTML, 3 = Mo file HTML)
+→ `MainWindow.StepButtonStyle` trả `AccentButtonStyle` cho nút của bước đó, `DefaultButtonStyle` cho các nút còn lại.
+Đọc xong → 2, xuất xong → 3, đọc lỗi → 1; lúc mở module / đổi nguồn tính lại từ file có sẵn (`.html` không cũ hơn `.db` → 3).
 
 **Hướng dẫn (F1)**: nút "Huong dan (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
 `ViewsHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
 
 ## Ánh xạ dữ liệu
 
-Cả 2 importer đọc thẳng vào catalog/data dictionary của DB (không qua `information_schema` một mình
+Các importer đọc thẳng vào catalog/data dictionary của DB (không qua `information_schema` một mình
 để tránh N+1 - trừ phần constraint vốn đã gọn theo hàng), dựng ra cùng 1 shape
 `DbTableRecord`/`DbColumnRecord`/`DbForeignKeyRecord` như Mcf.DbDef.HtmlGenerator:
 
@@ -75,7 +102,18 @@ Cả 2 importer đọc thẳng vào catalog/data dictionary của DB (không qua
   (`VARCHAR2(100)`, `NUMBER(10,2)`,...) từ `DATA_TYPE`/`DATA_LENGTH`/`DATA_PRECISION`/`DATA_SCALE`
   vì Oracle không có hàm dựng sẵn kiểu `format_type`. Schema/owner mặc định = Username viết hoa (quy
   ước Oracle: schema mặc định của user trùng tên user) nếu để trống ô Schema.
-- Chung cho cả 2: `Level` tái dùng đúng quy ước của Mcf.DbDef.HtmlGenerator (`0` = cột khóa chính, `1` = cột thường)
+- **MySQL / MariaDB** (`Services\MySqlSchemaImporter`, dùng `MySqlConnector`) - `information_schema.TABLES` /
+  `COLUMNS` / `KEY_COLUMN_USAGE` lọc theo `TABLE_SCHEMA = Database`. `DataType` = `COLUMN_TYPE` (đã gồm độ dài,
+  `unsigned`...), khóa chính = `COLUMN_KEY = 'PRI'`. Comment của view MySQL luôn là chữ `VIEW` nên bị bỏ.
+  *Chưa thử với máy chủ MySQL thật* (máy dev không có MySQL) - mới thử kết nối lỗi / quá giờ.
+- **SQL Server** (`Services\SqlServerSchemaImporter`, dùng `Microsoft.Data.SqlClient` 7 - bản 7 tách phần Azure ra
+  gói riêng nên không kéo `Azure.Identity` theo) - `sys.objects` / `sys.columns` / `sys.types` /
+  `sys.indexes` (khóa chính) / `sys.foreign_keys`, mô tả lấy từ extended property `MS_Description` (cái SSMS
+  ghi). `DataType` dựng như SSMS hiển thị: `nvarchar(50)` (max_length tính theo byte nên chia 2 cho kiểu n),
+  `varchar(max)`, `decimal(10,2)`, `datetime2(3)`. Đã thử với SQL Server LocalDB: bảng / view / khóa chính ghép /
+  khóa ngoại 2 cột / mô tả tiếng Việt / lọc schema.
+- Chung cho cả 4: khóa ngoại đọc theo từng cặp cột rồi gộp theo constraint ở `Services\ForeignKeyGrouper`.
+  `Level` tái dùng đúng quy ước của Mcf.DbDef.HtmlGenerator (`0` = cột khóa chính, `1` = cột thường)
   để phần tô màu "khoa chinh" trong HTML dùng lại được mà không cần sửa gì; khóa ngoại nhiều cột nối
   `LocalColumns`/`ReferencedColumns` bằng dấu phẩy. Các field đặc thù workbook tiếng Nhật của Mcf.DbDef.HtmlGenerator
   (`JapaneseName`, `ManagementType`, `CautionItems`, `RevisionHistory`, `Alias`, `Note`, `IsCommon`)

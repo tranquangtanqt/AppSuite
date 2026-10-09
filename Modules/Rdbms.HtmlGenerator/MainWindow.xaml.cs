@@ -1,3 +1,4 @@
+using System;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Rdbms.HtmlGenerator.Models;
@@ -19,6 +20,35 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
         Closed += (_, _) => _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
+        ViewModel.ErrorOccurred += ShowErrorDialog;
+        SourceComboBox.SelectedIndex = (int)ViewModel.SelectedSource; // nguồn đã chọn lần trước
+    }
+
+    /// <summary>x:Bind helper - enables controls only while no import/export is running.</summary>
+    public static bool Not(bool value) => !value;
+
+    /// <summary>x:Bind helper - AccentButtonStyle for the step the user should click next, default style otherwise.</summary>
+    public static Style StepButtonStyle(int nextStep, int step) =>
+        (Style)Application.Current.Resources[nextStep == step ? "AccentButtonStyle" : "DefaultButtonStyle"];
+
+    private async void ShowErrorDialog(string title, string message)
+    {
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true },
+            CloseButtonText = "Đóng",
+            XamlRoot = Content.XamlRoot,
+        };
+        await dialog.ShowAsync();
+    }
+
+    private void SourceComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (SourceComboBox.SelectedIndex >= 0)
+        {
+            ViewModel.SelectedSource = (DatabaseSourceType)SourceComboBox.SelectedIndex;
+        }
     }
 
     private async void OpenSettingsDialog_Click(object sender, RoutedEventArgs e)
@@ -42,50 +72,120 @@ public sealed partial class MainWindow : Window
         OraPasswordBox.Password = ora.Password;
         OraSchemaBox.Text = ora.Schema;
 
+        var my = ViewModel.MySqlConnectionSettings;
+        MyHostBox.Text = my.Host;
+        MyPortBox.Text = my.Port.ToString();
+        MyDatabaseBox.Text = my.Database;
+        MyUsernameBox.Text = my.Username;
+        MyPasswordBox.Password = my.Password;
+
+        var ms = ViewModel.SqlServerConnectionSettings;
+        MsHostBox.Text = ms.Host;
+        MsPortBox.Text = ms.Port.ToString();
+        MsDatabaseBox.Text = ms.Database;
+        MsWindowsAuthCheckBox.IsChecked = ms.UseWindowsAuthentication;
+        MsUsernameBox.Text = ms.Username;
+        MsPasswordBox.Password = ms.Password;
+        MsSchemaBox.Text = ms.Schema;
+        UpdateSqlServerLoginBoxes();
+
+        SettingsPivot.SelectedIndex = (int)ViewModel.SelectedSource; // mở sẵn tab của nguồn đang chọn
         DatabaseSettingsDialog.XamlRoot = Content.XamlRoot;
         await DatabaseSettingsDialog.ShowAsync();
     }
 
+    private static int ParsePort(string text, int fallback) =>
+        int.TryParse(text.Trim(), out var port) && port is > 0 and <= 65535 ? port : fallback;
+
     private void DatabaseSettingsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
-        if (!int.TryParse(PgPortBox.Text, out var pgPort))
-        {
-            pgPort = 5432;
-        }
+        ViewModel.SaveConnectionSettings(
+            new PostgresConnectionSettings
+            {
+                Host = PgHostBox.Text.Trim(),
+                Port = ParsePort(PgPortBox.Text, 5432),
+                Database = PgDatabaseBox.Text.Trim(),
+                Username = PgUsernameBox.Text.Trim(),
+                Password = PgPasswordBox.Password,
+                Schema = PgSchemaBox.Text.Trim(),
+            },
+            new OracleConnectionSettings
+            {
+                Host = OraHostBox.Text.Trim(),
+                Port = ParsePort(OraPortBox.Text, 1521),
+                ConnectBySid = OraBySidRadio.IsChecked == true,
+                ServiceName = OraServiceNameBox.Text.Trim(),
+                Sid = OraSidBox.Text.Trim(),
+                Username = OraUsernameBox.Text.Trim(),
+                Password = OraPasswordBox.Password,
+                Schema = OraSchemaBox.Text.Trim(),
+            },
+            new MySqlConnectionSettings
+            {
+                Host = MyHostBox.Text.Trim(),
+                Port = ParsePort(MyPortBox.Text, 3306),
+                Database = MyDatabaseBox.Text.Trim(),
+                Username = MyUsernameBox.Text.Trim(),
+                Password = MyPasswordBox.Password,
+            },
+            new SqlServerConnectionSettings
+            {
+                Host = MsHostBox.Text.Trim(),
+                Port = ParsePort(MsPortBox.Text, 1433),
+                Database = MsDatabaseBox.Text.Trim(),
+                UseWindowsAuthentication = MsWindowsAuthCheckBox.IsChecked == true,
+                Username = MsUsernameBox.Text.Trim(),
+                Password = MsPasswordBox.Password,
+                Schema = MsSchemaBox.Text.Trim(),
+            });
+    }
 
-        ViewModel.SavePostgresConnectionSettings(new PostgresConnectionSettings
-        {
-            Host = PgHostBox.Text.Trim(),
-            Port = pgPort,
-            Database = PgDatabaseBox.Text.Trim(),
-            Username = PgUsernameBox.Text.Trim(),
-            Password = PgPasswordBox.Password,
-            Schema = PgSchemaBox.Text.Trim(),
-        });
+    private void MsWindowsAuth_Changed(object sender, RoutedEventArgs e) => UpdateSqlServerLoginBoxes();
 
-        if (!int.TryParse(OraPortBox.Text, out var oraPort))
-        {
-            oraPort = 1521;
-        }
+    private void UpdateSqlServerLoginBoxes()
+    {
+        var sqlLogin = MsWindowsAuthCheckBox.IsChecked != true;
+        MsUsernameBox.IsEnabled = sqlLogin;
+        MsPasswordBox.IsEnabled = sqlLogin;
+    }
 
-        ViewModel.SaveOracleConnectionSettings(new OracleConnectionSettings
+    // ----- Cài đặt -----
+
+    private async void OpenOptionsDialog_Click(object sender, RoutedEventArgs e)
+    {
+        var options = ViewModel.Options;
+        ConnectTimeoutBox.Value = options.EffectiveConnectTimeoutSeconds;
+        CommandTimeoutBox.Value = options.EffectiveCommandTimeoutSeconds;
+        OpenHtmlAfterExportSwitch.IsOn = options.OpenHtmlAfterExport;
+        OpenFolderAfterExportSwitch.IsOn = options.OpenFolderAfterExport;
+
+        OptionsDialog.XamlRoot = Content.XamlRoot;
+        await OptionsDialog.ShowAsync();
+    }
+
+    private void OptionsDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+    {
+        // NumberBox.Value is NaN when the box was cleared - fall back to the default instead of saving 0.
+        static int ToSeconds(double value, int fallback) => double.IsNaN(value) ? fallback : (int)Math.Round(value);
+
+        ViewModel.SaveOptions(new AppOptions
         {
-            Host = OraHostBox.Text.Trim(),
-            Port = oraPort,
-            ConnectBySid = OraBySidRadio.IsChecked == true,
-            ServiceName = OraServiceNameBox.Text.Trim(),
-            Sid = OraSidBox.Text.Trim(),
-            Username = OraUsernameBox.Text.Trim(),
-            Password = OraPasswordBox.Password,
-            Schema = OraSchemaBox.Text.Trim(),
+            ConnectTimeoutSeconds = ToSeconds(ConnectTimeoutBox.Value, AppOptions.DefaultConnectTimeoutSeconds),
+            CommandTimeoutSeconds = ToSeconds(CommandTimeoutBox.Value, AppOptions.DefaultCommandTimeoutSeconds),
+            OpenHtmlAfterExport = OpenHtmlAfterExportSwitch.IsOn,
+            OpenFolderAfterExport = OpenFolderAfterExportSwitch.IsOn,
         });
     }
 
-    private void SourceRadio_Checked(object sender, RoutedEventArgs e)
+    /// <summary>"Mặc định": fill the boxes with defaults but keep the dialog open so the user still confirms with Lưu.</summary>
+    private void OptionsDialog_SecondaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
-        ViewModel.SelectedSource = ReferenceEquals(sender, SourceOracleRadio)
-            ? Models.DatabaseSourceType.Oracle
-            : Models.DatabaseSourceType.Postgres;
+        args.Cancel = true;
+        var defaults = new AppOptions();
+        ConnectTimeoutBox.Value = defaults.ConnectTimeoutSeconds;
+        CommandTimeoutBox.Value = defaults.CommandTimeoutSeconds;
+        OpenHtmlAfterExportSwitch.IsOn = defaults.OpenHtmlAfterExport;
+        OpenFolderAfterExportSwitch.IsOn = defaults.OpenFolderAfterExport;
     }
 
     private void OraConnectType_Checked(object sender, RoutedEventArgs e)

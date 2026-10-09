@@ -8,6 +8,8 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="MySqlConnector" />
     <PackageReference Include="Npgsql" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" />
   </ItemGroup>

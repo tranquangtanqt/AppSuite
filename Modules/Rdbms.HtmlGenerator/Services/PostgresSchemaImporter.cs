@@ -18,7 +18,7 @@ namespace Rdbms.HtmlGenerator.Services;
 public sealed class PostgresSchemaImporter
 {
     public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
-        PostgresConnectionSettings settings, Action<string> log, CancellationToken cancellationToken = default)
+        PostgresConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
         var builder = new NpgsqlConnectionStringBuilder
         {
@@ -27,11 +27,13 @@ public sealed class PostgresSchemaImporter
             Database = settings.Database,
             Username = settings.Username,
             Password = settings.Password,
+            Timeout = options.EffectiveConnectTimeoutSeconds,
+            CommandTimeout = options.EffectiveCommandTimeoutSeconds,
         };
 
-        log($"Dang ket noi {settings.Host}:{settings.Port}/{settings.Database}...");
+        log($"Dang ket noi {settings.Host}:{settings.Port}/{settings.Database} (toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
         await using var connection = new NpgsqlConnection(builder.ConnectionString);
-        await connection.OpenAsync(cancellationToken);
+        await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
 
         var sourceLabel = $"{settings.Host}:{settings.Port}/{settings.Database}";
         var schemaFilter = string.IsNullOrWhiteSpace(settings.Schema) ? null : settings.Schema.Trim();
@@ -214,19 +216,7 @@ public sealed class PostgresSchemaImporter
                 rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(4), reader.GetString(5)));
             }
 
-            var ordinal = 0;
-            foreach (var group in rows.GroupBy(r => (r.TableName, r.ConstraintName)))
-            {
-                var groupRows = group.ToList();
-                foreignKeys.Add(new DbForeignKeyRecord
-                {
-                    TableName = group.Key.TableName,
-                    OrdinalPosition = ordinal++,
-                    LocalColumns = string.Join(",", groupRows.Select(r => r.LocalColumn)),
-                    ReferencedTable = groupRows[0].RefTable,
-                    ReferencedColumns = string.Join(",", groupRows.Select(r => r.RefColumn)),
-                });
-            }
+            foreignKeys = ForeignKeyGrouper.Group(rows);
         }
         catch (Exception ex)
         {
