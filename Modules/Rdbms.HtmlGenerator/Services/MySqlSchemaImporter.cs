@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MySqlConnector;
@@ -14,7 +15,7 @@ namespace Rdbms.HtmlGenerator.Services;
 /// </summary>
 public sealed class MySqlSchemaImporter
 {
-    public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
+    public async Task<SchemaImportResult> ImportAsync(
         MySqlConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
         var sourceLabel = $"{settings.Host}:{settings.Port}/{settings.Database}";
@@ -26,9 +27,12 @@ public sealed class MySqlSchemaImporter
         var tables = await ReadTablesAsync(connection, schema, sourceLabel, log, cancellationToken);
         var columns = await ReadColumnsAsync(connection, schema, log, cancellationToken);
         var foreignKeys = await ReadForeignKeysAsync(connection, schema, log, cancellationToken);
+        var indexes = await ReadIndexesAsync(connection, schema, log, cancellationToken);
+        var constraints = await ReadConstraintsAsync(connection, schema, log, cancellationToken);
 
-        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại từ {sourceLabel}.");
-        return (tables, columns, foreignKeys);
+        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại, {indexes.Count} index, " +
+            $"{constraints.Count} ràng buộc UNIQUE / CHECK từ {sourceLabel}.");
+        return new SchemaImportResult(tables, columns, foreignKeys, indexes, constraints);
     }
 
     /// <summary>"Thu ket noi": opens a connection and counts the tables/views an import would read.</summary>
@@ -73,7 +77,7 @@ public sealed class MySqlSchemaImporter
     {
         const string sql =
             """
-            SELECT TABLE_NAME, TABLE_TYPE, TABLE_COMMENT
+            SELECT TABLE_NAME, TABLE_TYPE, TABLE_COMMENT, TABLE_ROWS
             FROM information_schema.TABLES
             WHERE TABLE_SCHEMA = @schema
             ORDER BY TABLE_NAME
@@ -94,6 +98,8 @@ public sealed class MySqlSchemaImporter
                     Kind = kind,
                     // MySQL fills TABLE_COMMENT of every view with the literal "VIEW" - not a real description.
                     Description = kind == "VIEW" && comment == "VIEW" ? string.Empty : comment,
+                    // TABLE_ROWS: InnoDB's estimate (exact for MyISAM); NULL for views.
+                    EstimatedRows = reader.IsDBNull(3) ? null : Convert.ToInt64(reader.GetValue(3)),
                     SourceFile = sourceLabel,
                     SourceSheet = schema,
                 });
@@ -180,5 +186,136 @@ public sealed class MySqlSchemaImporter
             log($"Lỗi đọc khoá ngoại: {ex.Message}");
             return [];
         }
+    }
+
+    /// <summary>information_schema.STATISTICS has one row per index column. SUB_PART = prefix length ("name(10)"),
+    /// COLLATION 'D' = descending (8.0+), COLUMN_NAME NULL = functional key part (8.0.13+).</summary>
+    private static async Task<List<DbIndexRecord>> ReadIndexesAsync(
+        MySqlConnection connection, string schema, Action<string> log, CancellationToken ct)
+    {
+        try
+        {
+            const string sql =
+                """
+                SELECT TABLE_NAME, INDEX_NAME, NON_UNIQUE, COLUMN_NAME, SUB_PART, COLLATION, INDEX_TYPE
+                FROM information_schema.STATISTICS
+                WHERE TABLE_SCHEMA = @schema
+                ORDER BY TABLE_NAME, INDEX_NAME = 'PRIMARY' DESC, INDEX_NAME, SEQ_IN_INDEX
+                """;
+
+            var rows = new List<(string Table, string Index, bool Unique, string Column, string Type)>();
+            await using var command = CreateCommand(connection, sql, schema);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                var column = reader.IsDBNull(3) ? "(biểu thức)" : reader.GetString(3);
+                if (!reader.IsDBNull(4))
+                {
+                    column += $"({Convert.ToInt64(reader.GetValue(4))})";
+                }
+
+                if (!reader.IsDBNull(5) && reader.GetString(5) == "D")
+                {
+                    column += " DESC";
+                }
+
+                rows.Add((reader.GetString(0), reader.GetString(1), Convert.ToInt64(reader.GetValue(2)) == 0,
+                    column, reader.IsDBNull(6) ? string.Empty : reader.GetString(6)));
+            }
+
+            return rows
+                .GroupBy(r => (r.Table, r.Index))
+                .Select(g => new DbIndexRecord
+                {
+                    Schema = schema,
+                    TableName = g.Key.Table,
+                    IndexName = g.Key.Index,
+                    IsUnique = g.First().Unique,
+                    IsPrimaryKey = g.Key.Index == "PRIMARY",
+                    IndexType = g.First().Type,
+                    Columns = string.Join(", ", g.Select(r => r.Column)),
+                })
+                .ToList();
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Lỗi đọc index: {ex.Message}");
+            return [];
+        }
+    }
+
+    /// <summary>UNIQUE from TABLE_CONSTRAINTS + KEY_COLUMN_USAGE; CHECK from CHECK_CONSTRAINTS, which only exists
+    /// from MySQL 8.0.16 / MariaDB 10.2 - read separately so an older server still gets its UNIQUE list.</summary>
+    private static async Task<List<DbConstraintRecord>> ReadConstraintsAsync(
+        MySqlConnection connection, string schema, Action<string> log, CancellationToken ct)
+    {
+        var constraints = new List<DbConstraintRecord>();
+        try
+        {
+            const string sql =
+                """
+                SELECT tc.TABLE_NAME, tc.CONSTRAINT_NAME,
+                       GROUP_CONCAT(k.COLUMN_NAME ORDER BY k.ORDINAL_POSITION SEPARATOR ', ')
+                FROM information_schema.TABLE_CONSTRAINTS tc
+                JOIN information_schema.KEY_COLUMN_USAGE k
+                    ON k.CONSTRAINT_SCHEMA = tc.CONSTRAINT_SCHEMA AND k.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+                       AND k.TABLE_NAME = tc.TABLE_NAME
+                WHERE tc.TABLE_SCHEMA = @schema AND tc.CONSTRAINT_TYPE = 'UNIQUE'
+                GROUP BY tc.TABLE_NAME, tc.CONSTRAINT_NAME
+                ORDER BY tc.TABLE_NAME, tc.CONSTRAINT_NAME
+                """;
+
+            await using var command = CreateCommand(connection, sql, schema);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                constraints.Add(new DbConstraintRecord
+                {
+                    Schema = schema,
+                    TableName = reader.GetString(0),
+                    ConstraintName = reader.GetString(1),
+                    ConstraintType = "UNIQUE",
+                    Definition = $"({reader.GetString(2)})",
+                });
+            }
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Lỗi đọc ràng buộc UNIQUE: {ex.Message}");
+        }
+
+        try
+        {
+            const string sql =
+                """
+                SELECT tc.TABLE_NAME, cc.CONSTRAINT_NAME, cc.CHECK_CLAUSE
+                FROM information_schema.CHECK_CONSTRAINTS cc
+                JOIN information_schema.TABLE_CONSTRAINTS tc
+                    ON tc.CONSTRAINT_SCHEMA = cc.CONSTRAINT_SCHEMA AND tc.CONSTRAINT_NAME = cc.CONSTRAINT_NAME
+                       AND tc.CONSTRAINT_TYPE = 'CHECK'
+                WHERE cc.CONSTRAINT_SCHEMA = @schema
+                ORDER BY tc.TABLE_NAME, cc.CONSTRAINT_NAME
+                """;
+
+            await using var command = CreateCommand(connection, sql, schema);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                constraints.Add(new DbConstraintRecord
+                {
+                    Schema = schema,
+                    TableName = reader.GetString(0),
+                    ConstraintName = reader.GetString(1),
+                    ConstraintType = "CHECK",
+                    Definition = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                });
+            }
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Không đọc được ràng buộc CHECK (cần MySQL 8.0.16 / MariaDB 10.2 trở lên): {ex.Message}");
+        }
+
+        return constraints;
     }
 }

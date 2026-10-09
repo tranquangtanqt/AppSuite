@@ -14,6 +14,10 @@ public sealed record DbTableRecord
     public string ManagementType { get; init; } = string.Empty;
     public string CautionItems { get; init; } = string.Empty;
     public string RevisionHistory { get; init; } = string.Empty;
+    /// <summary>Row count from the DB's statistics (not a COUNT(*) - instant even on huge tables, but only as
+    /// fresh as the last ANALYZE / stats run). Null = view, or no statistics yet.</summary>
+    public long? EstimatedRows { get; init; }
+
     public required string SourceFile { get; init; }
     public required string SourceSheet { get; init; }
 }

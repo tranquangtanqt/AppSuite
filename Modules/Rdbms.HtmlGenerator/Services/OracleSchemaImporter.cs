@@ -16,7 +16,7 @@ namespace Rdbms.HtmlGenerator.Services;
 /// </summary>
 public sealed class OracleSchemaImporter
 {
-    public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
+    public async Task<SchemaImportResult> ImportAsync(
         OracleConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
         var owner = ResolveOwner(settings);
@@ -34,9 +34,12 @@ public sealed class OracleSchemaImporter
         var primaryKeys = await ReadPrimaryKeysAsync(connection, owner, commandTimeout, cancellationToken);
         var columns = await ReadColumnsAsync(connection, owner, commandTimeout, primaryKeys, log, cancellationToken);
         var foreignKeys = await ReadForeignKeysAsync(connection, owner, commandTimeout, log, cancellationToken);
+        var indexes = await ReadIndexesAsync(connection, owner, commandTimeout, log, cancellationToken);
+        var constraints = await ReadConstraintsAsync(connection, owner, commandTimeout, log, cancellationToken);
 
-        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại từ {sourceLabel}.");
-        return (tables, columns, foreignKeys);
+        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại, {indexes.Count} index, " +
+            $"{constraints.Count} ràng buộc UNIQUE / CHECK từ {sourceLabel}.");
+        return new SchemaImportResult(tables, columns, foreignKeys, indexes, constraints);
     }
 
     /// <summary>"Thu ket noi": opens a connection and counts the tables/views an import would read.</summary>
@@ -102,12 +105,12 @@ public sealed class OracleSchemaImporter
     {
         const string sql =
             """
-            SELECT t.TABLE_NAME, 'BASE TABLE' AS OBJ_TYPE, c.COMMENTS
+            SELECT t.TABLE_NAME, 'BASE TABLE' AS OBJ_TYPE, c.COMMENTS, t.NUM_ROWS
             FROM ALL_TABLES t
             LEFT JOIN ALL_TAB_COMMENTS c ON c.OWNER = t.OWNER AND c.TABLE_NAME = t.TABLE_NAME
             WHERE t.OWNER = :owner
             UNION ALL
-            SELECT v.VIEW_NAME, 'VIEW' AS OBJ_TYPE, c.COMMENTS
+            SELECT v.VIEW_NAME, 'VIEW' AS OBJ_TYPE, c.COMMENTS, CAST(NULL AS NUMBER)
             FROM ALL_VIEWS v
             LEFT JOIN ALL_TAB_COMMENTS c ON c.OWNER = v.OWNER AND c.TABLE_NAME = v.VIEW_NAME
             WHERE v.OWNER = :owner
@@ -126,6 +129,8 @@ public sealed class OracleSchemaImporter
                     TableName = reader.GetString(0),
                     Kind = reader.GetString(1),
                     Description = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                    // NUM_ROWS comes from optimizer statistics (DBMS_STATS) - null until gathered.
+                    EstimatedRows = reader.IsDBNull(3) ? null : Convert.ToInt64(reader.GetValue(3)),
                     SourceFile = sourceLabel,
                     SourceSheet = owner,
                 });
@@ -276,5 +281,162 @@ public sealed class OracleSchemaImporter
         }
 
         return foreignKeys;
+    }
+
+    /// <summary>LOB indexes are internal (one per LOB column) - skipped. A function-based index shows its hidden
+    /// column (SYS_NC...$) - the expression itself lives in ALL_IND_EXPRESSIONS as a LONG, not worth the trouble.</summary>
+    private static async Task<List<DbIndexRecord>> ReadIndexesAsync(
+        OracleConnection connection, string owner, int commandTimeout, Action<string> log, CancellationToken ct)
+    {
+        var indexes = new List<DbIndexRecord>();
+        try
+        {
+            const string sql =
+                """
+                SELECT i.TABLE_NAME, i.INDEX_NAME, i.UNIQUENESS, i.INDEX_TYPE,
+                       LISTAGG(ic.COLUMN_NAME || CASE WHEN ic.DESCEND = 'DESC' THEN ' DESC' END, ', ')
+                           WITHIN GROUP (ORDER BY ic.COLUMN_POSITION) AS COLS,
+                       pc.CONSTRAINT_NAME AS PK_NAME
+                FROM ALL_INDEXES i
+                JOIN ALL_IND_COLUMNS ic ON ic.INDEX_OWNER = i.OWNER AND ic.INDEX_NAME = i.INDEX_NAME
+                LEFT JOIN ALL_CONSTRAINTS pc
+                    ON pc.OWNER = i.TABLE_OWNER AND pc.TABLE_NAME = i.TABLE_NAME
+                       AND pc.CONSTRAINT_TYPE = 'P' AND pc.INDEX_NAME = i.INDEX_NAME
+                WHERE i.TABLE_OWNER = :owner AND i.INDEX_TYPE <> 'LOB'
+                GROUP BY i.TABLE_NAME, i.OWNER, i.INDEX_NAME, i.UNIQUENESS, i.INDEX_TYPE, pc.CONSTRAINT_NAME
+                ORDER BY i.TABLE_NAME, i.INDEX_NAME
+                """;
+
+            await using var command = CreateCommand(connection, sql, owner, commandTimeout);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                indexes.Add(new DbIndexRecord
+                {
+                    Schema = owner,
+                    TableName = reader.GetString(0),
+                    IndexName = reader.GetString(1),
+                    IsUnique = reader.GetString(2) == "UNIQUE",
+                    IndexType = reader.GetString(3),
+                    Columns = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
+                    IsPrimaryKey = !reader.IsDBNull(5),
+                });
+            }
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Lỗi đọc index: {ex.Message}");
+        }
+
+        return await ReplaceFunctionColumnsAsync(connection, owner, commandTimeout, indexes, log, ct);
+    }
+
+    /// <summary>A function-based index lists a hidden column (SYS_NC00101$) in ALL_IND_COLUMNS; its real
+    /// expression (vd COALESCE("AVL_SCHD_DT","SCHD_DT")) is in ALL_IND_EXPRESSIONS.COLUMN_EXPRESSION - a LONG,
+    /// which ODP.NET only returns in full with InitialLONGFetchSize = -1, and SQL can't LISTAGG. So read it on its
+    /// own and swap it into the key list by position (Columns is in COLUMN_POSITION order).</summary>
+    private static async Task<List<DbIndexRecord>> ReplaceFunctionColumnsAsync(
+        OracleConnection connection, string owner, int commandTimeout, List<DbIndexRecord> indexes, Action<string> log, CancellationToken ct)
+    {
+        if (!indexes.Any(i => i.Columns.Contains("SYS_NC", StringComparison.Ordinal)))
+        {
+            return indexes;
+        }
+
+        try
+        {
+            const string sql =
+                """
+                SELECT INDEX_NAME, COLUMN_POSITION, COLUMN_EXPRESSION
+                FROM ALL_IND_EXPRESSIONS
+                WHERE TABLE_OWNER = :owner
+                """;
+
+            var expressions = new Dictionary<(string Index, int Position), string>();
+            await using var command = CreateCommand(connection, sql, owner, commandTimeout);
+            command.InitialLONGFetchSize = -1;
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                if (!reader.IsDBNull(2))
+                {
+                    expressions[(reader.GetString(0), Convert.ToInt32(reader.GetValue(1)))] = reader.GetString(2).Trim();
+                }
+            }
+
+            return indexes.Select(index =>
+            {
+                if (!index.Columns.Contains("SYS_NC", StringComparison.Ordinal))
+                {
+                    return index;
+                }
+
+                var parts = index.Columns.Split(", ");
+                for (var i = 0; i < parts.Length; i++)
+                {
+                    if (parts[i].StartsWith("SYS_NC", StringComparison.Ordinal)
+                        && expressions.TryGetValue((index.IndexName, i + 1), out var expression))
+                    {
+                        var desc = parts[i].EndsWith(" DESC", StringComparison.Ordinal) ? " DESC" : string.Empty;
+                        parts[i] = expression + desc;
+                    }
+                }
+
+                return index with { Columns = string.Join(", ", parts) };
+            }).ToList();
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Không đọc được biểu thức của index theo hàm (giữ tên cột ẩn SYS_NC...): {ex.Message}");
+            return indexes;
+        }
+    }
+
+    /// <summary>SEARCH_CONDITION is a LONG; SEARCH_CONDITION_VC (12c+) is its VARCHAR2 copy. The NOT NULL
+    /// constraints Oracle creates for "NOT NULL" columns are CHECKs too (system-named, "COL" IS NOT NULL) -
+    /// already shown in the Null column, so skipped.</summary>
+    private static async Task<List<DbConstraintRecord>> ReadConstraintsAsync(
+        OracleConnection connection, string owner, int commandTimeout, Action<string> log, CancellationToken ct)
+    {
+        var constraints = new List<DbConstraintRecord>();
+        try
+        {
+            const string sql =
+                """
+                SELECT c.TABLE_NAME, c.CONSTRAINT_NAME, c.CONSTRAINT_TYPE, c.SEARCH_CONDITION_VC,
+                       (SELECT LISTAGG(cc.COLUMN_NAME, ', ') WITHIN GROUP (ORDER BY cc.POSITION)
+                        FROM ALL_CONS_COLUMNS cc
+                        WHERE cc.OWNER = c.OWNER AND cc.CONSTRAINT_NAME = c.CONSTRAINT_NAME) AS COLS
+                FROM ALL_CONSTRAINTS c
+                WHERE c.OWNER = :owner AND c.CONSTRAINT_TYPE IN ('U', 'C')
+                  AND NOT (c.CONSTRAINT_TYPE = 'C' AND c.GENERATED = 'GENERATED NAME'
+                           AND c.SEARCH_CONDITION_VC LIKE '% IS NOT NULL')
+                ORDER BY c.TABLE_NAME, c.CONSTRAINT_TYPE DESC, c.CONSTRAINT_NAME
+                """;
+
+            await using var command = CreateCommand(connection, sql, owner, commandTimeout);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                var isUnique = reader.GetString(2) == "U";
+                constraints.Add(new DbConstraintRecord
+                {
+                    Schema = owner,
+                    TableName = reader.GetString(0),
+                    ConstraintName = reader.GetString(1),
+                    ConstraintType = isUnique ? "UNIQUE" : "CHECK",
+                    Definition = isUnique
+                        ? (reader.IsDBNull(4) ? string.Empty : $"({reader.GetString(4)})")
+                        : (reader.IsDBNull(3) ? string.Empty : $"({reader.GetString(3)})"),
+                });
+            }
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            // ORA-00904 on SEARCH_CONDITION_VC = Oracle 11g or older.
+            log($"Lỗi đọc ràng buộc UNIQUE / CHECK (cần Oracle 12c trở lên): {ex.Message}");
+        }
+
+        return constraints;
     }
 }

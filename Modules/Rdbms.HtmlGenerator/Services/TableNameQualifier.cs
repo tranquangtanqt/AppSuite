@@ -15,10 +15,11 @@ namespace Rdbms.HtmlGenerator.Services;
 /// </summary>
 public static class TableNameQualifier
 {
-    /// <returns>The renamed lists, plus the short names that collided (empty = nothing renamed).</returns>
-    public static (List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys, List<string> DuplicateNames)
-        QualifyDuplicates(List<DbTableRecord> tables, List<DbColumnRecord> columns, List<DbForeignKeyRecord> foreignKeys)
+    /// <returns>The renamed result, plus the short names that collided (empty = nothing renamed).</returns>
+    public static (SchemaImportResult Result, List<string> DuplicateNames) QualifyDuplicates(SchemaImportResult import)
     {
+        var (tables, columns, foreignKeys, indexes, constraints) = import;
+
         // Tables' schema is in SourceSheet (that's where every importer puts it).
         var duplicateNames = tables
             .GroupBy(t => t.TableName, StringComparer.Ordinal)
@@ -51,7 +52,14 @@ public static class TableNameQualifier
         var newForeignKeys = foreignKeys
             .Select(f => f with { TableName = Qualify(f.Schema, f.TableName), ReferencedTable = QualifyReference(f) })
             .ToList();
+        var newIndexes = duplicateNames.Count == 0
+            ? indexes
+            : indexes.Select(i => i with { TableName = Qualify(i.Schema, i.TableName) }).ToList();
+        var newConstraints = duplicateNames.Count == 0
+            ? constraints
+            : constraints.Select(c => c with { TableName = Qualify(c.Schema, c.TableName) }).ToList();
 
-        return (newTables, newColumns, newForeignKeys, duplicateNames.Order(StringComparer.Ordinal).ToList());
+        return (new SchemaImportResult(newTables, newColumns, newForeignKeys, newIndexes, newConstraints),
+            duplicateNames.Order(StringComparer.Ordinal).ToList());
     }
 }

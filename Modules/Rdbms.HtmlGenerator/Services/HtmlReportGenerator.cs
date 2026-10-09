@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using Rdbms.HtmlGenerator.Models;
 
@@ -21,7 +22,16 @@ public sealed class HtmlReportGenerator
     {
         Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
+
+    private static string? N(string? value) => string.IsNullOrEmpty(value) ? null : value;
+
+    private static T[]? NullIfEmpty<T>(IEnumerable<T> items)
+    {
+        var array = items.ToArray();
+        return array.Length == 0 ? null : array;
+    }
 
     public string Generate(RdbmsHtmlGeneratorDatabase database, string databaseName)
     {
@@ -34,45 +44,73 @@ public sealed class HtmlReportGenerator
         var foreignKeysByTable = foreignKeys
             .GroupBy(f => f.TableName, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
+        var indexesByTable = database.GetAllIndexes()
+            .GroupBy(i => i.TableName, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
+        var constraintsByTable = database.GetAllConstraints()
+            .GroupBy(c => c.TableName, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.Ordinal);
 
+        // Empty strings / empty lists are left out of the JSON (WhenWritingNull) - with 200k+ columns the always-empty
+        // Excel-only fields (japaneseName, fullName, meta...) were most of the file. The page's script fills them back
+        // in as '' / [] right after JSON.parse (see "normalize" in HtmlTemplate).
         var payload = new
         {
             generatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            extendedInfo = database.HasExtendedInfo(),
             tables = tables.Select(t => new
             {
                 name = t.TableName,
-                alias = t.Alias,
-                japaneseName = t.JapaneseName,
-                kind = t.Kind,
-                note = t.Note,
-                description = t.Description,
-                managementType = t.ManagementType,
-                cautionItems = t.CautionItems,
-                revisionHistory = t.RevisionHistory,
-                sourceFile = t.SourceFile,
-                sourceSheet = t.SourceSheet,
+                alias = N(t.Alias),
+                japaneseName = N(t.JapaneseName),
+                kind = N(t.Kind),
+                note = N(t.Note),
+                description = N(t.Description),
+                managementType = N(t.ManagementType),
+                cautionItems = N(t.CautionItems),
+                revisionHistory = N(t.RevisionHistory),
+                sourceFile = N(t.SourceFile),
+                sourceSheet = N(t.SourceSheet),
+                estimatedRows = t.EstimatedRows,
                 columns = (columnsByTable.TryGetValue(t.TableName, out var cols) ? cols : [])
                     .Select(c => new
                     {
                         level = c.Level,
                         name = c.ColumnName,
-                        dataType = c.DataType,
-                        length = c.Length,
-                        nullable = c.Nullable,
-                        defaultValue = c.DefaultValue,
-                        japaneseName = c.JapaneseName,
-                        description = c.Description,
-                        fullName = c.FullName,
-                        valueRestriction = c.ValueRestriction,
-                        meta = c.Meta,
+                        dataType = N(c.DataType),
+                        length = N(c.Length),
+                        nullable = N(c.Nullable),
+                        defaultValue = N(c.DefaultValue),
+                        japaneseName = N(c.JapaneseName),
+                        description = N(c.Description),
+                        fullName = N(c.FullName),
+                        valueRestriction = N(c.ValueRestriction),
+                        meta = N(c.Meta),
                     }),
-                foreignKeys = (foreignKeysByTable.TryGetValue(t.TableName, out var fks) ? fks : [])
+                foreignKeys = NullIfEmpty((foreignKeysByTable.TryGetValue(t.TableName, out var fks) ? fks : [])
                     .Select(f => new
                     {
                         localColumns = f.LocalColumns,
                         referencedTable = f.ReferencedTable,
-                        referencedColumns = f.ReferencedColumns,
-                    }),
+                        referencedColumns = N(f.ReferencedColumns),
+                    })),
+                indexes = NullIfEmpty((indexesByTable.TryGetValue(t.TableName, out var idx) ? idx : [])
+                    .Select(i => new
+                    {
+                        name = i.IndexName,
+                        columns = N(i.Columns),
+                        isUnique = i.IsUnique,
+                        isPrimaryKey = i.IsPrimaryKey,
+                        indexType = N(i.IndexType),
+                        note = N(i.Note),
+                    })),
+                constraints = NullIfEmpty((constraintsByTable.TryGetValue(t.TableName, out var cons) ? cons : [])
+                    .Select(c => new
+                    {
+                        name = c.ConstraintName,
+                        type = c.ConstraintType,
+                        definition = N(c.Definition),
+                    })),
             }),
         };
 
@@ -138,6 +176,7 @@ public sealed class HtmlReportGenerator
           .fk-link:hover { text-decoration: underline; }
           .groupBlock { border: 1px solid #8886; border-radius: 6px; padding: 12px; margin-bottom: 16px; }
           .groupBlock h2 { font-size: 15px; font-family: Consolas, monospace; margin: 0 0 8px; }
+          td.code { font-family: Consolas, monospace; white-space: pre-wrap; }
         </style>
         </head>
         <body>
@@ -160,6 +199,25 @@ public sealed class HtmlReportGenerator
         (function () {
           var data = JSON.parse(document.getElementById('app-data').textContent);
           var tables = data.tables;
+
+          // normalize: the generator leaves empty strings / lists out of the JSON to keep big schemas small -
+          // put them back so the code below can call .toLowerCase() / .length on every field.
+          var tableTextFields = ['alias', 'japaneseName', 'kind', 'note', 'description', 'managementType',
+            'cautionItems', 'revisionHistory', 'sourceFile', 'sourceSheet'];
+          var columnTextFields = ['dataType', 'length', 'nullable', 'defaultValue', 'japaneseName', 'description',
+            'fullName', 'valueRestriction', 'meta'];
+          tables.forEach(function (t) {
+            tableTextFields.forEach(function (k) { if (t[k] == null) t[k] = ''; });
+            t.columns = t.columns || [];
+            t.columns.forEach(function (c) {
+              columnTextFields.forEach(function (k) { if (c[k] == null) c[k] = ''; });
+            });
+            t.foreignKeys = t.foreignKeys || [];
+            t.indexes = (t.indexes || []).map(function (i) {
+              i.columns = i.columns || ''; i.indexType = i.indexType || ''; i.note = i.note || ''; return i;
+            });
+            t.constraints = (t.constraints || []).map(function (c) { c.definition = c.definition || ''; return c; });
+          });
           var listEl = document.getElementById('tableList');
           var contentEl = document.getElementById('content');
           var searchBox = document.getElementById('searchBox');
@@ -195,7 +253,7 @@ public sealed class HtmlReportGenerator
               var li = document.createElement('li');
               li.innerHTML = '<div class="tname"></div><div class="jname"></div>';
               li.querySelector('.tname').textContent = t.name;
-              li.querySelector('.jname').textContent = t.japaneseName || t.alias || '';
+              li.querySelector('.jname').textContent = t.japaneseName || t.alias || rowsText(t);
               li.addEventListener('click', function () {
                 var columnQuery = columnBox.value.trim().toLowerCase();
                 if (columnQuery) {
@@ -206,6 +264,41 @@ public sealed class HtmlReportGenerator
               });
               listEl.appendChild(li);
             });
+          }
+
+          // Row count comes from the DB's statistics (no COUNT(*)), so it's labelled as an estimate.
+          function rowsText(t) {
+            return t.estimatedRows == null ? '' : '≈ ' + t.estimatedRows.toLocaleString('vi-VN') + ' dòng';
+          }
+
+          function renderIndexes(indexes) {
+            if (!indexes || !indexes.length) return '';
+            var rows = indexes.map(function (i) {
+              var kind = i.isPrimaryKey ? 'Khoá chính' : (i.isUnique ? 'UNIQUE' : 'Thường');
+              return '<tr' + (i.isPrimaryKey ? ' class="pk"' : '') + '>' +
+                '<td>' + escapeHtml(i.name) + '</td>' +
+                '<td>' + escapeHtml(i.columns) + '</td>' +
+                '<td>' + kind + (i.indexType ? ' · ' + escapeHtml(i.indexType) : '') + '</td>' +
+                '<td>' + escapeHtml(i.note) + '</td>' +
+                '</tr>';
+            }).join('');
+            return '<div class="metaLabel" style="margin-top:16px">Index (' + indexes.length + ')</div>' +
+              '<table class="cols"><thead><tr><th>Tên index</th><th>Cột</th><th>Loại</th><th>Ghi chú</th></tr></thead>' +
+              '<tbody>' + rows + '</tbody></table>';
+          }
+
+          function renderConstraints(constraints) {
+            if (!constraints || !constraints.length) return '';
+            var rows = constraints.map(function (c) {
+              return '<tr>' +
+                '<td>' + escapeHtml(c.name) + '</td>' +
+                '<td>' + escapeHtml(c.type) + '</td>' +
+                '<td class="code">' + escapeHtml(c.definition) + '</td>' +
+                '</tr>';
+            }).join('');
+            return '<div class="metaLabel" style="margin-top:16px">Ràng buộc UNIQUE / CHECK (' + constraints.length + ')</div>' +
+              '<table class="cols"><thead><tr><th>Tên ràng buộc</th><th>Loại</th><th>Định nghĩa</th></tr></thead>' +
+              '<tbody>' + rows + '</tbody></table>';
           }
 
           function renderSection(label, text) {
@@ -282,7 +375,16 @@ public sealed class HtmlReportGenerator
           function renderColumnsTable(t) {
             var html = '<h1>' + escapeHtml(t.name) + (t.alias ? ' (' + escapeHtml(t.alias) + ')' : '') + '</h1>';
             html += '<div class="meta">' + escapeHtml(t.japaneseName) + (t.kind ? ' - ' + escapeHtml(t.kind) : '') + '\n';
-            html += 'Nguồn: ' + escapeHtml(t.sourceFile) + ' / ' + escapeHtml(t.sourceSheet) + '</div>';
+            html += 'Nguồn: ' + escapeHtml(t.sourceFile) + ' / ' + escapeHtml(t.sourceSheet);
+            if (!data.extendedInfo) {
+              // .db read by an older version - no row counts / indexes / constraints were collected.
+              html += '\n(Dữ liệu đọc bằng bản cũ: bấm lại "1. Đọc database" để có số dòng, index, ràng buộc UNIQUE / CHECK)';
+            } else if (t.estimatedRows != null) {
+              html += '\nSố dòng (ước tính theo thống kê của DB): ' + t.estimatedRows.toLocaleString('vi-VN');
+            } else if (t.kind !== 'VIEW') {
+              html += '\nSố dòng: chưa có thống kê (ANALYZE / thu thập thống kê trên DB rồi đọc lại)';
+            }
+            html += '</div>';
             html += renderSection('Mô tả (説明)', t.description);
             html += renderSection('Loại quản lý (管理タイプ)', t.managementType);
             html += renderSection('Mục cần lưu ý khi thay đổi (運用後の変更に注意が必要な項目)', t.cautionItems);
@@ -290,6 +392,8 @@ public sealed class HtmlReportGenerator
             html += renderForeignKeys(t.foreignKeys);
             html += legendHtml();
             html += buildColumnsTableHtml(t.columns);
+            html += renderIndexes(t.indexes);
+            html += renderConstraints(t.constraints);
             contentEl.innerHTML = html;
           }
 

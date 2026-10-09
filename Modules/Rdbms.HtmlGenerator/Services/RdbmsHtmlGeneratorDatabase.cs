@@ -46,11 +46,9 @@ public sealed class RdbmsHtmlGeneratorDatabase
         return connection;
     }
 
-    public async Task ReplaceAllAsync(
-        IReadOnlyList<DbTableRecord> tables,
-        IReadOnlyList<DbColumnRecord> columns,
-        IReadOnlyList<DbForeignKeyRecord> foreignKeys)
+    public async Task ReplaceAllAsync(SchemaImportResult import)
     {
+        var (tables, columns, foreignKeys, indexes, constraints) = import;
         using var connection = OpenConnection();
         using var transaction = connection.BeginTransaction();
 
@@ -59,6 +57,8 @@ public sealed class RdbmsHtmlGeneratorDatabase
             schema.Transaction = transaction;
             schema.CommandText =
                 """
+                DROP TABLE IF EXISTS Constraints;
+                DROP TABLE IF EXISTS Indexes;
                 DROP TABLE IF EXISTS ForeignKeys;
                 DROP TABLE IF EXISTS Columns;
                 DROP TABLE IF EXISTS Tables;
@@ -74,7 +74,27 @@ public sealed class RdbmsHtmlGeneratorDatabase
                   CautionItems    TEXT,
                   RevisionHistory TEXT,
                   SourceFile      TEXT NOT NULL,
-                  SourceSheet     TEXT NOT NULL
+                  SourceSheet     TEXT NOT NULL,
+                  EstimatedRows   INTEGER
+                );
+
+                CREATE TABLE Indexes (
+                  Id            INTEGER PRIMARY KEY AUTOINCREMENT,
+                  TableName     TEXT NOT NULL REFERENCES Tables(TableName),
+                  IndexName     TEXT NOT NULL,
+                  Columns       TEXT,
+                  IsUnique      INTEGER NOT NULL,
+                  IsPrimaryKey  INTEGER NOT NULL,
+                  IndexType     TEXT,
+                  Note          TEXT
+                );
+
+                CREATE TABLE Constraints (
+                  Id              INTEGER PRIMARY KEY AUTOINCREMENT,
+                  TableName       TEXT NOT NULL REFERENCES Tables(TableName),
+                  ConstraintName  TEXT NOT NULL,
+                  ConstraintType  TEXT NOT NULL,
+                  Definition      TEXT
                 );
 
                 CREATE TABLE Columns (
@@ -116,9 +136,9 @@ public sealed class RdbmsHtmlGeneratorDatabase
             insertTable.Transaction = transaction;
             insertTable.CommandText =
                 "INSERT INTO Tables (TableName, Alias, JapaneseName, Kind, Note, Description, " +
-                "ManagementType, CautionItems, RevisionHistory, SourceFile, SourceSheet) " +
+                "ManagementType, CautionItems, RevisionHistory, SourceFile, SourceSheet, EstimatedRows) " +
                 "VALUES ($tableName, $alias, $japaneseName, $kind, $note, $description, " +
-                "$managementType, $cautionItems, $revisionHistory, $sourceFile, $sourceSheet)";
+                "$managementType, $cautionItems, $revisionHistory, $sourceFile, $sourceSheet, $estimatedRows)";
             var pTableName = insertTable.Parameters.Add("$tableName", SqliteType.Text);
             var pAlias = insertTable.Parameters.Add("$alias", SqliteType.Text);
             var pJapaneseName = insertTable.Parameters.Add("$japaneseName", SqliteType.Text);
@@ -130,6 +150,7 @@ public sealed class RdbmsHtmlGeneratorDatabase
             var pRevisionHistory = insertTable.Parameters.Add("$revisionHistory", SqliteType.Text);
             var pSourceFile = insertTable.Parameters.Add("$sourceFile", SqliteType.Text);
             var pSourceSheet = insertTable.Parameters.Add("$sourceSheet", SqliteType.Text);
+            var pEstimatedRows = insertTable.Parameters.Add("$estimatedRows", SqliteType.Integer);
 
             foreach (var table in tables)
             {
@@ -144,6 +165,7 @@ public sealed class RdbmsHtmlGeneratorDatabase
                 pRevisionHistory.Value = table.RevisionHistory;
                 pSourceFile.Value = table.SourceFile;
                 pSourceSheet.Value = table.SourceSheet;
+                pEstimatedRows.Value = (object?)table.EstimatedRows ?? DBNull.Value;
                 await insertTable.ExecuteNonQueryAsync();
             }
         }
@@ -214,16 +236,142 @@ public sealed class RdbmsHtmlGeneratorDatabase
             }
         }
 
+        using (var insertIndex = connection.CreateCommand())
+        {
+            insertIndex.Transaction = transaction;
+            insertIndex.CommandText =
+                "INSERT INTO Indexes (TableName, IndexName, Columns, IsUnique, IsPrimaryKey, IndexType, Note) " +
+                "VALUES ($tableName, $indexName, $columns, $isUnique, $isPrimaryKey, $indexType, $note)";
+            var pTableName = insertIndex.Parameters.Add("$tableName", SqliteType.Text);
+            var pIndexName = insertIndex.Parameters.Add("$indexName", SqliteType.Text);
+            var pColumns = insertIndex.Parameters.Add("$columns", SqliteType.Text);
+            var pIsUnique = insertIndex.Parameters.Add("$isUnique", SqliteType.Integer);
+            var pIsPrimaryKey = insertIndex.Parameters.Add("$isPrimaryKey", SqliteType.Integer);
+            var pIndexType = insertIndex.Parameters.Add("$indexType", SqliteType.Text);
+            var pNote = insertIndex.Parameters.Add("$note", SqliteType.Text);
+
+            foreach (var index in indexes)
+            {
+                pTableName.Value = index.TableName;
+                pIndexName.Value = index.IndexName;
+                pColumns.Value = index.Columns;
+                pIsUnique.Value = index.IsUnique ? 1 : 0;
+                pIsPrimaryKey.Value = index.IsPrimaryKey ? 1 : 0;
+                pIndexType.Value = index.IndexType;
+                pNote.Value = index.Note;
+                await insertIndex.ExecuteNonQueryAsync();
+            }
+        }
+
+        using (var insertConstraint = connection.CreateCommand())
+        {
+            insertConstraint.Transaction = transaction;
+            insertConstraint.CommandText =
+                "INSERT INTO Constraints (TableName, ConstraintName, ConstraintType, Definition) " +
+                "VALUES ($tableName, $constraintName, $constraintType, $definition)";
+            var pTableName = insertConstraint.Parameters.Add("$tableName", SqliteType.Text);
+            var pConstraintName = insertConstraint.Parameters.Add("$constraintName", SqliteType.Text);
+            var pConstraintType = insertConstraint.Parameters.Add("$constraintType", SqliteType.Text);
+            var pDefinition = insertConstraint.Parameters.Add("$definition", SqliteType.Text);
+
+            foreach (var constraint in constraints)
+            {
+                pTableName.Value = constraint.TableName;
+                pConstraintName.Value = constraint.ConstraintName;
+                pConstraintType.Value = constraint.ConstraintType;
+                pDefinition.Value = constraint.Definition;
+                await insertConstraint.ExecuteNonQueryAsync();
+            }
+        }
+
         transaction.Commit();
+    }
+
+    /// <summary>A .db written before indexes / constraints / row estimates existed lacks those tables / columns -
+    /// it still exports, just without that information (re-read the database to get it).</summary>
+    private static bool HasColumn(SqliteConnection connection, string table, string column)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM pragma_table_info($table) WHERE name = $column";
+        command.Parameters.AddWithValue("$table", table);
+        command.Parameters.AddWithValue("$column", column);
+        return Convert.ToInt64(command.ExecuteScalar()) > 0;
+    }
+
+    /// <summary>False for a .db read by an older version (no index / constraint / row-estimate data).</summary>
+    public bool HasExtendedInfo()
+    {
+        using var connection = OpenConnection();
+        return HasColumn(connection, "Tables", "EstimatedRows");
+    }
+
+    public List<DbIndexRecord> GetAllIndexes()
+    {
+        using var connection = OpenConnection();
+        if (!HasColumn(connection, "Indexes", "IndexName"))
+        {
+            return [];
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            "SELECT TableName, IndexName, Columns, IsUnique, IsPrimaryKey, IndexType, Note FROM Indexes ORDER BY Id";
+
+        var result = new List<DbIndexRecord>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new DbIndexRecord
+            {
+                TableName = reader.GetString(0),
+                IndexName = reader.GetString(1),
+                Columns = reader.IsDBNull(2) ? string.Empty : reader.GetString(2),
+                IsUnique = reader.GetInt32(3) != 0,
+                IsPrimaryKey = reader.GetInt32(4) != 0,
+                IndexType = reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+                Note = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+            });
+        }
+
+        return result;
+    }
+
+    public List<DbConstraintRecord> GetAllConstraints()
+    {
+        using var connection = OpenConnection();
+        if (!HasColumn(connection, "Constraints", "ConstraintName"))
+        {
+            return [];
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT TableName, ConstraintName, ConstraintType, Definition FROM Constraints ORDER BY Id";
+
+        var result = new List<DbConstraintRecord>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            result.Add(new DbConstraintRecord
+            {
+                TableName = reader.GetString(0),
+                ConstraintName = reader.GetString(1),
+                ConstraintType = reader.GetString(2),
+                Definition = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+            });
+        }
+
+        return result;
     }
 
     public List<DbTableRecord> GetAllTables()
     {
         using var connection = OpenConnection();
+        var hasRows = HasColumn(connection, "Tables", "EstimatedRows");
         using var command = connection.CreateCommand();
         command.CommandText =
             "SELECT TableName, Alias, JapaneseName, Kind, Note, Description, " +
-            "ManagementType, CautionItems, RevisionHistory, SourceFile, SourceSheet " +
+            "ManagementType, CautionItems, RevisionHistory, SourceFile, SourceSheet, " +
+            (hasRows ? "EstimatedRows " : "NULL ") +
             "FROM Tables ORDER BY TableName";
 
         var result = new List<DbTableRecord>();
@@ -243,6 +391,7 @@ public sealed class RdbmsHtmlGeneratorDatabase
                 RevisionHistory = reader.GetString(8),
                 SourceFile = reader.GetString(9),
                 SourceSheet = reader.GetString(10),
+                EstimatedRows = reader.IsDBNull(11) ? null : reader.GetInt64(11),
             });
         }
 

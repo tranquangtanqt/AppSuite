@@ -44,7 +44,11 @@ internal static class HelpContent
             new("Tên bảng + Tên cột", "Chỉ hiện các cột khớp Tên cột trong đúng bảng đó."),
             new("Chỉ nhập Tên cột", "Tìm mọi bảng có cột khớp, kết quả nhóm theo từng bảng - dùng khi không nhớ cột thuộc bảng nào."),
             new("Màu nền", "Vàng nhạt = cột khoá chính."),
-            new("Khoá ngoại", "Bảng khoá ngoại dưới phần cột: bấm tên bảng tham chiếu để mở bảng đó ở tab mới. Thêm #table=TÊN_BẢNG vào cuối đường dẫn file HTML để chia sẻ link tới 1 bảng."),
+            new("Khoá ngoại", "Bảng khoá ngoại phía trên bảng cột: bấm tên bảng tham chiếu để mở bảng đó ở tab mới. Thêm #table=TÊN_BẢNG vào cuối đường dẫn file HTML để chia sẻ link tới 1 bảng."),
+            new("Số dòng", "\"≈ 1.234 dòng\" dưới tên bảng ở menu trái và dòng \"Số dòng (ước tính...)\" trên đầu bảng: lấy từ thống kê của database (không đếm thật nên đọc nhanh cả bảng rất lớn), chỉ mới bằng lần thống kê gần nhất (PostgreSQL: ANALYZE / VACUUM; Oracle: DBMS_STATS; MySQL: ước tính của InnoDB; SQL Server: luôn cập nhật). Chưa có thống kê thì ghi rõ; view không có số dòng."),
+            new("Index", "Bảng \"Index\" dưới bảng cột: tên index, các cột (theo thứ tự, DESC nếu sắp giảm; index theo biểu thức hiện biểu thức), loại (Khoá chính / UNIQUE / Thường + kiểu như btree, CLUSTERED), ghi chú INCLUDE (...) / WHERE ... (partial / filtered index). Index theo hàm (Oracle function-based) hiện biểu thức, vd COALESCE(\"A\",\"B\")."),
+            new("Ràng buộc UNIQUE / CHECK", "Bảng cuối: tên ràng buộc, loại, định nghĩa (các cột của UNIQUE, điều kiện của CHECK). Ràng buộc NOT NULL đã thể hiện ở cột Null nên không lặp lại. Cần Oracle 12c+ / MySQL 8.0.16+ (MariaDB 10.2+) để đọc CHECK."),
+            new("File đọc bằng bản cũ", "Dữ liệu đọc trước khi có số dòng / index / ràng buộc vẫn xuất HTML được, trang ghi nhắc bấm lại \"1. Đọc database\" để có đủ thông tin."),
         ]),
 
         new("Nhiều database và cập nhật", "", "Mỗi database có file dữ liệu riêng.",

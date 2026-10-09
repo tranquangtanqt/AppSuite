@@ -17,7 +17,7 @@ namespace Rdbms.HtmlGenerator.Services;
 /// </summary>
 public sealed class PostgresSchemaImporter
 {
-    public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
+    public async Task<SchemaImportResult> ImportAsync(
         PostgresConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
         log($"Đang kết nối {settings.Host}:{settings.Port}/{settings.Database} (tối đa {options.EffectiveConnectTimeoutSeconds} giây)...");
@@ -31,9 +31,12 @@ public sealed class PostgresSchemaImporter
         var primaryKeys = await ReadPrimaryKeysAsync(connection, schemaFilter, cancellationToken);
         var columns = await ReadColumnsAsync(connection, schemaFilter, primaryKeys, log, cancellationToken);
         var foreignKeys = await ReadForeignKeysAsync(connection, schemaFilter, log, cancellationToken);
+        var indexes = await ReadIndexesAsync(connection, schemaFilter, log, cancellationToken);
+        var constraints = await ReadConstraintsAsync(connection, schemaFilter, log, cancellationToken);
 
-        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại từ {sourceLabel}.");
-        return (tables, columns, foreignKeys);
+        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại, {indexes.Count} index, " +
+            $"{constraints.Count} ràng buộc UNIQUE / CHECK từ {sourceLabel}.");
+        return new SchemaImportResult(tables, columns, foreignKeys, indexes, constraints);
     }
 
     /// <summary>"Thu ket noi": opens a connection and counts the tables/views an import would read.</summary>
@@ -98,7 +101,15 @@ public sealed class PostgresSchemaImporter
                        WHEN 'r' THEN 'BASE TABLE' WHEN 'p' THEN 'BASE TABLE' WHEN 'f' THEN 'FOREIGN TABLE'
                        WHEN 'v' THEN 'VIEW' WHEN 'm' THEN 'MATERIALIZED VIEW' ELSE c.relkind::text
                    END AS table_type,
-                   d.description
+                   d.description,
+                   -- reltuples = estimate kept by VACUUM / ANALYZE (-1 = never analyzed, PG14+); a partitioned
+                   -- table has none of its own, so sum its partitions.
+                   CASE
+                       WHEN c.relkind = 'p' THEN (SELECT sum(greatest(ch.reltuples, 0))::bigint
+                                                  FROM pg_inherits inh JOIN pg_class ch ON ch.oid = inh.inhrelid
+                                                  WHERE inh.inhparent = c.oid)
+                       WHEN c.relkind IN ('r', 'm') AND c.reltuples >= 0 THEN c.reltuples::bigint
+                   END AS est_rows
             FROM pg_class c
             JOIN pg_namespace n ON n.oid = c.relnamespace
             LEFT JOIN pg_description d ON d.objoid = c.oid AND d.objsubid = 0
@@ -116,6 +127,7 @@ public sealed class PostgresSchemaImporter
                     TableName = reader.GetString(1),
                     Kind = reader.GetString(2),
                     Description = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    EstimatedRows = reader.IsDBNull(4) ? null : reader.GetInt64(4),
                     SourceFile = sourceLabel,
                     SourceSheet = reader.GetString(0),
                 });
@@ -256,5 +268,108 @@ public sealed class PostgresSchemaImporter
         }
 
         return foreignKeys;
+    }
+
+    /// <summary>pg_get_indexdef(index, k) renders key k as written in CREATE INDEX (column, or expression for an
+    /// expression index); keys after indnkeyatts are INCLUDE columns. indpred = WHERE of a partial index.</summary>
+    private static async Task<List<DbIndexRecord>> ReadIndexesAsync(
+        NpgsqlConnection connection, string? schemaFilter, Action<string> log, CancellationToken ct)
+    {
+        var indexes = new List<DbIndexRecord>();
+        try
+        {
+            await using var command = connection.CreateCommand();
+            var schemaClause = ApplySchemaFilter(command, schemaFilter, "n.nspname");
+            command.CommandText =
+                $"""
+                SELECT n.nspname, t.relname, i.relname, ix.indisunique, ix.indisprimary, am.amname,
+                       (SELECT string_agg(pg_get_indexdef(ix.indexrelid, k, true)
+                                          -- indoption (0-based int2vector) bit 1 = DESC; not in pg_get_indexdef(i, k)
+                                          || CASE WHEN ix.indoption[k - 1] & 1 = 1 THEN ' DESC' ELSE '' END,
+                                          ', ' ORDER BY k)
+                        FROM generate_series(1, ix.indnkeyatts) k),
+                       (SELECT string_agg(pg_get_indexdef(ix.indexrelid, k, true), ', ' ORDER BY k)
+                        FROM generate_series(ix.indnkeyatts + 1, ix.indnatts) k),
+                       pg_get_expr(ix.indpred, ix.indrelid, true)
+                FROM pg_index ix
+                JOIN pg_class i ON i.oid = ix.indexrelid
+                JOIN pg_class t ON t.oid = ix.indrelid
+                JOIN pg_namespace n ON n.oid = t.relnamespace
+                JOIN pg_am am ON am.oid = i.relam
+                WHERE t.relkind IN ('r', 'm', 'p') AND {schemaClause}
+                ORDER BY n.nspname, t.relname, ix.indisprimary DESC, i.relname
+                """;
+
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                var include = reader.IsDBNull(7) ? null : $"INCLUDE ({reader.GetString(7)})";
+                var where = reader.IsDBNull(8) ? null : $"WHERE {reader.GetString(8)}";
+                indexes.Add(new DbIndexRecord
+                {
+                    Schema = reader.GetString(0),
+                    TableName = reader.GetString(1),
+                    IndexName = reader.GetString(2),
+                    IsUnique = reader.GetBoolean(3),
+                    IsPrimaryKey = reader.GetBoolean(4),
+                    IndexType = reader.GetString(5),
+                    Columns = reader.IsDBNull(6) ? string.Empty : reader.GetString(6),
+                    Note = string.Join("  ", new[] { include, where }.Where(s => s is not null)),
+                });
+            }
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Lỗi đọc index: {ex.Message}");
+        }
+
+        return indexes;
+    }
+
+    private static async Task<List<DbConstraintRecord>> ReadConstraintsAsync(
+        NpgsqlConnection connection, string? schemaFilter, Action<string> log, CancellationToken ct)
+    {
+        var constraints = new List<DbConstraintRecord>();
+        try
+        {
+            await using var command = connection.CreateCommand();
+            var schemaClause = ApplySchemaFilter(command, schemaFilter, "n.nspname");
+            // pg_get_constraintdef: "UNIQUE (a, b)" / "CHECK ((price > 0))" - strip the keyword, keep the body.
+            command.CommandText =
+                $"""
+                SELECT n.nspname, cl.relname, con.conname, con.contype::text, pg_get_constraintdef(con.oid, true)
+                FROM pg_constraint con
+                JOIN pg_class cl ON cl.oid = con.conrelid
+                JOIN pg_namespace n ON n.oid = cl.relnamespace
+                WHERE con.contype IN ('u', 'c') AND {schemaClause}
+                ORDER BY n.nspname, cl.relname, con.contype DESC, con.conname
+                """;
+
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                var type = reader.GetString(3) == "u" ? "UNIQUE" : "CHECK";
+                var definition = reader.GetString(4);
+                if (definition.StartsWith(type, StringComparison.Ordinal))
+                {
+                    definition = definition[type.Length..].Trim();
+                }
+
+                constraints.Add(new DbConstraintRecord
+                {
+                    Schema = reader.GetString(0),
+                    TableName = reader.GetString(1),
+                    ConstraintName = reader.GetString(2),
+                    ConstraintType = type,
+                    Definition = definition,
+                });
+            }
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Lỗi đọc ràng buộc UNIQUE / CHECK: {ex.Message}");
+        }
+
+        return constraints;
     }
 }

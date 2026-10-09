@@ -511,6 +511,17 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   đường thành công)
 - [ ] **[Đề xuất · Có thể]** Thông báo lỗi PostgreSQL lúc đăng nhập bị lỗi font khi máy chủ dùng locale tiếng Nhật
   (máy chủ gửi trước khi thống nhất bảng mã) - phần gợi ý tiếng Việt vẫn đúng
+- [x] Trang HTML thêm **số dòng ước tính** (menu trái + đầu bảng, từ thống kê của DB), bảng **Index** (cột, DESC,
+  biểu thức, loại, INCLUDE / WHERE) và **Ràng buộc UNIQUE / CHECK** cho cả 4 nguồn; `.db` cũ vẫn xuất được, trang nhắc
+  đọc lại. Thử console PostgreSQL 17 tạm + SQL Server LocalDB, ảnh HTML bằng Edge headless trong Sandbox, GUI Sandbox
+  29/29 (2026-10-09)
+- [x] Thử với **Oracle 19c thật** (ABLIC_ITA: 6.472 bảng / view, 245.309 cột, đọc 18 giây): số dòng 2.494 / 3.405 bảng có
+  thống kê, 5.846 index, 142 UNIQUE + 2.445 CHECK (19.111 NOT NULL tự sinh bỏ đúng). Sửa thêm: index theo hàm hiện biểu
+  thức thật thay cho SYS_NC...$ (ALL_IND_EXPRESSIONS, LONG); HTML bỏ trường rỗng → 52 MB còn 24 MB. Ảnh HTML trong
+  Sandbox OK (2026-10-09)
+- [ ] Thử index / ràng buộc / số dòng với MySQL thật
+- [ ] **[Đề xuất · Có thể]** Schema rất lớn (24 MB HTML với 245k cột): cân nhắc nén dữ liệu trong trang hoặc tách file
+  theo nhóm bảng nếu trình duyệt mở chậm
 - [ ] Thử MySQL với máy chủ thật (máy dev không có MySQL — mới thử được trường hợp không kết nối được)
 - [ ] Thử tay GUI: combobox đổi nguồn, hộp thoại kết nối 4 tab (tích Windows Authentication khoá ô user/pass),
   hộp thoại Cài đặt (Lưu / Mặc định / Huỷ), tự mở HTML; regression PostgreSQL + Oracle với DB thật

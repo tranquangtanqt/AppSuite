@@ -210,25 +210,25 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
 
             // WaitAsync: "Huỷ" returns at once even while a driver is stuck opening the connection (ODP.NET's
             // OpenAsync ignores the token) - that attempt ends on its own within the connect timeout.
-            var (tables, columns, foreignKeys) = await importTask.WaitAsync(cancellationToken);
+            var import = await importTask.WaitAsync(cancellationToken);
 
             // Importers swallow per-row / foreign-key errors into the log, so a cancel can come back as a normal
             // (partial) result - never save that over the previous .db.
             cancellationToken.ThrowIfCancellationRequested();
 
             // Same table name in 2+ schemas -> "schema.table" for those only (SQLite / HTML key tables by name).
-            List<string> duplicateNames;
-            (tables, columns, foreignKeys, duplicateNames) = TableNameQualifier.QualifyDuplicates(tables, columns, foreignKeys);
+            (import, var duplicateNames) = TableNameQualifier.QualifyDuplicates(import);
             if (duplicateNames.Count > 0)
             {
                 AppendLog($"{duplicateNames.Count} tên bảng trùng ở nhiều schema → đặt tên dạng schema.bảng: {string.Join(", ", duplicateNames)}");
             }
 
             IsImporting = false; // saving to SQLite is quick and must not be interrupted half-way
-            StatusText = $"Đang lưu {tables.Count} bảng / {columns.Count} cột vào SQLite...";
-            await _database.ReplaceAllAsync(tables, columns, foreignKeys);
+            StatusText = $"Đang lưu {import.Tables.Count} bảng / {import.Columns.Count} cột vào SQLite...";
+            await _database.ReplaceAllAsync(import);
 
-            StatusText = $"Đã đọc và lưu xong: {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại. File: {_database.DatabasePath}";
+            StatusText = $"Đã đọc và lưu xong: {import.Tables.Count} bảng, {import.Columns.Count} cột, {import.ForeignKeys.Count} khoá ngoại, " +
+                         $"{import.Indexes.Count} index, {import.Constraints.Count} ràng buộc. File: {_database.DatabasePath}";
             CanExportHtml = true;
             NextStep = 2;
         }

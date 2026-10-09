@@ -136,6 +136,24 @@ Các importer đọc thẳng vào catalog/data dictionary của DB (không qua `
 - PostgreSQL khoá ngoại đọc từ `pg_constraint` (`unnest(conkey, confkey) WITH ORDINALITY`): bản cũ join
   `information_schema.constraint_column_usage` (không có vị trí cột) nên khoá ngoại nhiều cột bị nhân chéo
   (`cust_id,cust_id,cust_branch,cust_branch -> branch,id,branch,id`). Đã thử với PostgreSQL 17 tạm và SQL Server LocalDB.
+- **Số dòng ước tính, index, ràng buộc UNIQUE / CHECK** (`DbTableRecord.EstimatedRows`, `DbIndexRecord`,
+  `DbConstraintRecord`; importer trả `SchemaImportResult`; SQLite thêm cột `Tables.EstimatedRows` + bảng `Indexes`,
+  `Constraints`). Số dòng lấy từ thống kê, không `COUNT(*)`:
+
+  | DB | Số dòng | Index | UNIQUE / CHECK |
+  |---|---|---|---|
+  | PostgreSQL | `pg_class.reltuples` (-1 = chưa ANALYZE → null; bảng partitioned = tổng partition) | `pg_index` + `pg_get_indexdef(i, k)` từng key, DESC từ `indoption`, INCLUDE = key sau `indnkeyatts`, WHERE = `indpred` | `pg_constraint` contype u / c + `pg_get_constraintdef` |
+  | Oracle | `ALL_TABLES.NUM_ROWS` (DBMS_STATS) | `ALL_INDEXES` + `ALL_IND_COLUMNS` (bỏ LOB index; khoá chính = `ALL_CONSTRAINTS.INDEX_NAME`); cột ẩn SYS_NC...$ của index theo hàm thay bằng `ALL_IND_EXPRESSIONS.COLUMN_EXPRESSION` (LONG - đọc riêng với `InitialLONGFetchSize = -1`) | `ALL_CONSTRAINTS` U / C, `SEARCH_CONDITION_VC` (12c+), bỏ NOT NULL tự sinh |
+  | MySQL | `TABLES.TABLE_ROWS` | `STATISTICS` (SUB_PART, COLLATION D) | `TABLE_CONSTRAINTS` UNIQUE + `CHECK_CONSTRAINTS` (8.0.16+, đọc riêng) |
+  | SQL Server | `sys.partitions` index 0 / 1 | `sys.indexes` + `sys.index_columns` (gộp trong C#, không STRING_AGG để chạy cả bản < 2017) | `sys.key_constraints` UQ + `sys.check_constraints` |
+
+  `.db` đọc bằng bản cũ (chưa có cột / bảng mới) vẫn xuất HTML: `GetAllIndexes / GetAllConstraints` trả rỗng,
+  `HasExtendedInfo()` = false → trang nhắc đọc lại. Đã thử PostgreSQL 17 tạm + SQL Server LocalDB (partial / filtered,
+  INCLUDE, DESC, index theo biểu thức, UNIQUE, CHECK, bảng heap, view) và Oracle 19c thật (schema 6.472 bảng / 245.309
+  cột: đọc 18 giây; 5.846 index gồm 2 index theo hàm; 142 UNIQUE + 2.445 CHECK, 19.111 NOT NULL tự sinh được bỏ đúng).
+  MySQL chưa thử với máy chủ thật.
+- **Dung lượng HTML**: JSON bỏ các trường rỗng / danh sách rỗng (`JsonIgnoreCondition.WhenWritingNull` + `N()` /
+  `NullIfEmpty`), script trong trang điền lại `''` / `[]` ngay sau `JSON.parse` ("normalize"). Schema Oracle trên: 52 MB → 24 MB.
 - Chung cho cả 4: khóa ngoại đọc theo từng cặp cột rồi gộp theo (schema, bảng, constraint) ở `Services\ForeignKeyGrouper`.
   `Level` tái dùng đúng quy ước của Mcf.DbDef.HtmlGenerator (`0` = cột khóa chính, `1` = cột thường)
   để phần tô màu "khoa chinh" trong HTML dùng lại được mà không cần sửa gì; khóa ngoại nhiều cột nối

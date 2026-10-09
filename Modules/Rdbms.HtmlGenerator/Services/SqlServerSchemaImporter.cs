@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
@@ -14,7 +15,7 @@ namespace Rdbms.HtmlGenerator.Services;
 /// </summary>
 public sealed class SqlServerSchemaImporter
 {
-    public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
+    public async Task<SchemaImportResult> ImportAsync(
         SqlServerConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
         var sourceLabel = $"{BuildDataSource(settings)}/{settings.Database}";
@@ -27,9 +28,12 @@ public sealed class SqlServerSchemaImporter
         var primaryKeys = await ReadPrimaryKeysAsync(connection, schemaFilter, cancellationToken);
         var columns = await ReadColumnsAsync(connection, schemaFilter, primaryKeys, log, cancellationToken);
         var foreignKeys = await ReadForeignKeysAsync(connection, schemaFilter, log, cancellationToken);
+        var indexes = await ReadIndexesAsync(connection, schemaFilter, log, cancellationToken);
+        var constraints = await ReadConstraintsAsync(connection, schemaFilter, log, cancellationToken);
 
-        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại từ {sourceLabel}.");
-        return (tables, columns, foreignKeys);
+        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại, {indexes.Count} index, " +
+            $"{constraints.Count} ràng buộc UNIQUE / CHECK từ {sourceLabel}.");
+        return new SchemaImportResult(tables, columns, foreignKeys, indexes, constraints);
     }
 
     /// <summary>"Thu ket noi": opens a connection and counts the tables/views an import would read.</summary>
@@ -102,7 +106,10 @@ public sealed class SqlServerSchemaImporter
         const string sql =
             """
             SELECT s.name, o.name, CASE o.type WHEN 'V' THEN 'VIEW' ELSE 'BASE TABLE' END,
-                   CAST(ep.value AS nvarchar(max))
+                   CAST(ep.value AS nvarchar(max)),
+                   -- heap (0) or clustered index (1) rows = the table's rows; kept current by the engine, no COUNT(*)
+                   CASE o.type WHEN 'U' THEN (SELECT SUM(p.rows) FROM sys.partitions p
+                                              WHERE p.object_id = o.object_id AND p.index_id IN (0, 1)) END
             FROM sys.objects o
             JOIN sys.schemas s ON s.schema_id = o.schema_id
             LEFT JOIN sys.extended_properties ep
@@ -123,6 +130,7 @@ public sealed class SqlServerSchemaImporter
                     TableName = reader.GetString(1),
                     Kind = reader.GetString(2),
                     Description = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+                    EstimatedRows = reader.IsDBNull(4) ? null : Convert.ToInt64(reader.GetValue(4)),
                     SourceFile = sourceLabel,
                     SourceSheet = reader.GetString(0),
                 });
@@ -269,6 +277,131 @@ public sealed class SqlServerSchemaImporter
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             log($"Lỗi đọc khoá ngoại: {ex.Message}");
+            return [];
+        }
+    }
+
+    /// <summary>One row per index column, grouped here (STRING_AGG needs SQL Server 2017+). Key columns in
+    /// key_ordinal order (columnstore indexes have none - index_column_id order), INCLUDE columns and the filter
+    /// of a filtered index go to Note.</summary>
+    private static async Task<List<DbIndexRecord>> ReadIndexesAsync(
+        SqlConnection connection, string? schemaFilter, Action<string> log, CancellationToken ct)
+    {
+        try
+        {
+            const string sql =
+                """
+                SELECT s.name, o.name, i.name, i.is_unique, i.is_primary_key, i.type_desc, i.filter_definition,
+                       c.name, ic.is_included_column, ic.is_descending_key
+                FROM sys.indexes i
+                JOIN sys.objects o ON o.object_id = i.object_id
+                JOIN sys.schemas s ON s.schema_id = o.schema_id
+                JOIN sys.index_columns ic ON ic.object_id = i.object_id AND ic.index_id = i.index_id
+                JOIN sys.columns c ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+                WHERE i.type > 0 AND i.is_hypothetical = 0 AND o.is_ms_shipped = 0 AND o.type IN ('U', 'V')
+                  AND {schemaClause}
+                ORDER BY s.name, o.name, i.is_primary_key DESC, i.name, ic.is_included_column,
+                         CASE WHEN ic.key_ordinal = 0 THEN ic.index_column_id ELSE ic.key_ordinal END
+                """;
+
+            var rows = new List<(string Schema, string Table, string Index, bool Unique, bool Pk, string Type, string? Filter,
+                string Column, bool Included, bool Descending)>();
+            await using var command = CreateCommand(connection, sql, schemaFilter);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetBoolean(3),
+                    reader.GetBoolean(4), reader.GetString(5), reader.IsDBNull(6) ? null : reader.GetString(6),
+                    reader.GetString(7), reader.GetBoolean(8), reader.GetBoolean(9)));
+            }
+
+            return rows
+                .GroupBy(r => (r.Schema, r.Table, r.Index))
+                .Select(g =>
+                {
+                    var first = g.First();
+                    var keys = g.Where(r => !r.Included).Select(r => r.Descending ? $"{r.Column} DESC" : r.Column);
+                    var included = g.Where(r => r.Included).Select(r => r.Column).ToList();
+                    var notes = new List<string>();
+                    if (included.Count > 0)
+                    {
+                        notes.Add($"INCLUDE ({string.Join(", ", included)})");
+                    }
+
+                    if (first.Filter is not null)
+                    {
+                        notes.Add($"WHERE {first.Filter}");
+                    }
+
+                    return new DbIndexRecord
+                    {
+                        Schema = g.Key.Schema,
+                        TableName = g.Key.Table,
+                        IndexName = g.Key.Index,
+                        IsUnique = first.Unique,
+                        IsPrimaryKey = first.Pk,
+                        IndexType = first.Type,
+                        Columns = string.Join(", ", keys),
+                        Note = string.Join("  ", notes),
+                    };
+                })
+                .ToList();
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Lỗi đọc index: {ex.Message}");
+            return [];
+        }
+    }
+
+    private static async Task<List<DbConstraintRecord>> ReadConstraintsAsync(
+        SqlConnection connection, string? schemaFilter, Action<string> log, CancellationToken ct)
+    {
+        try
+        {
+            // UNIQUE: one row per column of the constraint's backing index; CHECK: one row with its definition.
+            const string sql =
+                """
+                SELECT s.name, o.name, kc.name, 'UNIQUE', c.name, ic.key_ordinal
+                FROM sys.key_constraints kc
+                JOIN sys.objects o ON o.object_id = kc.parent_object_id
+                JOIN sys.schemas s ON s.schema_id = o.schema_id
+                JOIN sys.index_columns ic ON ic.object_id = kc.parent_object_id AND ic.index_id = kc.unique_index_id
+                JOIN sys.columns c ON c.object_id = ic.object_id AND c.column_id = ic.column_id
+                WHERE kc.type = 'UQ' AND {schemaClause}
+                UNION ALL
+                SELECT s.name, o.name, cc.name, 'CHECK', cc.definition, 0
+                FROM sys.check_constraints cc
+                JOIN sys.objects o ON o.object_id = cc.parent_object_id
+                JOIN sys.schemas s ON s.schema_id = o.schema_id
+                WHERE {schemaClause}
+                ORDER BY 1, 2, 4 DESC, 3, 6
+                """;
+
+            var rows = new List<(string Schema, string Table, string Name, string Type, string Part)>();
+            await using var command = CreateCommand(connection, sql, schemaFilter);
+            await using var reader = await command.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                rows.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2), reader.GetString(3),
+                    reader.IsDBNull(4) ? string.Empty : reader.GetString(4)));
+            }
+
+            return rows
+                .GroupBy(r => (r.Schema, r.Table, r.Name, r.Type))
+                .Select(g => new DbConstraintRecord
+                {
+                    Schema = g.Key.Schema,
+                    TableName = g.Key.Table,
+                    ConstraintName = g.Key.Name,
+                    ConstraintType = g.Key.Type,
+                    Definition = g.Key.Type == "UNIQUE" ? $"({string.Join(", ", g.Select(r => r.Part))})" : g.First().Part,
+                })
+                .ToList();
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            log($"Lỗi đọc ràng buộc UNIQUE / CHECK: {ex.Message}");
             return [];
         }
     }
