@@ -44,7 +44,7 @@
             <CheckBox VerticalAlignment="Bottom" Content="Không phân biệt hoa / thường" IsChecked="{x:Bind ViewModel.IgnoreCase, Mode=TwoWay}" />
             <CheckBox VerticalAlignment="Bottom" Content="Bỏ qua khác biệt khoảng trắng" IsChecked="{x:Bind ViewModel.IgnoreWhitespace, Mode=TwoWay}" />
             <NumberBox Header="Dòng ngữ cảnh" Width="140" Minimum="0" Maximum="50" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.ContextLines, Mode=TwoWay}" />
-            <Button VerticalAlignment="Bottom" Content="So sánh" MinWidth="110" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.CompareCommand}" />
+            <Button VerticalAlignment="Bottom" Content="So sánh" MinWidth="110" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.CompareCommand}" />
         </StackPanel>
 
         <Border Grid.Row="3" BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">

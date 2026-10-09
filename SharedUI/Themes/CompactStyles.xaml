@@ -38,11 +38,22 @@
         <Setter Property="FontSize" Value="12" />
     </Style>
 
-    <Style TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+    <!-- Keyed copies so code / x:Bind can pick a compact style explicitly: setting Button.Style to the stock
+         DefaultButtonStyle / AccentButtonStyle bypasses the implicit style below and brings back the large
+         Fluent size (FontSize 14, bigger padding) - the button then looks bigger than its neighbours. -->
+    <Style x:Key="CompactButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Padding" Value="10,4" />
         <Setter Property="MinHeight" Value="28" />
     </Style>
+
+    <Style x:Key="CompactAccentButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Padding" Value="10,4" />
+        <Setter Property="MinHeight" Value="28" />
+    </Style>
+
+    <Style TargetType="Button" BasedOn="{StaticResource CompactButtonStyle}" />
 
     <Style TargetType="TextBox" BasedOn="{StaticResource DefaultTextBoxStyle}">
         <Setter Property="FontSize" Value="12" />

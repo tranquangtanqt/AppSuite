@@ -36,7 +36,7 @@
             <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseFolderCommand}" />
             <TextBox Grid.Column="2" Header="Mẫu lọc" Text="{x:Bind ViewModel.Patterns, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <CheckBox Grid.Column="3" VerticalAlignment="Bottom" Content="Gồm thư mục con" IsChecked="{x:Bind ViewModel.Recursive, Mode=TwoWay}" />
-            <Button Grid.Column="4" VerticalAlignment="Bottom" Content="Liệt kê file" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.ListFilesCommand}" />
+            <Button Grid.Column="4" VerticalAlignment="Bottom" Content="Liệt kê file" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.ListFilesCommand}" />
         </Grid>
 
         <Grid Grid.Row="2" ColumnSpacing="8">
@@ -103,7 +103,7 @@
             <TextBox Header="File kết quả" Text="{x:Bind ViewModel.OutputPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseOutputCommand}" />
             <views:OutputPanel Grid.Column="2" Settings="{x:Bind ViewModel.Output}" />
-            <Button Grid.Column="3" VerticalAlignment="Bottom" Content="Nối file" MinWidth="110" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.MergeCommand}" />
+            <Button Grid.Column="3" VerticalAlignment="Bottom" Content="Nối file" MinWidth="110" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.MergeCommand}" />
         </Grid>
 
         <views:JobPanel Grid.Row="5" Job="{x:Bind ViewModel}" />

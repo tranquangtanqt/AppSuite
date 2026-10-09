@@ -44,7 +44,7 @@
             <TextBox Header="Chỉ hiện dòng chứa (để trống = mọi dòng; áp dụng khi bấm Bắt đầu)" PlaceholderText="vd: ERROR"
                      Text="{x:Bind ViewModel.FilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <CheckBox Grid.Column="1" VerticalAlignment="Bottom" Content="Không phân biệt dấu" IsChecked="{x:Bind ViewModel.IgnoreDiacritics, Mode=TwoWay}" />
-            <Button Grid.Column="2" VerticalAlignment="Bottom" Content="▶ Bắt đầu" MinWidth="100" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.StartCommand}" />
+            <Button Grid.Column="2" VerticalAlignment="Bottom" Content="▶ Bắt đầu" MinWidth="100" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.StartCommand}" />
             <Button Grid.Column="3" VerticalAlignment="Bottom" Content="■ Dừng" Command="{x:Bind ViewModel.StopCommand}" />
             <CheckBox Grid.Column="4" VerticalAlignment="Bottom" Content="Tự cuộn xuống cuối" IsChecked="{x:Bind ViewModel.AutoScroll, Mode=TwoWay}" />
         </Grid>

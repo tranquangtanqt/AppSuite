@@ -33,13 +33,13 @@
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Top">
-                <Button Content="Huong dan su dung" Style="{StaticResource AccentButtonStyle}" Click="HelpButton_Click"
+                <Button Content="Huong dan su dung" Style="{StaticResource CompactAccentButtonStyle}" Click="HelpButton_Click"
                         ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
                     <Button.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F1" />
                     </Button.KeyboardAccelerators>
                 </Button>
-                <Button Content="Tim kiem ten bang" Style="{StaticResource AccentButtonStyle}"
+                <Button Content="Tim kiem ten bang" Style="{StaticResource CompactAccentButtonStyle}"
                         Click="OpenTableNameSearch_Click" />
             </StackPanel>
         </Grid>
@@ -83,7 +83,7 @@
                 </ItemsControl>
 
                 <Button Grid.Row="1" Width="32" Height="32" Padding="0" HorizontalAlignment="Right"
-                        Style="{StaticResource AccentButtonStyle}"
+                        Style="{StaticResource CompactAccentButtonStyle}"
                         Command="{x:Bind ViewModel.AddRowCommand}">
                     <FontIcon Glyph="&#xE710;" FontSize="14" />
                 </Button>
@@ -98,7 +98,7 @@
                          VerticalContentAlignment="Top" />
 
                 <Button Grid.Row="4" Content="Tim kiem" Margin="0,12,0,0"
-                        Style="{StaticResource AccentButtonStyle}"
+                        Style="{StaticResource CompactAccentButtonStyle}"
                         Command="{x:Bind ViewModel.SearchCommand}" />
             </Grid>
 
@@ -115,7 +115,7 @@
                     </Grid.RowDefinitions>
 
                     <Button Grid.Row="0" Content="Copy" HorizontalAlignment="Right"
-                            Style="{StaticResource AccentButtonStyle}"
+                            Style="{StaticResource CompactAccentButtonStyle}"
                             Command="{x:Bind ViewModel.CopyResultsCommand}" />
 
                     <Grid Grid.Row="1" ColumnSpacing="8" Padding="4,0">
@@ -193,7 +193,7 @@
                 <StackPanel Grid.Column="0" Spacing="8">
                     <TextBlock Text="Ten bang (tieng Anh hoac tieng Nhat)" />
                     <TextBox Text="{x:Bind TableNameSearchViewModel.Query, Mode=TwoWay}" />
-                    <Button Content="Tim kiem" Style="{StaticResource AccentButtonStyle}"
+                    <Button Content="Tim kiem" Style="{StaticResource CompactAccentButtonStyle}"
                             Command="{x:Bind TableNameSearchViewModel.SearchCommand}" />
                 </StackPanel>
 

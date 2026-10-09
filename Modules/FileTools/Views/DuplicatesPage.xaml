@@ -37,7 +37,7 @@
             <TextBox Header="Mẫu lọc" Width="200" Text="{x:Bind ViewModel.Patterns, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <NumberBox Header="Bỏ qua file nhỏ hơn (KB)" Width="190" Minimum="0" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.MinSizeKb, Mode=TwoWay}" />
             <CheckBox VerticalAlignment="Bottom" Content="Gồm thư mục con" IsChecked="{x:Bind ViewModel.Recursive, Mode=TwoWay}" />
-            <Button VerticalAlignment="Bottom" Content="Tìm file trùng" MinWidth="120" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.FindCommand}" />
+            <Button VerticalAlignment="Bottom" Content="Tìm file trùng" MinWidth="120" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.FindCommand}" />
         </StackPanel>
 
         <Border Grid.Row="3" BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">

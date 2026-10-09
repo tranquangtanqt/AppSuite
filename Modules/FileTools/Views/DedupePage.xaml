@@ -69,7 +69,7 @@
             <views:OutputPanel Grid.Column="2" Settings="{x:Bind ViewModel.Output}" />
         </Grid>
 
-        <Button Grid.Row="4" Content="Bỏ dòng trùng" MinWidth="120" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.RunCommand}" />
+        <Button Grid.Row="4" Content="Bỏ dòng trùng" MinWidth="120" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.RunCommand}" />
 
         <views:JobPanel Grid.Row="5" Job="{x:Bind ViewModel}" />
     </Grid>

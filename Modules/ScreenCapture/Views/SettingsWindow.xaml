@@ -182,7 +182,7 @@
                 ToolTipService.ToolTip="Đưa mọi tuỳ chọn về mặc định (chưa lưu cho tới khi bấm OK)" />
         <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
             <TextBlock x:Name="ValidationText" VerticalAlignment="Center" Foreground="{ThemeResource SystemFillColorCriticalBrush}" TextWrapping="Wrap" MaxWidth="360" />
-            <Button Content="OK" Width="110" Style="{StaticResource AccentButtonStyle}" Click="OkButton_Click" />
+            <Button Content="OK" Width="110" Style="{StaticResource CompactAccentButtonStyle}" Click="OkButton_Click" />
             <Button Content="Huỷ" Width="110" Click="CancelButton_Click" />
         </StackPanel>
     </Grid>

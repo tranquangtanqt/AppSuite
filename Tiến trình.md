@@ -478,7 +478,19 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [x] Nút màu xanh chạy theo bước: đọc xong → "2. Xuat HTML" xanh, xuất xong → "Mo file HTML" xanh (trước đây luôn
   là nút 1); mở lại module tự tính bước từ file .db / .html có sẵn. Cài đặt thêm "Tự mở thư mục chứa file HTML sau khi
   xuất" (Explorer chọn sẵn file). Build 0 warning, app khởi động OK (2026-10-09)
-- [ ] Thử tay: đọc DB → nút 2 xanh → xuất → nút "Mo file HTML" xanh; bật tuỳ chọn mở thư mục → Explorer chọn sẵn file
+- [x] Thử GUI trong Windows Sandbox (bản Release framework-dependent, không mạng, `.db` mẫu): combobox nhớ nguồn,
+  hộp thoại mở sẵn tab đang chọn, Thử kết nối (thiếu Host / host không tới được → đỏ sau 10 giây / đổi tab xoá kết quả),
+  Windows Authentication khoá ô Username, Lưu, Cài đặt (Mặc định / Lưu timeout 3 giây + mở thư mục), nút xanh bước
+  2 → 3, Xuất HTML mở Explorer, đọc DB lỗi → hộp thoại "tối đa 3 giây" + nút 1 xanh lại: 20/20 (2026-10-09)
+- [x] Cỡ chữ hàng nút không đồng nhất: 3 nút bước (gán Style Accent/Default của WinUI) bỏ qua style gọn chung nên chữ
+  14 / padding to. SharedUI `CompactStyles.xaml` thêm `CompactButtonStyle` / `CompactAccentButtonStyle` (style ngầm định
+  của Button dựa trên `CompactButtonStyle`); nút bước dùng 2 style này. Build solution 0 warning, Sandbox 20/20 (2026-10-09)
+- [x] 27 nút `AccentButtonStyle` ở FileTools (12 trang), ImageCompare, Mcf.CrudDiagram / DbDef / Screen, ModuleB/C,
+  ScreenCapture (Cài đặt) đổi sang `CompactAccentButtonStyle` — cùng cỡ với nút bên cạnh. Build solution 0 warning;
+  Sandbox: mở từng module + mọi trang FileTools + cửa sổ Cài đặt ScreenCapture, không app nào văng, ảnh chụp đồng nhất
+  (2026-10-09)
+- [ ] Cửa sổ hẹp (vd Sandbox ~1000 px): hàng nút bị cắt, không thấy "Mo file HTML" / "Cài đặt" / "Huong dan" (ảnh
+  người dùng gửi cũng mất nút Hướng dẫn) — cho hàng nút xuống dòng hoặc gom nút phụ sang phải
 - [x] Nút **Thử kết nối** trong hộp thoại thiết lập (thanh nút Luu | Thử kết nối | Huy): thử bằng thông tin đang nhập
   ở tab hiện tại, chưa cần Lưu; báo phiên bản máy chủ + số bảng / view sẽ đọc (0 bảng = cảnh báo vàng), lỗi đỏ kèm gợi ý.
   Sửa kèm: Oracle sai Service Name trước đây bị báo nhầm "không tới được máy chủ" (ORA-12514 nằm trong ORA-50201);

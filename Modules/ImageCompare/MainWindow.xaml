@@ -273,7 +273,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Lưu PNG" /></StackPanel>
                         </Button>
                         <Button Grid.Row="1" Grid.ColumnSpan="2" Click="SaveHtml_Click" IsEnabled="{x:Bind ViewModel.CanExport, Mode=OneWay}"
-                                HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"
+                                HorizontalAlignment="Stretch" Style="{StaticResource CompactAccentButtonStyle}"
                                 ToolTipService.ToolTip="Báo cáo HTML 1 file (ảnh nhúng sẵn) để gửi người khác - mở bằng trình duyệt">
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE9F9;" FontSize="14" /><TextBlock Text="Xuất báo cáo HTML" /></StackPanel>
                         </Button>
@@ -297,7 +297,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Lưu CSV" /></StackPanel>
                         </Button>
                         <Button Grid.Row="1" Grid.ColumnSpan="2" Click="SaveTextDiffHtml_Click" IsEnabled="{x:Bind ViewModel.CanExportTextDiff, Mode=OneWay}"
-                                HorizontalAlignment="Stretch" Style="{StaticResource AccentButtonStyle}"
+                                HorizontalAlignment="Stretch" Style="{StaticResource CompactAccentButtonStyle}"
                                 ToolTipService.ToolTip="Báo cáo HTML 1 file: bảng các chỗ khác kèm ảnh cắt A | B từng chỗ - mở bằng trình duyệt">
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE9F9;" FontSize="14" /><TextBlock Text="Xuất báo cáo HTML" /></StackPanel>
                         </Button>

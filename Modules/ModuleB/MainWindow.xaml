@@ -121,7 +121,7 @@
                         </StackPanel>
                     </TextBox.Header>
                 </TextBox>
-                <Button Grid.Column="1" Content="Tìm kiếm" Style="{StaticResource AccentButtonStyle}" VerticalAlignment="Bottom"
+                <Button Grid.Column="1" Content="Tìm kiếm" Style="{StaticResource CompactAccentButtonStyle}" VerticalAlignment="Bottom"
                         Command="{x:Bind ViewModel.SearchCommand}" />
             </Grid>
 

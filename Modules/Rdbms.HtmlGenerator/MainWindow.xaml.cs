@@ -28,9 +28,11 @@ public sealed partial class MainWindow : Window
     /// <summary>x:Bind helper - enables controls only while no import/export is running.</summary>
     public static bool Not(bool value) => !value;
 
-    /// <summary>x:Bind helper - AccentButtonStyle for the step the user should click next, default style otherwise.</summary>
+    /// <summary>x:Bind helper - accent style for the step the user should click next, normal style otherwise.
+    /// Uses SharedUI's compact keyed styles: the stock Accent/DefaultButtonStyle would make these 3 buttons
+    /// bigger than the rest of the row (they bypass the suite-wide implicit compact Button style).</summary>
     public static Style StepButtonStyle(int nextStep, int step) =>
-        (Style)Application.Current.Resources[nextStep == step ? "AccentButtonStyle" : "DefaultButtonStyle"];
+        (Style)Application.Current.Resources[nextStep == step ? "CompactAccentButtonStyle" : "CompactButtonStyle"];
 
     private async void ShowErrorDialog(string title, string message)
     {

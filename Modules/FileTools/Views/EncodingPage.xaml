@@ -28,7 +28,7 @@
             <ComboBox Header="Đọc file nguồn theo" MinWidth="190" ItemsSource="{x:Bind vm:EncodingViewModel.SourceEncodingNames}"
                       SelectedIndex="{x:Bind ViewModel.SourceEncodingIndex, Mode=TwoWay}" />
             <views:OutputPanel Settings="{x:Bind ViewModel.Output}" />
-            <Button VerticalAlignment="Bottom" Content="Đổi" MinWidth="120" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.ConvertCommand}" />
+            <Button VerticalAlignment="Bottom" Content="Đổi" MinWidth="120" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.ConvertCommand}" />
         </StackPanel>
 
         <views:JobPanel Grid.Row="3" Job="{x:Bind ViewModel}" />

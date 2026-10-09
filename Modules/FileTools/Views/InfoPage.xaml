@@ -88,7 +88,7 @@
                     <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Mở thư mục tạm" Command="{x:Bind ViewModel.OpenTempFolderCommand}" />
                     <views:OutputPanel Grid.Column="2" Settings="{x:Bind ViewModel.Output}" />
                     <Button Grid.Column="3" VerticalAlignment="Bottom" Content="Trích dòng" MinWidth="110"
-                            Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.ExtractCommand}" />
+                            Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.ExtractCommand}" />
                 </Grid>
             </StackPanel>
         </Border>

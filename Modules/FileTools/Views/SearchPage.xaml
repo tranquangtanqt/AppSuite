@@ -62,7 +62,7 @@
 
         <!-- Tìm: xem dòng khớp -->
         <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="20">
-            <Button VerticalAlignment="Bottom" Content="Tìm" MinWidth="100" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.SearchCommand}" />
+            <Button VerticalAlignment="Bottom" Content="Tìm" MinWidth="100" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.SearchCommand}" />
             <NumberBox Header="Hiện tối đa (dòng)" Width="150" Minimum="1" SpinButtonPlacementMode="Compact"
                        Value="{x:Bind ViewModel.MaxResults, Mode=TwoWay}" />
             <CheckBox VerticalAlignment="Bottom" Content="Xuất dòng khớp ra file tạm" IsChecked="{x:Bind ViewModel.ExportMatches, Mode=TwoWay}" />
@@ -135,7 +135,7 @@
                 </Grid>
                 <views:OutputPanel Grid.Row="1" Grid.Column="1" Settings="{x:Bind ViewModel.Output}" />
                 <Button Grid.Row="1" Grid.Column="2" VerticalAlignment="Bottom" Content="Lọc ra file" MinWidth="110"
-                        Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.FilterCommand}" />
+                        Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.FilterCommand}" />
             </Grid>
         </Border>
 
