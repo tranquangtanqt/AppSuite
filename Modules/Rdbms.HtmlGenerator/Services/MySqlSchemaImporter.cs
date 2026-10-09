@@ -18,7 +18,7 @@ public sealed class MySqlSchemaImporter
         MySqlConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
         var sourceLabel = $"{settings.Host}:{settings.Port}/{settings.Database}";
-        log($"Dang ket noi {sourceLabel} (toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
+        log($"Đang kết nối {sourceLabel} (tối đa {options.EffectiveConnectTimeoutSeconds} giây)...");
         await using var connection = CreateConnection(settings, options);
         await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
 
@@ -27,7 +27,7 @@ public sealed class MySqlSchemaImporter
         var columns = await ReadColumnsAsync(connection, schema, log, cancellationToken);
         var foreignKeys = await ReadForeignKeysAsync(connection, schema, log, cancellationToken);
 
-        log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
+        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại từ {sourceLabel}.");
         return (tables, columns, foreignKeys);
     }
 
@@ -100,7 +100,7 @@ public sealed class MySqlSchemaImporter
             }
             catch (Exception ex)
             {
-                log($"Loi doc thong tin bang: {ex.Message}");
+                log($"Lỗi đọc thông tin bảng: {ex.Message}");
             }
         }
 
@@ -143,7 +143,7 @@ public sealed class MySqlSchemaImporter
             }
             catch (Exception ex)
             {
-                log($"Loi doc thong tin cot: {ex.Message}");
+                log($"Lỗi đọc thông tin cột: {ex.Message}");
             }
         }
 
@@ -175,9 +175,9 @@ public sealed class MySqlSchemaImporter
 
             return ForeignKeyGrouper.Group(rows);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
-            log($"Loi doc khoa ngoai: {ex.Message}");
+            log($"Lỗi đọc khoá ngoại: {ex.Message}");
             return [];
         }
     }

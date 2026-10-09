@@ -495,7 +495,12 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   đổi thành `schema.bảng` (`TableNameQualifier`). Sửa kèm: khoá ngoại nhiều cột của PostgreSQL bị nhân chéo (đọc từ
   `pg_constraint` thay vì information_schema); gom khoá ngoại theo cả schema. Thử console: PostgreSQL 17 tạm (cổng riêng,
   đã xoá) + SQL Server LocalDB, đọc → SQLite → HTML OK (2026-10-09)
-- [ ] Đọc DB lỗi thì nút "2. Xuat HTML" tắt dù file .db cũ vẫn còn (phải đổi nguồn / mở lại mới xuất được bản cũ)
+- [x] Đọc DB lỗi thì nút "2. Xuất HTML" tắt dù file .db cũ vẫn còn → giữ bật cho bản cũ (2026-10-09)
+- [x] Nút **Huỷ** khi đang đọc DB (chỉ hiện lúc đọc, dừng ngay kể cả đang chờ kết nối, .db cũ giữ nguyên) (2026-10-09)
+- [x] Giao diện có dấu: cửa sổ, hộp thoại, dòng trạng thái, log, trang HTML xuất ra ("Thiết lập kết nối", "1. Đọc
+  database → SQLite", "Tên bảng...", "Khoá chính"...); F1 + README theo tên nút mới. Sandbox 29/29 (thêm: đọc lỗi vẫn
+  xuất được .db cũ; Huỷ khi SQL Server chờ ở cổng không trả lời → dừng < 1 giây, không hộp thoại lỗi, .db cũ còn)
+  (2026-10-09)
 - [x] Nút **Thử kết nối** trong hộp thoại thiết lập (thanh nút Luu | Thử kết nối | Huy): thử bằng thông tin đang nhập
   ở tab hiện tại, chưa cần Lưu; báo phiên bản máy chủ + số bảng / view sẽ đọc (0 bảng = cảnh báo vàng), lỗi đỏ kèm gợi ý.
   Sửa kèm: Oracle sai Service Name trước đây bị báo nhầm "không tới được máy chủ" (ORA-12514 nằm trong ORA-50201);

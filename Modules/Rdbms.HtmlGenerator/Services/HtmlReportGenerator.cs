@@ -143,17 +143,17 @@ public sealed class HtmlReportGenerator
         <body>
         <div id="sidebar">
           <div id="searchArea">
-            <input id="searchBox" type="text" placeholder="Ten bang..." />
-            <input id="columnBox" type="text" placeholder="Ten cot (tuy chon)..." />
-            <button id="searchButton">Tim kiem</button>
+            <input id="searchBox" type="text" placeholder="Tên bảng..." />
+            <input id="columnBox" type="text" placeholder="Tên cột (tuỳ chọn)..." />
+            <button id="searchButton">Tìm kiếm</button>
           </div>
           <div id="summary"></div>
           <ul id="tableList"></ul>
         </div>
         <div id="content">
-          <p>Chon 1 bang o menu ben trai, hoac nhap Ten bang va/hoac Ten cot roi bam Tim kiem.<br>
-          Chi Ten bang: hien toan bo cau truc bang. Ca hai: hien dong cot do trong bang. Chi Ten cot:
-          tim tat ca cac bang co cot do, ket qua nhom theo tung bang.</p>
+          <p>Chọn 1 bảng ở menu bên trái, hoặc nhập Tên bảng và / hoặc Tên cột rồi bấm Tìm kiếm.<br>
+          Chỉ Tên bảng: hiện toàn bộ cấu trúc bảng. Cả hai: hiện dòng cột đó trong bảng. Chỉ Tên cột:
+          tìm tất cả các bảng có cột đó, kết quả nhóm theo từng bảng.</p>
         </div>
         <script id="app-data" type="application/json">%%DATA_JSON%%</script>
         <script>
@@ -168,7 +168,7 @@ public sealed class HtmlReportGenerator
           var summaryEl = document.getElementById('summary');
 
           var totalColumns = tables.reduce(function (sum, t) { return sum + t.columns.length; }, 0);
-          summaryEl.textContent = 'Tong: ' + tables.length + ' bang, ' + totalColumns + ' cot. (Xuat luc ' + data.generatedAt + ')';
+          summaryEl.textContent = 'Tổng: ' + tables.length + ' bảng, ' + totalColumns + ' cột. (Xuất lúc ' + data.generatedAt + ')';
 
           var tablesByName = {};
           tables.forEach(function (t) { tablesByName[t.name] = t; });
@@ -215,14 +215,14 @@ public sealed class HtmlReportGenerator
 
           function legendHtml() {
             return '<div class="legend" style="margin-top:12px">' +
-              '<span><span class="swatch pk"></span>Khoa chinh (level 0)</span>' +
+              '<span><span class="swatch pk"></span>Khoá chính (level 0)</span>' +
               '</div>';
           }
 
           function buildColumnsTableHtml(columns) {
             var html = '<table class="cols"><thead><tr>' +
-              '<th>STT</th><th>Ten cot</th><th>Kieu</th><th>Null</th>' +
-              '<th>Mo ta</th></tr></thead><tbody>';
+              '<th>STT</th><th>Tên cột</th><th>Kiểu</th><th>Null</th>' +
+              '<th>Mô tả</th></tr></thead><tbody>';
             columns.forEach(function (c, i) {
               var rowClasses = [];
               if (c.level === 0) rowClasses.push('pk');
@@ -263,8 +263,8 @@ public sealed class HtmlReportGenerator
                 '<td>' + escapeHtml(f.referencedColumns || f.localColumns) + '</td>' +
                 '</tr>';
             }).join('');
-            return '<div class="metaLabel" style="margin-top:12px">Khoa ngoai (FOREIGN)</div>' +
-              '<table class="cols"><thead><tr><th>Cot cua bang nay</th><th>Bang tham chieu</th><th>Cot tham chieu</th></tr></thead>' +
+            return '<div class="metaLabel" style="margin-top:12px">Khoá ngoại (FOREIGN)</div>' +
+              '<table class="cols"><thead><tr><th>Cột của bảng này</th><th>Bảng tham chiếu</th><th>Cột tham chiếu</th></tr></thead>' +
               '<tbody>' + rows + '</tbody></table>';
           }
 
@@ -282,11 +282,11 @@ public sealed class HtmlReportGenerator
           function renderColumnsTable(t) {
             var html = '<h1>' + escapeHtml(t.name) + (t.alias ? ' (' + escapeHtml(t.alias) + ')' : '') + '</h1>';
             html += '<div class="meta">' + escapeHtml(t.japaneseName) + (t.kind ? ' - ' + escapeHtml(t.kind) : '') + '\n';
-            html += 'Nguon: ' + escapeHtml(t.sourceFile) + ' / ' + escapeHtml(t.sourceSheet) + '</div>';
-            html += renderSection('Mo ta (説明)', t.description);
-            html += renderSection('Loai quan ly (管理タイプ)', t.managementType);
-            html += renderSection('Muc can luu y khi thay doi (運用後の変更に注意が必要な項目)', t.cautionItems);
-            html += renderSection('Cai cach / bai bo (改廃)', t.revisionHistory);
+            html += 'Nguồn: ' + escapeHtml(t.sourceFile) + ' / ' + escapeHtml(t.sourceSheet) + '</div>';
+            html += renderSection('Mô tả (説明)', t.description);
+            html += renderSection('Loại quản lý (管理タイプ)', t.managementType);
+            html += renderSection('Mục cần lưu ý khi thay đổi (運用後の変更に注意が必要な項目)', t.cautionItems);
+            html += renderSection('Cải cách / bãi bỏ (改廃)', t.revisionHistory);
             html += renderForeignKeys(t.foreignKeys);
             html += legendHtml();
             html += buildColumnsTableHtml(t.columns);
@@ -312,9 +312,9 @@ public sealed class HtmlReportGenerator
             setActiveListItem(li);
             var matchedCols = t.columns.filter(function (c) { return columnMatches(c, columnQuery); });
             var heading = '<h1>' + escapeHtml(t.name) + (t.alias ? ' (' + escapeHtml(t.alias) + ')' : '') + '</h1>' +
-              '<div class="meta">Cot khop "' + escapeHtml(columnQuery) + '": ' + matchedCols.length + ' / ' + t.columns.length + '</div>';
+              '<div class="meta">Cột khớp "' + escapeHtml(columnQuery) + '": ' + matchedCols.length + ' / ' + t.columns.length + '</div>';
             renderColumnGroups(heading, [{ table: t, columns: matchedCols }]);
-            document.title = 'CSDL - ' + t.name + ' (cot: ' + columnQuery + ')';
+            document.title = 'CSDL - ' + t.name + ' (cột: ' + columnQuery + ')';
           }
 
           // Dieu kien 3: chi Ten cot (Ten bang de trong) -> tim tat ca bang co cot do, nhom theo bang.
@@ -326,14 +326,14 @@ public sealed class HtmlReportGenerator
               if (matchedCols.length) groups.push({ table: t, columns: matchedCols });
             });
             if (!groups.length) {
-              contentEl.innerHTML = '<p>Khong tim thay cot nao khop "' + escapeHtml(columnQuery) + '".</p>';
+              contentEl.innerHTML = '<p>Không tìm thấy cột nào khớp "' + escapeHtml(columnQuery) + '".</p>';
               document.title = 'CSDL';
               return;
             }
-            var heading = '<h1>Ket qua tim cot "' + escapeHtml(columnQuery) + '"</h1>' +
-              '<div class="meta">' + groups.length + ' bang co cot khop.</div>';
+            var heading = '<h1>Kết quả tìm cột "' + escapeHtml(columnQuery) + '"</h1>' +
+              '<div class="meta">' + groups.length + ' bảng có cột khớp.</div>';
             renderColumnGroups(heading, groups);
-            document.title = 'CSDL - cot ' + columnQuery + ' (' + groups.length + ' bang)';
+            document.title = 'CSDL - cột ' + columnQuery + ' (' + groups.length + ' bảng)';
           }
 
           function performSearch() {

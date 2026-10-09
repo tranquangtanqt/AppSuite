@@ -12,11 +12,11 @@ internal static class HelpContent
     [
         new("Bắt đầu nhanh", "", "Đọc cấu trúc bảng / cột / khoá từ PostgreSQL, Oracle, MySQL hoặc SQL Server, xuất thành 1 trang HTML tra cứu mở trong trình duyệt.",
         [
-            new("1. Chọn Nguon", "Combobox \"Nguon\": PostgreSQL / Oracle / MySQL / SQL Server. Nguồn đã chọn được nhớ cho lần mở sau."),
-            new("2. Thiết lập kết nối", "Nút \"Thiet lap thong tin database\" (mở sẵn tab của nguồn đang chọn): nhập thông tin, bấm Luu (lưu cả 4 tab, tự điền lại lần mở sau). Nút \"1. Doc Database -> SQLite\" chỉ bật khi nguồn đang chọn đã có Host + Database (Oracle: Host + Service Name hoặc SID)."),
-            new("3. Bấm \"1. Doc Database -> SQLite\"", "Kết nối, đọc schema, lưu vào Data\\Database\\{tên database}.db. Khung log bên dưới hiện tiến trình. Không kết nối được (sai Host / Port, chưa bật VPN, firewall chặn...) thì sau thời gian chờ (mặc định 10 giây, đổi trong Cài đặt) hiện hộp thoại báo lỗi kèm gợi ý cần kiểm tra; sai mật khẩu / sai tên database / Service Name cũng được báo rõ."),
-            new("4. Bấm \"2. Xuat HTML\" rồi \"Mo file HTML\"", "Sinh và mở Data\\Database\\{tên database}.html - 1 file tự chứa, không cần mạng, gửi cho người khác được."),
-            new("Nút màu xanh = bước tiếp theo", "Chưa đọc database: nút 1 xanh. Đọc xong: nút \"2. Xuat HTML\" xanh. Xuất xong: nút \"Mo file HTML\" xanh. Mở lại module cũng tự nhận đang ở bước nào (HTML cũ hơn dữ liệu vừa đọc thì vẫn là bước 2)."),
+            new("1. Chọn Nguồn", "Combobox \"Nguồn\": PostgreSQL / Oracle / MySQL / SQL Server. Nguồn đã chọn được nhớ cho lần mở sau."),
+            new("2. Thiết lập kết nối", "Nút \"Thiết lập kết nối\" (mở sẵn tab của nguồn đang chọn): nhập thông tin, bấm Lưu (lưu cả 4 tab, tự điền lại lần mở sau). Nút \"1. Đọc database → SQLite\" chỉ bật khi nguồn đang chọn đã có Host + Database (Oracle: Host + Service Name hoặc SID)."),
+            new("3. Bấm \"1. Đọc database → SQLite\"", "Kết nối, đọc schema, lưu vào Data\\Database\\{tên database}.db. Khung log bên dưới hiện tiến trình. Không kết nối được (sai Host / Port, chưa bật VPN, firewall chặn...) thì sau thời gian chờ (mặc định 10 giây, đổi trong Cài đặt) hiện hộp thoại báo lỗi kèm gợi ý cần kiểm tra; sai mật khẩu / sai tên database / Service Name cũng được báo rõ."),
+            new("4. Bấm \"2. Xuất HTML\" rồi \"Mở file HTML\"", "Sinh và mở Data\\Database\\{tên database}.html - 1 file tự chứa, không cần mạng, gửi cho người khác được."),
+            new("Nút màu xanh = bước tiếp theo", "Chưa đọc database: nút 1 xanh. Đọc xong: nút \"2. Xuất HTML\" xanh. Xuất xong: nút \"Mở file HTML\" xanh. Mở lại module cũng tự nhận đang ở bước nào (HTML cũ hơn dữ liệu vừa đọc thì vẫn là bước 2)."),
             new("Mở lại hướng dẫn này", "Nút Hướng dẫn trên cùng, hoặc phím F1.", "F1"),
         ]),
 
@@ -34,11 +34,11 @@ internal static class HelpContent
         [
             new("Giới hạn thời gian kết nối", "Số giây chờ kết nối tới máy chủ (mặc định 10). Quá thời gian thì báo lỗi thay vì chờ mãi. Mạng chậm / qua VPN xa thì tăng lên."),
             new("Giới hạn thời gian truy vấn", "Số giây tối đa cho mỗi câu đọc schema (mặc định 120). Database rất nhiều bảng / máy chủ chậm mà báo \"truy vấn quá giờ\" thì tăng lên, hoặc nhập Schema để đọc ít hơn."),
-            new("Tự mở file HTML sau khi xuất", "Bật thì \"2. Xuat HTML\" xong tự mở trang trong trình duyệt."),
-            new("Tự mở thư mục chứa file HTML sau khi xuất", "Bật thì \"2. Xuat HTML\" xong mở Explorer tại Data\\Database, chọn sẵn file vừa xuất - tiện để gửi file cho người khác. Bật được cùng lúc với tuỳ chọn trên."),
+            new("Tự mở file HTML sau khi xuất", "Bật thì \"2. Xuất HTML\" xong tự mở trang trong trình duyệt."),
+            new("Tự mở thư mục chứa file HTML sau khi xuất", "Bật thì \"2. Xuất HTML\" xong mở Explorer tại Data\\Database, chọn sẵn file vừa xuất - tiện để gửi file cho người khác. Bật được cùng lúc với tuỳ chọn trên."),
         ]),
 
-        new("Tra cứu trong trang HTML", "", "Menu trái là danh sách bảng (bấm để xem), bên phải là định nghĩa bảng đang chọn. Ô \"Ten bang...\" và \"Ten cot (tuy chon)...\" + nút Tim kiem kết hợp như dưới đây.",
+        new("Tra cứu trong trang HTML", "", "Menu trái là danh sách bảng (bấm để xem), bên phải là định nghĩa bảng đang chọn. Ô \"Tên bảng...\" và \"Tên cột (tuỳ chọn)...\" + nút Tìm kiếm kết hợp như dưới đây.",
         [
             new("Chỉ nhập Tên bảng", "Hiện toàn bộ cột của bảng: STT, tên cột, kiểu (đã gồm độ dài, vd VARCHAR2(100)), Null, mô tả (comment của cột trong database)."),
             new("Tên bảng + Tên cột", "Chỉ hiện các cột khớp Tên cột trong đúng bảng đó."),
@@ -51,8 +51,10 @@ internal static class HelpContent
         [
             new("Bảng trùng tên ở nhiều schema", "Để trống Schema mà 2 schema có bảng cùng tên (vd public.orders và audit.orders) thì chỉ những bảng trùng đó hiện dạng schema.bảng trong trang HTML (cột, khoá ngoại đổi theo); bảng không trùng giữ tên ngắn. Khung log ghi rõ bảng nào được đổi. Khoá ngoại trỏ sang schema không đọc cũng hiện dạng schema.bảng."),
             new("Tên file theo database", "File .db / .html đặt theo tên database (PostgreSQL / MySQL / SQL Server) hoặc Service Name / SID (Oracle) - đọc nhiều database khác nhau không ghi đè lên nhau."),
-            new("Đã đọc trước đó", "Mở lại module (hoặc đổi Nguon) vẫn nhận file .db / .html đã có của database đang chọn - không cần đọc lại nếu schema chưa đổi."),
-            new("Lấy dữ liệu mới nhất", "Bấm lại \"1. Doc Database -> SQLite\" rồi \"2. Xuat HTML\". Mỗi lần đọc là dựng lại toàn bộ."),
+            new("Đã đọc trước đó", "Mở lại module (hoặc đổi Nguồn) vẫn nhận file .db / .html đã có của database đang chọn - không cần đọc lại nếu schema chưa đổi."),
+            new("Huỷ khi đang đọc", "Đang đọc database thì nút \"Huỷ\" hiện cạnh nút 1 - bấm để dừng ngay (kể cả khi còn đang chờ kết nối). Dữ liệu đọc lần trước (file .db) giữ nguyên, vẫn \"2. Xuất HTML\" được."),
+            new("Đọc lỗi vẫn giữ bản cũ", "Đọc database bị lỗi (mất mạng, sai mật khẩu...) không xoá dữ liệu lần trước: nút \"2. Xuất HTML\" vẫn bật để xuất lại bản cũ nếu cần; nút 1 có màu xanh để nhắc đọc lại."),
+            new("Lấy dữ liệu mới nhất", "Bấm lại \"1. Đọc database → SQLite\" rồi \"2. Xuất HTML\". Mỗi lần đọc là dựng lại toàn bộ."),
         ]),
     ];
 }

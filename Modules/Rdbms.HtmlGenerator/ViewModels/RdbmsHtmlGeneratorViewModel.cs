@@ -37,7 +37,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _statusText = "San sang.";
+    private string _statusText = "Sẵn sàng.";
 
     [ObservableProperty]
     private DatabaseSourceType _selectedSource;
@@ -122,15 +122,15 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         OnPropertyChanged(nameof(CanImportDatabase));
         ImportDatabaseCommand.NotifyCanExecuteChanged();
         RefreshDatabaseTarget();
-        StatusText = $"Da luu thong tin ket noi. Nguon dang chon: {SourceDisplayName(SelectedSource)} ({CurrentDatabaseName}).";
+        StatusText = $"Đã lưu thông tin kết nối. Nguồn đang chọn: {SourceDisplayName(SelectedSource)} ({CurrentDatabaseName}).";
     }
 
     public void SaveOptions(AppOptions options)
     {
         _config.Options = options;
         SaveConfig();
-        StatusText = $"Da luu cai dat: ket noi toi da {options.EffectiveConnectTimeoutSeconds} giay, " +
-                     $"moi truy van toi da {options.EffectiveCommandTimeoutSeconds} giay.";
+        StatusText = $"Đã lưu cài đặt: kết nối tối đa {options.EffectiveConnectTimeoutSeconds} giây, " +
+                     $"mỗi truy vấn tối đa {options.EffectiveCommandTimeoutSeconds} giây.";
     }
 
     private void SaveConfig()
@@ -142,7 +142,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            StatusText = $"Khong luu duoc {_settingsStore.ConfigPath}: {ex.Message}";
+            StatusText = $"Không lưu được {_settingsStore.ConfigPath}: {ex.Message}";
         }
     }
 
@@ -172,50 +172,89 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
             : 2;
     }
 
-    [RelayCommand(CanExecute = nameof(CanImport))]
-    private async Task ImportDatabaseAsync()
+    /// <summary>True only while "1. Đọc database" runs - shows the "Huỷ" button next to it.</summary>
+    [ObservableProperty]
+    private bool _isImporting;
+
+    /// <summary>IncludeCancelCommand generates ImportDatabaseCancelCommand ("Huỷ"), which cancels
+    /// <paramref name="cancellationToken"/>. Cancel / failure leave the previous .db untouched (it is only
+    /// replaced after a complete read), so "2. Xuất HTML" stays available for it.</summary>
+    [RelayCommand(CanExecute = nameof(CanImport), IncludeCancelCommand = true)]
+    private async Task ImportDatabaseAsync(CancellationToken cancellationToken)
     {
         IsBusy = true;
+        IsImporting = true;
         CanExportHtml = false;
         LogLines.Clear();
-        StatusText = $"Dang doc du lieu tu {SourceDisplayName(SelectedSource)}...";
+        StatusText = $"Đang đọc dữ liệu từ {SourceDisplayName(SelectedSource)}...";
 
         try
         {
             var options = Options;
-            var (tables, columns, foreignKeys) = SelectedSource switch
+            // After "Huỷ" the abandoned read may still log a line or two before it notices - drop those.
+            void Log(string line)
             {
-                DatabaseSourceType.Oracle => await Task.Run(() => _oracleImporter.ImportAsync(OracleConnectionSettings, options, AppendLog)),
-                DatabaseSourceType.MySql => await Task.Run(() => _mySqlImporter.ImportAsync(MySqlConnectionSettings, options, AppendLog)),
-                DatabaseSourceType.SqlServer => await Task.Run(() => _sqlServerImporter.ImportAsync(SqlServerConnectionSettings, options, AppendLog)),
-                _ => await Task.Run(() => _postgresImporter.ImportAsync(PostgresConnectionSettings, options, AppendLog)),
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    AppendLog(line);
+                }
+            }
+
+            var importTask = SelectedSource switch
+            {
+                DatabaseSourceType.Oracle => Task.Run(() => _oracleImporter.ImportAsync(OracleConnectionSettings, options, Log, cancellationToken)),
+                DatabaseSourceType.MySql => Task.Run(() => _mySqlImporter.ImportAsync(MySqlConnectionSettings, options, Log, cancellationToken)),
+                DatabaseSourceType.SqlServer => Task.Run(() => _sqlServerImporter.ImportAsync(SqlServerConnectionSettings, options, Log, cancellationToken)),
+                _ => Task.Run(() => _postgresImporter.ImportAsync(PostgresConnectionSettings, options, Log, cancellationToken)),
             };
+
+            // WaitAsync: "Huỷ" returns at once even while a driver is stuck opening the connection (ODP.NET's
+            // OpenAsync ignores the token) - that attempt ends on its own within the connect timeout.
+            var (tables, columns, foreignKeys) = await importTask.WaitAsync(cancellationToken);
+
+            // Importers swallow per-row / foreign-key errors into the log, so a cancel can come back as a normal
+            // (partial) result - never save that over the previous .db.
+            cancellationToken.ThrowIfCancellationRequested();
 
             // Same table name in 2+ schemas -> "schema.table" for those only (SQLite / HTML key tables by name).
             List<string> duplicateNames;
             (tables, columns, foreignKeys, duplicateNames) = TableNameQualifier.QualifyDuplicates(tables, columns, foreignKeys);
             if (duplicateNames.Count > 0)
             {
-                AppendLog($"{duplicateNames.Count} ten bang trung o nhieu schema -> dat ten dang schema.bang: {string.Join(", ", duplicateNames)}");
+                AppendLog($"{duplicateNames.Count} tên bảng trùng ở nhiều schema → đặt tên dạng schema.bảng: {string.Join(", ", duplicateNames)}");
             }
 
-            StatusText = $"Dang luu {tables.Count} bang / {columns.Count} cot vao SQLite...";
+            IsImporting = false; // saving to SQLite is quick and must not be interrupted half-way
+            StatusText = $"Đang lưu {tables.Count} bảng / {columns.Count} cột vào SQLite...";
             await _database.ReplaceAllAsync(tables, columns, foreignKeys);
 
-            StatusText = $"Da doc va luu xong: {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai. File: {_database.DatabasePath}";
+            StatusText = $"Đã đọc và lưu xong: {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại. File: {_database.DatabasePath}";
             CanExportHtml = true;
             NextStep = 2;
         }
+        catch (Exception) when (cancellationToken.IsCancellationRequested)
+        {
+            // Drivers report a cancel differently (OperationCanceledException, SqlException "Operation
+            // cancelled by user"...) - the token is the reliable signal. Back to whatever is on disk.
+            RefreshDatabaseTarget();
+            StatusText = _database.Exists
+                ? "Đã huỷ đọc database - dữ liệu đọc lần trước vẫn giữ nguyên, vẫn xuất HTML được."
+                : "Đã huỷ đọc database.";
+            AppendLog("Đã huỷ.");
+        }
         catch (Exception ex)
         {
+            // The old .db (if any) is untouched - keep "2. Xuất HTML" usable for it, but point at step 1.
+            CanExportHtml = _database.Exists;
             NextStep = 1;
             var hint = DescribeConnectionError(ex, SettingsFor(SelectedSource));
-            StatusText = $"Loi khi doc database: {ex.Message}";
-            AppendLog($"LOI: {ex.Message}");
+            StatusText = $"Lỗi khi đọc database: {ex.Message}";
+            AppendLog($"LỖI: {ex.Message}");
             ErrorOccurred?.Invoke("Không đọc được database", $"{hint}\n\nChi tiết: {ex.Message}");
         }
         finally
         {
+            IsImporting = false;
             IsBusy = false;
         }
     }
@@ -342,7 +381,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
     private async Task ExportHtmlAsync()
     {
         IsBusy = true;
-        StatusText = "Dang xuat file HTML...";
+        StatusText = "Đang xuất file HTML...";
 
         try
         {
@@ -350,8 +389,8 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
             _htmlPath = path;
             CanOpenHtml = true;
             NextStep = 3;
-            StatusText = $"Da xuat HTML: {path}";
-            AppendLog($"Da xuat: {path}");
+            StatusText = $"Đã xuất HTML: {path}";
+            AppendLog($"Đã xuất: {path}");
             if (Options.OpenHtmlAfterExport)
             {
                 OpenHtml();
@@ -365,7 +404,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            StatusText = $"Loi khi xuat HTML: {ex.Message}";
+            StatusText = $"Lỗi khi xuất HTML: {ex.Message}";
         }
         finally
         {
@@ -378,7 +417,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
     {
         if (_htmlPath is null || !File.Exists(_htmlPath))
         {
-            StatusText = "Chua co file HTML - hay xuat truoc.";
+            StatusText = "Chưa có file HTML - hãy xuất trước.";
             return;
         }
 

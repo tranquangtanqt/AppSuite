@@ -39,7 +39,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Nguon:" VerticalAlignment="Center" Opacity="0.7" />
+                <TextBlock Grid.Column="0" Text="Nguồn:" VerticalAlignment="Center" Opacity="0.7" />
                 <!-- Thứ tự mục = thứ tự enum DatabaseSourceType (SelectedIndex <-> enum) -->
                 <ComboBox x:Name="SourceComboBox" Grid.Column="1" MinWidth="140" VerticalAlignment="Center"
                           SelectionChanged="SourceComboBox_SelectionChanged" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}">
@@ -48,14 +48,14 @@
                     <x:String>MySQL</x:String>
                     <x:String>SQL Server</x:String>
                 </ComboBox>
-                <Button Grid.Column="2" Content="Thiet lap thong tin database" Click="OpenSettingsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" />
+                <Button Grid.Column="2" Content="Thiết lập kết nối" Click="OpenSettingsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" />
                 <Button Grid.Column="4" Click="OpenOptionsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" ToolTipService.ToolTip="Cài đặt: giới hạn thời gian kết nối / truy vấn, tự mở HTML">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE713;" FontSize="14" />
                         <TextBlock Text="Cài đặt" />
                     </StackPanel>
                 </Button>
-                <Button Grid.Column="5" Content="Huong dan (F1)" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
+                <Button Grid.Column="5" Content="Hướng dẫn (F1)" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
                     <Button.KeyboardAccelerators>
                         <KeyboardAccelerator Key="F1" />
                     </Button.KeyboardAccelerators>
@@ -63,11 +63,20 @@
             </Grid>
             <!-- Nút của bước nên bấm tiếp (ViewModel.NextStep) có màu nhấn -->
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Content="1. Doc Database -> SQLite" Command="{x:Bind ViewModel.ImportDatabaseCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 1), Mode=OneWay}" />
+                <Button Content="1. Đọc database → SQLite" Command="{x:Bind ViewModel.ImportDatabaseCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 1), Mode=OneWay}" />
+                <!-- Chỉ hiện khi đang đọc database -->
+                <Button x:Name="CancelImportButton" Command="{x:Bind ViewModel.ImportDatabaseCancelCommand}"
+                        Visibility="{x:Bind ViewModel.IsImporting, Mode=OneWay}"
+                        ToolTipService.ToolTip="Dừng đọc database - dữ liệu đọc lần trước (nếu có) giữ nguyên">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                        <TextBlock Text="Huỷ" />
+                    </StackPanel>
+                </Button>
                 <FontIcon Glyph="&#xE76C;" FontSize="10" Opacity="0.5" VerticalAlignment="Center" />
-                <Button Content="2. Xuat HTML" Command="{x:Bind ViewModel.ExportHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 2), Mode=OneWay}" />
+                <Button Content="2. Xuất HTML" Command="{x:Bind ViewModel.ExportHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 2), Mode=OneWay}" />
                 <FontIcon Glyph="&#xE76C;" FontSize="10" Opacity="0.5" VerticalAlignment="Center" />
-                <Button Content="Mo file HTML" Command="{x:Bind ViewModel.OpenHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 3), Mode=OneWay}" />
+                <Button Content="Mở file HTML" Command="{x:Bind ViewModel.OpenHtmlCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 3), Mode=OneWay}" />
             </StackPanel>
         </StackPanel>
 
@@ -85,12 +94,12 @@
             </ListView>
         </Border>
 
-        <!-- "Thiet lap thong tin database" dialog -->
+        <!-- "Thiết lập kết nối database" dialog -->
         <ContentDialog x:Name="DatabaseSettingsDialog"
-                       Title="Thiet lap thong tin database"
-                       PrimaryButtonText="Luu"
+                       Title="Thiết lập kết nối database"
+                       PrimaryButtonText="Lưu"
                        SecondaryButtonText="Thử kết nối"
-                       CloseButtonText="Huy"
+                       CloseButtonText="Huỷ"
                        DefaultButton="Primary"
                        PrimaryButtonClick="DatabaseSettingsDialog_PrimaryButtonClick"
                        SecondaryButtonClick="TestConnection_Click"
@@ -109,7 +118,7 @@
                             <TextBox x:Name="PgDatabaseBox" Header="Database" />
                             <TextBox x:Name="PgUsernameBox" Header="Username" />
                             <PasswordBox x:Name="PgPasswordBox" Header="Password" />
-                            <TextBox x:Name="PgSchemaBox" Header="Schema (tuy chon, de trong = tat ca schema)" />
+                            <TextBox x:Name="PgSchemaBox" Header="Schema (tuỳ chọn, để trống = tất cả schema)" />
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
@@ -119,7 +128,7 @@
                             <TextBox x:Name="OraHostBox" Header="Host" PlaceholderText="vd: localhost" />
                             <TextBox x:Name="OraPortBox" Header="Port" PlaceholderText="1521" />
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="Ket noi bang:" VerticalAlignment="Center" Opacity="0.7" />
+                                <TextBlock Text="Kết nối bằng:" VerticalAlignment="Center" Opacity="0.7" />
                                 <RadioButton x:Name="OraByServiceNameRadio" Content="Service Name" GroupName="OraConnectType" IsChecked="True" Checked="OraConnectType_Checked" />
                                 <RadioButton x:Name="OraBySidRadio" Content="SID" GroupName="OraConnectType" Checked="OraConnectType_Checked" />
                             </StackPanel>
@@ -127,7 +136,7 @@
                             <TextBox x:Name="OraSidBox" Header="SID" PlaceholderText="vd: ORCL" IsEnabled="False" />
                             <TextBox x:Name="OraUsernameBox" Header="Username" />
                             <PasswordBox x:Name="OraPasswordBox" Header="Password" />
-                            <TextBox x:Name="OraSchemaBox" Header="Schema (tuy chon, de trong = mac dinh theo Username)" />
+                            <TextBox x:Name="OraSchemaBox" Header="Schema (tuỳ chọn, để trống = mặc định theo Username)" />
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>
@@ -145,14 +154,14 @@
                 <PivotItem Header="SQL Server">
                     <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
-                            <TextBox x:Name="MsHostBox" Header="Host (hoac Host\TenInstance)" PlaceholderText="vd: localhost hoac MAYCHU\SQLEXPRESS" />
-                            <TextBox x:Name="MsPortBox" Header="Port (bo qua khi nhap ten instance)" PlaceholderText="1433" />
+                            <TextBox x:Name="MsHostBox" Header="Host (hoặc Host\TênInstance)" PlaceholderText="vd: localhost hoặc MAYCHU\SQLEXPRESS" />
+                            <TextBox x:Name="MsPortBox" Header="Port (bỏ qua khi nhập tên instance)" PlaceholderText="1433" />
                             <TextBox x:Name="MsDatabaseBox" Header="Database" />
-                            <CheckBox x:Name="MsWindowsAuthCheckBox" Content="Dung Windows Authentication (tai khoan Windows dang dang nhap)"
+                            <CheckBox x:Name="MsWindowsAuthCheckBox" Content="Dùng Windows Authentication (tài khoản Windows đang đăng nhập)"
                                       Checked="MsWindowsAuth_Changed" Unchecked="MsWindowsAuth_Changed" />
                             <TextBox x:Name="MsUsernameBox" Header="Username" />
                             <PasswordBox x:Name="MsPasswordBox" Header="Password" />
-                            <TextBox x:Name="MsSchemaBox" Header="Schema (tuy chon, vd dbo; de trong = tat ca schema)" />
+                            <TextBox x:Name="MsSchemaBox" Header="Schema (tuỳ chọn, vd dbo; để trống = tất cả schema)" />
                         </StackPanel>
                     </ScrollViewer>
                 </PivotItem>

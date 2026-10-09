@@ -15,11 +15,11 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
 
 ## Chức năng
 
-1. **"Thiet lap thong tin database"** - mở modal có 4 tab **PostgreSQL** / **Oracle** / **MySQL** / **SQL Server**
+1. **"Thiết lập kết nối"** - mở modal có 4 tab **PostgreSQL** / **Oracle** / **MySQL** / **SQL Server**
    (`Microsoft.UI.Xaml.Controls.Pivot`, mỗi tab bọc trong `ScrollViewer` để không bao giờ bị cắt mất
    trường nào kể cả khi dialog thấp; mở sẵn tab của nguồn đang chọn), mỗi tab nhập thông tin kết nối riêng:
    - Postgres: Host/Port/Database/Username/Password/Schema.
-   - Oracle: Host/Port, radio **"Ket noi bang: Service Name / SID"** (mặc định Service Name) rồi
+   - Oracle: Host/Port, radio **"Kết nối bằng: Service Name / SID"** (mặc định Service Name) rồi
      tương ứng 1 trong 2 ô Service Name hoặc SID (ô còn lại bị disable), Username/Password/Schema.
      `OracleConnectionSettings` lưu cả `ServiceName`, `Sid`, và cờ `ConnectBySid` - importer dựng
      connection string khác nhau: Service Name dùng EZ Connect `host:port/serviceName`, SID dùng
@@ -37,23 +37,23 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    nối qua cùng `CreateConnection` với lúc import + đếm bảng / view trong phạm vi sẽ đọc, trả `ConnectionTestResult`).
    Kết quả hiện ở InfoBar trên các tab: xanh = OK, vàng = kết nối được nhưng 0 bảng, đỏ = lỗi (cùng
    `DescribeConnectionError` với hộp thoại lỗi lúc import). Đang thử thì bấm lại bị bỏ qua (không tắt nút vì focus
-   sẽ nhảy sang "Huy" và Enter sẽ đóng hộp thoại); đổi tab / đóng hộp thoại thì huỷ lần thử đang chạy và xoá kết quả.
+   sẽ nhảy sang "Huỷ" và Enter sẽ đóng hộp thoại); đổi tab / đóng hộp thoại thì huỷ lần thử đang chạy và xoá kết quả.
    Oracle: sai Service Name trả ORA-50201 bọc ORA-12514 bên trong - `DescribeConnectionError` dò cả chuỗi
    InnerException. Mọi `OracleCommand` đặt `BindByName = true` (câu đọc bảng dùng `:owner` 2 lần).
 
-   Bấm "Luu" sẽ lưu **cả 4 tab** cùng lúc vào `Data\Config\config.xml`
+   Bấm "Lưu" sẽ lưu **cả 4 tab** cùng lúc vào `Data\Config\config.xml`
    (`Services\ConnectionSettingsStore`, dùng `System.Xml.Serialization.XmlSerializer`, root
    `DatabaseConnectionsConfig` chứa `Postgres` / `Oracle` / `MySql` / `SqlServer` + `SelectedSource` +
    `Options`; config.xml cũ thiếu phần nào thì phần đó lấy mặc định) và tự điền lại sẵn ở những lần mở module
    sau. **Lưu ý**: mật khẩu lưu dưới dạng plain text trong file này (không có tiện ích mã hóa nào sẵn
    có trong repo để dùng) - phù hợp với công cụ nội bộ, 1 người dùng, chạy cục bộ; không copy
    `config.xml` này ra ngoài máy.
-2. **Combobox "Nguon"** (PostgreSQL / Oracle / MySQL / SQL Server - thứ tự mục = thứ tự enum
+2. **Combobox "Nguồn"** (PostgreSQL / Oracle / MySQL / SQL Server - thứ tự mục = thứ tự enum
    `DatabaseSourceType`) - quyết định `ImportDatabaseCommand` dùng importer nào trong `Services\*SchemaImporter`.
    Nguồn đã chọn được lưu vào config.xml, mở lại module chọn sẵn. Khoá khi đang đọc / xuất.
-   Nút "1. Doc Database → SQLite" chỉ bật khi nguồn đang chọn có đủ thông tin tối thiểu đã lưu
+   Nút "1. Đọc database → SQLite" chỉ bật khi nguồn đang chọn có đủ thông tin tối thiểu đã lưu
    (Host + Database; Oracle: Host + Service Name hoặc SID tùy chế độ đang chọn).
-3. **"1. Doc Database → SQLite"** - kết nối theo nguồn đã chọn, đọc schema, lưu vào SQLite tại
+3. **"1. Đọc database → SQLite"** - kết nối theo nguồn đã chọn, đọc schema, lưu vào SQLite tại
    `Data\Database\{ten_database}.db` (`Services\RdbmsHtmlGeneratorDatabase` - bản sao gần như nguyên vẹn của
    `McfDbDefHtmlGeneratorDatabase`, cùng schema 3 bảng `Tables`/`Columns`/`ForeignKeys`). Tên file lấy đúng tên
    database/service đang kết nối (Postgres / MySQL / SQL Server: field `Database`; Oracle: `Service Name` hoặc `SID` tùy
@@ -61,19 +61,25 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    hợp lệ trên Windows bị thay bằng `_` (`RdbmsHtmlGeneratorDatabase.SanitizeFileName`). Nhờ đặt tên theo DB,
    import từ nhiều database khác nhau giữ cache SQLite riêng biệt thay vì ghi đè lên nhau. Mỗi lần
    chạy sẽ rebuild toàn bộ (drop + create + insert lại).
+   **Huỷ**: `[RelayCommand(IncludeCancelCommand = true)]` sinh `ImportDatabaseCancelCommand`, nút "Huỷ" chỉ hiện khi
+   `IsImporting`. Chờ importer bằng `WaitAsync(token)` nên Huỷ dừng ngay cả khi driver đang kẹt ở bước mở kết nối (ODP.NET
+   bỏ qua token; lần thử đó tự hết trong thời gian chờ kết nối, log của nó bị bỏ qua). Huỷ / lỗi đều không đụng `.db`
+   (chỉ thay sau khi đọc trọn vẹn) → "2. Xuất HTML" vẫn bật cho bản cũ; huỷ thì `RefreshDatabaseTarget` tính lại bước,
+   lỗi thì về bước 1. Huỷ nhận ra bằng `token.IsCancellationRequested` vì mỗi driver báo huỷ một kiểu
+   (`OperationCanceledException`, `SqlException` "Operation cancelled by user"...).
    Giới hạn thời gian kết nối / truy vấn lấy từ **Cài đặt** (`AppOptions`). Mọi importer mở kết nối qua
    `DatabaseConnectException.OpenAsync` - lỗi lúc mở kết nối được bọc trong `DatabaseConnectException`, nhờ đó
    phân biệt "không kết nối được" với "kết nối được nhưng truy vấn lỗi / quá giờ" mà không phải dò message của
    từng driver. Lỗi → ghi vào log + `ErrorOccurred` → `MainWindow` hiện ContentDialog; `DescribeConnectionError`
    dịch lỗi thường gặp (không tới được host, sai user/password, database / Service Name không tồn tại, truy vấn
    quá giờ) thành gợi ý dễ hiểu.
-4. **"2. Xuat HTML"** - đọc lại `{ten_database}.db`, sinh 1 file HTML tĩnh, tự chứa tại
+4. **"2. Xuất HTML"** - đọc lại `{ten_database}.db`, sinh 1 file HTML tĩnh, tự chứa tại
    `Data\Database\{ten_database}.html` (cùng quy ước đặt tên như bước 3;
    `Services\HtmlReportGenerator`, có sửa riêng so với Mcf.DbDef.HtmlGenerator: cột "STT" thay cho "Level", bỏ cột
    "Ten tieng Nhat"/"Xac dinh", bỏ chú giải/màu "Cot dung chung" vì không áp dụng cho dữ liệu DB quan
    hệ - chỉ còn tô màu khóa chính (vàng nhạt), menu trái + 2 ô tìm kiếm (tên bảng/tên cột), link khóa
    ngoại mở tab mới - xem README của Mcf.DbDef.HtmlGenerator để biết chi tiết các tính năng gốc).
-5. **"Mo file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định. Đóng rồi mở lại module vẫn
+5. **"Mở file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định. Đóng rồi mở lại module vẫn
    nhận đúng file `.db`/`.html` đã có sẵn cho database/nguồn đang chọn (`RdbmsHtmlGeneratorViewModel.RefreshDatabaseTarget`
    kiểm tra lại mỗi khi đổi nguồn hoặc lưu settings), không cần import lại nếu đã có cache từ trước.
 6. **"Cài đặt"** - modal chỉnh `AppOptions` (lưu trong `config.xml`, phần `Options`):
@@ -86,11 +92,11 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    Nút "Mặc định" điền lại giá trị mặc định (chưa lưu cho tới khi bấm Lưu). Giá trị sửa tay ngoài khoảng
    trong config.xml bị kẹp lại (`EffectiveConnectTimeoutSeconds` / `EffectiveCommandTimeoutSeconds`).
 
-**Nút màu nhấn theo bước**: `RdbmsHtmlGeneratorViewModel.NextStep` (1 = Doc Database, 2 = Xuat HTML, 3 = Mo file HTML)
+**Nút màu nhấn theo bước**: `RdbmsHtmlGeneratorViewModel.NextStep` (1 = Đọc database, 2 = Xuất HTML, 3 = Mở file HTML)
 → `MainWindow.StepButtonStyle` trả `AccentButtonStyle` cho nút của bước đó, `DefaultButtonStyle` cho các nút còn lại.
 Đọc xong → 2, xuất xong → 3, đọc lỗi → 1; lúc mở module / đổi nguồn tính lại từ file có sẵn (`.html` không cũ hơn `.db` → 3).
 
-**Hướng dẫn (F1)**: nút "Huong dan (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
+**Hướng dẫn (F1)**: nút "Hướng dẫn (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
 `ViewsHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
 
 ## Ánh xạ dữ liệu
@@ -138,8 +144,8 @@ Các importer đọc thẳng vào catalog/data dictionary của DB (không qua `
   luôn để trống/`false` - giữ lại chỉ để model cùng hình dạng, tái dùng được `RdbmsHtmlGeneratorDatabase` mà
   không cần sửa.
 
-Khi cần đọc lại dữ liệu mới nhất: chọn đúng nguồn rồi bấm lại "1. Doc Database → SQLite" rồi
-"2. Xuat HTML".
+Khi cần đọc lại dữ liệu mới nhất: chọn đúng nguồn rồi bấm lại "1. Đọc database → SQLite" rồi
+"2. Xuất HTML".
 
 ## Vì sao độc lập được với MainLauncher?
 

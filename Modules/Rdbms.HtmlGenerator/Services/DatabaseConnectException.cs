@@ -21,6 +21,6 @@ public sealed class DatabaseConnectException(Exception inner) : Exception(inner.
             throw new DatabaseConnectException(ex);
         }
 
-        log("Da ket noi, dang doc schema...");
+        log("Đã kết nối, đang đọc schema...");
     }
 }

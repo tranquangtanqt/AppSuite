@@ -180,7 +180,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        // Already testing: ignore the click. (Not disabling the button - that moves keyboard focus to "Huy",
+        // Already testing: ignore the click. (Not disabling the button - that moves keyboard focus to "Huỷ",
         // and an Enter pressed while waiting would then close the dialog without saving.)
         if (_testConnectionCts is not null)
         {

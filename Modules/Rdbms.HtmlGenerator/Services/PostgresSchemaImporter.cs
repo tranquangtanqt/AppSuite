@@ -20,7 +20,7 @@ public sealed class PostgresSchemaImporter
     public async Task<(List<DbTableRecord> Tables, List<DbColumnRecord> Columns, List<DbForeignKeyRecord> ForeignKeys)> ImportAsync(
         PostgresConnectionSettings settings, AppOptions options, Action<string> log, CancellationToken cancellationToken = default)
     {
-        log($"Dang ket noi {settings.Host}:{settings.Port}/{settings.Database} (toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
+        log($"Đang kết nối {settings.Host}:{settings.Port}/{settings.Database} (tối đa {options.EffectiveConnectTimeoutSeconds} giây)...");
         await using var connection = CreateConnection(settings, options);
         await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
 
@@ -32,7 +32,7 @@ public sealed class PostgresSchemaImporter
         var columns = await ReadColumnsAsync(connection, schemaFilter, primaryKeys, log, cancellationToken);
         var foreignKeys = await ReadForeignKeysAsync(connection, schemaFilter, log, cancellationToken);
 
-        log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
+        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại từ {sourceLabel}.");
         return (tables, columns, foreignKeys);
     }
 
@@ -122,7 +122,7 @@ public sealed class PostgresSchemaImporter
             }
             catch (Exception ex)
             {
-                log($"Loi doc thong tin bang: {ex.Message}");
+                log($"Lỗi đọc thông tin bảng: {ex.Message}");
             }
         }
 
@@ -205,7 +205,7 @@ public sealed class PostgresSchemaImporter
             }
             catch (Exception ex)
             {
-                log($"Loi doc thong tin cot: {ex.Message}");
+                log($"Lỗi đọc thông tin cột: {ex.Message}");
             }
         }
 
@@ -250,9 +250,9 @@ public sealed class PostgresSchemaImporter
 
             foreignKeys = ForeignKeyGrouper.Group(rows);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
-            log($"Loi doc khoa ngoai: {ex.Message}");
+            log($"Lỗi đọc khoá ngoại: {ex.Message}");
         }
 
         return foreignKeys;

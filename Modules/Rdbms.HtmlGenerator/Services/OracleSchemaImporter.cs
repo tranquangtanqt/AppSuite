@@ -24,7 +24,7 @@ public sealed class OracleSchemaImporter
             ? $"{settings.Host}:{settings.Port}:{settings.Sid}"
             : $"{settings.Host}:{settings.Port}/{settings.ServiceName}";
 
-        log($"Dang ket noi {sourceLabel} (schema {owner}, toi da {options.EffectiveConnectTimeoutSeconds} giay)...");
+        log($"Đang kết nối {sourceLabel} (schema {owner}, tối đa {options.EffectiveConnectTimeoutSeconds} giây)...");
         await using var connection = CreateConnection(settings, options);
         await DatabaseConnectException.OpenAsync(connection, log, cancellationToken);
 
@@ -35,7 +35,7 @@ public sealed class OracleSchemaImporter
         var columns = await ReadColumnsAsync(connection, owner, commandTimeout, primaryKeys, log, cancellationToken);
         var foreignKeys = await ReadForeignKeysAsync(connection, owner, commandTimeout, log, cancellationToken);
 
-        log($"Da doc {tables.Count} bang, {columns.Count} cot, {foreignKeys.Count} khoa ngoai tu {sourceLabel}.");
+        log($"Đã đọc {tables.Count} bảng, {columns.Count} cột, {foreignKeys.Count} khoá ngoại từ {sourceLabel}.");
         return (tables, columns, foreignKeys);
     }
 
@@ -132,7 +132,7 @@ public sealed class OracleSchemaImporter
             }
             catch (Exception ex)
             {
-                log($"Loi doc thong tin bang: {ex.Message}");
+                log($"Lỗi đọc thông tin bảng: {ex.Message}");
             }
         }
 
@@ -212,7 +212,7 @@ public sealed class OracleSchemaImporter
             }
             catch (Exception ex)
             {
-                log($"Loi doc thong tin cot: {ex.Message}");
+                log($"Lỗi đọc thông tin cột: {ex.Message}");
             }
         }
 
@@ -270,9 +270,9 @@ public sealed class OracleSchemaImporter
 
             foreignKeys = ForeignKeyGrouper.Group(rows);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
-            log($"Loi doc khoa ngoai: {ex.Message}");
+            log($"Lỗi đọc khoá ngoại: {ex.Message}");
         }
 
         return foreignKeys;
