@@ -15,12 +15,12 @@ Quyết định với người dùng (2026-10-12):
 - Không làm: giỏ hàng POS + Giao dịch, in hoá đơn, giọng nói, Firestore, lịch tự sao lưu, ảnh món ăn.
 - Làm **4 đợt**, mỗi đợt người dùng thử trong Sandbox rồi mới sang đợt sau.
 
-| Đợt | Nội dung |
-|---|---|
-| 1 | Khung module + database + Import TSV + Địa chỉ, Danh mục món, Khách hàng, Món ăn |
-| 2 | Đặt hàng (đầy đủ như điện thoại) |
-| 3 | Mua hàng + 4 báo cáo |
-| 4 | Xuất TSV, Xoá toàn bộ, hướng dẫn, README / PLAN, test |
+| Đợt | Nội dung | Trạng thái |
+|---|---|---|
+| 1 | Khung module + database + Import TSV + Địa chỉ, Danh mục món, Khách hàng, Món ăn | xong, a7290c3 |
+| 2 | Đặt hàng (đầy đủ như điện thoại) | xong, 0e52631 |
+| 3 | Mua hàng + 4 báo cáo | xong, bcdc246 |
+| 4 | Xuất TSV, Xoá toàn bộ, rà soát hướng dẫn / README / PLAN, test | xong (2026-10-12) |
 
 ## Thiết kế
 
@@ -52,7 +52,7 @@ Database ở `%LOCALAPPDATA%\AppSuite\MeRon\` (không cạnh exe như log): cậ
   báo cáo; người dùng chọn "thay toàn bộ".
 
 Hệ quả cần nói rõ với người dùng (đã nói, có trong hộp thoại xác nhận và Hướng dẫn): sửa trên máy tính sẽ mất ở lần nhập
-sau — điện thoại là nơi nhập liệu chính.
+sau — điện thoại là nơi nhập liệu chính. Từ Đợt 4 có đường ngược lại: Xuất TSV rồi nhập trên điện thoại.
 
 ### Quy tắc nghiệp vụ
 
@@ -71,6 +71,28 @@ Thêm ở máy tính (vì điện thoại không bật khoá ngoại, xoá sẽ 
   (tránh kéo metapackage WinAppSDK cũ, xem CsvEditor).
 - Số / tiền luôn định dạng `vi-VN` (`VnFormat`) — Sandbox chạy Windows tiếng Nhật đã lộ lỗi `2,617` khi để theo
   ngôn ngữ máy.
+
+## Đợt 4 — Xuất / Xoá dữ liệu, rà soát tài liệu (2026-10-12)
+
+- **Xuất = ảnh gương của nhập** (`BackupExporter`): đúng định dạng `BackupService.exportToLocal` (thư mục + tên file theo
+  thời điểm, cột theo thứ tự bảng, dòng theo rowid, null → rỗng, không BOM, không xuống dòng cuối). Kiểm chứng mạnh nhất:
+  nhập bộ backup thật rồi xuất lại → **giống từng byte** file của điện thoại (7.336 dòng); và xuất → nhập lại cho dữ liệu y
+  hệt. Ghi vào `<stamp>.partial` rồi đổi tên: lỗi giữa chừng không để lại bộ dở mà điện thoại / máy khác lỡ nhập.
+- 2 chỗ lệch có chủ đích, đều vì màn Nhập của chính điện thoại (`import_data_screen.dart`): nó đọc bằng `readAsLines` (tách
+  cả `\r` → ghi chú nhiều dòng gõ trên Windows sẽ làm lệch dòng) nên xuất đổi cả `\r` thành dấu cách; nó báo lỗi "File
+  rỗng" với file rỗng nên bảng trống ghi dòng tiêu đề (nhập ra bảng trống — đúng ý "thay toàn bộ"). MeRon nhập được cả 2 kiểu.
+- **Xoá toàn bộ** (`MeRonDatabase.WipeAll`): xác nhận 2 lần như điện thoại, nút mặc định của hộp thoại là Huỷ; xoá 8 bảng +
+  bộ đếm id + thông tin lần nhập trong 1 transaction, giữ thư mục đã chọn. Khác điện thoại: luôn chép bản sao an toàn trước
+  (`me_ron_truoc-xoa_*`) — bản sao an toàn tách thành `MeRonDatabase.MakeSafetyCopy(reason)` dùng chung với Nhập.
+- Rà soát tài liệu: README viết lại theo thứ tự menu + quy trình dùng + mục "Khác điện thoại có chủ đích"; Hướng dẫn F1 đủ
+  16 mục / 15 trang (unit test kiểm tra); README gốc, `modules.json`, `Tiến trình.md` cập nhật.
+
+## Kiểm chứng (Đợt 4)
+
+- [x] Unit test 43/43 (+ backup thật: xuất lại giống từng byte file điện thoại)
+- [x] GUI Sandbox `meron_export.ps1` 15/15: xuất 7.336 dòng, thư mục + 8 file giống file điện thoại, nhập lại bộ vừa xuất,
+  Xoá toàn bộ (Huỷ ở lần 2 giữ dữ liệu; đủ 2 lần thì xoá, bản sao `truoc-xoa`, Đặt hàng trống). Chạy lại Đợt 1–3 đạt
+- [ ] Người dùng thử tay Đợt 4 + thử nhập bộ xuất từ máy tính trên điện thoại thật
 
 ## Đợt 3 — Mua hàng + 4 báo cáo (2026-10-12)
 

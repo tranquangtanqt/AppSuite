@@ -29,9 +29,6 @@ public sealed record ImportResult(IReadOnlyDictionary<string, int> RowCounts, st
 /// </summary>
 public static class BackupImporter
 {
-    /// <summary>Số bản sao an toàn giữ lại trong Backups\ (cũ hơn thì xoá).</summary>
-    public const int KeepSafetyCopies = 10;
-
     public static ImportPlan Prepare(BackupFileSet backup)
     {
         var errors = new List<string>();
@@ -121,7 +118,7 @@ public static class BackupImporter
         }
 
         database.EnsureCreated();
-        var safetyCopy = MakeSafetyCopy(database);
+        var safetyCopy = database.MakeSafetyCopy("truoc-import");
 
         var counts = new Dictionary<string, int>();
         using var connection = database.Open();
@@ -168,37 +165,5 @@ public static class BackupImporter
         transaction.Commit();
 
         return new ImportResult(counts, safetyCopy);
-    }
-
-    /// <summary>Chép database hiện tại ra Backups\me_ron_truoc-import_yyyyMMdd_HHmmss.db (bỏ qua nếu chưa có dữ liệu gì).</summary>
-    private static string? MakeSafetyCopy(MeRonDatabase database)
-    {
-        if (Schema.BackupTables.Sum(t => database.Count(t.Name)) == 0)
-        {
-            return null;
-        }
-        var folder = Path.Combine(database.Folder, "Backups");
-        Directory.CreateDirectory(folder);
-        var target = Path.Combine(folder, $"me_ron_truoc-import_{DateTime.Now:yyyyMMdd_HHmmss}.db");
-        using (var source = database.Open())
-        using (var destination = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = target, Pooling = false }.ToString()))
-        {
-            destination.Open();
-            source.BackupDatabase(destination);
-        }
-
-        foreach (var old in new DirectoryInfo(folder).GetFiles("me_ron_truoc-import_*.db")
-                     .OrderByDescending(f => f.Name, StringComparer.Ordinal).Skip(KeepSafetyCopies))
-        {
-            try
-            {
-                old.Delete();
-            }
-            catch (IOException)
-            {
-                // Bản cũ đang bị mở ở đâu đó - để lần sau dọn.
-            }
-        }
-        return target;
     }
 }

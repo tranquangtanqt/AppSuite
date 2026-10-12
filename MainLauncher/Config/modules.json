@@ -78,7 +78,7 @@
   },
   {
     "Name": "MeRon",
-    "Description": "Quan ly ban hang (du lieu tu app dien thoai me-ron): nhap backup TSV, khach hang, mon an, danh muc, dia chi",
+    "Description": "Quan ly ban hang (ban may tinh cua app dien thoai me-ron): dat hang, mua hang, thong ke, danh muc; nhap / xuat backup TSV",
     "Path": ".\\Modules\\MeRon\\MeRon.exe",
     "Arguments": "",
     "AutoStart": false

@@ -63,14 +63,14 @@ AppSuite.sln
 |   |-- ScreenCapture/            Chup man hinh + chinh sua anh (PicPick-like)
 |   |-- ImageCompare/             So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)
 |   |-- FileTools/                Xu ly file text/CSV/log lon (vai GB): noi, tach, trich, tim, loc, doi encoding...
-|   `-- MeRon/                   Quan ly ban hang (du lieu tu app dien thoai me-ron): nhap backup TSV -> SQLite, danh muc
+|   `-- MeRon/                   Quan ly ban hang (ban may tinh cua app dien thoai me-ron): dat hang, mua hang, 4 bao cao, danh muc; nhap / xuat backup TSV
 |
 |-- Tests/                      Unit test (xUnit v3, exe tu chay) - xem muc "Unit test" trong README cua tung module
 |   |-- CsvEditor.Tests/
 |   |-- FileTools.Tests/        Doc/ghi stream, encoding, noi/tach/trich/tim/loc/doi encoding (+ test file 2 GB chay tay)
 |   |-- ImageCompare.Tests/     Engine: so pixel, tu can, tim anh con, OCR, bao cao (chi x64)
 |   |-- Mcf.CrudDiagram.Tests/  Doc sheet CRUD図 -> HTML -> SQLite
-|   |-- MeRon.Tests/            Doc TSV backup, import thay toan bo (kiem tra truoc, rollback, ban sao), quy tac danh muc
+|   |-- MeRon.Tests/            Nhap / xuat TSV (giong tung byte file dien thoai), don hang, phieu nhap, 4 bao cao, danh muc
 |   |-- Mcf.DbDef.Tests/        Doc workbook DBDef -> bang/cot/khoa ngoai -> SQLite -> HTML
 |   `-- Mcf.Screen.Tests/       Doc 画面説明書 -> HTML (luoi gop o, 3 parser, so do) -> SQLite
 |

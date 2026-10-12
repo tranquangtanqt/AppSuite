@@ -178,7 +178,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   sửa lỗi tab trạng thái không reset khi vào lại trang (SelectorBar trong trang cache) cho cả Đặt hàng; lỗi form tự tắt
   khi sửa; unit test 38/38; GUI Sandbox 32/32 + Đợt 1 37/37 + Đợt 2 36/36 (2026-10-12)
 - [ ] Người dùng thử tay Đợt 3
-- [ ] Đợt 4: Xuất TSV (định dạng điện thoại), Xoá toàn bộ dữ liệu, rà hướng dẫn / README
+- [x] Đợt 4: **Xuất TSV** đúng định dạng điện thoại (xuất lại bộ backup thật giống từng byte file điện thoại; bảng trống =
+  dòng tiêu đề, `\r` → dấu cách để điện thoại nhập được; ghi `.partial` rồi đổi tên), **Xoá toàn bộ dữ liệu** (xác nhận 2
+  lần, bản sao `truoc-xoa` trước); rà soát tài liệu (README viết lại theo menu + quy trình dùng, PLAN, F1 16 mục, README
+  gốc, modules.json); unit test 43/43; GUI Sandbox 15/15 + Đợt 1–3 chạy lại đạt (2026-10-12)
+- [ ] Người dùng thử tay Đợt 4 + nhập thử bộ xuất từ máy tính trên điện thoại thật
 - [ ] Sau này: lấy backup thẳng từ link Google Drive (thêm 1 `IBackupSource`; folder đang để công khai — cân nhắc
   chuyển sang "Hạn chế" + đăng nhập Google vì có bảng khách hàng / địa chỉ)
 

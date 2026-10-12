@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MeRon.Views.ExportPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MeRon.Views">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="24,12,24,24" Spacing="14" MaxWidth="1000" HorizontalAlignment="Left">
+            <TextBlock Text="Xuất / Xoá dữ liệu" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Text="{x:Bind ViewModel.CurrentData, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.75" AutomationProperties.AutomationId="CurrentData" />
+
+            <!-- Xuất -->
+            <Border Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Xuất bộ backup TSV" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="Tạo thư mục yyyyMMdd_HHmmss chứa 8 file .tsv đúng định dạng app điện thoại (address_…, users_…, orders_…). Dùng để: chép sang điện thoại rồi nhập (Cài đặt → Sao lưu → Nhập dữ liệu từ tệp sao lưu, từng bảng), chuyển sang máy tính khác (trang Nhập dữ liệu), hoặc cất làm bản lưu." />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{x:Bind ViewModel.FolderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Thư mục lưu"
+                                 AutomationProperties.Name="Thư mục xuất" AutomationProperties.AutomationId="ExportFolderBox" />
+                        <Button Grid.Column="1" Content="Chọn thư mục..." Click="Pick_Click" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Style="{StaticResource AccentButtonStyle}" Click="Export_Click" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}"
+                                AutomationProperties.Name="Xuất TSV">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <SymbolIcon Symbol="Upload" />
+                                <TextBlock Text="Xuất TSV" />
+                            </StackPanel>
+                        </Button>
+                        <Button Content="Mở thư mục vừa xuất" Click="OpenExport_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasExport), Mode=OneWay}" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.ExportStatus, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                               AutomationProperties.AutomationId="ExportStatus" />
+                </StackPanel>
+            </Border>
+
+            <!-- Xoá -->
+            <Border Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource SystemFillColorCriticalBrush}"
+                    Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Xoá toàn bộ dữ liệu ở máy" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.85"
+                               Text="Xoá sạch đơn hàng, khách hàng, món ăn, danh mục, địa chỉ, phiếu nhập trên máy này (không đụng gì tới điện thoại hay Google Drive). Hỏi xác nhận 2 lần. Bản trước khi xoá luôn được lưu trong thư mục Backups - lấy lại: đóng app, chép bản đó đè lên me_ron.db." />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Click="Wipe_Click" AutomationProperties.Name="Xoá toàn bộ dữ liệu">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <SymbolIcon Symbol="Delete" />
+                                <TextBlock Text="Xoá toàn bộ dữ liệu..." />
+                            </StackPanel>
+                        </Button>
+                        <Button Content="Mở thư mục Backups" Click="OpenBackups_Click" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.WipeStatus, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                               AutomationProperties.AutomationId="WipeStatus" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

@@ -59,5 +59,20 @@ public class RealBackupTests
         Assert.True(top.Count <= 100);
         TestContext.Current.SendDiagnosticMessage(
             $"4 báo cáo: {watch.ElapsedMilliseconds} ms; {report.OrderCount} đơn, {report.Products.Count} món, top 1 = {top[0].Name} {top[0].Amount}");
+
+        // Xuất lại phải giống TỪNG BYTE file của điện thoại (trừ bảng trống: máy tính ghi dòng tiêu đề, điện thoại ghi file rỗng).
+        var export = BackupExporter.Export(db, temp.Sub("export"), DateTime.Now);
+        foreach (var (table, original) in plan.Backup.Files)
+        {
+            var exported = Path.Combine(export.Folder, $"{table.FilePrefix}_{export.Name}.tsv");
+            var phone = File.ReadAllBytes(original);
+            if (phone.Length == 0)
+            {
+                Assert.Equal(string.Join('\t', table.Columns.Select(c => c.Name)), File.ReadAllText(exported));
+                continue;
+            }
+            Assert.True(phone.AsSpan().SequenceEqual(File.ReadAllBytes(exported)), $"{table.Name}: khác file điện thoại");
+        }
+        TestContext.Current.SendDiagnosticMessage($"Xuất lại {export.RowCounts.Values.Sum()} dòng: giống từng byte file điện thoại");
     }
 }

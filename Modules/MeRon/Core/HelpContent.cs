@@ -16,7 +16,7 @@ public static class HelpContent
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
         ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage",
-         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "ImportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage"];
+         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "ImportPage", "ExportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
     [
@@ -28,7 +28,7 @@ public static class HelpContent
             new("4. Mua hàng, Thống kê", "Mua hàng: phiếu nhập nguyên liệu theo ngày. Thống kê: Theo đơn hàng, Theo món ăn, Tổng hợp (bán + mua), Khách hàng tiềm năng."),
             new("5. Xem / sửa danh mục", "Các trang Khách hàng, Món ăn, Danh mục món ăn, Địa chỉ ở menu bên trái."),
             new("Khoảng ngày", "Mọi trang có Từ ngày – Đến ngày (tính cả 2 ngày) và nút lịch nhỏ để chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Mở trang từ menu thì về hôm nay (như điện thoại); quay lại từ trang con thì giữ nguyên."),
-            new("Điện thoại là nơi nhập liệu chính", "Mỗi lần nhập là THAY TOÀN BỘ dữ liệu trên máy tính bằng bản backup - những gì thêm / sửa trên máy tính sẽ mất ở lần nhập sau. Bản cũ luôn được lưu lại trong thư mục Backups trước khi nhập."),
+            new("Điện thoại là nơi nhập liệu chính", "Mỗi lần nhập là THAY TOÀN BỘ dữ liệu trên máy tính bằng bản backup - những gì thêm / sửa trên máy tính sẽ mất ở lần nhập sau. Bản cũ luôn được lưu lại trong thư mục Backups trước khi nhập. Muốn đưa phần sửa trên máy tính sang điện thoại: trang Xuất / Xoá dữ liệu → Xuất TSV, rồi nhập trên điện thoại."),
             new("Mở lại hướng dẫn này", "Mục Hướng dẫn cuối menu trái, hoặc phím F1 (mở thẳng phần của trang đang xem).", "F1"),
         ]),
 
@@ -114,6 +114,16 @@ public static class HelpContent
             new("Lấy lại dữ liệu cũ", "Trước mỗi lần nhập, database hiện tại được chép sang thư mục Backups cạnh file database (me_ron_truoc-import_<thời gian>.db, giữ 10 bản gần nhất). Đường dẫn database hiện ở cuối trang."),
             new("Kiểm tra lại", "Đọc lại thư mục - dùng khi vừa chép thêm bản backup mới vào thư mục cha."),
             new("File rỗng", "Bảng không có dữ liệu thì điện thoại xuất file rỗng (vd chưa có phiếu nhập nào) - nhập bình thường thành bảng trống."),
+        ]),
+
+        new("Xuất / Xoá dữ liệu", "", "Xuất bộ backup TSV đúng định dạng điện thoại; xoá toàn bộ dữ liệu ở máy.", "ExportPage",
+        [
+            new("Xuất TSV", "Chọn thư mục lưu (mặc định Documents\\MeRon, nhớ lần trước) rồi bấm Xuất TSV: tạo thư mục yyyyMMdd_HHmmss chứa 8 file .tsv giống hệt file điện thoại xuất. Mở thư mục vừa xuất để chép đi."),
+            new("Đưa sang điện thoại", "Chép thư mục vừa xuất vào điện thoại; trên điện thoại vào Cài đặt → Sao lưu → Nhập dữ liệu từ tệp sao lưu và chọn file của từng bảng. Lưu ý: điện thoại xoá dữ liệu của bảng đó rồi mới nhập file."),
+            new("Đưa sang máy tính khác", "Trên máy kia: trang Nhập dữ liệu, chọn thư mục vừa xuất (hoặc thư mục cha) - như nhập backup của điện thoại."),
+            new("Khác file điện thoại 2 chỗ nhỏ", "Bảng trống ghi dòng tiêu đề (điện thoại ghi file rỗng, và chính điện thoại không nhập được file rỗng); xuống dòng trong ghi chú đổi thành dấu cách (như điện thoại làm với tab / xuống dòng)."),
+            new("Xoá toàn bộ dữ liệu", "Xoá sạch dữ liệu bán hàng trên máy này (đơn, khách, món, danh mục, địa chỉ, phiếu nhập). Hỏi xác nhận 2 lần. Bản trước khi xoá lưu ở thư mục Backups (me_ron_truoc-xoa_<thời gian>.db); nút Mở thư mục Backups."),
+            new("Lấy lại dữ liệu cũ", "Thư mục Backups có bản trước mỗi lần Nhập (me_ron_truoc-import_…) và mỗi lần Xoá (me_ron_truoc-xoa_…), giữ 10 bản gần nhất mỗi loại. Lấy lại: đóng MeRon, chép bản cần lấy đè lên file me_ron.db (đường dẫn ở cuối trang Nhập dữ liệu)."),
         ]),
 
         new("Khách hàng", "", "Danh sách khách hàng dùng cho đơn hàng và báo cáo.", "CustomersPage",

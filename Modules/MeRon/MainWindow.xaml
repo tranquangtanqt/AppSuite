@@ -56,6 +56,7 @@
             <NavigationViewItem Content="Địa chỉ" Tag="AddressesPage" Icon="Map" />
             <NavigationViewItemHeader Content="Dữ liệu" />
             <NavigationViewItem Content="Nhập dữ liệu" Tag="ImportPage" Icon="Download" />
+            <NavigationViewItem Content="Xuất / Xoá dữ liệu" Tag="ExportPage" Icon="Upload" />
         </NavigationView.MenuItems>
         <NavigationView.FooterMenuItems>
             <!-- Mở cửa sổ Hướng dẫn, không chuyển trang (SelectsOnInvoked=False → xử lý ở ItemInvoked). -->
