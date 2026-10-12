@@ -4,7 +4,7 @@ Danh sách việc cần làm / đã làm của toàn bộ AppSuite. Có vấn đ
 mục; làm xong thì đổi thành `- [x]` và ghi ngày hoàn thành. Chi tiết thiết kế của từng module vẫn nằm
 trong `PLAN.md` / `README.md` của module đó — file này chỉ để theo dõi tiến độ.
 
-Cập nhật lần cuối: 2026-10-02
+Cập nhật lần cuối: 2026-10-12
 
 Mục ghi **[Đề xuất · Cao / Nên có / Có thể]** là tính năng còn thiếu tìm ra khi rà toàn bộ module (2026-10-02), chưa
 được duyệt làm — người dùng chọn mục nào thì bỏ nhãn đề xuất và làm như việc bình thường.
@@ -155,6 +155,23 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   tên thêm "(Lọc dòng)", Đổi xuống dòng → Xuống dòng LF + Encoding giữ như nguồn, Đổi dấu phân cách → Tab), chuyển trang
   giữ file đang làm (Xem file → Tìm → Đổi encoding → CSV, đổi file ở trang khác thì trang kia đổi theo), Shift+Enter
   thêm dòng / Enter = Tìm (10 dòng khớp), Lọc ra file giữ tiêu đề, CSV ghi ra .tsv. `ft_merge` 19/19 (2026-10-08)
+
+## MeRon (module mới — bản máy tính của app điện thoại me-ron, `Modules/MeRon/PLAN.md`)
+
+Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), import TSV = thay toàn bộ, làm 4 đợt.
+
+- [x] Đợt 1: khung module (sln / modules.json / build scripts / icon), SQLite cùng schema điện thoại, **Nhập dữ liệu**
+  (thư mục backup hoặc thư mục cha → bản mới nhất, kiểm tra cả 8 file trước, thay toàn bộ trong 1 transaction, bản sao
+  an toàn `Backups\`), **Khách hàng / Món ăn / Danh mục món ăn / Địa chỉ**, Hướng dẫn F1; unit test 19/19, backup thật
+  nạp không lỗi; GUI Sandbox 36/36 (sửa: số hiện `2,617` theo ngôn ngữ Windows → luôn `vi-VN`; ô tìm che số mục khi
+  cửa sổ hẹp; nhãn Địa chỉ lệch cỡ chữ; thư mục không được nhớ khi bấm Kiểm tra lại) (2026-10-12)
+- [ ] Người dùng thử tay Đợt 1
+- [ ] Đợt 2: Đặt hàng (lọc trạng thái / khách / ngày, sắp xếp, Chi tiết gộp theo khách, Thanh toán toàn bộ, tạo / sửa
+  đơn, món tự do, khoá dòng đã đổi giá, cảnh báo trùng đơn, huỷ / xoá)
+- [ ] Đợt 3: Mua hàng + 4 báo cáo (Theo đơn hàng, Theo món ăn, Tổng hợp, Khách hàng tiềm năng)
+- [ ] Đợt 4: Xuất TSV (định dạng điện thoại), Xoá toàn bộ dữ liệu, rà hướng dẫn / README
+- [ ] Sau này: lấy backup thẳng từ link Google Drive (thêm 1 `IBackupSource`; folder đang để công khai — cân nhắc
+  chuyển sang "Hạn chế" + đăng nhập Google vì có bảng khách hàng / địa chỉ)
 
 ## MainLauncher
 

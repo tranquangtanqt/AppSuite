@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    MeRon is a fully standalone WinUI 3 app: it opens, builds and runs on its own (right-click
+    MeRon.csproj > Set as Startup Project, or `dotnet run` from this folder). It only references
+    Common for the shared IModuleInfo-style contracts/logging - never MainLauncher.
+
+    Core\ không phụ thuộc WinUI (database, import TSV, nghiệp vụ) - Tests\MeRon.Tests biên dịch kèm trực tiếp.
+  -->
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\SharedUI\SharedUI.csproj" />
+  </ItemGroup>
+</Project>

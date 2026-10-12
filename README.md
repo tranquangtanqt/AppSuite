@@ -18,6 +18,7 @@ MainLauncher.exe
     |-- Modules\ScreenCapture\ScreenCapture.exe
     |-- Modules\ImageCompare\ImageCompare.exe
     |-- Modules\FileTools\FileTools.exe
+    |-- Modules\MeRon\MeRon.exe
     |-- ... (them Module moi theo cung mot khuon mau)
 ```
 
@@ -61,13 +62,15 @@ AppSuite.sln
 |   |-- Mcf.CrudDiagram.HtmlGenerator/                CRUD図 tu Excel -> SQLite -> HTML
 |   |-- ScreenCapture/            Chup man hinh + chinh sua anh (PicPick-like)
 |   |-- ImageCompare/             So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)
-|   `-- FileTools/                Xu ly file text/CSV/log lon (vai GB): noi, tach, trich, tim, loc, doi encoding...
+|   |-- FileTools/                Xu ly file text/CSV/log lon (vai GB): noi, tach, trich, tim, loc, doi encoding...
+|   `-- MeRon/                   Quan ly ban hang (du lieu tu app dien thoai me-ron): nhap backup TSV -> SQLite, danh muc
 |
 |-- Tests/                      Unit test (xUnit v3, exe tu chay) - xem muc "Unit test" trong README cua tung module
 |   |-- CsvEditor.Tests/
 |   |-- FileTools.Tests/        Doc/ghi stream, encoding, noi/tach/trich/tim/loc/doi encoding (+ test file 2 GB chay tay)
 |   |-- ImageCompare.Tests/     Engine: so pixel, tu can, tim anh con, OCR, bao cao (chi x64)
 |   |-- Mcf.CrudDiagram.Tests/  Doc sheet CRUD図 -> HTML -> SQLite
+|   |-- MeRon.Tests/            Doc TSV backup, import thay toan bo (kiem tra truoc, rollback, ban sao), quy tac danh muc
 |   |-- Mcf.DbDef.Tests/        Doc workbook DBDef -> bang/cot/khoa ngoai -> SQLite -> HTML
 |   `-- Mcf.Screen.Tests/       Doc 画面説明書 -> HTML (luoi gop o, 3 parser, so do) -> SQLite
 |
@@ -179,7 +182,7 @@ Publish cả 12 project (MainLauncher + 11 module) khá mất thời gian. Khi c
 ```
 
 Tên hợp lệ: `MainLauncher`, `ModuleA`, `ModuleB`, `ModuleC`, `Mcf.DbDef.HtmlGenerator`, `Rdbms.HtmlGenerator`,
-`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator`, `ScreenCapture`, `ImageCompare`, `FileTools` (không phân biệt
+`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator`, `ScreenCapture`, `ImageCompare`, `FileTools`, `MeRon` (không phân biệt
 hoa/thường). Bỏ qua `-Targets` để publish toàn bộ như trước.
 
 Kết quả nằm ở `Application\`:
@@ -198,6 +201,7 @@ Application\
 |-- Modules\ScreenCapture\ScreenCapture.exe
 |-- Modules\ImageCompare\ImageCompare.exe
 |-- Modules\FileTools\FileTools.exe
+|-- Modules\MeRon\MeRon.exe
 `-- Config\modules.json, appsettings.json
 ```
 

@@ -15,6 +15,7 @@
         |-- Modules\ScreenCapture\ScreenCapture.exe
         |-- Modules\ImageCompare\ImageCompare.exe
         |-- Modules\FileTools\FileTools.exe
+        |-- Modules\MeRon\MeRon.exe
         `-- Config\modules.json
 
 .DESCRIPTION
@@ -23,7 +24,7 @@
     MSBuild - is what ties the three executables into one deployable folder.
 
     Use -Targets to publish only a subset (faster than rebuilding everything while iterating on
-    one module). Names are matched case-insensitively; "MainLauncher" and "ModuleA".."FileTools" are
+    one module). Names are matched case-insensitively; "MainLauncher" and "ModuleA".."MeRon" are
     valid. Omit -Targets to publish everything, same as before.
 
 .EXAMPLE
@@ -69,6 +70,7 @@ $allProjects = [ordered]@{
     "ScreenCapture"      = @{ ProjectPath = "Modules\ScreenCapture\ScreenCapture.csproj"; DestSubfolder = "Modules\ScreenCapture" }
     "ImageCompare"      = @{ ProjectPath = "Modules\ImageCompare\ImageCompare.csproj"; DestSubfolder = "Modules\ImageCompare" }
     "FileTools"      = @{ ProjectPath = "Modules\FileTools\FileTools.csproj"; DestSubfolder = "Modules\FileTools" }
+    "MeRon"      = @{ ProjectPath = "Modules\MeRon\MeRon.csproj"; DestSubfolder = "Modules\MeRon" }
 }
 
 function Publish-Project {

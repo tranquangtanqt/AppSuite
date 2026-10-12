@@ -33,7 +33,7 @@ $root = Resolve-Path (Join-Path $PSScriptRoot "..")
 $rid = "win-$($Platform.ToLowerInvariant())"
 $buildProps = @("-p:Configuration=$Configuration", "-p:Platform=$Platform", "-p:RuntimeIdentifier=$rid")
 
-$modules = @("ModuleA", "ModuleB", "ModuleC", "Mcf.DbDef.HtmlGenerator", "Rdbms.HtmlGenerator", "CsvEditor", "Mcf.Screen.HtmlGenerator", "Mcf.CrudDiagram.HtmlGenerator", "ScreenCapture", "ImageCompare", "FileTools")
+$modules = @("ModuleA", "ModuleB", "ModuleC", "Mcf.DbDef.HtmlGenerator", "Rdbms.HtmlGenerator", "CsvEditor", "Mcf.Screen.HtmlGenerator", "Mcf.CrudDiagram.HtmlGenerator", "ScreenCapture", "ImageCompare", "FileTools", "MeRon")
 
 # Modules: force framework-dependent. Some projects (ModuleA/B, ImageCompare) have template
 # Properties\PublishProfiles\win-*.pubxml with SelfContained=true, and the SDK imports that profile on

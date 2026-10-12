@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="MeRon.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="MeRon - quản lý bán hàng">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <!-- Mỗi mục 1 trang; Tag = tên class trang trong MeRon.Views. -->
+    <NavigationView x:Name="Nav" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" PaneDisplayMode="Left"
+                    OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked">
+        <NavigationView.MenuItems>
+            <NavigationViewItemHeader Content="Danh mục" />
+            <NavigationViewItem Content="Khách hàng" Tag="CustomersPage" Icon="People" />
+            <NavigationViewItem Content="Món ăn" Tag="ProductsPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xED56;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Danh mục món ăn" Tag="CategoriesPage" Icon="List" />
+            <NavigationViewItem Content="Địa chỉ" Tag="AddressesPage" Icon="Map" />
+            <NavigationViewItemHeader Content="Dữ liệu" />
+            <NavigationViewItem Content="Nhập dữ liệu" Tag="ImportPage" Icon="Download" />
+        </NavigationView.MenuItems>
+        <NavigationView.FooterMenuItems>
+            <!-- Mở cửa sổ Hướng dẫn, không chuyển trang (SelectsOnInvoked=False → xử lý ở ItemInvoked). -->
+            <NavigationViewItem Content="Hướng dẫn (F1)" Tag="Help" Icon="Help" SelectsOnInvoked="False" />
+        </NavigationView.FooterMenuItems>
+        <NavigationView.KeyboardAccelerators>
+            <KeyboardAccelerator Key="F1" Invoked="F1_Invoked" />
+        </NavigationView.KeyboardAccelerators>
+
+        <Frame x:Name="ContentFrame" />
+    </NavigationView>
+</Window>
