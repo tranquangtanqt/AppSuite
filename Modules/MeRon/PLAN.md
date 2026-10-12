@@ -72,6 +72,37 @@ Thêm ở máy tính (vì điện thoại không bật khoá ngoại, xoá sẽ 
 - Số / tiền luôn định dạng `vi-VN` (`VnFormat`) — Sandbox chạy Windows tiếng Nhật đã lộ lỗi `2,617` khi để theo
   ngôn ngữ máy.
 
+## Đợt 2 — Đặt hàng (2026-10-12)
+
+Port theo `order_local_datasource_impl.dart`, `order_form_notifier.dart`, `order_screen.dart`, `order_detail_screen.dart`.
+
+- **Lõi tách khỏi UI**: `OrderDraft` + `OrderCalculator` (thuần, có unit test) giữ đúng quy tắc tính tiền của điện thoại:
+  dòng khoá khi món còn nguyên và giá hiện tại ≠ đơn giá lúc đặt (dùng đơn giá cũ); món tự do lấy giá tự nhập; Tổng =
+  max(0, Tạm tính − Giảm giá); thông báo lỗi món tự do giữ nguyên văn và chỉ ra dòng / ô để đưa con trỏ tới. Điện thoại
+  áp giá cũ theo *productId* (dòng mới cùng món cũng bị tính giá cũ) — ở đây theo từng dòng.
+- **Sửa lỗi điện thoại có chủ đích**: lọc theo ngày (`substr(deliveryDatetime,1,10)`) thay vì so chuỗi ngày giờ (bỏ sót
+  dạng có dấu cách); sắp theo `julianday` (2 dạng chuỗi không so trực tiếp được); xoá đơn xoá dòng món; Thanh toán toàn
+  bộ không chuyển đơn Huỷ; lưu đơn đã Huỷ giữ Huỷ (điện thoại âm thầm bỏ huỷ).
+- **Không phân trang**: 2.617 đơn thật + 4.394 dòng món tải trong 20 ms → bỏ "Xem thêm"; danh sách dùng `ItemsRepeater`
+  (ảo hoá) với **mỗi thẻ là 1 Button** — chuột, bàn phím, trình đọc màn hình và UI Automation đều mở được (ListView
+  ItemClick không có Invoke, Sandbox chặn chuột giả).
+- **Điều hướng**: form đơn và Chi tiết là trang trong Frame (form nhiều dòng không hợp ContentDialog). Danh sách
+  `NavigationCacheMode=Enabled`: Back giữ bộ lọc, New (từ menu) reset — đúng hành vi điện thoại. Menu xoá back stack;
+  bấm lại mục đang chọn khi ở trang con thì về trang gốc.
+- **Thêm cho desktop**: khoảng ngày nhanh (`DateRanges`), đổi ngày tìm ngay, Chụp ảnh = `RenderTargetBitmap` cả vùng
+  nội dung → clipboard + PNG (Windows giới hạn 4096 px: danh sách rất dài bị thu nhỏ, vẫn đọc được — 38 đơn ≈ 85%).
+- Không làm: thêm món bằng giọng nói (đã thống nhất).
+
+## Kiểm chứng (Đợt 2)
+
+- [x] Unit test 32/32 (+ test backup thật: tải toàn bộ đơn khớp số dòng, mọi ngày giao đọc được, 20 ms)
+- [x] GUI Sandbox `meron_orders.ps1` 36/36 trên dữ liệu thật: số đơn theo trạng thái (2.617 / 177 / 2.439 / 1), lọc khách
+  (38), sắp xếp, dòng khoá (đơn 1), Chi tiết + từ chối thanh toán, Thanh toán toàn bộ, Chụp ảnh (PNG + clipboard, cả phần
+  cuộn), thêm đơn món thường + tự do + giảm giá, lỗi món tự do, cảnh báo trùng đơn (Huỷ / Vẫn lưu), huỷ, xoá, reset bộ lọc
+  từ menu. Đợt 1 chạy lại 37/37. Sửa nhờ ảnh chụp: thông báo lỗi form khuất cuối trang → chuyển cạnh nút Lưu; nút Khoảng
+  ngày bị cắt khi cửa sổ hẹp; vùng Chi tiết rỗng hiện dải xám
+- [ ] Người dùng thử tay Đợt 2
+
 ## Kiểm chứng (Đợt 1)
 
 - [x] Unit test `Tests\MeRon.Tests` 19/19 (+1 test backup thật chạy khi đặt `MERON_REAL_BACKUP`) — 2026-10-12

@@ -12,10 +12,13 @@ Thiết kế và lý do các quyết định: [PLAN.md](PLAN.md).
 - Từ MainLauncher: mục **MeRon** trong Module List (sau `.\build\Sync-Modules-Dev.ps1` khi dev).
 - Module chỉ tham chiếu `Common` + `SharedUI`, không bao giờ tham chiếu MainLauncher; không đọc `modules.json`.
 
-## Chức năng hiện có (Đợt 1)
+## Chức năng hiện có (Đợt 1 + 2)
 
 | Trang | Làm gì |
 |---|---|
+| **Đặt hàng** | Lọc trạng thái (Tất cả / Đã lên đơn / Đã thanh toán / Huỷ), khách (gõ tên / SĐT, không dấu), khoảng ngày giao (+ chọn nhanh Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày); sắp xếp theo thành tiền / ngày giao; dòng tổng "N đơn · Tổng X". Thẻ đơn: khách, trạng thái, ngày giao, các món, ghi chú, Tạm tính / Giảm giá, Tổng; nền xanh = Đã thanh toán, đỏ = Huỷ; mỗi thẻ là 1 nút (chuột, Tab + Enter). Mở từ menu = bộ lọc mặc định (Đã lên đơn, hôm nay); quay lại từ form / Chi tiết = giữ bộ lọc. Ctrl+N thêm đơn, F5 làm mới |
+| **Thêm / sửa đơn** | Khách (điền sẵn khách đang lọc; ngày giao điền sẵn khi Từ = Đến), dòng món thường (chọn món, − / số / +) và **món tự do** (tên + đơn giá), Giảm giá, Tạm tính / Tổng / tổng số lượng tự tính, Ngày giao, Đã thanh toán trước + Ngày thanh toán, Ghi chú. **Dòng đổi giá bị khoá** (giữ đơn giá lúc đặt). Lưu (Ctrl+S) có **Cảnh báo trùng đơn** (khách đã có đơn khác cùng ngày giao, không tính đơn huỷ). Món tự do thiếu tên / đơn giá → báo lỗi cạnh nút Lưu và đưa con trỏ về đúng ô. Huỷ đơn, Xoá đơn (xoá cả dòng món) |
+| **Chi tiết** | Toàn bộ đơn khớp bộ lọc, gộp theo khách + Tổng đơn từng khách; bấm đơn để sửa. **Thanh toán toàn bộ** (từ chối nếu danh sách có đơn đã thanh toán; đơn Huỷ không đổi). **Chụp ảnh**: cả danh sách (kể cả phần phải cuộn; danh sách rất dài thì ảnh thu nhỏ cho vừa 4096 px) → clipboard + `Pictures\MeRon\chi_tiet_don_hang_*.png` |
 | **Nhập dữ liệu** | Chọn thư mục 1 lần backup (vd `20261011_231039`) hoặc thư mục cha (tự lấy thư mục con mới nhất dạng `yyyyMMdd_HHmmss`, bỏ qua `…_bk`). Đọc + kiểm tra cả 8 file trước, bảng xem trước "Sẽ nhập / Đang có"; lỗi (thiếu file, sai tiêu đề, số sai, trùng khoá) báo rõ file + dòng và **không** động tới dữ liệu. **Nhập (thay toàn bộ)** có hỏi xác nhận, ghi trong 1 transaction, trước đó chép database ra `Backups\` |
 | **Khách hàng** | Bảng STT / Tên / Số ĐT / Địa chỉ / Ghi chú; tìm theo tên hoặc SĐT (không phân biệt hoa thường, dấu); thêm / sửa (Địa chỉ gõ tự do hoặc chọn từ danh mục); trùng tên (không phân biệt hoa thường) không cho lưu; xoá trong form sửa, không xoá được khách còn đơn hàng |
 | **Món ăn** | Bảng STT / Tên / Giá / Danh mục / Mô tả; tìm theo tên; thêm / sửa (Danh mục, Tên, Giá bán, Mô tả). Không xoá, không quản lý ảnh (giống điện thoại hiện tại; ảnh có sẵn giữ nguyên khi sửa) |
@@ -23,14 +26,17 @@ Thiết kế và lý do các quyết định: [PLAN.md](PLAN.md).
 | **Địa chỉ** | Bảng Mã / Tên; thêm / sửa (Mã không đổi sau khi tạo); xoá trong form sửa |
 | **Hướng dẫn (F1)** | Cửa sổ hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`), mở đúng mục của trang đang xem; nội dung ở `Core\HelpContent.cs` |
 
-Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu**; có dữ liệu rồi thì vào **Khách hàng**.
+Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu**; có dữ liệu rồi thì vào **Đặt hàng**.
+
+Khác điện thoại có chủ đích (sửa lỗi / hợp desktop): lọc theo **ngày** giao (điện thoại so chuỗi nên bỏ sót đơn lưu dạng
+`yyyy-MM-dd HH:mm:ss` đúng ngày "Từ ngày"); tải hết đơn khớp bộ lọc thay vì "Xem thêm" (2.617 đơn: 20 ms); đổi ngày là
+tìm ngay; xoá đơn xoá cả dòng món; Thanh toán toàn bộ không đổi đơn Huỷ; sửa + Lưu đơn đã Huỷ vẫn giữ Huỷ; số lượng gõ
+thẳng vào ô (thay hộp thoại "Nhập số lượng"); Chụp ảnh = clipboard + file (thay chia sẻ của điện thoại).
 
 Số và tiền luôn hiển thị kiểu Việt Nam (`2.617`, `25.000 đ`) bất kể ngôn ngữ Windows.
 
 ### Chưa làm (theo kế hoạch)
 
-- Đợt 2: **Đặt hàng** (danh sách lọc / sắp xếp, màn Chi tiết gộp theo khách, Thanh toán toàn bộ, tạo / sửa đơn, món tự
-  do, khoá dòng đã đổi giá, cảnh báo trùng đơn, huỷ / xoá đơn).
 - Đợt 3: **Mua hàng** (phiếu nhập) + 4 **báo cáo** (Theo đơn hàng, Theo món ăn, Tổng hợp, Khách hàng tiềm năng).
 - Đợt 4: Xuất TSV (cùng định dạng điện thoại), Xoá toàn bộ dữ liệu.
 - Sau này: lấy backup thẳng từ link Google Drive (chỉ thêm 1 `IBackupSource` mới).
@@ -60,13 +66,16 @@ Modules/MeRon/
 |   |-- Data/Schema.cs           8 bảng + DDL giống điện thoại
 |   |-- Data/MeRonDatabase.cs    Kết nối, tạo bảng, MeRonMeta
 |   |-- Data/MasterDataRepository.cs  Địa chỉ / Danh mục / Khách hàng / Món ăn + quy tắc nghiệp vụ
+|   |-- Data/OrderRepository.cs  Lọc / sắp xếp đơn, lưu đơn + dòng món, trùng đơn, huỷ, xoá, Thanh toán toàn bộ
+|   |-- Orders/OrderDraft.cs     Form đơn + OrderCalculator (khoá dòng đổi giá, món tự do, tổng, kiểm tra)
+|   |-- Models/Orders.cs, DbDate.cs (2 dạng ngày giờ của điện thoại), DateRanges.cs
 |   |-- Import/BackupSource.cs   IBackupSource, LocalFolderBackupSource (thư mục / thư mục cha)
 |   |-- Import/TsvTable.cs       Đọc + kiểm tra 1 file TSV
 |   |-- Import/BackupImporter.cs Prepare (kiểm tra cả bộ) → Apply (thay toàn bộ, bản sao an toàn)
 |   |-- TextSearch.cs, VnFormat.cs, HelpContent.cs
 |-- Services/                AppServices (database dùng chung), AppLog (Logs\meron-*.log cạnh exe), Pickers
-|-- ViewModels/              ImportViewModel, MasterDataViewModels (khung danh sách + 4 trang)
-`-- Views/                   5 trang + Dialogs (form Lưu / Xoá / Huỷ, lỗi hiện trong hộp thoại)
+|-- ViewModels/              ImportViewModel, MasterDataViewModels, OrdersViewModel (+ Chi tiết), OrderFormViewModel, OrderCardViewModel
+`-- Views/                   8 trang + OrderCard (thẻ đơn dùng chung), CustomerSuggest (ô chọn khách), Dialogs
 ```
 
 ## Unit test
@@ -74,7 +83,9 @@ Modules/MeRon/
 `Tests\MeRon.Tests` (xUnit v3, exe tự chạy): `dotnet run --project Tests\MeRon.Tests\MeRon.Tests.csproj`.
 Đọc TSV (rỗng, null, BOM / CRLF, số sai, lệch số ô, trùng khoá, cột lạ / thiếu), chọn thư mục backup (thư mục cha,
 bỏ `_bk`), import (giữ id gốc, thay toàn bộ, bản sao an toàn, bộ lỗi không động tới database, cảnh báo liên kết,
-id mới tiếp sau id lớn nhất), quy tắc danh mục, tìm không dấu, hướng dẫn F1 đủ mọi trang.
+id mới tiếp sau id lớn nhất), quy tắc danh mục, tìm không dấu, hướng dẫn F1 đủ mọi trang; đơn hàng (khoá dòng đổi giá,
+tổng không âm, thông báo lỗi giống điện thoại, trạng thái khi lưu, 2 dạng ngày giờ, lọc ngày / trạng thái / khách, 4
+cách sắp xếp, lưu đơn món thường + tự do, sửa thay dòng món, trùng đơn, Thanh toán toàn bộ, xoá, khoảng ngày nhanh).
 
 Chạy thêm với 1 bộ backup thật (không đưa vào repo): đặt `MERON_REAL_BACKUP=<thư mục>` rồi chạy test
 `RealBackupTests`.

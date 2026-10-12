@@ -20,14 +20,14 @@ public sealed partial class MainWindow : Window
         Nav.SelectedItem = FindItem(StartPage());
     }
 
-    /// <summary>Chưa có dữ liệu (lần đầu mở) → vào thẳng trang Nhập dữ liệu; có rồi → Khách hàng.</summary>
+    /// <summary>Chưa có dữ liệu (lần đầu mở) → vào thẳng trang Nhập dữ liệu; có rồi → Đặt hàng.</summary>
     private static string StartPage()
     {
         try
         {
             return AppServices.Database.Count(Schema.Users.Name) + AppServices.Database.Count(Schema.Orders.Name) == 0
                 ? "ImportPage"
-                : "CustomersPage";
+                : "OrdersPage";
         }
         catch (Exception ex)
         {
@@ -41,11 +41,19 @@ public sealed partial class MainWindow : Window
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
-        if (args.SelectedItem is NavigationViewItem { Tag: string tag }
-            && Type.GetType($"MeRon.Views.{tag}") is { } pageType
-            && ContentFrame.CurrentSourcePageType != pageType)
+        if (args.SelectedItem is NavigationViewItem { Tag: string tag })
+        {
+            NavigateFromMenu(tag);
+        }
+    }
+
+    /// <summary>Mục menu = trang gốc: xoá lịch sử Back (Back chỉ dùng trong 1 luồng, vd Đặt hàng → form đơn → quay lại).</summary>
+    private void NavigateFromMenu(string tag)
+    {
+        if (Type.GetType($"MeRon.Views.{tag}") is { } pageType && ContentFrame.CurrentSourcePageType != pageType)
         {
             ContentFrame.Navigate(pageType);
+            ContentFrame.BackStack.Clear();
         }
     }
 
@@ -56,6 +64,11 @@ public sealed partial class MainWindow : Window
         if (args.InvokedItemContainer is NavigationViewItem { Tag: "Help" })
         {
             OpenHelp();
+        }
+        // Bấm lại mục đang chọn khi đang ở trang con (form đơn, Chi tiết) → về trang gốc của mục đó.
+        else if (args.InvokedItemContainer is NavigationViewItem { Tag: string tag } item && ReferenceEquals(item, sender.SelectedItem))
+        {
+            NavigateFromMenu(tag);
         }
     }
 

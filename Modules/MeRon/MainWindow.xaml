@@ -13,6 +13,12 @@
     <NavigationView x:Name="Nav" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" PaneDisplayMode="Left"
                     OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked">
         <NavigationView.MenuItems>
+            <NavigationViewItemHeader Content="Bán hàng" />
+            <NavigationViewItem Content="Đặt hàng" Tag="OrdersPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE7BF;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItemHeader Content="Danh mục" />
             <NavigationViewItem Content="Khách hàng" Tag="CustomersPage" Icon="People" />
             <NavigationViewItem Content="Món ăn" Tag="ProductsPage">

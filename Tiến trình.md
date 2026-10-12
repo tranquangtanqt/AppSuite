@@ -166,8 +166,12 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   nạp không lỗi; GUI Sandbox 36/36 (sửa: số hiện `2,617` theo ngôn ngữ Windows → luôn `vi-VN`; ô tìm che số mục khi
   cửa sổ hẹp; nhãn Địa chỉ lệch cỡ chữ; thư mục không được nhớ khi bấm Kiểm tra lại) (2026-10-12)
 - [ ] Người dùng thử tay Đợt 1
-- [ ] Đợt 2: Đặt hàng (lọc trạng thái / khách / ngày, sắp xếp, Chi tiết gộp theo khách, Thanh toán toàn bộ, tạo / sửa
-  đơn, món tự do, khoá dòng đã đổi giá, cảnh báo trùng đơn, huỷ / xoá)
+- [x] Đợt 2: **Đặt hàng** (lọc trạng thái / khách / khoảng ngày + chọn nhanh, sắp xếp, thẻ đơn), **Thêm / sửa đơn** (món
+  thường + tự do, khoá dòng đổi giá, giảm giá, đã thanh toán trước, cảnh báo trùng đơn, huỷ / xoá), **Chi tiết** (gộp theo
+  khách, Thanh toán toàn bộ, Chụp ảnh → clipboard + PNG); sửa có chủ đích 4 lỗi của điện thoại (lọc ngày bỏ sót, xoá đơn
+  để lại dòng món, thanh toán cả đơn huỷ, lưu lại đơn huỷ bị bỏ huỷ); unit test 32/32; GUI Sandbox 36/36 + Đợt 1 37/37
+  (2026-10-12)
+- [ ] Người dùng thử tay Đợt 2
 - [ ] Đợt 3: Mua hàng + 4 báo cáo (Theo đơn hàng, Theo món ăn, Tổng hợp, Khách hàng tiềm năng)
 - [ ] Đợt 4: Xuất TSV (định dạng điện thoại), Xoá toàn bộ dữ liệu, rà hướng dẫn / README
 - [ ] Sau này: lấy backup thẳng từ link Google Drive (thêm 1 `IBackupSource`; folder đang để công khai — cân nhắc

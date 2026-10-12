@@ -18,6 +18,8 @@ public static class AppServices
 
     public static MasterDataRepository MasterData { get; } = new(Database);
 
+    public static OrderRepository Orders { get; } = new(Database);
+
     /// <summary>Chạy 1 thao tác ghi; trả về thông báo lỗi cho người dùng hoặc null nếu thành công.</summary>
     public static string? Try(string what, Action action)
     {
@@ -26,7 +28,7 @@ public static class AppServices
             action();
             return null;
         }
-        catch (MeRonValidationException ex)
+        catch (Exception ex) when (ex is MeRonValidationException or Core.Orders.OrderValidationException)
         {
             return ex.Message;
         }
