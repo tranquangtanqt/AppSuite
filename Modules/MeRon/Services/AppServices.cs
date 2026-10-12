@@ -20,6 +20,10 @@ public static class AppServices
 
     public static OrderRepository Orders { get; } = new(Database);
 
+    public static PurchaseRepository Purchases { get; } = new(Database);
+
+    public static Core.Reports.ReportRepository Reports { get; } = new(Database, Orders);
+
     /// <summary>Chạy 1 thao tác ghi; trả về thông báo lỗi cho người dùng hoặc null nếu thành công.</summary>
     public static string? Try(string what, Action action)
     {
@@ -28,7 +32,7 @@ public static class AppServices
             action();
             return null;
         }
-        catch (Exception ex) when (ex is MeRonValidationException or Core.Orders.OrderValidationException)
+        catch (Exception ex) when (ex is MeRonValidationException or Core.Orders.OrderValidationException or PurchaseValidationException)
         {
             return ex.Message;
         }

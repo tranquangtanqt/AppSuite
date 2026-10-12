@@ -19,6 +19,32 @@
                     <FontIcon Glyph="&#xE7BF;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Mua hàng" Tag="PurchasesPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE719;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItemHeader Content="Thống kê" />
+            <NavigationViewItem Content="Theo đơn hàng" Tag="ReportOrderPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE9D2;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Theo món ăn" Tag="ReportProductPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE9F9;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Tổng hợp" Tag="ReportSummaryPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8EF;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
+            <NavigationViewItem Content="Khách hàng tiềm năng" Tag="ReportCustomerPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE734;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItemHeader Content="Danh mục" />
             <NavigationViewItem Content="Khách hàng" Tag="CustomersPage" Icon="People" />
             <NavigationViewItem Content="Món ăn" Tag="ProductsPage">

@@ -15,7 +15,8 @@ public static class HelpContent
 {
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
-        ["OrdersPage", "OrderFormPage", "OrderDetailPage", "ImportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage"];
+        ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage",
+         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "ImportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
     [
@@ -24,7 +25,9 @@ public static class HelpContent
             new("1. Lấy file backup từ điện thoại", "Trên điện thoại: Cài đặt → Sao lưu → Xuất file sao lưu. App lưu 8 file .tsv vào Download/MeRon/<thời gian> và tải lên Google Drive. Chép cả thư mục đó (hoặc tải từ Google Drive) về máy tính."),
             new("2. Nhập vào máy tính", "Mở trang Nhập dữ liệu, bấm Chọn thư mục..., kiểm tra số dòng từng bảng rồi bấm Nhập (thay toàn bộ)."),
             new("3. Đặt hàng", "Trang Đặt hàng: xem / lọc đơn, thêm / sửa đơn, Chi tiết gộp theo khách + Thanh toán toàn bộ."),
-            new("4. Xem / sửa danh mục", "Các trang Khách hàng, Món ăn, Danh mục món ăn, Địa chỉ ở menu bên trái."),
+            new("4. Mua hàng, Thống kê", "Mua hàng: phiếu nhập nguyên liệu theo ngày. Thống kê: Theo đơn hàng, Theo món ăn, Tổng hợp (bán + mua), Khách hàng tiềm năng."),
+            new("5. Xem / sửa danh mục", "Các trang Khách hàng, Món ăn, Danh mục món ăn, Địa chỉ ở menu bên trái."),
+            new("Khoảng ngày", "Mọi trang có Từ ngày – Đến ngày (tính cả 2 ngày) và nút lịch nhỏ để chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Mở trang từ menu thì về hôm nay (như điện thoại); quay lại từ trang con thì giữ nguyên."),
             new("Điện thoại là nơi nhập liệu chính", "Mỗi lần nhập là THAY TOÀN BỘ dữ liệu trên máy tính bằng bản backup - những gì thêm / sửa trên máy tính sẽ mất ở lần nhập sau. Bản cũ luôn được lưu lại trong thư mục Backups trước khi nhập."),
             new("Mở lại hướng dẫn này", "Mục Hướng dẫn cuối menu trái, hoặc phím F1 (mở thẳng phần của trang đang xem).", "F1"),
         ]),
@@ -59,6 +62,47 @@ public static class HelpContent
             new("Sửa đơn", "Bấm vào 1 đơn để mở form sửa; Lưu / Quay lại thì về lại Chi tiết (đã cập nhật).", "Click"),
             new("Thanh toán toàn bộ", "Hiện khi còn đơn Đã lên đơn. Hỏi xác nhận rồi chuyển mọi đơn Đã lên đơn trong danh sách sang Đã thanh toán. Trong danh sách có đơn đã thanh toán từ trước thì từ chối cả lần (tránh thanh toán trùng) - lọc trạng thái Đã lên đơn trước khi mở Chi tiết. Đơn Huỷ không bị đổi."),
             new("Chụp ảnh", "Chụp toàn bộ danh sách (cả phần phải cuộn) → chép vào clipboard để dán (Ctrl+V) vào Zalo / Messenger, và lưu file PNG trong Pictures\\MeRon."),
+        ]),
+
+        new("Mua hàng", "", "Phiếu nhập / mua nguyên liệu theo ngày.", "PurchasesPage",
+        [
+            new("Danh sách", "Phiếu nhập trong khoảng ngày (mặc định hôm nay), mới nhất trước: ngày, các khoản (tên, giá), Tổng. Dòng trên cùng: số phiếu và tổng tiền. Bấm 1 phiếu để sửa.", "Click"),
+            new("Thêm phiếu", "Nút Thêm (Ctrl+N). Đang lọc đúng 1 ngày thì phiếu mới lấy ngày đó, ngược lại là hôm nay.", "Ctrl+N"),
+        ]),
+
+        new("Thêm / sửa phiếu nhập", "", "Ngày nhập + các khoản hàng.", "PurchaseFormPage",
+        [
+            new("Các bước", "Chọn Ngày nhập. Mỗi khoản nhập Tên hàng và Giá tiền; Thêm hàng để thêm dòng, X để xoá dòng. Tổng tự cộng."),
+            new("Lưu", "Nút Lưu hoặc Ctrl+S. Phải có ít nhất 1 khoản, mỗi khoản có tên và giá lớn hơn 0 - thiếu thì báo lỗi cạnh nút Lưu và đưa con trỏ về đúng ô.", "Ctrl+S"),
+            new("Xoá phiếu", "Trong phiếu đang sửa: xoá cả phiếu và mọi khoản bên trong (có hỏi xác nhận)."),
+        ]),
+
+        new("Thống kê theo đơn hàng", "", "Tổng đơn / tiền, theo trạng thái, theo món, theo khách.", "ReportOrderPage",
+        [
+            new("Bộ lọc", "Trạng thái (mặc định Đã lên đơn), khách hàng (tuỳ chọn), khoảng ngày giao."),
+            new("Tổng cộng", "Tổng số đơn và Tổng thành tiền - không tính đơn Huỷ. Bên dưới: số đơn + tiền của từng trạng thái (Huỷ vẫn hiện riêng để biết)."),
+            new("Tổng cộng theo món", "Số lượng + thành tiền từng món (không tính đơn Huỷ), nhiều nhất trước; món tự do gộp theo tên. Tổng số món ở trên bảng."),
+            new("Chi tiết đơn hàng", "Mỗi khách 1 dòng: số đơn, tổng tiền. Sắp xếp: tiền giảm / tăng dần, ngày giao tăng dần (theo đơn sớm nhất của khách) / giảm dần (theo đơn mới nhất). Bấm 1 khách → màn Chi tiết chỉ đơn của khách đó trong đúng bộ lọc này (không đổi bộ lọc trang Đặt hàng).", "Click"),
+        ]),
+
+        new("Thống kê theo món ăn", "", "Món nào bán bao nhiêu.", "ReportProductPage",
+        [
+            new("Bộ lọc", "Món ăn (mặc định tất cả) + khoảng ngày giao. Không tính đơn Huỷ."),
+            new("Kết quả", "Tổng số món; bảng từng món (số lượng, thành tiền) nhiều nhất trước - món tự do mỗi tên 1 dòng (chọn 1 món cụ thể thì không lọc được món tự do)."),
+            new("Đơn hàng liên quan", "Các đơn trong khoảng ngày; chọn 1 món thì chỉ hiện đơn có món đó và chỉ dòng của món đó. Bấm đơn để mở form sửa.", "Click"),
+        ]),
+
+        new("Thống kê tổng hợp", "", "Bán (đơn hàng) và mua (phiếu nhập) trong cùng khoảng ngày.", "ReportSummaryPage",
+        [
+            new("Đơn hàng", "Tổng số đơn, Tổng thành tiền (không tính đơn Huỷ) và bảng theo từng món."),
+            new("Mua hàng", "Tổng số phiếu nhập, Tổng thành tiền và bảng theo từng khoản hàng (gộp theo tên, không phân biệt hoa thường): số lần mua, tổng tiền."),
+            new("Chênh lệch", "Dòng trên cùng: tiền bán − tiền mua của khoảng ngày (âm = mua nhiều hơn bán)."),
+        ]),
+
+        new("Khách hàng tiềm năng", "", "Xếp hạng khách theo tổng tiền đã đặt.", "ReportCustomerPage",
+        [
+            new("Xếp hạng", "Khách đặt nhiều tiền nhất trong khoảng ngày lên đầu (không tính đơn Huỷ), tối đa 100 khách; mỗi dòng: hạng, tên, số đơn, tổng tiền."),
+            new("Xem đơn", "Bấm 1 khách → màn Chi tiết các đơn của khách trong khoảng ngày (mọi trạng thái).", "Click"),
         ]),
 
         new("Nhập dữ liệu", "", "Nạp bộ backup .tsv của điện thoại, thay toàn bộ dữ liệu trên máy này.", "ImportPage",

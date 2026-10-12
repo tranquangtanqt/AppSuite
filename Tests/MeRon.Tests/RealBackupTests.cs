@@ -39,5 +39,25 @@ public class RealBackupTests
         Assert.All(all, o => Assert.NotNull(o.Delivery));
         Assert.True(watch.ElapsedMilliseconds < 2000, $"{watch.ElapsedMilliseconds} ms");
         TestContext.Current.SendDiagnosticMessage($"Tải {all.Count} đơn: {watch.ElapsedMilliseconds} ms; đơn mới nhất {all[0].DeliveryDatetime}");
+
+        // Báo cáo khớp với tự cộng từ danh sách đơn (bỏ đơn huỷ).
+        var reports = new MeRon.Core.Reports.ReportRepository(db, orders);
+        watch.Restart();
+        var report = reports.OrderReport(new MeRon.Core.Models.OrderFilter(null, null, null));
+        var summary = reports.SummaryReport(null, null);
+        var top = reports.TopCustomers(null, null);
+        var products = reports.ProductReport(null, null, null);
+        watch.Stop();
+        var active = all.Where(o => o.Status != MeRon.Core.Models.OrderStatus.Cancelled).ToList();
+        Assert.Equal(active.Count, report.OrderCount);
+        Assert.Equal(active.Sum(o => o.Total), report.Amount);
+        Assert.Equal(active.SelectMany(o => o.Items).Sum(i => i.Quantity), report.Products.Sum(p => p.Quantity));
+        Assert.Equal(active.SelectMany(o => o.Items).Sum(i => i.LineTotal), report.Products.Sum(p => p.Amount));
+        Assert.Equal(report.Amount, summary.OrderAmount);
+        Assert.Equal(all.Count, report.ByStatus.Sum(s => s.Count));
+        Assert.Equal(active.Count, products.Orders.Count);
+        Assert.True(top.Count <= 100);
+        TestContext.Current.SendDiagnosticMessage(
+            $"4 báo cáo: {watch.ElapsedMilliseconds} ms; {report.OrderCount} đơn, {report.Products.Count} món, top 1 = {top[0].Name} {top[0].Amount}");
     }
 }

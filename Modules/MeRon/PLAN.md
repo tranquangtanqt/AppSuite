@@ -72,6 +72,35 @@ Thêm ở máy tính (vì điện thoại không bật khoá ngoại, xoá sẽ 
 - Số / tiền luôn định dạng `vi-VN` (`VnFormat`) — Sandbox chạy Windows tiếng Nhật đã lộ lỗi `2,617` khi để theo
   ngôn ngữ máy.
 
+## Đợt 3 — Mua hàng + 4 báo cáo (2026-10-12)
+
+Port theo `purchase_local_datasource_impl.dart`, `purchase_form_*`, `report_*_notifier.dart`, `report_*_screen.dart`.
+
+- **Báo cáo = truy vấn tổng hợp SQL** (`ReportRepository`) thay vì tải hết đơn rồi cộng như báo cáo Tổng hợp của điện thoại:
+  4 báo cáo trên 2.617 đơn thật chạy 36 ms; test backup thật đối chiếu tổng báo cáo với tự cộng từng đơn.
+- **Đơn Huỷ không tính** vào tổng tiền / số đơn / số món / xếp hạng ở mọi báo cáo — đúng hướng dẫn của điện thoại. Điện
+  thoại lệch ở 2 chỗ (đếm cả đơn huỷ vào "Tổng số đơn"; báo cáo Tổng hợp tính cả đơn huỷ) → sửa có chủ đích. Ô "Huỷ" vẫn
+  hiện riêng số đơn / tiền huỷ để biết.
+- Món gộp theo productId với **tên món hiện tại** (điện thoại lấy MIN(snapshotName) - đổi tên món là tên cũ / mới lẫn
+  lộn); món tự do gộp theo tên. Khoản mua hàng gộp theo tên, bỏ khoảng trắng, không phân biệt hoa thường.
+- Báo cáo Tổng hợp thêm **Chênh lệch (bán − mua)** — 2 con số đã có sẵn trên trang, người dùng hay tự trừ.
+- `DateRangeFilter` + `DateRangeBar`: 1 khoảng ngày dùng chung (mặc định hôm nay như điện thoại, chọn nhanh), báo 1 lần
+  khi đổi. Drill-down từ báo cáo dùng lại màn Chi tiết của Đợt 2 (`OrderDetailArgs(filter)`), không đụng bộ lọc trang Đặt hàng.
+- **Lỗi tìm ra khi test GUI**: SelectorBar trong trang `NavigationCacheMode=Enabled` tự áp lại tab cũ khi trang gắn lại vào
+  cửa sổ (bộ lọc đã về "Đã lên đơn" nhưng tab hiện "Tất cả" và còn ghi đè ngược bộ lọc). Sửa: 2 trang có SelectorBar
+  (Đặt hàng, Theo đơn hàng) không cache, giữ bộ lọc trong 1 ViewModel tĩnh của phiên (Back giữ, New từ menu reset);
+  trang không có SelectorBar vẫn cache. Thông báo lỗi form tự tắt khi người dùng sửa.
+
+## Kiểm chứng (Đợt 3)
+
+- [x] Unit test 38/38 (+ backup thật: 4 báo cáo khớp tự cộng, 36 ms)
+- [x] GUI Sandbox `meron_reports.ps1` 32/32 trên dữ liệu thật: phiếu nhập (lỗi thiếu tên, lỗi tự tắt, 2 khoản = 165.000,
+  sửa còn 120.000); Theo đơn hàng (2.616 đơn / 140.191.000 đ, ô 177 / 1, 18.422 món, lọc khách 38 / 1.785.000, Chi tiết
+  khách, quay lại giữ bộ lọc, sắp xếp); Theo món ăn (18.422, lọc 1 món); Tổng hợp (mọi ngày + chênh lệch 140.071.000,
+  tháng 9: 670 / 33.497.000); Khách hàng tiềm năng (hạng 1 anh Công 4.516.500, 100 khách, Chi tiết); vào lại từ menu reset.
+  Đợt 1 37/37, Đợt 2 36/36 chạy lại đạt
+- [ ] Người dùng thử tay Đợt 3
+
 ## Đợt 2 — Đặt hàng (2026-10-12)
 
 Port theo `order_local_datasource_impl.dart`, `order_form_notifier.dart`, `order_screen.dart`, `order_detail_screen.dart`.

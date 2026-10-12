@@ -2,7 +2,6 @@ using MeRon.Core.Orders;
 using MeRon.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 
 namespace MeRon.Views;
@@ -98,27 +97,10 @@ public sealed partial class OrderFormPage : Page
             OrderLineField.FreePrice => "FreePriceBox",
             _ => "ProductBox",
         };
-        if (LinesList.ContainerFromIndex(index) is DependencyObject container && Find(container, name) is Control control)
+        if (LinesList.ContainerFromIndex(index) is DependencyObject container && Ui.FindByName(container, name) is Control control)
         {
             control.StartBringIntoView();
             control.Focus(FocusState.Programmatic);
         }
-    }
-
-    private static FrameworkElement? Find(DependencyObject parent, string name)
-    {
-        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-        {
-            var child = VisualTreeHelper.GetChild(parent, i);
-            if (child is FrameworkElement { Name: var n } element && n == name)
-            {
-                return element;
-            }
-            if (Find(child, name) is { } found)
-            {
-                return found;
-            }
-        }
-        return null;
     }
 }

@@ -172,7 +172,12 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   để lại dòng món, thanh toán cả đơn huỷ, lưu lại đơn huỷ bị bỏ huỷ); unit test 32/32; GUI Sandbox 36/36 + Đợt 1 37/37
   (2026-10-12)
 - [ ] Người dùng thử tay Đợt 2
-- [ ] Đợt 3: Mua hàng + 4 báo cáo (Theo đơn hàng, Theo món ăn, Tổng hợp, Khách hàng tiềm năng)
+- [x] Đợt 3: **Mua hàng** (phiếu nhập: lọc ngày, thêm / sửa / xoá, kiểm tra từng ô) + 4 **báo cáo** (Theo đơn hàng, Theo
+  món ăn, Tổng hợp + chênh lệch bán − mua, Khách hàng tiềm năng) bằng truy vấn SQL tổng hợp (36 ms trên dữ liệu thật),
+  bấm khách → Chi tiết đơn; khoảng ngày dùng chung + chọn nhanh; không tính đơn Huỷ ở mọi báo cáo (điện thoại lệch 2 chỗ);
+  sửa lỗi tab trạng thái không reset khi vào lại trang (SelectorBar trong trang cache) cho cả Đặt hàng; lỗi form tự tắt
+  khi sửa; unit test 38/38; GUI Sandbox 32/32 + Đợt 1 37/37 + Đợt 2 36/36 (2026-10-12)
+- [ ] Người dùng thử tay Đợt 3
 - [ ] Đợt 4: Xuất TSV (định dạng điện thoại), Xoá toàn bộ dữ liệu, rà hướng dẫn / README
 - [ ] Sau này: lấy backup thẳng từ link Google Drive (thêm 1 `IBackupSource`; folder đang để công khai — cân nhắc
   chuyển sang "Hạn chế" + đăng nhập Google vì có bảng khách hàng / địa chỉ)

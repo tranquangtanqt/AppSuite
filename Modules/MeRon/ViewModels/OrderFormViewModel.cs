@@ -87,6 +87,8 @@ public sealed partial class OrderLineViewModel : ObservableObject
 
     partial void OnFreePriceChanged(double value) => _owner.Recalculate();
 
+    partial void OnFreeNameChanged(string value) => _owner.Error = string.Empty;
+
     public string UnitPriceText => VnFormat.Money(OrderCalculator.UnitPrice(ToDraft(), _owner.ProductMap));
 
     public string LineTotalText => VnFormat.Money(OrderCalculator.LineTotal(ToDraft(), _owner.ProductMap));
@@ -152,6 +154,8 @@ public sealed partial class OrderFormViewModel : ObservableObject
 
     [ObservableProperty]
     private CustomerOption? _customer;
+
+    partial void OnCustomerChanged(CustomerOption? value) => Error = string.Empty;
 
     [ObservableProperty]
     private double _discount;
@@ -222,10 +226,6 @@ public sealed partial class OrderFormViewModel : ObservableObject
             _originalPayment = null;
             Discount = 0;
             Note = string.Empty;
-            if (args.OrderId is not null)
-            {
-                Error = "Không tìm thấy đơn hàng (có thể vừa nhập lại backup) - đang mở form đơn mới.";
-            }
         }
         else
         {
@@ -250,6 +250,10 @@ public sealed partial class OrderFormViewModel : ObservableObject
         }
         OnPropertyChanged(string.Empty);
         Recalculate();
+        if (args.OrderId is not null && Id == 0)
+        {
+            Error = "Không tìm thấy đơn hàng (có thể vừa nhập lại backup) - đang mở form đơn mới.";
+        }
     }
 
     /// <summary>Thêm món: mặc định món đầu tiên trong danh sách (như điện thoại).</summary>
@@ -284,6 +288,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
         SubTotalText = "Tạm tính: " + VnFormat.Money(subTotal);
         TotalText = "Tổng: " + VnFormat.Money(OrderCalculator.Total(subTotal, discount));
         QuantityText = $"Tổng số lượng: {VnFormat.Number(OrderCalculator.TotalQuantity(drafts))} món";
+        Error = string.Empty; // người dùng vừa sửa form - lỗi cũ không còn đúng
     }
 
     /// <summary>Ngày chọn trên lịch; giữ nguyên giờ gốc nếu vẫn là ngày cũ (sửa đơn không làm đổi dữ liệu không liên quan).</summary>

@@ -8,12 +8,15 @@ using Microsoft.UI.Xaml.Navigation;
 namespace MeRon.Views;
 
 /// <summary>
-/// Danh sách đơn. NavigationCacheMode=Enabled: quay lại từ form / Chi tiết (Back) giữ nguyên bộ lọc và chỉ tải lại; vào từ
-/// menu (New) thì bộ lọc về mặc định - như điện thoại.
+/// Danh sách đơn. Bộ lọc giữ trong 1 ViewModel dùng chung cả phiên: quay lại từ form / Chi tiết (Back) giữ nguyên bộ lọc;
+/// vào từ menu (New) thì về mặc định - như điện thoại. Trang KHÔNG cache: SelectorBar trong trang cache tự áp lại tab cũ khi
+/// gắn lại vào cửa sổ (tab hiện "Tất cả" trong khi bộ lọc đã về "Đã lên đơn").
 /// </summary>
 public sealed partial class OrdersPage : Page
 {
-    public OrdersViewModel ViewModel { get; } = new();
+    private static readonly OrdersViewModel Session = new();
+
+    public OrdersViewModel ViewModel => Session;
 
     public OrdersPage()
     {
@@ -31,26 +34,41 @@ public sealed partial class OrdersPage : Page
             item.Click += (_, _) => ViewModel.ApplyRange(range);
             RangeMenu.Items.Add(item);
         }
-        ViewModel.PropertyChanged += (_, e) =>
+    }
+
+    private void OnViewModelChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(OrdersViewModel.Sort))
         {
-            if (e.PropertyName == nameof(OrdersViewModel.Sort))
-            {
-                ShowSort();
-            }
-        };
+            ShowSort();
+        }
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
+        ViewModel.PropertyChanged += OnViewModelChanged;
         if (e.NavigationMode == NavigationMode.New)
         {
             ViewModel.Reset();
         }
         ViewModel.Load();
         CustomerBox.Text = ViewModel.Customer?.Name ?? string.Empty;
+        SyncStatusBar();
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, SyncStatusBar);
+        ShowSort();
+    }
+
+    /// <summary>ViewModel sống cả phiên, trang thì không - gỡ đăng ký để trang cũ không bị giữ lại.</summary>
+    protected override void OnNavigatedFrom(NavigationEventArgs e) => ViewModel.PropertyChanged -= OnViewModelChanged;
+
+    private bool _syncing;
+
+    private void SyncStatusBar()
+    {
+        _syncing = true;
         var tag = ViewModel.Status is { } s ? ((int)s).ToString() : "0";
         StatusBar.SelectedItem = StatusBar.Items.First(i => (string)i.Tag == tag);
-        ShowSort();
+        _syncing = false;
     }
 
     /// <summary>Nút Sắp xếp hiện cách đang chọn (đậm khi khác mặc định, như icon đổi màu của điện thoại).</summary>
@@ -66,6 +84,11 @@ public sealed partial class OrdersPage : Page
 
     private void StatusBar_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
     {
+        // Bỏ qua thay đổi do chính trang đặt, hoặc SelectorBar tự áp lại lúc trang chưa gắn vào cửa sổ.
+        if (_syncing || !IsLoaded)
+        {
+            return;
+        }
         ViewModel.Status = sender.SelectedItem?.Tag is string tag && tag != "0" ? (OrderStatus)int.Parse(tag) : null;
     }
 
@@ -74,7 +97,6 @@ public sealed partial class OrdersPage : Page
         ViewModel.Customer = null;
         CustomerBox.Text = string.Empty;
     }
-
 
     private void Refresh_Click(object sender, RoutedEventArgs e) => ViewModel.Load();
 

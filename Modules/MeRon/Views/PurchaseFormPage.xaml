@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MeRon.Views.PurchaseFormPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MeRon.ViewModels"
+    xmlns:local="using:MeRon.Views">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="24,12,24,16" Spacing="12" MaxWidth="760" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Button Click="Back_Click" AutomationProperties.Name="Quay lại" ToolTipService.ToolTip="Quay lại (không lưu)">
+                        <SymbolIcon Symbol="Back" />
+                    </Button>
+                    <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <CalendarDatePicker Header="Ngày nhập" Date="{x:Bind ViewModel.Date, Mode=TwoWay}" Width="170"
+                                    DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" AutomationProperties.Name="Ngày nhập" />
+
+                <StackPanel Spacing="4">
+                    <Grid ColumnSpacing="8" Opacity="0.75">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="240" />
+                            <ColumnDefinition Width="160" />
+                            <ColumnDefinition Width="40" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Tên hàng" FontWeight="SemiBold" />
+                        <TextBlock Grid.Column="1" Text="Giá tiền" FontWeight="SemiBold" />
+                    </Grid>
+                    <ItemsControl x:Name="LinesList" ItemsSource="{x:Bind ViewModel.Lines}" IsTabStop="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PurchaseLineViewModel">
+                                <Grid ColumnSpacing="8" Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" MinWidth="240" />
+                                        <ColumnDefinition Width="160" />
+                                        <ColumnDefinition Width="40" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="NameBox" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Tên hàng"
+                                             AutomationProperties.Name="Tên hàng" />
+                                    <NumberBox x:Name="PriceBox" Grid.Column="1" Value="{x:Bind Price, Mode=TwoWay}" Minimum="0" PlaceholderText="Giá tiền"
+                                               Loaded="MoneyBox_Loaded" AutomationProperties.Name="Giá tiền" />
+                                    <Button Grid.Column="2" Command="{x:Bind RemoveCommand}" Padding="6" Background="Transparent" BorderThickness="0"
+                                            AutomationProperties.Name="Xoá khoản" ToolTipService.ToolTip="Xoá khoản">
+                                        <SymbolIcon Symbol="Cancel" />
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Grid>
+                        <Button Command="{x:Bind ViewModel.AddLineCommand}" AutomationProperties.Name="Thêm hàng">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <SymbolIcon Symbol="Add" />
+                                <TextBlock Text="Thêm hàng" />
+                            </StackPanel>
+                        </Button>
+                        <Border HorizontalAlignment="Right" Padding="12,6" CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                            <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="16"
+                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" AutomationProperties.AutomationId="PurchaseTotal" />
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="1" Padding="24,10" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Style="{StaticResource AccentButtonStyle}" Click="Save_Click" AutomationProperties.Name="Lưu phiếu" ToolTipService.ToolTip="Lưu (Ctrl+S)">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <SymbolIcon Symbol="Save" />
+                        <TextBlock Text="Lưu" />
+                    </StackPanel>
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Modifiers="Control" Key="S" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+                <Button Content="Quay lại" Click="Back_Click" />
+                <Button Click="Delete_Click" Margin="24,0,0,0" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsEdit), Mode=OneWay}"
+                        AutomationProperties.Name="Xoá phiếu">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <SymbolIcon Symbol="Delete" />
+                        <TextBlock Text="Xoá phiếu" />
+                    </StackPanel>
+                </Button>
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="16,0,0,0" VerticalAlignment="Center"
+                            Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.Error), Mode=OneWay}">
+                    <FontIcon Glyph="&#xEA39;" FontSize="16" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                    <TextBlock Text="{x:Bind ViewModel.Error, Mode=OneWay}" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                               TextWrapping="Wrap" MaxWidth="460" VerticalAlignment="Center" AutomationProperties.AutomationId="FormError" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Page>
