@@ -219,3 +219,70 @@ public class OrderRepositoryTests
         Assert.Equal(1, db.Count("OrderItems")); // còn dòng của đơn 3
     }
 }
+
+public class OrderCopierTests
+{
+    private static readonly Dictionary<long, Product> Products = new()
+    {
+        [1] = new Product(1, 1, "Bánh bao không nhân", null, 5000, null),
+        [2] = new Product(2, 1, "Bánh bao thịt trứng", null, 12000, null), // đơn gốc đặt giá 10.000
+    };
+
+    /// <summary>Đơn gốc đã thanh toán: món giữ giá, món đã đổi giá, món tự do, món không còn trong danh sách (id 9).</summary>
+    private static readonly Order Paid = new(7, 42, "908 Chị Huyền", OrderStatus.Completed,
+        "2026-06-27T14:20:53.242992", "2026-06-28T09:00:00.000", 1000, 49000, 48000, "Giao cổng sau",
+        [
+            new OrderItem(1, 7, 1, "Bánh bao không nhân", 5000, 2, 10000),
+            new OrderItem(2, 7, 2, "Bánh bao thịt trứng", 10000, 1, 10000),
+            new OrderItem(3, 7, null, "Bánh flan", 7000, 3, 21000),
+            new OrderItem(4, 7, 9, "Chè bưởi", 8000, 1, 8000),
+        ]);
+
+    [Fact]
+    public void Copy_is_a_new_unpaid_order_for_the_given_day_keeping_delivery_time()
+    {
+        var draft = OrderCopier.CopyAsNew(Paid, new DateOnly(2026, 10, 13), Products).Draft;
+
+        Assert.Equal(0, draft.Id);
+        Assert.Equal(42, draft.UserId);
+        Assert.Equal(OrderStatus.Shipping, draft.OriginalStatus);
+        Assert.Equal(OrderStatus.Shipping, OrderCalculator.StatusOnSave(draft));
+        Assert.False(draft.IsPrepaid);
+        Assert.Null(draft.Payment);
+        Assert.Equal(new DateTime(2026, 10, 13, 14, 20, 53, 242).AddTicks(9920), draft.Delivery);
+        Assert.Equal(1000, draft.Discount);
+        Assert.Equal("Giao cổng sau", draft.Note);
+    }
+
+    [Fact]
+    public void Copy_uses_current_prices_and_keeps_free_and_missing_items_as_free_lines()
+    {
+        var copy = OrderCopier.CopyAsNew(Paid, new DateOnly(2026, 10, 13), Products);
+        var lines = copy.Draft.Lines;
+
+        Assert.Equal(4, lines.Count);
+        Assert.Equal(new OrderLineDraft(1, 2), lines[0]);
+        Assert.Equal(new OrderLineDraft(2, 1), lines[1]);
+        Assert.False(OrderCalculator.IsLocked(lines[1], Products)); // không khoá giá cũ
+        Assert.Equal(12000, OrderCalculator.UnitPrice(lines[1], Products));
+        Assert.Equal(new OrderLineDraft(null, 3, true, "Bánh flan", 7000), lines[2]);
+        Assert.Equal(new OrderLineDraft(null, 1, true, "Chè bưởi", 8000), lines[3]);
+        Assert.Equal(10000 + 12000 + 21000 + 8000, OrderCalculator.SubTotal(lines, Products));
+        OrderCalculator.Validate(copy.Draft);
+
+        Assert.Equal(2, copy.Notices.Count);
+        Assert.Contains("Bánh bao thịt trứng", copy.Notices[0]);
+        Assert.Contains("12.000", copy.Notices[0]);
+        Assert.Contains("Chè bưởi", copy.Notices[1]);
+    }
+
+    [Fact]
+    public void Copy_of_order_without_delivery_or_changes_has_no_notices()
+    {
+        var plain = Paid with { DeliveryDatetime = null, Items = [new OrderItem(1, 7, 1, "Bánh bao không nhân", 5000, 4, 20000)] };
+        var copy = OrderCopier.CopyAsNew(plain, new DateOnly(2026, 10, 13), Products);
+
+        Assert.Empty(copy.Notices);
+        Assert.Equal(new DateTime(2026, 10, 13), copy.Draft.Delivery);
+    }
+}

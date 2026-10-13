@@ -164,7 +164,16 @@ public sealed partial class OrderFormViewModel : ObservableObject
 
     public OrderStatus OriginalStatus { get; private set; } = OrderStatus.Shipping;
 
-    public string Title => IsEdit ? $"Chỉnh sửa đặt hàng #{Id}" : "Thêm đặt hàng";
+    /// <summary>Đơn mới đang chép từ đơn này (Sao chép đơn); null = không phải bản sao.</summary>
+    public long? CopiedFromId { get; private set; }
+
+    public string Title => IsEdit ? $"Chỉnh sửa đặt hàng #{Id}"
+        : CopiedFromId is { } from ? $"Thêm đặt hàng (sao chép từ đơn #{from})" : "Thêm đặt hàng";
+
+    /// <summary>Báo khi sao chép: giá món đã đổi, món không còn trong danh sách.</summary>
+    public string CopyNotice { get; private set; } = string.Empty;
+
+    public bool HasCopyNotice => CopyNotice.Length > 0;
 
     public string StatusText => IsEdit ? OrderStatusText.Label(OriginalStatus) : string.Empty;
 
@@ -234,8 +243,31 @@ public sealed partial class OrderFormViewModel : ObservableObject
         ProductMap = products.ToDictionary(p => p.Id);
         Products = products.Select(p => new ProductOption(p.Id, p.Name ?? $"#{p.Id}", p.Price ?? 0)).ToList();
         Lines.Clear();
+        CopiedFromId = null;
+        CopyNotice = string.Empty;
 
-        if (args.OrderId is not { } id || _orders.Get(id) is not { } order)
+        if (args.CopyFromId is { } copyId && _orders.Get(copyId) is { } source)
+        {
+            var copy = OrderCopier.CopyAsNew(source, args.InitialDelivery ?? DateOnly.FromDateTime(DateTime.Today), ProductMap);
+            var draft = copy.Draft;
+            Id = 0;
+            CopiedFromId = copyId;
+            OriginalStatus = OrderStatus.Shipping;
+            Customer = Customers.FirstOrDefault(c => c.Id == draft.UserId);
+            _originalDelivery = draft.Delivery;
+            DeliveryDate = new DateTimeOffset(_originalDelivery.Date);
+            IsPrepaid = false;
+            PaymentDate = null;
+            _originalPayment = null;
+            Discount = draft.Discount;
+            Note = draft.Note ?? string.Empty;
+            foreach (var line in draft.Lines)
+            {
+                Lines.Add(new OrderLineViewModel(this, line));
+            }
+            CopyNotice = copy.Notices.Count == 0 ? string.Empty : "Khác đơn gốc: " + string.Join("; ", copy.Notices) + ".";
+        }
+        else if (args.OrderId is not { } id || _orders.Get(id) is not { } order)
         {
             Id = 0;
             OriginalStatus = OrderStatus.Shipping;
@@ -271,7 +303,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
         }
         OnPropertyChanged(string.Empty);
         Recalculate();
-        if (args.OrderId is not null && Id == 0)
+        if ((args.OrderId ?? args.CopyFromId) is not null && Id == 0 && CopiedFromId is null)
         {
             Error = "Không tìm thấy đơn hàng (có thể vừa nhập lại backup) - đang mở form đơn mới.";
         }

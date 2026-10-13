@@ -31,6 +31,48 @@ public sealed record OrderDraft(
     string? Note,
     IReadOnlyList<OrderLineDraft> Lines);
 
+/// <summary>Bản nháp đơn mới chép từ 1 đơn cũ + các điều cần báo người dùng (giá đổi, món không còn).</summary>
+public sealed record OrderCopy(OrderDraft Draft, IReadOnlyList<string> Notices);
+
+/// <summary>
+/// Nhân bản đơn (khách quen đặt lặp lại): chép khách, các món + số lượng, món tự do, giảm giá, ghi chú. Đơn mới luôn là
+/// Đã lên đơn, chưa thanh toán; ngày giao = <c>deliveryDay</c> với giờ giao của đơn gốc; món thường tính giá hiện tại
+/// (không khoá giá cũ); món không còn trong danh sách chép thành món tự do với tên + đơn giá lúc đặt.
+/// </summary>
+public static class OrderCopier
+{
+    public static OrderCopy CopyAsNew(Order source, DateOnly deliveryDay, IReadOnlyDictionary<long, Product> products)
+    {
+        var notices = new List<string>();
+        var lines = new List<OrderLineDraft>();
+        foreach (var item in source.Items)
+        {
+            if (item.ProductId is { } productId && products.TryGetValue(productId, out var product))
+            {
+                lines.Add(new OrderLineDraft(productId, item.Quantity));
+                var price = product.Price ?? 0;
+                if (price != item.SnapshotPrice)
+                {
+                    notices.Add($"{product.Name}: {VnFormat.Money(item.SnapshotPrice)} → {VnFormat.Money(price)} (giá hiện tại)");
+                }
+            }
+            else
+            {
+                lines.Add(new OrderLineDraft(null, item.Quantity, true, item.SnapshotName, item.SnapshotPrice));
+                if (item.ProductId is not null)
+                {
+                    notices.Add($"Món \"{item.SnapshotName}\" không còn trong danh sách - chép thành món tự do");
+                }
+            }
+        }
+
+        var time = source.Delivery is { } d ? TimeOnly.FromDateTime(d) : TimeOnly.MinValue;
+        var draft = new OrderDraft(0, source.UserId, OrderStatus.Shipping, deliveryDay.ToDateTime(time), false, null,
+            source.DiscountValue, source.Note, lines);
+        return new OrderCopy(draft, notices);
+    }
+}
+
 /// <summary>Lỗi ở 1 dòng món tự do - form đưa con trỏ về đúng ô (như điện thoại).</summary>
 public enum OrderLineField
 {

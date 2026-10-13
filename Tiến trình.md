@@ -209,6 +209,16 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   quay lại từ Chi tiết / form thì bộ lọc trạng thái tự về "Tất cả". Bỏ cache 2 trang này; chống COMException tận gốc: rời
   trang thì gỡ x:Bind (Bindings.StopTracking) + ItemsSource danh sách. Bộ lọc vẫn giữ (ViewModel cả phiên). Unit test 58/58;
   GUI Sandbox Đặt hàng 36/36 (chạy 3 lần), giữ bộ lọc 16/16, báo cáo 32/32 (2026-10-13)
+- [x] Sao chép đơn (khách quen đặt lặp lại): chuột phải thẻ đơn (Đặt hàng / Chi tiết / Theo món ăn, cả Shift+F10) hoặc
+  nút "Sao chép đơn" trong form sửa → form Thêm đặt hàng điền sẵn khách, món + số lượng, món tự do, giảm giá, ghi chú;
+  giao hôm nay (giữ giờ giao gốc), Đã lên đơn, chưa thanh toán, giá hiện tại (báo ở đầu form khi giá đổi; món không còn →
+  món tự do); chưa lưu đến khi bấm Lưu, Lưu về thẳng danh sách. Unit test 61/61; GUI Sandbox `meron_copy.ps1` 21/21 +
+  Đặt hàng 36/36 (2026-10-13)
+- [ ] Người dùng thử tay Sao chép đơn
+- [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
+  mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
+- [ ] App điện thoại me-ron: 17 điểm nên cải thiện (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật
+  Drive) ghi ở `Modules/MeRon/MOBILE_TODO.md` (2026-10-13)
 
 ## MainLauncher
 

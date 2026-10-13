@@ -78,6 +78,20 @@ public sealed partial class OrderFormPage : Page
         }
     }
 
+    /// <summary>
+    /// Mở form đơn mới chép từ đơn đang mở (chỗ sửa chưa lưu không được chép, chép theo dữ liệu đã lưu). Form bản sao thay chỗ
+    /// form này trong lịch sử: Lưu / Quay lại về thẳng danh sách.
+    /// </summary>
+    private void CopyOrder_Click(object sender, RoutedEventArgs e)
+    {
+        var id = ViewModel.Id;
+        Frame.Navigate(typeof(OrderFormPage), new OrderFormArgs(null, CopyFromId: id));
+        if (Frame.BackStack.Count > 0 && Frame.BackStack[^1].SourcePageType == typeof(OrderFormPage))
+        {
+            Frame.BackStack.RemoveAt(Frame.BackStack.Count - 1);
+        }
+    }
+
     private async void CancelOrder_Click(object sender, RoutedEventArgs e)
     {
         if (await Dialogs.ConfirmAsync(XamlRoot, "Huỷ đơn?", "Bạn có chắc chắn muốn huỷ đơn? Đơn vẫn được giữ lại để tra cứu, không tính vào báo cáo.", "Huỷ đơn")
