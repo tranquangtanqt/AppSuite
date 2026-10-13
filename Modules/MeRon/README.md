@@ -15,7 +15,8 @@ Thiết kế và lý do các quyết định: [PLAN.md](PLAN.md).
 ## Quy trình dùng
 
 1. Điện thoại: Cài đặt → Sao lưu → **Xuất file sao lưu** (lưu `Download/MeRon/<thời gian>` + tải lên Google Drive).
-2. Chép thư mục đó (hoặc tải folder từ Google Drive) về máy → MeRon **Nhập dữ liệu** → chọn thư mục (hoặc thư mục cha).
+2. MeRon **Nhập dữ liệu** → chọn thư mục đã chép về máy (hoặc thư mục cha), **hoặc dán link folder Google Drive** rồi Enter:
+   app tự tải bản mới nhất (không cần đăng nhập; folder phải chia sẻ "Bất kỳ ai có đường liên kết").
 3. Xem / lọc đơn, báo cáo; sửa nhỏ trên máy tính nếu cần.
 4. Muốn đưa phần sửa trên máy tính về điện thoại: **Xuất / Xoá dữ liệu** → Xuất TSV → chép sang điện thoại → Cài đặt →
    Sao lưu → Nhập dữ liệu từ tệp sao lưu (từng bảng).
@@ -58,7 +59,12 @@ luôn hiển thị kiểu Việt Nam (`2.617`, `25.000 đ`) bất kể ngôn ng�
   chú cũng thành dấu cách (điện thoại đọc bằng `readAsLines`, `\r` sẽ cắt đôi dòng). Còn lại giống từng byte.
 
 Không làm (riêng của điện thoại / đang ẩn trên điện thoại): giỏ hàng POS + Giao dịch, in hoá đơn, thêm món bằng giọng
-nói, đồng bộ Firestore, lịch tự sao lưu, ảnh món ăn. Để sau: lấy backup thẳng từ link Google Drive (thêm 1 `IBackupSource`).
+nói, đồng bộ Firestore, lịch tự sao lưu, ảnh món ăn.
+
+Google Drive (2026-10-13): đọc folder công khai qua trang `embeddedfolderview` của Google (không phải API chính thức,
+không cần khoá API / đăng nhập), tải file bằng `uc?export=download` về `%TEMP%\AppSuite\MeRon\GoogleDrive\<bản>` rồi nạp
+như thư mục trên máy. Google đổi trang thì báo lỗi rõ, vẫn nhập từ thư mục được. Để sau: đăng nhập Google (OAuth, Drive
+API) để folder không phải để công khai - chỉ thêm 1 `IBackupSource` nữa.
 
 ## Dữ liệu
 
@@ -89,6 +95,7 @@ Modules/MeRon/
 |   |-- Orders/OrderDraft.cs     Form đơn + OrderCalculator (khoá dòng đổi giá, món tự do, tổng, kiểm tra)
 |   |-- Reports/ReportRepository.cs  4 báo cáo bằng truy vấn tổng hợp SQL (bỏ đơn Huỷ)
 |   |-- Import/BackupSource.cs   IBackupSource, LocalFolderBackupSource (thư mục / thư mục cha)
+|   |-- Import/GoogleDriveBackupSource.cs  Link folder Drive công khai → bản mới nhất → tải 8 file về thư mục tạm
 |   |-- Import/TsvTable.cs       Đọc + kiểm tra 1 file TSV
 |   |-- Import/BackupImporter.cs Prepare (kiểm tra cả bộ) → Apply (thay toàn bộ, bản sao an toàn)
 |   |-- Import/BackupExporter.cs Xuất 8 bảng đúng định dạng điện thoại (ghi thư mục .partial rồi đổi tên)

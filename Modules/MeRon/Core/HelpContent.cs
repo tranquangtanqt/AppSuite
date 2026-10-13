@@ -22,8 +22,8 @@ public static class HelpContent
     [
         new("Bắt đầu nhanh", "", "MeRon bản máy tính: xem và quản lý dữ liệu bán hàng của app điện thoại me-ron (khách hàng, món ăn, đơn hàng...). Dữ liệu lấy từ file backup .tsv mà điện thoại xuất ra.", null,
         [
-            new("1. Lấy file backup từ điện thoại", "Trên điện thoại: Cài đặt → Sao lưu → Xuất file sao lưu. App lưu 8 file .tsv vào Download/MeRon/<thời gian> và tải lên Google Drive. Chép cả thư mục đó (hoặc tải từ Google Drive) về máy tính."),
-            new("2. Nhập vào máy tính", "Mở trang Nhập dữ liệu, bấm Chọn thư mục..., kiểm tra số dòng từng bảng rồi bấm Nhập (thay toàn bộ)."),
+            new("1. Lấy file backup từ điện thoại", "Trên điện thoại: Cài đặt → Sao lưu → Xuất file sao lưu. App lưu 8 file .tsv vào Download/MeRon/<thời gian> và tải lên Google Drive. Chép cả thư mục đó về máy tính, hoặc dùng thẳng link folder Google Drive."),
+            new("2. Nhập vào máy tính", "Mở trang Nhập dữ liệu, bấm Chọn thư mục... (hoặc dán link folder Google Drive rồi Enter), kiểm tra số dòng từng bảng rồi bấm Nhập (thay toàn bộ)."),
             new("3. Đặt hàng", "Trang Đặt hàng: xem / lọc đơn, thêm / sửa đơn, Chi tiết gộp theo khách + Thanh toán toàn bộ."),
             new("4. Mua hàng, Thống kê", "Mua hàng: phiếu nhập nguyên liệu theo ngày. Thống kê: Theo đơn hàng, Theo món ăn, Tổng hợp (bán + mua), Khách hàng tiềm năng."),
             new("5. Xem / sửa danh mục", "Các trang Khách hàng, Món ăn, Danh mục món ăn, Địa chỉ ở menu bên trái."),
@@ -108,11 +108,12 @@ public static class HelpContent
         new("Nhập dữ liệu", "", "Nạp bộ backup .tsv của điện thoại, thay toàn bộ dữ liệu trên máy này.", "ImportPage",
         [
             new("Chọn thư mục", "Chọn chính thư mục 1 lần backup (vd 20261011_231039 - chứa address_….tsv, users_….tsv, orders_….tsv...), hoặc thư mục cha chứa nhiều lần backup: app tự lấy thư mục con mới nhất có tên dạng yyyyMMdd_HHmmss (bỏ qua bản phụ như …_bk). Có thể dán đường dẫn vào ô rồi Enter.", "Enter"),
+            new("Lấy thẳng từ Google Drive", "Dán link folder Google Drive vào ô (vd https://drive.google.com/drive/folders/…) rồi Enter / Kiểm tra lại - không cần đăng nhập. Link là folder cha điện thoại tải backup lên thì app tự lấy folder con mới nhất dạng yyyyMMdd_HHmmss, tải 8 file .tsv về thư mục tạm rồi kiểm tra như thư mục trên máy; đang tải bấm Huỷ được. Folder phải chia sẻ \"Bất kỳ ai có đường liên kết\" (lưu ý: ai có link đều xem được dữ liệu khách hàng). App nhớ link cho lần sau.", "Enter"),
             new("Kiểm tra trước, chưa ghi gì", "Chọn xong app đọc + kiểm tra cả 8 file: thiếu file, sai dòng tiêu đề, số sai, trùng mã... đều báo rõ file nào, dòng nào - khi đó dữ liệu hiện tại không bị động tới. Bảng xem trước cho biết mỗi bảng sẽ nhập bao nhiêu dòng và đang có bao nhiêu."),
             new("Lưu ý (vẫn nhập được)", "Cột lạ trong file (điện thoại bản mới hơn) bị bỏ qua; đơn hàng trỏ tới khách hàng / món ăn không có trong file... được nhập nguyên văn và liệt kê để bạn biết."),
             new("Nhập (thay toàn bộ)", "Hỏi xác nhận rồi xoá dữ liệu cũ của 8 bảng và nạp dữ liệu mới - trong 1 lần ghi duy nhất: lỗi giữa chừng thì dữ liệu giữ nguyên như trước."),
             new("Lấy lại dữ liệu cũ", "Trước mỗi lần nhập, database hiện tại được chép sang thư mục Backups cạnh file database (me_ron_truoc-import_<thời gian>.db, giữ 10 bản gần nhất). Đường dẫn database hiện ở cuối trang."),
-            new("Kiểm tra lại", "Đọc lại thư mục - dùng khi vừa chép thêm bản backup mới vào thư mục cha."),
+            new("Kiểm tra lại", "Đọc lại thư mục / folder Google Drive - dùng khi vừa có bản backup mới."),
             new("File rỗng", "Bảng không có dữ liệu thì điện thoại xuất file rỗng (vd chưa có phiếu nhập nào) - nhập bình thường thành bảng trống."),
         ]),
 

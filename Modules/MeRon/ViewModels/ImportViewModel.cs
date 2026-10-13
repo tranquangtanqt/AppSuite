@@ -14,14 +14,21 @@ namespace MeRon.ViewModels;
 public sealed record ImportTableRow(string Title, string FileName, string FileRows, string CurrentRows);
 
 /// <summary>
-/// Trang Nhập dữ liệu: chọn thư mục → tự đọc + kiểm tra cả bộ backup (chưa ghi gì) → xem trước số dòng từng bảng →
-/// Nhập (thay toàn bộ). Phần nạp nằm ở Core (<see cref="BackupImporter"/>); trang này chỉ lấy file qua
-/// <see cref="IBackupSource"/> nên thêm nguồn Google Drive sau này không đổi luồng.
+/// Trang Nhập dữ liệu: chọn thư mục (hoặc dán link folder Google Drive) → tự đọc + kiểm tra cả bộ backup (chưa ghi gì)
+/// → xem trước số dòng từng bảng → Nhập (thay toàn bộ). Phần nạp nằm ở Core (<see cref="BackupImporter"/>); trang này
+/// chỉ lấy file qua <see cref="IBackupSource"/> (thư mục trên máy hoặc Google Drive).
 /// </summary>
 public sealed partial class ImportViewModel : ObservableObject
 {
+    /// <summary>Dùng chung cho cả app (1 HttpClient / tiến trình). Hết 60 giây không trả lời → báo lỗi mạng.</summary>
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(60) };
+
+    /// <summary>Bản tải từ Google Drive: %TEMP%\AppSuite\MeRon\GoogleDrive\&lt;tên bản&gt; (tải lại thì ghi đè).</summary>
+    private static readonly string DriveDownloadRoot = Path.Combine(Path.GetTempPath(), "AppSuite", "MeRon", "GoogleDrive");
+
     private readonly MeRonDatabase _database = AppServices.Database;
     private ImportPlan? _plan;
+    private CancellationTokenSource? _cancel;
 
     public ImportViewModel()
     {
@@ -40,6 +47,10 @@ public sealed partial class ImportViewModel : ObservableObject
     /// <summary>Tên bản backup sẽ nạp (vd 20261011_231039) + thư mục của nó.</summary>
     [ObservableProperty]
     private string _backupTitle = string.Empty;
+
+    /// <summary>Đang tải từ Google Drive → hiện nút Huỷ.</summary>
+    [ObservableProperty]
+    private bool _isDownloading;
 
     [ObservableProperty]
     private string _status = string.Empty;
@@ -85,21 +96,34 @@ public sealed partial class ImportViewModel : ObservableObject
 
     private bool CanCheck() => !IsBusy && !string.IsNullOrWhiteSpace(FolderPath);
 
-    /// <summary>Đọc + kiểm tra cả bộ backup, chưa ghi gì vào database.</summary>
+    /// <summary>Đọc + kiểm tra cả bộ backup, chưa ghi gì vào database. Ô thư mục là link folder Google Drive → tải về
+    /// thư mục tạm trước (<see cref="GoogleDriveBackupSource"/>).</summary>
     [RelayCommand(CanExecute = nameof(CanCheck))]
     private async Task CheckAsync()
     {
         IsBusy = true;
         ClearPlan();
         Status = "Đang đọc file backup...";
+        using var cancel = new CancellationTokenSource();
+        _cancel = cancel;
         try
         {
             var folder = FolderPath.Trim().Trim('"');
-            var backup = await new LocalFolderBackupSource(folder).GetLatestAsync();
-            // Tìm được backup → nhớ thư mục (cả khi là thư mục cha) cho lần mở sau.
+            var source = GoogleDriveBackupSource.ParseFolderId(folder) is { } driveId
+                ? new GoogleDriveBackupSource(driveId, DriveDownloadRoot, Http, new Progress<string>(s => Status = s))
+                : (IBackupSource)new LocalFolderBackupSource(folder);
+            IsDownloading = source is GoogleDriveBackupSource;
+            var backup = await source.GetLatestAsync(cancel.Token);
+            IsDownloading = false;
+            // Tìm được backup → nhớ thư mục / link (cả khi là thư mục cha) cho lần mở sau.
             _database.SetMeta(MeRonDatabase.MetaKeys.LastPickedFolder, folder);
+            Status = "Đang kiểm tra file backup...";
             var plan = await Task.Run(() => BackupImporter.Prepare(backup));
             ShowPlan(plan);
+        }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested)
+        {
+            Status = "Đã huỷ tải từ Google Drive. Dữ liệu hiện tại không bị động tới.";
         }
         catch (BackupSourceException ex)
         {
@@ -112,9 +136,15 @@ public sealed partial class ImportViewModel : ObservableObject
         }
         finally
         {
+            _cancel = null;
+            IsDownloading = false;
             IsBusy = false;
         }
     }
+
+    /// <summary>Huỷ lúc đang tải từ Google Drive (đọc thư mục trên máy thì nhanh, không cần).</summary>
+    [RelayCommand]
+    private void Cancel() => _cancel?.Cancel();
 
     private void ShowPlan(ImportPlan plan)
     {

@@ -183,8 +183,13 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   lần, bản sao `truoc-xoa` trước); rà soát tài liệu (README viết lại theo menu + quy trình dùng, PLAN, F1 16 mục, README
   gốc, modules.json); unit test 43/43; GUI Sandbox 15/15 + Đợt 1–3 chạy lại đạt (2026-10-12)
 - [ ] Người dùng thử tay Đợt 4 + nhập thử bộ xuất từ máy tính trên điện thoại thật
-- [ ] Sau này: lấy backup thẳng từ link Google Drive (thêm 1 `IBackupSource`; folder đang để công khai — cân nhắc
-  chuyển sang "Hạn chế" + đăng nhập Google vì có bảng khách hàng / địa chỉ)
+- [x] Lấy backup thẳng từ link folder Google Drive công khai, không cần đăng nhập (`GoogleDriveBackupSource`: dán link
+  vào ô thư mục → folder con mới nhất → tải 8 file về `%TEMP%\AppSuite\MeRon\GoogleDrive` → kiểm tra / nhập như cũ; nút
+  Huỷ, nhớ link, báo lỗi rõ khi link sai / chưa chia sẻ / mất mạng); unit test 57/57 + tải thật từ folder Drive của
+  điện thoại đạt; GUI Sandbox 17/17 (Drive giả `MERON_DRIVE_BASE_URL` vì Sandbox không ra Internet) (2026-10-13)
+- [ ] Người dùng thử tay: dán link folder Drive → Kiểm tra lại → Nhập
+- [ ] Sau này: đăng nhập Google (OAuth + Drive API, Client ID loại Desktop trong project `me-ron`) để chuyển folder
+  sang "Hạn chế" — folder đang công khai mà có bảng khách hàng / địa chỉ
 
 ## MainLauncher
 

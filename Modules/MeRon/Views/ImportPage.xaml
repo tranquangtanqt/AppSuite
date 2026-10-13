@@ -10,7 +10,7 @@
         <StackPanel Padding="24,12,24,24" Spacing="14" MaxWidth="1000" HorizontalAlignment="Left">
             <TextBlock Text="Nhập dữ liệu từ backup của điện thoại" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock TextWrapping="Wrap" Opacity="0.8"
-                       Text="Chọn thư mục 1 lần backup (vd 20261011_231039, chứa các file orders_….tsv, users_….tsv…) hoặc thư mục cha chứa nhiều lần backup - khi đó tự lấy bản mới nhất. Nhập sẽ THAY TOÀN BỘ dữ liệu trên máy này." />
+                       Text="Chọn thư mục 1 lần backup (vd 20261011_231039, chứa các file orders_….tsv, users_….tsv…) hoặc thư mục cha chứa nhiều lần backup - khi đó tự lấy bản mới nhất. Cũng có thể dán link folder Google Drive (chia sẻ &quot;Bất kỳ ai có đường liên kết&quot;) rồi Enter: app tự tải bản mới nhất về. Nhập sẽ THAY TOÀN BỘ dữ liệu trên máy này." />
 
             <!-- 1. Chọn thư mục -->
             <Grid ColumnSpacing="8">
@@ -19,14 +19,22 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBox Text="{x:Bind ViewModel.FolderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Thư mục backup"
+                <TextBox Text="{x:Bind ViewModel.FolderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Thư mục backup, hoặc link folder Google Drive"
                          AutomationProperties.Name="Thư mục backup" AutomationProperties.AutomationId="FolderBox" KeyDown="Folder_KeyDown" />
                 <Button Grid.Column="1" Content="Chọn thư mục..." Click="Pick_Click" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}" />
                 <Button Grid.Column="2" Content="Kiểm tra lại" Command="{x:Bind ViewModel.CheckCommand}"
-                        ToolTipService.ToolTip="Đọc lại thư mục (vd vừa chép thêm bản backup mới vào thư mục cha)" />
+                        ToolTipService.ToolTip="Đọc lại thư mục / folder Google Drive (vd điện thoại vừa tải lên bản backup mới)" />
             </Grid>
 
-            <ProgressBar IsIndeterminate="True" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsBusy), Mode=OneWay}" />
+            <Grid ColumnSpacing="12" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsBusy), Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ProgressBar IsIndeterminate="True" VerticalAlignment="Center" />
+                <Button Grid.Column="1" Content="Huỷ" Command="{x:Bind ViewModel.CancelCommand}" AutomationProperties.AutomationId="CancelDownload"
+                        Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsDownloading), Mode=OneWay}" />
+            </Grid>
             <TextBlock Text="{x:Bind ViewModel.Status, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
                        AutomationProperties.AutomationId="ImportStatus" />
 
