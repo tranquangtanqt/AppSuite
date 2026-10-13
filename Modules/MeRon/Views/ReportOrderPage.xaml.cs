@@ -7,7 +7,7 @@ using Microsoft.UI.Xaml.Navigation;
 namespace MeRon.Views;
 
 /// <summary>
-/// Thống kê theo đơn hàng. Vào từ menu = bộ lọc mặc định; quay lại từ Chi tiết = giữ bộ lọc (ViewModel dùng chung cả phiên,
+/// Thống kê theo đơn hàng. Bộ lọc mặc định chỉ ở lần đầu mở trong phiên, sau đó luôn giữ (ViewModel dùng chung cả phiên,
 /// trang không cache - cùng lý do với OrdersPage: SelectorBar trong trang cache áp lại tab cũ).
 /// </summary>
 public sealed partial class ReportOrderPage : Page
@@ -47,6 +47,14 @@ public sealed partial class ReportOrderPage : Page
         SyncStatusBar();
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, SyncStatusBar);
         ShowSort();
+    }
+
+    /// <summary>ViewModel sống cả phiên, trang thì không - gỡ mọi chỗ nghe ViewModel (cùng lý do với OrdersPage).</summary>
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        Bindings.StopTracking();
+        TilesList.ItemsSource = null;
+        RowsList.ItemsSource = null;
     }
 
     private bool _syncing;

@@ -205,6 +205,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   có lúc không): ViewModel dùng chung cả phiên nhưng trang Đặt hàng / Theo đơn hàng không cache → trang cũ đã gỡ vẫn
   nghe danh sách đơn, ném COMException khi danh sách đổi → cache 2 trang này (1 trang duy nhất), Frame CacheSize 20
   (2026-10-13)
+- [x] Sửa lỗi do cách sửa trên: cache trang Đặt hàng / Theo đơn hàng làm SelectorBar tự áp lại tab cũ (lúc có lúc không) →
+  quay lại từ Chi tiết / form thì bộ lọc trạng thái tự về "Tất cả". Bỏ cache 2 trang này; chống COMException tận gốc: rời
+  trang thì gỡ x:Bind (Bindings.StopTracking) + ItemsSource danh sách. Bộ lọc vẫn giữ (ViewModel cả phiên). Unit test 58/58;
+  GUI Sandbox Đặt hàng 36/36 (chạy 3 lần), giữ bộ lọc 16/16, báo cáo 32/32 (2026-10-13)
 
 ## MainLauncher
 

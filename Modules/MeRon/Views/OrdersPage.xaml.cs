@@ -9,8 +9,8 @@ namespace MeRon.Views;
 
 /// <summary>
 /// Danh sách đơn. Bộ lọc giữ trong 1 ViewModel dùng chung cả phiên: quay lại từ form / Chi tiết (Back) giữ nguyên bộ lọc;
-/// vào từ menu (New) thì về mặc định - như điện thoại. Trang KHÔNG cache: SelectorBar trong trang cache tự áp lại tab cũ khi
-/// gắn lại vào cửa sổ (tab hiện "Tất cả" trong khi bộ lọc đã về "Đã lên đơn").
+/// vào lại từ menu cũng giữ (mặc định chỉ ở lần đầu mở trong phiên). Trang KHÔNG cache: SelectorBar trong trang cache tự áp lại
+/// tab cũ khi gắn lại vào cửa sổ, lúc có lúc không (quay lại từ Chi tiết thì bộ lọc tự về "Tất cả").
 /// </summary>
 public sealed partial class OrdersPage : Page
 {
@@ -62,8 +62,16 @@ public sealed partial class OrdersPage : Page
         ShowSort();
     }
 
-    /// <summary>ViewModel sống cả phiên, trang thì không - gỡ đăng ký để trang cũ không bị giữ lại.</summary>
-    protected override void OnNavigatedFrom(NavigationEventArgs e) => ViewModel.PropertyChanged -= OnViewModelChanged;
+    /// <summary>
+    /// ViewModel sống cả phiên, trang thì không - gỡ mọi chỗ nghe ViewModel (x:Bind, danh sách thẻ): trang cũ đã gỡ khỏi cửa sổ
+    /// mà còn nghe Cards thì ném COMException "Unspecified error" khi danh sách đổi.
+    /// </summary>
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        ViewModel.PropertyChanged -= OnViewModelChanged;
+        Bindings.StopTracking();
+        CardsRepeater.ItemsSource = null;
+    }
 
     private bool _syncing;
 

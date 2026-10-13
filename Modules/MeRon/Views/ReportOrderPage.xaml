@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Page
     x:Class="MeRon.Views.ReportOrderPage"
-    NavigationCacheMode="Enabled"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:MeRon.ViewModels"
@@ -66,7 +65,7 @@
                             </StackPanel>
                         </Border>
                     </StackPanel>
-                    <ItemsControl ItemsSource="{x:Bind ViewModel.StatusTiles}" IsTabStop="False">
+                    <ItemsControl x:Name="TilesList" ItemsSource="{x:Bind ViewModel.StatusTiles}" IsTabStop="False">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <StackPanel Orientation="Horizontal" Spacing="10" />
@@ -111,7 +110,7 @@
                             </DropDownButton.Flyout>
                         </DropDownButton>
                     </StackPanel>
-                    <ItemsControl ItemsSource="{x:Bind ViewModel.CustomerRows}" IsTabStop="False">
+                    <ItemsControl x:Name="RowsList" ItemsSource="{x:Bind ViewModel.CustomerRows}" IsTabStop="False">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:CustomerReportRow">
                                 <Button Click="Customer_Click" Tag="{x:Bind}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
