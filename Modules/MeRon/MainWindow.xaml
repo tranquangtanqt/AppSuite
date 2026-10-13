@@ -11,7 +11,8 @@
 
     <!-- Mỗi mục 1 trang; Tag = tên class trang trong MeRon.Views. -->
     <NavigationView x:Name="Nav" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" PaneDisplayMode="Left"
-                    OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked">
+                    OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked"
+                    KeyboardAcceleratorPlacementMode="Hidden">
         <NavigationView.MenuItems>
             <NavigationViewItemHeader Content="Bán hàng" />
             <NavigationViewItem Content="Đặt hàng" Tag="OrdersPage">
@@ -62,6 +63,8 @@
             <!-- Mở cửa sổ Hướng dẫn, không chuyển trang (SelectsOnInvoked=False → xử lý ở ItemInvoked). -->
             <NavigationViewItem Content="Hướng dẫn (F1)" Tag="Help" Icon="Help" SelectsOnInvoked="False" />
         </NavigationView.FooterMenuItems>
+        <!-- F1 cho cả cửa sổ. NavigationView ở trên đặt KeyboardAcceleratorPlacementMode="Hidden": không thì WinUI tự hiện
+             tooltip "F1" khi rê chuột vào bất kỳ chỗ nào không có tooltip riêng. -->
         <NavigationView.KeyboardAccelerators>
             <KeyboardAccelerator Key="F1" Invoked="F1_Invoked" />
         </NavigationView.KeyboardAccelerators>

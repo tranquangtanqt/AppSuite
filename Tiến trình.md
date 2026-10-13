@@ -190,6 +190,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Người dùng thử tay: dán link folder Drive → Kiểm tra lại → Nhập
 - [ ] Sau này: đăng nhập Google (OAuth + Drive API, Client ID loại Desktop trong project `me-ron`) để chuyển folder
   sang "Hạn chế" — folder đang công khai mà có bảng khách hàng / địa chỉ
+- [x] Rê chuột vào vùng trống hay hiện tooltip "F1": phím F1 gắn ở NavigationView → `KeyboardAcceleratorPlacementMode="Hidden"`;
+  GUI Sandbox 4/4 (bản cũ tái hiện lỗi ở 2/3 điểm rê chuột, F1 vẫn mở Hướng dẫn) (2026-10-13)
+- [ ] Form đơn: ô chọn món đổi ComboBox → ô gõ lọc kiểu autocomplete (như ô Khách hàng, không phân biệt dấu), bắt buộc
+  chọn 1 món trong danh sách (gõ món không có → báo lỗi, không lưu được); món tự do giữ nguyên gõ tay
 
 ## MainLauncher
 
@@ -398,6 +402,8 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 
 ## ImageCompare
 
+- [x] Tooltip phím tắt ("Ctrl+V"...) có thể hiện khi rê chuột vùng trống: phím tắt gắn ở Grid gốc →
+  `KeyboardAcceleratorPlacementMode="Hidden"`; GUI Sandbox 3/3 không còn tooltip (2026-10-13)
 - [x] Module So sánh ảnh + Tìm chữ (OCR Tesseract, tiếng Việt) — kiểm tra engine 30/30 + GUI trong Sandbox (2026-09-25)
 - [x] Commit toàn bộ module + đăng ký vào sln / modules.json / build scripts
 - [ ] Chạy thử GUI hộp thoại *Lưu PNG* và *Xuất báo cáo HTML*

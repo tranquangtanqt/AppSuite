@@ -15,7 +15,8 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
-    <Grid x:Name="RootGrid" Padding="8" RowSpacing="6">
+    <!-- Phím tắt gắn vào Grid gốc: Hidden để WinUI không tự hiện tooltip "Ctrl+V" khi rê chuột bất kỳ đâu trong cửa sổ. -->
+    <Grid x:Name="RootGrid" Padding="8" RowSpacing="6" KeyboardAcceleratorPlacementMode="Hidden">
         <Grid.Resources>
             <!-- Ô chứa ảnh A / B: tên + kích thước ảnh, nút Mở / Dán; kéo-thả file ảnh vào ô. -->
             <Style x:Key="SlotStyle" TargetType="Border">
