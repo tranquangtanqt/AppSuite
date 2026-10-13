@@ -25,6 +25,22 @@ public sealed partial class OrderFormPage : Page
 
     private void MoneyBox_Loaded(object sender, RoutedEventArgs e) => ((NumberBox)sender).NumberFormatter = Format.MoneyFormatter();
 
+    private void ProductBox_Loaded(object sender, RoutedEventArgs e) => ProductSuggest.Attach((AutoSuggestBox)sender);
+
+    /// <summary>Click chạy trước Command (dòng chưa thêm) → đợi dòng mới hiện rồi đưa con trỏ vào ô món của nó để gõ ngay.</summary>
+    private void AddLine_Click(object sender, RoutedEventArgs e) =>
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => FocusLine(ViewModel.Lines.Count - 1, "ProductBox"));
+
+    private void FocusLine(int index, string name)
+    {
+        LinesList.UpdateLayout();
+        if (index >= 0 && LinesList.ContainerFromIndex(index) is DependencyObject container && Ui.FindByName(container, name) is Control control)
+        {
+            control.StartBringIntoView();
+            control.Focus(FocusState.Programmatic);
+        }
+    }
+
     private void Back_Click(object sender, RoutedEventArgs e) => GoBack();
 
     private void GoBack()
@@ -91,16 +107,11 @@ public sealed partial class OrderFormPage : Page
             }
             return;
         }
-        var name = error.Field switch
+        FocusLine(index, error.Field switch
         {
             OrderLineField.FreeName => "FreeNameBox",
             OrderLineField.FreePrice => "FreePriceBox",
             _ => "ProductBox",
-        };
-        if (LinesList.ContainerFromIndex(index) is DependencyObject container && Ui.FindByName(container, name) is Control control)
-        {
-            control.StartBringIntoView();
-            control.Focus(FocusState.Programmatic);
-        }
+        });
     }
 }

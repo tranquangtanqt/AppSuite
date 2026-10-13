@@ -308,4 +308,18 @@ public class MasterDataTests
         Assert.True(TextSearch.Matches("Anything", "  "));
         Assert.False(TextSearch.Matches("Sữa chua", "kem"));
     }
+
+    [Fact]
+    public void Product_search_matches_every_word_in_any_order_and_ranks_prefix_first()
+    {
+        Assert.True(TextSearch.MatchesAllWords("Bánh bao xá xíu/trứng sữa", "bao xiu"));
+        Assert.True(TextSearch.MatchesAllWords("Bánh bao xá xíu/trứng sữa", "  TRUNG   banh "));
+        Assert.True(TextSearch.MatchesAllWords("Bất kỳ", ""));
+        Assert.False(TextSearch.MatchesAllWords("Bánh bao xá xíu/trứng sữa", "bao thit"));
+
+        string[] products = ["Rau câu/chè", "Bánh canh", "Chè bưởi", "Bánh bao chè?", "Panna cotta"];
+        Assert.Equal(["Chè bưởi", "Rau câu/chè", "Bánh bao chè?"], TextSearch.Filter(products, p => p, "che", 50));
+        Assert.Equal(["Rau câu/chè", "Bánh canh"], TextSearch.Filter(products, p => p, " ", 2));
+        Assert.Empty(TextSearch.Filter(products, p => p, "che buoi xanh", 50));
+    }
 }

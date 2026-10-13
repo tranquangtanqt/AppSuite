@@ -192,8 +192,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   sang "Hạn chế" — folder đang công khai mà có bảng khách hàng / địa chỉ
 - [x] Rê chuột vào vùng trống hay hiện tooltip "F1": phím F1 gắn ở NavigationView → `KeyboardAcceleratorPlacementMode="Hidden"`;
   GUI Sandbox 4/4 (bản cũ tái hiện lỗi ở 2/3 điểm rê chuột, F1 vẫn mở Hướng dẫn) (2026-10-13)
-- [ ] Form đơn: ô chọn món đổi ComboBox → ô gõ lọc kiểu autocomplete (như ô Khách hàng, không phân biệt dấu), bắt buộc
-  chọn 1 món trong danh sách (gõ món không có → báo lỗi, không lưu được); món tự do giữ nguyên gõ tay
+- [x] Form đơn: ô chọn món đổi ComboBox → ô gõ lọc kiểu autocomplete (không dấu, các từ không cần liền nhau "bao xiu",
+  tên bắt đầu bằng chữ gõ lên trước, Enter chọn món đầu), bắt buộc chọn 1 món trong danh sách (gõ món không có → lỗi đỏ
+  dưới dòng, Lưu báo + đưa con trỏ về ô); Thêm món = dòng trống + con trỏ vào ô món (trước: mặc định món đầu); món tự
+  do giữ nguyên gõ tay; unit test 58/58; GUI Sandbox 22/22 (chạy 4 lần) + Đợt 2 36/36 (2026-10-13)
+- [ ] Người dùng thử tay ô chọn món mới
 
 ## MainLauncher
 

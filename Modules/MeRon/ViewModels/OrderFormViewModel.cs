@@ -70,6 +70,27 @@ public sealed partial class OrderLineViewModel : ObservableObject
 
     partial void OnSelectedProductChanged(ProductOption? value) => _owner.Recalculate();
 
+    /// <summary>Ô món còn chữ gõ không phải 1 món trong danh sách (bắt buộc chọn trong danh sách) → hiện đỏ dưới ô, không lưu được.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasProductError))]
+    private string _productError = string.Empty;
+
+    public bool HasProductError => ProductError.Length > 0;
+
+    /// <summary>Chọn 1 món trong danh sách (hoặc bỏ chọn khi ô trống) - xoá lỗi chữ gõ sai.</summary>
+    public void ChooseProduct(ProductOption? product)
+    {
+        ProductError = string.Empty;
+        SelectedProduct = product;
+    }
+
+    /// <summary>Chữ trong ô không khớp món nào: bỏ món đang chọn để không lưu nhầm món cũ.</summary>
+    public void RejectProductText(string text)
+    {
+        SelectedProduct = null;
+        ProductError = $"Không có món \"{text.Trim()}\" trong danh sách - chọn 1 món trong danh sách.";
+    }
+
     partial void OnQuantityChanged(double value)
     {
         if (double.IsNaN(value) || value < 1)
@@ -256,11 +277,12 @@ public sealed partial class OrderFormViewModel : ObservableObject
         }
     }
 
-    /// <summary>Thêm món: mặc định món đầu tiên trong danh sách (như điện thoại).</summary>
+    /// <summary>Thêm món: dòng trống, View đưa con trỏ vào ô món để gõ lọc (điện thoại mặc định món đầu tiên - với ô
+    /// autocomplete thì chọn sẵn 1 món dễ lưu nhầm).</summary>
     [RelayCommand]
     private void AddLine()
     {
-        Lines.Add(new OrderLineViewModel(this, new OrderLineDraft(Products.FirstOrDefault()?.Id, 1)));
+        Lines.Add(new OrderLineViewModel(this, new OrderLineDraft(null, 1)));
         Recalculate();
     }
 
@@ -310,6 +332,14 @@ public sealed partial class OrderFormViewModel : ObservableObject
     {
         try
         {
+            // Ô món còn chữ gõ không khớp món nào: báo đúng lỗi đó (core chỉ thấy "chưa chọn món").
+            for (var i = 0; i < Lines.Count; i++)
+            {
+                if (Lines[i].HasProductError)
+                {
+                    throw new OrderValidationException(Lines[i].ProductError, i, OrderLineField.Product);
+                }
+            }
             OrderCalculator.Validate(BuildDraft());
             Error = string.Empty;
             return null;

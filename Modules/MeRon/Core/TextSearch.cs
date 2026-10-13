@@ -28,4 +28,23 @@ public static class TextSearch
     /// <summary>Ô tìm trống → khớp tất cả.</summary>
     public static bool Matches(string? text, string? query) =>
         string.IsNullOrWhiteSpace(query) || Fold(text).Contains(Fold(query.Trim()), StringComparison.Ordinal);
+
+    /// <summary>Mọi từ trong <paramref name="query"/> đều có trong <paramref name="text"/>, không cần liền nhau / đúng thứ tự
+    /// ("bao xiu" khớp "Bánh bao xá xíu/trứng sữa"). Ô tìm trống → khớp tất cả.</summary>
+    public static bool MatchesAllWords(string? text, string? query)
+    {
+        var folded = Fold(text);
+        return Fold(query).Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .All(word => folded.Contains(word, StringComparison.Ordinal));
+    }
+
+    /// <summary>Lọc theo <see cref="MatchesAllWords"/>; tên bắt đầu bằng chữ gõ lên trước, còn lại giữ thứ tự gốc.</summary>
+    public static List<T> Filter<T>(IEnumerable<T> items, Func<T, string?> name, string? query, int max)
+    {
+        var prefix = Fold(query).Trim();
+        return items.Where(item => MatchesAllWords(name(item), query))
+            .OrderBy(item => prefix.Length > 0 && Fold(name(item)).StartsWith(prefix, StringComparison.Ordinal) ? 0 : 1)
+            .Take(max)
+            .ToList();
+    }
 }

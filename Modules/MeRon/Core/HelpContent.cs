@@ -47,7 +47,9 @@ public static class HelpContent
         new("Thêm / sửa đơn", "", "Form đơn hàng: khách, các món, giảm giá, ngày giao, thanh toán, ghi chú.", "OrderFormPage",
         [
             new("Khách hàng", "Gõ tên / số điện thoại rồi chọn. Bắt buộc."),
-            new("Thêm món", "Thêm 1 dòng (mặc định món đầu danh sách) - chọn món trong ô Món, số lượng bằng − / + hoặc gõ thẳng số (nhỏ hơn 1 tự về 1). X = xoá dòng."),
+            new("Thêm món", "Thêm 1 dòng trống, con trỏ vào ngay ô Món và danh sách hiện sẵn tất cả các món (tên · giá). Số lượng bằng − / + hoặc gõ thẳng số (nhỏ hơn 1 tự về 1). X = xoá dòng."),
+            new("Gõ để chọn món", "Gõ vài chữ của tên món: không cần dấu, các từ không cần liền nhau (vd \"bao xiu\" → Bánh bao xá xíu/trứng sữa); món có tên bắt đầu bằng chữ vừa gõ lên đầu. Enter = chọn món đầu danh sách, hoặc bấm chuột vào món. Gõ đủ tên món (không dấu cũng được) rồi rời ô thì tự nhận món đó.", "Enter"),
+            new("Bắt buộc chọn trong danh sách", "Gõ món không có trong danh sách: dưới dòng hiện lỗi đỏ \"Không có món … trong danh sách\", chữ đã gõ giữ nguyên; bấm Lưu thì báo lỗi và đưa con trỏ về đúng ô đó. Dòng để trống mà Lưu: báo \"Chưa chọn món ăn.\". Món ngoài danh sách thì dùng Thêm món tự do."),
             new("Thêm món tự do", "Món không có trong danh sách Món ăn: tự nhập Tên món và Đơn giá. Không gắn với món nào (không bị ảnh hưởng khi sửa Món ăn). Để trống tên hoặc đơn giá ≤ 0 thì không lưu được và con trỏ nhảy về đúng ô thiếu."),
             new("Dòng bị khoá", "Khi sửa đơn: món đã đổi giá so với lúc đặt thì dòng đó mờ đi, có biểu tượng ổ khoá, không đổi món / số lượng / xoá được - giữ nguyên đơn giá cũ. Muốn đổi phải xoá đơn và tạo lại. Món tự do không bao giờ bị khoá."),
             new("Tiền", "Tổng = Tạm tính − Giảm giá (không âm), tự tính khi đổi món / số lượng / giảm giá. Tổng số lượng món (cả món tự do) hiện ngay trên Tạm tính."),
