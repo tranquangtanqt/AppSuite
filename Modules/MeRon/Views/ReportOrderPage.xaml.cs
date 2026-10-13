@@ -32,11 +32,15 @@ public sealed partial class ReportOrderPage : Page
         }
     }
 
+    private static bool _filterInitialized;
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        if (e.NavigationMode == NavigationMode.New)
+        // Bộ lọc mặc định chỉ ở lần đầu mở trang trong phiên; vào lại từ menu thì giữ điều kiện đã chọn.
+        if (!_filterInitialized)
         {
             ViewModel.Reset();
+            _filterInitialized = true;
         }
         ViewModel.Load();
         CustomerBox.Text = ViewModel.Customer?.Name ?? string.Empty;

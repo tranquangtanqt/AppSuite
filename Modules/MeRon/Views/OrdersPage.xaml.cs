@@ -44,12 +44,16 @@ public sealed partial class OrdersPage : Page
         }
     }
 
+    private static bool _filterInitialized;
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel.PropertyChanged += OnViewModelChanged;
-        if (e.NavigationMode == NavigationMode.New)
+        // Bộ lọc mặc định (Đã lên đơn, hôm nay) chỉ ở lần đầu mở trang trong phiên; vào lại từ menu thì giữ điều kiện đã chọn.
+        if (!_filterInitialized)
         {
             ViewModel.Reset();
+            _filterInitialized = true;
         }
         ViewModel.Load();
         CustomerBox.Text = ViewModel.Customer?.Name ?? string.Empty;

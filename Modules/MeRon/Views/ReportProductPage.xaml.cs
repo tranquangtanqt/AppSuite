@@ -15,11 +15,15 @@ public sealed partial class ReportProductPage : Page
         InitializeComponent();
     }
 
+    private bool _filterInitialized;
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        if (e.NavigationMode == NavigationMode.New)
+        // Trang được cache: bộ lọc mặc định chỉ ở lần đầu mở; vào lại từ menu thì giữ điều kiện đã chọn.
+        if (!_filterInitialized)
         {
             ViewModel.Reset();
+            _filterInitialized = true;
         }
         ViewModel.LoadProducts();
         ViewModel.Load();

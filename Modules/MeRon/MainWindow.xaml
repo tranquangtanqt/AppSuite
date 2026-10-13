@@ -69,6 +69,7 @@
             <KeyboardAccelerator Key="F1" Invoked="F1_Invoked" />
         </NavigationView.KeyboardAccelerators>
 
-        <Frame x:Name="ContentFrame" />
+        <!-- 10 trang được cache (giữ bộ lọc, và 1 trang duy nhất cho ViewModel dùng chung cả phiên) - CacheSize mặc định 10 vừa khít, để dư. -->
+        <Frame x:Name="ContentFrame" CacheSize="20" />
     </NavigationView>
 </Window>

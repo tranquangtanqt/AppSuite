@@ -27,20 +27,20 @@ public static class HelpContent
             new("3. Đặt hàng", "Trang Đặt hàng: xem / lọc đơn, thêm / sửa đơn, Chi tiết gộp theo khách + Thanh toán toàn bộ."),
             new("4. Mua hàng, Thống kê", "Mua hàng: phiếu nhập nguyên liệu theo ngày. Thống kê: Theo đơn hàng, Theo món ăn, Tổng hợp (bán + mua), Khách hàng tiềm năng."),
             new("5. Xem / sửa danh mục", "Các trang Khách hàng, Món ăn, Danh mục món ăn, Địa chỉ ở menu bên trái."),
-            new("Khoảng ngày", "Mọi trang có Từ ngày – Đến ngày (tính cả 2 ngày) và nút lịch nhỏ để chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Mở trang từ menu thì về hôm nay (như điện thoại); quay lại từ trang con thì giữ nguyên."),
+            new("Khoảng ngày", "Mọi trang có Từ ngày – Đến ngày (tính cả 2 ngày) và nút lịch nhỏ để chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Lần đầu mở trang thì là hôm nay (như điện thoại); sau đó chuyển sang trang khác rồi quay lại (kể cả bằng menu) vẫn giữ nguyên khoảng ngày đã chọn - đến khi tắt app."),
             new("Điện thoại là nơi nhập liệu chính", "Mỗi lần nhập là THAY TOÀN BỘ dữ liệu trên máy tính bằng bản backup - những gì thêm / sửa trên máy tính sẽ mất ở lần nhập sau. Bản cũ luôn được lưu lại trong thư mục Backups trước khi nhập. Muốn đưa phần sửa trên máy tính sang điện thoại: trang Xuất / Xoá dữ liệu → Xuất TSV, rồi nhập trên điện thoại."),
             new("Mở lại hướng dẫn này", "Mục Hướng dẫn cuối menu trái, hoặc phím F1 (mở thẳng phần của trang đang xem).", "F1"),
         ]),
 
         new("Đặt hàng", "", "Danh sách đơn đặt hàng: lọc, sắp xếp, thêm / sửa đơn.", "OrdersPage",
         [
-            new("Lọc theo trạng thái", "Tất cả / Đã lên đơn / Đã thanh toán / Huỷ. Mở trang từ menu thì mặc định là Đã lên đơn, giao hôm nay."),
+            new("Lọc theo trạng thái", "Tất cả / Đã lên đơn / Đã thanh toán / Huỷ. Lần đầu mở trang thì mặc định là Đã lên đơn, giao hôm nay."),
             new("Lọc theo khách", "Gõ tên hoặc số điện thoại vào ô Lọc theo khách hàng (không phân biệt dấu) rồi chọn trong gợi ý (Enter = gợi ý đầu). Nút X bỏ lọc."),
             new("Khoảng ngày giao", "Từ ngày – Đến ngày, tính theo ngày giao hàng (cả 2 ngày). Nút Khoảng ngày chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày (bỏ lọc ngày). Đổi bộ lọc là tìm lại ngay."),
             new("Sắp xếp", "Tăng / Giảm dần theo thành tiền hoặc theo ngày giao đơn. Mặc định: ngày giao mới nhất trước. Nút Sắp xếp in đậm khi đang dùng cách khác mặc định."),
             new("Thẻ đơn", "Tên khách, trạng thái, ngày giao, các món (đơn giá, số lượng, thành tiền), ghi chú, Tạm tính / Giảm giá (khi có giảm giá), Tổng. Nền xanh = Đã thanh toán, đỏ = Huỷ. Bấm vào thẻ để sửa.", "Click"),
             new("Thêm đơn", "Nút Thêm (Ctrl+N). Đang lọc 1 khách thì đơn mới điền sẵn khách đó; Từ ngày = Đến ngày thì điền sẵn ngày giao đó.", "Ctrl+N"),
-            new("Giữ bộ lọc", "Thêm / sửa đơn hoặc xem Chi tiết rồi quay lại: bộ lọc giữ nguyên. Bấm Đặt hàng ở menu: bộ lọc về mặc định."),
+            new("Giữ bộ lọc", "Trạng thái, khách, khoảng ngày, sắp xếp được giữ nguyên khi thêm / sửa đơn, xem Chi tiết, hoặc chuyển sang trang khác (vd Mua hàng) rồi quay lại - đến khi tắt app. Các trang báo cáo, Mua hàng và ô tìm ở trang danh mục cũng giữ như vậy."),
             new("Làm mới", "Nút ⟳ hoặc F5 đọc lại danh sách.", "F5"),
         ]),
 

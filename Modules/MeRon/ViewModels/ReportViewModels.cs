@@ -216,7 +216,7 @@ public sealed partial class ReportProductViewModel : ReportViewModel
 
     partial void OnProductChanged(ProductOption value)
     {
-        if (!_suspend)
+        if (!_suspend && value is not null)
         {
             Load();
         }
@@ -230,12 +230,20 @@ public sealed partial class ReportProductViewModel : ReportViewModel
         _suspend = false;
     }
 
+    /// <summary>Nạp lại danh sách món (vào trang). Giữ món đang lọc: ComboBox bỏ chọn khi đổi ItemsSource (có thể đẩy null
+    /// về đây) nên chọn lại đúng phần tử của danh sách mới; món đã bị xoá → Tất cả món.</summary>
     public void LoadProducts()
     {
+        var id = Product?.Id ?? 0;
+        _suspend = true;
         ProductOptions = [AllProducts, .. AppServices.MasterData.GetProducts()
             .Select(p => new ProductOption(p.Id, p.Name ?? $"#{p.Id}", p.Price ?? 0))
             .OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase)];
         OnPropertyChanged(nameof(ProductOptions));
+        // Qua null trước: record so sánh theo giá trị, gán thẳng món "bằng" món cũ thì không báo đổi và ComboBox không chọn lại.
+        Product = null!;
+        Product = ProductOptions.FirstOrDefault(p => p.Id == id) ?? AllProducts;
+        _suspend = false;
     }
 
     protected override void Refresh()

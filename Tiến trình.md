@@ -197,6 +197,14 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   dưới dòng, Lưu báo + đưa con trỏ về ô); Thêm món = dòng trống + con trỏ vào ô món (trước: mặc định món đầu); món tự
   do giữ nguyên gõ tay; unit test 58/58; GUI Sandbox 22/22 (chạy 4 lần) + Đợt 2 36/36 (2026-10-13)
 - [ ] Người dùng thử tay ô chọn món mới
+- [x] Giữ điều kiện tìm kiếm khi chuyển trang bằng menu (vd Đặt hàng → Mua hàng → Đặt hàng): trước đây vào lại từ menu
+  là về mặc định; nay mặc định chỉ ở lần đầu mở trong phiên, tắt app mở lại mới về mặc định. Áp dụng: Đặt hàng, Mua
+  hàng, 4 báo cáo, ô tìm ở Khách hàng / Món ăn / Danh mục / Địa chỉ (cache trang); Theo món ăn giữ món đang lọc khi nạp
+  lại danh sách món (2026-10-13)
+- [x] Sửa lỗi "Không đọc được đơn hàng: Unspecified error" sau khi vào Chi tiết rồi quay lại và đổi tab / lưu đơn (lúc
+  có lúc không): ViewModel dùng chung cả phiên nhưng trang Đặt hàng / Theo đơn hàng không cache → trang cũ đã gỡ vẫn
+  nghe danh sách đơn, ném COMException khi danh sách đổi → cache 2 trang này (1 trang duy nhất), Frame CacheSize 20
+  (2026-10-13)
 
 ## MainLauncher
 
