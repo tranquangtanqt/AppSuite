@@ -21,8 +21,8 @@
                     <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
 
-                <CalendarDatePicker Header="Ngày nhập" Date="{x:Bind ViewModel.Date, Mode=TwoWay}" Width="170"
-                                    DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" AutomationProperties.Name="Ngày nhập" />
+                <local:DateBox Header="Ngày nhập" AllowEmpty="False" Date="{x:Bind ViewModel.Date, Mode=TwoWay}" Width="170"
+                               AutomationProperties.Name="Ngày nhập" />
 
                 <StackPanel Spacing="4">
                     <Grid ColumnSpacing="8" Opacity="0.75">

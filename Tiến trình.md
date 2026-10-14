@@ -231,6 +231,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   trong ô Số lượng, Ctrl+Shift+C sao chép đơn, Esc quay lại (đang mở gợi ý / lịch / menu thì Esc đóng cái đó trước). Không
   hiện tooltip phím tắt, bỏ qua khi đang mở hộp thoại. GUI Sandbox `meron_keys.ps1` (phím thật) 35/35; live 7/7, Đặt
   hàng 36/36, Sao chép 19/19, ô chọn khách 11/11, tooltip 4/4, giữ bộ lọc 16/16, báo cáo 32/32 (2026-10-14)
+- [x] Ô ngày mới `DateBox` thay CalendarDatePicker (Từ / Đến ngày mọi trang, Ngày giao, Ngày thanh toán, Ngày nhập): gõ thẳng
+  dd/MM/yyyy + gõ tắt (14/10, 14, 141026), gõ sai trả lại ngày cũ, ↑ / ↓ ±1 ngày, Alt+↓ / F4 mở lịch; lịch tiếng Việt (Tháng
+  Mười 2026, T2…CN, tuần từ thứ Hai) + nút Hôm nay + Xoá ngày (ô không bắt buộc). Unit test 86/86 (thêm 25 DateInput); GUI
+  Sandbox `meron_date.ps1` 18/18; phím tắt 35/35, live 7/7, Đặt hàng 36/36, Sao chép 19/19, ô chọn khách 11/11, tooltip
+  4/4, giữ bộ lọc 16/16, báo cáo 32/32 (2026-10-14)
 - [ ] Người dùng thử tay Sao chép đơn
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

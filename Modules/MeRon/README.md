@@ -44,7 +44,9 @@ Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu
 | | **Hướng dẫn (F1)** | Cửa sổ hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`), mở đúng mục của trang đang xem; nội dung ở `Core\HelpContent.cs` |
 | | **Phím tắt** (mục riêng trong F1) | Ctrl+F ô tìm / lọc khách; Ctrl+N thêm (mọi trang danh sách); Ctrl+1…4 tab trạng thái (Đặt hàng, Theo đơn hàng); Ctrl+D khoảng ngày nhanh; F5 làm mới; form: Ctrl+S lưu, Ctrl+Shift+N lưu + đơn mới cùng ngày giao, Ctrl+M thêm món / thêm hàng, ↑ / ↓ trong ô Số lượng, Ctrl+Shift+C sao chép đơn, Esc quay lại. Gắn bằng `Views\Shortcuts.cs` lên chính trang (không hiện tooltip phím tắt; bỏ qua khi đang mở hộp thoại) |
 
-Mọi trang có khoảng ngày đều có nút chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Số và tiền
+Mọi trang có khoảng ngày đều có nút chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Mọi ô ngày là
+`Views\DateBox` (thay CalendarDatePicker): gõ thẳng dd/MM/yyyy (gõ tắt "14/10", "14", "141026" - `Core\DateInput.cs`), ↑ / ↓ ±1 ngày,
+nút lịch (Alt+↓ / F4) tiếng Việt tuần bắt đầu thứ Hai + Hôm nay + Xoá ngày (ô không bắt buộc). Số và tiền
 luôn hiển thị kiểu Việt Nam (`2.617`, `25.000 đ`) bất kể ngôn ngữ Windows.
 
 ### Khác điện thoại có chủ đích

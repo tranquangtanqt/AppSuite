@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <UserControl
     x:Class="MeRon.Views.DateRangeBar"
+    xmlns:local="using:MeRon.Views"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
     <StackPanel Orientation="Horizontal" Spacing="8">
-        <CalendarDatePicker Date="{x:Bind Filter.FromDate, Mode=TwoWay}" PlaceholderText="Từ ngày" Width="136"
-                            DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" AutomationProperties.Name="Từ ngày" />
+        <local:DateBox Date="{x:Bind Filter.FromDate, Mode=TwoWay}" PlaceholderText="Từ ngày" Width="136"
+                       AutomationProperties.Name="Từ ngày" />
         <TextBlock Text="–" VerticalAlignment="Center" />
-        <CalendarDatePicker Date="{x:Bind Filter.ToDate, Mode=TwoWay}" PlaceholderText="Đến ngày" Width="136"
-                            DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" AutomationProperties.Name="Đến ngày" />
+        <local:DateBox Date="{x:Bind Filter.ToDate, Mode=TwoWay}" PlaceholderText="Đến ngày" Width="136"
+                       AutomationProperties.Name="Đến ngày" />
         <DropDownButton x:Name="RangeButton" AutomationProperties.Name="Khoảng ngày nhanh" ToolTipService.ToolTip="Chọn nhanh khoảng ngày">
             <FontIcon Glyph="&#xE787;" FontSize="16" />
             <DropDownButton.Flyout>

@@ -27,6 +27,7 @@ public static class HelpContent
             new("3. Đặt hàng", "Trang Đặt hàng: xem / lọc đơn, thêm / sửa đơn, Chi tiết gộp theo khách + Thanh toán toàn bộ."),
             new("4. Mua hàng, Thống kê", "Mua hàng: phiếu nhập nguyên liệu theo ngày. Thống kê: Theo đơn hàng, Theo món ăn, Tổng hợp (bán + mua), Khách hàng tiềm năng."),
             new("5. Xem / sửa danh mục", "Các trang Khách hàng, Món ăn, Danh mục món ăn, Địa chỉ ở menu bên trái."),
+            new("Ô ngày", "Gõ thẳng ngày kiểu 14/10/2026 rồi Enter (hoặc rời ô). Gõ tắt: 14/10 = năm nay, 14 = ngày 14 tháng này, 141026 hoặc 14102026; dấu / - . đều được. Gõ sai thì ô trả lại ngày cũ. Mũi tên lên / xuống = sau / trước 1 ngày. Nút lịch (hoặc Alt+↓, F4): lịch tiếng Việt, tuần bắt đầu thứ Hai, nút Hôm nay; Từ ngày / Đến ngày có thêm Xoá ngày (= không giới hạn). Ngày giao, ngày thanh toán, ngày nhập là bắt buộc: xoá trắng thì giữ ngày cũ.", "Enter", "↑", "↓", "Alt+↓"),
             new("Khoảng ngày", "Mọi trang có Từ ngày – Đến ngày (tính cả 2 ngày) và nút lịch nhỏ để chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Lần đầu mở trang thì là hôm nay (như điện thoại); sau đó chuyển sang trang khác rồi quay lại (kể cả bằng menu) vẫn giữ nguyên khoảng ngày đã chọn - đến khi tắt app."),
             new("Điện thoại là nơi nhập liệu chính", "Mỗi lần nhập là THAY TOÀN BỘ dữ liệu trên máy tính bằng bản backup - những gì thêm / sửa trên máy tính sẽ mất ở lần nhập sau. Bản cũ luôn được lưu lại trong thư mục Backups trước khi nhập. Muốn đưa phần sửa trên máy tính sang điện thoại: trang Xuất / Xoá dữ liệu → Xuất TSV, rồi nhập trên điện thoại."),
             new("Mở lại hướng dẫn này", "Mục Hướng dẫn cuối menu trái, hoặc phím F1 (mở thẳng phần của trang đang xem).", "F1"),
@@ -45,7 +46,8 @@ public static class HelpContent
             new("Thêm món / thêm hàng", "Form đơn: thêm dòng món, con trỏ vào ô món. Form phiếu nhập: thêm khoản, con trỏ vào ô Tên hàng.", "Ctrl+M"),
             new("Tăng / giảm số lượng", "Trong ô Số lượng: mũi tên lên = +1, xuống = −1.", "↑", "↓"),
             new("Sao chép đơn", "Form sửa đơn: như nút Sao chép đơn.", "Ctrl+Shift+C"),
-            new("Quay lại", "Form đơn / phiếu nhập: quay lại, không lưu. Đang mở danh sách gợi ý thì Esc đóng gợi ý trước.", "Esc"),
+            new("Ô ngày", "Gõ ngày rồi Enter; mũi tên lên / xuống = ±1 ngày; Alt+↓ hoặc F4 mở lịch.", "↑", "↓", "Alt+↓", "F4"),
+            new("Quay lại", "Form đơn / phiếu nhập: quay lại, không lưu. Đang mở danh sách gợi ý / lịch / menu thì Esc đóng cái đó trước.", "Esc"),
         ]),
 
         new("Đặt hàng", "", "Danh sách đơn đặt hàng: lọc, sắp xếp, thêm / sửa đơn.", "OrdersPage",
