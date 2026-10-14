@@ -48,9 +48,10 @@ public sealed partial class OrderLineViewModel : ObservableObject
 
     public double RowOpacity => IsLocked ? 0.55 : 1.0;
 
-    public string LockTip => IsLocked && SnapshotPrice is { } snap
+    /// <summary>null (không phải chuỗi rỗng) khi dòng không khoá: chuỗi rỗng vẫn hiện 1 tooltip trống khi rê chuột.</summary>
+    public string? LockTip => IsLocked && SnapshotPrice is { } snap
         ? $"Giá món đã đổi ({VnFormat.Money(snap)} lúc đặt → {VnFormat.Money(SelectedProduct?.Price)} hiện tại): dòng bị khoá để giữ đơn giá cũ. Muốn thay đổi phải xoá đơn và tạo lại."
-        : string.Empty;
+        : null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UnitPriceText), nameof(LineTotalText))]
