@@ -1,6 +1,7 @@
 # App điện thoại me-ron: các điểm nên cải thiện
 
-Ghi lại từ lúc port sang MeRon (máy tính), 2026-10-12 → 13. Bản máy tính đã tránh / sửa các điểm này. Mỗi mục ghi:
+Ghi lại từ lúc port sang MeRon (máy tính), 2026-10-12 → 14. Mục A–E: bản máy tính đã tránh / sửa các điểm này; mục F:
+chức năng bản máy tính đã có mà điện thoại chưa có. Mỗi mục ghi:
 hiện tượng, hậu quả và cách sửa gợi ý. File Flutter nằm ở `D:\tantq\src\me-ron\lib`.
 
 ## A. Lỗi làm sai số liệu (nên sửa trước)
@@ -62,3 +63,30 @@ hiện tượng, hậu quả và cách sửa gợi ý. File Flutter nằm ở `D
 17. **Folder Google Drive chứa backup đang để "ai có link cũng xem được"**
     (id `1c0cznqHuK3hCUdLC5LRtSJoSGb1qM_qT`). Folder này có tên, số điện thoại, địa chỉ của khách.
     → Giới hạn quyền folder; app điện thoại và máy tính đọc qua đăng nhập Google (OAuth, scope `drive.file`).
+
+## F. Chức năng bản máy tính đã có, nên thêm cho điện thoại
+
+Thêm 2026-10-14. Các chức năng này làm sau khi port, điện thoại chưa có. Không ghi các tính năng chỉ hợp với máy tính
+(phím tắt, gõ ngày bằng bàn phím).
+
+18. **Sao chép đơn / Đặt lại** cho khách quen đặt lặp lại. Mở form Thêm đặt hàng điền sẵn khách, món + số lượng, món tự
+    do, giảm giá, ghi chú. Đơn mới luôn là Đã lên đơn, chưa thanh toán, tính giá hiện tại (báo khi giá đổi so với đơn
+    gốc; món không còn trong danh sách → món tự do). Ngày giao: Sao chép giữ ngày của đơn gốc, Đặt lại thì giao hôm nay.
+    → Trên điện thoại: nhấn giữ thẻ đơn → "Sao chép đơn". (bản máy tính: `OrderCopier` trong `Core\Orders\OrderDraft.cs`)
+19. **Ô chọn món gõ để lọc** thay danh sách thả xuống (`DropdownButtonFormField` trong `order_item_row.dart`): gõ không
+    dấu, các từ không cần liền nhau ("bao xiu" → Bánh bao xá xíu/trứng sữa), món có tên bắt đầu bằng chữ gõ lên trước;
+    bắt buộc chọn 1 món trong danh sách. Danh sách món dài thì cuộn dropdown rất mất thời gian.
+    → Dùng `Autocomplete` như `app_user_autocomplete.dart` đang làm cho khách, lọc bằng hàm bỏ dấu (xem mục 13).
+20. **Khách lâu không đặt** (trang mới trong Thống kê): khách đã đặt ≥ 2 đơn mà đơn gần nhất (ngày giao, bỏ đơn Huỷ)
+    cách hôm nay ≥ 30 ngày. Mỗi khách hiện:
+    - lần đặt cuối + số ngày;
+    - thói quen: trung bình bao nhiêu ngày đặt 1 lần, cần ≥ 3 ngày đặt; nghỉ gấp ≥ 2 lần thói quen thì có nhãn cảnh báo;
+    - số đơn, tổng tiền, 3 món hay đặt.
+
+    Có nút Đặt lại (mục 18) và nút chép tin nhắn hỏi thăm soạn sẵn. Tin nhắn gọi theo tên khách (bỏ mã phòng như
+    "908", "W3"; tên viết hoa hết thì đổi thành chữ hoa đầu từ) và nhắc món hay đặt nhất.
+    → Trên điện thoại nên mở thẳng Zalo / màn chia sẻ (`share_plus`) thay vì chép, và gọi điện bằng `tel:`.
+    (bản máy tính: `Core\Reports\LapsedCustomers.cs`)
+21. **Giữ bộ lọc khi chuyển trang**: điện thoại vào lại trang từ menu thì bộ lọc về mặc định (Đã lên đơn, hôm nay).
+    Bản máy tính giữ trạng thái, khách, khoảng ngày, sắp xếp đến khi tắt app; mặc định chỉ áp ở lần đầu mở trang.
+    → Giữ `OrderFilterState` cả phiên (không `autoDispose`, không reset trong `initState` khi vào từ menu).
