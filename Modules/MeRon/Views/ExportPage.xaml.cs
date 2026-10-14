@@ -16,7 +16,19 @@ public sealed partial class ExportPage : Page
         InitializeComponent();
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e) => ViewModel.RefreshCounts();
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        ViewModel.RefreshCounts();
+        ViewModel.RefreshGoogle();
+    }
+
+    private async void SignIn_Click(object sender, RoutedEventArgs e) => await ViewModel.SignInAsync();
+
+    private async void SignOut_Click(object sender, RoutedEventArgs e) => await ViewModel.SignOutAsync();
+
+    private async void Upload_Click(object sender, RoutedEventArgs e) => await ViewModel.UploadToDriveAsync();
+
+    private void OpenDrive_Click(object sender, RoutedEventArgs e) => ExportViewModel.OpenUrl(ViewModel.DriveLink);
 
     private async void Pick_Click(object sender, RoutedEventArgs e)
     {

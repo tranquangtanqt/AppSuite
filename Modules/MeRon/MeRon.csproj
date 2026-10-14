@@ -13,6 +13,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- OAuth client Google (Desktop app) cho Đăng nhập + tải backup lên Drive: chỉ có trên máy đã đặt file, không commit
+         (.gitignore client_secret*.json); không có file thì nút Đăng nhập báo "chưa cấu hình". -->
+    <Content Include="Assets\client_secret*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\Common\Common.csproj" />
     <ProjectReference Include="..\..\SharedUI\SharedUI.csproj" />
   </ItemGroup>

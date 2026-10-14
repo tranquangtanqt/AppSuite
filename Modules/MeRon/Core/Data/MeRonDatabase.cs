@@ -169,5 +169,8 @@ public sealed class MeRonDatabase
 
         /// <summary>Thư mục lần trước xuất TSV (trong đó mỗi lần xuất tạo 1 thư mục con yyyyMMdd_HHmmss).</summary>
         public const string LastExportFolder = "lastExportFolder";
+
+        /// <summary>Link / id folder Google Drive để tải bộ backup lên (trống = folder riêng "MeRon backup").</summary>
+        public const string DriveUploadFolder = "driveUploadFolder";
     }
 }

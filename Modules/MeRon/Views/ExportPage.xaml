@@ -41,6 +41,50 @@
                 </StackPanel>
             </Border>
 
+            <!-- Google Drive: đăng nhập + tải bộ backup lên -->
+            <Border Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Tải bộ backup lên Google Drive" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="Xuất bộ TSV như nút Xuất TSV (vào thư mục bên trên) rồi tải lên Google Drive thành 1 thư mục yyyyMMdd_HHmmss, giống app điện thoại. Đăng nhập 1 lần, lần sau app tự nhớ (cất trong Thông tin xác thực Windows). App chỉ được thấy file do chính nó / app điện thoại tạo trên Drive." />
+                    <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsSignedOut), Mode=OneWay}">
+                        <Button Style="{StaticResource AccentButtonStyle}" Click="SignIn_Click" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}"
+                                AutomationProperties.Name="Đăng nhập Google">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <SymbolIcon Symbol="Contact" />
+                                <TextBlock Text="Đăng nhập Google..." />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <StackPanel Spacing="10" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsSignedIn), Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE73E;" FontSize="14" Foreground="{ThemeResource SystemFillColorSuccessBrush}" VerticalAlignment="Center" />
+                            <TextBlock VerticalAlignment="Center" AutomationProperties.AutomationId="GoogleEmail">
+                                <Run Text="Đã đăng nhập:" /> <Run Text="{x:Bind ViewModel.GoogleEmail, Mode=OneWay}" FontWeight="SemiBold" />
+                            </TextBlock>
+                            <HyperlinkButton Content="Đăng xuất" Click="SignOut_Click" AutomationProperties.Name="Đăng xuất Google" />
+                        </StackPanel>
+                        <TextBox Header="Folder trên Google Drive" Style="{StaticResource DefaultTextBoxStyle}"
+                                 Text="{x:Bind ViewModel.DriveFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 PlaceholderText="Để trống = folder riêng &quot;MeRon backup&quot; ở My Drive; hoặc dán link folder điện thoại đang dùng"
+                                 AutomationProperties.Name="Folder Google Drive" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button Style="{StaticResource AccentButtonStyle}" Click="Upload_Click" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}"
+                                    AutomationProperties.Name="Xuất lên Google Drive">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE753;" FontSize="16" />
+                                    <TextBlock Text="Xuất lên Google Drive" />
+                                </StackPanel>
+                            </Button>
+                            <Button Content="Mở trên Google Drive" Click="OpenDrive_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasDriveLink), Mode=OneWay}" />
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.DriveStatus, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                               AutomationProperties.AutomationId="DriveStatus" />
+                </StackPanel>
+            </Border>
+
             <!-- Xoá -->
             <Border Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource SystemFillColorCriticalBrush}"
                     Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}">

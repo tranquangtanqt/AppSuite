@@ -242,6 +242,13 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   giao hôm nay), Tin nhắn (chép câu hỏi thăm cho Zalo), chép SĐT. Unit test 92/92; GUI Sandbox `meron_lapsed.ps1` 12/12 (dữ
   liệu thật: 46 khách); các bộ khác đạt hết (2026-10-14)
 - [ ] Để sau: Khách lâu không đặt - ghi "đã liên hệ" (lưu riêng, không mất khi nhập backup); Chụp ảnh danh sách
+- [x] Đăng nhập Google + Xuất lên Google Drive (trang Xuất / Xoá dữ liệu): OAuth Desktop app + PKCE, loopback 127.0.0.1,
+  quyền drive.file, refresh token trong Windows Credential Manager; xuất TSV rồi tải lên thư mục yyyyMMdd_HHmmss trong folder
+  đã chọn hoặc folder riêng "MeRon backup". File client_secret_….json không commit (.gitignore). Unit test 106/106 (14 mới,
+  có đăng nhập giả lập qua cổng loopback); GUI Sandbox `meron_google.ps1` 9/9 (không mạng: tới bước chờ trình duyệt + huỷ),
+  export 15/15, các bộ khác đạt (2026-10-14)
+- [ ] Người dùng thử tay: Đăng nhập Google thật, Xuất lên Google Drive (để trống ô Folder, rồi thử dán link folder điện
+  thoại), Đăng xuất / mở lại app vẫn nhớ đăng nhập
 - [ ] Người dùng thử tay Sao chép đơn
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
