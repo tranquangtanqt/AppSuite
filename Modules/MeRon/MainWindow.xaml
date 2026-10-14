@@ -46,6 +46,11 @@
                     <FontIcon Glyph="&#xE734;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Khách lâu không đặt" Tag="LapsedCustomersPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE823;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItemHeader Content="Danh mục" />
             <NavigationViewItem Content="Khách hàng" Tag="CustomersPage" Icon="People" />
             <NavigationViewItem Content="Món ăn" Tag="ProductsPage">

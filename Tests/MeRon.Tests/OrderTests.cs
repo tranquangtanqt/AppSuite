@@ -285,4 +285,13 @@ public class OrderCopierTests
         Assert.Empty(copy.Notices);
         Assert.Equal(new DateTime(2026, 10, 13), copy.Draft.Delivery);
     }
+
+    [Fact]
+    public void Reorder_delivers_on_the_given_day_keeping_the_delivery_time()
+    {
+        var draft = OrderCopier.CopyAsNew(Paid, new DateOnly(2026, 10, 1), Products, deliveryDay: new DateOnly(2026, 10, 14)).Draft;
+
+        Assert.Equal(new DateTime(2026, 10, 14, 14, 20, 53, 242).AddTicks(9920), draft.Delivery);
+        Assert.Equal(OrderStatus.Shipping, draft.OriginalStatus);
+    }
 }

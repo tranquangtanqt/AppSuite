@@ -288,7 +288,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
 
         if (args.CopyFromId is { } copyId && _orders.Get(copyId) is { } source)
         {
-            var copy = OrderCopier.CopyAsNew(source, args.InitialDelivery ?? DateOnly.FromDateTime(DateTime.Today), ProductMap);
+            var copy = OrderCopier.CopyAsNew(source, DateOnly.FromDateTime(DateTime.Today), ProductMap, args.InitialDelivery);
             var draft = copy.Draft;
             Id = 0;
             CopiedFromId = copyId;

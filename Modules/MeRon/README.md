@@ -35,6 +35,7 @@ Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu
 | | **Theo món ăn** | Khoảng ngày + (tuỳ chọn) 1 món: tổng số món, bảng từng món (món tự do gộp theo tên), các đơn liên quan → bấm mở form đơn |
 | | **Tổng hợp** | Đơn hàng (số đơn, tiền, theo món) + Mua hàng (số phiếu, tiền, theo khoản) + Chênh lệch (bán − mua) |
 | | **Khách hàng tiềm năng** | Tối đa 100 khách xếp theo tổng tiền → bấm mở Chi tiết đơn của khách |
+| | **Khách lâu không đặt** | Khách đã đặt ≥ N đơn (mặc định 2) mà đơn gần nhất (ngày giao, bỏ đơn Huỷ) cách hôm nay ≥ M ngày (mặc định 30; chọn nhanh 14 / 30 / 60 / 90): lần cuối + số ngày, thói quen (TB ngày giữa các lần đặt, cần ≥ 3 ngày đặt; nhãn cam khi nghỉ ≥ 2 lần thói quen), số đơn + tổng tiền, 3 món hay đặt. Sắp xếp lâu nhất / tiền nhiều nhất / quá thói quen nhất, tìm (Ctrl+F). Nút: Xem đơn, Đặt lại (chép đơn gần nhất, giao hôm nay), Tin nhắn (chép câu hỏi thăm cho Zalo, bỏ mã phòng ở tên), chép SĐT. Tính ở `Core\Reports\LapsedCustomers.cs` |
 | Danh mục | **Khách hàng** | STT / Tên / Số ĐT / Địa chỉ / Ghi chú; tìm theo tên / SĐT (không dấu); thêm / sửa (Địa chỉ gõ tự do hoặc chọn); trùng tên không cho lưu; không xoá được khách còn đơn |
 | | **Món ăn** | STT / Tên / Giá / Danh mục / Mô tả; tìm; thêm / sửa. Không xoá, không quản lý ảnh (như điện thoại; ảnh có sẵn giữ nguyên) |
 | | **Danh mục món ăn** | Sửa / Xoá ngay trên dòng; không xoá được danh mục còn món |

@@ -236,6 +236,12 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Mười 2026, T2…CN, tuần từ thứ Hai) + nút Hôm nay + Xoá ngày (ô không bắt buộc). Unit test 86/86 (thêm 25 DateInput); GUI
   Sandbox `meron_date.ps1` 18/18; phím tắt 35/35, live 7/7, Đặt hàng 36/36, Sao chép 19/19, ô chọn khách 11/11, tooltip
   4/4, giữ bộ lọc 16/16, báo cáo 32/32 (2026-10-14)
+- [x] Trang mới "Khách lâu không đặt" (Thống kê): khách đã đặt ≥ 2 đơn mà đơn gần nhất (ngày giao, bỏ đơn Huỷ) cách hôm nay
+  ≥ 30 ngày (chọn nhanh 14 / 30 / 60 / 90, gõ số); lần cuối, thói quen (TB ngày giữa các lần đặt, cần ≥ 3 ngày đặt; nhãn cam
+  khi nghỉ ≥ 2 lần thói quen), số đơn + tiền, 3 món hay đặt; sắp xếp, tìm (Ctrl+F); nút Xem đơn, Đặt lại (chép đơn gần nhất,
+  giao hôm nay), Tin nhắn (chép câu hỏi thăm cho Zalo), chép SĐT. Unit test 92/92; GUI Sandbox `meron_lapsed.ps1` 12/12 (dữ
+  liệu thật: 46 khách); các bộ khác đạt hết (2026-10-14)
+- [ ] Để sau: Khách lâu không đặt - ghi "đã liên hệ" (lưu riêng, không mất khi nhập backup); Chụp ảnh danh sách
 - [ ] Người dùng thử tay Sao chép đơn
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

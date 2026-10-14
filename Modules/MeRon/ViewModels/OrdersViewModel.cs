@@ -8,7 +8,8 @@ using Microsoft.Extensions.Logging;
 namespace MeRon.ViewModels;
 
 /// <summary>Tham số mở form đơn: <see cref="OrderId"/> null = đơn mới (điền sẵn khách / ngày giao theo bộ lọc đang chọn);
-/// <see cref="CopyFromId"/> = đơn mới chép từ đơn đó (Sao chép đơn), giữ ngày giao của đơn gốc.</summary>
+/// <see cref="CopyFromId"/> = đơn mới chép từ đơn đó (Sao chép đơn), giữ ngày giao của đơn gốc;
+/// kèm <see cref="InitialDelivery"/> thì giao ngày đó (Đặt lại như lần trước ở trang Khách lâu không đặt).</summary>
 public sealed record OrderFormArgs(long? OrderId, long? InitialUserId = null, DateOnly? InitialDelivery = null, long? CopyFromId = null);
 
 /// <summary>Tham số màn Chi tiết: bộ lọc của danh sách đơn (hoặc của báo cáo, Đợt 3).</summary>

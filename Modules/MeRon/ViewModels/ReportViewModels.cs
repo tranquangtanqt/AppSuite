@@ -336,3 +336,135 @@ public sealed partial class ReportCustomerViewModel : ReportViewModel
     /// <summary>Chi tiết đơn của khách trong khoảng ngày, mọi trạng thái (như điện thoại: status -1).</summary>
     public OrderDetailArgs DetailArgs(CustomerReportRow row) => new(new OrderFilter(null, Range.From, Range.To, row.Summary.UserId));
 }
+
+/// <summary>1 khách trên trang Khách lâu không đặt.</summary>
+public sealed record LapsedRow(LapsedCustomer Customer)
+{
+    public string Name => Customer.Name;
+
+    public string Contact => string.Join("  ·  ", new[] { Customer.Phone, Customer.Address }.Where(s => s is not null));
+
+    public bool HasContact => Contact.Length > 0;
+
+    public bool HasPhone => Customer.Phone is not null;
+
+    public string LastText => $"Đặt lần cuối {Customer.LastDay:dd/MM/yyyy}  ·  {VnFormat.Number(Customer.DaysSince)} ngày trước";
+
+    public string HabitText => Customer.AverageGapDays is { } gap
+        ? $"Thường ~{VnFormat.Number((long)Math.Round(gap))} ngày đặt 1 lần"
+        : "Chưa đủ 3 lần đặt để biết thói quen";
+
+    public bool IsOverHabit => Customer.IsOverHabit;
+
+    public string OverHabitText => Customer.OverdueRatio is { } ratio ? $"Nghỉ gấp {Math.Floor(ratio):0} lần thói quen" : string.Empty;
+
+    public string OrdersText => $"{VnFormat.Number(Customer.OrderCount)} đơn  ·  {VnFormat.Money(Customer.Amount)}";
+
+    public string ProductsText => Customer.TopProducts.Count > 0 ? "Hay đặt: " + string.Join(", ", Customer.TopProducts) : string.Empty;
+
+    public string AccessibleName => $"{Name} - {LastText} - {OrdersText}";
+}
+
+/// <summary>
+/// Khách lâu không đặt: khách đã đặt ít nhất N đơn mà đơn gần nhất cách hôm nay từ M ngày (xem <see cref="LapsedCustomers"/>).
+/// Bộ lọc giữ suốt phiên (trang được cache); mỗi lần vào trang thì đọc lại dữ liệu.
+/// </summary>
+public sealed partial class LapsedCustomersViewModel : ObservableObject
+{
+    public static readonly int[] DayPresets = [14, 30, 60, 90];
+
+    private IReadOnlyList<LapsedCustomer> _all = [];
+
+    public ObservableCollection<LapsedRow> Rows { get; } = [];
+
+    /// <summary>NumberBox dùng double; bỏ trống / nhỏ hơn 1 → về mặc định.</summary>
+    [ObservableProperty]
+    private double _minDays = LapsedCustomers.DefaultMinDays;
+
+    [ObservableProperty]
+    private double _minOrders = LapsedCustomers.DefaultMinOrders;
+
+    [ObservableProperty]
+    private LapsedSort _sort = LapsedSort.Longest;
+
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+
+    [ObservableProperty]
+    private string _summary = string.Empty;
+
+    [ObservableProperty]
+    private string _error = string.Empty;
+
+    /// <summary>Kết quả thao tác (đã chép tin nhắn / SĐT).</summary>
+    [ObservableProperty]
+    private string _message = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasData;
+
+    public static string SortLabel(LapsedSort sort) => sort switch
+    {
+        LapsedSort.Amount => "Tổng tiền đã mua nhiều nhất trước",
+        LapsedSort.OverHabit => "Quá thói quen nhiều nhất trước",
+        _ => "Lâu không đặt nhất trước",
+    };
+
+    partial void OnMinDaysChanged(double value)
+    {
+        if (double.IsNaN(value) || value < 1)
+        {
+            MinDays = LapsedCustomers.DefaultMinDays;
+            return;
+        }
+        Load();
+    }
+
+    partial void OnMinOrdersChanged(double value)
+    {
+        if (double.IsNaN(value) || value < 1)
+        {
+            MinOrders = LapsedCustomers.DefaultMinOrders;
+            return;
+        }
+        Load();
+    }
+
+    partial void OnSortChanged(LapsedSort value) => Apply();
+
+    partial void OnSearchTextChanged(string value) => Apply();
+
+    public void Load()
+    {
+        try
+        {
+            _all = AppServices.Reports.LapsedCustomers(DateOnly.FromDateTime(DateTime.Today), (int)Math.Round(MinDays), (int)Math.Round(MinOrders));
+            Error = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("Reports").LogError(ex, "Tải khách lâu không đặt lỗi");
+            Error = "Không đọc được dữ liệu: " + ex.Message;
+            _all = [];
+        }
+        Apply();
+    }
+
+    private void Apply()
+    {
+        var shown = LapsedCustomers.Sort(
+            _all.Where(c => TextSearch.Matches(c.Name, SearchText) || TextSearch.Matches(c.Phone, SearchText)), Sort);
+        Rows.Clear();
+        foreach (var c in shown)
+        {
+            Rows.Add(new LapsedRow(c));
+        }
+        var overHabit = shown.Count(c => c.IsOverHabit);
+        Summary = _all.Count == 0
+            ? "Không có khách nào lâu không đặt."
+            : shown.Count == _all.Count
+                ? $"{VnFormat.Number(_all.Count)} khách  ·  {VnFormat.Number(overHabit)} khách nghỉ quá thói quen"
+                : $"{VnFormat.Number(shown.Count)} / {VnFormat.Number(_all.Count)} khách";
+        HasData = shown.Count > 0;
+    }
+}

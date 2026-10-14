@@ -16,7 +16,7 @@ public static class HelpContent
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
         ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage",
-         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "ImportPage", "ExportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage"];
+         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
     [
@@ -124,6 +124,17 @@ public static class HelpContent
         [
             new("Xếp hạng", "Khách đặt nhiều tiền nhất trong khoảng ngày lên đầu (không tính đơn Huỷ), tối đa 100 khách; mỗi dòng: hạng, tên, số đơn, tổng tiền."),
             new("Xem đơn", "Bấm 1 khách → màn Chi tiết các đơn của khách trong khoảng ngày (mọi trạng thái).", "Click"),
+        ]),
+
+        new("Khách lâu không đặt", "", "Khách trước đây hay đặt mà dạo này không đặt nữa - để nhắn hỏi thăm, mời đặt lại.", "LapsedCustomersPage",
+        [
+            new("Bộ lọc", "Không đặt từ … ngày (mặc định 30; nút đồng hồ chọn nhanh 14 / 30 / 60 / 90) và Đã đặt ít nhất … đơn (mặc định 2, loại khách chỉ thử 1 lần). Tính theo ngày giao của đơn gần nhất, không tính đơn Huỷ; khách có đơn giao trong tương lai coi như vẫn đang đặt. Bộ lọc giữ nguyên khi chuyển trang, đến khi tắt app."),
+            new("Mỗi khách", "Tên, SĐT, địa chỉ; ngày đặt lần cuối + cách đây bao nhiêu ngày; thói quen (trung bình bao nhiêu ngày đặt 1 lần, cần từ 3 lần đặt ở 3 ngày khác nhau), số đơn + tổng tiền đã mua, 3 món hay đặt nhất. Nhãn cam \"Nghỉ gấp … lần thói quen\" khi đã nghỉ gấp 2 lần thói quen trở lên - khách tuần nào cũng đặt mà 3 tuần nay im thì đáng hỏi hơn khách tháng mới đặt 1 lần."),
+            new("Sắp xếp", "Lâu không đặt nhất trước (mặc định) / Tổng tiền đã mua nhiều nhất trước / Quá thói quen nhiều nhất trước."),
+            new("Tìm", "Gõ tên hoặc số điện thoại (không dấu cũng được).", "Ctrl+F"),
+            new("Xem đơn", "Mọi đơn của khách (mọi ngày, mọi trạng thái) ở màn Chi tiết."),
+            new("Đặt lại", "Mở form đơn mới giống đơn gần nhất của khách (món, số lượng, ghi chú...), giao hôm nay, giá hiện tại. Chưa lưu gì cho đến khi bấm Lưu."),
+            new("Tin nhắn", "Chép tin nhắn hỏi thăm soạn sẵn (gọi theo tên khách, bỏ mã phòng ở đầu / cuối tên như \"908\", \"W3\", tên viết hoa hết thì đổi thành chữ hoa đầu từ; nhắc món hay đặt nhất) rồi dán vào Zalo bằng Ctrl+V. Nút điện thoại: chép số điện thoại.", "Ctrl+V"),
         ]),
 
         new("Nhập dữ liệu", "", "Nạp bộ backup .tsv của điện thoại, thay toàn bộ dữ liệu trên máy này.", "ImportPage",

@@ -138,7 +138,31 @@ public sealed class ReportRepository(MeRonDatabase database, OrderRepository ord
             parameters);
     }
 
+    /// <summary>Khách lâu không đặt (xem <see cref="Reports.LapsedCustomers"/>): mọi đơn không huỷ có ngày giao, mọi thời gian.</summary>
+    public IReadOnlyList<LapsedCustomer> LapsedCustomers(DateOnly today, int minDays, int minOrders)
+    {
+        var where = $"O.userId IS NOT NULL AND O.status <> {Cancelled} AND length(O.deliveryDatetime) >= 10";
+        using var connection = database.Open();
+        var orders = Query(connection,
+            $"SELECT O.userId, O.id, substr(O.deliveryDatetime, 1, 10), O.total FROM Orders AS O WHERE {where}",
+            r => (r.GetInt64(0), r.GetInt64(1), r.GetString(2), r.IsDBNull(3) ? 0 : r.GetInt64(3)), [])
+            .Select(o => DateOnly.TryParseExact(o.Item3, "yyyy-MM-dd", out var day) ? new CustomerOrderPoint(o.Item1, o.Item2, day, o.Item4) : null)
+            .OfType<CustomerOrderPoint>()
+            .ToList();
+        var products = Query(connection,
+            "SELECT O.userId, COALESCE(MAX(P.name), MIN(D.snapshotName)), COALESCE(SUM(D.quantity), 0) " +
+            "FROM Orders AS O JOIN OrderItems AS D ON O.id = D.orderId LEFT JOIN Products AS P ON P.id = D.productId " +
+            $"WHERE {where} GROUP BY O.userId, COALESCE(CAST(D.productId AS TEXT), 'name:' || D.snapshotName)",
+            r => new CustomerProductQuantity(r.GetInt64(0), r.IsDBNull(1) ? string.Empty : r.GetString(1), r.GetInt64(2)), []);
+        var customers = Query(connection, "SELECT id, name, address, phone, note FROM Users",
+                r => new Customer(r.GetInt64(0), Text(r, 1), Text(r, 2), Text(r, 3), Text(r, 4)), [])
+            .ToDictionary(c => c.Id);
+        return Reports.LapsedCustomers.Build(orders, products, customers, today, minDays, minOrders);
+    }
+
     // ---- tiện ích ----
+
+    private static string? Text(SqliteDataReader r, int i) => r.IsDBNull(i) ? null : r.GetString(i);
 
     /// <summary>Tổng theo món (đơn O + dòng D đã lọc bởi <paramref name="where"/>), số lượng giảm dần.</summary>
     private static List<ProductSummary> ProductSummaries(SqliteConnection connection, string where, IReadOnlyList<(string, object?)> parameters) =>
