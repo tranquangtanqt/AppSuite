@@ -91,14 +91,14 @@ public class GoogleAuthTests
     public async Task Sign_in_through_the_loopback_port_saves_the_refresh_token()
     {
         var google = new FakeGoogle((_, body) => body.Contains("grant_type=authorization_code")
-            ? (HttpStatusCode.OK, $$"""{"access_token":"AT1","expires_in":3599,"refresh_token":"RT1","id_token":"{{IdToken("chi.huyen@gmail.com")}}"}""")
+            ? (HttpStatusCode.OK, $$"""{"access_token":"AT1","expires_in":3599,"refresh_token":"RT1","id_token":"{{IdToken("chi.huyen@gmail.com")}}","scope":"https://www.googleapis.com/auth/drive.file openid https://www.googleapis.com/auth/userinfo.email"}""")
             : (HttpStatusCode.BadRequest, """{"error":"unexpected"}"""));
         var store = new MemoryTokenStore();
         var auth = new GoogleAuth(Client, store, new HttpClient(google));
-        Task? browser = null;
+        Task<string>? browser = null;
 
         var email = await auth.SignInAsync(url => browser = BrowserAsync(url, "CODE-1"), TimeSpan.FromSeconds(30));
-        await browser!;
+        Assert.Contains("Đã đăng nhập Google (chi.huyen@gmail.com)", await browser!); // trang trả sau khi đã đổi mã
 
         Assert.Equal("chi.huyen@gmail.com", email);
         Assert.Equal(("chi.huyen@gmail.com", "RT1"), store.Saved);
@@ -111,11 +111,33 @@ public class GoogleAuthTests
         Assert.Single(google.Requests);
     }
 
+    /// <summary>Trang đồng ý của Google cho bỏ tick ô Google Drive: đăng nhập "thành công" nhưng không có quyền Drive.</summary>
+    [Fact]
+    public async Task Sign_in_without_the_drive_box_ticked_is_refused_and_revoked()
+    {
+        var google = new FakeGoogle((r, _) => r.RequestUri!.ToString() == GoogleAuth.DefaultRevokeUrl
+            ? (HttpStatusCode.OK, "{}")
+            : (HttpStatusCode.OK, $$"""{"access_token":"AT1","expires_in":3599,"refresh_token":"RT1","id_token":"{{IdToken("a@b.c")}}","scope":"openid https://www.googleapis.com/auth/userinfo.email"}"""));
+        var store = new MemoryTokenStore();
+        var auth = new GoogleAuth(Client, store, new HttpClient(google));
+        Task<string>? browser = null;
+
+        var ex = await Assert.ThrowsAsync<GoogleAuthException>(() => auth.SignInAsync(url => browser = BrowserAsync(url, "CODE-2"), TimeSpan.FromSeconds(30)));
+        var page = await browser!;
+        Assert.Contains("Chưa đăng nhập xong", page); // trình duyệt không còn báo "Đã đăng nhập" sai
+        Assert.Contains("Google Drive", page);
+
+        Assert.Equal(GoogleAuth.MissingDriveScope, ex.Message);
+        Assert.Contains("tick", ex.Message);
+        Assert.Null(store.Saved);
+        Assert.Equal("token=RT1", google.Requests[^1].Body); // thu hồi phiên thiếu quyền
+    }
+
     [Fact]
     public async Task Sign_in_reports_a_cancelled_consent()
     {
         var auth = new GoogleAuth(Client, new MemoryTokenStore(), new HttpClient(new FakeGoogle((_, _) => (HttpStatusCode.OK, "{}"))));
-        Task? browser = null;
+        Task<string>? browser = null;
 
         var ex = await Assert.ThrowsAsync<GoogleAuthException>(() => auth.SignInAsync(url => browser = BrowserAsync(url, null), TimeSpan.FromSeconds(30)));
         await browser!;
@@ -123,7 +145,7 @@ public class GoogleAuthTests
     }
 
     /// <summary>Trình duyệt giả: mở 1 kết nối "dự phòng" không gửi gì (như Chrome), rồi gọi về redirect_uri với code / lỗi.</summary>
-    private static async Task BrowserAsync(string url, string? code)
+    private static async Task<string> BrowserAsync(string url, string? code)
     {
         var query = new Uri(url).Query.TrimStart('?').Split('&').Select(p => p.Split('=')).ToDictionary(p => p[0], p => Uri.UnescapeDataString(p[1]));
         var redirect = new Uri(query["redirect_uri"]);
@@ -133,6 +155,7 @@ public class GoogleAuthTests
         var target = code is null ? $"?error=access_denied&state={query["state"]}" : $"?code={code}&state={query["state"]}";
         var page = await http.GetStringAsync(redirect + target);
         Assert.Contains("MeRon", page);
+        return page;
     }
 
     [Fact]
@@ -249,6 +272,15 @@ public class DriveUploaderTests
         ex = await Assert.ThrowsAsync<GoogleAuthException>(() =>
             new DriveUploader(new HttpClient(quota), _ => Task.FromResult("AT")).UploadBackupAsync(folder, "PHONE"));
         Assert.Equal("Google Drive báo lỗi (HTTP 403): The user's Drive storage quota has been exceeded.", ex.Message);
+        Assert.False(ex.NeedsSignIn);
+
+        // Phiên cũ đăng nhập mà chưa tick quyền Drive → báo cách sửa + cần đăng nhập lại
+        var scopes = new FakeGoogle((_, _) => (HttpStatusCode.Forbidden,
+            """{"error":{"code":403,"message":"Request had insufficient authentication scopes.","status":"PERMISSION_DENIED"}}"""));
+        ex = await Assert.ThrowsAsync<GoogleAuthException>(() =>
+            new DriveUploader(new HttpClient(scopes), _ => Task.FromResult("AT")).UploadBackupAsync(folder, null));
+        Assert.Equal(GoogleAuth.MissingDriveScope, ex.Message);
+        Assert.True(ex.NeedsSignIn);
 
         Directory.Delete(folder, true);
         Directory.CreateDirectory(folder);

@@ -153,12 +153,12 @@ public sealed partial class ExportViewModel : ObservableObject
         try
         {
             GoogleEmail = await auth.SignInAsync(OpenUrl, TimeSpan.FromMinutes(5));
-            AppLog.For("Google").LogInformation("Đăng nhập Google: {Email}", GoogleEmail);
+            AppLog.For("Google").LogInformation("Đăng nhập Google: {Email}; quyền: {Scopes}", GoogleEmail, auth.LastGrantedScopes);
             DriveStatus = $"Đã đăng nhập Google: {GoogleEmail}";
         }
         catch (Exception ex)
         {
-            AppLog.For("Google").LogError(ex, "Đăng nhập Google lỗi");
+            AppLog.For("Google").LogError(ex, "Đăng nhập Google lỗi; quyền Google cấp: {Scopes}", auth.LastGrantedScopes ?? "(chưa tới bước cấp quyền)");
             DriveStatus = ex is GoogleAuthException ? ex.Message : "Đăng nhập Google lỗi: " + ex.Message;
         }
         finally
@@ -223,6 +223,10 @@ public sealed partial class ExportViewModel : ObservableObject
         {
             AppLog.For("Google").LogError(ex, "Tải lên Drive lỗi");
             DriveStatus = ex is GoogleAuthException ? ex.Message : "Tải lên Google Drive lỗi: " + ex.Message;
+            if (ex is GoogleAuthException { NeedsSignIn: true })
+            {
+                await auth.SignOutAsync(); // đăng nhập lại để cấp đủ quyền
+            }
             GoogleEmail = GoogleServices.Auth?.Email ?? string.Empty; // phiên bị thu hồi → về trạng thái chưa đăng nhập
             OnPropertyChanged(nameof(IsSignedOut));
         }

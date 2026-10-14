@@ -247,6 +247,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   đã chọn hoặc folder riêng "MeRon backup". File client_secret_….json không commit (.gitignore). Unit test 106/106 (14 mới,
   có đăng nhập giả lập qua cổng loopback); GUI Sandbox `meron_google.ps1` 9/9 (không mạng: tới bước chờ trình duyệt + huỷ),
   export 15/15, các bộ khác đạt (2026-10-14)
+- [x] Sửa lỗi "Google Drive báo lỗi (HTTP 403): Request had insufficient authentication scopes": trang đồng ý của Google cho
+  bỏ tick ô quyền Drive → đăng nhập kiểm tra quyền được cấp, thiếu thì thu hồi + báo cách tick; phiên cũ thiếu quyền khi upload
+  thì tự đăng xuất + báo đăng nhập lại. Trang trình duyệt chỉ báo sau khi đã đổi mã + kiểm tra quyền (trước: báo "Đã đăng
+  nhập" dù app từ chối); log ghi các quyền Google cấp. Unit test 107/107; GUI Sandbox Google 9/9 (2026-10-14)
 - [ ] Người dùng thử tay: Đăng nhập Google thật, Xuất lên Google Drive (để trống ô Folder, rồi thử dán link folder điện
   thoại), Đăng xuất / mở lại app vẫn nhớ đăng nhập
 - [ ] Người dùng thử tay Sao chép đơn

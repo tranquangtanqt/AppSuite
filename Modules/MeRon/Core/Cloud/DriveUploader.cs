@@ -109,6 +109,10 @@ public sealed class DriveUploader(HttpClient http, Func<CancellationToken, Task<
         {
             var message = json.ValueKind == JsonValueKind.Object && json.TryGetProperty("error", out var error) && error.ValueKind == JsonValueKind.Object
                           && error.TryGetProperty("message", out var m) ? m.GetString() : null;
+            if (response.StatusCode == HttpStatusCode.Forbidden && message?.Contains("insufficient authentication scopes", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                throw new GoogleAuthException(GoogleAuth.MissingDriveScope) { NeedsSignIn = true };
+            }
             throw new GoogleAuthException($"Google Drive báo lỗi (HTTP {(int)response.StatusCode}){(message is null ? "." : ": " + message)}");
         }
         return json;
