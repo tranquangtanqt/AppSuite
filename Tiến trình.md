@@ -216,6 +216,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Đặt hàng 36/36 (2026-10-13)
 - [x] Sao chép đơn: giữ nguyên ngày giờ giao của đơn gốc (trước: giao hôm nay); đơn gốc không có ngày giao → hôm nay
   (2026-10-14)
+- [x] Sửa lỗi ô chọn khách (lọc khách ở Đặt hàng / Theo đơn hàng, form đơn): gõ tên rồi bấm chuột vào gợi ý thì tên lên ô
+  nhưng danh sách không đóng, phải bấm lần 2 → đóng danh sách + bỏ gợi ý cũ sau khi chọn. GUI Sandbox `meron_suggest.ps1`
+  (gõ phím thật + bấm chuột) 11/11; Đặt hàng 36/36, Sao chép 19/19, giữ bộ lọc 16/16, báo cáo 32/32 (2026-10-14)
 - [ ] Người dùng thử tay Sao chép đơn
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

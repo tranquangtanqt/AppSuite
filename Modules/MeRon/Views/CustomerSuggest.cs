@@ -52,6 +52,14 @@ internal static class CustomerSuggest
                 sender.Text = chosen.Name;
                 choose(chosen);
             }
+            // Bấm chuột vào gợi ý sau khi gõ phím: ô tự mở lại danh sách sau sự kiện này (phải bấm lần 2 mới đóng) →
+            // đóng sau 1 nhịp và bỏ gợi ý cũ (gõ tiếp thì TextChanged nạp lại).
+            sender.IsSuggestionListOpen = false;
+            sender.DispatcherQueue.TryEnqueue(() =>
+            {
+                sender.IsSuggestionListOpen = false;
+                sender.ItemsSource = null;
+            });
         };
 
         box.GotFocus += (_, _) =>
