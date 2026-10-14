@@ -92,8 +92,30 @@ public sealed partial class OrderLineViewModel : ObservableObject
         ProductError = $"Không có món \"{text.Trim()}\" trong danh sách - chọn 1 món trong danh sách.";
     }
 
+    // Số đang gõ trong ô (NumberBox chỉ ghi Value khi rời ô / Enter) - để Thành tiền / Tổng đổi ngay lúc gõ. null = dùng giá trị đã ghi.
+    private double? _typingQuantity;
+    private double? _typingFreePrice;
+
+    /// <summary>Ô Số lượng đang gõ: số hợp lệ (≥ 1) thì tính tạm theo số đó; null / không hợp lệ thì về giá trị đã ghi.</summary>
+    public void PreviewQuantity(double? value)
+    {
+        _typingQuantity = value is { } q && q >= 1 ? Math.Round(q) : null;
+        OnPropertyChanged(nameof(LineTotalText));
+        _owner.Recalculate();
+    }
+
+    /// <summary>Ô Đơn giá món tự do đang gõ (như <see cref="PreviewQuantity"/>).</summary>
+    public void PreviewFreePrice(double? value)
+    {
+        _typingFreePrice = value is { } p && p >= 0 ? Math.Round(p) : null;
+        OnPropertyChanged(nameof(UnitPriceText));
+        OnPropertyChanged(nameof(LineTotalText));
+        _owner.Recalculate();
+    }
+
     partial void OnQuantityChanged(double value)
     {
+        _typingQuantity = null;
         if (double.IsNaN(value) || value < 1)
         {
             Quantity = 1;
@@ -107,7 +129,11 @@ public sealed partial class OrderLineViewModel : ObservableObject
         _owner.Recalculate();
     }
 
-    partial void OnFreePriceChanged(double value) => _owner.Recalculate();
+    partial void OnFreePriceChanged(double value)
+    {
+        _typingFreePrice = null;
+        _owner.Recalculate();
+    }
 
     partial void OnFreeNameChanged(string value) => _owner.Error = string.Empty;
 
@@ -132,10 +158,10 @@ public sealed partial class OrderLineViewModel : ObservableObject
 
     public OrderLineDraft ToDraft() => new(
         IsFree ? null : SelectedProduct?.Id,
-        double.IsNaN(Quantity) ? 1 : (long)Quantity,
+        _typingQuantity is { } typed ? (long)typed : double.IsNaN(Quantity) ? 1 : (long)Quantity,
         IsFree,
         IsFree ? FreeName : null,
-        IsFree && !double.IsNaN(FreePrice) ? (long)Math.Round(FreePrice) : null,
+        IsFree ? _typingFreePrice is { } typedPrice ? (long)typedPrice : double.IsNaN(FreePrice) ? null : (long)Math.Round(FreePrice) : null,
         OriginalProductId,
         SnapshotPrice);
 }
@@ -218,8 +244,20 @@ public sealed partial class OrderFormViewModel : ObservableObject
 
     public bool PaymentVisible => IsPrepaid;
 
+    private double? _typingDiscount;
+
+    /// <summary>Ô Giảm giá đang gõ (NumberBox chỉ ghi Value khi rời ô / Enter) → Tổng đổi ngay; null = dùng giá trị đã ghi.</summary>
+    public void PreviewDiscount(double? value)
+    {
+        _typingDiscount = value is { } d && d >= 0 ? Math.Round(d) : null;
+        Recalculate();
+    }
+
+    private long DiscountValue => _typingDiscount is { } typed ? (long)typed : double.IsNaN(Discount) ? 0 : (long)Math.Round(Discount);
+
     partial void OnDiscountChanged(double value)
     {
+        _typingDiscount = null;
         if (double.IsNaN(value) || value < 0)
         {
             Discount = 0;
@@ -239,6 +277,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
 
     public void Load(OrderFormArgs args)
     {
+        _typingDiscount = null;
         Customers = CustomerOption.From(AppServices.MasterData.GetCustomers());
         var products = AppServices.MasterData.GetProducts();
         ProductMap = products.ToDictionary(p => p.Id);
@@ -339,7 +378,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
     {
         var drafts = Lines.Select(l => l.ToDraft()).ToList();
         var subTotal = OrderCalculator.SubTotal(drafts, ProductMap);
-        var discount = double.IsNaN(Discount) ? 0 : (long)Math.Round(Discount);
+        var discount = DiscountValue;
         SubTotalText = "Tạm tính: " + VnFormat.Money(subTotal);
         TotalText = "Tổng: " + VnFormat.Money(OrderCalculator.Total(subTotal, discount));
         QuantityText = $"Tổng số lượng: {VnFormat.Number(OrderCalculator.TotalQuantity(drafts))} món";
@@ -357,7 +396,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
             ? _originalPayment is { } op && op.Date == pd.Date ? op : pd.Date
             : null;
         return new OrderDraft(Id, Customer?.Id, OriginalStatus, delivery, IsPrepaid, payment,
-            double.IsNaN(Discount) ? 0 : (long)Math.Round(Discount), Note, Lines.Select(l => l.ToDraft()).ToList());
+            DiscountValue, Note, Lines.Select(l => l.ToDraft()).ToList());
     }
 
     /// <summary>Kiểm tra form; trả về lỗi (kèm dòng / ô cần đưa con trỏ tới) hoặc null.</summary>

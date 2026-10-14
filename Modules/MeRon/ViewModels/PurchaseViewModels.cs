@@ -79,14 +79,29 @@ public sealed partial class PurchaseLineViewModel(PurchaseFormViewModel owner, s
     [ObservableProperty]
     private double _price = price is { } p ? p : double.NaN;
 
-    partial void OnPriceChanged(double value) => owner.Recalculate();
+    // Giá đang gõ (NumberBox chỉ ghi Value khi rời ô / Enter) - để Tổng đổi ngay lúc gõ. null = dùng giá đã ghi.
+    private double? _typingPrice;
+
+    /// <summary>Ô Giá tiền đang gõ: số hợp lệ (≥ 0) thì tính tạm theo số đó; null / không hợp lệ thì về giá đã ghi.</summary>
+    public void PreviewPrice(double? value)
+    {
+        _typingPrice = value is { } p && p >= 0 ? Math.Round(p) : null;
+        owner.Recalculate();
+    }
+
+    partial void OnPriceChanged(double value)
+    {
+        _typingPrice = null;
+        owner.Recalculate();
+    }
 
     partial void OnNameChanged(string value) => owner.Error = string.Empty;
 
     [RelayCommand]
     private void Remove() => owner.RemoveLine(this);
 
-    public PurchaseLineDraft ToDraft() => new(Name, double.IsNaN(Price) ? null : (long)Math.Round(Price));
+    public PurchaseLineDraft ToDraft() =>
+        new(Name, _typingPrice is { } typed ? (long)typed : double.IsNaN(Price) ? null : (long)Math.Round(Price));
 }
 
 /// <summary>Form phiếu nhập (purchase_form_screen của điện thoại): Ngày nhập, các khoản, Tổng tự cộng, Lưu, Xoá phiếu.</summary>

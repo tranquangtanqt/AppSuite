@@ -23,7 +23,31 @@ public sealed partial class OrderFormPage : Page
         Bindings.Update();
     }
 
-    private void MoneyBox_Loaded(object sender, RoutedEventArgs e) => ((NumberBox)sender).NumberFormatter = Format.MoneyFormatter();
+    // Ô số: Tổng tính lại ngay lúc gõ (LiveNumberBox); tiền canh phải, số lượng canh giữa.
+    private void DiscountBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        var box = (NumberBox)sender;
+        box.NumberFormatter = Format.MoneyFormatter();
+        LiveNumberBox.Attach(box, ViewModel.PreviewDiscount, TextAlignment.Right);
+    }
+
+    private void FreePriceBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        var box = (NumberBox)sender;
+        box.NumberFormatter = Format.MoneyFormatter();
+        if (box.DataContext is OrderLineViewModel line)
+        {
+            LiveNumberBox.Attach(box, line.PreviewFreePrice, TextAlignment.Right);
+        }
+    }
+
+    private void QuantityBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (sender is NumberBox { DataContext: OrderLineViewModel line } box)
+        {
+            LiveNumberBox.Attach(box, line.PreviewQuantity, TextAlignment.Center);
+        }
+    }
 
     private void ProductBox_Loaded(object sender, RoutedEventArgs e) => ProductSuggest.Attach((AutoSuggestBox)sender);
 

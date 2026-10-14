@@ -43,10 +43,11 @@
                                         <ColumnDefinition Width="160" />
                                         <ColumnDefinition Width="40" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="NameBox" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Tên hàng"
+                                    <!-- Style mặc định (cỡ chữ 14) như ô Giá tiền bên cạnh; style gọn chung (SharedUI) chỉ áp lên TextBox nên chữ nhỏ hơn. -->
+                                    <TextBox x:Name="NameBox" Style="{StaticResource DefaultTextBoxStyle}" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Tên hàng"
                                              AutomationProperties.Name="Tên hàng" />
                                     <NumberBox x:Name="PriceBox" Grid.Column="1" Value="{x:Bind Price, Mode=TwoWay}" Minimum="0" PlaceholderText="Giá tiền"
-                                               Loaded="MoneyBox_Loaded" AutomationProperties.Name="Giá tiền" />
+                                               Loaded="PriceBox_Loaded" AutomationProperties.Name="Giá tiền" />
                                     <Button Grid.Column="2" Command="{x:Bind RemoveCommand}" Padding="6" Background="Transparent" BorderThickness="0"
                                             AutomationProperties.Name="Xoá khoản" ToolTipService.ToolTip="Xoá khoản">
                                         <SymbolIcon Symbol="Cancel" />

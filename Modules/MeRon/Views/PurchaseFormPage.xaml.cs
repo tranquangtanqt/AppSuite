@@ -21,7 +21,16 @@ public sealed partial class PurchaseFormPage : Page
         Bindings.Update();
     }
 
-    private void MoneyBox_Loaded(object sender, RoutedEventArgs e) => ((NumberBox)sender).NumberFormatter = Format.MoneyFormatter();
+    // Tổng tính lại ngay lúc gõ (LiveNumberBox); tiền canh phải.
+    private void PriceBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        var box = (NumberBox)sender;
+        box.NumberFormatter = Format.MoneyFormatter();
+        if (box.DataContext is PurchaseLineViewModel line)
+        {
+            LiveNumberBox.Attach(box, line.PreviewPrice, TextAlignment.Right);
+        }
+    }
 
     private void Back_Click(object sender, RoutedEventArgs e) => GoBack();
 
