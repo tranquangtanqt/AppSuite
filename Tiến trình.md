@@ -214,6 +214,8 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   giao hôm nay (giữ giờ giao gốc), Đã lên đơn, chưa thanh toán, giá hiện tại (báo ở đầu form khi giá đổi; món không còn →
   món tự do); chưa lưu đến khi bấm Lưu, Lưu về thẳng danh sách. Unit test 61/61; GUI Sandbox `meron_copy.ps1` 21/21 +
   Đặt hàng 36/36 (2026-10-13)
+- [x] Sao chép đơn: giữ nguyên ngày giờ giao của đơn gốc (trước: giao hôm nay); đơn gốc không có ngày giao → hôm nay
+  (2026-10-14)
 - [ ] Người dùng thử tay Sao chép đơn
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

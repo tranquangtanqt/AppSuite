@@ -239,7 +239,7 @@ public class OrderCopierTests
         ]);
 
     [Fact]
-    public void Copy_is_a_new_unpaid_order_for_the_given_day_keeping_delivery_time()
+    public void Copy_is_a_new_unpaid_order_keeping_the_original_delivery()
     {
         var draft = OrderCopier.CopyAsNew(Paid, new DateOnly(2026, 10, 13), Products).Draft;
 
@@ -249,7 +249,7 @@ public class OrderCopierTests
         Assert.Equal(OrderStatus.Shipping, OrderCalculator.StatusOnSave(draft));
         Assert.False(draft.IsPrepaid);
         Assert.Null(draft.Payment);
-        Assert.Equal(new DateTime(2026, 10, 13, 14, 20, 53, 242).AddTicks(9920), draft.Delivery);
+        Assert.Equal(new DateTime(2026, 6, 27, 14, 20, 53, 242).AddTicks(9920), draft.Delivery);
         Assert.Equal(1000, draft.Discount);
         Assert.Equal("Giao cổng sau", draft.Note);
     }
@@ -277,7 +277,7 @@ public class OrderCopierTests
     }
 
     [Fact]
-    public void Copy_of_order_without_delivery_or_changes_has_no_notices()
+    public void Copy_of_order_without_delivery_or_changes_is_delivered_on_the_fallback_day_with_no_notices()
     {
         var plain = Paid with { DeliveryDatetime = null, Items = [new OrderItem(1, 7, 1, "Bánh bao không nhân", 5000, 4, 20000)] };
         var copy = OrderCopier.CopyAsNew(plain, new DateOnly(2026, 10, 13), Products);

@@ -178,7 +178,7 @@
                 </Button>
                 <Button Content="Quay lại" Click="Back_Click" />
                 <Button Click="CopyOrder_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsEdit), Mode=OneWay}" Margin="24,0,0,0"
-                        AutomationProperties.Name="Sao chép đơn" ToolTipService.ToolTip="Tạo đơn mới giống đơn này (giao hôm nay, giá hiện tại) - không lưu đơn đang sửa">
+                        AutomationProperties.Name="Sao chép đơn" ToolTipService.ToolTip="Tạo đơn mới giống đơn này (cùng ngày giao, giá hiện tại) - không lưu đơn đang sửa">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <SymbolIcon Symbol="Copy" />
                         <TextBlock Text="Sao chép đơn" />

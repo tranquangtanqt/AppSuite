@@ -36,12 +36,13 @@ public sealed record OrderCopy(OrderDraft Draft, IReadOnlyList<string> Notices);
 
 /// <summary>
 /// Nhân bản đơn (khách quen đặt lặp lại): chép khách, các món + số lượng, món tự do, giảm giá, ghi chú. Đơn mới luôn là
-/// Đã lên đơn, chưa thanh toán; ngày giao = <c>deliveryDay</c> với giờ giao của đơn gốc; món thường tính giá hiện tại
-/// (không khoá giá cũ); món không còn trong danh sách chép thành món tự do với tên + đơn giá lúc đặt.
+/// Đã lên đơn, chưa thanh toán; ngày giờ giao giữ nguyên như đơn gốc (đơn gốc không có ngày giao → <c>fallbackDay</c>);
+/// món thường tính giá hiện tại (không khoá giá cũ); món không còn trong danh sách chép thành món tự do với tên + đơn giá
+/// lúc đặt.
 /// </summary>
 public static class OrderCopier
 {
-    public static OrderCopy CopyAsNew(Order source, DateOnly deliveryDay, IReadOnlyDictionary<long, Product> products)
+    public static OrderCopy CopyAsNew(Order source, DateOnly fallbackDay, IReadOnlyDictionary<long, Product> products)
     {
         var notices = new List<string>();
         var lines = new List<OrderLineDraft>();
@@ -66,8 +67,8 @@ public static class OrderCopier
             }
         }
 
-        var time = source.Delivery is { } d ? TimeOnly.FromDateTime(d) : TimeOnly.MinValue;
-        var draft = new OrderDraft(0, source.UserId, OrderStatus.Shipping, deliveryDay.ToDateTime(time), false, null,
+        var delivery = source.Delivery ?? fallbackDay.ToDateTime(TimeOnly.MinValue);
+        var draft = new OrderDraft(0, source.UserId, OrderStatus.Shipping, delivery, false, null,
             source.DiscountValue, source.Note, lines);
         return new OrderCopy(draft, notices);
     }
