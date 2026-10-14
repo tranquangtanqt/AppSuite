@@ -13,6 +13,8 @@ public sealed partial class AddressesPage : Page
     public AddressesPage()
     {
         InitializeComponent();
+        Shortcuts.Search(this, SearchBox);
+        Shortcuts.Ctrl(this, Windows.System.VirtualKey.N, () => Add_Click(this, new RoutedEventArgs()));
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e) => ViewModel.Load();

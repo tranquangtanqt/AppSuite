@@ -22,6 +22,9 @@ public sealed partial class OrdersPage : Page
     {
         InitializeComponent();
         CustomerSuggest.Attach(CustomerBox, () => ViewModel.Customers, () => ViewModel.Customer, c => ViewModel.Customer = c);
+        Shortcuts.Search(this, CustomerBox);
+        Shortcuts.StatusTabs(this, StatusBar);
+        Shortcuts.Ctrl(this, Windows.System.VirtualKey.D, () => RangeMenu.ShowAt(RangeButton));
         foreach (var sort in Enum.GetValues<OrderSort>())
         {
             var item = new RadioMenuFlyoutItem { Text = OrdersViewModel.SortLabel(sort), Tag = sort, GroupName = "sort" };

@@ -25,7 +25,7 @@
             </Grid.ColumnDefinitions>
             <TextBlock Text="Món ăn" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.CountText, Mode=OneWay}" AutomationProperties.AutomationId="CountText" Opacity="0.7" VerticalAlignment="Center" Margin="12,0,0,0" />
-            <TextBox Grid.Column="3" PlaceholderText="Tìm theo tên món" AutomationProperties.Name="Tìm món ăn"
+            <TextBox x:Name="SearchBox" Grid.Column="3" PlaceholderText="Tìm theo tên món" AutomationProperties.Name="Tìm món ăn"
                      Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Grid.Column="4" Style="{StaticResource AccentButtonStyle}" Click="Add_Click" AutomationProperties.Name="Thêm món ăn">
                 <StackPanel Orientation="Horizontal" Spacing="6">

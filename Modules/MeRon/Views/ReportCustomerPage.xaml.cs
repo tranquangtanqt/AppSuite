@@ -12,6 +12,7 @@ public sealed partial class ReportCustomerPage : Page
     public ReportCustomerPage()
     {
         InitializeComponent();
+        Shortcuts.Ctrl(this, Windows.System.VirtualKey.D, RangeBar.ShowPresets);
     }
 
     private bool _filterInitialized;

@@ -11,6 +11,7 @@ public sealed partial class ReportSummaryPage : Page
     public ReportSummaryPage()
     {
         InitializeComponent();
+        Shortcuts.Ctrl(this, Windows.System.VirtualKey.D, RangeBar.ShowPresets);
     }
 
     private bool _filterInitialized;

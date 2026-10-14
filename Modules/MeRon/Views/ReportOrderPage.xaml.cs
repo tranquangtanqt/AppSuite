@@ -19,6 +19,9 @@ public sealed partial class ReportOrderPage : Page
     public ReportOrderPage()
     {
         InitializeComponent();
+        Shortcuts.Ctrl(this, Windows.System.VirtualKey.D, RangeBar.ShowPresets);
+        Shortcuts.Search(this, CustomerBox);
+        Shortcuts.StatusTabs(this, StatusBar);
         CustomerSuggest.Attach(CustomerBox, () => ViewModel.Customers, () => ViewModel.Customer, c => ViewModel.Customer = c);
         foreach (var sort in Enum.GetValues<CustomerSort>())
         {

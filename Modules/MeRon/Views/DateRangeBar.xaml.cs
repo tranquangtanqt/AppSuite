@@ -22,6 +22,9 @@ public sealed partial class DateRangeBar : UserControl
         }
     }
 
+    /// <summary>Mở menu chọn nhanh khoảng ngày (Ctrl+D).</summary>
+    public void ShowPresets() => RangeMenu.ShowAt(RangeButton);
+
     public DateRangeFilter Filter
     {
         get => (DateRangeFilter)GetValue(FilterProperty);

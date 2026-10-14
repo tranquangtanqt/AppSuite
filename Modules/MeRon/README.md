@@ -42,6 +42,7 @@ Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu
 | Dữ liệu | **Nhập dữ liệu** | Thư mục 1 lần backup hoặc thư mục cha (tự lấy bản mới nhất `yyyyMMdd_HHmmss`, bỏ `…_bk`). Kiểm tra cả 8 file trước, xem trước "Sẽ nhập / Đang có"; lỗi báo rõ file + dòng và **không** động tới dữ liệu. **Nhập (thay toàn bộ)** hỏi xác nhận, 1 transaction, bản sao an toàn trước |
 | | **Xuất / Xoá dữ liệu** | **Xuất TSV**: thư mục `yyyyMMdd_HHmmss` + 8 file đúng định dạng điện thoại (nhớ thư mục lần trước; Mở thư mục vừa xuất). **Xoá toàn bộ dữ liệu** ở máy: xác nhận 2 lần, bản sao an toàn trước; Mở thư mục Backups |
 | | **Hướng dẫn (F1)** | Cửa sổ hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`), mở đúng mục của trang đang xem; nội dung ở `Core\HelpContent.cs` |
+| | **Phím tắt** (mục riêng trong F1) | Ctrl+F ô tìm / lọc khách; Ctrl+N thêm (mọi trang danh sách); Ctrl+1…4 tab trạng thái (Đặt hàng, Theo đơn hàng); Ctrl+D khoảng ngày nhanh; F5 làm mới; form: Ctrl+S lưu, Ctrl+Shift+N lưu + đơn mới cùng ngày giao, Ctrl+M thêm món / thêm hàng, ↑ / ↓ trong ô Số lượng, Ctrl+Shift+C sao chép đơn, Esc quay lại. Gắn bằng `Views\Shortcuts.cs` lên chính trang (không hiện tooltip phím tắt; bỏ qua khi đang mở hộp thoại) |
 
 Mọi trang có khoảng ngày đều có nút chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Số và tiền
 luôn hiển thị kiểu Việt Nam (`2.617`, `25.000 đ`) bất kể ngôn ngữ Windows.

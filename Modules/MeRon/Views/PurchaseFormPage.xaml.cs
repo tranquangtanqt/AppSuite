@@ -12,6 +12,8 @@ public sealed partial class PurchaseFormPage : Page
     public PurchaseFormPage()
     {
         InitializeComponent();
+        Shortcuts.Ctrl(this, Windows.System.VirtualKey.M, AddLine);
+        Shortcuts.EscapeBack(this, GoBack);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -30,6 +32,21 @@ public sealed partial class PurchaseFormPage : Page
         {
             LiveNumberBox.Attach(box, line.PreviewPrice, TextAlignment.Right);
         }
+    }
+
+    /// <summary>Ctrl+M: như nút Thêm hàng, con trỏ vào ô Tên hàng của dòng mới.</summary>
+    private void AddLine()
+    {
+        ViewModel.AddLineCommand.Execute(null);
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            LinesList.UpdateLayout();
+            if (LinesList.ContainerFromIndex(ViewModel.Lines.Count - 1) is DependencyObject container && Ui.FindByName(container, "NameBox") is Control box)
+            {
+                box.StartBringIntoView();
+                box.Focus(FocusState.Programmatic);
+            }
+        });
     }
 
     private void Back_Click(object sender, RoutedEventArgs e) => GoBack();

@@ -20,7 +20,7 @@
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
             <ComboBox ItemsSource="{x:Bind ViewModel.ProductOptions, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.Product, Mode=TwoWay}"
                       DisplayMemberPath="Name" MinWidth="240" AutomationProperties.Name="Món ăn" PlaceholderText="(Tất cả món)" />
-            <local:DateRangeBar Filter="{x:Bind ViewModel.Range}" />
+            <local:DateRangeBar x:Name="RangeBar" Filter="{x:Bind ViewModel.Range}" />
         </StackPanel>
 
         <InfoBar Grid.Row="2" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"

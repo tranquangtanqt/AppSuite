@@ -35,7 +35,7 @@
                     Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasCustomer), Mode=OneWay}">
                 <SymbolIcon Symbol="Clear" />
             </Button>
-            <local:DateRangeBar Grid.Column="2" Filter="{x:Bind ViewModel.Range}" />
+            <local:DateRangeBar x:Name="RangeBar" Grid.Column="2" Filter="{x:Bind ViewModel.Range}" />
         </Grid>
 
         <InfoBar Grid.Row="3" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"

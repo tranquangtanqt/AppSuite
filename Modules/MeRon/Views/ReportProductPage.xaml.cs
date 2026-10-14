@@ -13,6 +13,7 @@ public sealed partial class ReportProductPage : Page
     public ReportProductPage()
     {
         InitializeComponent();
+        Shortcuts.Ctrl(this, Windows.System.VirtualKey.D, RangeBar.ShowPresets);
     }
 
     private bool _filterInitialized;

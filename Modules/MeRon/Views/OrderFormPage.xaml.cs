@@ -3,6 +3,7 @@ using MeRon.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Windows.System;
 
 namespace MeRon.Views;
 
@@ -14,6 +15,16 @@ public sealed partial class OrderFormPage : Page
     {
         InitializeComponent();
         CustomerSuggest.Attach(CustomerBox, () => ViewModel.Customers, () => ViewModel.Customer, c => ViewModel.Customer = c);
+        Shortcuts.Ctrl(this, VirtualKey.M, AddLine);
+        Shortcuts.Add(this, VirtualKey.N, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => _ = SaveAsync(thenNew: true));
+        Shortcuts.Add(this, VirtualKey.C, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () =>
+        {
+            if (ViewModel.IsEdit)
+            {
+                CopyOrder_Click(this, new RoutedEventArgs());
+            }
+        });
+        Shortcuts.EscapeBack(this, GoBack);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -55,6 +66,13 @@ public sealed partial class OrderFormPage : Page
     private void AddLine_Click(object sender, RoutedEventArgs e) =>
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => FocusLine(ViewModel.Lines.Count - 1, "ProductBox"));
 
+    /// <summary>Ctrl+M: như nút Thêm món.</summary>
+    private void AddLine()
+    {
+        ViewModel.AddLineCommand.Execute(null);
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => FocusLine(ViewModel.Lines.Count - 1, "ProductBox"));
+    }
+
     private void FocusLine(int index, string name)
     {
         LinesList.UpdateLayout();
@@ -80,10 +98,14 @@ public sealed partial class OrderFormPage : Page
     }
 
     /// <summary>Kiểm tra → (trùng đơn cùng ngày thì hỏi "Cảnh báo trùng đơn": Hủy / Vẫn lưu) → lưu → quay lại danh sách.</summary>
-    private async void Save_Click(object sender, RoutedEventArgs e)
+    private async void Save_Click(object sender, RoutedEventArgs e) => await SaveAsync(thenNew: false);
+
+    /// <param name="thenNew">Ctrl+Shift+N: lưu xong mở luôn form đơn mới (cùng ngày giao) để nhập liên tiếp; form mới thay chỗ form này
+    /// trong lịch sử (Quay lại về thẳng danh sách).</param>
+    private async Task SaveAsync(bool thenNew)
     {
         // Ctrl+S khi con trỏ còn trong 1 ô (khách hàng, số tiền...) → chuyển focus để ô đó ghi nhận giá trị trước khi đọc.
-        (sender as Control)?.Focus(FocusState.Programmatic);
+        SaveButton.Focus(FocusState.Programmatic);
 
         if (ViewModel.Validate() is { } invalid)
         {
@@ -96,7 +118,16 @@ public sealed partial class OrderFormPage : Page
         {
             return;
         }
-        if (ViewModel.Save())
+        if (!ViewModel.Save())
+        {
+            return;
+        }
+        if (thenNew)
+        {
+            var day = ViewModel.DeliveryDate is { } d ? DateOnly.FromDateTime(d.Date) : (DateOnly?)null;
+            ReplaceWithForm(new OrderFormArgs(null, InitialDelivery: day));
+        }
+        else
         {
             GoBack();
         }
@@ -108,8 +139,13 @@ public sealed partial class OrderFormPage : Page
     /// </summary>
     private void CopyOrder_Click(object sender, RoutedEventArgs e)
     {
-        var id = ViewModel.Id;
-        Frame.Navigate(typeof(OrderFormPage), new OrderFormArgs(null, CopyFromId: id));
+        ReplaceWithForm(new OrderFormArgs(null, CopyFromId: ViewModel.Id));
+    }
+
+    /// <summary>Mở form đơn khác thay chỗ form này trong lịch sử: Lưu / Quay lại ở form mới về thẳng danh sách.</summary>
+    private void ReplaceWithForm(OrderFormArgs args)
+    {
+        Frame.Navigate(typeof(OrderFormPage), args);
         if (Frame.BackStack.Count > 0 && Frame.BackStack[^1].SourcePageType == typeof(OrderFormPage))
         {
             Frame.BackStack.RemoveAt(Frame.BackStack.Count - 1);

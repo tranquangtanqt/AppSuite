@@ -16,6 +16,7 @@ public sealed partial class PurchasesPage : Page
     public PurchasesPage()
     {
         InitializeComponent();
+        Shortcuts.Ctrl(this, Windows.System.VirtualKey.D, RangeBar.ShowPresets);
     }
 
     private bool _filterInitialized;

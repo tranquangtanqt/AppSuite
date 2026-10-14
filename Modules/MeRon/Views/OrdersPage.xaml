@@ -96,7 +96,7 @@
             <TextBlock Grid.Column="3" Text="–" VerticalAlignment="Center" />
             <CalendarDatePicker Grid.Column="4" Date="{x:Bind ViewModel.ToDate, Mode=TwoWay}" PlaceholderText="Đến ngày"
                                 DateFormat="{}{day.integer(2)}/{month.integer(2)}/{year.full}" AutomationProperties.Name="Đến ngày" Width="136" />
-            <DropDownButton Grid.Column="5" AutomationProperties.Name="Khoảng ngày nhanh" ToolTipService.ToolTip="Chọn nhanh khoảng ngày">
+            <DropDownButton x:Name="RangeButton" Grid.Column="5" AutomationProperties.Name="Khoảng ngày nhanh" ToolTipService.ToolTip="Chọn nhanh khoảng ngày">
                 <FontIcon Glyph="&#xE787;" FontSize="16" />
                 <DropDownButton.Flyout>
                     <MenuFlyout x:Name="RangeMenu" Placement="BottomEdgeAlignedRight" />

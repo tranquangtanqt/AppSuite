@@ -169,7 +169,7 @@
         <!-- Nút cố định cuối trang -->
         <Border Grid.Row="1" Padding="24,10" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button Style="{StaticResource AccentButtonStyle}" Click="Save_Click" AutomationProperties.Name="Lưu đơn" ToolTipService.ToolTip="Lưu (Ctrl+S)">
+                <Button x:Name="SaveButton" Style="{StaticResource AccentButtonStyle}" Click="Save_Click" AutomationProperties.Name="Lưu đơn" ToolTipService.ToolTip="Lưu (Ctrl+S)">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <SymbolIcon Symbol="Save" />
                         <TextBlock Text="Lưu" />

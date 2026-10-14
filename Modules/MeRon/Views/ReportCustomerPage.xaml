@@ -24,7 +24,7 @@
             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Summary, Mode=OneWay}" Opacity="0.75" VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="CustomerReportSummary" />
         </Grid>
-        <local:DateRangeBar Grid.Row="1" Filter="{x:Bind ViewModel.Range}" />
+        <local:DateRangeBar x:Name="RangeBar" Grid.Row="1" Filter="{x:Bind ViewModel.Range}" />
         <InfoBar Grid.Row="2" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                  IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
 
