@@ -276,6 +276,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   cam) - bảng trong khung bo góc, số mục nhãn tròn. Cửa sổ F1 giữ nguyên (người dùng chọn). Cập nhật F1, README. Ảnh trước /
   sau ở `Pictures\MeRon giao dien mau 2026-10-15\5_dot2_cac_trang_con_lai` (2026-10-15)
 - [ ] Còn kiểu cũ: Khách hàng tiềm năng, Khách lâu không đặt, Nhập / Xuất dữ liệu, form thêm / sửa đơn và phiếu nhập
+- [x] Cảnh báo trước khi nhập đè mất phần sửa trên máy tính: trigger SQLite trên 8 bảng đếm dòng thêm / sửa / xoá (tắt trong
+  lúc nhập); trang Nhập hiện khung vàng "Có thay đổi trên máy tính chưa xuất" (số dòng, từ lúc nào) + nút Mở trang Xuất; hộp
+  xác nhận đổi tiêu đề + nút "Vẫn nhập, bỏ thay đổi" (chọn sẵn Huỷ); xuất TSV / Drive, nhập, xoá toàn bộ → về 0. Database
+  cũ bắt đầu đếm từ lần mở app đầu tiên sau khi cập nhật. Unit test 112/112; GUI Sandbox cảnh báo 12/12, xuất 15/15, báo
+  cáo 33/33, Đặt hàng 36/36, tổng quát 37/37, trang Nhập 13/13 (2026-10-15)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
 - [ ] App điện thoại me-ron: 22 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + 4 chức năng

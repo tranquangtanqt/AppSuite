@@ -323,3 +323,51 @@ public class MasterDataTests
         Assert.Empty(TextSearch.Filter(products, p => p, "che buoi xanh", 50));
     }
 }
+
+/// <summary>Đếm thay đổi trên máy tính chưa xuất (cảnh báo trước khi nhập đè, 2026-10-15).</summary>
+public class UnsyncedEditTests
+{
+    private static void Sql(MeRonDatabase db, string sql)
+    {
+        using var connection = db.Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        command.ExecuteNonQuery();
+    }
+
+    [Fact]
+    public void Edits_are_counted_until_export_import_or_wipe()
+    {
+        using var temp = new TempFolder();
+        var db = temp.NewDatabase();
+        Assert.False(db.GetUnsyncedEdits().Any);
+
+        // Nhập backup: hàng nghìn dòng nạp vào không tính là "sửa trên máy tính"
+        BackupImporter.Apply(BackupImporter.Prepare(new LocalFolderBackupSource(Backup.Write(temp.Sub("in"))).Resolve()), db);
+        Assert.Equal(0, db.GetUnsyncedEdits().Count);
+
+        // Sửa 1 khách, thêm 1 địa chỉ, xoá địa chỉ đó: mọi đường ghi đều đếm (không cần sửa từng repository)
+        Sql(db, "UPDATE Users SET note = 'đã sửa' WHERE id = 1");
+        Sql(db, "INSERT INTO Address (code, name) VALUES ('W9', 'Toà W9')");
+        Sql(db, "DELETE FROM Address WHERE code = 'W9'");
+        var edits = db.GetUnsyncedEdits();
+        Assert.Equal(3, edits.Count);
+        Assert.NotNull(edits.Since);
+        Assert.True(edits.Last >= edits.Since);
+
+        // Xuất → mọi thay đổi đã nằm trong bản xuất
+        BackupExporter.Export(db, temp.Sub("out"), DateTime.Now);
+        Assert.False(db.GetUnsyncedEdits().Any);
+
+        Sql(db, "UPDATE Users SET note = 'sửa lần 2' WHERE id = 1");
+        Assert.Equal(1, db.GetUnsyncedEdits().Count);
+        BackupImporter.Apply(BackupImporter.Prepare(new LocalFolderBackupSource(Backup.Write(temp.Sub("in2"))).Resolve()), db);
+        Assert.False(db.GetUnsyncedEdits().Any);
+        Assert.Null(db.GetMeta(MeRonDatabase.MetaKeys.EditTrackingOff)); // trigger bật lại sau khi nhập
+
+        Sql(db, "UPDATE Users SET note = 'sửa lần 3' WHERE id = 1");
+        Assert.True(db.GetUnsyncedEdits().Any);
+        db.WipeAll();
+        Assert.False(db.GetUnsyncedEdits().Any);
+    }
+}

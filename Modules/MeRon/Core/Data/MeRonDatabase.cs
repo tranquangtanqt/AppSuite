@@ -52,6 +52,10 @@ public sealed class MeRonDatabase
         {
             Execute(connection, sql);
         }
+        foreach (var sql in EditTriggerSql())
+        {
+            Execute(connection, sql);
+        }
         Execute(connection, $"PRAGMA user_version = {Schema.Version};");
         transaction.Commit();
     }
@@ -120,9 +124,60 @@ public sealed class MeRonDatabase
         Execute(connection, $"DELETE FROM sqlite_sequence WHERE name IN ({string.Join(", ", Schema.BackupTables.Select(t => $"'{t.Name}'"))});");
         Execute(connection,
             $"DELETE FROM MeRonMeta WHERE key IN ('{MetaKeys.LastImportSource}', '{MetaKeys.LastImportBackupName}', '{MetaKeys.LastImportAt}');");
+        ResetUnsyncedEdits(connection); // đã xoá sạch (có bản sao) → không còn gì để mất khi nhập
         transaction.Commit();
         return copy;
     }
+
+    // ---- Thay đổi trên máy tính chưa xuất (cảnh báo trước khi nhập đè) ----
+
+    /// <summary>
+    /// Mỗi bảng nghiệp vụ có trigger sau INSERT / UPDATE / DELETE: tăng bộ đếm <see cref="MetaKeys.UnsyncedEdits"/> (số dòng đã
+    /// thêm / sửa / xoá), ghi lần sửa đầu (<see cref="MetaKeys.UnsyncedSince"/>) và cuối (<see cref="MetaKeys.LastEditAt"/>).
+    /// Bắt mọi đường ghi (form, Thanh toán toàn bộ, xoá...) mà không phải sửa từng chỗ. Nhập backup tự đặt
+    /// <see cref="MetaKeys.EditTrackingOff"/> trong transaction để không đếm các dòng vừa nạp.
+    /// </summary>
+    internal static IEnumerable<string> EditTriggerSql()
+    {
+        const string now = "strftime('%Y-%m-%dT%H:%M:%S', 'now', 'localtime')";
+        foreach (var table in Schema.BackupTables)
+        {
+            foreach (var op in new[] { "INSERT", "UPDATE", "DELETE" })
+            {
+                yield return $"""
+                    CREATE TRIGGER IF NOT EXISTS meron_edit_{table.Name}_{op.ToLowerInvariant()} AFTER {op} ON {table.Name}
+                    WHEN (SELECT value FROM MeRonMeta WHERE key = '{MetaKeys.EditTrackingOff}') IS NULL
+                    BEGIN
+                        INSERT INTO MeRonMeta(key, value) VALUES ('{MetaKeys.UnsyncedEdits}', '1')
+                            ON CONFLICT(key) DO UPDATE SET value = CAST(value AS INTEGER) + 1;
+                        INSERT INTO MeRonMeta(key, value) VALUES ('{MetaKeys.UnsyncedSince}', {now}) ON CONFLICT(key) DO NOTHING;
+                        INSERT INTO MeRonMeta(key, value) VALUES ('{MetaKeys.LastEditAt}', {now})
+                            ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+                    END;
+                    """;
+            }
+        }
+    }
+
+    /// <summary>Số dòng đã thêm / sửa / xoá trên máy này kể từ lần nhập / xuất / xoá toàn bộ gần nhất (0 = không có gì để mất).</summary>
+    public UnsyncedEdits GetUnsyncedEdits()
+    {
+        var count = long.TryParse(GetMeta(MetaKeys.UnsyncedEdits), out var c) ? c : 0;
+        return new UnsyncedEdits(count, ParseTime(GetMeta(MetaKeys.UnsyncedSince)), ParseTime(GetMeta(MetaKeys.LastEditAt)));
+    }
+
+    /// <summary>Gọi sau khi xuất bộ backup (TSV / Google Drive): mọi thay đổi đã nằm trong bản xuất.</summary>
+    public void ResetUnsyncedEdits()
+    {
+        using var connection = Open();
+        ResetUnsyncedEdits(connection);
+    }
+
+    internal static void ResetUnsyncedEdits(SqliteConnection connection) =>
+        Execute(connection, $"DELETE FROM MeRonMeta WHERE key IN ('{MetaKeys.UnsyncedEdits}', '{MetaKeys.UnsyncedSince}', '{MetaKeys.LastEditAt}');");
+
+    private static DateTime? ParseTime(string? value) =>
+        DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var time) ? time : null;
 
     public string? GetMeta(string key)
     {
@@ -172,5 +227,19 @@ public sealed class MeRonDatabase
 
         /// <summary>Link / id folder Google Drive để tải bộ backup lên (trống = folder riêng "MeRon backup").</summary>
         public const string DriveUploadFolder = "driveUploadFolder";
+
+        /// <summary>Số dòng thêm / sửa / xoá trên máy tính chưa xuất (trigger tăng; nhập / xuất / xoá toàn bộ thì xoá).</summary>
+        public const string UnsyncedEdits = "unsyncedEdits";
+        public const string UnsyncedSince = "unsyncedSince";
+        public const string LastEditAt = "lastEditAt";
+
+        /// <summary>Có mục này (chỉ trong transaction nhập backup) → trigger không đếm.</summary>
+        public const string EditTrackingOff = "editTrackingOff";
     }
+}
+
+/// <summary>Thay đổi trên máy tính chưa xuất: số dòng, lần sửa đầu / cuối.</summary>
+public sealed record UnsyncedEdits(long Count, DateTime? Since, DateTime? Last)
+{
+    public bool Any => Count > 0;
 }

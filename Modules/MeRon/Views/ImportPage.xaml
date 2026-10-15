@@ -12,6 +12,18 @@
             <TextBlock TextWrapping="Wrap" Opacity="0.8"
                        Text="Chọn thư mục 1 lần backup (vd 20261011_231039, chứa các file orders_….tsv, users_….tsv…) hoặc thư mục cha chứa nhiều lần backup - khi đó tự lấy bản mới nhất. Cũng có thể dán link folder Google Drive (chia sẻ &quot;Bất kỳ ai có đường liên kết&quot;) rồi Enter, hoặc đăng nhập Google ở khung bên dưới để chọn bản backup trên Drive. Nhập sẽ THAY TOÀN BỘ dữ liệu trên máy này." />
 
+            <!-- Có thêm / sửa / xoá trên máy tính chưa xuất → nhập sẽ mất: nhắc xuất trước -->
+            <InfoBar Severity="Warning" IsClosable="False" Title="Có thay đổi trên máy tính chưa xuất" AutomationProperties.AutomationId="UnsyncedWarning"
+                     Message="{x:Bind ViewModel.UnsyncedText, Mode=OneWay}" IsOpen="{x:Bind ViewModel.HasUnsynced, Mode=OneWay}">
+                <InfoBar.Content>
+                    <StackPanel Spacing="8" Margin="0,0,0,12">
+                        <TextBlock TextWrapping="Wrap" Opacity="0.85"
+                                   Text="Nhập sẽ thay toàn bộ dữ liệu nên các thay đổi này sẽ mất (vẫn còn bản sao trong thư mục Backups). Nên xuất ra rồi nhập vào điện thoại trước." />
+                        <Button Content="Mở trang Xuất / Xoá dữ liệu" Click="OpenExport_Click" AutomationProperties.Name="Mở trang Xuất" />
+                    </StackPanel>
+                </InfoBar.Content>
+            </InfoBar>
+
             <!-- 1. Chọn thư mục -->
             <Grid ColumnSpacing="8">
                 <Grid.ColumnDefinitions>

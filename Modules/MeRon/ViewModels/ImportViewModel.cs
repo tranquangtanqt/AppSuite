@@ -446,6 +446,7 @@ public sealed partial class ImportViewModel : ObservableObject
                           $"{VnFormat.Number(result.RowCounts.GetValueOrDefault("Products"))} món ăn.";
             ClearPlan();
             RefreshLastImport();
+            RefreshUnsynced();
             Status = result.SafetyCopyPath is null ? summary : summary + $" Dữ liệu cũ đã lưu ở {result.SafetyCopyPath}.";
         }
         catch (Exception ex)
@@ -462,8 +463,34 @@ public sealed partial class ImportViewModel : ObservableObject
     public string ConfirmText =>
         _plan is null
             ? string.Empty
-            : $"Toàn bộ dữ liệu hiện có trên máy này (cả những gì đã thêm / sửa trên máy tính) sẽ bị XOÁ và thay bằng bản backup " +
+            : (HasUnsynced ? $"CẢNH BÁO: {UnsyncedText}\nNhập bây giờ sẽ MẤT các thay đổi này (vẫn lấy lại được từ thư mục Backups). " +
+                             "Nên bấm Huỷ, sang trang Xuất / Xoá dữ liệu xuất ra (rồi nhập vào điện thoại) trước.\n\n" : string.Empty) +
+              $"Toàn bộ dữ liệu hiện có trên máy này (cả những gì đã thêm / sửa trên máy tính) sẽ bị XOÁ và thay bằng bản backup " +
               $"{FormatBackupName(_plan.Backup.Name)}.\n\nBản dữ liệu hiện tại được tự động lưu lại trong thư mục Backups trước khi nạp.";
+
+    public string ConfirmTitle => HasUnsynced ? "Có thay đổi chưa xuất - vẫn thay toàn bộ?" : "Thay toàn bộ dữ liệu?";
+
+    public string ConfirmButton => HasUnsynced ? "Vẫn nhập, bỏ thay đổi" : "Nhập, thay toàn bộ";
+
+    // ---- Thay đổi trên máy tính chưa xuất ----
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnsynced))]
+    private string _unsyncedText = string.Empty;
+
+    public bool HasUnsynced => UnsyncedText.Length > 0;
+
+    /// <summary>Đọc lại bộ đếm (vào trang, sau khi nhập): có dòng thêm / sửa / xoá trên máy chưa xuất → câu cảnh báo.</summary>
+    public void RefreshUnsynced()
+    {
+        var edits = _database.GetUnsyncedEdits();
+        UnsyncedText = edits.Any
+            ? $"Trên máy tính có {VnFormat.Number(edits.Count)} dòng dữ liệu đã thêm / sửa / xoá chưa xuất" +
+              (edits.Since is { } since ? $" (từ {since:dd/MM/yyyy HH:mm}" + (edits.Last is { } last && last - since >= TimeSpan.FromMinutes(1) ? $", lần cuối {last:dd/MM/yyyy HH:mm})." : ").") : ".")
+            : string.Empty;
+    }
+
+    public void OpenExportPage() => App.MainWindow?.SelectMenu("ExportPage");
 
     public string DatabasePath => _database.Path;
 

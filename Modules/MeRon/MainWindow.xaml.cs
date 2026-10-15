@@ -47,6 +47,15 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    /// <summary>Chọn 1 mục menu từ trong trang (vd cảnh báo ở trang Nhập → mở trang Xuất).</summary>
+    public void SelectMenu(string tag)
+    {
+        if (FindItem(tag) is { } item)
+        {
+            Nav.SelectedItem = item;
+        }
+    }
+
     /// <summary>Mục menu = trang gốc: xoá lịch sử Back (Back chỉ dùng trong 1 luồng, vd Đặt hàng → form đơn → quay lại).</summary>
     private void NavigateFromMenu(string tag)
     {

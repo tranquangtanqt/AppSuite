@@ -14,7 +14,11 @@ public sealed partial class ImportPage : Page
     public ImportPage()
     {
         InitializeComponent();
-        Loaded += (_, _) => ViewModel.RefreshGoogle();
+        Loaded += (_, _) =>
+        {
+            ViewModel.RefreshGoogle();
+            ViewModel.RefreshUnsynced();
+        };
     }
 
     private async void Pick_Click(object sender, RoutedEventArgs e)
@@ -53,6 +57,8 @@ public sealed partial class ImportPage : Page
 
     private string? _autoChecked;
 
+    private void OpenExport_Click(object sender, RoutedEventArgs e) => ViewModel.OpenExportPage();
+
     private async void SignIn_Click(object sender, RoutedEventArgs e) => await ViewModel.SignInAsync();
 
     private async void SignOut_Click(object sender, RoutedEventArgs e) => await ViewModel.SignOutAsync();
@@ -77,7 +83,8 @@ public sealed partial class ImportPage : Page
 
     private async void Import_Click(object sender, RoutedEventArgs e)
     {
-        if (await Dialogs.ConfirmAsync(XamlRoot, "Thay toàn bộ dữ liệu?", ViewModel.ConfirmText, "Nhập, thay toàn bộ"))
+        ViewModel.RefreshUnsynced(); // có thể vừa sửa ở trang khác
+        if (await Dialogs.ConfirmAsync(XamlRoot, ViewModel.ConfirmTitle, ViewModel.ConfirmText, ViewModel.ConfirmButton))
         {
             await ViewModel.ImportCommand.ExecuteAsync(null);
         }

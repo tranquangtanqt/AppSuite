@@ -123,6 +123,8 @@ public static class BackupImporter
         var counts = new Dictionary<string, int>();
         using var connection = database.Open();
         using var transaction = connection.BeginTransaction();
+        // Các dòng vừa nạp không phải "sửa trên máy tính" → tắt trigger đếm trong transaction này.
+        MeRonDatabase.SetMeta(connection, MeRonDatabase.MetaKeys.EditTrackingOff, "1");
 
         foreach (var table in Schema.BackupTables)
         {
@@ -162,6 +164,8 @@ public static class BackupImporter
         MeRonDatabase.SetMeta(connection, MeRonDatabase.MetaKeys.LastImportSource, plan.Backup.Source);
         MeRonDatabase.SetMeta(connection, MeRonDatabase.MetaKeys.LastImportBackupName, plan.Backup.Name);
         MeRonDatabase.SetMeta(connection, MeRonDatabase.MetaKeys.LastImportAt, MeRonDatabase.Now());
+        MeRonDatabase.ResetUnsyncedEdits(connection);
+        MeRonDatabase.Execute(connection, $"DELETE FROM MeRonMeta WHERE key = '{MeRonDatabase.MetaKeys.EditTrackingOff}';");
         transaction.Commit();
 
         return new ImportResult(counts, safetyCopy);

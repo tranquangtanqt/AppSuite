@@ -37,9 +37,11 @@ public static class BackupExporter
         Directory.CreateDirectory(temp);
 
         var counts = new Dictionary<string, int>();
+        // Đọc trong 1 transaction (ảnh chụp nhất quán) và chỉ xoá bộ đếm "thay đổi chưa xuất" khi bộ file đã xong.
+        using var connection = database.Open();
+        using var transaction = connection.BeginTransaction();
         try
         {
-            using var connection = database.Open();
             foreach (var table in Schema.BackupTables)
             {
                 var builder = new StringBuilder();
@@ -80,6 +82,8 @@ public static class BackupExporter
         }
 
         Directory.Move(temp, folder);
+        MeRonDatabase.ResetUnsyncedEdits(connection);
+        transaction.Commit();
         return new ExportResult(folder, stamp, counts);
     }
 
