@@ -131,6 +131,36 @@ public class GoogleDriveTests
     }
 
     [Fact]
+    public async Task Parent_folder_and_parent_directory_list_every_backup_to_choose_from()
+    {
+        using var temp = new TempFolder();
+        var drive = temp.Sub("drive");
+        Backup.Write(drive, "20261013_203040");
+        Backup.Write(drive, "20261014_235508");
+        Backup.Write(drive, "20261014_164527");
+        Backup.Write(drive, "20261012_225408_bk"); // bản phụ - bỏ qua
+        Directory.CreateDirectory(Path.Combine(drive, "20261015_000000")); // folder trống
+        var ct = TestContext.Current.CancellationToken;
+
+        var http = new HttpClient(new FakeDrive(drive));
+        var folders = await new GoogleDriveBackupSource("id-root", temp.Sub("download"), http).ListBackupFoldersAsync(ct);
+        // Drive (link công khai) không biết folder nào trống mà không đọc từng folder → vẫn liệt kê, chọn thì báo lỗi rõ.
+        Assert.Equal(["20261015_000000", "20261014_235508", "20261014_164527", "20261013_203040"], folders.Select(f => f.Name));
+
+        // Chọn 1 bản khác bản mới nhất: link thẳng folder đó, giữ đúng tên folder
+        var chosen = folders.Single(f => f.Name == "20261013_203040");
+        var backup = await new GoogleDriveBackupSource(chosen.Id, temp.Sub("download"), http, knownName: chosen.Name).GetLatestAsync(ct);
+        Assert.Equal("20261013_203040", backup.Name);
+        Assert.Empty(backup.Missing);
+
+        // Thư mục cha trên máy: bỏ folder trống; chọn thẳng 1 bản → không có danh sách
+        Assert.Equal(["20261014_235508", "20261014_164527", "20261013_203040"],
+            new LocalFolderBackupSource(drive).ListBackupFolders().Select(Path.GetFileName));
+        Assert.Empty(new LocalFolderBackupSource(Path.Combine(drive, "20261013_203040")).ListBackupFolders());
+        Assert.Empty(await new GoogleDriveBackupSource(chosen.Id, temp.Path, http).ListBackupFoldersAsync(ct));
+    }
+
+    [Fact]
     public async Task Link_to_a_single_backup_folder_takes_name_from_files_and_replaces_old_download()
     {
         using var temp = new TempFolder();

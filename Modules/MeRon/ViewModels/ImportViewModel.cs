@@ -3,6 +3,7 @@ using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MeRon.Core;
+using MeRon.Core.Cloud;
 using MeRon.Core.Data;
 using MeRon.Core.Import;
 using MeRon.Services;
@@ -12,6 +13,38 @@ namespace MeRon.ViewModels;
 
 /// <summary>1 dòng trong bảng xem trước: bảng nào, file nào, bao nhiêu dòng sẽ nạp, đang có bao nhiêu.</summary>
 public sealed record ImportTableRow(string Title, string FileName, string FileRows, string CurrentRows);
+
+/// <summary>1 bản backup trong thư mục cha / folder Google Drive đang chọn (để chọn bản khác bản mới nhất).</summary>
+public sealed partial class BackupChoiceRow(string name, Func<IBackupSource> createSource) : ObservableObject
+{
+    public string Name => name;
+
+    public string Title => ImportViewModel.FormatBackupName(name);
+
+    public Func<IBackupSource> CreateSource => createSource;
+
+    /// <summary>Bản đang hiện ở phần xem trước.</summary>
+    [ObservableProperty]
+    private bool _isCurrent;
+
+    public string AccessibleName => $"Bản {Title}";
+}
+
+/// <summary>1 bản backup trong danh sách Google Drive (đăng nhập): thời điểm, nơi lưu, đủ bảng chưa.</summary>
+public sealed record DriveBackupRow(DriveBackup Backup)
+{
+    public string Title => ImportViewModel.FormatBackupName(Backup.Name);
+
+    public string Place => Backup.InOwnFolder ? $"Máy tính - folder \"{DriveUploader.OwnFolderName}\"" : "Điện thoại / folder chung";
+
+    public string FilesText => Backup.IsComplete
+        ? $"Đủ {Backup.TableCount} bảng"
+        : $"Thiếu {Schema.BackupTables.Count - Backup.TableCount} / {Schema.BackupTables.Count} bảng";
+
+    public bool IsIncomplete => !Backup.IsComplete;
+
+    public string AccessibleName => $"Bản {Title} - {Place} - {FilesText}";
+}
 
 /// <summary>
 /// Trang Nhập dữ liệu: chọn thư mục (hoặc dán link folder Google Drive) → tự đọc + kiểm tra cả bộ backup (chưa ghi gì)
@@ -99,7 +132,48 @@ public sealed partial class ImportViewModel : ObservableObject
     /// <summary>Đọc + kiểm tra cả bộ backup, chưa ghi gì vào database. Ô thư mục là link folder Google Drive → tải về
     /// thư mục tạm trước (<see cref="GoogleDriveBackupSource"/>).</summary>
     [RelayCommand(CanExecute = nameof(CanCheck))]
-    private async Task CheckAsync()
+    private Task CheckAsync()
+    {
+        var folder = FolderPath.Trim().Trim('"');
+        var progress = new Progress<string>(s => Status = s);
+        if (GoogleDriveBackupSource.ParseFolderId(folder) is { } driveId)
+        {
+            var drive = new GoogleDriveBackupSource(driveId, DriveDownloadRoot, Http, progress);
+            return CheckSourceAsync(drive, folder, async ct => (await drive.ListBackupFoldersAsync(ct))
+                .Select(e => new BackupChoiceRow(e.Name, () => new GoogleDriveBackupSource(e.Id, DriveDownloadRoot, Http, progress, knownName: e.Name)))
+                .ToList());
+        }
+        var local = new LocalFolderBackupSource(folder);
+        return CheckSourceAsync(local, folder, _ => Task.FromResult<IReadOnlyList<BackupChoiceRow>>(local.ListBackupFolders()
+            .Select(d => new BackupChoiceRow(Path.GetFileName(d), () => new LocalFolderBackupSource(d)))
+            .ToList()));
+    }
+
+    /// <summary>Tất cả bản trong thư mục cha / folder Google Drive đang chọn, mới nhất trước (trống khi chọn thẳng 1 bản).</summary>
+    public ObservableCollection<BackupChoiceRow> FolderBackups { get; } = [];
+
+    public bool HasFolderBackups => FolderBackups.Count > 0;
+
+    public string FolderBackupsTitle => $"Các bản backup trong thư mục / folder này ({FolderBackups.Count}) - mới nhất trước, bấm để chọn bản khác";
+
+    /// <summary>Bấm 1 bản trong danh sách thư mục cha / folder: kiểm tra bản đó (giữ danh sách).</summary>
+    public Task CheckFolderBackupAsync(BackupChoiceRow row)
+    {
+        if (IsBusy)
+        {
+            return Task.CompletedTask;
+        }
+        foreach (var r in FolderBackups)
+        {
+            r.IsCurrent = r == row;
+        }
+        return CheckSourceAsync(row.CreateSource(), null);
+    }
+
+    /// <param name="rememberFolder">Thư mục / link sẽ nhớ cho lần mở sau (null = bản chọn trong 1 danh sách, không nhớ).</param>
+    /// <param name="listChoices">Đọc lại danh sách các bản trong thư mục cha / folder (null = giữ danh sách đang có).</param>
+    private async Task CheckSourceAsync(IBackupSource source, string? rememberFolder,
+        Func<CancellationToken, Task<IReadOnlyList<BackupChoiceRow>>>? listChoices = null)
     {
         IsBusy = true;
         ClearPlan();
@@ -108,15 +182,27 @@ public sealed partial class ImportViewModel : ObservableObject
         _cancel = cancel;
         try
         {
-            var folder = FolderPath.Trim().Trim('"');
-            var source = GoogleDriveBackupSource.ParseFolderId(folder) is { } driveId
-                ? new GoogleDriveBackupSource(driveId, DriveDownloadRoot, Http, new Progress<string>(s => Status = s))
-                : (IBackupSource)new LocalFolderBackupSource(folder);
-            IsDownloading = source is GoogleDriveBackupSource;
+            IsDownloading = source is not LocalFolderBackupSource;
+            if (listChoices is not null)
+            {
+                SetFolderBackups([]);
+                SetFolderBackups(await listChoices(cancel.Token));
+            }
             var backup = await source.GetLatestAsync(cancel.Token);
+            if (listChoices is not null)
+            {
+                // Tự lấy bản mới nhất → đánh dấu bản đó trong danh sách.
+                foreach (var row in FolderBackups)
+                {
+                    row.IsCurrent = row.Name == backup.Name;
+                }
+            }
             IsDownloading = false;
-            // Tìm được backup → nhớ thư mục / link (cả khi là thư mục cha) cho lần mở sau.
-            _database.SetMeta(MeRonDatabase.MetaKeys.LastPickedFolder, folder);
+            if (rememberFolder is not null)
+            {
+                // Tìm được backup → nhớ thư mục / link (cả khi là thư mục cha) cho lần mở sau.
+                _database.SetMeta(MeRonDatabase.MetaKeys.LastPickedFolder, rememberFolder);
+            }
             Status = "Đang kiểm tra file backup...";
             var plan = await Task.Run(() => BackupImporter.Prepare(backup));
             ShowPlan(plan);
@@ -129,9 +215,15 @@ public sealed partial class ImportViewModel : ObservableObject
         {
             Status = ex.Message;
         }
+        catch (GoogleAuthException ex)
+        {
+            AppLog.For("Import").LogError(ex, "Tải backup từ Google Drive lỗi");
+            Status = ex.Message;
+            await HandleGoogleErrorAsync(ex);
+        }
         catch (Exception ex)
         {
-            AppLog.For("Import").LogError(ex, "Kiểm tra backup lỗi: {Folder}", FolderPath);
+            AppLog.For("Import").LogError(ex, "Kiểm tra backup lỗi: {Folder}", rememberFolder ?? "(Google Drive)");
             Status = "Lỗi khi đọc backup: " + ex.Message;
         }
         finally
@@ -139,6 +231,163 @@ public sealed partial class ImportViewModel : ObservableObject
             _cancel = null;
             IsDownloading = false;
             IsBusy = false;
+        }
+    }
+
+    private void SetFolderBackups(IReadOnlyList<BackupChoiceRow> rows)
+    {
+        FolderBackups.Clear();
+        foreach (var row in rows)
+        {
+            FolderBackups.Add(row);
+        }
+        OnPropertyChanged(nameof(HasFolderBackups));
+        OnPropertyChanged(nameof(FolderBackupsTitle));
+    }
+
+    // ---- Google Drive (đăng nhập): danh sách các bản backup, chọn 1 bản để nhập ----
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSignedIn), nameof(IsSignedOut))]
+    private string _googleEmail = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSignedOut))]
+    private bool _isGoogleConfigured;
+
+    [ObservableProperty]
+    private string _driveListStatus = string.Empty;
+
+    public ObservableCollection<DriveBackupRow> DriveBackups { get; } = [];
+
+    public bool IsSignedIn => GoogleEmail.Length > 0;
+
+    public bool IsSignedOut => IsGoogleConfigured && GoogleEmail.Length == 0;
+
+    public bool HasDriveBackups => DriveBackups.Count > 0;
+
+    /// <summary>Vào trang: đọc lại trạng thái đăng nhập (có thể vừa đăng nhập / đăng xuất ở trang Xuất).</summary>
+    public void RefreshGoogle()
+    {
+        IsGoogleConfigured = GoogleServices.Auth is not null;
+        var email = GoogleServices.Auth?.Email ?? string.Empty;
+        if (email != GoogleEmail)
+        {
+            DriveBackups.Clear();
+            OnPropertyChanged(nameof(HasDriveBackups));
+        }
+        GoogleEmail = email;
+        DriveListStatus = IsGoogleConfigured
+            ? IsSignedIn ? DriveListStatus : "Đăng nhập Google để xem các bản backup điện thoại / máy tính đã tải lên."
+            : $"Chưa cấu hình Google: đặt file client_secret_….json (OAuth client loại Desktop app) vào {GoogleServices.ConfigFolder} " +
+              "hoặc thư mục Assets cạnh MeRon.exe, rồi mở lại app. Vẫn nhập được bằng thư mục hoặc link folder bên trên.";
+    }
+
+    /// <summary>Mở trình duyệt để đăng nhập Google (chờ tối đa 5 phút), xong thì đọc luôn danh sách bản backup.</summary>
+    public async Task SignInAsync()
+    {
+        if (GoogleServices.Auth is not { } auth || IsBusy)
+        {
+            return;
+        }
+        IsBusy = true;
+        DriveListStatus = "Đang chờ đăng nhập trên trình duyệt... (chọn tài khoản Google, tick ô quyền Google Drive rồi bấm Continue)";
+        try
+        {
+            GoogleEmail = await auth.SignInAsync(ExportViewModel.OpenUrl, TimeSpan.FromMinutes(5));
+            AppLog.For("Google").LogInformation("Đăng nhập Google (trang Nhập): {Email}; quyền: {Scopes}", GoogleEmail, auth.LastGrantedScopes);
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("Google").LogError(ex, "Đăng nhập Google lỗi; quyền Google cấp: {Scopes}", auth.LastGrantedScopes ?? "(chưa tới bước cấp quyền)");
+            DriveListStatus = ex is GoogleAuthException ? ex.Message : "Đăng nhập Google lỗi: " + ex.Message;
+            return;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+        await LoadDriveBackupsAsync();
+    }
+
+    public async Task SignOutAsync()
+    {
+        if (GoogleServices.Auth is not { } auth)
+        {
+            return;
+        }
+        await auth.SignOutAsync();
+        AppLog.For("Google").LogInformation("Đăng xuất Google (trang Nhập): {Email}", GoogleEmail);
+        GoogleEmail = string.Empty;
+        DriveBackups.Clear();
+        OnPropertyChanged(nameof(HasDriveBackups));
+        DriveListStatus = "Đã đăng xuất Google.";
+    }
+
+    /// <summary>Đọc danh sách bản backup trên Google Drive (mới nhất trước).</summary>
+    public async Task LoadDriveBackupsAsync()
+    {
+        if (GoogleServices.Auth is not { } auth || IsBusy)
+        {
+            return;
+        }
+        IsBusy = true;
+        DriveListStatus = "Đang đọc danh sách bản backup trên Google Drive...";
+        try
+        {
+            var backups = await new DriveBackupBrowser(GoogleServices.Http, auth.GetAccessTokenAsync).ListAsync();
+            DriveBackups.Clear();
+            foreach (var backup in backups)
+            {
+                DriveBackups.Add(new DriveBackupRow(backup));
+            }
+            AppLog.For("Google").LogInformation("Danh sách backup trên Drive: {Count} bản", backups.Count);
+            DriveListStatus = backups.Count == 0
+                ? "Chưa thấy bản backup nào trên Google Drive mà MeRon đọc được. App chỉ thấy bản do app điện thoại hoặc MeRon tải lên " +
+                  "(folder tự tạo / file tự kéo lên trang web Drive thì không thấy) - dùng ô thư mục / link folder bên trên."
+                : $"{backups.Count} bản backup, mới nhất trước. Bấm 1 bản để kiểm tra rồi nhập.";
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("Google").LogError(ex, "Đọc danh sách backup trên Drive lỗi");
+            DriveListStatus = ex is GoogleAuthException ? ex.Message : "Đọc danh sách trên Google Drive lỗi: " + ex.Message;
+            if (ex is GoogleAuthException auth403)
+            {
+                await HandleGoogleErrorAsync(auth403);
+            }
+        }
+        finally
+        {
+            IsBusy = false;
+            OnPropertyChanged(nameof(HasDriveBackups));
+        }
+    }
+
+    /// <summary>Bấm 1 bản trong danh sách: tải về thư mục tạm rồi kiểm tra như thư mục trên máy.</summary>
+    public Task CheckDriveBackupAsync(DriveBackupRow row)
+    {
+        if (GoogleServices.Auth is not { } auth || IsBusy)
+        {
+            return Task.CompletedTask;
+        }
+        var browser = new DriveBackupBrowser(GoogleServices.Http, auth.GetAccessTokenAsync);
+        // Danh sách của thư mục / link bên trên không còn liên quan → ẩn đi.
+        return CheckSourceAsync(new DriveApiBackupSource(row.Backup, browser, DriveDownloadRoot, new Progress<string>(s => Status = s)), null,
+            _ => Task.FromResult<IReadOnlyList<BackupChoiceRow>>([]));
+    }
+
+    /// <summary>Phiên thiếu quyền Drive / bị thu hồi → đăng xuất để người dùng đăng nhập lại.</summary>
+    private async Task HandleGoogleErrorAsync(GoogleAuthException ex)
+    {
+        if (ex.NeedsSignIn && GoogleServices.Auth is { } auth)
+        {
+            await auth.SignOutAsync();
+        }
+        GoogleEmail = GoogleServices.Auth?.Email ?? string.Empty;
+        if (!IsSignedIn)
+        {
+            DriveBackups.Clear();
+            OnPropertyChanged(nameof(HasDriveBackups));
         }
     }
 

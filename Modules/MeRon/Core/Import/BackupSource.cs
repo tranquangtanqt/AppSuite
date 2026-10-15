@@ -67,6 +67,20 @@ public sealed partial class LocalFolderBackupSource(string path) : IBackupSource
         };
     }
 
+    /// <summary>Tất cả bản backup trong thư mục cha (thư mục con yyyyMMdd_HHmmss có file .tsv), mới nhất trước - để người dùng
+    /// chọn bản khác bản mới nhất. Chính là thư mục 1 lần backup → danh sách rỗng.</summary>
+    public IReadOnlyList<string> ListBackupFolders()
+    {
+        if (!Directory.Exists(path) || HasAnyBackupFile(path))
+        {
+            return [];
+        }
+        return Directory.EnumerateDirectories(path)
+            .Where(d => BackupFolderName().IsMatch(System.IO.Path.GetFileName(d)) && HasAnyBackupFile(d))
+            .OrderByDescending(d => System.IO.Path.GetFileName(d), StringComparer.Ordinal)
+            .ToList();
+    }
+
     private static bool HasAnyBackupFile(string folder) => FindFiles(folder).Count > 0;
 
     /// <summary>File của bảng X: "x_*.tsv" (không phân biệt hoa thường). "orders_" không khớp "orderitems_..." nên không lẫn.

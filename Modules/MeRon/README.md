@@ -15,8 +15,9 @@ Thiết kế và lý do các quyết định: [PLAN.md](PLAN.md).
 ## Quy trình dùng
 
 1. Điện thoại: Cài đặt → Sao lưu → **Xuất file sao lưu** (lưu `Download/MeRon/<thời gian>` + tải lên Google Drive).
-2. MeRon **Nhập dữ liệu** → chọn thư mục đã chép về máy (hoặc thư mục cha), **hoặc dán link folder Google Drive** rồi Enter:
-   app tự tải bản mới nhất (không cần đăng nhập; folder phải chia sẻ "Bất kỳ ai có đường liên kết").
+2. MeRon **Nhập dữ liệu** → chọn thư mục đã chép về máy (hoặc thư mục cha), **hoặc dán link folder Google Drive** (dán vào là tự đọc):
+   app tự tải bản mới nhất (không cần đăng nhập; folder phải chia sẻ "Bất kỳ ai có đường liên kết"), **hoặc đăng nhập Google**
+   ở khung "Hoặc lấy từ Google Drive" rồi chọn 1 bản trong danh sách (folder không cần công khai).
 3. Xem / lọc đơn, báo cáo; sửa nhỏ trên máy tính nếu cần.
 4. Muốn đưa phần sửa trên máy tính về điện thoại: **Xuất / Xoá dữ liệu** → Xuất TSV → chép sang điện thoại → Cài đặt →
    Sao lưu → Nhập dữ liệu từ tệp sao lưu (từng bảng).
@@ -40,7 +41,7 @@ Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu
 | | **Món ăn** | STT / Tên / Giá (cam) / Danh mục (nhãn xanh dương) / Mô tả; tìm; thêm / sửa. Không xoá, không quản lý ảnh (như điện thoại; ảnh có sẵn giữ nguyên) |
 | | **Danh mục món ăn** | Sửa / Xoá ngay trên dòng; không xoá được danh mục còn món |
 | | **Địa chỉ** | Mã (nhãn cam) / Tên; thêm / sửa (Mã không đổi); xoá trong form sửa |
-| Dữ liệu | **Nhập dữ liệu** | Thư mục 1 lần backup hoặc thư mục cha (tự lấy bản mới nhất `yyyyMMdd_HHmmss`, bỏ `…_bk`). Kiểm tra cả 8 file trước, xem trước "Sẽ nhập / Đang có"; lỗi báo rõ file + dòng và **không** động tới dữ liệu. **Nhập (thay toàn bộ)** hỏi xác nhận, 1 transaction, bản sao an toàn trước |
+| Dữ liệu | **Nhập dữ liệu** | Thư mục 1 lần backup hoặc thư mục cha (tự lấy bản mới nhất `yyyyMMdd_HHmmss`, bỏ `…_bk`; đồng thời liệt kê hết các bản trong thư mục cha / link folder Drive để chọn bản khác). **Google Drive (đăng nhập)**: danh sách các bản backup app điện thoại / MeRon đã tải lên, mới nhất trước (nơi lưu, đủ bảng chưa) → bấm 1 bản để tải về rồi kiểm tra; đọc bằng Drive API (`Core\Cloud\DriveBackupBrowser.cs`, quyền `drive.file`), folder không cần công khai. Kiểm tra cả 8 file trước, xem trước "Sẽ nhập / Đang có"; lỗi báo rõ file + dòng và **không** động tới dữ liệu. **Nhập (thay toàn bộ)** hỏi xác nhận, 1 transaction, bản sao an toàn trước |
 | | **Xuất / Xoá dữ liệu** | **Xuất TSV**: thư mục `yyyyMMdd_HHmmss` + 8 file đúng định dạng điện thoại (nhớ thư mục lần trước; Mở thư mục vừa xuất). **Xuất lên Google Drive**: Đăng nhập Google (OAuth Desktop app + PKCE, loopback 127.0.0.1, quyền `drive.file`; refresh token trong Windows Credential Manager - `Services\GoogleServices.cs`), xuất TSV rồi tải lên thành thư mục `yyyyMMdd_HHmmss` trong folder đã chọn hoặc folder riêng "MeRon backup" (`Core\Cloud\`). File OAuth client `client_secret_….json` đặt ở `Assets\` (không commit, `.gitignore`) hoặc `%LOCALAPPDATA%\AppSuite\MeRon`; không có thì báo "chưa cấu hình". **Xoá toàn bộ dữ liệu** ở máy: xác nhận 2 lần, bản sao an toàn trước; Mở thư mục Backups |
 | | **Hướng dẫn (F1)** | Cửa sổ hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`), mở đúng mục của trang đang xem; nội dung ở `Core\HelpContent.cs` |
 | | **Phím tắt** (mục riêng trong F1) | Ctrl+F ô tìm / lọc khách; Ctrl+N thêm (mọi trang danh sách); Ctrl+1…4 tab trạng thái (Đặt hàng, Theo đơn hàng); Ctrl+D khoảng ngày nhanh; F5 làm mới; form: Ctrl+S lưu, Ctrl+Shift+N lưu + đơn mới cùng ngày giao, Ctrl+M thêm món / thêm hàng, ↑ / ↓ trong ô Số lượng, Ctrl+Shift+C sao chép đơn, Esc quay lại. Gắn bằng `Views\Shortcuts.cs` lên chính trang (không hiện tooltip phím tắt; bỏ qua khi đang mở hộp thoại) |

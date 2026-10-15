@@ -105,6 +105,11 @@ internal static class Ui
     public static Brush PurchasePillForeground(bool isEmpty) =>
         isEmpty ? (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"] : White;
 
+    // Nhãn số bảng của 1 bản backup trên Google Drive: đủ bảng xanh lá, thiếu cam.
+    public static Brush FilesPillBackground(bool incomplete) => incomplete ? ShippingSoft : PaidSoft;
+
+    public static Brush FilesPillForeground(bool incomplete) => incomplete ? ShippingSolid : PaidSolid;
+
     /// <summary>Ô Chênh lệch (Tổng hợp): lãi xanh lá, lỗ đỏ.</summary>
     public static Brush DifferenceBrush(bool isLoss) => isLoss ? LossSolid : PaidSolid;
 

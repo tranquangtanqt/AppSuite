@@ -19,7 +19,7 @@ public sealed class DriveUploader(HttpClient http, Func<CancellationToken, Task<
     public const string DefaultApiUrl = "https://www.googleapis.com/drive/v3";
     public const string DefaultUploadUrl = "https://www.googleapis.com/upload/drive/v3";
     public const string OwnFolderName = "MeRon backup";
-    private const string FolderMime = "application/vnd.google-apps.folder";
+    internal const string FolderMime = "application/vnd.google-apps.folder";
 
     /// <param name="localFolder">Thư mục bộ backup vừa xuất (chứa các file .tsv).</param>
     /// <param name="parentId">Folder đích; null = folder riêng "MeRon backup".</param>
@@ -80,41 +80,9 @@ public sealed class DriveUploader(HttpClient http, Func<CancellationToken, Task<
         await ReadAsync(response, cancellationToken);
     }
 
-    private async Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, HttpContent? content, CancellationToken cancellationToken)
-    {
-        using var request = new HttpRequestMessage(method, url) { Content = content };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await accessToken(cancellationToken));
-        try
-        {
-            return await http.SendAsync(request, cancellationToken);
-        }
-        catch (HttpRequestException ex)
-        {
-            throw new GoogleAuthException("Không kết nối được Google Drive - kiểm tra mạng.", ex);
-        }
-    }
+    private Task<HttpResponseMessage> SendAsync(HttpMethod method, string url, HttpContent? content, CancellationToken cancellationToken) =>
+        DriveHttp.SendAsync(http, accessToken, method, url, content, cancellationToken);
 
-    private static async Task<JsonElement> ReadAsync(HttpResponseMessage response, CancellationToken cancellationToken)
-    {
-        var text = await response.Content.ReadAsStringAsync(cancellationToken);
-        JsonElement json = default;
-        try
-        {
-            json = JsonDocument.Parse(text.Length == 0 ? "{}" : text).RootElement.Clone();
-        }
-        catch (JsonException)
-        {
-        }
-        if (!response.IsSuccessStatusCode)
-        {
-            var message = json.ValueKind == JsonValueKind.Object && json.TryGetProperty("error", out var error) && error.ValueKind == JsonValueKind.Object
-                          && error.TryGetProperty("message", out var m) ? m.GetString() : null;
-            if (response.StatusCode == HttpStatusCode.Forbidden && message?.Contains("insufficient authentication scopes", StringComparison.OrdinalIgnoreCase) == true)
-            {
-                throw new GoogleAuthException(GoogleAuth.MissingDriveScope) { NeedsSignIn = true };
-            }
-            throw new GoogleAuthException($"Google Drive báo lỗi (HTTP {(int)response.StatusCode}){(message is null ? "." : ": " + message)}");
-        }
-        return json;
-    }
+    private static Task<JsonElement> ReadAsync(HttpResponseMessage response, CancellationToken cancellationToken) =>
+        DriveHttp.ReadAsync(response, cancellationToken);
 }

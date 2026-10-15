@@ -10,7 +10,7 @@
         <StackPanel Padding="24,12,24,24" Spacing="14" MaxWidth="1000" HorizontalAlignment="Left">
             <TextBlock Text="Nhập dữ liệu từ backup của điện thoại" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock TextWrapping="Wrap" Opacity="0.8"
-                       Text="Chọn thư mục 1 lần backup (vd 20261011_231039, chứa các file orders_….tsv, users_….tsv…) hoặc thư mục cha chứa nhiều lần backup - khi đó tự lấy bản mới nhất. Cũng có thể dán link folder Google Drive (chia sẻ &quot;Bất kỳ ai có đường liên kết&quot;) rồi Enter: app tự tải bản mới nhất về. Nhập sẽ THAY TOÀN BỘ dữ liệu trên máy này." />
+                       Text="Chọn thư mục 1 lần backup (vd 20261011_231039, chứa các file orders_….tsv, users_….tsv…) hoặc thư mục cha chứa nhiều lần backup - khi đó tự lấy bản mới nhất. Cũng có thể dán link folder Google Drive (chia sẻ &quot;Bất kỳ ai có đường liên kết&quot;) rồi Enter, hoặc đăng nhập Google ở khung bên dưới để chọn bản backup trên Drive. Nhập sẽ THAY TOÀN BỘ dữ liệu trên máy này." />
 
             <!-- 1. Chọn thư mục -->
             <Grid ColumnSpacing="8">
@@ -20,11 +20,131 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <TextBox Text="{x:Bind ViewModel.FolderPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Thư mục backup, hoặc link folder Google Drive"
-                         AutomationProperties.Name="Thư mục backup" AutomationProperties.AutomationId="FolderBox" KeyDown="Folder_KeyDown" />
+                         AutomationProperties.Name="Thư mục backup" AutomationProperties.AutomationId="FolderBox" KeyDown="Folder_KeyDown"
+                         TextChanged="Folder_TextChanged" />
                 <Button Grid.Column="1" Content="Chọn thư mục..." Click="Pick_Click" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}" />
                 <Button Grid.Column="2" Content="Kiểm tra lại" Command="{x:Bind ViewModel.CheckCommand}"
                         ToolTipService.ToolTip="Đọc lại thư mục / folder Google Drive (vd điện thoại vừa tải lên bản backup mới)" />
             </Grid>
+
+            <!-- Thư mục cha / folder Google Drive có nhiều bản: liệt kê hết để chọn (mặc định đã kiểm tra bản mới nhất) -->
+            <StackPanel Spacing="6" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasFolderBackups), Mode=OneWay}">
+                <TextBlock Text="{x:Bind ViewModel.FolderBackupsTitle, Mode=OneWay}" FontWeight="SemiBold" Opacity="0.85" TextWrapping="Wrap" />
+                <ScrollViewer MaxHeight="260" VerticalScrollBarVisibility="Auto">
+                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.FolderBackups}" AutomationProperties.Name="Các bản backup trong thư mục">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout MinItemWidth="210" MinColumnSpacing="6" MinRowSpacing="6" ItemsStretch="Fill" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
+                            <DataTemplate x:DataType="vm:BackupChoiceRow">
+                                <Button Click="FolderBackup_Click" Tag="{x:Bind}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                        Padding="10,6" AutomationProperties.Name="{x:Bind AccessibleName}">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <FontIcon Glyph="&#xE787;" FontSize="13" Opacity="0.7" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="{x:Bind Title}" VerticalAlignment="Center" />
+                                        <Border Grid.Column="2" CornerRadius="10" Padding="8,1,8,2" Background="#26E8590C" VerticalAlignment="Center"
+                                                Visibility="{x:Bind local:Ui.VisibleIf(IsCurrent), Mode=OneWay}">
+                                            <TextBlock Text="Đang xem" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                        </Border>
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
+                </ScrollViewer>
+            </StackPanel>
+
+            <!-- Hoặc: Google Drive (đăng nhập) - danh sách các bản backup điện thoại / máy tính đã tải lên, folder không cần công khai -->
+            <Border Padding="16,12" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <Grid ColumnSpacing="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#261C7ED6" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE753;" FontSize="15" Foreground="#1C7ED6" />
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock Text="Hoặc lấy từ Google Drive (đăng nhập)" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                            <TextBlock TextWrapping="Wrap" Opacity="0.75" FontSize="12"
+                                       Text="Liệt kê các bản backup app điện thoại / MeRon đã tải lên - folder không cần chia sẻ công khai. Bấm 1 bản để kiểm tra rồi nhập." />
+                        </StackPanel>
+                        <!-- Chưa đăng nhập -->
+                        <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Click="SignIn_Click" VerticalAlignment="Center"
+                                IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}" AutomationProperties.Name="Đăng nhập Google để nhập"
+                                Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsSignedOut), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <FontIcon Glyph="&#xE77B;" FontSize="14" />
+                                <TextBlock Text="Đăng nhập Google..." />
+                            </StackPanel>
+                        </Button>
+                        <!-- Đã đăng nhập -->
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
+                                    Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsSignedIn), Mode=OneWay}">
+                            <Button Click="LoadDrive_Click" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}"
+                                    AutomationProperties.Name="Xem các bản trên Google Drive" ToolTipService.ToolTip="Đọc lại danh sách (vd điện thoại vừa tải lên bản mới)">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <SymbolIcon Symbol="Refresh" />
+                                    <TextBlock Text="Xem các bản trên Drive" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="4" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsSignedIn), Mode=OneWay}">
+                        <TextBlock VerticalAlignment="Center" Opacity="0.8" AutomationProperties.AutomationId="ImportGoogleEmail">
+                            <Run Text="Đã đăng nhập:" /> <Run Text="{x:Bind ViewModel.GoogleEmail, Mode=OneWay}" FontWeight="SemiBold" />
+                        </TextBlock>
+                        <HyperlinkButton Content="Đăng xuất" Click="SignOut_Click" AutomationProperties.Name="Đăng xuất Google (trang Nhập)" />
+                    </StackPanel>
+
+                    <TextBlock Text="{x:Bind ViewModel.DriveListStatus, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.85" IsTextSelectionEnabled="True"
+                               AutomationProperties.AutomationId="DriveListStatus" Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.DriveListStatus), Mode=OneWay}" />
+
+                    <!-- Danh sách bản backup: mỗi dòng 1 nút (chuột, Tab + Enter) -->
+                    <ScrollViewer MaxHeight="300" VerticalScrollBarVisibility="Auto" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasDriveBackups), Mode=OneWay}">
+                        <ItemsRepeater ItemsSource="{x:Bind ViewModel.DriveBackups}" AutomationProperties.Name="Các bản backup trên Google Drive">
+                            <ItemsRepeater.Layout>
+                                <StackLayout Spacing="6" />
+                            </ItemsRepeater.Layout>
+                            <ItemsRepeater.ItemTemplate>
+                                <DataTemplate x:DataType="vm:DriveBackupRow">
+                                    <Button Click="DriveBackup_Click" Tag="{x:Bind}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                            Padding="12,8" Margin="0,0,12,0" AutomationProperties.Name="{x:Bind AccessibleName}">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <FontIcon Glyph="&#xE787;" FontSize="14" Opacity="0.7" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" />
+                                                <TextBlock Text="{x:Bind Place}" FontSize="12" Opacity="0.7" />
+                                            </StackPanel>
+                                            <Border Grid.Column="2" CornerRadius="11" Padding="10,2,10,3" VerticalAlignment="Center"
+                                                    Background="{x:Bind local:Ui.FilesPillBackground(IsIncomplete)}">
+                                                <TextBlock Text="{x:Bind FilesText}" FontSize="12" FontWeight="SemiBold"
+                                                           Foreground="{x:Bind local:Ui.FilesPillForeground(IsIncomplete)}" />
+                                            </Border>
+                                            <FontIcon Grid.Column="3" Glyph="&#xE76C;" FontSize="12" Opacity="0.6" />
+                                        </Grid>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsRepeater.ItemTemplate>
+                        </ItemsRepeater>
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
 
             <Grid ColumnSpacing="12" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsBusy), Mode=OneWay}">
                 <Grid.ColumnDefinitions>

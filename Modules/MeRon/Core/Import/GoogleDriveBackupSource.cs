@@ -15,7 +15,7 @@ public sealed record DriveEntry(string Id, string Name, bool IsFolder);
 /// Google đổi trang thì báo lỗi rõ ràng, vẫn nhập từ thư mục trên máy được.</para>
 /// </summary>
 public sealed partial class GoogleDriveBackupSource(
-    string folderId, string downloadRoot, HttpClient http, IProgress<string>? progress = null, string? baseUrl = null)
+    string folderId, string downloadRoot, HttpClient http, IProgress<string>? progress = null, string? baseUrl = null, string? knownName = null)
     : IBackupSource
 {
     [GeneratedRegex(@"^\d{8}_\d{6}$")]
@@ -83,7 +83,8 @@ public sealed partial class GoogleDriveBackupSource(
 
         // Folder chính là 1 lần backup: lấy tên từ hậu tố file (orders_20261011_231039.tsv → 20261011_231039).
         var toDownload = PickFiles(entries);
-        name ??= BackupNameFromFiles(toDownload) ?? folderId;
+        // knownName: chọn 1 bản trong danh sách folder cha → giữ đúng tên folder.
+        name ??= knownName ?? BackupNameFromFiles(toDownload) ?? folderId;
 
         var target = Path.Combine(downloadRoot, SafeName(name));
         if (Directory.Exists(target))
@@ -106,6 +107,21 @@ public sealed partial class GoogleDriveBackupSource(
             Source = FolderUrl(sourceFolderId),
             Files = LocalFolderBackupSource.FindFiles(target),
         };
+    }
+
+    /// <summary>Tất cả bản backup trong folder cha (folder con yyyyMMdd_HHmmss - của mọi tài khoản đã tải lên folder chung),
+    /// mới nhất trước. Link chính là folder 1 lần backup → danh sách rỗng.</summary>
+    public async Task<IReadOnlyList<DriveEntry>> ListBackupFoldersAsync(CancellationToken cancellationToken = default)
+    {
+        var entries = await ListAsync(folderId, cancellationToken);
+        if (HasAnyBackupFile(entries))
+        {
+            return [];
+        }
+        return entries
+            .Where(e => e.IsFolder && BackupFolderName().IsMatch(e.Name))
+            .OrderByDescending(e => e.Name, StringComparer.Ordinal)
+            .ToList();
     }
 
     private async Task<IReadOnlyList<DriveEntry>> ListAsync(string id, CancellationToken cancellationToken)
@@ -189,5 +205,5 @@ public sealed partial class GoogleDriveBackupSource(
             .Select(n => n.Length > 15 ? n[^15..] : string.Empty)
             .FirstOrDefault(n => BackupFolderName().IsMatch(n));
 
-    private static string SafeName(string name) => string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+    internal static string SafeName(string name) => string.Concat(name.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
 }

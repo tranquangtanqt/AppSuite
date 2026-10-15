@@ -3,6 +3,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using MeRon.Core.Cloud;
+using MeRon.Core.Data;
+using MeRon.Core.Import;
 
 namespace MeRon.Tests;
 
@@ -285,5 +287,88 @@ public class DriveUploaderTests
         Directory.Delete(folder, true);
         Directory.CreateDirectory(folder);
         await Assert.ThrowsAsync<GoogleAuthException>(() => new DriveUploader(new HttpClient(ok), _ => Task.FromResult("AT")).UploadBackupAsync(folder, null));
+    }
+}
+
+public class DriveBackupBrowserTests
+{
+    private static string File(string id, string name, string parent) =>
+        $$"""{"id":"{{id}}","name":"{{name}}","mimeType":"text/tab-separated-values","parents":["{{parent}}"]}""";
+
+    private static string Folder(string id, string name, string parent) =>
+        $$"""{"id":"{{id}}","name":"{{name}}","mimeType":"application/vnd.google-apps.folder","parents":["{{parent}}"]}""";
+
+    /// <summary>Drive giả: OWN = "MeRon backup" (bản máy tính, 2 bảng); PHONE1 = bản điện thoại đủ 8 bảng (folder cha
+    /// PHONEDIR do người dùng tạo, app không thấy); EMPTY = folder backup không có file; danh sách folder chia 2 trang.</summary>
+    private static FakeGoogle Drive() => new((request, _) =>
+    {
+        var url = Uri.UnescapeDataString(request.RequestUri!.ToString());
+        if (url.Contains("alt=media"))
+        {
+            var id = url[(url.IndexOf("/files/", StringComparison.Ordinal) + 7)..url.IndexOf('?')];
+            return (HttpStatusCode.OK, $"id\tnote\n1\tfile {id}");
+        }
+        if (url.Contains("mimeType = 'application/vnd.google-apps.folder'"))
+        {
+            return url.Contains("pageToken=P2")
+                ? (HttpStatusCode.OK, $$"""{"files":[{{Folder("PHONE1", "20261015_080000", "PHONEDIR")}},{{Folder("EMPTY", "20261016_000000", "PHONEDIR")}},{{Folder("X", "ghi chú", "root")}}]}""")
+                : (HttpStatusCode.OK, $$"""{"nextPageToken":"P2","files":[{{Folder("OWN", "MeRon backup", "root")}},{{Folder("PC1", "20261014_093000", "OWN")}}]}""");
+        }
+        var phone = Schema.BackupTables.Select((t, i) => File($"F{i}", $"{t.FilePrefix}_20261015_080000.tsv", "PHONE1"));
+        return (HttpStatusCode.OK, $$"""
+            {"files":[{{string.Join(",", phone)}},
+              {{File("P1", "users_20261014_093000.tsv", "PC1")}},{{File("P2", "orders_20261014_093000.tsv", "PC1")}},
+              {{File("N", "ghi chú.txt", "PC1")}}]}
+            """);
+    });
+
+    [Fact]
+    public async Task Lists_backups_newest_first_with_place_and_table_count()
+    {
+        var google = Drive();
+        var backups = await new DriveBackupBrowser(new HttpClient(google), _ => Task.FromResult("AT")).ListAsync();
+
+        Assert.Equal(["20261015_080000", "20261014_093000"], backups.Select(b => b.Name)); // EMPTY (không có file) bị bỏ
+        Assert.False(backups[0].InOwnFolder);
+        Assert.True(backups[0].IsComplete);
+        Assert.Equal(new DateTime(2026, 10, 15, 8, 0, 0), backups[0].Time);
+        Assert.True(backups[1].InOwnFolder);
+        Assert.Equal(2, backups[1].TableCount);
+        Assert.False(backups[1].IsComplete);
+        Assert.Equal(3, google.Requests.Count); // folder trang 1 + trang 2, file
+        Assert.All(google.Requests, r => Assert.Equal("Bearer AT", r.Auth));
+    }
+
+    [Fact]
+    public async Task Downloads_the_chosen_backup_for_the_normal_import()
+    {
+        using var temp = new TempFolder();
+        var browser = new DriveBackupBrowser(new HttpClient(Drive()), _ => Task.FromResult("AT"));
+        var backup = (await browser.ListAsync())[0];
+        var steps = new List<string>();
+
+        var set = await new DriveApiBackupSource(backup, browser, temp.Path, new Progress<string>(steps.Add)).GetLatestAsync();
+
+        Assert.Equal("20261015_080000", set.Name);
+        Assert.Equal("https://drive.google.com/drive/folders/PHONE1", set.Source);
+        Assert.Empty(set.Missing);
+        Assert.StartsWith(Path.Combine(temp.Path, "20261015_080000"), set.Files.Values.First());
+        Assert.Contains("file F0", System.IO.File.ReadAllText(set.Files[Schema.BackupTables[0]]));
+    }
+
+    [Fact]
+    public async Task Missing_drive_permission_asks_to_sign_in_again()
+    {
+        var scopes = new FakeGoogle((_, _) => (HttpStatusCode.Forbidden,
+            """{"error":{"code":403,"message":"Request had insufficient authentication scopes.","status":"PERMISSION_DENIED"}}"""));
+        var ex = await Assert.ThrowsAsync<GoogleAuthException>(() =>
+            new DriveBackupBrowser(new HttpClient(scopes), _ => Task.FromResult("AT")).ListAsync());
+        Assert.True(ex.NeedsSignIn);
+
+        var gone = new FakeGoogle((_, _) => (HttpStatusCode.NotFound, """{"error":{"code":404,"message":"File not found: F0."}}"""));
+        using var temp = new TempFolder();
+        ex = await Assert.ThrowsAsync<GoogleAuthException>(() =>
+            new DriveBackupBrowser(new HttpClient(gone), _ => Task.FromResult("AT")).DownloadAsync("F0", Path.Combine(temp.Path, "x.tsv")));
+        Assert.Equal("Google Drive báo lỗi (HTTP 404): File not found: F0.", ex.Message);
     }
 }

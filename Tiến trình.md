@@ -188,8 +188,19 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Huỷ, nhớ link, báo lỗi rõ khi link sai / chưa chia sẻ / mất mạng); unit test 57/57 + tải thật từ folder Drive của
   điện thoại đạt; GUI Sandbox 17/17 (Drive giả `MERON_DRIVE_BASE_URL` vì Sandbox không ra Internet) (2026-10-13)
 - [ ] Người dùng thử tay: dán link folder Drive → Kiểm tra lại → Nhập
-- [ ] Sau này: đăng nhập Google (OAuth + Drive API, Client ID loại Desktop trong project `me-ron`) để chuyển folder
-  sang "Hạn chế" — folder đang công khai mà có bảng khách hàng / địa chỉ
+- [x] Đăng nhập Google (OAuth + Drive API, Client ID loại Desktop trong project `me-ron`) để chuyển folder sang "Hạn chế":
+  trang Nhập có khung "Hoặc lấy từ Google Drive (đăng nhập)" - liệt kê các bản backup app điện thoại / MeRon đã tải lên (mới
+  nhất trước, nơi lưu, đủ bảng chưa), bấm 1 bản → tải về + kiểm tra như thư mục; folder không cần công khai
+  (`Core\Cloud\DriveBackupBrowser.cs`, `Core\Import\DriveApiBackupSource.cs`). Unit test 110/110 (2026-10-15)
+- [x] Thử với Drive thật (người dùng, 2026-10-15): đăng nhập chỉ thấy 1 bản (20261014_164527) - folder chung có bản của nhiều
+  tài khoản (phanphuong…, Saku Ra…), quyền drive.file chỉ thấy file app tạo bằng chính tài khoản đang đăng nhập
+- [x] Thư mục cha / link folder Drive: liệt kê HẾT các bản (mới nhất trước, mọi tài khoản) dưới ô thư mục, bấm để chọn bản
+  khác bản mới nhất; nhãn "Đang xem". Unit test 111/111; GUI Sandbox trang Nhập 13/13 (2026-10-15)
+- [x] Dán link folder Google Drive vào ô thư mục là tự đọc (không cần Enter; chỉ khi ô có con trỏ - mở trang không tự tải lại).
+  Người dùng dán link mà không thấy danh sách vì app chưa đọc (chưa Enter). Folder điện thoại công khai đọc được đủ 39 bản.
+  GUI Sandbox: dán link 4/4, phím Enter 3/3, nhập qua link 17/17 (2026-10-15)
+- [ ] Đăng nhập thấy được bản của các tài khoản khác: cần quyền đọc cả Drive (drive.readonly, loại "restricted") - chờ người
+  dùng quyết; chưa có thì giữ folder điện thoại công khai và dùng link
 - [x] Rê chuột vào vùng trống hay hiện tooltip "F1": phím F1 gắn ở NavigationView → `KeyboardAcceleratorPlacementMode="Hidden"`;
   GUI Sandbox 4/4 (bản cũ tái hiện lỗi ở 2/3 điểm rê chuột, F1 vẫn mở Hướng dẫn) (2026-10-13)
 - [x] Form đơn: ô chọn món đổi ComboBox → ô gõ lọc kiểu autocomplete (không dấu, các từ không cần liền nhau "bao xiu",
