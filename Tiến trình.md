@@ -256,9 +256,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Người dùng thử tay Sao chép đơn
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
-- [ ] App điện thoại me-ron: 21 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + 4 chức năng
-  bản máy tính đã có: Sao chép đơn / Đặt lại, ô chọn món gõ để lọc, Khách lâu không đặt, giữ bộ lọc) ghi ở
-  `Modules/MeRon/MOBILE_TODO.md` (2026-10-13, thêm mục F 2026-10-14)
+- [ ] App điện thoại me-ron: 22 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + 4 chức năng
+  bản máy tính đã có: Sao chép đơn / Đặt lại, ô chọn món gõ để lọc, Khách lâu không đặt, giữ bộ lọc + nhập cả bộ backup
+  từ Google Drive một lần) ghi ở `Modules/MeRon/MOBILE_TODO.md` (2026-10-13, thêm mục F 2026-10-14, mục G 2026-10-15)
 
 ## MainLauncher
 

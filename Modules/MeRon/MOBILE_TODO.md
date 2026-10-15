@@ -1,7 +1,7 @@
 # App điện thoại me-ron: các điểm nên cải thiện
 
 Ghi lại từ lúc port sang MeRon (máy tính), 2026-10-12 → 14. Mục A–E: bản máy tính đã tránh / sửa các điểm này; mục F:
-chức năng bản máy tính đã có mà điện thoại chưa có. Mỗi mục ghi:
+chức năng bản máy tính đã có mà điện thoại chưa có; mục G: chức năng mới cho điện thoại. Mỗi mục ghi:
 hiện tượng, hậu quả và cách sửa gợi ý. File Flutter nằm ở `D:\tantq\src\me-ron\lib`.
 
 ## A. Lỗi làm sai số liệu (nên sửa trước)
@@ -90,3 +90,22 @@ Thêm 2026-10-14. Các chức năng này làm sau khi port, điện thoại chư
 21. **Giữ bộ lọc khi chuyển trang**: điện thoại vào lại trang từ menu thì bộ lọc về mặc định (Đã lên đơn, hôm nay).
     Bản máy tính giữ trạng thái, khách, khoảng ngày, sắp xếp đến khi tắt app; mặc định chỉ áp ở lần đầu mở trang.
     → Giữ `OrderFilterState` cả phiên (không `autoDispose`, không reset trong `initState` khi vào từ menu).
+
+## G. Chức năng mới cho điện thoại
+
+Thêm 2026-10-15.
+
+22. **Nhập cả bộ backup từ Google Drive một lần.** Hiện màn Nhập dữ liệu (`import_data_screen.dart`) bắt chọn từng file
+    .tsv cho từng bảng bằng `FilePicker`. Muốn lấy bộ backup bản máy tính vừa "Xuất lên Google Drive" thì phải tải từng
+    file về máy rồi chọn lại từng bảng.
+    → Thêm nút "Nhập từ Google Drive":
+    - đăng nhập Google, scope `drive.file`, dùng lại phần đăng nhập của `drive_upload_service.dart`;
+    - liệt kê các folder backup `yyyyMMdd_HHmmss`, mới nhất lên đầu, kèm số file .tsv;
+    - chọn 1 folder → tải các file .tsv về thư mục tạm → kiểm tra đủ bảng → hỏi xác nhận (dữ liệu hiện có bị thay);
+    - nhập lần lượt bằng `_importTsvToDatabase` sẵn có: bảng chính (khách, món…) trước, đơn hàng sau;
+    - báo kết quả từng bảng; bảng nào lỗi thì nói rõ.
+
+    Giới hạn: `drive.file` chỉ thấy file / folder do app trong project Google Cloud `me-ron` tạo. Gồm cả bản máy tính
+    (client "MeRon Desktop") lẫn điện thoại, đã kiểm tra 2026-10-14. Folder tự tạo hoặc file tự kéo lên trang web Drive
+    thì app không thấy. Muốn thấy phải xin quyền đọc cả Drive, quyền loại "restricted" phải qua Google xét duyệt, không
+    đáng làm.
