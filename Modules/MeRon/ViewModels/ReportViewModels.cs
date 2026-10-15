@@ -226,6 +226,13 @@ public sealed partial class ReportProductViewModel : ReportViewModel
     [ObservableProperty]
     private string _totalQuantity = string.Empty;
 
+    // Ô số liệu: tổng tiền + số món khác nhau
+    [ObservableProperty]
+    private string _totalAmount = VnFormat.Money(0);
+
+    [ObservableProperty]
+    private string _productCount = "0";
+
     [ObservableProperty]
     private string _ordersTitle = string.Empty;
 
@@ -271,10 +278,13 @@ public sealed partial class ReportProductViewModel : ReportViewModel
     {
         var report = AppServices.Reports.ProductReport(Range.From, Range.To, Product.Id == 0 ? null : Product.Id);
         TotalQuantity = VnFormat.Number(report.TotalQuantity);
+        TotalAmount = VnFormat.Money(report.Products.Sum(p => p.Amount));
+        ProductCount = VnFormat.Number(report.Products.Count);
         Products.Clear();
+        var maxQuantity = report.Products.Count > 0 ? report.Products.Max(p => p.Quantity) : 0;
         foreach (var p in report.Products)
         {
-            Products.Add(Line(p));
+            Products.Add(Line(p) with { Share = maxQuantity > 0 ? 100.0 * p.Quantity / maxQuantity : 0 });
         }
         Orders.Clear();
         foreach (var o in report.Orders)
@@ -304,6 +314,13 @@ public sealed partial class ReportSummaryViewModel : ReportViewModel
     [ObservableProperty]
     private string _difference = string.Empty;
 
+    // Ô Chênh lệch: số tiền riêng (chữ lớn) + lỗ (âm) thì đổi màu
+    [ObservableProperty]
+    private string _differenceValue = string.Empty;
+
+    [ObservableProperty]
+    private bool _isLoss;
+
     public ObservableCollection<ReportLine> Products { get; } = [];
 
     public ObservableCollection<ReportLine> PurchaseItems { get; } = [];
@@ -316,16 +333,21 @@ public sealed partial class ReportSummaryViewModel : ReportViewModel
         PurchaseCount = VnFormat.Number(r.PurchaseCount);
         PurchaseAmount = VnFormat.Money(r.PurchaseAmount);
         var diff = r.OrderAmount - r.PurchaseAmount;
-        Difference = $"Chênh lệch (bán − mua): {(diff < 0 ? "−" : string.Empty)}{VnFormat.Money(Math.Abs(diff))}";
+        DifferenceValue = $"{(diff < 0 ? "−" : string.Empty)}{VnFormat.Money(Math.Abs(diff))}";
+        Difference = $"Chênh lệch (bán − mua): {DifferenceValue}";
+        IsLoss = diff < 0;
         Products.Clear();
+        var maxQuantity = r.Products.Count > 0 ? r.Products.Max(p => p.Quantity) : 0;
         foreach (var p in r.Products)
         {
-            Products.Add(Line(p));
+            Products.Add(Line(p) with { Share = maxQuantity > 0 ? 100.0 * p.Quantity / maxQuantity : 0 });
         }
         PurchaseItems.Clear();
+        var maxAmount = r.PurchaseItems.Count > 0 ? r.PurchaseItems.Max(i => i.Amount) : 0;
         foreach (var i in r.PurchaseItems)
         {
-            PurchaseItems.Add(new ReportLine(i.Name, $"{VnFormat.Number(i.Count)} lần", VnFormat.Money(i.Amount)));
+            PurchaseItems.Add(new ReportLine(i.Name, $"{VnFormat.Number(i.Count)} lần", VnFormat.Money(i.Amount),
+                maxAmount > 0 ? 100.0 * i.Amount / maxAmount : 0));
         }
         HasData = r.OrderCount + r.PurchaseCount > 0;
     }

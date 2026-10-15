@@ -87,7 +87,7 @@ public static class HelpContent
 
         new("Mua hàng", "", "Phiếu nhập / mua nguyên liệu theo ngày.", "PurchasesPage",
         [
-            new("Danh sách", "Phiếu nhập trong khoảng ngày (mặc định hôm nay), mới nhất trước: ngày, các khoản (tên, giá), Tổng. Dòng trên cùng: số phiếu và tổng tiền. Bấm 1 phiếu để sửa.", "Click"),
+            new("Danh sách", "Phiếu nhập trong khoảng ngày (mặc định hôm nay), mới nhất trước: thẻ có vạch xanh dương bên trái, ngày, số khoản, các khoản (tên, giá), Tổng. Nhãn xanh dương cạnh tiêu đề: số phiếu và tổng tiền. Bấm 1 phiếu để sửa.", "Click"),
             new("Thêm phiếu", "Nút Thêm (Ctrl+N). Đang lọc đúng 1 ngày thì phiếu mới lấy ngày đó, ngược lại là hôm nay.", "Ctrl+N"),
         ]),
 
@@ -109,15 +109,15 @@ public static class HelpContent
         new("Thống kê theo món ăn", "", "Món nào bán bao nhiêu.", "ReportProductPage",
         [
             new("Bộ lọc", "Món ăn (mặc định tất cả) + khoảng ngày giao. Không tính đơn Huỷ."),
-            new("Kết quả", "Tổng số món; bảng từng món (số lượng, thành tiền) nhiều nhất trước - món tự do mỗi tên 1 dòng (chọn 1 món cụ thể thì không lọc được món tự do)."),
+            new("Kết quả", "3 ô: Tổng số món, Tổng thành tiền, Số món khác nhau; bảng từng món (số lượng, thành tiền, thanh so với món bán nhiều nhất) nhiều nhất trước - món tự do mỗi tên 1 dòng (chọn 1 món cụ thể thì không lọc được món tự do)."),
             new("Đơn hàng liên quan", "Các đơn trong khoảng ngày; chọn 1 món thì chỉ hiện đơn có món đó và chỉ dòng của món đó. Bấm đơn để mở form sửa.", "Click"),
         ]),
 
         new("Thống kê tổng hợp", "", "Bán (đơn hàng) và mua (phiếu nhập) trong cùng khoảng ngày.", "ReportSummaryPage",
         [
-            new("Đơn hàng", "Tổng số đơn, Tổng thành tiền (không tính đơn Huỷ) và bảng theo từng món."),
-            new("Mua hàng", "Tổng số phiếu nhập, Tổng thành tiền và bảng theo từng khoản hàng (gộp theo tên, không phân biệt hoa thường): số lần mua, tổng tiền."),
-            new("Chênh lệch", "Dòng trên cùng: tiền bán − tiền mua của khoảng ngày (âm = mua nhiều hơn bán)."),
+            new("Đơn hàng", "Ô cam Bán: tổng thành tiền + số đơn (không tính đơn Huỷ); bảng Bán theo món (có thanh so với món bán nhiều nhất)."),
+            new("Mua hàng", "Ô xanh dương Mua: tổng tiền + số phiếu nhập; bảng Mua theo khoản hàng (gộp theo tên, không phân biệt hoa thường): số lần mua, tổng tiền, thanh so với khoản tốn nhiều nhất."),
+            new("Chênh lệch", "Ô thứ 3: tiền bán − tiền mua của khoảng ngày - xanh lá khi lãi, đỏ khi lỗ (số âm = mua nhiều hơn bán)."),
         ]),
 
         new("Khách hàng tiềm năng", "", "Xếp hạng khách theo tổng tiền đã đặt.", "ReportCustomerPage",
@@ -163,6 +163,7 @@ public static class HelpContent
         new("Khách hàng", "", "Danh sách khách hàng dùng cho đơn hàng và báo cáo.", "CustomersPage",
         [
             new("Tìm", "Gõ vào ô tìm - lọc ngay theo tên hoặc số điện thoại, không phân biệt hoa thường và dấu (\"chi an\" khớp \"Chị An\")."),
+            new("Danh sách", "Ô tròn màu cạnh tên = chữ cái đầu của tên (bỏ qua số phòng / mã toà: \"908 Chị Huyền\" → H); địa chỉ hiện thành nhãn xám."),
             new("Thêm / sửa", "Bấm Thêm, hoặc bấm vào 1 dòng để sửa: Tên, Số điện thoại, Địa chỉ (gõ tự do hoặc chọn gợi ý từ danh mục Địa chỉ), Ghi chú.", "Click"),
             new("Trùng tên", "Tên khách hàng không được trùng với khách khác (không phân biệt hoa thường, như điện thoại). Sửa mà giữ nguyên tên cũ thì vẫn lưu được."),
             new("Xoá", "Nút Xoá trong hộp thoại sửa. Khách hàng còn đơn hàng thì không xoá được (để báo cáo không bị sai)."),

@@ -21,9 +21,13 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Mua hàng" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Summary, Mode=OneWay}" AutomationProperties.AutomationId="PurchasesSummary"
-                       Opacity="0.75" VerticalAlignment="Center" Margin="12,0,0,0" TextTrimming="CharacterEllipsis" />
+            <TextBlock Text="Mua hàng" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <!-- Số phiếu + tổng tiền thành nhãn tròn xanh dương (mua = chi, khác màu cam của bán) -->
+            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,4,0,0" CornerRadius="14" Padding="12,4,12,5"
+                    Background="{x:Bind local:Ui.PurchasePillBackground(ViewModel.IsEmpty), Mode=OneWay}">
+                <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" AutomationProperties.AutomationId="PurchasesSummary" FontWeight="SemiBold"
+                           Foreground="{x:Bind local:Ui.PurchasePillForeground(ViewModel.IsEmpty), Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+            </Border>
             <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}" Click="Add_Click" AutomationProperties.Name="Thêm phiếu nhập">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="Add" />
@@ -44,38 +48,54 @@
             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
                 <ItemsRepeater ItemsSource="{x:Bind ViewModel.Cards}" AutomationProperties.Name="Danh sách phiếu nhập">
                     <ItemsRepeater.Layout>
-                        <StackLayout Spacing="6" />
+                        <StackLayout Spacing="10" />
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="vm:PurchaseCardViewModel">
                             <Button Click="Card_Click" Tag="{x:Bind}" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                     Background="Transparent" BorderThickness="0" AutomationProperties.Name="{x:Bind AccessibleName}">
-                                <Border Padding="12,10" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                    <StackPanel Spacing="3">
-                                        <TextBlock Text="{x:Bind DateText}" FontWeight="SemiBold" FontSize="15" />
+                                <!-- Thẻ phiếu nhập cùng kiểu thẻ đơn: vạch xanh dương bên trái, ngày có icon, nhãn số khoản, Tổng to -->
+                                <Grid CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                      Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="5" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Rectangle Fill="#1C7ED6" />
+                                    <StackPanel Grid.Column="1" Spacing="6" Padding="16,12">
+                                        <Grid ColumnSpacing="10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <FontIcon Glyph="&#xE787;" FontSize="15" Opacity="0.75" />
+                                                <TextBlock Text="{x:Bind DateText}" FontWeight="SemiBold" FontSize="16" />
+                                            </StackPanel>
+                                            <Border Grid.Column="1" CornerRadius="11" Padding="10,2,10,3" Background="#261C7ED6" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind CountText}" FontSize="12" FontWeight="SemiBold" Foreground="#1C7ED6" />
+                                            </Border>
+                                        </Grid>
                                         <ItemsControl ItemsSource="{x:Bind Lines}" IsTabStop="False">
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate x:DataType="vm:PurchaseCardLine">
-                                                    <Grid ColumnSpacing="12">
+                                                    <Grid ColumnSpacing="12" Padding="0,1">
                                                         <Grid.ColumnDefinitions>
-                                                            <ColumnDefinition Width="12" />
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="110" />
                                                         </Grid.ColumnDefinitions>
-                                                        <Ellipse Width="4" Height="4" Fill="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
-                                                        <TextBlock Grid.Column="1" Text="{x:Bind Name}" FontSize="13" TextTrimming="CharacterEllipsis" />
-                                                        <TextBlock Grid.Column="2" Text="{x:Bind Price}" FontSize="13" HorizontalAlignment="Right" />
+                                                        <TextBlock Text="{x:Bind Name}" FontSize="14" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Grid.Column="1" Text="{x:Bind Price}" FontSize="14" HorizontalAlignment="Right" />
                                                     </Grid>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
+                                        <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,2,0,0" />
                                         <TextBlock HorizontalAlignment="Right">
-                                            <Run Text="Tổng: " FontWeight="SemiBold" /><Run Text="{x:Bind TotalText}" FontWeight="SemiBold"
-                                                                                                 Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                            <Run Text="Tổng  " FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind TotalText}" FontSize="17" FontWeight="Bold" Foreground="#1C7ED6" />
                                         </TextBlock>
                                     </StackPanel>
-                                </Border>
+                                </Grid>
                             </Button>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>

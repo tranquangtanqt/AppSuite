@@ -23,8 +23,8 @@
                 <ColumnDefinition Width="*" MaxWidth="320" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Danh mục món ăn" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.CountText, Mode=OneWay}" AutomationProperties.AutomationId="CountText" Opacity="0.7" VerticalAlignment="Center" Margin="12,0,0,0" />
+            <TextBlock Text="Danh mục món ăn" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <Border Grid.Column="1" VerticalAlignment="Center" Margin="16,4,0,0" CornerRadius="14" Padding="12,3,12,4" Background="#26E8590C"><TextBlock Text="{x:Bind ViewModel.CountText, Mode=OneWay}" AutomationProperties.AutomationId="CountText" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" /></Border>
             <TextBox x:Name="SearchBox" Grid.Column="3" PlaceholderText="Tìm theo tên hoặc mô tả" AutomationProperties.Name="Tìm danh mục"
                      Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Grid.Column="4" Style="{StaticResource AccentButtonStyle}" Click="Add_Click" AutomationProperties.Name="Thêm danh mục">
@@ -38,12 +38,13 @@
         <InfoBar Grid.Row="1" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.LoadError, Mode=OneWay}"
                  IsOpen="{x:Bind local:Ui.HasText(ViewModel.LoadError), Mode=OneWay}" />
 
-        <Grid Grid.Row="2" RowSpacing="2">
+        <Border Grid.Row="2" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+        <Grid RowSpacing="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Grid Padding="12,6" ColumnSpacing="12" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4">
+            <Grid Padding="16,10" ColumnSpacing="12" Background="{ThemeResource LayerFillColorAltBrush}" CornerRadius="10,10,0,0" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="48" />
                     <ColumnDefinition Width="1*" />
@@ -59,7 +60,7 @@
                       IsItemClickEnabled="True" ItemClick="List_ItemClick" AutomationProperties.Name="Danh sách danh mục">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
-                        <Setter Property="Padding" Value="12,0" />
+                        <Setter Property="Padding" Value="16,0" />
                         <Setter Property="MinHeight" Value="38" />
                         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                     </Style>
@@ -74,7 +75,7 @@
                                 <ColumnDefinition Width="96" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Bind Index}" Opacity="0.6" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind Item.Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind Item.Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                             <TextBlock Grid.Column="2" Text="{x:Bind Item.Description}" TextTrimming="CharacterEllipsis" Opacity="0.8" VerticalAlignment="Center" />
                             <!-- Như điện thoại: trang duy nhất có Sửa / Xoá ngay trên dòng. -->
                             <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="4">
@@ -92,5 +93,6 @@
                 </ListView.ItemTemplate>
             </ListView>
         </Grid>
+        </Border>
     </Grid>
 </Page>

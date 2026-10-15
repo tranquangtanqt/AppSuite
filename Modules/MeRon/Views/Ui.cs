@@ -83,4 +83,47 @@ internal static class Ui
         OrderStatus.Cancelled => Cancelled,
         _ => (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
     };
+
+    // Ô tròn chữ cái đầu cạnh tên khách: chữ cái đầu của từ cuối cùng chỉ gồm chữ cái, bỏ qua số phòng / mã toà
+    // ("908 Chị Huyền" → H, "w1 C Ngọc Thủy" → T, "Huyền 611 -> w1" → H).
+    private static readonly Brush[] AvatarBrushes =
+    [
+        new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0xE8, 0x59, 0x0C)),
+        new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0x2F, 0x9E, 0x44)),
+        new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0x1C, 0x7E, 0xD6)),
+        new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0x7B, 0x4D, 0xD8)),
+        new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0xD6, 0x33, 0x6C)),
+        new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0x0C, 0x8B, 0x8F)),
+    ];
+
+    // Nhãn tóm tắt Mua hàng: xanh dương khi có phiếu; trống thì chỉ là chữ xám (không thành nhãn màu).
+    private static readonly Brush PurchaseSolid = new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0x1C, 0x7E, 0xD6));
+    private static readonly Brush White = new SolidColorBrush(Colors.White);
+
+    public static Brush PurchasePillBackground(bool isEmpty) => isEmpty ? NoTint : PurchaseSolid;
+
+    public static Brush PurchasePillForeground(bool isEmpty) =>
+        isEmpty ? (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"] : White;
+
+    /// <summary>Ô Chênh lệch (Tổng hợp): lãi xanh lá, lỗ đỏ.</summary>
+    public static Brush DifferenceBrush(bool isLoss) => isLoss ? LossSolid : PaidSolid;
+
+    private static readonly Brush LossSolid = new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0xE0, 0x31, 0x31));
+
+    public static string Initial(string? name)
+    {
+        var word = (name ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .LastOrDefault(w => w.All(char.IsLetter));
+        return word is null ? "?" : char.ToUpper(word[0]).ToString();
+    }
+
+    public static Brush AvatarBrush(string? name)
+    {
+        var hash = 0;
+        foreach (var c in name ?? string.Empty)
+        {
+            hash = unchecked(hash * 31 + c);
+        }
+        return AvatarBrushes[(hash & 0x7FFFFFFF) % AvatarBrushes.Length];
+    }
 }

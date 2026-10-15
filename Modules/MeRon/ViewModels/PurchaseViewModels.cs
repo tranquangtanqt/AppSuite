@@ -23,6 +23,8 @@ public sealed class PurchaseCardViewModel(Purchase purchase)
 
     public string TotalText => VnFormat.Money(purchase.Total);
 
+    public string CountText => $"{Lines.Count} khoản";
+
     public string AccessibleName => $"Phiếu {purchase.Id} - {DateText} - {Lines.Count} khoản - {TotalText}";
 }
 

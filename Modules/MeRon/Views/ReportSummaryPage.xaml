@@ -14,57 +14,80 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Thống kê tổng hợp" Style="{StaticResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Thống kê tổng hợp" Style="{StaticResource TitleTextBlockStyle}" />
         <local:DateRangeBar x:Name="RangeBar" Grid.Row="1" Filter="{x:Bind ViewModel.Range}" />
         <InfoBar Grid.Row="2" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                  IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
 
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="20" Padding="0,0,12,24" MaxWidth="900" HorizontalAlignment="Left">
-                <TextBlock Text="{x:Bind ViewModel.Difference, Mode=OneWay}" FontWeight="SemiBold" AutomationProperties.AutomationId="SummaryDifference" />
+            <StackPanel Spacing="20" Padding="0,0,12,24" MaxWidth="1100" HorizontalAlignment="Stretch">
+                <!-- 3 ô lớn: Tiền bán (cam), Tiền mua (xanh dương), Chênh lệch (xanh lá khi lãi, đỏ khi lỗ) -->
+                <Grid ColumnSpacing="12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border Padding="16,14" CornerRadius="10" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                        <StackPanel Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Border Width="32" Height="32" CornerRadius="16" Background="#33FFFFFF">
+                                    <FontIcon Glyph="&#xE7BF;" FontSize="15" Foreground="White" />
+                                </Border>
+                                <TextBlock Text="Bán (không tính Huỷ)" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Bind ViewModel.OrderAmount, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                                       AutomationProperties.AutomationId="SummaryOrderAmount" />
+                            <StackPanel Orientation="Horizontal" Spacing="4" Opacity="0.9">
+                                <TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" Foreground="White" AutomationProperties.AutomationId="SummaryOrderCount" />
+                                <TextBlock Text="đơn" Foreground="White" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="1" Padding="16,14" CornerRadius="10" Background="#1C7ED6">
+                        <StackPanel Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Border Width="32" Height="32" CornerRadius="16" Background="#33FFFFFF">
+                                    <FontIcon Glyph="&#xE719;" FontSize="15" Foreground="White" />
+                                </Border>
+                                <TextBlock Text="Mua" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Bind ViewModel.PurchaseAmount, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                                       AutomationProperties.AutomationId="SummaryPurchaseAmount" />
+                            <StackPanel Orientation="Horizontal" Spacing="4" Opacity="0.9">
+                                <TextBlock Text="{x:Bind ViewModel.PurchaseCount, Mode=OneWay}" Foreground="White" AutomationProperties.AutomationId="SummaryPurchaseCount" />
+                                <TextBlock Text="phiếu nhập" Foreground="White" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Padding="16,14" CornerRadius="10" Background="{x:Bind local:Ui.DifferenceBrush(ViewModel.IsLoss), Mode=OneWay}">
+                        <StackPanel Spacing="6">
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Border Width="32" Height="32" CornerRadius="16" Background="#33FFFFFF">
+                                    <FontIcon Glyph="&#xE9D2;" FontSize="15" Foreground="White" />
+                                </Border>
+                                <TextBlock Text="Chênh lệch (bán − mua)" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock Text="{x:Bind ViewModel.DifferenceValue, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                                       AutomationProperties.Name="{x:Bind ViewModel.Difference, Mode=OneWay}" AutomationProperties.AutomationId="SummaryDifference" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
 
                 <!-- Đơn hàng -->
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Đơn hàng (không tính đơn Huỷ)" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Padding="16,10" CornerRadius="8" MinWidth="180" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="Tổng số đơn" Opacity="0.75" />
-                                <TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" FontSize="22" FontWeight="SemiBold" AutomationProperties.AutomationId="SummaryOrderCount" />
-                            </StackPanel>
-                        </Border>
-                        <Border Padding="16,10" CornerRadius="8" MinWidth="220" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="Tổng thành tiền" Opacity="0.75" />
-                                <TextBlock Text="{x:Bind ViewModel.OrderAmount, Mode=OneWay}" FontSize="22" FontWeight="SemiBold"
-                                           Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" AutomationProperties.AutomationId="SummaryOrderAmount" />
-                            </StackPanel>
-                        </Border>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="10" Height="10" Fill="#E8590C" VerticalAlignment="Center" />
+                        <TextBlock Text="Bán theo món" Style="{StaticResource BodyStrongTextBlockStyle}" />
                     </StackPanel>
                     <local:ReportTable Lines="{x:Bind ViewModel.Products}" />
                 </StackPanel>
 
                 <!-- Mua hàng -->
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Mua hàng" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Padding="16,10" CornerRadius="8" MinWidth="180" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="Tổng số phiếu nhập" Opacity="0.75" />
-                                <TextBlock Text="{x:Bind ViewModel.PurchaseCount, Mode=OneWay}" FontSize="22" FontWeight="SemiBold" AutomationProperties.AutomationId="SummaryPurchaseCount" />
-                            </StackPanel>
-                        </Border>
-                        <Border Padding="16,10" CornerRadius="8" MinWidth="220" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="Tổng thành tiền" Opacity="0.75" />
-                                <TextBlock Text="{x:Bind ViewModel.PurchaseAmount, Mode=OneWay}" FontSize="22" FontWeight="SemiBold"
-                                           AutomationProperties.AutomationId="SummaryPurchaseAmount" />
-                            </StackPanel>
-                        </Border>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="10" Height="10" Fill="#1C7ED6" VerticalAlignment="Center" />
+                        <TextBlock Text="Mua theo khoản hàng" Style="{StaticResource BodyStrongTextBlockStyle}" />
                     </StackPanel>
                     <local:ReportTable Lines="{x:Bind ViewModel.PurchaseItems}" NameHeader="Khoản hàng" QuantityHeader="Số lần" />
                 </StackPanel>
