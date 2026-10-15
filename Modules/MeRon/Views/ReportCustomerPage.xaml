@@ -20,40 +20,57 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Khách hàng tiềm năng" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Summary, Mode=OneWay}" Opacity="0.75" VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="CustomerReportSummary" />
+            <TextBlock Text="Khách hàng tiềm năng" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <!-- Số khách + tổng tiền thành nhãn tròn cam nhạt -->
+            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,4,0,0" CornerRadius="14" Padding="12,3,12,4"
+                    Background="#26E8590C">
+                <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                           TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="CustomerReportSummary" />
+            </Border>
         </Grid>
         <local:DateRangeBar x:Name="RangeBar" Grid.Row="1" Filter="{x:Bind ViewModel.Range}" />
         <InfoBar Grid.Row="2" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                  IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
 
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
-            <StackPanel Padding="0,0,12,24" MaxWidth="800" HorizontalAlignment="Left" Spacing="6">
+            <StackPanel Padding="0,0,12,24" MaxWidth="900" HorizontalAlignment="Left" Spacing="8">
                 <TextBlock Text="Xếp theo tổng tiền đã đặt (không tính đơn Huỷ), tối đa 100 khách. Bấm 1 khách để xem các đơn trong khoảng ngày."
                            Opacity="0.75" TextWrapping="Wrap" />
+                <!-- Mỗi khách 1 thẻ: hạng (1-3 vàng / bạc / đồng), ô tròn chữ cái đầu, tên + thanh tỷ lệ so với khách nhiều nhất -->
                 <ItemsRepeater ItemsSource="{x:Bind ViewModel.Rows}">
                     <ItemsRepeater.Layout>
-                        <StackLayout Spacing="4" />
+                        <StackLayout Spacing="6" />
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="vm:CustomerReportRow">
                             <Button Click="Customer_Click" Tag="{x:Bind}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                                    Padding="12,8" AutomationProperties.Name="{x:Bind AccessibleName}">
+                                    Padding="14,10" CornerRadius="10" AutomationProperties.Name="{x:Bind AccessibleName}">
                                 <Grid ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="36" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="90" />
-                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="80" />
+                                        <ColumnDefinition Width="130" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{x:Bind RankText}" FontWeight="SemiBold" Opacity="0.7" />
-                                    <TextBlock Grid.Column="1" Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="2" Text="{x:Bind Orders}" HorizontalAlignment="Right" />
-                                    <TextBlock Grid.Column="3" Text="{x:Bind Amount}" HorizontalAlignment="Right" FontWeight="SemiBold"
-                                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                                    <FontIcon Grid.Column="4" Glyph="&#xE76C;" FontSize="12" Opacity="0.6" />
+                                    <Border Width="30" Height="30" CornerRadius="15" Background="{x:Bind local:Ui.RankBackground(Rank)}" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind RankText}" FontWeight="Bold" FontSize="13" Foreground="{x:Bind local:Ui.RankForeground(Rank)}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <Border Grid.Column="1" Width="32" Height="32" CornerRadius="16" Background="{x:Bind local:Ui.AvatarBrush(Name)}" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind local:Ui.Initial(Name)}" Foreground="White" FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="2" Spacing="5" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <ProgressBar Value="{x:Bind Share}" Maximum="100" MinHeight="4" CornerRadius="2" MaxWidth="360" HorizontalAlignment="Stretch"
+                                                     Visibility="{x:Bind HasShare}" IsTabStop="False" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="3" Text="{x:Bind Orders}" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.75" />
+                                    <TextBlock Grid.Column="4" Text="{x:Bind Amount}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold"
+                                               FontSize="15" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    <FontIcon Grid.Column="5" Glyph="&#xE76C;" FontSize="12" Opacity="0.6" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
                         </DataTemplate>

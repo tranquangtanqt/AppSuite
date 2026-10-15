@@ -35,7 +35,7 @@ Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu
 | Thống kê | **Theo đơn hàng** | Lọc trạng thái (mặc định Đã lên đơn) / khách / khoảng ngày: 4 ô Tổng số đơn / Tổng thành tiền / TB mỗi đơn / Tổng số món, ô từng trạng thái (số đơn, tiền, thanh % số đơn), bảng theo món (thanh so với món bán nhiều nhất) + tổng số món, danh sách theo khách (4 cách sắp xếp) → bấm mở Chi tiết đơn của khách |
 | | **Theo món ăn** | Khoảng ngày + (tuỳ chọn) 1 món: 3 ô Tổng số món / Tổng thành tiền / Số món khác nhau, bảng từng món có thanh tỷ lệ (món tự do gộp theo tên), các đơn liên quan → bấm mở form đơn |
 | | **Tổng hợp** | 3 ô: Bán (cam: tiền + số đơn), Mua (xanh dương: tiền + số phiếu), Chênh lệch bán − mua (xanh lá khi lãi, đỏ khi lỗ); bảng Bán theo món + Mua theo khoản, có thanh tỷ lệ |
-| | **Khách hàng tiềm năng** | Tối đa 100 khách xếp theo tổng tiền → bấm mở Chi tiết đơn của khách |
+| | **Khách hàng tiềm năng** | Tối đa 100 khách xếp theo tổng tiền (hạng 1–3 vàng / bạc / đồng, ô tròn chữ cái đầu, thanh tỷ lệ so với khách nhiều nhất) → bấm mở Chi tiết đơn của khách |
 | | **Khách lâu không đặt** | Khách đã đặt ≥ N đơn (mặc định 2) mà đơn gần nhất (ngày giao, bỏ đơn Huỷ) cách hôm nay ≥ M ngày (mặc định 30; chọn nhanh 14 / 30 / 60 / 90): lần cuối + số ngày, thói quen (TB ngày giữa các lần đặt, cần ≥ 3 ngày đặt; nhãn cam khi nghỉ ≥ 2 lần thói quen), số đơn + tổng tiền, 3 món hay đặt. Sắp xếp lâu nhất / tiền nhiều nhất / quá thói quen nhất, tìm (Ctrl+F). Nút: Xem đơn, Đặt lại (chép đơn gần nhất, giao hôm nay), Tin nhắn (chép câu hỏi thăm cho Zalo, bỏ mã phòng ở tên), chép SĐT. Tính ở `Core\Reports\LapsedCustomers.cs` |
 | Danh mục | **Khách hàng** | STT / Tên (ô tròn chữ cái đầu, bỏ qua số phòng / mã toà) / Số ĐT / Địa chỉ (nhãn) / Ghi chú; tìm theo tên / SĐT (không dấu); thêm / sửa (Địa chỉ gõ tự do hoặc chọn); trùng tên không cho lưu; không xoá được khách còn đơn |
 | | **Món ăn** | STT / Tên / Giá (cam) / Danh mục (nhãn xanh dương) / Mô tả; tìm; thêm / sửa. Không xoá, không quản lý ảnh (như điện thoại; ảnh có sẵn giữ nguyên) |
@@ -51,7 +51,9 @@ Mọi trang có khoảng ngày đều có nút chọn nhanh: Hôm nay, Hôm qua,
 nút lịch (Alt+↓ / F4) tiếng Việt tuần bắt đầu thứ Hai + Hôm nay + Xoá ngày (ô không bắt buộc). Số và tiền
 luôn hiển thị kiểu Việt Nam (`2.617`, `25.000 đ`) bất kể ngôn ngữ Windows. Màu chủ đạo cam (`#E8590C`, khai trong `App.xaml`)
 thay màu nhấn của Windows cho nút chính, tab, menu, số tiền; mua hàng (chi) dùng xanh dương `#1C7ED6`. Các trang danh mục: bảng
-trong khung bo góc, số mục là nhãn tròn.
+trong khung bo góc, số mục là nhãn tròn. Đợt 3 (2026-10-15): Khách lâu không đặt có ô số ngày to bên trái (cam khi nghỉ quá
+thói quen); Nhập / Xuất chia khung có icon (Xoá toàn bộ khung đỏ), bảng xem trước trong khung bo góc; form đơn chia 2 khung
+"Khách hàng và món" / "Tiền, ngày giao, ghi chú", nhãn trạng thái tròn; form phiếu nhập 1 khung, Tổng xanh dương.
 
 ### Khác điện thoại có chủ đích
 

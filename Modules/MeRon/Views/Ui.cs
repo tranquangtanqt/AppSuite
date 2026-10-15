@@ -115,6 +115,27 @@ internal static class Ui
 
     private static readonly Brush LossSolid = new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0xE0, 0x31, 0x31));
 
+    // Hạng khách (Khách hàng tiềm năng): 1 vàng, 2 bạc, 3 đồng, còn lại xám nhạt.
+    private static readonly Brush Gold = new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0xF5, 0x9F, 0x00));
+    private static readonly Brush Silver = new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0x86, 0x8E, 0x96));
+    private static readonly Brush Bronze = new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0xB0, 0x6A, 0x3B));
+
+    public static Brush RankBackground(int rank) => rank switch
+    {
+        1 => Gold,
+        2 => Silver,
+        3 => Bronze,
+        _ => CancelledSoft,
+    };
+
+    public static Brush RankForeground(int rank) =>
+        rank <= 3 ? White : (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+
+    /// <summary>Ô số ngày (Khách lâu không đặt): nghỉ quá thói quen cam, còn lại xám.</summary>
+    public static Brush LapsedBackground(bool overHabit) => overHabit ? ShippingSoft : CancelledSoft;
+
+    public static Brush LapsedForeground(bool overHabit) => overHabit ? ShippingSolid : (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+
     public static string Initial(string? name)
     {
         var word = (name ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries)

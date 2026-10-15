@@ -275,7 +275,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   cái đầu bỏ qua số phòng, địa chỉ thành nhãn), Món ăn (giá cam, danh mục nhãn xanh dương), Danh mục món ăn, Địa chỉ (mã nhãn
   cam) - bảng trong khung bo góc, số mục nhãn tròn. Cửa sổ F1 giữ nguyên (người dùng chọn). Cập nhật F1, README. Ảnh trước /
   sau ở `Pictures\MeRon giao dien mau 2026-10-15\5_dot2_cac_trang_con_lai` (2026-10-15)
-- [ ] Còn kiểu cũ: Khách hàng tiềm năng, Khách lâu không đặt, Nhập / Xuất dữ liệu, form thêm / sửa đơn và phiếu nhập
+- [x] Giao diện mới đợt 3 (mẫu thử trong Sandbox, người dùng duyệt): Khách hàng tiềm năng (hạng 1–3 vàng / bạc / đồng, ô tròn
+  chữ cái đầu, thanh tỷ lệ tiền); Khách lâu không đặt (ô số ngày to - cam khi nghỉ quá thói quen); Nhập / Xuất (khung có
+  icon, Xoá toàn bộ khung đỏ, bảng xem trước bo góc); form đơn 2 khung + nhãn trạng thái tròn; form phiếu nhập 1 khung, Tổng
+  xanh dương. Ảnh trước / sau ở `Pictures\MeRon giao dien mau 2026-10-15\6_dot3_khach_nhap_xuat_form`. Unit test 112/112; GUI Sandbox 18 bộ
+  đạt hết (Đặt hàng 36/36, báo cáo 33/33, Khách lâu không đặt 12/12, Sao chép 19/19, cảnh báo chưa xuất 12/12, tổng quát 37/37...) (2026-10-15)
 - [x] Cảnh báo trước khi nhập đè mất phần sửa trên máy tính: trigger SQLite trên 8 bảng đếm dòng thêm / sửa / xoá (tắt trong
   lúc nhập); trang Nhập hiện khung vàng "Có thay đổi trên máy tính chưa xuất" (số dòng, từ lúc nào) + nút Mở trang Xuất; hộp
   xác nhận đổi tiêu đề + nút "Vẫn nhập, bỏ thay đổi" (chọn sẵn Huỷ); xuất TSV / Drive, nhập, xoá toàn bộ → về 0. Database

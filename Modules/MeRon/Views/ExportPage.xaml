@@ -7,14 +7,22 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Padding="24,12,24,24" Spacing="14" MaxWidth="1000" HorizontalAlignment="Left">
-            <TextBlock Text="Xuất / Xoá dữ liệu" Style="{StaticResource SubtitleTextBlockStyle}" />
-            <TextBlock Text="{x:Bind ViewModel.CurrentData, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.75" AutomationProperties.AutomationId="CurrentData" />
+            <TextBlock Text="Xuất / Xoá dữ liệu" Style="{StaticResource TitleTextBlockStyle}" />
+            <!-- Số dòng đang có: nhãn tròn xám -->
+            <Border HorizontalAlignment="Left" CornerRadius="12" Padding="12,4,12,5" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                <TextBlock Text="{x:Bind ViewModel.CurrentData, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.85" AutomationProperties.AutomationId="CurrentData" />
+            </Border>
 
             <!-- Xuất -->
-            <Border Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Xuất bộ backup TSV" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
+                            <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="#E8590C" />
+                        </Border>
+                        <TextBlock Text="Xuất bộ backup TSV" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Tạo thư mục yyyyMMdd_HHmmss chứa 8 file .tsv đúng định dạng app điện thoại (address_…, users_…, orders_…). Dùng để: chép sang điện thoại rồi nhập (Cài đặt → Sao lưu → Nhập dữ liệu từ tệp sao lưu, từng bảng), chuyển sang máy tính khác (trang Nhập dữ liệu), hoặc cất làm bản lưu." />
                     <Grid ColumnSpacing="8">
@@ -42,10 +50,15 @@
             </Border>
 
             <!-- Google Drive: đăng nhập + tải bộ backup lên -->
-            <Border Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Tải bộ backup lên Google Drive" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#261C7ED6">
+                            <FontIcon Glyph="&#xE753;" FontSize="15" Foreground="#1C7ED6" />
+                        </Border>
+                        <TextBlock Text="Tải bộ backup lên Google Drive" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Xuất bộ TSV như nút Xuất TSV (vào thư mục bên trên) rồi tải lên Google Drive thành 1 thư mục yyyyMMdd_HHmmss, giống app điện thoại. Đăng nhập 1 lần, lần sau app tự nhớ (cất trong Thông tin xác thực Windows). App chỉ được thấy file do chính nó / app điện thoại tạo trên Drive." />
                     <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsSignedOut), Mode=OneWay}">
@@ -86,10 +99,15 @@
             </Border>
 
             <!-- Xoá -->
-            <Border Padding="16" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource SystemFillColorCriticalBrush}"
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource SystemFillColorCriticalBrush}"
                     Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="Xoá toàn bộ dữ liệu ở máy" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E03131">
+                            <FontIcon Glyph="&#xE74D;" FontSize="15" Foreground="#E03131" />
+                        </Border>
+                        <TextBlock Text="Xoá toàn bộ dữ liệu ở máy" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.85"
                                Text="Xoá sạch đơn hàng, khách hàng, món ăn, danh mục, địa chỉ, phiếu nhập trên máy này (không đụng gì tới điện thoại hay Google Drive). Hỏi xác nhận 2 lần. Bản trước khi xoá luôn được lưu trong thư mục Backups - lấy lại: đóng app, chép bản đó đè lên me_ron.db." />
                     <StackPanel Orientation="Horizontal" Spacing="8">

@@ -18,10 +18,21 @@
                     <Button Click="Back_Click" AutomationProperties.Name="Quay lại" ToolTipService.ToolTip="Quay lại (không lưu)">
                         <SymbolIcon Symbol="Back" />
                     </Button>
-                    <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Bind ViewModel.Title, Mode=OneWay}" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
 
-                <local:DateBox Header="Ngày nhập" AllowEmpty="False" Date="{x:Bind ViewModel.Date, Mode=TwoWay}" Width="170"
+                <!-- Phiếu nhập trong 1 khung, màu xanh dương của mua hàng (chi) -->
+                <Border Padding="18,14" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Border Width="30" Height="30" CornerRadius="15" Background="#261C7ED6">
+                        <FontIcon Glyph="&#xE719;" FontSize="14" Foreground="#1C7ED6" />
+                    </Border>
+                    <TextBlock Text="Ngày nhập và các khoản hàng" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <local:DateBox Header="Ngày nhập" AllowEmpty="False" Date="{x:Bind ViewModel.Date, Mode=TwoWay}" Width="170" HorizontalAlignment="Left"
                                AutomationProperties.Name="Ngày nhập" />
 
                 <StackPanel Spacing="4">
@@ -63,12 +74,14 @@
                                 <TextBlock Text="Thêm hàng" />
                             </StackPanel>
                         </Button>
-                        <Border HorizontalAlignment="Right" Padding="12,6" CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                        <Border HorizontalAlignment="Right" Padding="14,6" CornerRadius="16" Background="#1C7ED6">
                             <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="16"
-                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" AutomationProperties.AutomationId="PurchaseTotal" />
+                                       Foreground="White" AutomationProperties.AutomationId="PurchaseTotal" />
                         </Border>
                     </Grid>
                 </StackPanel>
+                </StackPanel>
+                </Border>
             </StackPanel>
         </ScrollViewer>
 

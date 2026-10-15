@@ -22,9 +22,12 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="Khách lâu không đặt" Style="{StaticResource SubtitleTextBlockStyle}" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Summary, Mode=OneWay}" Opacity="0.75" VerticalAlignment="Center"
-                       TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="LapsedSummary" />
+            <TextBlock Text="Khách lâu không đặt" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,4,0,0" CornerRadius="14" Padding="12,3,12,4"
+                    Background="#26E8590C">
+                <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                           TextWrapping="Wrap" AutomationProperties.AutomationId="LapsedSummary" />
+            </Border>
             <TextBox x:Name="SearchBox" Grid.Column="2" Width="280" Style="{StaticResource DefaultTextBoxStyle}"
                      PlaceholderText="Tìm theo tên hoặc số điện thoại" AutomationProperties.Name="Tìm khách"
                      Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
@@ -78,21 +81,34 @@
         <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
             <ItemsRepeater x:Name="RowsRepeater" ItemsSource="{x:Bind ViewModel.Rows}" Margin="0,0,12,24" MaxWidth="980" HorizontalAlignment="Left">
                 <ItemsRepeater.Layout>
-                    <StackLayout Spacing="6" />
+                    <StackLayout Spacing="8" />
                 </ItemsRepeater.Layout>
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:LapsedRow">
-                        <Border Padding="14,10" CornerRadius="8" BorderThickness="1"
+                        <!-- Thẻ khách: ô số ngày không đặt (cam khi nghỉ quá thói quen), ô tròn chữ cái đầu, thông tin, nút -->
+                        <Border Padding="14,12" CornerRadius="10" BorderThickness="1"
                                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                 AutomationProperties.Name="{x:Bind AccessibleName}">
-                            <Grid ColumnSpacing="16">
+                            <Grid ColumnSpacing="14">
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="3">
+                                <Border Width="64" CornerRadius="10" Padding="0,8" VerticalAlignment="Center" Background="{x:Bind local:Ui.LapsedBackground(IsOverHabit)}">
+                                    <StackPanel HorizontalAlignment="Center">
+                                        <TextBlock Text="{x:Bind DaysText}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"
+                                                   Foreground="{x:Bind local:Ui.LapsedForeground(IsOverHabit)}" />
+                                        <TextBlock Text="ngày" FontSize="12" HorizontalAlignment="Center" Foreground="{x:Bind local:Ui.LapsedForeground(IsOverHabit)}" />
+                                    </StackPanel>
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="3">
                                     <StackPanel Orientation="Horizontal" Spacing="10">
-                                        <TextBlock Text="{x:Bind Name}" FontSize="14" FontWeight="SemiBold" />
+                                        <Border Width="26" Height="26" CornerRadius="13" Background="{x:Bind local:Ui.AvatarBrush(Name)}" VerticalAlignment="Center">
+                                            <TextBlock Text="{x:Bind local:Ui.Initial(Name)}" Foreground="White" FontWeight="SemiBold" FontSize="12"
+                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <TextBlock Text="{x:Bind Name}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
                                         <Border Padding="8,1" CornerRadius="10" VerticalAlignment="Center"
                                                 Background="{ThemeResource SystemFillColorCautionBackgroundBrush}"
                                                 Visibility="{x:Bind local:Ui.VisibleIf(IsOverHabit)}">
@@ -101,13 +117,13 @@
                                         </Border>
                                     </StackPanel>
                                     <TextBlock Text="{x:Bind Contact}" Opacity="0.75" Visibility="{x:Bind local:Ui.VisibleIf(HasContact)}" />
-                                    <TextBlock Text="{x:Bind LastText}" />
-                                    <TextBlock Opacity="0.75">
-                                        <Run Text="{x:Bind HabitText}" /><Run Text="  ·  " /><Run Text="{x:Bind OrdersText}" />
+                                    <TextBlock>
+                                        <Run Text="{x:Bind LastDayText}" /><Run Text="  ·  " /><Run Text="{x:Bind OrdersText}" FontWeight="SemiBold" />
                                     </TextBlock>
+                                    <TextBlock Text="{x:Bind HabitText}" Opacity="0.75" />
                                     <TextBlock Text="{x:Bind ProductsText}" Opacity="0.75" TextWrapping="Wrap" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                                     <Button Tag="{x:Bind}" Click="Detail_Click" AutomationProperties.Name="Xem đơn" ToolTipService.ToolTip="Xem các đơn của khách">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <SymbolIcon Symbol="View" />

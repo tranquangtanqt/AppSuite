@@ -21,8 +21,11 @@ public sealed record StatusTile(OrderStatus Status, string Label, string Count, 
     string CountValue = "", string AmountValue = "", double Share = 0, string ShareText = "");
 
 /// <summary>1 khách trong báo cáo: bấm để mở Chi tiết đơn của riêng khách đó.</summary>
-public sealed record CustomerReportRow(int Rank, CustomerSummary Summary)
+/// <param name="Share">0–100: thanh tỷ lệ so với khách đặt nhiều nhất (Khách hàng tiềm năng; 0 = không vẽ).</param>
+public sealed record CustomerReportRow(int Rank, CustomerSummary Summary, double Share = 0)
 {
+    public bool HasShare => Share > 0;
+
     public string Name => Summary.Name;
 
     public string Orders => $"{VnFormat.Number(Summary.OrderCount)} đơn";
@@ -366,9 +369,10 @@ public sealed partial class ReportCustomerViewModel : ReportViewModel
         var top = AppServices.Reports.TopCustomers(Range.From, Range.To);
         Rows.Clear();
         var rank = 0;
+        var maxAmount = top.Count > 0 ? top.Max(c => c.Amount) : 0;
         foreach (var c in top)
         {
-            Rows.Add(new CustomerReportRow(++rank, c));
+            Rows.Add(new CustomerReportRow(++rank, c, maxAmount > 0 ? 100.0 * c.Amount / maxAmount : 0));
         }
         Summary = top.Count == 0
             ? "Không có đơn nào trong khoảng ngày này."
@@ -392,6 +396,11 @@ public sealed record LapsedRow(LapsedCustomer Customer)
     public bool HasPhone => Customer.Phone is not null;
 
     public string LastText => $"Đặt lần cuối {Customer.LastDay:dd/MM/yyyy}  ·  {VnFormat.Number(Customer.DaysSince)} ngày trước";
+
+    /// <summary>Ô số ngày to bên trái thẻ.</summary>
+    public string DaysText => VnFormat.Number(Customer.DaysSince);
+
+    public string LastDayText => $"Lần cuối {Customer.LastDay:dd/MM/yyyy}";
 
     public string HabitText => Customer.AverageGapDays is { } gap
         ? $"Thường ~{VnFormat.Number((long)Math.Round(gap))} ngày đặt 1 lần"

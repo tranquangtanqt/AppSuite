@@ -8,7 +8,7 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Padding="24,12,24,24" Spacing="14" MaxWidth="1000" HorizontalAlignment="Left">
-            <TextBlock Text="Nhập dữ liệu từ backup của điện thoại" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Text="Nhập dữ liệu từ backup của điện thoại" Style="{StaticResource TitleTextBlockStyle}" />
             <TextBlock TextWrapping="Wrap" Opacity="0.8"
                        Text="Chọn thư mục 1 lần backup (vd 20261011_231039, chứa các file orders_….tsv, users_….tsv…) hoặc thư mục cha chứa nhiều lần backup - khi đó tự lấy bản mới nhất. Cũng có thể dán link folder Google Drive (chia sẻ &quot;Bất kỳ ai có đường liên kết&quot;) rồi Enter, hoặc đăng nhập Google ở khung bên dưới để chọn bản backup trên Drive. Nhập sẽ THAY TOÀN BỘ dữ liệu trên máy này." />
 
@@ -24,7 +24,16 @@
                 </InfoBar.Content>
             </InfoBar>
 
-            <!-- 1. Chọn thư mục -->
+            <!-- 1. Chọn thư mục / link folder Drive (khung cùng kiểu khung Google Drive bên dưới) -->
+            <Border Padding="16,12" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <StackPanel Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
+                    <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="#E8590C" />
+                </Border>
+                <TextBlock Text="Từ thư mục trên máy hoặc link folder Google Drive" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+            </StackPanel>
             <Grid ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -70,6 +79,8 @@
                     </ItemsRepeater>
                 </ScrollViewer>
             </StackPanel>
+            </StackPanel>
+            </Border>
 
             <!-- Hoặc: Google Drive (đăng nhập) - danh sách các bản backup điện thoại / máy tính đã tải lên, folder không cần công khai -->
             <Border Padding="16,12" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
@@ -173,7 +184,12 @@
             <!-- 2. Xem trước -->
             <StackPanel Spacing="8" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasPlan), Mode=OneWay}">
                 <TextBlock Text="{x:Bind ViewModel.BackupTitle, Mode=OneWay}" FontWeight="SemiBold" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
-                <Grid Padding="12,6" ColumnSpacing="12" Background="{ThemeResource LayerFillColorDefaultBrush}" CornerRadius="4">
+                <!-- Bảng xem trước trong khung bo góc như các trang danh mục -->
+                <Border CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel>
+                <Grid Padding="16,10" ColumnSpacing="12" Background="{ThemeResource LayerFillColorAltBrush}" CornerRadius="10,10,0,0"
+                      BorderThickness="0,0,0,1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="180" />
                         <ColumnDefinition Width="*" />
@@ -188,21 +204,24 @@
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Tables}" AutomationProperties.Name="Xem trước các bảng">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:ImportTableRow">
-                            <Grid Padding="12,4" ColumnSpacing="12">
+                            <Grid Padding="16,7" ColumnSpacing="12" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="180" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="110" />
                                     <ColumnDefinition Width="110" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Bind Title}" />
+                                <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" />
                                 <TextBlock Grid.Column="1" Text="{x:Bind FileName}" Opacity="0.75" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="2" Text="{x:Bind FileRows}" HorizontalAlignment="Right" />
+                                <TextBlock Grid.Column="2" Text="{x:Bind FileRows}" HorizontalAlignment="Right" FontWeight="SemiBold"
+                                           Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                 <TextBlock Grid.Column="3" Text="{x:Bind CurrentRows}" HorizontalAlignment="Right" Opacity="0.75" />
                             </Grid>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+                </StackPanel>
+                </Border>
 
                 <InfoBar Severity="Error" IsClosable="False" Title="Lỗi - chưa nhập được" IsOpen="{x:Bind ViewModel.HasErrors, Mode=OneWay}">
                     <InfoBar.Content>

@@ -122,14 +122,14 @@ public static class HelpContent
 
         new("Khách hàng tiềm năng", "", "Xếp hạng khách theo tổng tiền đã đặt.", "ReportCustomerPage",
         [
-            new("Xếp hạng", "Khách đặt nhiều tiền nhất trong khoảng ngày lên đầu (không tính đơn Huỷ), tối đa 100 khách; mỗi dòng: hạng, tên, số đơn, tổng tiền."),
+            new("Xếp hạng", "Khách đặt nhiều tiền nhất trong khoảng ngày lên đầu (không tính đơn Huỷ), tối đa 100 khách; mỗi dòng: hạng (1 / 2 / 3 vàng / bạc / đồng), ô tròn chữ cái đầu, tên + thanh tỷ lệ so với khách đặt nhiều nhất, số đơn, tổng tiền."),
             new("Xem đơn", "Bấm 1 khách → màn Chi tiết các đơn của khách trong khoảng ngày (mọi trạng thái).", "Click"),
         ]),
 
         new("Khách lâu không đặt", "", "Khách trước đây hay đặt mà dạo này không đặt nữa - để nhắn hỏi thăm, mời đặt lại.", "LapsedCustomersPage",
         [
             new("Bộ lọc", "Không đặt từ … ngày (mặc định 30; nút đồng hồ chọn nhanh 14 / 30 / 60 / 90) và Đã đặt ít nhất … đơn (mặc định 2, loại khách chỉ thử 1 lần). Tính theo ngày giao của đơn gần nhất, không tính đơn Huỷ; khách có đơn giao trong tương lai coi như vẫn đang đặt. Bộ lọc giữ nguyên khi chuyển trang, đến khi tắt app."),
-            new("Mỗi khách", "Tên, SĐT, địa chỉ; ngày đặt lần cuối + cách đây bao nhiêu ngày; thói quen (trung bình bao nhiêu ngày đặt 1 lần, cần từ 3 lần đặt ở 3 ngày khác nhau), số đơn + tổng tiền đã mua, 3 món hay đặt nhất. Nhãn cam \"Nghỉ gấp … lần thói quen\" khi đã nghỉ gấp 2 lần thói quen trở lên - khách tuần nào cũng đặt mà 3 tuần nay im thì đáng hỏi hơn khách tháng mới đặt 1 lần."),
+            new("Mỗi khách", "Ô to bên trái = số ngày chưa đặt (cam khi nghỉ quá thói quen, xám khi chưa); ô tròn chữ cái đầu, tên, SĐT, địa chỉ; ngày đặt lần cuối; thói quen (trung bình bao nhiêu ngày đặt 1 lần, cần từ 3 lần đặt ở 3 ngày khác nhau), số đơn + tổng tiền đã mua, 3 món hay đặt nhất. Nhãn cam \"Nghỉ gấp … lần thói quen\" khi đã nghỉ gấp 2 lần thói quen trở lên - khách tuần nào cũng đặt mà 3 tuần nay im thì đáng hỏi hơn khách tháng mới đặt 1 lần."),
             new("Sắp xếp", "Lâu không đặt nhất trước (mặc định) / Tổng tiền đã mua nhiều nhất trước / Quá thói quen nhiều nhất trước."),
             new("Tìm", "Gõ tên hoặc số điện thoại (không dấu cũng được).", "Ctrl+F"),
             new("Xem đơn", "Mọi đơn của khách (mọi ngày, mọi trạng thái) ở màn Chi tiết."),
