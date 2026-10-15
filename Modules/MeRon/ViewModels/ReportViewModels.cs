@@ -9,10 +9,16 @@ using Microsoft.Extensions.Logging;
 namespace MeRon.ViewModels;
 
 /// <summary>1 dòng bảng trong báo cáo (món / khoản hàng): tên, số lượng, thành tiền.</summary>
-public sealed record ReportLine(string Name, string Quantity, string Amount);
+/// <param name="Share">0–100: thanh tỷ lệ so với dòng lớn nhất (0 = không vẽ).</param>
+public sealed record ReportLine(string Name, string Quantity, string Amount, double Share = 0)
+{
+    public bool HasShare => Share > 0;
+}
 
 /// <summary>Ô số liệu theo trạng thái (Đã lên đơn / Đã thanh toán / Huỷ).</summary>
-public sealed record StatusTile(OrderStatus Status, string Label, string Count, string Amount);
+/// <remarks><c>CountValue</c> / <c>AmountValue</c>: số đơn / tiền riêng (chữ lớn); <c>Share</c>: % số đơn trong kỳ.</remarks>
+public sealed record StatusTile(OrderStatus Status, string Label, string Count, string Amount,
+    string CountValue = "", string AmountValue = "", double Share = 0, string ShareText = "");
 
 /// <summary>1 khách trong báo cáo: bấm để mở Chi tiết đơn của riêng khách đó.</summary>
 public sealed record CustomerReportRow(int Rank, CustomerSummary Summary)
@@ -102,6 +108,13 @@ public sealed partial class ReportOrderViewModel : ReportViewModel
     [ObservableProperty]
     private string _totalQuantity = string.Empty;
 
+    // Giao diện 2026-10-15: ô KPI Trung bình / đơn + Tổng số món
+    [ObservableProperty]
+    private string _averageAmount = VnFormat.Money(0);
+
+    [ObservableProperty]
+    private string _quantityValue = "0";
+
     public ObservableCollection<StatusTile> StatusTiles { get; } = [];
 
     public ObservableCollection<ReportLine> Products { get; } = [];
@@ -141,20 +154,28 @@ public sealed partial class ReportOrderViewModel : ReportViewModel
         OrderCount = VnFormat.Number(report.OrderCount);
         Amount = VnFormat.Money(report.Amount);
 
+        AverageAmount = VnFormat.Money(report.OrderCount > 0 ? report.Amount / report.OrderCount : 0);
+
         StatusTiles.Clear();
+        var allCount = report.ByStatus.Sum(x => x.Count);
         foreach (var status in new[] { OrderStatus.Shipping, OrderStatus.Completed, OrderStatus.Cancelled })
         {
             var s = report.ByStatus.FirstOrDefault(x => x.Status == status);
-            StatusTiles.Add(new StatusTile(status, OrderStatusText.Label(status), $"Số đơn: {VnFormat.Number(s?.Count ?? 0)}",
-                $"Tiền: {VnFormat.Money(s?.Amount ?? 0)}"));
+            var count = s?.Count ?? 0;
+            var share = allCount > 0 ? 100.0 * count / allCount : 0;
+            StatusTiles.Add(new StatusTile(status, OrderStatusText.Label(status), $"Số đơn: {VnFormat.Number(count)}",
+                $"Tiền: {VnFormat.Money(s?.Amount ?? 0)}", VnFormat.Number(count), VnFormat.Money(s?.Amount ?? 0), share,
+                $"{share:0}% số đơn"));
         }
 
         Products.Clear();
+        var maxQuantity = report.Products.Count > 0 ? report.Products.Max(p => p.Quantity) : 0;
         foreach (var p in report.Products)
         {
-            Products.Add(Line(p));
+            Products.Add(Line(p) with { Share = maxQuantity > 0 ? 100.0 * p.Quantity / maxQuantity : 0 });
         }
-        TotalQuantity = $"Tổng số món: {VnFormat.Number(report.Products.Sum(p => p.Quantity))}";
+        QuantityValue = VnFormat.Number(report.Products.Sum(p => p.Quantity));
+        TotalQuantity = $"Tổng số món: {QuantityValue}";
 
         _customers = report.Customers;
         ShowCustomers();

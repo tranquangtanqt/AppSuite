@@ -254,6 +254,12 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Người dùng thử tay: Đăng nhập Google thật, Xuất lên Google Drive (để trống ô Folder, rồi thử dán link folder điện
   thoại), Đăng xuất / mở lại app vẫn nhớ đăng nhập
 - [ ] Người dùng thử tay Sao chép đơn
+- [x] Giao diện mới (mẫu thử trong Sandbox, người dùng chọn): màu chủ đạo cam `#E8590C` thay màu nhấn Windows; thẻ đơn bo
+  góc + vạch màu trạng thái bên trái + nhãn tròn, Đã thanh toán nền xanh nhạt (mức "xanh đậm vừa"), Đã lên đơn nền trắng, Huỷ
+  xám mờ; Đặt hàng: tiêu đề to + nhãn "N đơn · Tổng X"; Theo đơn hàng: 4 ô số liệu có icon (thêm TB mỗi đơn), ô trạng thái
+  có thanh % số đơn, bảng món có thanh so với món bán nhiều nhất. Cập nhật F1, README. Unit test 107/107 (2026-10-15)
+- [ ] Giao diện mới cho các trang còn lại (Mua hàng, Theo món ăn, Tổng hợp, danh mục...) và đồng bộ cửa sổ F1; ảnh trước /
+  sau ở `Pictures\MeRon giao dien mau 2026-10-15`
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
 - [ ] App điện thoại me-ron: 22 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + 4 chức năng

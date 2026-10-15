@@ -56,7 +56,7 @@ public static class HelpContent
             new("Lọc theo khách", "Gõ tên hoặc số điện thoại vào ô Lọc theo khách hàng (không phân biệt dấu) rồi chọn trong gợi ý (Enter = gợi ý đầu). Nút X bỏ lọc. Ctrl+F đưa con trỏ vào ô.", "Ctrl+F"),
             new("Khoảng ngày giao", "Từ ngày – Đến ngày, tính theo ngày giao hàng (cả 2 ngày). Nút Khoảng ngày chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày (bỏ lọc ngày). (Ctrl+D). Đổi bộ lọc là tìm lại ngay.", "Ctrl+D"),
             new("Sắp xếp", "Tăng / Giảm dần theo thành tiền hoặc theo ngày giao đơn. Mặc định: ngày giao mới nhất trước. Nút Sắp xếp in đậm khi đang dùng cách khác mặc định."),
-            new("Thẻ đơn", "Tên khách, trạng thái, ngày giao, các món (đơn giá, số lượng, thành tiền), ghi chú, Tạm tính / Giảm giá (khi có giảm giá), Tổng. Nền xanh = Đã thanh toán, đỏ = Huỷ. Bấm vào thẻ để sửa.", "Click"),
+            new("Thẻ đơn", "Tên khách, trạng thái, ngày giao, các món (đơn giá, số lượng, thành tiền), ghi chú, Tạm tính / Giảm giá (khi có giảm giá), Tổng. Vạch màu bên trái + nhãn trạng thái: cam = Đã lên đơn (nền trắng), xanh lá = Đã thanh toán (nền xanh nhạt), xám = Huỷ (nền xám, chữ mờ). Bấm vào thẻ để sửa.", "Click"),
             new("Thêm đơn", "Nút Thêm (Ctrl+N). Đang lọc 1 khách thì đơn mới điền sẵn khách đó; Từ ngày = Đến ngày thì điền sẵn ngày giao đó.", "Ctrl+N"),
             new("Giữ bộ lọc", "Trạng thái, khách, khoảng ngày, sắp xếp được giữ nguyên khi thêm / sửa đơn, xem Chi tiết, hoặc chuyển sang trang khác (vd Mua hàng) rồi quay lại - đến khi tắt app. Các trang báo cáo, Mua hàng và ô tìm ở trang danh mục cũng giữ như vậy."),
             new("Làm mới", "Nút ⟳ hoặc F5 đọc lại danh sách.", "F5"),
@@ -101,8 +101,8 @@ public static class HelpContent
         new("Thống kê theo đơn hàng", "", "Tổng đơn / tiền, theo trạng thái, theo món, theo khách.", "ReportOrderPage",
         [
             new("Bộ lọc", "Trạng thái (mặc định Đã lên đơn), khách hàng (tuỳ chọn), khoảng ngày giao."),
-            new("Tổng cộng", "Tổng số đơn và Tổng thành tiền - không tính đơn Huỷ. Bên dưới: số đơn + tiền của từng trạng thái (Huỷ vẫn hiện riêng để biết)."),
-            new("Tổng cộng theo món", "Số lượng + thành tiền từng món (không tính đơn Huỷ), nhiều nhất trước; món tự do gộp theo tên. Tổng số món ở trên bảng."),
+            new("Tổng cộng", "4 ô: Tổng số đơn, Tổng thành tiền, TB mỗi đơn (tổng tiền ÷ số đơn), Tổng số món - không tính đơn Huỷ. Bên dưới: từng trạng thái có số đơn, tiền và thanh % số đơn trong kỳ (Huỷ vẫn hiện riêng để biết)."),
+            new("Tổng cộng theo món", "Số lượng + thành tiền từng món (không tính đơn Huỷ), nhiều nhất trước, thanh màu dưới tên so với món bán nhiều nhất; món tự do gộp theo tên. Tổng số món ở trên bảng."),
             new("Chi tiết đơn hàng", "Mỗi khách 1 dòng: số đơn, tổng tiền. Sắp xếp: tiền giảm / tăng dần, ngày giao tăng dần (theo đơn sớm nhất của khách) / giảm dần (theo đơn mới nhất). Bấm 1 khách → màn Chi tiết chỉ đơn của khách đó trong đúng bộ lọc này (không đổi bộ lọc trang Đặt hàng).", "Click"),
         ]),
 

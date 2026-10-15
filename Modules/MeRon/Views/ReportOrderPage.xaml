@@ -15,7 +15,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Thống kê theo đơn hàng" Style="{StaticResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Thống kê theo đơn hàng" Style="{StaticResource TitleTextBlockStyle}" />
 
         <SelectorBar x:Name="StatusBar" Grid.Row="1" SelectionChanged="StatusBar_SelectionChanged" AutomationProperties.Name="Trạng thái">
             <SelectorBarItem Text="Tất cả" Tag="0" />
@@ -42,44 +42,94 @@
                  IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
 
         <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="18" Padding="0,0,12,24" MaxWidth="900" HorizontalAlignment="Left">
+            <StackPanel Spacing="18" Padding="0,0,12,24" MaxWidth="1100" HorizontalAlignment="Stretch">
                 <TextBlock Text="Không có đơn nào khớp bộ lọc." Opacity="0.7" Visibility="{x:Bind local:Ui.VisibleIfNot(ViewModel.HasData), Mode=OneWay}" />
 
                 <!-- Tổng cộng -->
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Tổng cộng theo đơn hàng (không tính đơn Huỷ)" FontWeight="SemiBold" />
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Padding="16,10" CornerRadius="8" MinWidth="200" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    <!-- Giao diện 2026-10-15: 4 ô KPI có icon tròn màu, số to; ô trạng thái nền trắng + chấm màu + thanh tỷ lệ. -->
+                    <TextBlock Text="Tổng cộng theo đơn hàng (không tính đơn Huỷ)" FontWeight="SemiBold" Opacity="0.8" />
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1.3*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Padding="16,14" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="Tổng số đơn" Opacity="0.75" />
-                                <TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" FontSize="24" FontWeight="SemiBold" AutomationProperties.AutomationId="ReportOrderCount" />
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
+                                        <FontIcon Glyph="&#xE7BF;" FontSize="15" Foreground="#E8590C" />
+                                    </Border>
+                                    <TextBlock Text="Tổng số đơn" Opacity="0.75" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" FontSize="30" FontWeight="Bold" AutomationProperties.AutomationId="ReportOrderCount" />
                             </StackPanel>
                         </Border>
-                        <Border Padding="16,10" CornerRadius="8" MinWidth="240" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="Tổng thành tiền" Opacity="0.75" />
-                                <TextBlock Text="{x:Bind ViewModel.Amount, Mode=OneWay}" FontSize="24" FontWeight="SemiBold"
-                                           Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" AutomationProperties.AutomationId="ReportAmount" />
+                        <Border Grid.Column="1" Padding="16,14" CornerRadius="10" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="32" Height="32" CornerRadius="16" Background="#33FFFFFF">
+                                        <FontIcon Glyph="&#xE8C7;" FontSize="15" Foreground="White" />
+                                    </Border>
+                                    <TextBlock Text="Tổng thành tiền" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{x:Bind ViewModel.Amount, Mode=OneWay}" FontSize="30" FontWeight="Bold" Foreground="White"
+                                           AutomationProperties.AutomationId="ReportAmount" />
                             </StackPanel>
                         </Border>
-                    </StackPanel>
+                        <Border Grid.Column="2" Padding="16,14" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="32" Height="32" CornerRadius="16" Background="#262F9E44">
+                                        <FontIcon Glyph="&#xE9D2;" FontSize="15" Foreground="#2F9E44" />
+                                    </Border>
+                                    <TextBlock Text="TB mỗi đơn" Opacity="0.75" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{x:Bind ViewModel.AverageAmount, Mode=OneWay}" FontSize="30" FontWeight="Bold" />
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="3" Padding="16,14" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                            <StackPanel Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <Border Width="32" Height="32" CornerRadius="16" Background="#261C7ED6">
+                                        <FontIcon Glyph="&#xED56;" FontSize="15" Foreground="#1C7ED6" />
+                                    </Border>
+                                    <TextBlock Text="Tổng số món" Opacity="0.75" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{x:Bind ViewModel.QuantityValue, Mode=OneWay}" FontSize="30" FontWeight="Bold" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
                     <ItemsControl x:Name="TilesList" ItemsSource="{x:Bind ViewModel.StatusTiles}" IsTabStop="False">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="10" />
+                                <StackPanel Orientation="Horizontal" Spacing="12" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="vm:StatusTile">
-                                <Border Padding="14,8" CornerRadius="8" MinWidth="180" Background="{x:Bind local:Ui.StatusBackground(Status)}"
+                                <Border Padding="16,12" CornerRadius="10" Width="226" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                                         AutomationProperties.Name="{x:Bind Label}">
-                                    <StackPanel Spacing="2">
-                                        <TextBlock Text="{x:Bind Label}" FontWeight="SemiBold" />
-                                        <TextBlock Text="{x:Bind Count}" />
-                                        <TextBlock Text="{x:Bind Amount}" />
+                                    <StackPanel Spacing="6">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <Ellipse Width="10" Height="10" Fill="{x:Bind local:Ui.StatusSolid(Status)}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{x:Bind Label}" FontWeight="SemiBold" />
+                                        </StackPanel>
+                                        <TextBlock>
+                                            <Run Text="{x:Bind CountValue}" FontSize="22" FontWeight="Bold" /><Run Text=" đơn" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </TextBlock>
+                                        <TextBlock Text="{x:Bind AmountValue}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        <Grid Height="6" CornerRadius="3" Background="{ThemeResource ControlStrongFillColorDisabledBrush}">
+                                            <ProgressBar Value="{x:Bind Share}" Maximum="100" MinHeight="6" CornerRadius="3" Background="Transparent"
+                                                         Foreground="{x:Bind local:Ui.StatusSolid(Status)}" IsTabStop="False" />
+                                        </Grid>
+                                        <TextBlock Text="{x:Bind ShareText}" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

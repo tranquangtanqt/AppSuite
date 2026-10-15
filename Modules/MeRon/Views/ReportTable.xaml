@@ -22,13 +22,18 @@
             <ItemsControl ItemsSource="{x:Bind Lines, Mode=OneWay}" IsTabStop="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:ReportLine">
-                        <Grid Padding="12,4" ColumnSpacing="12">
+                        <Grid Padding="12,5" ColumnSpacing="12" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="100" />
                                 <ColumnDefinition Width="130" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                            <!-- Giao diện 2026-10-15: thanh tỷ lệ so với món bán nhiều nhất -->
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                                <ProgressBar Value="{x:Bind Share}" Maximum="100" MinHeight="4" CornerRadius="2" MaxWidth="320" HorizontalAlignment="Left" Width="320"
+                                             Visibility="{x:Bind HasShare}" IsTabStop="False" />
+                            </StackPanel>
                             <TextBlock Grid.Column="1" Text="{x:Bind Quantity}" HorizontalAlignment="Right" />
                             <TextBlock Grid.Column="2" Text="{x:Bind Amount}" HorizontalAlignment="Right" />
                         </Grid>

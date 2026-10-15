@@ -11,6 +11,15 @@
                 <!-- Compact sizing (Button/TextBox/ComboBox/TextBlock/...) applied suite-wide -->
                 <ResourceDictionary Source="ms-appx:///SharedUI/Themes/CompactStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Giao diện 2026-10-15: màu chủ đạo cam của MeRon thay màu nhấn Windows (nút Thêm, tab, số tiền...). -->
+            <Color x:Key="SystemAccentColor">#E8590C</Color>
+            <Color x:Key="SystemAccentColorLight1">#F76707</Color>
+            <Color x:Key="SystemAccentColorLight2">#FD7E14</Color>
+            <Color x:Key="SystemAccentColorLight3">#FFA94D</Color>
+            <Color x:Key="SystemAccentColorDark1">#D9480F</Color>
+            <Color x:Key="SystemAccentColorDark2">#C2410C</Color>
+            <Color x:Key="SystemAccentColorDark3">#9A3412</Color>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

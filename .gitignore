@@ -68,3 +68,6 @@ UpgradeLog*.XML
 *.cache
 *.DS_Store
 Thumbs.db
+
+# Google OAuth client (MeRon đăng nhập Google Drive) - không commit
+client_secret*.json

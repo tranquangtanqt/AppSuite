@@ -6,52 +6,79 @@
     xmlns:vm="using:MeRon.ViewModels"
     xmlns:local="using:MeRon.Views">
 
-    <!-- Thẻ đơn như order_card / order_detail_card của điện thoại; nền theo trạng thái (Đã thanh toán xanh, Huỷ đỏ). -->
-    <Border Padding="12,10" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-            Background="{x:Bind local:Ui.StatusBackground(Card.Status), Mode=OneWay}">
-        <StackPanel Spacing="3">
-            <Grid ColumnSpacing="8">
+    <!-- Thẻ đơn như order_card / order_detail_card của điện thoại (giao diện 2026-10-15): bo góc, vạch màu trạng thái
+         bên trái, nhãn trạng thái tròn, nền xanh nhạt khi Đã thanh toán (Đã lên đơn nền trắng), ngày giao có icon,
+         đường kẻ trước dòng Tổng; đơn Huỷ nền xám + mờ đi. -->
+    <Grid CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="5" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Rectangle Grid.ColumnSpan="2" Fill="{x:Bind local:Ui.StatusTint(Card.Status), Mode=OneWay}" />
+        <Rectangle Fill="{x:Bind local:Ui.StatusSolid(Card.Status), Mode=OneWay}" />
+        <StackPanel Grid.Column="1" Spacing="6" Padding="16,12,16,12" Opacity="{x:Bind local:Ui.DimIfCancelled(Card.Status), Mode=OneWay}">
+            <Grid ColumnSpacing="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{x:Bind Card.CustomerName, Mode=OneWay}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis" />
-                <TextBlock Grid.Column="1" Text="{x:Bind Card.StatusText, Mode=OneWay}" Opacity="0.7" FontSize="12" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="2" Text="{x:Bind Card.DeliveryText, Mode=OneWay}" FontSize="12" VerticalAlignment="Center" />
+                <TextBlock Text="{x:Bind Card.CustomerName, Mode=OneWay}" FontWeight="SemiBold" FontSize="16" TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Opacity="0.75">
+                    <FontIcon Glyph="&#xE787;" FontSize="13" />
+                    <TextBlock Text="{x:Bind Card.DeliveryText, Mode=OneWay}" FontSize="13" />
+                </StackPanel>
+                <Border Grid.Column="2" CornerRadius="11" Padding="10,2,10,3" VerticalAlignment="Center"
+                        Background="{x:Bind local:Ui.StatusSoft(Card.Status), Mode=OneWay}">
+                    <TextBlock Text="{x:Bind Card.StatusText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{x:Bind local:Ui.StatusSolid(Card.Status), Mode=OneWay}" />
+                </Border>
             </Grid>
             <ItemsControl ItemsSource="{x:Bind Card.Lines, Mode=OneWay}" IsTabStop="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:OrderCardLine">
-                        <Grid ColumnSpacing="12">
+                        <Grid ColumnSpacing="12" Padding="0,1">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="12" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="90" />
                                 <ColumnDefinition Width="44" />
-                                <ColumnDefinition Width="96" />
+                                <ColumnDefinition Width="100" />
                             </Grid.ColumnDefinitions>
-                            <Ellipse Width="4" Height="4" Fill="{ThemeResource TextFillColorTertiaryBrush}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind Name}" FontSize="13" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Grid.Column="2" Text="{x:Bind Price}" FontSize="13" HorizontalAlignment="Right" />
-                            <TextBlock Grid.Column="3" Text="{x:Bind Quantity}" FontSize="13" HorizontalAlignment="Right" />
-                            <TextBlock Grid.Column="4" Text="{x:Bind LineTotal}" FontSize="13" HorizontalAlignment="Right" />
+                            <TextBlock Text="{x:Bind Name}" FontSize="14" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind Price}" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Column="2" Text="{x:Bind Quantity}" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Grid.Column="3" Text="{x:Bind LineTotal}" FontSize="14" HorizontalAlignment="Right" />
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-            <StackPanel Orientation="Horizontal" Spacing="6" Visibility="{x:Bind local:Ui.VisibleIf(Card.HasNote), Mode=OneWay}">
-                <FontIcon Glyph="&#xE70B;" FontSize="12" Opacity="0.7" />
-                <TextBlock Text="{x:Bind Card.Note, Mode=OneWay}" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
-            </StackPanel>
-            <StackPanel HorizontalAlignment="Right" Spacing="0" Visibility="{x:Bind local:Ui.VisibleIf(Card.HasDiscount), Mode=OneWay}">
-                <TextBlock Text="{x:Bind Card.SubTotalText, Mode=OneWay}" FontSize="12" HorizontalAlignment="Right" Opacity="0.8" />
-                <TextBlock Text="{x:Bind Card.DiscountText, Mode=OneWay}" FontSize="12" HorizontalAlignment="Right" Opacity="0.8" />
-            </StackPanel>
-            <TextBlock HorizontalAlignment="Right">
-                <Run Text="Tổng: " FontWeight="SemiBold" /><Run Text="{x:Bind Card.TotalText, Mode=OneWay}" FontWeight="SemiBold"
-                                                                     Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-            </TextBlock>
+            <Border CornerRadius="4" Padding="8,4" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                    Visibility="{x:Bind local:Ui.VisibleIf(Card.HasNote), Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE70B;" FontSize="12" Opacity="0.7" />
+                    <TextBlock Text="{x:Bind Card.Note, Mode=OneWay}" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,2,0,0" />
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"
+                            Visibility="{x:Bind local:Ui.VisibleIf(Card.HasDiscount), Mode=OneWay}">
+                    <TextBlock Text="{x:Bind Card.SubTotalText, Mode=OneWay}" FontSize="12" Opacity="0.7" />
+                    <TextBlock Text="{x:Bind Card.DiscountText, Mode=OneWay}" FontSize="12" Opacity="0.7" />
+                </StackPanel>
+                <TextBlock Grid.Column="1" VerticalAlignment="Center">
+                    <Run Text="Tổng  " FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind Card.TotalText, Mode=OneWay}" FontSize="17" FontWeight="Bold"
+                                                                         Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                </TextBlock>
+            </Grid>
         </StackPanel>
-    </Border>
+    </Grid>
 </UserControl>

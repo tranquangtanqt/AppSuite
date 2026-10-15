@@ -27,11 +27,11 @@ Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu
 
 | Menu | Trang | Làm gì |
 |---|---|---|
-| Bán hàng | **Đặt hàng** | Lọc trạng thái (Tất cả / Đã lên đơn / Đã thanh toán / Huỷ), khách (gõ tên / SĐT, không dấu), khoảng ngày giao; sắp xếp theo thành tiền / ngày giao; "N đơn · Tổng X". Thẻ đơn: khách, trạng thái, ngày giao, các món, ghi chú, Tạm tính / Giảm giá, Tổng; nền xanh = Đã thanh toán, đỏ = Huỷ; mỗi thẻ là 1 nút (chuột, Tab + Enter). Lần đầu mở = mặc định (Đã lên đơn, hôm nay); sau đó giữ bộ lọc khi vào form / Chi tiết hoặc chuyển trang khác rồi quay lại (cả báo cáo, Mua hàng, ô tìm ở danh mục) - đến khi tắt app. Ctrl+N thêm, F5 làm mới |
+| Bán hàng | **Đặt hàng** | Lọc trạng thái (Tất cả / Đã lên đơn / Đã thanh toán / Huỷ), khách (gõ tên / SĐT, không dấu), khoảng ngày giao; sắp xếp theo thành tiền / ngày giao; "N đơn · Tổng X". Thẻ đơn: khách, trạng thái, ngày giao, các món, ghi chú, Tạm tính / Giảm giá, Tổng; vạch màu bên trái + nhãn trạng thái (cam = Đã lên đơn nền trắng, xanh lá = Đã thanh toán nền xanh nhạt, xám = Huỷ nền xám mờ); mỗi thẻ là 1 nút (chuột, Tab + Enter). Lần đầu mở = mặc định (Đã lên đơn, hôm nay); sau đó giữ bộ lọc khi vào form / Chi tiết hoặc chuyển trang khác rồi quay lại (cả báo cáo, Mua hàng, ô tìm ở danh mục) - đến khi tắt app. Ctrl+N thêm, F5 làm mới |
 | | **Thêm / sửa đơn** | Khách (điền sẵn khách đang lọc; ngày giao điền sẵn khi Từ = Đến), dòng món thường (ô món gõ lọc không dấu theo từng từ, Enter chọn, **bắt buộc chọn trong danh sách**; − / số / +) và **món tự do** (tên + đơn giá), Giảm giá, Tạm tính / Tổng / tổng số lượng tự tính, Ngày giao, Đã thanh toán trước + Ngày thanh toán, Ghi chú. **Dòng đổi giá bị khoá** (giữ đơn giá lúc đặt). Lưu (Ctrl+S) có **Cảnh báo trùng đơn**. Lỗi hiện cạnh nút Lưu, con trỏ về đúng ô, tự tắt khi sửa. Huỷ đơn, Xoá đơn. **Sao chép đơn** (chuột phải thẻ đơn / nút trong form): đơn mới cùng khách, món, giảm giá, ghi chú; giữ ngày giao của đơn gốc, Đã lên đơn, giá hiện tại (báo nếu giá đổi; món không còn → món tự do) |
 | | **Chi tiết** | Toàn bộ đơn khớp bộ lọc, gộp theo khách + Tổng đơn từng khách; bấm đơn để sửa. **Thanh toán toàn bộ** (từ chối nếu có đơn đã thanh toán; đơn Huỷ không đổi). **Chụp ảnh** cả danh sách (kể cả phần phải cuộn; quá 4096 px thì thu nhỏ) → clipboard + `Pictures\MeRon\chi_tiet_don_hang_*.png` |
 | | **Mua hàng** | Phiếu nhập theo khoảng ngày, mới nhất trước; thêm (Ctrl+N) / sửa: Ngày nhập, khoản Tên hàng + Giá tiền, Tổng tự cộng, Lưu (Ctrl+S; ≥ 1 khoản, tên + giá > 0), Xoá phiếu |
-| Thống kê | **Theo đơn hàng** | Lọc trạng thái (mặc định Đã lên đơn) / khách / khoảng ngày: Tổng số đơn + Tổng thành tiền, ô từng trạng thái, bảng theo món + tổng số món, danh sách theo khách (4 cách sắp xếp) → bấm mở Chi tiết đơn của khách |
+| Thống kê | **Theo đơn hàng** | Lọc trạng thái (mặc định Đã lên đơn) / khách / khoảng ngày: 4 ô Tổng số đơn / Tổng thành tiền / TB mỗi đơn / Tổng số món, ô từng trạng thái (số đơn, tiền, thanh % số đơn), bảng theo món (thanh so với món bán nhiều nhất) + tổng số món, danh sách theo khách (4 cách sắp xếp) → bấm mở Chi tiết đơn của khách |
 | | **Theo món ăn** | Khoảng ngày + (tuỳ chọn) 1 món: tổng số món, bảng từng món (món tự do gộp theo tên), các đơn liên quan → bấm mở form đơn |
 | | **Tổng hợp** | Đơn hàng (số đơn, tiền, theo món) + Mua hàng (số phiếu, tiền, theo khoản) + Chênh lệch (bán − mua) |
 | | **Khách hàng tiềm năng** | Tối đa 100 khách xếp theo tổng tiền → bấm mở Chi tiết đơn của khách |
@@ -48,7 +48,8 @@ Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu
 Mọi trang có khoảng ngày đều có nút chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày. Mọi ô ngày là
 `Views\DateBox` (thay CalendarDatePicker): gõ thẳng dd/MM/yyyy (gõ tắt "14/10", "14", "141026" - `Core\DateInput.cs`), ↑ / ↓ ±1 ngày,
 nút lịch (Alt+↓ / F4) tiếng Việt tuần bắt đầu thứ Hai + Hôm nay + Xoá ngày (ô không bắt buộc). Số và tiền
-luôn hiển thị kiểu Việt Nam (`2.617`, `25.000 đ`) bất kể ngôn ngữ Windows.
+luôn hiển thị kiểu Việt Nam (`2.617`, `25.000 đ`) bất kể ngôn ngữ Windows. Màu chủ đạo cam (`#E8590C`, khai trong `App.xaml`)
+thay màu nhấn của Windows cho nút chính, tab, menu, số tiền.
 
 ### Khác điện thoại có chủ đích
 
