@@ -64,14 +64,22 @@ trong khung bo góc, số mục là nhãn tròn.
   xoá khách còn đơn / danh mục còn món.
 - Xuất TSV: bảng trống ghi dòng tiêu đề (điện thoại ghi file rỗng mà chính nó không nhập được); xuống dòng `\r` trong ghi
   chú cũng thành dấu cách (điện thoại đọc bằng `readAsLines`, `\r` sẽ cắt đôi dòng). Còn lại giống từng byte.
+- Thêm 2026-10-15 (điện thoại chưa có - ghi ở `MOBILE_TODO.md` điểm 22–25):
+  - Nhập: cảnh báo thay đổi trên máy chưa xuất trước khi nhập đè; chọn bản backup bất kỳ trong thư mục cha / folder Drive
+    (không chỉ bản mới nhất); dán link Drive là tự đọc; lấy bản backup trên Drive bằng đăng nhập Google.
+  - Thống kê: TB mỗi đơn, % số đơn từng trạng thái, Tổng thành tiền + Số món khác nhau (Theo món ăn), ô Chênh lệch xanh /
+    đỏ theo lãi / lỗ, thanh tỷ lệ trong bảng món / khoản hàng.
+  - Giao diện: màu chủ đạo cam; thẻ đơn có vạch màu + nhãn trạng thái, đơn Huỷ nền xám mờ (điện thoại: nền đỏ); mua hàng
+    dùng xanh dương; khách có ô tròn chữ cái đầu.
 
 Không làm (riêng của điện thoại / đang ẩn trên điện thoại): giỏ hàng POS + Giao dịch, in hoá đơn, thêm món bằng giọng
 nói, đồng bộ Firestore, lịch tự sao lưu, ảnh món ăn.
 
 Google Drive (2026-10-13): đọc folder công khai qua trang `embeddedfolderview` của Google (không phải API chính thức,
 không cần khoá API / đăng nhập), tải file bằng `uc?export=download` về `%TEMP%\AppSuite\MeRon\GoogleDrive\<bản>` rồi nạp
-như thư mục trên máy. Google đổi trang thì báo lỗi rõ, vẫn nhập từ thư mục được. Để sau: đăng nhập Google (OAuth, Drive
-API) để folder không phải để công khai - chỉ thêm 1 `IBackupSource` nữa.
+như thư mục trên máy. Google đổi trang thì báo lỗi rõ, vẫn nhập từ thư mục được. Đăng nhập Google (OAuth, Drive API,
+2026-10-15): `DriveApiBackupSource` - chỉ thấy bản do tài khoản đang đăng nhập tải lên (quyền `drive.file`); folder chung
+nhiều tài khoản thì vẫn cần link công khai để thấy hết.
 
 ## Dữ liệu
 

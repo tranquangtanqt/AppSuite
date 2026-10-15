@@ -1,7 +1,7 @@
 # App điện thoại me-ron: các điểm nên cải thiện
 
 Ghi lại từ lúc port sang MeRon (máy tính), 2026-10-12 → 14. Mục A–E: bản máy tính đã tránh / sửa các điểm này; mục F:
-chức năng bản máy tính đã có mà điện thoại chưa có; mục G: chức năng mới cho điện thoại. Mỗi mục ghi:
+chức năng bản máy tính đã có mà điện thoại chưa có (thêm điểm 23–25 ngày 2026-10-15); mục G: chức năng mới cho điện thoại. Mỗi mục ghi:
 hiện tượng, hậu quả và cách sửa gợi ý. File Flutter nằm ở `D:\tantq\src\me-ron\lib`.
 
 ## A. Lỗi làm sai số liệu (nên sửa trước)
@@ -105,7 +105,32 @@ Thêm 2026-10-15.
     - nhập lần lượt bằng `_importTsvToDatabase` sẵn có: bảng chính (khách, món…) trước, đơn hàng sau;
     - báo kết quả từng bảng; bảng nào lỗi thì nói rõ.
 
-    Giới hạn: `drive.file` chỉ thấy file / folder do app trong project Google Cloud `me-ron` tạo. Gồm cả bản máy tính
-    (client "MeRon Desktop") lẫn điện thoại, đã kiểm tra 2026-10-14. Folder tự tạo hoặc file tự kéo lên trang web Drive
-    thì app không thấy. Muốn thấy phải xin quyền đọc cả Drive, quyền loại "restricted" phải qua Google xét duyệt, không
-    đáng làm.
+    Giới hạn: `drive.file` chỉ thấy file / folder do app trong project Google Cloud `me-ron` tạo **bằng chính tài khoản
+    đang đăng nhập**. Folder tự tạo hoặc file tự kéo lên trang web Drive thì app không thấy.
+    **Thử thật 2026-10-15 (bản máy tính):** folder backup chung có bản của nhiều tài khoản (phanphuong…, Saku Ra, chủ
+    folder) → đăng nhập chỉ thấy 1 / 39 bản. Muốn thấy hết phải xin quyền đọc cả Drive (`drive.readonly`, loại
+    "restricted": app để chế độ Testing thì dùng được nhưng hiện cảnh báo "app chưa xác minh"), hoặc đọc folder chung đang
+    công khai. Bản máy tính hiện làm cả 2: đăng nhập (thấy bản của mình) + dán link folder công khai (thấy hết, chọn bản bất
+    kỳ, không chỉ bản mới nhất) - xem `Core\Cloud\DriveBackupBrowser.cs`, `Core\Import\GoogleDriveBackupSource.cs`.
+
+## F (tiếp). Thêm 2026-10-15 - bản máy tính đã có, điện thoại chưa có
+
+23. **Cảnh báo trước khi nhập đè mất dữ liệu chưa xuất.** Nhập backup là thay toàn bộ bảng: sửa trên máy này mà chưa
+    xuất / sao lưu thì mất, không có cảnh báo. Điện thoại cũng vậy (vd nhập bộ xuất từ máy tính đè lên đơn mới ghi trên
+    điện thoại).
+    → Bản máy tính (`Core\Data\MeRonDatabase.cs`): trigger SQLite AFTER INSERT / UPDATE / DELETE trên 8 bảng tăng bộ đếm
+    trong bảng meta (kèm lần sửa đầu / cuối); trong transaction nhập thì tắt; xuất / nhập / xoá toàn bộ thì về 0. Màn Nhập
+    hiện cảnh báo + nút sang màn Xuất; hộp xác nhận ghi rõ "sẽ mất N thay đổi", nút chọn sẵn là Huỷ.
+    Trên điện thoại (sqflite) làm y hệt bằng trigger, hoặc ghi mốc thời gian sửa cuối ở các hàm insert / update / delete.
+24. **Chọn bản backup bất kỳ trong thư mục cha / folder Drive**, không chỉ bản mới nhất: liệt kê hết các bản
+    `yyyyMMdd_HHmmss` (mới nhất trước), bấm 1 bản để kiểm tra + xem trước. Hợp khi bản mới nhất lỗi / thiếu file, hoặc
+    muốn quay lại 1 bản cũ.
+25. **Số liệu thêm ở Thống kê** (nhỏ, tuỳ chọn):
+    - Theo đơn hàng: ô **TB mỗi đơn** (tổng tiền ÷ số đơn), mỗi trạng thái có **% số đơn**;
+    - Theo món ăn: **Tổng thành tiền**, **Số món khác nhau**;
+    - Tổng hợp: ô **Chênh lệch** đổi màu - xanh khi lãi, đỏ khi lỗ;
+    - bảng món có thanh dài ngắn theo số lượng (nhìn nhanh món bán chạy).
+
+    Giao diện thẻ đơn bản máy tính (2026-10-15) khác điện thoại: thêm vạch màu trạng thái bên trái + nhãn trạng thái tròn;
+    Đã thanh toán nền xanh, Đã lên đơn nền trắng (như điện thoại), **Huỷ nền xám + chữ mờ** (điện thoại: nền đỏ) - người
+    dùng chọn kiểu này vì nhìn lướt dễ phân biệt hơn.
