@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MeRon.Views.DataInfoPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MeRon.ViewModels"
+    xmlns:local="using:MeRon.Views">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="24,12,24,24" Spacing="14" MaxWidth="1000" HorizontalAlignment="Left">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Thông tin dữ liệu" Style="{StaticResource TitleTextBlockStyle}" />
+                <Button Grid.Column="1" Click="Refresh_Click" AutomationProperties.Name="Làm mới" ToolTipService.ToolTip="Đọc lại (F5)">
+                    <SymbolIcon Symbol="Refresh" />
+                </Button>
+            </Grid>
+
+            <!-- Tổng quan -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
+                            <FontIcon Glyph="&#xE9D9;" FontSize="15" Foreground="#E8590C" />
+                        </Border>
+                        <TextBlock Text="Tổng quan" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.FileText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.8" IsTextSelectionEnabled="True"
+                               AutomationProperties.AutomationId="FileText" />
+                    <TextBlock Text="{x:Bind ViewModel.SyncText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.8" AutomationProperties.AutomationId="SyncText" />
+                    <!-- Số dòng từng bảng: ô nhỏ xếp ngang, tự xuống dòng -->
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Tables}" IsTabStop="False">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="180" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:TableRowView">
+                                <Border Margin="0,0,8,8" Padding="12,8" CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                        AutomationProperties.Name="{x:Bind Title}">
+                                    <StackPanel>
+                                        <TextBlock Text="{x:Bind Title}" FontSize="12" Opacity="0.75" />
+                                        <TextBlock Text="{x:Bind Rows}" FontSize="18" FontWeight="SemiBold" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{x:Bind ViewModel.OrderSpanText, Mode=OneWay}" TextWrapping="Wrap" AutomationProperties.AutomationId="OrderSpan" />
+                    <TextBlock Text="{x:Bind ViewModel.PurchaseSpanText, Mode=OneWay}" TextWrapping="Wrap" AutomationProperties.AutomationId="PurchaseSpan" />
+                    <TextBlock Text="{x:Bind ViewModel.UnusedText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.8" AutomationProperties.AutomationId="UnusedText" />
+                </StackPanel>
+            </Border>
+
+            <!-- Theo năm → bấm năm xem 12 tháng -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#261C7ED6">
+                            <FontIcon Glyph="&#xE787;" FontSize="15" Foreground="#1C7ED6" />
+                        </Border>
+                        <TextBlock Text="Theo năm" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="(bấm vào 1 năm để xem từng tháng)" Opacity="0.65" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="Chưa có đơn hàng / phiếu nhập nào." Opacity="0.7" Visibility="{x:Bind local:Ui.VisibleIfNot(ViewModel.HasPeriods), Mode=OneWay}" />
+                    <Grid Padding="12,4" ColumnSpacing="12" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasPeriods), Mode=OneWay}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.4*" MinWidth="120" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="1.2*" />
+                            <ColumnDefinition Width="0.9*" />
+                            <ColumnDefinition Width="1.2*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Kỳ" FontWeight="SemiBold" Opacity="0.7" />
+                        <TextBlock Grid.Column="1" Text="Số đơn" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="2" Text="Tiền bán" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="3" Text="Phiếu nhập" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Right" />
+                        <TextBlock Grid.Column="4" Text="Tiền mua" FontWeight="SemiBold" Opacity="0.7" HorizontalAlignment="Right" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Periods}" IsTabStop="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PeriodRow">
+                                <!-- Mỗi dòng là 1 nút (chuột, Tab + Enter); chỉ dòng năm mở / đóng được -->
+                                <Button Click="Period_Click" Tag="{x:Bind}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                        Padding="12,6" Margin="0,0,0,2" BorderThickness="0" IsTabStop="{x:Bind IsYear}"
+                                        Background="{x:Bind local:DataInfoPage.RowBackground(IsYear)}"
+                                        AutomationProperties.Name="{x:Bind AccessibleName}">
+                                    <Grid ColumnSpacing="12" Opacity="{x:Bind local:DataInfoPage.RowOpacity(IsEmpty)}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="1.4*" MinWidth="120" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="1.2*" />
+                                            <ColumnDefinition Width="0.9*" />
+                                            <ColumnDefinition Width="1.2*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="{x:Bind ExpandGlyph, Mode=OneWay}" FontSize="10" Visibility="{x:Bind local:Ui.VisibleIf(IsYear)}" />
+                                            <TextBlock Text="{x:Bind Label}" Margin="{x:Bind local:DataInfoPage.RowIndent(IsYear)}"
+                                                       FontWeight="{x:Bind local:DataInfoPage.RowWeight(IsYear)}" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{x:Bind OrdersText}" HorizontalAlignment="Right" />
+                                        <TextBlock Grid.Column="2" Text="{x:Bind SalesText}" HorizontalAlignment="Right" Foreground="#E8590C" />
+                                        <TextBlock Grid.Column="3" Text="{x:Bind PurchasesText}" HorizontalAlignment="Right" />
+                                        <TextBlock Grid.Column="4" Text="{x:Bind PurchaseAmountText}" HorizontalAlignment="Right" Foreground="#1C7ED6" />
+                                    </Grid>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="Ngày của đơn = ngày giao (đơn không có ngày giao thì lấy ngày tạo); tiền bán không tính đơn Huỷ."
+                               FontSize="12" Opacity="0.65" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
+            <!-- Dọn dữ liệu cũ -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource SystemFillColorCriticalBrush}"
+                    Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E03131">
+                            <FontIcon Glyph="&#xE74D;" FontSize="15" Foreground="#E03131" />
+                        </Border>
+                        <TextBlock Text="Dọn dữ liệu cũ" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Opacity="0.85"
+                               Text="Xoá đơn hàng và phiếu nhập có ngày trước mốc (kèm các dòng món / khoản hàng của chúng). Trước khi xoá, app tự xuất 1 bộ backup TSV (thư mục &quot;Truoc khi don&quot; trong thư mục Xuất) và chép bản sao vào thư mục Backups - xuất lỗi thì không xoá gì. Báo cáo, Khách lâu không đặt... sẽ không còn tính phần đã xoá." />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <ComboBox x:Name="PresetBox" Header="Xoá dữ liệu" MinWidth="220" SelectedIndex="0" SelectionChanged="Preset_SelectionChanged"
+                                  AutomationProperties.Name="Mốc xoá" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}">
+                            <x:String>Trước năm nay</x:String>
+                            <x:String>Cũ hơn 1 năm</x:String>
+                            <x:String>Cũ hơn 2 năm</x:String>
+                            <x:String>Trước ngày...</x:String>
+                        </ComboBox>
+                        <local:DateBox Header="Trước ngày" AllowEmpty="False" Width="170" VerticalAlignment="Bottom" AutomationProperties.Name="Trước ngày"
+                                       Date="{x:Bind ViewModel.CutoffDate, Mode=TwoWay}"
+                                       Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsCustomDate), Mode=OneWay}" />
+                    </StackPanel>
+                    <CheckBox Content="Xoá luôn khách hàng không còn đơn nào (chỉ khách tạo trước mốc)"
+                              IsChecked="{x:Bind ViewModel.DeleteCustomers, Mode=TwoWay}" AutomationProperties.Name="Xoá khách không còn đơn" />
+                    <CheckBox Content="Xoá luôn món ăn không còn trong đơn nào (chỉ món tạo trước mốc)"
+                              IsChecked="{x:Bind ViewModel.DeleteProducts, Mode=TwoWay}" AutomationProperties.Name="Xoá món không còn bán" />
+                    <TextBlock Text="{x:Bind ViewModel.PlanText, Mode=OneWay}" TextWrapping="Wrap" FontWeight="SemiBold"
+                               AutomationProperties.AutomationId="PlanText" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Click="Cleanup_Click" AutomationProperties.Name="Xoá dữ liệu cũ"
+                                IsEnabled="{x:Bind local:DataInfoPage.CanRun(ViewModel.CanCleanup, ViewModel.IsBusy), Mode=OneWay}">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <SymbolIcon Symbol="Delete" />
+                                <TextBlock Text="Xoá dữ liệu cũ..." />
+                            </StackPanel>
+                        </Button>
+                        <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="20" Height="20" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.CleanupStatus, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                               AutomationProperties.AutomationId="CleanupStatus" />
+                    <!-- Sau khi dọn: điện thoại vẫn còn dữ liệu cũ -->
+                    <InfoBar Severity="Warning" IsClosable="False" IsOpen="{x:Bind ViewModel.RemindExport, Mode=OneWay}"
+                             Title="Điện thoại vẫn còn dữ liệu cũ"
+                             Message="Muốn dọn cả trên điện thoại: Xuất (TSV hoặc Google Drive) rồi nhập bộ đó vào điện thoại. Nếu nhập lại backup từ điện thoại vào máy tính trước khi làm vậy, dữ liệu cũ sẽ quay lại."
+                             AutomationProperties.AutomationId="RemindExport">
+                        <InfoBar.ActionButton>
+                            <Button Content="Mở trang Xuất" Click="OpenExport_Click" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

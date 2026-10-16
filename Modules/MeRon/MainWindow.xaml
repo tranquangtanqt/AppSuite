@@ -63,6 +63,11 @@
             <NavigationViewItemHeader Content="Dữ liệu" />
             <NavigationViewItem Content="Nhập dữ liệu" Tag="ImportPage" Icon="Download" />
             <NavigationViewItem Content="Xuất / Xoá dữ liệu" Tag="ExportPage" Icon="Upload" />
+            <NavigationViewItem Content="Thông tin dữ liệu" Tag="DataInfoPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE9D9;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
         </NavigationView.MenuItems>
         <NavigationView.FooterMenuItems>
             <!-- Mở cửa sổ Hướng dẫn, không chuyển trang (SelectsOnInvoked=False → xử lý ở ItemInvoked). -->

@@ -294,6 +294,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Trang Cài đặt (cuối menu): ẩn / hiện từng mục menu trái bằng ô tích theo nhóm, nhóm ẩn hết thì ẩn tiêu đề, Hiện tất
   cả; Đặt hàng luôn hiện; lưu settings.json cạnh database (nhập backup không mất). Cập nhật F1, README (2026-10-16)
 - [x] Thẻ đơn: số Tổng nhỏ lại (17 → 14, bằng dòng món), giữ màu cam + đậm (2026-10-16)
+- [ ] Trang **Thông tin dữ liệu** (nhóm Dữ liệu): tổng quan (file, số dòng 8 bảng, khoảng ngày, dữ liệu thừa), theo năm →
+  bấm xem 12 tháng, **Dọn dữ liệu cũ** (mốc trước năm nay / 1 năm / 2 năm / ngày tự chọn, xem trước, tuỳ chọn xoá khách /
+  món không còn dùng; tự xuất TSV "Truoc khi don" + bản sao .db trước khi xoá; nhắc xuất sang điện thoại). Unit test
+  6 mới (122/122); GUI Sandbox với backup thật 27/27 (dọn trước 01/08/2026: 924 đơn + 30 khách), tổng quát 37/37, Cài
+  đặt 21/21. Cập nhật F1, README (2026-10-16) - chờ thử tay
 - [x] Chi tiết: tên khách chỉ hiện 1 lần ở đầu khung, các thẻ đơn trong khung bỏ tên (ngày giao lên đầu thẻ) (2026-10-16)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

@@ -16,7 +16,7 @@ public static class HelpContent
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
         ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage",
-         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
+         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "DataInfoPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
     [
@@ -161,6 +161,16 @@ public static class HelpContent
             new("Khác file điện thoại 2 chỗ nhỏ", "Bảng trống ghi dòng tiêu đề (điện thoại ghi file rỗng, và chính điện thoại không nhập được file rỗng); xuống dòng trong ghi chú đổi thành dấu cách (như điện thoại làm với tab / xuống dòng)."),
             new("Xoá toàn bộ dữ liệu", "Xoá sạch dữ liệu bán hàng trên máy này (đơn, khách, món, danh mục, địa chỉ, phiếu nhập). Hỏi xác nhận 2 lần. Bản trước khi xoá lưu ở thư mục Backups (me_ron_truoc-xoa_<thời gian>.db); nút Mở thư mục Backups."),
             new("Lấy lại dữ liệu cũ", "Thư mục Backups có bản trước mỗi lần Nhập (me_ron_truoc-import_…) và mỗi lần Xoá (me_ron_truoc-xoa_…), giữ 10 bản gần nhất mỗi loại. Lấy lại: đóng MeRon, chép bản cần lấy đè lên file me_ron.db (đường dẫn ở cuối trang Nhập dữ liệu)."),
+        ]),
+        new("Thông tin dữ liệu", "", "Xem toàn bộ dữ liệu đang có trên máy, rồi dọn bớt dữ liệu quá cũ.", "DataInfoPage",
+        [
+            new("Tổng quan", "Dung lượng và chỗ để file dữ liệu, bộ backup nhập gần nhất, số dòng thay đổi chưa xuất; số dòng từng bảng (khách hàng, món, danh mục, địa chỉ, đơn, dòng món, phiếu nhập, khoản hàng); đơn hàng / phiếu nhập từ ngày nào đến ngày nào; số khách chưa có đơn nào, món chưa từng bán, danh mục không có món. Nút ⟳ hoặc F5 đọc lại.", "F5"),
+            new("Theo năm, theo tháng", "Mỗi năm 1 dòng (mới nhất trước): số đơn (kèm số đơn huỷ), tiền bán (không tính đơn Huỷ), số phiếu nhập, tiền mua. Bấm vào 1 năm (hoặc Tab + Enter) để mở 12 tháng của năm đó ngay bên dưới - tháng không có gì thì mờ; bấm lần nữa để đóng. Ngày của đơn là ngày giao (đơn không có ngày giao thì lấy ngày tạo).", "Click"),
+            new("Dọn dữ liệu cũ", "Chọn mốc: Trước năm nay, Cũ hơn 1 năm, Cũ hơn 2 năm, hoặc Trước ngày... (chọn ngày). Dòng chữ đậm cho biết sẽ xoá bao nhiêu đơn hàng (dòng món, tiền bán) và phiếu nhập (khoản hàng, tiền mua) - chưa xoá gì cho đến khi bấm Xoá dữ liệu cũ và xác nhận (nút chọn sẵn là Huỷ)."),
+            new("Xoá luôn khách / món", "2 ô tích (mặc định không tích): xoá khách hàng không còn đơn nào sau khi dọn, và món ăn không còn trong đơn nào. Chỉ xoá khách / món tạo trước mốc - khách, món vừa thêm chưa có đơn vẫn giữ. Danh mục, địa chỉ không bị xoá."),
+            new("An toàn", "Trước khi xoá app tự xuất 1 bộ backup TSV vào thư mục \"Truoc khi don\" trong thư mục Xuất (Documents\\MeRon nếu chưa đổi) và chép bản sao vào thư mục Backups (me_ron_truoc-don_…). Xuất lỗi thì không xoá gì. Xoá chạy 1 lần trọn vẹn: lỗi giữa chừng thì không mất dòng nào. Lấy lại: trang Nhập dữ liệu, chọn bộ backup trong \"Truoc khi don\"."),
+            new("Điện thoại", "Dọn trên máy tính không đụng tới điện thoại. Xoá xong có khung vàng nhắc: muốn dọn cả điện thoại thì Xuất (TSV / Google Drive) rồi nhập vào điện thoại. Nếu nhập lại backup từ điện thoại vào máy tính trước đó thì dữ liệu cũ quay lại (trang Nhập cũng cảnh báo có thay đổi chưa xuất)."),
+            new("Ảnh hưởng báo cáo", "Thống kê, Khách hàng tiềm năng, Khách lâu không đặt... chỉ tính trên dữ liệu còn lại - phần đã xoá không còn được cộng."),
         ]),
 
         new("Khách hàng", "", "Danh sách khách hàng dùng cho đơn hàng và báo cáo.", "CustomersPage",
