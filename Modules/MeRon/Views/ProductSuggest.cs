@@ -16,8 +16,9 @@ internal static class ProductSuggest
 {
     private const int MaxSuggestions = 50;
 
-    /// <summary>Gắn trong Loaded của ô (ô nằm trong DataTemplate, DataContext = dòng). Gắn 1 lần / ô.</summary>
-    public static void Attach(AutoSuggestBox box)
+    /// <summary>Gắn trong Loaded của ô (ô nằm trong DataTemplate, DataContext = dòng). Gắn 1 lần / ô.
+    /// <paramref name="onChosen"/>: gọi sau khi chọn được món (bấm gợi ý / Enter) - form đưa con trỏ sang ô Số lượng.</summary>
+    public static void Attach(AutoSuggestBox box, Action? onChosen = null)
     {
         if (box.Tag is "attached" || box.DataContext is not OrderLineViewModel line)
         {
@@ -67,6 +68,7 @@ internal static class ProductSuggest
             sender.Text = chosen.Name;
             line.ChooseProduct(chosen);
             sender.IsSuggestionListOpen = false;
+            onChosen?.Invoke();
         };
 
         // Ô trống mà có con trỏ → mở sẵn cả danh sách. Mở sau 1 nhịp: ô vừa tạo (bấm Thêm món) thì popup gợi ý chưa sẵn

@@ -100,7 +100,7 @@
                                     <!-- Style mặc định (cỡ chữ 14) như ô món / ô số bên cạnh; style gọn chung (SharedUI) chỉ áp lên TextBox nên chữ nhỏ hơn. -->
                                     <TextBox x:Name="FreeNameBox" Style="{StaticResource DefaultTextBoxStyle}" Text="{x:Bind FreeName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                              PlaceholderText="Tên món tự do" Visibility="{x:Bind local:Ui.VisibleIf(IsFree)}"
-                                             AutomationProperties.Name="Tên món tự do" />
+                                             KeyDown="FreeNameBox_KeyDown" AutomationProperties.Name="Tên món tự do" />
                                     <TextBlock Grid.Column="1" Text="{x:Bind UnitPriceText, Mode=OneWay}" HorizontalAlignment="Right" VerticalAlignment="Center"
                                                Visibility="{x:Bind local:Ui.VisibleIf(IsProduct)}" />
                                     <NumberBox x:Name="FreePriceBox" Grid.Column="1" Value="{x:Bind FreePrice, Mode=TwoWay}" Minimum="0" PlaceholderText="Đơn giá"
@@ -109,7 +109,7 @@
                                         <Button Command="{x:Bind DecreaseCommand}" IsEnabled="{x:Bind IsEditable}" Padding="8,4" AutomationProperties.Name="Bớt 1">
                                             <FontIcon Glyph="&#xE738;" FontSize="12" />
                                         </Button>
-                                        <NumberBox Value="{x:Bind Quantity, Mode=TwoWay}" Minimum="1" Width="64" IsEnabled="{x:Bind IsEditable}" Loaded="QuantityBox_Loaded"
+                                        <NumberBox x:Name="QuantityBox" Value="{x:Bind Quantity, Mode=TwoWay}" Minimum="1" Width="64" IsEnabled="{x:Bind IsEditable}" Loaded="QuantityBox_Loaded"
                                                    AutomationProperties.Name="Số lượng" />
                                         <Button Command="{x:Bind IncreaseCommand}" IsEnabled="{x:Bind IsEditable}" Padding="8,4" AutomationProperties.Name="Thêm 1">
                                             <FontIcon Glyph="&#xE710;" FontSize="12" />
@@ -131,7 +131,7 @@
                                 <TextBlock Text="Thêm món" />
                             </StackPanel>
                         </Button>
-                        <Button Command="{x:Bind ViewModel.AddFreeLineCommand}" AutomationProperties.Name="Thêm món tự do"
+                        <Button Command="{x:Bind ViewModel.AddFreeLineCommand}" Click="AddFreeLine_Click" AutomationProperties.Name="Thêm món tự do"
                                 ToolTipService.ToolTip="Món không có trong danh sách Món ăn: tự nhập tên + đơn giá">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <FontIcon Glyph="&#xE710;" FontSize="14" />

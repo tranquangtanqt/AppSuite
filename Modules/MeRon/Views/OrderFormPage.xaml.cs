@@ -69,11 +69,38 @@ public sealed partial class OrderFormPage : Page
         }
     }
 
-    private void ProductBox_Loaded(object sender, RoutedEventArgs e) => ProductSuggest.Attach((AutoSuggestBox)sender);
+    /// <summary>Chọn được món (bấm gợi ý / Enter) → con trỏ sang ô Số lượng cùng dòng.</summary>
+    private void ProductBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        var box = (AutoSuggestBox)sender;
+        ProductSuggest.Attach(box, () => FocusSameLine(box, "QuantityBox"));
+    }
+
+    /// <summary>Gõ xong tên món tự do, Enter → con trỏ sang ô Đơn giá cùng dòng.</summary>
+    private void FreeNameBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter && sender is FrameworkElement box)
+        {
+            e.Handled = true;
+            FocusSameLine(box, "FreePriceBox");
+        }
+    }
+
+    private void FocusSameLine(FrameworkElement element, string name)
+    {
+        if (element.DataContext is OrderLineViewModel line)
+        {
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => FocusLine(ViewModel.Lines.IndexOf(line), name));
+        }
+    }
 
     /// <summary>Click chạy trước Command (dòng chưa thêm) → đợi dòng mới hiện rồi đưa con trỏ vào ô món của nó để gõ ngay.</summary>
     private void AddLine_Click(object sender, RoutedEventArgs e) =>
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => FocusLine(ViewModel.Lines.Count - 1, "ProductBox"));
+
+    /// <summary>Như Thêm món: đợi dòng tự do mới hiện rồi đưa con trỏ vào ô Tên món tự do.</summary>
+    private void AddFreeLine_Click(object sender, RoutedEventArgs e) =>
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => FocusLine(ViewModel.Lines.Count - 1, "FreeNameBox"));
 
     /// <summary>Ctrl+M: như nút Thêm món.</summary>
     private void AddLine()
@@ -89,6 +116,11 @@ public sealed partial class OrderFormPage : Page
         {
             control.StartBringIntoView();
             control.Focus(FocusState.Programmatic);
+            // Ô số (Số lượng, Đơn giá): bôi đen số cũ để gõ đè luôn.
+            if (control is NumberBox && Ui.FindByName(control, "InputBox") is TextBox input)
+            {
+                input.SelectAll();
+            }
         }
     }
 
