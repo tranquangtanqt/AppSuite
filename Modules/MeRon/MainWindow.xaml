@@ -41,6 +41,11 @@
                     <FontIcon Glyph="&#xE8EF;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Biểu đồ" Tag="ChartsPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xEB05;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItem Content="Khách hàng tiềm năng" Tag="ReportCustomerPage">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE734;" />

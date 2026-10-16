@@ -307,6 +307,12 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   01/08/2026: giữ 3 đơn chưa TT 65.000 đ, xoá 921 → khôi phục đủ 2.617 đơn / 268 khách), đợt 1 27/27. Cập nhật F1,
   README (2026-10-16) - chờ thử tay
 - [x] Chi tiết: tên khách chỉ hiện 1 lần ở đầu khung, các thẻ đơn trong khung bỏ tên (ngày giao lên đầu thẻ) (2026-10-16)
+- [ ] Trang **Biểu đồ** (Thống kê), chỉ dữ liệu đơn hàng: 4 ô số chính so với kỳ trước, doanh thu theo ngày / tuần / tháng
+  (tự chọn), số đơn theo thứ, khách mới / quay lại (cột chồng + chú thích), 10 món bán chạy; rê chuột xem chi tiết, công
+  tắc Bảng số liệu; mặc định 30 ngày qua. Màu đã chạy validate_palette (sáng + tối). Unit test 135/135 (10 mới); GUI
+  Sandbox backup thật 11/11 (tổng đơn các tuần = 2.616), tổng quát 37/37, Cài đặt 21/21. Cập nhật F1, README
+  (2026-10-16) - chờ thử tay, xem nền tối
+- [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
 - [ ] App điện thoại me-ron: 25 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + chức năng

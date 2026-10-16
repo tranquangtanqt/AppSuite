@@ -16,7 +16,7 @@ public static class HelpContent
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
         ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage",
-         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "DataInfoPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
+         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ChartsPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "DataInfoPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
     [
@@ -118,6 +118,18 @@ public static class HelpContent
             new("Đơn hàng", "Ô cam Bán: tổng thành tiền + số đơn (không tính đơn Huỷ); bảng Bán theo món (có thanh so với món bán nhiều nhất)."),
             new("Mua hàng", "Ô xanh dương Mua: tổng tiền + số phiếu nhập; bảng Mua theo khoản hàng (gộp theo tên, không phân biệt hoa thường): số lần mua, tổng tiền, thanh so với khoản tốn nhiều nhất."),
             new("Chênh lệch", "Ô thứ 3: tiền bán − tiền mua của khoảng ngày - xanh lá khi lãi, đỏ khi lỗ (số âm = mua nhiều hơn bán)."),
+        ]),
+
+        new("Biểu đồ", "", "Doanh thu, số đơn, khách mới / quay lại và món bán chạy dạng biểu đồ - chỉ từ đơn hàng (chưa dùng Mua hàng).", "ChartsPage",
+        [
+            new("Khoảng ngày", "Từ ngày – Đến ngày như các trang Thống kê (Ctrl+D chọn nhanh). Lần đầu mở là 30 ngày qua; vào lại từ menu thì giữ khoảng đã chọn. Không tính đơn Huỷ, tính theo ngày giao.", "Ctrl+D"),
+            new("Theo ngày / tuần / tháng", "Ô \"Theo\": Tự động = khoảng ≤ 31 ngày thì mỗi cột 1 ngày, ≤ 6 tháng thì 1 tuần (thứ 2 → chủ nhật), dài hơn thì 1 tháng; hoặc chọn hẳn Ngày / Tuần / Tháng. Ngày / tuần không có đơn vẫn có cột trống."),
+            new("4 ô số chính", "Doanh thu, Số đơn, TB mỗi đơn, Số khách đặt - dòng nhỏ dưới mỗi ô so với kỳ trước cùng độ dài (vd 30 ngày trước đó): ▲ tăng / ▼ giảm bao nhiêu %."),
+            new("Doanh thu theo thời gian", "Mỗi cột 1 ngày / tuần / tháng, cao = doanh thu. Rê chuột lên cột (hoặc dải dọc quanh cột) để xem ngày, doanh thu, số đơn; số trên đỉnh chỉ ghi ở cột cao nhất. Trục trái rút gọn: 500k = 500.000 đ, 1,2tr = 1.200.000 đ.", "Rê chuột"),
+            new("Số đơn theo thứ trong tuần", "Tổng số đơn của từng thứ (T2 … CN) trong khoảng ngày - biết ngày nào đông. Rê chuột: số đơn, doanh thu, trung bình mỗi đơn."),
+            new("Khách mới và khách quay lại", "Cột chồng mỗi kỳ: xanh dương (dưới) = khách quay lại (đã từng đặt trước kỳ đó), cam (trên) = khách mới (lần đầu tiên đặt, tính trên mọi đơn từ trước tới nay, rơi vào kỳ đó). Mỗi khách đếm 1 lần mỗi kỳ."),
+            new("10 món bán chạy", "Thanh ngang xếp theo doanh thu từ cao xuống; số ở đầu thanh; rê chuột xem số phần. Món tự do gộp theo tên."),
+            new("Bảng số liệu", "Bật công tắc \"Bảng số liệu\" để hiện bảng số chính xác ngay dưới mỗi biểu đồ (bôi đen chép được). F5 đọc lại.", "F5"),
         ]),
 
         new("Khách hàng tiềm năng", "", "Xếp hạng khách theo tổng tiền đã đặt.", "ReportCustomerPage",
