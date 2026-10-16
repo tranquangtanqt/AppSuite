@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Unit test cho phần không phụ thuộc WinUI của ScreenCapture: tên tab gọn, mẫu tên file, hình vẽ (bao / trúng / di
+    chuyển), Undo / Redo + các lệnh sửa ảnh, xoay / lật, hiệu ứng ảnh, phiên tạm (lưu / mở lại tab), cài đặt.
+
+    Giống ImageCompare.Tests: ScreenCapture là app WinUI nên không ProjectReference được; Models\, Commands\ chỉ dùng
+    SkiaSharp → biên dịch kèm trực tiếp (trừ HelpContent: dùng SharedUI), cùng SessionService / SettingsStore / AppLog
+    (Common cho log; Common.Ocr vì AppSettings có ngôn ngữ OCR).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <PlatformTarget>x64</PlatformTarget>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <RootNamespace>ScreenCapture.Tests</RootNamespace>
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Modules\ScreenCapture\Models\**\*.cs" Exclude="..\..\Modules\ScreenCapture\Models\HelpContent.cs" Link="ScreenCapture\Models\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\ScreenCapture\Commands\**\*.cs" Link="ScreenCapture\Commands\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\ScreenCapture\Services\SessionService.cs" Link="ScreenCapture\Services\SessionService.cs" />
+    <Compile Include="..\..\Modules\ScreenCapture\Services\SettingsStore.cs" Link="ScreenCapture\Services\SettingsStore.cs" />
+    <Compile Include="..\..\Modules\ScreenCapture\Services\AppLog.cs" Link="ScreenCapture\Services\AppLog.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Common.Ocr\Common.Ocr.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

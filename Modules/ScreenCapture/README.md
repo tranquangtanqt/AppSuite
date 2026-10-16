@@ -323,6 +323,24 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 Khi đang gõ trong ô số (Current/Next), các phím trên thuộc về ô đó (vd `Ctrl+Z` hoàn tác chữ vừa
 gõ), không kích hoạt lệnh của Editor.
 
+## Unit test
+
+`Tests\ScreenCapture.Tests` (xUnit v3, exe tự chạy): `dotnet test Tests\ScreenCapture.Tests` — 38 test (2026-10-16).
+Biên dịch kèm trực tiếp `Models\` (trừ `HelpContent.cs` - dùng SharedUI), `Commands\`, `SessionService`, `SettingsStore`,
+`AppLog` vì app WinUI không ProjectReference được.
+
+- Tên tab gọn (`TabTitle`): hôm nay / ngày khác / năm khác / hậu tố " (2)" / tên không phải ngày giữ nguyên / qua nửa đêm.
+- Mẫu tên file tự lưu (`FileNameTemplate`): mặc định, thẻ không phân biệt hoa thường, ký tự cấm, thư mục con, bỏ đuôi
+  `.png`, thiếu tên app, `{n}` tiếp sau số lớn nhất đang có (kể cả bản " (2)").
+- Undo / Redo: thêm / xoá (trả đúng vị trí) / đổi thứ tự hình, Do sau Undo xoá Redo, `IsDirty` so với lần Lưu, Cắt ảnh
+  (bỏ hình ngoài vùng, dịch hình theo góc cắt, Undo trả lại).
+- Xoay / lật / co giãn: cỡ ảnh, vị trí pixel, `MapPoint`, shape cũ giữ nguyên; mọi chuỗi xoay / lật về hướng ban đầu
+  trong ≤ 2 bước (`ImageOrientation.UndoSteps`).
+- Hiệu ứng: Grayscale, Invert, Viền, Đổ bóng (nền trong suốt).
+- Phiên tạm: lưu → mở lại đủ tab / hình (chữ, mũi tên, góc bo) / hướng ảnh / file đã lưu / tab đang mở; giới hạn số tab +
+  dọn file thừa; tắt nhớ tab; `session.json` hỏng; mất 1 file ảnh chỉ bỏ tab đó. Chạy trong thư mục tạm riêng
+  (`SCREENCAPTURE_SESSION_DIR` đặt bằng ModuleInitializer) - **không đụng phiên thật** của người dùng.
+
 ## Chạy độc lập
 
 Mở `Modules\ScreenCapture\ScreenCapture.csproj` (double-click hoặc "Open Project" trong VS), đặt

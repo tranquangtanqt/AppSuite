@@ -72,7 +72,8 @@ AppSuite.sln
 |   |-- Mcf.CrudDiagram.Tests/  Doc sheet CRUD図 -> HTML -> SQLite
 |   |-- MeRon.Tests/            Nhap / xuat TSV (giong tung byte file dien thoai), don hang, phieu nhap, 4 bao cao, danh muc
 |   |-- Mcf.DbDef.Tests/        Doc workbook DBDef -> bang/cot/khoa ngoai -> SQLite -> HTML
-|   `-- Mcf.Screen.Tests/       Doc 画面説明書 -> HTML (luoi gop o, 3 parser, so do) -> SQLite
+|   |-- Mcf.Screen.Tests/       Doc 画面説明書 -> HTML (luoi gop o, 3 parser, so do) -> SQLite
+|   `-- ScreenCapture.Tests/    Ten tab, mau ten file, Undo/Redo + cat anh, xoay/lat, hieu ung, phien tam (thu muc rieng)
 |
 `-- build/
     |-- Sync-Modules-Dev.ps1    Tien ich cho F5/debug local (xem ben duoi)

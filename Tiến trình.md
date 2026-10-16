@@ -61,8 +61,10 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
   1 màu + glyph), `Modules\Directory.Build.props` tự dùng làm icon exe + chép cạnh exe, cửa sổ gọi
   `SharedUI.Helpers.WindowIcon.Apply` (thay `ScreenCapture/Views/AppIcon`). Build sln 0 warning; Sandbox: taskbar + thanh
   tiêu đề của MainLauncher / ModuleA / FileTools / CsvEditor + cửa sổ Hướng dẫn đều có icon (2026-10-02)
-- [ ] Unit test còn thiếu: Rdbms.HtmlGenerator (cần PostgreSQL/Oracle thật hoặc tách phần dựng HTML), ModuleB/C,
-  ScreenCapture (logic chỉnh ảnh / phiên làm việc)
+- [ ] Unit test còn thiếu: Rdbms.HtmlGenerator (cần PostgreSQL/Oracle thật hoặc tách phần dựng HTML), ModuleB/C
+- [x] Unit test ScreenCapture: `Tests\ScreenCapture.Tests` 38 test - tên tab gọn, mẫu tên file, Undo / Redo + cắt ảnh,
+  xoay / lật / co giãn + về hướng ban đầu, hiệu ứng, phiên tạm (thư mục tạm riêng, không đụng phiên thật). Thêm vào
+  AppSuite.sln (2026-10-16)
 - [ ] Cập nhật CodeGraph 1.4.1 → 1.6.0 (`codegraph upgrade`)
 - [x] Giảm dung lượng `Application\`: thay metapackage `Microsoft.WindowsAppSDK` bằng component
   `WinUI` + `Runtime` ở 13 project (bỏ onnxruntime/DirectML ~40 MB/exe); ghim metapackage cũ
