@@ -46,13 +46,40 @@ public sealed partial class DataInfoPage : Page
         {
             return;
         }
-        var message = ViewModel.PlanText + "\n\nTrước khi xoá, app tự xuất bộ backup TSV vào:\n" + ViewModel.BackupParent +
-                      "\n\nĐiện thoại không bị đụng tới - muốn dọn cả điện thoại thì xuất rồi nhập vào điện thoại.";
+        var message = ViewModel.PlanText +
+                      (ViewModel.HasKeptUnpaid ? "\n\n" + ViewModel.KeptUnpaidText : string.Empty) +
+                      "\n\nTrước khi xoá, app tự xuất bộ backup TSV vào:\n" + ViewModel.BackupParent +
+                      "\n(khôi phục lại được ở khung Khôi phục phần đã dọn)\n\nĐiện thoại không bị đụng tới - muốn dọn cả điện thoại thì xuất rồi nhập vào điện thoại.";
         if (await Dialogs.ConfirmAsync(XamlRoot, "Xoá dữ liệu cũ?", message, "Xoá dữ liệu cũ"))
         {
             await ViewModel.CleanupAsync();
         }
     }
+
+    private async void Restore_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: CleanupRow row })
+        {
+            return;
+        }
+        var message = $"{row.Title}\n{row.Detail}\n\nChỉ thêm lại các dòng đang thiếu; dữ liệu hiện có giữ nguyên. Database hiện tại được chép bản sao trước.";
+        if (await Dialogs.ConfirmAsync(XamlRoot, "Khôi phục phần đã dọn?", message, "Khôi phục"))
+        {
+            await ViewModel.RestoreAsync(row);
+        }
+    }
+
+    private void OpenPath_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string path })
+        {
+            DataInfoViewModel.Open(path);
+        }
+    }
+
+    /// <summary>Trang Chi tiết lọc "Đã lên đơn" giao trước mốc - thu tiền (Thanh toán toàn bộ) hoặc huỷ từng đơn.</summary>
+    private void ShowKeptUnpaid_Click(object sender, RoutedEventArgs e) =>
+        Frame.Navigate(typeof(OrderDetailPage), new ViewModels.OrderDetailArgs(ViewModel.KeptUnpaidFilter));
 
     private void OpenExport_Click(object sender, RoutedEventArgs e) => App.MainWindow?.SelectMenu("ExportPage");
 

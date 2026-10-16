@@ -57,6 +57,40 @@
                 </StackPanel>
             </Border>
 
+            <!-- Đường dẫn liên quan: file dữ liệu, bản sao, thư mục Xuất, bản trước khi dọn, nhập gần nhất, Google Drive -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#262F9E44">
+                            <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="#2F9E44" />
+                        </Border>
+                        <TextBlock Text="Đường dẫn liên quan" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Paths}" IsTabStop="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:PathRow">
+                                <Grid ColumnSpacing="12" Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="170" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{x:Bind Label}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <StackPanel Grid.Column="1" Spacing="2">
+                                        <TextBlock Text="{x:Bind Path}" TextWrapping="Wrap" IsTextSelectionEnabled="True" FontFamily="Consolas" FontSize="12"
+                                                   Visibility="{x:Bind local:Ui.VisibleIfText(Path)}" />
+                                        <TextBlock Text="{x:Bind Detail}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Content="Mở" Click="OpenPath_Click" Tag="{x:Bind Path}" VerticalAlignment="Top"
+                                            Visibility="{x:Bind local:Ui.VisibleIf(CanOpen)}" AutomationProperties.Name="{x:Bind AccessibleName}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
             <!-- Theo năm → bấm năm xem 12 tháng -->
             <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
@@ -129,7 +163,7 @@
                         <TextBlock Text="Dọn dữ liệu cũ" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.85"
-                               Text="Xoá đơn hàng và phiếu nhập có ngày trước mốc (kèm các dòng món / khoản hàng của chúng). Trước khi xoá, app tự xuất 1 bộ backup TSV (thư mục &quot;Truoc khi don&quot; trong thư mục Xuất) và chép bản sao vào thư mục Backups - xuất lỗi thì không xoá gì. Báo cáo, Khách lâu không đặt... sẽ không còn tính phần đã xoá." />
+                               Text="Xoá đơn hàng và phiếu nhập có ngày trước mốc (kèm các dòng món / khoản hàng của chúng). Đơn chưa thanh toán (Đã lên đơn) luôn được giữ lại. Trước khi xoá, app tự xuất 1 bộ backup TSV (thư mục &quot;Truoc khi don&quot; trong thư mục Xuất) và chép bản sao vào thư mục Backups - xuất lỗi thì không xoá gì. Báo cáo, Khách lâu không đặt... sẽ không còn tính phần đã xoá." />
                     <StackPanel Orientation="Horizontal" Spacing="12">
                         <ComboBox x:Name="PresetBox" Header="Xoá dữ liệu" MinWidth="220" SelectedIndex="0" SelectionChanged="Preset_SelectionChanged"
                                   AutomationProperties.Name="Mốc xoá" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}">
@@ -148,6 +182,15 @@
                               IsChecked="{x:Bind ViewModel.DeleteProducts, Mode=TwoWay}" AutomationProperties.Name="Xoá món không còn bán" />
                     <TextBlock Text="{x:Bind ViewModel.PlanText, Mode=OneWay}" TextWrapping="Wrap" FontWeight="SemiBold"
                                AutomationProperties.AutomationId="PlanText" />
+                    <!-- Đơn chưa thanh toán trước mốc: luôn giữ lại -->
+                    <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasKeptUnpaid), Mode=OneWay}">
+                        <FontIcon Glyph="&#xE72E;" FontSize="14" Foreground="#E8590C" VerticalAlignment="Top" Margin="0,3,0,0" />
+                        <TextBlock Text="{x:Bind ViewModel.KeptUnpaidText, Mode=OneWay}" TextWrapping="Wrap" MaxWidth="760"
+                                   AutomationProperties.AutomationId="KeptUnpaidText" />
+                    </StackPanel>
+                    <HyperlinkButton Content="Xem các đơn chưa thanh toán này (Chi tiết)" Click="ShowKeptUnpaid_Click" Padding="22,0,0,0"
+                                     Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasKeptUnpaid), Mode=OneWay}"
+                                     AutomationProperties.Name="Xem đơn chưa thanh toán" />
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button Click="Cleanup_Click" AutomationProperties.Name="Xoá dữ liệu cũ"
                                 IsEnabled="{x:Bind local:DataInfoPage.CanRun(ViewModel.CanCleanup, ViewModel.IsBusy), Mode=OneWay}">
@@ -169,6 +212,50 @@
                             <Button Content="Mở trang Xuất" Click="OpenExport_Click" />
                         </InfoBar.ActionButton>
                     </InfoBar>
+                </StackPanel>
+            </Border>
+
+            <!-- Khôi phục phần đã dọn -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#261C7ED6">
+                            <FontIcon Glyph="&#xE777;" FontSize="15" Foreground="#1C7ED6" />
+                        </Border>
+                        <TextBlock Text="Khôi phục phần đã dọn" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Opacity="0.85"
+                               Text="Thêm lại đúng các dòng đã xoá ở 1 lần dọn (lấy từ bộ backup trước khi dọn). Dữ liệu đang có - kể cả đơn, khách, món thêm / sửa sau lúc dọn - giữ nguyên. Khách / món đã tạo lại trùng tên thì đơn cũ nối vào cái đang có. Chép bản sao an toàn trước khi khôi phục." />
+                    <TextBlock Text="Chưa có lần dọn nào trong thư mục &quot;Truoc khi don&quot;." Opacity="0.7"
+                               Visibility="{x:Bind local:Ui.VisibleIfNot(ViewModel.HasCleanups), Mode=OneWay}" />
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.Cleanups}" IsTabStop="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:CleanupRow">
+                                <Grid ColumnSpacing="12" Margin="0,0,0,8" Padding="12,8" CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{x:Bind Detail}" FontSize="12" Opacity="0.75" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Mở thư mục" Click="OpenPath_Click" Tag="{x:Bind Folder}" VerticalAlignment="Center" />
+                                    <Button Grid.Column="2" Click="Restore_Click" Tag="{x:Bind}" VerticalAlignment="Center" IsEnabled="{x:Bind CanRestore}"
+                                            AutomationProperties.Name="{x:Bind AccessibleName}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE777;" FontSize="14" />
+                                            <TextBlock Text="Khôi phục..." />
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="{x:Bind ViewModel.RestoreStatus, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                               AutomationProperties.AutomationId="RestoreStatus" />
                 </StackPanel>
             </Border>
         </StackPanel>

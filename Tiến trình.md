@@ -299,6 +299,13 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   món không còn dùng; tự xuất TSV "Truoc khi don" + bản sao .db trước khi xoá; nhắc xuất sang điện thoại). Unit test
   6 mới (122/122); GUI Sandbox với backup thật 27/27 (dọn trước 01/08/2026: 924 đơn + 30 khách), tổng quát 37/37, Cài
   đặt 21/21. Cập nhật F1, README (2026-10-16) - chờ thử tay
+- [ ] Thông tin dữ liệu, đợt 2: **đơn chưa thanh toán luôn giữ** khi dọn (dòng "Giữ lại N đơn" + mở Chi tiết lọc sẵn; khách
+  / món của chúng cũng giữ); **Khôi phục phần đã dọn** (don-dep.json trong bộ "Truoc khi don", chỉ thêm dòng còn thiếu,
+  id bị chiếm → id mới, trùng tên → nối); "Truoc khi don" giữ hết, không tự xoá; khung **Đường dẫn liên quan** (file,
+  Backups, Xuất, Truoc khi don, nhập gần nhất / link Drive, tài khoản + folder Drive, nút Mở). Unit test 125/125 (khôi
+  phục: đủ, 2 lần không trùng, trùng tên → nối, id bị chiếm → id mới); GUI Sandbox backup thật: đợt 2 24/24 (trước
+  01/08/2026: giữ 3 đơn chưa TT 65.000 đ, xoá 921 → khôi phục đủ 2.617 đơn / 268 khách), đợt 1 27/27. Cập nhật F1,
+  README (2026-10-16) - chờ thử tay
 - [x] Chi tiết: tên khách chỉ hiện 1 lần ở đầu khung, các thẻ đơn trong khung bỏ tên (ngày giao lên đầu thẻ) (2026-10-16)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
