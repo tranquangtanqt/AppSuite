@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Unit test cho phần không phụ thuộc WinUI / máy chủ database của Rdbms.HtmlGenerator: hồ sơ kết nối (chuyển config.xml
+    cũ, kiểm tra tên, tên file theo hồ sơ), lưu / đọc config.xml.
+
+    Rdbms.HtmlGenerator là app WinUI nên không ProjectReference được → biên dịch kèm Models\ và vài file Services\ thuần .NET.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Rdbms.HtmlGenerator.Tests</RootNamespace>
+    <NoWarn>$(NoWarn);xUnit1051</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Models\**\*.cs" Link="Rdbms.HtmlGenerator\Models\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\ConnectionProfiles.cs" Link="Rdbms.HtmlGenerator\Services\ConnectionProfiles.cs" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\ConnectionSettingsStore.cs" Link="Rdbms.HtmlGenerator\Services\ConnectionSettingsStore.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

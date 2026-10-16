@@ -73,6 +73,7 @@ AppSuite.sln
 |   |-- MeRon.Tests/            Nhap / xuat TSV (giong tung byte file dien thoai), don hang, phieu nhap, 4 bao cao, danh muc
 |   |-- Mcf.DbDef.Tests/        Doc workbook DBDef -> bang/cot/khoa ngoai -> SQLite -> HTML
 |   |-- Mcf.Screen.Tests/       Doc 画面説明書 -> HTML (luoi gop o, 3 parser, so do) -> SQLite
+|   |-- Rdbms.HtmlGenerator.Tests/ Ho so ket noi (dev/test/prod): chuyen config.xml cu, ten, ten file theo ho so
 |   `-- ScreenCapture.Tests/    Ten tab, mau ten file, Undo/Redo + cat anh, xoay/lat, hieu ung, phien tam (thu muc rieng)
 |
 `-- build/

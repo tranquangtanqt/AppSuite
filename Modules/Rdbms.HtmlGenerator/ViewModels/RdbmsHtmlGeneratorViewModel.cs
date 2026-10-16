@@ -53,13 +53,19 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
     [ObservableProperty]
     private int _nextStep = 1;
 
-    public PostgresConnectionSettings PostgresConnectionSettings => _config.Postgres;
+    /// <summary>Hồ sơ kết nối đang chọn (dev / test / prod...) - mọi thông tin kết nối bên dưới lấy từ đây.</summary>
+    public ConnectionProfile CurrentProfile => ConnectionProfiles.Find(_config, _config.SelectedProfile) ?? _config.Profiles[0];
 
-    public OracleConnectionSettings OracleConnectionSettings => _config.Oracle;
+    /// <summary>Tên các hồ sơ cho combobox Hồ sơ (theo thứ tự trong config.xml).</summary>
+    public ObservableCollection<string> ProfileNames { get; } = [];
 
-    public MySqlConnectionSettings MySqlConnectionSettings => _config.MySql;
+    public PostgresConnectionSettings PostgresConnectionSettings => CurrentProfile.Postgres;
 
-    public SqlServerConnectionSettings SqlServerConnectionSettings => _config.SqlServer;
+    public OracleConnectionSettings OracleConnectionSettings => CurrentProfile.Oracle;
+
+    public MySqlConnectionSettings MySqlConnectionSettings => CurrentProfile.MySql;
+
+    public SqlServerConnectionSettings SqlServerConnectionSettings => CurrentProfile.SqlServer;
 
     public AppOptions Options => _config.Options;
 
@@ -69,23 +75,20 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
     /// a status line alone is easy to miss and looks like the app is still hanging.</summary>
     public event Action<string, string>? ErrorOccurred;
 
-    /// <summary>The name of the database/service currently selected to connect to - this is what
-    /// Data\Database\{name}.db and {name}.html get named after, so different databases keep separate
-    /// caches instead of overwriting each other.</summary>
+    /// <summary>The name of the database/service currently selected to connect to (shown in status lines).</summary>
     public string CurrentDatabaseName
     {
         get
         {
-            var name = SelectedSource switch
-            {
-                DatabaseSourceType.Oracle => OracleDatabaseName,
-                DatabaseSourceType.MySql => MySqlConnectionSettings.Database,
-                DatabaseSourceType.SqlServer => SqlServerConnectionSettings.Database,
-                _ => PostgresConnectionSettings.Database,
-            };
+            var name = CurrentProfile.DatabaseName;
             return string.IsNullOrWhiteSpace(name) ? "Rdbms.HtmlGenerator" : name;
         }
     }
+
+    /// <summary>Data\Database\{name}.db and {name}.html get named after this: database + profile
+    /// ("orders (prod)"), so different databases - and the same database on dev / prod - keep separate caches
+    /// instead of overwriting each other. Profile "Mặc định" keeps the pre-profile name "{database}".</summary>
+    public string CurrentFileBaseName => ConnectionProfiles.FileBaseName(CurrentProfile);
 
     private string OracleDatabaseName => OracleConnectionSettings.ConnectBySid
         ? OracleConnectionSettings.Sid
@@ -94,9 +97,98 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
     public RdbmsHtmlGeneratorViewModel()
     {
         _config = _settingsStore.Load();
-        _selectedSource = Enum.IsDefined(_config.SelectedSource) ? _config.SelectedSource : DatabaseSourceType.Postgres;
-        _database = new RdbmsHtmlGeneratorDatabase(CurrentDatabaseName);
+        foreach (var profile in _config.Profiles)
+        {
+            ProfileNames.Add(profile.Name);
+        }
+        _selectedSource = CurrentProfile.Source;
+        _database = new RdbmsHtmlGeneratorDatabase(CurrentFileBaseName);
         RefreshDatabaseTarget();
+    }
+
+    // ----- Hồ sơ kết nối (dev / test / prod...) -----
+
+    /// <summary>Đổi sang hồ sơ khác: nguồn + thông tin kết nối + file .db / .html của hồ sơ đó.</summary>
+    public void SelectProfile(string name)
+    {
+        if (ConnectionProfiles.Find(_config, name) is not { } profile || ReferenceEquals(profile, CurrentProfile))
+        {
+            return;
+        }
+        _config.SelectedProfile = profile.Name;
+        ApplyCurrentProfile();
+        StatusText = $"Hồ sơ \"{profile.Name}\": {SourceDisplayName(SelectedSource)} ({CurrentDatabaseName}).";
+    }
+
+    /// <summary>Thêm hồ sơ = sao chép hồ sơ đang chọn (sửa Host / Database... trong Thiết lập kết nối) rồi chọn nó.
+    /// Trả lỗi tên (null = đã thêm).</summary>
+    public string? AddProfile(string name)
+    {
+        if (ConnectionProfiles.ValidateName(_config, name) is { } error)
+        {
+            return error;
+        }
+        var profile = CurrentProfile.Clone(name.Trim());
+        _config.Profiles.Add(profile);
+        ProfileNames.Add(profile.Name);
+        _config.SelectedProfile = profile.Name;
+        ApplyCurrentProfile();
+        StatusText = $"Đã thêm hồ sơ \"{profile.Name}\" (sao chép thông tin kết nối) - bấm Thiết lập kết nối để sửa.";
+        return null;
+    }
+
+    public string? RenameProfile(string name)
+    {
+        var profile = CurrentProfile;
+        if (ConnectionProfiles.ValidateName(_config, name, except: profile) is { } error)
+        {
+            return error;
+        }
+        var oldName = profile.Name;
+        profile.Name = name.Trim();
+        _config.SelectedProfile = profile.Name;
+        ProfileNames[_config.Profiles.IndexOf(profile)] = profile.Name;
+        ApplyCurrentProfile(); // tên file .db / .html đổi theo tên hồ sơ
+        StatusText = $"Đã đổi tên hồ sơ \"{oldName}\" thành \"{profile.Name}\".";
+        return null;
+    }
+
+    /// <summary>Xoá hồ sơ đang chọn (không xoá được hồ sơ cuối cùng). File .db / .html đã xuất giữ nguyên.</summary>
+    public bool DeleteProfile()
+    {
+        if (_config.Profiles.Count <= 1)
+        {
+            return false;
+        }
+        var profile = CurrentProfile;
+        var index = _config.Profiles.IndexOf(profile);
+        _config.Profiles.RemoveAt(index);
+        ProfileNames.RemoveAt(index);
+        _config.SelectedProfile = _config.Profiles[Math.Min(index, _config.Profiles.Count - 1)].Name;
+        ApplyCurrentProfile();
+        StatusText = $"Đã xoá hồ sơ \"{profile.Name}\". Đang dùng hồ sơ \"{CurrentProfile.Name}\".";
+        return true;
+    }
+
+    public bool CanDeleteProfile => _config.Profiles.Count > 1;
+
+    /// <summary>Cho hộp thoại tên hồ sơ (gợi ý tên chưa dùng).</summary>
+    public DatabaseConnectionsConfig Config => _config;
+
+    /// <summary>Sau khi đổi / thêm / đổi tên / xoá hồ sơ: nguồn của hồ sơ, nút Đọc, file đích, ghi config.xml.</summary>
+    private void ApplyCurrentProfile()
+    {
+        OnPropertyChanged(nameof(CurrentProfile));
+        OnPropertyChanged(nameof(CanDeleteProfile));
+        if (SelectedSource != CurrentProfile.Source)
+        {
+            SelectedSource = CurrentProfile.Source; // OnSelectedSourceChanged làm phần còn lại
+            return;
+        }
+        OnPropertyChanged(nameof(CanImportDatabase));
+        ImportDatabaseCommand.NotifyCanExecuteChanged();
+        RefreshDatabaseTarget();
+        SaveConfig();
     }
 
     /// <summary>True when the currently selected source has enough info saved to attempt an import -
@@ -114,15 +206,16 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         PostgresConnectionSettings postgres, OracleConnectionSettings oracle,
         MySqlConnectionSettings mySql, SqlServerConnectionSettings sqlServer)
     {
-        _config.Postgres = postgres;
-        _config.Oracle = oracle;
-        _config.MySql = mySql;
-        _config.SqlServer = sqlServer;
+        var profile = CurrentProfile;
+        profile.Postgres = postgres;
+        profile.Oracle = oracle;
+        profile.MySql = mySql;
+        profile.SqlServer = sqlServer;
         SaveConfig();
         OnPropertyChanged(nameof(CanImportDatabase));
         ImportDatabaseCommand.NotifyCanExecuteChanged();
         RefreshDatabaseTarget();
-        StatusText = $"Đã lưu thông tin kết nối. Nguồn đang chọn: {SourceDisplayName(SelectedSource)} ({CurrentDatabaseName}).";
+        StatusText = $"Đã lưu thông tin kết nối của hồ sơ \"{profile.Name}\". Nguồn đang chọn: {SourceDisplayName(SelectedSource)} ({CurrentDatabaseName}).";
     }
 
     public void SaveOptions(AppOptions options)
@@ -135,7 +228,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
 
     private void SaveConfig()
     {
-        _config.SelectedSource = SelectedSource;
+        CurrentProfile.Source = SelectedSource;
         try
         {
             _settingsStore.Save(_config);
@@ -159,10 +252,10 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
     /// - called whenever the selected source or its saved settings change the target database name.</summary>
     private void RefreshDatabaseTarget()
     {
-        _database = new RdbmsHtmlGeneratorDatabase(CurrentDatabaseName);
+        _database = new RdbmsHtmlGeneratorDatabase(CurrentFileBaseName);
         CanExportHtml = _database.Exists;
 
-        var expectedHtmlPath = Path.Combine(AppContext.BaseDirectory, "Data", "Database", $"{CurrentDatabaseName}.html");
+        var expectedHtmlPath = Path.Combine(AppContext.BaseDirectory, "Data", "Database", $"{CurrentFileBaseName}.html");
         _htmlPath = File.Exists(expectedHtmlPath) ? expectedHtmlPath : null;
         CanOpenHtml = _htmlPath is not null;
 
@@ -385,7 +478,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
 
         try
         {
-            var path = await Task.Run(() => _htmlGenerator.Generate(_database, CurrentDatabaseName));
+            var path = await Task.Run(() => _htmlGenerator.Generate(_database, CurrentFileBaseName));
             _htmlPath = path;
             CanOpenHtml = true;
             NextStep = 3;

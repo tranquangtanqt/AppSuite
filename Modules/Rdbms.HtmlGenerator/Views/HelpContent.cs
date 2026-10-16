@@ -12,7 +12,7 @@ internal static class HelpContent
     [
         new("Bắt đầu nhanh", "", "Đọc cấu trúc bảng / cột / khoá từ PostgreSQL, Oracle, MySQL hoặc SQL Server, xuất thành 1 trang HTML tra cứu mở trong trình duyệt.",
         [
-            new("1. Chọn Nguồn", "Combobox \"Nguồn\": PostgreSQL / Oracle / MySQL / SQL Server. Nguồn đã chọn được nhớ cho lần mở sau."),
+            new("1. Chọn Nguồn", "Combobox \"Nguồn\": PostgreSQL / Oracle / MySQL / SQL Server. Nguồn đã chọn được nhớ cho lần mở sau. Nhiều môi trường (dev / test / prod): dùng combobox \"Hồ sơ\" ở trên cùng - xem mục Hồ sơ kết nối."),
             new("2. Thiết lập kết nối", "Nút \"Thiết lập kết nối\" (mở sẵn tab của nguồn đang chọn): nhập thông tin, bấm Lưu (lưu cả 4 tab, tự điền lại lần mở sau). Nút \"1. Đọc database → SQLite\" chỉ bật khi nguồn đang chọn đã có Host + Database (Oracle: Host + Service Name hoặc SID)."),
             new("3. Bấm \"1. Đọc database → SQLite\"", "Kết nối, đọc schema, lưu vào Data\\Database\\{tên database}.db. Khung log bên dưới hiện tiến trình. Không kết nối được (sai Host / Port, chưa bật VPN, firewall chặn...) thì sau thời gian chờ (mặc định 10 giây, đổi trong Cài đặt) hiện hộp thoại báo lỗi kèm gợi ý cần kiểm tra; sai mật khẩu / sai tên database / Service Name cũng được báo rõ."),
             new("4. Bấm \"2. Xuất HTML\" rồi \"Mở file HTML\"", "Sinh và mở Data\\Database\\{tên database}.html - 1 file tự chứa, không cần mạng, gửi cho người khác được."),
@@ -28,6 +28,15 @@ internal static class HelpContent
             new("SQL Server", "Host (hoặc MAYCHU\\TenInstance - khi đó bỏ qua Port), Port (mặc định 1433), Database, Schema (vd dbo, để trống = mọi schema). Tích \"Windows Authentication\" để đăng nhập bằng tài khoản Windows đang dùng (không cần Username / Password). Mô tả bảng / cột lấy từ MS_Description (phần Description trong SSMS)."),
             new("Thử kết nối", "Nút \"Thử kết nối\" cuối hộp thoại: kết nối thử bằng thông tin đang nhập ở tab hiện tại (chưa cần Lưu). Thành công (xanh) báo phiên bản máy chủ và số bảng / view sẽ đọc; 0 bảng (vàng) thường là sai Schema hoặc thiếu quyền; lỗi (đỏ) kèm gợi ý cần sửa - sai mật khẩu, sai database, sai Service Name / SID, không tới được máy chủ. Đổi tab hoặc đóng hộp thoại thì kết quả cũ bị xoá."),
             new("Lưu ý mật khẩu", "Mật khẩu lưu dạng chữ thường trong Data\\Config\\config.xml cạnh exe - chỉ dùng trên máy cá nhân, không chép file này ra ngoài."),
+        ]),
+
+        new("Hồ sơ kết nối", "", "Lưu nhiều bộ thông tin kết nối có tên (vd dev / test / prod) rồi chọn nhanh ở combobox \"Hồ sơ\" trên cùng.",
+        [
+            new("Hồ sơ là gì", "Mỗi hồ sơ có nguồn đang chọn + thông tin kết nối của cả 4 tab (PostgreSQL / Oracle / MySQL / SQL Server) + file .db / .html riêng. Đổi hồ sơ là đổi luôn Nguồn, thông tin kết nối và bước đang làm của hồ sơ đó. Hồ sơ đang chọn được nhớ cho lần mở sau."),
+            new("Thêm hồ sơ", "Nút ⋯ cạnh combobox Hồ sơ → Thêm hồ sơ: đặt tên (gợi ý dev, test, prod) → hồ sơ mới sao chép thông tin của hồ sơ đang chọn, rồi bấm \"Thiết lập kết nối\" để sửa Host / Database / mật khẩu cho môi trường đó. Tên tối đa 40 ký tự, không trùng (không phân biệt hoa thường), không có \\ / : * ? \" < > |."),
+            new("Đổi tên / Xoá", "Nút ⋯ → Đổi tên hồ sơ, hoặc Xoá hồ sơ (có hỏi lại; không xoá được hồ sơ cuối cùng). Xoá hồ sơ không xoá file .db / .html đã có trong Data\\Database."),
+            new("Tên file theo hồ sơ", "File .db / .html đặt tên \"{tên database} ({tên hồ sơ})\", vd \"orders (dev)\" và \"orders (prod)\" - cùng tên database ở 2 môi trường không ghi đè nhau. Hồ sơ \"Mặc định\" giữ tên cũ \"{tên database}\". Đổi tên hồ sơ thì tên file đổi theo - đọc lại database (bước 1)."),
+            new("Từ bản cũ", "Thông tin kết nối đã lưu trước khi có hồ sơ tự thành hồ sơ \"Mặc định\" (giữ nguyên nguồn, cả 4 tab và file đã đọc)."),
         ]),
 
         new("Cài đặt", "", "Nút \"Cài đặt\" trên thanh nút. Bấm Lưu để áp dụng, \"Mặc định\" để điền lại giá trị gốc.",
@@ -54,7 +63,7 @@ internal static class HelpContent
         new("Nhiều database và cập nhật", "", "Mỗi database có file dữ liệu riêng.",
         [
             new("Bảng trùng tên ở nhiều schema", "Để trống Schema mà 2 schema có bảng cùng tên (vd public.orders và audit.orders) thì chỉ những bảng trùng đó hiện dạng schema.bảng trong trang HTML (cột, khoá ngoại đổi theo); bảng không trùng giữ tên ngắn. Khung log ghi rõ bảng nào được đổi. Khoá ngoại trỏ sang schema không đọc cũng hiện dạng schema.bảng."),
-            new("Tên file theo database", "File .db / .html đặt theo tên database (PostgreSQL / MySQL / SQL Server) hoặc Service Name / SID (Oracle) - đọc nhiều database khác nhau không ghi đè lên nhau."),
+            new("Tên file theo database", "File .db / .html đặt theo tên database (PostgreSQL / MySQL / SQL Server) hoặc Service Name / SID (Oracle) kèm tên hồ sơ, vd \"orders (prod)\" - đọc nhiều database (hoặc cùng database ở dev / prod) không ghi đè lên nhau."),
             new("Đã đọc trước đó", "Mở lại module (hoặc đổi Nguồn) vẫn nhận file .db / .html đã có của database đang chọn - không cần đọc lại nếu schema chưa đổi."),
             new("Huỷ khi đang đọc", "Đang đọc database thì nút \"Huỷ\" hiện cạnh nút 1 - bấm để dừng ngay (kể cả khi còn đang chờ kết nối). Dữ liệu đọc lần trước (file .db) giữ nguyên, vẫn \"2. Xuất HTML\" được."),
             new("Đọc lỗi vẫn giữ bản cũ", "Đọc database bị lỗi (mất mạng, sai mật khẩu...) không xoá dữ liệu lần trước: nút \"2. Xuất HTML\" vẫn bật để xuất lại bản cũ nếu cần; nút 1 có màu xanh để nhắc đọc lại."),

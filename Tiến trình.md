@@ -614,6 +614,10 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 
 ## Rdbms.HtmlGenerator (ModuleE)
 
+- [ ] Nhiều hồ sơ kết nối (dev / test / prod): combobox Hồ sơ + nút ⋯ (Thêm = sao chép hồ sơ đang chọn, Đổi tên, Xoá);
+  mỗi hồ sơ có nguồn + 4 tab kết nối + file `{database} ({hồ sơ})`.db/.html riêng; config.xml cũ tự thành hồ sơ "Mặc
+  định" (giữ tên file cũ). Unit test mới `Tests\Rdbms.HtmlGenerator.Tests` 12/12; GUI Sandbox: hồ sơ 26/26, bộ cũ
+  29/29. Cập nhật F1, README (2026-10-16) - chờ thử tay với DB thật (dev / prod)
 - [x] Đổi tiêu đề cửa sổ "Module E" → "Rdbms.HtmlGenerator - Từ điển dữ liệu (PostgreSQL / Oracle)", tiêu đề trong
   trang bỏ "Module E", dòng mô tả sửa đúng tên file `{tên database}.db/.html` (2026-10-09)
 - [x] Không kết nối được thì báo hộp thoại thay vì trông như treo: timeout 10 giây (Postgres + Oracle), lỗi ghi vào

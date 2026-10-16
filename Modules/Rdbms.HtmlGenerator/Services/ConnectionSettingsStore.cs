@@ -16,36 +16,40 @@ public sealed class ConnectionSettingsStore
 
     public string ConfigPath { get; }
 
-    public ConnectionSettingsStore()
+    /// <param name="configPath">null = Data\Config\config.xml cạnh exe; unit test truyền file tạm.</param>
+    public ConnectionSettingsStore(string? configPath = null)
     {
-        var configDirectory = Path.Combine(AppContext.BaseDirectory, "Data", "Config");
-        Directory.CreateDirectory(configDirectory);
-        ConfigPath = Path.Combine(configDirectory, "config.xml");
+        ConfigPath = configPath ?? Path.Combine(AppContext.BaseDirectory, "Data", "Config", "config.xml");
+        Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
     }
 
     /// <summary>Never returns null - individual Host/etc. fields are simply empty when nothing has
-    /// been saved yet (first run) or the file is unreadable.</summary>
+    /// been saved yet (first run) or the file is unreadable. Always has at least 1 profile (a pre-profile
+    /// config.xml becomes profile "Mặc định" - see <see cref="ConnectionProfiles.Normalize"/>).</summary>
     public DatabaseConnectionsConfig Load()
     {
-        if (!File.Exists(ConfigPath))
-        {
-            return new DatabaseConnectionsConfig();
-        }
-
+        DatabaseConnectionsConfig config;
         try
         {
             using var stream = File.OpenRead(ConfigPath);
-            return (DatabaseConnectionsConfig?)Serializer.Deserialize(stream) ?? new DatabaseConnectionsConfig();
+            config = (DatabaseConnectionsConfig?)Serializer.Deserialize(stream) ?? new DatabaseConnectionsConfig();
         }
         catch (Exception)
         {
-            return new DatabaseConnectionsConfig();
+            config = new DatabaseConnectionsConfig(); // chưa có file / file hỏng
         }
+        ConnectionProfiles.Normalize(config);
+        return config;
     }
 
     public void Save(DatabaseConnectionsConfig config)
     {
-        using var stream = File.Create(ConfigPath);
-        Serializer.Serialize(stream, config);
+        // Ghi file tạm rồi thay: đang ghi mà lỗi (ổ đầy...) thì config.xml cũ - có mọi hồ sơ - vẫn còn nguyên.
+        var tempPath = ConfigPath + ".tmp";
+        using (var stream = File.Create(tempPath))
+        {
+            Serializer.Serialize(stream, config);
+        }
+        File.Move(tempPath, ConfigPath, overwrite: true);
     }
 }

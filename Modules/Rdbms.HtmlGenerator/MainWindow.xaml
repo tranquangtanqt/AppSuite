@@ -24,11 +24,11 @@
 
         <StackPanel Grid.Row="0" Spacing="2">
             <TextBlock Text="Từ điển dữ liệu database" Style="{StaticResource TitleLargeTextBlockStyle}" />
-            <TextBlock Text="Đọc schema từ PostgreSQL / Oracle / MySQL / SQL Server -> lưu Data\Database\{tên database}.db -> xuất Data\Database\{tên database}.html" Opacity="0.7" TextWrapping="Wrap" />
+            <TextBlock Text="Đọc schema từ PostgreSQL / Oracle / MySQL / SQL Server -> lưu Data\Database\{tên database} ({hồ sơ}).db -> xuất .html cùng tên" Opacity="0.7" TextWrapping="Wrap" />
         </StackPanel>
 
-        <!-- 2 hàng để cửa sổ hẹp (~650 px) vẫn thấy đủ nút: hàng trên = nguồn + nút phụ (dồn phải),
-             hàng dưới = 3 bước theo thứ tự. -->
+        <!-- 3 hàng để cửa sổ hẹp (~650 px) vẫn thấy đủ nút: hàng trên = hồ sơ + nút phụ (dồn phải),
+             hàng giữa = nguồn + thiết lập kết nối, hàng dưới = 3 bước theo thứ tự. -->
         <StackPanel Grid.Row="1" Spacing="10">
             <Grid ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
@@ -39,16 +39,35 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Nguồn:" VerticalAlignment="Center" Opacity="0.7" />
-                <!-- Thứ tự mục = thứ tự enum DatabaseSourceType (SelectedIndex <-> enum) -->
-                <ComboBox x:Name="SourceComboBox" Grid.Column="1" MinWidth="140" VerticalAlignment="Center"
-                          SelectionChanged="SourceComboBox_SelectionChanged" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}">
-                    <x:String>PostgreSQL</x:String>
-                    <x:String>Oracle</x:String>
-                    <x:String>MySQL</x:String>
-                    <x:String>SQL Server</x:String>
-                </ComboBox>
-                <Button Grid.Column="2" Content="Thiết lập kết nối" Click="OpenSettingsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" />
+                <!-- Hồ sơ kết nối (dev / test / prod...): mỗi hồ sơ có nguồn + thông tin kết nối + file .db / .html riêng -->
+                <TextBlock Grid.Column="0" Text="Hồ sơ:" VerticalAlignment="Center" Opacity="0.7" />
+                <ComboBox x:Name="ProfileComboBox" Grid.Column="1" MinWidth="160" MaxWidth="260" VerticalAlignment="Center"
+                          ItemsSource="{x:Bind ViewModel.ProfileNames}" AutomationProperties.Name="Hồ sơ kết nối"
+                          SelectionChanged="ProfileComboBox_SelectionChanged" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}"
+                          ToolTipService.ToolTip="Hồ sơ kết nối (vd dev / test / prod): nguồn, thông tin kết nối và file .db / .html riêng" />
+                <DropDownButton Grid.Column="2" AutomationProperties.Name="Quản lý hồ sơ" ToolTipService.ToolTip="Thêm / đổi tên / xoá hồ sơ"
+                                IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}">
+                    <FontIcon Glyph="&#xE712;" FontSize="14" />
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                            <MenuFlyoutItem Text="Thêm hồ sơ (sao chép hồ sơ đang chọn)..." Click="AddProfile_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <SymbolIcon Symbol="Add" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem Text="Đổi tên hồ sơ..." Click="RenameProfile_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <SymbolIcon Symbol="Rename" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Name="DeleteProfileItem" Text="Xoá hồ sơ..." Click="DeleteProfile_Click">
+                                <MenuFlyoutItem.Icon>
+                                    <SymbolIcon Symbol="Delete" />
+                                </MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
                 <Button Grid.Column="4" Click="OpenOptionsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" ToolTipService.ToolTip="Cài đặt: giới hạn thời gian kết nối / truy vấn, tự mở HTML">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE713;" FontSize="14" />
@@ -61,6 +80,18 @@
                     </Button.KeyboardAccelerators>
                 </Button>
             </Grid>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Nguồn:" VerticalAlignment="Center" Opacity="0.7" />
+                <!-- Thứ tự mục = thứ tự enum DatabaseSourceType (SelectedIndex <-> enum) -->
+                <ComboBox x:Name="SourceComboBox" MinWidth="140" VerticalAlignment="Center"
+                          SelectionChanged="SourceComboBox_SelectionChanged" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}">
+                    <x:String>PostgreSQL</x:String>
+                    <x:String>Oracle</x:String>
+                    <x:String>MySQL</x:String>
+                    <x:String>SQL Server</x:String>
+                </ComboBox>
+                <Button Content="Thiết lập kết nối" Click="OpenSettingsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" />
+            </StackPanel>
             <!-- Nút của bước nên bấm tiếp (ViewModel.NextStep) có màu nhấn -->
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <Button Content="1. Đọc database → SQLite" Command="{x:Bind ViewModel.ImportDatabaseCommand}" Style="{x:Bind local:MainWindow.StepButtonStyle(ViewModel.NextStep, 1), Mode=OneWay}" />
@@ -167,6 +198,21 @@
                 </PivotItem>
             </Pivot>
           </StackPanel>
+        </ContentDialog>
+
+        <!-- Tên hồ sơ (Thêm / Đổi tên) -->
+        <ContentDialog x:Name="ProfileNameDialog"
+                       PrimaryButtonText="Lưu"
+                       CloseButtonText="Huỷ"
+                       DefaultButton="Primary"
+                       PrimaryButtonClick="ProfileNameDialog_PrimaryButtonClick">
+            <StackPanel Spacing="8" MinWidth="360">
+                <TextBox x:Name="ProfileNameBox" Header="Tên hồ sơ" PlaceholderText="vd: dev, test, prod" MaxLength="40"
+                         AutomationProperties.Name="Tên hồ sơ" />
+                <TextBlock x:Name="ProfileNameHint" TextWrapping="Wrap" Opacity="0.7" FontSize="12" />
+                <TextBlock x:Name="ProfileNameError" TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                           Visibility="Collapsed" AutomationProperties.AutomationId="ProfileNameError" />
+            </StackPanel>
         </ContentDialog>
 
         <!-- "Cài đặt" dialog -->

@@ -41,11 +41,18 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    Oracle: sai Service Name trả ORA-50201 bọc ORA-12514 bên trong - `DescribeConnectionError` dò cả chuỗi
    InnerException. Mọi `OracleCommand` đặt `BindByName = true` (câu đọc bảng dùng `:owner` 2 lần).
 
-   Bấm "Lưu" sẽ lưu **cả 4 tab** cùng lúc vào `Data\Config\config.xml`
+   Bấm "Lưu" sẽ lưu **cả 4 tab** của **hồ sơ đang chọn** vào `Data\Config\config.xml`
    (`Services\ConnectionSettingsStore`, dùng `System.Xml.Serialization.XmlSerializer`, root
-   `DatabaseConnectionsConfig` chứa `Postgres` / `Oracle` / `MySql` / `SqlServer` + `SelectedSource` +
-   `Options`; config.xml cũ thiếu phần nào thì phần đó lấy mặc định) và tự điền lại sẵn ở những lần mở module
-   sau. **Lưu ý**: mật khẩu lưu dưới dạng plain text trong file này (không có tiện ích mã hóa nào sẵn
+   `DatabaseConnectionsConfig` chứa `Profiles` (mỗi `ConnectionProfile`: `Name`, `Source`, `Postgres` / `Oracle` /
+   `MySql` / `SqlServer`) + `SelectedProfile` + `Options`; config.xml cũ thiếu phần nào thì phần đó lấy mặc định; ghi
+   file tạm rồi thay để lỗi giữa chừng không mất hồ sơ) và tự điền lại sẵn ở những lần mở module sau. Tiêu đề hộp
+   thoại ghi tên hồ sơ.
+   **Hồ sơ kết nối (2026-10-16)**: combobox "Hồ sơ" trên cùng + nút ⋯ (Thêm = sao chép hồ sơ đang chọn, gợi ý tên
+   dev / test / prod; Đổi tên; Xoá - có hỏi, không xoá hồ sơ cuối, giữ file .db / .html). Quy tắc ở
+   `Services\ConnectionProfiles` (unit test `Tests\Rdbms.HtmlGenerator.Tests`): tên ≤ 40 ký tự, không trùng (không
+   phân biệt hoa thường), không ký tự cấm trong tên file; file .db / .html = `{database} ({hồ sơ})`, riêng hồ sơ
+   **"Mặc định"** giữ `{database}`. config.xml cũ (các nguồn ở gốc + `SelectedSource`) tự chuyển thành hồ sơ "Mặc
+   định" (`Normalize`, lúc Load) - giữ nguyên nguồn, 4 tab và file đã đọc; lần lưu sau bỏ các phần tử cũ ở gốc. **Lưu ý**: mật khẩu lưu dưới dạng plain text trong file này (không có tiện ích mã hóa nào sẵn
    có trong repo để dùng) - phù hợp với công cụ nội bộ, 1 người dùng, chạy cục bộ; không copy
    `config.xml` này ra ngoài máy.
 2. **Combobox "Nguồn"** (PostgreSQL / Oracle / MySQL / SQL Server - thứ tự mục = thứ tự enum

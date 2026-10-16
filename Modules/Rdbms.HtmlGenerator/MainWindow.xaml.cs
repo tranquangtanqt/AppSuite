@@ -22,7 +22,100 @@ public sealed partial class MainWindow : Window
         SharedUI.Helpers.WindowIcon.Apply(this);
         Closed += (_, _) => _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
         ViewModel.ErrorOccurred += ShowErrorDialog;
-        SourceComboBox.SelectedIndex = (int)ViewModel.SelectedSource; // nguồn đã chọn lần trước
+        SyncProfileControls(); // hồ sơ + nguồn đã chọn lần trước
+    }
+
+    /// <summary>Đặt combobox Hồ sơ / Nguồn theo ViewModel (sau khi đổi / thêm / đổi tên / xoá hồ sơ) - không chạy lại
+    /// SelectionChanged của chính nó.</summary>
+    private bool _syncingProfile;
+
+    private void SyncProfileControls()
+    {
+        _syncingProfile = true;
+        ProfileComboBox.SelectedItem = ViewModel.CurrentProfile.Name;
+        SourceComboBox.SelectedIndex = (int)ViewModel.SelectedSource;
+        DeleteProfileItem.IsEnabled = ViewModel.CanDeleteProfile;
+        _syncingProfile = false;
+    }
+
+    // ----- Hồ sơ kết nối -----
+
+    private void ProfileComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_syncingProfile && ProfileComboBox.SelectedItem is string name)
+        {
+            ViewModel.SelectProfile(name);
+            SyncProfileControls();
+        }
+    }
+
+    /// <summary>Thêm = true, Đổi tên = false (ProfileNameDialog dùng chung).</summary>
+    private bool _addingProfile;
+
+    private async void AddProfile_Click(object sender, RoutedEventArgs e)
+    {
+        _addingProfile = true;
+        ProfileNameDialog.Title = "Thêm hồ sơ kết nối";
+        ProfileNameDialog.PrimaryButtonText = "Thêm";
+        ProfileNameBox.Text = Services.ConnectionProfiles.SuggestName(ViewModel.Config);
+        ProfileNameHint.Text = $"Hồ sơ mới sao chép thông tin kết nối của hồ sơ \"{ViewModel.CurrentProfile.Name}\" - sau đó bấm " +
+                               "Thiết lập kết nối để sửa Host / Database... File .db / .html của mỗi hồ sơ tách riêng.";
+        await ShowProfileNameDialogAsync();
+    }
+
+    private async void RenameProfile_Click(object sender, RoutedEventArgs e)
+    {
+        _addingProfile = false;
+        ProfileNameDialog.Title = "Đổi tên hồ sơ";
+        ProfileNameDialog.PrimaryButtonText = "Lưu";
+        ProfileNameBox.Text = ViewModel.CurrentProfile.Name;
+        ProfileNameHint.Text = "Tên file .db / .html đổi theo tên hồ sơ - đọc lại database (bước 1) để có lại dữ liệu.";
+        await ShowProfileNameDialogAsync();
+    }
+
+    private async System.Threading.Tasks.Task ShowProfileNameDialogAsync()
+    {
+        ProfileNameError.Visibility = Visibility.Collapsed;
+        ProfileNameBox.SelectAll();
+        ProfileNameDialog.XamlRoot = Content.XamlRoot;
+        await ProfileNameDialog.ShowAsync();
+    }
+
+    /// <summary>Tên sai (trống, trùng, ký tự cấm) → báo lỗi dưới ô, giữ hộp thoại mở.</summary>
+    private void ProfileNameDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+    {
+        var error = _addingProfile ? ViewModel.AddProfile(ProfileNameBox.Text) : ViewModel.RenameProfile(ProfileNameBox.Text);
+        if (error is not null)
+        {
+            args.Cancel = true;
+            ProfileNameError.Text = error;
+            ProfileNameError.Visibility = Visibility.Visible;
+            ProfileNameBox.Focus(FocusState.Programmatic);
+            return;
+        }
+        SyncProfileControls();
+    }
+
+    private async void DeleteProfile_Click(object sender, RoutedEventArgs e)
+    {
+        var name = ViewModel.CurrentProfile.Name;
+        var confirm = new ContentDialog
+        {
+            Title = "Xoá hồ sơ",
+            Content = new TextBlock
+            {
+                Text = $"Xoá hồ sơ \"{name}\" cùng thông tin kết nối của nó? File .db / .html đã đọc / xuất (trong Data\\Database) vẫn giữ nguyên.",
+                TextWrapping = TextWrapping.Wrap,
+            },
+            PrimaryButtonText = "Xoá",
+            CloseButtonText = "Huỷ",
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = Content.XamlRoot,
+        };
+        if (await confirm.ShowAsync() == ContentDialogResult.Primary && ViewModel.DeleteProfile())
+        {
+            SyncProfileControls();
+        }
     }
 
     /// <summary>x:Bind helper - enables controls only while no import/export is running.</summary>
@@ -48,7 +141,7 @@ public sealed partial class MainWindow : Window
 
     private void SourceComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (SourceComboBox.SelectedIndex >= 0)
+        if (!_syncingProfile && SourceComboBox.SelectedIndex >= 0)
         {
             ViewModel.SelectedSource = (DatabaseSourceType)SourceComboBox.SelectedIndex;
         }
@@ -93,6 +186,7 @@ public sealed partial class MainWindow : Window
         UpdateSqlServerLoginBoxes();
 
         SettingsPivot.SelectedIndex = (int)ViewModel.SelectedSource; // mở sẵn tab của nguồn đang chọn
+        DatabaseSettingsDialog.Title = $"Thiết lập kết nối - hồ sơ \"{ViewModel.CurrentProfile.Name}\"";
         DatabaseSettingsDialog.XamlRoot = Content.XamlRoot;
         await DatabaseSettingsDialog.ShowAsync();
     }
