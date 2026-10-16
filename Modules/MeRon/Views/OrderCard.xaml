@@ -75,7 +75,7 @@
                     <TextBlock Text="{x:Bind Card.DiscountText, Mode=OneWay}" FontSize="12" Opacity="0.7" />
                 </StackPanel>
                 <TextBlock Grid.Column="1" VerticalAlignment="Center">
-                    <Run Text="Tổng  " FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind Card.TotalText, Mode=OneWay}" FontSize="17" FontWeight="Bold"
+                    <Run Text="Tổng  " FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind Card.TotalText, Mode=OneWay}" FontSize="14" FontWeight="Bold"
                                                                          Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                 </TextBlock>
             </Grid>
