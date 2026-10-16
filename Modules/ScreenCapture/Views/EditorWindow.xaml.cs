@@ -113,6 +113,17 @@ public sealed partial class EditorWindow : Window
         }
 
         this.Content.KeyDown += Content_KeyDown;
+        this.Content.PreviewKeyDown += Content_PreviewKeyDown;
+        DocumentTabs.AddHandler(UIElement.PointerWheelChangedEvent,
+            new PointerEventHandler(DocumentTabs_PointerWheelChanged), handledEventsToo: true);
+        // Mở lại phiên: tab được chọn trước khi thanh tab dựng xong → cuộn tới nó khi thanh tab đã sẵn sàng.
+        DocumentTabs.Loaded += (_, _) => DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            if (DocumentTabs.SelectedItem is TabViewItem selected)
+            {
+                BringTabIntoView(selected);
+            }
+        });
         BuildZoomFlyout();
         // Ctrl + lăn chuột: Canvas chặn trước để ScrollViewer không cuộn, còn zoom xử lý ở ScrollViewer
         // (handledEventsToo) để lăn ở vùng trống quanh ảnh cũng zoom được.
@@ -280,10 +291,13 @@ public sealed partial class EditorWindow : Window
         vm.Saved += (_, _) => TrySaveSession(); // nhớ file vừa lưu của tab ngay (xem EditorViewModel.Saved)
         var tab = new TabViewItem
         {
-            Header = vm.Title,
+            // Tên gọn (TabTitle) để thấy nhiều tab hơn; tên đầy đủ ở tooltip. TextBlock để in đậm được tab đang chọn.
+            Header = new TextBlock { Text = TabTitle.Short(vm.Title, DateTime.Now) },
             Tag = vm,
             IconSource = new FontIconSource { Glyph = "" },
         };
+        ToolTipService.SetToolTip(tab, vm.Title);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(tab, vm.Title);
         DocumentTabs.TabItems.Add(tab);
         return tab;
     }
@@ -383,6 +397,212 @@ public sealed partial class EditorWindow : Window
         var tabs = DocumentTabs.TabItems.OfType<TabViewItem>().ToList();
         int index = tabs.FindIndex(t => ReferenceEquals(t.Tag, _viewModel));
         TabPositionText.Text = index >= 0 ? $"Ảnh {index + 1} / {tabs.Count}" : string.Empty;
+        RefreshTabHeaders(tabs);
+    }
+
+    /// <summary>Tab đang chọn chữ đậm (nền màu chủ đạo ở TabView.Resources); tính lại tên gọn - app mở qua đêm thì ảnh
+    /// "hôm nay" thành "hôm qua".</summary>
+    private void RefreshTabHeaders(List<TabViewItem> tabs)
+    {
+        var now = DateTime.Now;
+        foreach (var tab in tabs)
+        {
+            if (tab is { Header: TextBlock header, Tag: EditorViewModel vm })
+            {
+                header.Text = TabTitle.Short(vm.Title, now);
+                header.FontWeight = ReferenceEquals(vm, _viewModel) ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+            }
+        }
+    }
+
+    // ---------- Chọn tab nhanh (2026-10-16): phím tắt, Danh sách ảnh, lăn chuột trên thanh tab ----------
+
+    /// <summary>Ctrl+Tab / Ctrl+Shift+Tab, Ctrl+PgDn / Ctrl+PgUp: tab sau / trước (vòng); Ctrl+1…8: tab thứ n; Ctrl+9: tab
+    /// cuối; Ctrl+Shift+A: Danh sách ảnh. Bắt ở PreviewKeyDown: ScrollViewer của ảnh / chuyển focus không nuốt mất phím.</summary>
+    private void Content_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (_inlineEditor is not null || !IsKeyDown(Windows.System.VirtualKey.Control))
+        {
+            return;
+        }
+        bool shift = IsKeyDown(Windows.System.VirtualKey.Shift);
+        var tabs = DocumentTabs.TabItems.OfType<TabViewItem>().ToList();
+        int current = tabs.FindIndex(t => ReferenceEquals(t.Tag, _viewModel));
+        int? target = e.Key switch
+        {
+            Windows.System.VirtualKey.Tab => current + (shift ? -1 : 1),
+            Windows.System.VirtualKey.PageDown => current + 1,
+            Windows.System.VirtualKey.PageUp => current - 1,
+            >= Windows.System.VirtualKey.Number1 and <= Windows.System.VirtualKey.Number8 when !shift => e.Key - Windows.System.VirtualKey.Number1,
+            >= Windows.System.VirtualKey.NumberPad1 and <= Windows.System.VirtualKey.NumberPad8 when !shift => e.Key - Windows.System.VirtualKey.NumberPad1,
+            Windows.System.VirtualKey.Number9 or Windows.System.VirtualKey.NumberPad9 when !shift => tabs.Count - 1,
+            _ => null,
+        };
+        if (shift && e.Key == Windows.System.VirtualKey.A)
+        {
+            ShowTabList();
+            e.Handled = true;
+            return;
+        }
+        if (target is not { } index || tabs.Count == 0)
+        {
+            return;
+        }
+        e.Handled = true;
+        if (e.Key is >= Windows.System.VirtualKey.Number1 and <= Windows.System.VirtualKey.Number8
+            or >= Windows.System.VirtualKey.NumberPad1 and <= Windows.System.VirtualKey.NumberPad8 && index >= tabs.Count)
+        {
+            return; // Ctrl+5 khi chỉ có 3 tab: bỏ qua (như trình duyệt)
+        }
+        SelectTab(tabs[((index % tabs.Count) + tabs.Count) % tabs.Count]);
+    }
+
+    private void SelectTab(TabViewItem tab)
+    {
+        DocumentTabs.SelectedItem = tab; // SelectionChanged cuộn thanh tab tới tab này
+    }
+
+    private void ShowTabList() => TabListFlyout.ShowAt(TabListButton);
+
+    private void TabPositionButton_Click(object sender, RoutedEventArgs e) => ShowTabList();
+
+    /// <summary>Ảnh thu nhỏ của từng tab (ảnh nền, chưa gồm hình vẽ) - tạo lại khi bitmap của tab đổi.</summary>
+    private readonly System.Runtime.CompilerServices.ConditionalWeakTable<EditorViewModel, Tuple<SKBitmap, ImageSource>> _thumbnails = new();
+
+    private ImageSource Thumbnail(EditorViewModel vm)
+    {
+        if (_thumbnails.TryGetValue(vm, out var cached) && ReferenceEquals(cached.Item1, vm.Bitmap))
+        {
+            return cached.Item2;
+        }
+        var source = vm.Bitmap;
+        double ratio = Math.Min(1.0, 96.0 / Math.Max(source.Width, source.Height));
+        using var small = source.Resize(new SKImageInfo(Math.Max(1, (int)(source.Width * ratio)), Math.Max(1, (int)(source.Height * ratio))), SKFilterQuality.Medium);
+        ImageSource image = (small ?? source).ToWriteableBitmap();
+        _thumbnails.AddOrUpdate(vm, Tuple.Create(source, image));
+        return image;
+    }
+
+    private void TabListFlyout_Opening(object sender, object e)
+    {
+        TabListFilter.Text = string.Empty;
+        FillTabList(string.Empty);
+    }
+
+    private void TabListFlyout_Opened(object sender, object e)
+    {
+        TabListFilter.Focus(FocusState.Programmatic);
+        if (TabList.SelectedItem is { } selected)
+        {
+            TabList.ScrollIntoView(selected, ScrollIntoViewAlignment.Leading);
+        }
+    }
+
+    private void TabListFilter_TextChanged(object sender, TextChangedEventArgs e) => FillTabList(TabListFilter.Text);
+
+    /// <summary>Mỗi tab 1 dòng: ảnh thu nhỏ, tên đầy đủ, "Ảnh n" + "chưa lưu". Lọc theo tên đầy đủ hoặc tên gọn (vd "10:01",
+    /// "15/10"), không phân biệt hoa thường.</summary>
+    private void FillTabList(string filter)
+    {
+        var now = DateTime.Now;
+        filter = filter.Trim();
+        TabList.Items.Clear();
+        var tabs = DocumentTabs.TabItems.OfType<TabViewItem>().ToList();
+        for (int i = 0; i < tabs.Count; i++)
+        {
+            if (tabs[i].Tag is not EditorViewModel vm)
+            {
+                continue;
+            }
+            var shortTitle = TabTitle.Short(vm.Title, now);
+            if (filter.Length > 0 && !vm.Title.Contains(filter, StringComparison.CurrentCultureIgnoreCase)
+                && !shortTitle.Contains(filter, StringComparison.CurrentCultureIgnoreCase))
+            {
+                continue;
+            }
+            var row = new Grid { ColumnSpacing = 10, Padding = new Thickness(0, 4, 0, 4), Tag = tabs[i] };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(96) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.Children.Add(new Border
+            {
+                Height = 60,
+                Background = (Brush)Application.Current.Resources["SubtleFillColorSecondaryBrush"],
+                CornerRadius = new CornerRadius(4),
+                Child = new Image { Source = Thumbnail(vm), Stretch = Stretch.Uniform },
+            });
+            var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
+            text.Children.Add(new TextBlock { Text = vm.Title, TextTrimming = TextTrimming.CharacterEllipsis, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            text.Children.Add(new TextBlock { Text = $"Ảnh {i + 1}" + (vm.NeedsSave ? "  ·  ● chưa lưu" : string.Empty), FontSize = 12, Opacity = 0.7 });
+            Grid.SetColumn(text, 1);
+            row.Children.Add(text);
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(row, vm.Title);
+            TabList.Items.Add(row);
+            if (ReferenceEquals(vm, _viewModel))
+            {
+                TabList.SelectedItem = row;
+            }
+        }
+    }
+
+    private void PickFromTabList(object? item)
+    {
+        if (item is FrameworkElement { Tag: TabViewItem tab })
+        {
+            TabListFlyout.Hide();
+            SelectTab(tab);
+        }
+    }
+
+    private void TabList_ItemClick(object sender, ItemClickEventArgs e) => PickFromTabList(e.ClickedItem);
+
+    private void TabList_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            PickFromTabList(TabList.SelectedItem);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Ô lọc: Enter = ảnh đầu tiên khớp; mũi tên xuống = vào danh sách.</summary>
+    private void TabListFilter_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter && TabList.Items.Count > 0)
+        {
+            PickFromTabList(TabList.Items[0]);
+            e.Handled = true;
+        }
+        else if (e.Key == Windows.System.VirtualKey.Down && TabList.Items.Count > 0)
+        {
+            TabList.SelectedIndex = Math.Max(0, TabList.SelectedIndex);
+            (TabList.ContainerFromIndex(TabList.SelectedIndex) as Control)?.Focus(FocusState.Keyboard);
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Lăn chuột trên thanh tab = cuộn ngang dải tab (mặc định chỉ có nút tam giác 2 bên, mỗi lần 1 nấc).</summary>
+    private void DocumentTabs_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        if (FindDescendant<ScrollViewer>(DocumentTabs) is not { ScrollableWidth: > 0 } scroller)
+        {
+            return;
+        }
+        int delta = e.GetCurrentPoint(DocumentTabs).Properties.MouseWheelDelta;
+        scroller.ChangeView(Math.Clamp(scroller.HorizontalOffset - delta * 1.5, 0, scroller.ScrollableWidth), null, null, disableAnimation: false);
+        e.Handled = true;
+    }
+
+    private static T? FindDescendant<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T found || (found = FindDescendant<T>(child)!) is not null)
+            {
+                return found;
+            }
+        }
+        return null;
     }
 
     private void ViewModel_RequestRedraw(object? sender, EventArgs e)
@@ -433,9 +653,25 @@ public sealed partial class EditorWindow : Window
 
     private void DocumentTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (DocumentTabs.SelectedItem is TabViewItem { Tag: EditorViewModel vm })
+        if (DocumentTabs.SelectedItem is TabViewItem { Tag: EditorViewModel vm } tab)
         {
             SwitchTo(vm);
+            // Nhiều tab: cuộn thanh tab tới tab đang chọn (mở lại phiên 30 tab thì tab cuối nằm khuất bên phải). Đợi 1
+            // nhịp để thanh tab dựng xong.
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => BringTabIntoView(tab));
+        }
+    }
+
+    /// <summary>Cuộn qua ListView bên trong TabView: tab chưa dựng (khuất) thì StartBringIntoView của tab không có tác dụng.</summary>
+    private void BringTabIntoView(TabViewItem tab)
+    {
+        if (FindDescendant<ListView>(DocumentTabs) is { } strip)
+        {
+            strip.ScrollIntoView(tab);
+        }
+        else
+        {
+            tab.StartBringIntoView();
         }
     }
 

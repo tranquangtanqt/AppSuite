@@ -68,7 +68,8 @@ public static class HelpContent
 
         new("Editor: tab ảnh & phiên làm việc", "\uE8A5", "Chỉ có 1 cửa sổ Editor; mỗi lần chụp mở thêm 1 tab.",
         [
-            new("Nhiều ảnh dạng tab", "Mỗi ảnh chụp là 1 tab (tên = thời điểm chụp). Mỗi tab giữ riêng hình đã vẽ, lịch sử Undo và mức zoom; công cụ / màu / cỡ nét dùng chung. Góc phải thanh trạng thái ghi ảnh đang mở là ảnh thứ mấy trên tổng số tab (vd \"Ảnh 3 / 6\")."),
+            new("Nhiều ảnh dạng tab", "Mỗi ảnh chụp là 1 tab (tên = thời điểm chụp). Mỗi tab giữ riêng hình đã vẽ, lịch sử Undo và mức zoom; công cụ / màu / cỡ nét dùng chung. Tab đang mở có nền xanh, chữ trắng đậm. Tên tab ghi gọn: chụp hôm nay chỉ ghi giờ (10:01:46), ngày khác ghi \"15/10 16:22\" - rê chuột lên tab để xem tên đầy đủ. Góc phải thanh trạng thái ghi ảnh đang mở là ảnh thứ mấy trên tổng số tab (vd \"Ảnh 3 / 6\")."),
+            new("Chọn tab nhanh", "Nhiều tab: lăn chuột trên thanh tab để cuộn qua các tab. Nút Danh sách ảnh (cuối thanh tab), bấm vào chữ \"Ảnh 3 / 6\" hoặc Ctrl+Shift+A: danh sách mọi ảnh (ảnh thu nhỏ, tên đầy đủ, ● chưa lưu), gõ vào ô lọc theo tên / giờ (vd 10:01, 15/10) rồi Enter = ảnh đầu tiên khớp, mũi tên xuống để chọn trong danh sách, hoặc bấm chuột. Phím: Ctrl+Tab / Ctrl+Shift+Tab (hoặc Ctrl+PgDn / Ctrl+PgUp) tab sau / trước, Ctrl+1…8 tab thứ n, Ctrl+9 tab cuối.", "Ctrl+Tab", "Ctrl+1…9", "Ctrl+Shift+A", "Lăn chuột"),
             new("Mở ảnh có sẵn", "Tab Tệp > Mở (hoặc nút Mở ảnh ở cửa sổ chính, hoặc kéo-thả file vào Editor / cửa sổ chính): mở ảnh PNG, JPG, BMP, GIF (khung đầu), WEBP thành tab mới để ghi chú - chọn được nhiều file, mỗi file 1 tab, tên tab = tên file. Ảnh chụp điện thoại tự xoay đúng chiều theo EXIF. Tab mở từ file coi như đã lưu: không sửa gì thì đóng không hỏi. Lưu (Ctrl+S) ghi đè chính file đó (ảnh gốc mất - muốn giữ thì dùng Lưu thành…); GIF / WEBP thì Lưu hỏi nơi lưu mới.", "Ctrl+O"),
             new("Ảnh mới", "Tab Tệp > Ảnh mới (hoặc nút Ảnh mới ở cửa sổ chính): tạo ảnh trống thành 1 tab - chọn cỡ theo mẫu (ảnh trong clipboard, ảnh đang mở, màn hình chính, 640×480 … 1920×1080) hoặc nhập rộng / cao (nút ⇄ đổi ngang ↔ dọc), và màu nền (Trắng, Đen, màu bất kỳ - nhớ cho lần sau). Dùng làm nền để ghép nhiều ảnh dán vào.", "Ctrl+N"),
             new("Đóng 1 tab", "Bấm × trên tab, hoặc Ctrl+W / Ctrl+F4 để đóng tab đang mở. Ảnh chưa lưu, đã sửa sau lần lưu cuối, hoặc file đã lưu (kể cả ảnh tự lưu) bị xoá / đổi tên → hỏi Lưu / Không lưu / Huỷ (Lưu = ghi lại đúng chỗ cũ). Đóng tab cuối cùng = đóng Editor.", "Ctrl+W", "Ctrl+F4"),
@@ -213,6 +214,9 @@ public static class HelpContent
             new("Zoom", "Phóng to / thu nhỏ / về 100% / zoom quanh con trỏ.", "Ctrl++", "Ctrl+-", "Ctrl+0", "Ctrl+lăn chuột"),
             new("Khoá góc / hình đều", "Giữ khi vẽ / kéo: đường thẳng khoá 45°, chữ nhật → vuông, elip → tròn, vùng chọn → vuông, ảnh dán giữ tỉ lệ.", "Shift"),
             new("Đóng tab", "Đóng tab đang mở (ảnh chưa lưu thì hỏi trước).", "Ctrl+W", "Ctrl+F4"),
+            new("Chuyển tab", "Tab sau / tab trước (đến cuối thì vòng lại đầu).", "Ctrl+Tab", "Ctrl+Shift+Tab", "Ctrl+PgDn", "Ctrl+PgUp"),
+            new("Nhảy tới tab", "Ctrl+1…8 = tab thứ 1…8, Ctrl+9 = tab cuối.", "Ctrl+1…8", "Ctrl+9"),
+            new("Danh sách ảnh", "Mở danh sách mọi ảnh đang mở để chọn nhanh.", "Ctrl+Shift+A"),
             new("Hướng dẫn", "Mở cửa sổ này.", "F1"),
         ]),
 

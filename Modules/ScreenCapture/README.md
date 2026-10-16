@@ -120,6 +120,11 @@ mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để kh
 - Đóng 1 tab (`×`, hoặc `Ctrl+W` / `Ctrl+F4` cho tab đang mở) khi ảnh chưa lưu ra file (kể cả ảnh vừa chụp chưa sửa gì) hoặc đã sửa sau lần lưu
   cuối, hoặc file đã lưu (kể cả ảnh tự lưu) bị xoá / đổi tên ngoài app → hỏi *Lưu* / *Không lưu* / *Huỷ* (*Lưu* ghi lại đúng
   chỗ cũ, tạo lại thư mục nếu cần). Đóng tab cuối cùng = đóng Editor.
+- **Thanh tab nhiều ảnh (2026-10-16)**: tab đang mở nền màu chủ đạo, chữ trắng đậm (`TabView.Resources`); tên tab gọn
+  (`Models\TabTitle.cs`: hôm nay `10:01:46`, ngày khác `15/10 16:22`, năm khác `15/10/25 16:22`; tên file / *Ảnh mới* giữ
+  nguyên), tên đầy đủ ở tooltip. Lăn chuột trên thanh tab = cuộn ngang. **Danh sách ảnh** (nút cuối thanh tab / bấm "Ảnh
+  x / n" / `Ctrl+Shift+A`): ảnh thu nhỏ + tên đầy đủ + "● chưa lưu", ô lọc theo tên / giờ (Enter = ảnh đầu khớp, ↓ vào
+  danh sách). Phím `Ctrl+Tab`, `Ctrl+PgDn/PgUp`, `Ctrl+1…9` (bắt ở `PreviewKeyDown`).
 - **Đóng tất cả** (nút cuối thanh tab): còn ảnh chưa lưu → hỏi *Lưu tất cả...* (chọn 1 thư mục, lưu
   mọi ảnh chưa lưu vào đó, tên file = tên tab, trùng tên thì thêm " (2)" — không ghi đè file có sẵn) /
   *Đóng không lưu* / *Huỷ*. Xong thì đóng mọi tab và Editor, thư mục lưu tạm được dọn sạch. Huỷ chọn
@@ -310,6 +315,9 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | Giữ `Shift` khi vẽ/kéo | Khoá góc 45° (đường/mũi tên), vuông/tròn (chữ nhật/elip) |
 | `Ctrl` + lăn chuột / `Ctrl++` / `Ctrl+-` / `Ctrl+0` | Zoom quanh con trỏ / phóng to / thu nhỏ / về 100% |
 | `Ctrl+W` / `Ctrl+F4` | Đóng tab đang mở (ảnh chưa lưu thì hỏi Lưu / Không lưu / Huỷ; tab cuối = đóng Editor) |
+| `Ctrl+Tab` / `Ctrl+Shift+Tab`, `Ctrl+PgDn` / `Ctrl+PgUp` | Tab sau / trước (vòng) |
+| `Ctrl+1` … `Ctrl+8` / `Ctrl+9` | Tab thứ 1…8 / tab cuối |
+| `Ctrl+Shift+A` | Danh sách ảnh (chọn nhanh tab) |
 | `F1` | Mở cửa sổ Hướng dẫn |
 
 Khi đang gõ trong ô số (Current/Next), các phím trên thuộc về ô đó (vd `Ctrl+Z` hoàn tác chữ vừa

@@ -890,7 +890,36 @@
         <TabView x:Name="DocumentTabs" Grid.Row="2" Margin="0,6,0,0"
                  IsAddTabButtonVisible="False" TabWidthMode="SizeToContent" CanReorderTabs="False" CanDragTabs="False"
                  SelectionChanged="DocumentTabs_SelectionChanged" TabCloseRequested="DocumentTabs_TabCloseRequested">
+            <!-- Tab đang chọn (2026-10-16): nền màu chủ đạo như nút Trang chủ, chữ trắng (đậm: RefreshTabHeaders) - mặc định
+                 chỉ trắng hơn chút, nhiều tab thì khó thấy. -->
+            <TabView.Resources>
+                <StaticResource x:Key="TabViewItemHeaderBackgroundSelected" ResourceKey="AccentFillColorDefaultBrush" />
+                <StaticResource x:Key="TabViewItemHeaderForegroundSelected" ResourceKey="TextOnAccentFillColorPrimaryBrush" />
+                <StaticResource x:Key="TabViewItemIconForegroundSelected" ResourceKey="TextOnAccentFillColorPrimaryBrush" />
+                <StaticResource x:Key="TabViewItemHeaderSelectedCloseButtonForeground" ResourceKey="TextOnAccentFillColorPrimaryBrush" />
+                <StaticResource x:Key="TabViewButtonForegroundActiveTab" ResourceKey="TextOnAccentFillColorPrimaryBrush" />
+            </TabView.Resources>
             <TabView.TabStripFooter>
+                <StackPanel Orientation="Horizontal">
+                <!-- Danh sách mọi ảnh (ảnh thu nhỏ + ô lọc) để nhảy nhanh khi có nhiều tab; Ctrl+Shift+A hoặc bấm "Ảnh x / n". -->
+                <Button x:Name="TabListButton" Margin="8,0,0,0" Padding="10,4" VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
+                        AutomationProperties.Name="Danh sách ảnh" ToolTipService.ToolTip="Danh sách ảnh: chọn nhanh 1 tab (Ctrl+Shift+A)">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE8FD;" FontSize="12" />
+                        <TextBlock Text="Danh sách ảnh" FontSize="12" />
+                        <FontIcon Glyph="&#xE70D;" FontSize="10" />
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout x:Name="TabListFlyout" Placement="BottomEdgeAlignedRight" Opening="TabListFlyout_Opening" Opened="TabListFlyout_Opened">
+                            <StackPanel Width="380" Spacing="8">
+                                <TextBox x:Name="TabListFilter" PlaceholderText="Lọc theo tên / giờ chụp, vd 10:01 hoặc 15/10"
+                                         AutomationProperties.Name="Lọc danh sách ảnh" TextChanged="TabListFilter_TextChanged" KeyDown="TabListFilter_KeyDown" />
+                                <ListView x:Name="TabList" MaxHeight="520" SelectionMode="Single" IsItemClickEnabled="True"
+                                          ItemClick="TabList_ItemClick" KeyDown="TabList_KeyDown" AutomationProperties.Name="Các ảnh đang mở" />
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
                 <Button x:Name="CloseAllTabsButton" Click="CloseAllTabsButton_Click" Margin="8,0,0,0" Padding="10,4"
                         VerticalAlignment="Center" Background="Transparent" BorderThickness="0"
                         ToolTipService.ToolTip="Đóng tất cả ảnh (hỏi lưu tất cả vào 1 thư mục nếu còn ảnh chưa lưu)">
@@ -899,6 +928,7 @@
                         <TextBlock Text="Đóng tất cả" FontSize="12" />
                     </StackPanel>
                 </Button>
+                </StackPanel>
             </TabView.TabStripFooter>
         </TabView>
 
@@ -1005,8 +1035,12 @@
             <TextBlock x:Name="StatusText" Opacity="0.7" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2" VerticalAlignment="Center">
                 <!-- Thứ tự tab ảnh đang mở / tổng số tab (UpdateTabPosition). -->
-                <TextBlock x:Name="TabPositionText" VerticalAlignment="Center" Margin="0,0,14,0" Opacity="0.8"
-                           ToolTipService.ToolTip="Ảnh đang mở / tổng số ảnh (tab) trong Editor" />
+                <!-- Bấm vào = mở Danh sách ảnh (chọn nhanh tab). -->
+                <HyperlinkButton x:Name="TabPositionButton" Padding="6,2" Margin="0,0,8,0" Click="TabPositionButton_Click"
+                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}" AutomationProperties.Name="Vị trí ảnh"
+                                 ToolTipService.ToolTip="Ảnh đang mở / tổng số ảnh (tab) - bấm để chọn nhanh ảnh khác (Ctrl+Shift+A)">
+                    <TextBlock x:Name="TabPositionText" />
+                </HyperlinkButton>
                 <Button x:Name="ZoomFitButton" Style="{StaticResource SmallToolButtonStyle}" Click="ZoomFitButton_Click"
                         ToolTipService.ToolTip="Vừa cửa sổ">
                     <FontIcon Glyph="&#xE9A6;" FontSize="14" />

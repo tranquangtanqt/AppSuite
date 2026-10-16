@@ -311,6 +311,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 
 ## ScreenCapture
 
+- [ ] Thanh tab nhiều ảnh: tab đang mở nền màu chủ đạo + chữ trắng đậm; tên tab gọn (hôm nay chỉ giờ, ngày khác
+  "15/10 16:22", đầy đủ ở tooltip); lăn chuột trên thanh tab = cuộn; Danh sách ảnh (nút cuối thanh tab / bấm "Ảnh x / n" /
+  Ctrl+Shift+A: ảnh thu nhỏ, lọc theo tên / giờ); Ctrl+Tab / Ctrl+Shift+Tab, Ctrl+PgDn / PgUp, Ctrl+1…8, Ctrl+9. Cập
+  nhật F1, README (2026-10-16)
 - [x] Ảnh mới (giống New của PicPick): `Ctrl+N` / tab Tệp / nút ở cửa sổ chính → hộp thoại mẫu kích thước (clipboard,
   ảnh đang mở, màn hình, cỡ phổ biến), rộng / cao + đổi chiều, màu nền (mặc định Đen, nhớ lần trước) → tab mới trong
   Editor. GUI Sandbox 17/17 (2026-10-02)
