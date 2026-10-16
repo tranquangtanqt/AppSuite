@@ -25,6 +25,15 @@ public sealed partial class OrderFormPage : Page
             }
         });
         Shortcuts.EscapeBack(this, GoBack);
+        // Thêm đơn (nút Thêm, Ctrl+N, Lưu và thêm mới, Sao chép đơn): con trỏ vào ngay ô Khách hàng - ô trống thì hiện sẵn
+        // danh sách khách (GotFocus của CustomerSuggest) để chọn luôn. Đợi 1 nhịp sau Loaded thì ô mới nhận focus được.
+        Loaded += (_, _) =>
+        {
+            if (!ViewModel.IsEdit)
+            {
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => CustomerBox.Focus(FocusState.Programmatic));
+            }
+        };
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

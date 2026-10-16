@@ -57,14 +57,14 @@ public static class HelpContent
             new("Khoảng ngày giao", "Từ ngày – Đến ngày, tính theo ngày giao hàng (cả 2 ngày). Nút Khoảng ngày chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày (bỏ lọc ngày). (Ctrl+D). Đổi bộ lọc là tìm lại ngay.", "Ctrl+D"),
             new("Sắp xếp", "Tăng / Giảm dần theo thành tiền hoặc theo ngày giao đơn. Mặc định: ngày giao mới nhất trước. Nút Sắp xếp in đậm khi đang dùng cách khác mặc định."),
             new("Thẻ đơn", "Tên khách, trạng thái, ngày giao, các món (đơn giá, số lượng, thành tiền), ghi chú, Tạm tính / Giảm giá (khi có giảm giá), Tổng. Vạch màu bên trái + nhãn trạng thái: cam = Đã lên đơn (nền trắng), xanh lá = Đã thanh toán (nền xanh nhạt), xám = Huỷ (nền xám, chữ mờ). Bấm vào thẻ để sửa.", "Click"),
-            new("Thêm đơn", "Nút Thêm (Ctrl+N). Đang lọc 1 khách thì đơn mới điền sẵn khách đó; Từ ngày = Đến ngày thì điền sẵn ngày giao đó.", "Ctrl+N"),
+            new("Thêm đơn", "Nút Thêm (Ctrl+N) - con trỏ vào sẵn ô Khách hàng. Đang lọc 1 khách thì đơn mới điền sẵn khách đó; Từ ngày = Đến ngày thì điền sẵn ngày giao đó.", "Ctrl+N"),
             new("Giữ bộ lọc", "Trạng thái, khách, khoảng ngày, sắp xếp được giữ nguyên khi thêm / sửa đơn, xem Chi tiết, hoặc chuyển sang trang khác (vd Mua hàng) rồi quay lại - đến khi tắt app. Các trang báo cáo, Mua hàng và ô tìm ở trang danh mục cũng giữ như vậy."),
             new("Làm mới", "Nút ⟳ hoặc F5 đọc lại danh sách.", "F5"),
         ]),
 
         new("Thêm / sửa đơn", "", "Form đơn hàng: khách, các món, giảm giá, ngày giao, thanh toán, ghi chú.", "OrderFormPage",
         [
-            new("Khách hàng", "Gõ tên / số điện thoại rồi chọn. Bắt buộc."),
+            new("Khách hàng", "Gõ tên / số điện thoại rồi chọn. Bắt buộc. Thêm đơn mới (Thêm, Ctrl+N, Lưu và thêm mới, Sao chép đơn) thì con trỏ vào sẵn ô này, ô trống thì hiện luôn danh sách khách để chọn."),
             new("Thêm món", "Nút Thêm món hoặc Ctrl+M: thêm 1 dòng trống, con trỏ vào ngay ô Món và danh sách hiện sẵn tất cả các món (tên · giá). Số lượng bằng − / +, mũi tên lên / xuống trong ô, hoặc gõ thẳng số (nhỏ hơn 1 tự về 1). X = xoá dòng.", "Ctrl+M", "↑", "↓"),
             new("Gõ để chọn món", "Gõ vài chữ của tên món: không cần dấu, các từ không cần liền nhau (vd \"bao xiu\" → Bánh bao xá xíu/trứng sữa); món có tên bắt đầu bằng chữ vừa gõ lên đầu. Enter = chọn món đầu danh sách, hoặc bấm chuột vào món. Gõ đủ tên món (không dấu cũng được) rồi rời ô thì tự nhận món đó.", "Enter"),
             new("Bắt buộc chọn trong danh sách", "Gõ món không có trong danh sách: dưới dòng hiện lỗi đỏ \"Không có món … trong danh sách\", chữ đã gõ giữ nguyên; bấm Lưu thì báo lỗi và đưa con trỏ về đúng ô đó. Dòng để trống mà Lưu: báo \"Chưa chọn món ăn.\". Món ngoài danh sách thì dùng Thêm món tự do."),
