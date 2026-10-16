@@ -289,6 +289,8 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   danh sách khách để chọn; sửa đơn thì không. Cập nhật F1, README (2026-10-16)
 - [ ] Form đơn: chọn món (bấm gợi ý / Enter) → con trỏ sang ô Số lượng cùng dòng; Thêm món tự do → con trỏ ở ô Tên, Enter
   → ô Đơn giá; vào ô số thì số cũ bôi đen sẵn để gõ đè. Cập nhật F1, README (2026-10-16)
+- [ ] Trang Cài đặt (cuối menu): ẩn / hiện từng mục menu trái bằng ô tích theo nhóm, nhóm ẩn hết thì ẩn tiêu đề, Hiện tất
+  cả; Đặt hàng luôn hiện; lưu settings.json cạnh database (nhập backup không mất). Cập nhật F1, README (2026-10-16)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
 - [ ] App điện thoại me-ron: 25 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + chức năng

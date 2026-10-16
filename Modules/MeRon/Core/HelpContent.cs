@@ -16,7 +16,7 @@ public static class HelpContent
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
         ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage",
-         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage"];
+         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
     [
@@ -190,6 +190,13 @@ public static class HelpContent
         [
             new("Thêm / sửa", "Bấm Thêm: Mã (vd W1) và Tên (vd Tòa nhà W1). Mã không trùng nhau và không đổi được sau khi tạo - muốn đổi mã thì xoá rồi thêm lại."),
             new("Xoá", "Nút Xoá trong hộp thoại sửa. Khách hàng đã ghi địa chỉ này vẫn giữ nguyên chữ đã ghi."),
+        ]),
+
+        new("Cài đặt", "", "Ẩn / hiện các mục của menu bên trái.", "SettingsPage",
+        [
+            new("Ẩn mục menu", "Mục Cài đặt ở cuối menu (cạnh Hướng dẫn) → khung Menu bên trái: bỏ tích mục ít dùng (vd Địa chỉ, Danh mục món ăn) là mục đó biến khỏi menu ngay; tích lại để hiện. Nhóm ẩn hết mục thì tiêu đề nhóm (Thống kê, Danh mục...) cũng ẩn. Hiện tất cả = trả về như cũ."),
+            new("Luôn hiện", "Đặt hàng (trang mở đầu), Cài đặt và Hướng dẫn không ẩn được. Ẩn trang Xuất thì nút Mở trang Xuất (cảnh báo ở trang Nhập) vẫn mở được trang đó."),
+            new("Lưu ở đâu", "Lưu ngay khi đổi, trong file settings.json cạnh database (%LOCALAPPDATA%\\AppSuite\\MeRon) - tắt app mở lại vẫn giữ; nhập backup hay Xoá toàn bộ dữ liệu không ảnh hưởng."),
         ]),
     ];
 

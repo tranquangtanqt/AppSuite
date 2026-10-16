@@ -17,7 +17,92 @@ public sealed partial class MainWindow : Window
         AppWindow.Resize(new SizeInt32(1280, 860));
         AppLog.For("App").LogInformation("Khởi động MeRon");
         Closed += (_, _) => _help?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
-        Nav.SelectedItem = FindItem(StartPage());
+        MenuSettings = Core.MenuSettings.Load(MenuSettingsPath);
+        ApplyMenuSettings();
+        var start = StartPage();
+        Nav.SelectedItem = FindItem(MenuSettings.IsVisible(start) ? start : "OrdersPage");
+    }
+
+    // ---------- Ẩn / hiện mục menu (trang Cài đặt) ----------
+
+    public Core.MenuSettings MenuSettings { get; }
+
+    private static string MenuSettingsPath => System.IO.Path.Combine(AppServices.Database.Folder, Core.MenuSettings.FileName);
+
+    /// <summary>1 mục menu ẩn được: nhóm (tiêu đề phía trên nó), tên, tag trang.</summary>
+    public sealed record MenuEntry(string Group, string Name, string Page);
+
+    public IReadOnlyList<MenuEntry> MenuEntries()
+    {
+        var entries = new List<MenuEntry>();
+        var group = string.Empty;
+        foreach (var item in Nav.MenuItems)
+        {
+            if (item is NavigationViewItemHeader header)
+            {
+                group = header.Content as string ?? string.Empty;
+            }
+            else if (item is NavigationViewItem { Tag: string tag, Content: string name })
+            {
+                entries.Add(new MenuEntry(group, name, tag));
+            }
+        }
+        return entries;
+    }
+
+    public void SetMenuVisible(string page, bool visible)
+    {
+        MenuSettings.SetVisible(page, visible);
+        SaveMenuSettings();
+    }
+
+    public void ShowAllMenu()
+    {
+        MenuSettings.ShowAll();
+        SaveMenuSettings();
+    }
+
+    private void SaveMenuSettings()
+    {
+        try
+        {
+            MenuSettings.Save(MenuSettingsPath);
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("App").LogError(ex, "Không lưu được cài đặt menu");
+        }
+        ApplyMenuSettings();
+    }
+
+    /// <summary>Ẩn mục bị bỏ tích; tiêu đề nhóm ẩn khi cả nhóm không còn mục nào hiện.</summary>
+    private void ApplyMenuSettings()
+    {
+        NavigationViewItemHeader? header = null;
+        var groupVisible = false;
+        void CloseGroup()
+        {
+            if (header is not null)
+            {
+                header.Visibility = groupVisible ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }
+        foreach (var item in Nav.MenuItems)
+        {
+            if (item is NavigationViewItemHeader next)
+            {
+                CloseGroup();
+                header = next;
+                groupVisible = false;
+            }
+            else if (item is NavigationViewItem { Tag: string tag } menuItem)
+            {
+                var visible = MenuSettings.IsVisible(tag);
+                menuItem.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
+                groupVisible |= visible;
+            }
+        }
+        CloseGroup();
     }
 
     /// <summary>Chưa có dữ liệu (lần đầu mở) → vào thẳng trang Nhập dữ liệu; có rồi → Đặt hàng.</summary>
@@ -52,7 +137,16 @@ public sealed partial class MainWindow : Window
     {
         if (FindItem(tag) is { } item)
         {
-            Nav.SelectedItem = item;
+            if (item.Visibility == Visibility.Visible)
+            {
+                Nav.SelectedItem = item;
+            }
+            else
+            {
+                // mục đang bị ẩn (Cài đặt): vẫn mở trang, menu không chọn mục nào
+                Nav.SelectedItem = null;
+                NavigateFromMenu(tag);
+            }
         }
     }
 
