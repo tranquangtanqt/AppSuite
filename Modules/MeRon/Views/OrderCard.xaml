@@ -24,9 +24,10 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{x:Bind Card.CustomerName, Mode=OneWay}" FontWeight="SemiBold" FontSize="16" TextTrimming="CharacterEllipsis"
+                <TextBlock x:Name="CustomerText" Text="{x:Bind Card.CustomerName, Mode=OneWay}" FontWeight="SemiBold" FontSize="16" TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Opacity="0.75">
+                <!-- ShowCustomer=False (Chi tiết): ẩn tên, khối ngày giao chuyển sang cột đầu -->
+                <StackPanel x:Name="DeliveryPanel" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Opacity="0.75">
                     <FontIcon Glyph="&#xE787;" FontSize="13" />
                     <TextBlock Text="{x:Bind Card.DeliveryText, Mode=OneWay}" FontSize="13" />
                 </StackPanel>

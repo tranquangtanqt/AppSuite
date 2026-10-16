@@ -10,6 +10,10 @@ public sealed partial class OrderCard : UserControl
     public static readonly DependencyProperty CardProperty = DependencyProperty.Register(
         nameof(Card), typeof(OrderCardViewModel), typeof(OrderCard), new PropertyMetadata(null, (d, _) => ((OrderCard)d).Bindings.Update()));
 
+    /// <summary>False: không hiện tên khách trên thẻ (trang Chi tiết đã có tên ở đầu nhóm) - ngày giao lên đầu thẻ.</summary>
+    public static readonly DependencyProperty ShowCustomerProperty = DependencyProperty.Register(
+        nameof(ShowCustomer), typeof(bool), typeof(OrderCard), new PropertyMetadata(true, (d, _) => ((OrderCard)d).ApplyShowCustomer()));
+
     public OrderCard()
     {
         InitializeComponent();
@@ -20,6 +24,18 @@ public sealed partial class OrderCard : UserControl
     {
         get => (OrderCardViewModel)GetValue(CardProperty);
         set => SetValue(CardProperty, value);
+    }
+
+    public bool ShowCustomer
+    {
+        get => (bool)GetValue(ShowCustomerProperty);
+        set => SetValue(ShowCustomerProperty, value);
+    }
+
+    private void ApplyShowCustomer()
+    {
+        CustomerText.Visibility = ShowCustomer ? Visibility.Visible : Visibility.Collapsed;
+        Grid.SetColumn(DeliveryPanel, ShowCustomer ? 1 : 0);
     }
 
     /// <summary>

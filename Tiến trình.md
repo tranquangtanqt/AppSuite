@@ -292,6 +292,7 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Trang Cài đặt (cuối menu): ẩn / hiện từng mục menu trái bằng ô tích theo nhóm, nhóm ẩn hết thì ẩn tiêu đề, Hiện tất
   cả; Đặt hàng luôn hiện; lưu settings.json cạnh database (nhập backup không mất). Cập nhật F1, README (2026-10-16)
 - [x] Thẻ đơn: số Tổng nhỏ lại (17 → 14, bằng dòng món), giữ màu cam + đậm (2026-10-16)
+- [x] Chi tiết: tên khách chỉ hiện 1 lần ở đầu khung, các thẻ đơn trong khung bỏ tên (ngày giao lên đầu thẻ) (2026-10-16)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
 - [ ] App điện thoại me-ron: 25 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + chức năng
