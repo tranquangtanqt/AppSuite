@@ -338,7 +338,7 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] App điện thoại me-ron: 25 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + chức năng
   bản máy tính đã có: Sao chép đơn / Đặt lại, ô chọn món gõ để lọc, Khách lâu không đặt, giữ bộ lọc, nhập cả bộ backup
   từ Google Drive một lần, cảnh báo thay đổi chưa xuất trước khi nhập, chọn bản backup bất kỳ, số liệu thêm ở Thống kê) ghi
-  ở `Modules/MeRon/MOBILE_TODO.md` (2026-10-13, thêm mục F 2026-10-14, mục G + điểm 23–25 2026-10-15)
+  ở `Modules/MeRon/MOBILE_TODO.md` (2026-10-13, thêm mục F 2026-10-14, mục G + điểm 23–25 2026-10-15, điểm 26–32 2026-10-19: Lần trước + Chép vào đơn, Lưu và thêm mới / Lưu và chép cho khách khác, con trỏ đúng chỗ trong form đơn, tên khách 1 lần ở Chi tiết, ẩn / hiện menu, Thông tin dữ liệu + Dọn / Khôi phục, Biểu đồ)
 
 ## MainLauncher
 

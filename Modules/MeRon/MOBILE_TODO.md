@@ -1,7 +1,7 @@
 # App điện thoại me-ron: các điểm nên cải thiện
 
 Ghi lại từ lúc port sang MeRon (máy tính), 2026-10-12 → 14. Mục A–E: bản máy tính đã tránh / sửa các điểm này; mục F:
-chức năng bản máy tính đã có mà điện thoại chưa có (thêm điểm 23–25 ngày 2026-10-15); mục G: chức năng mới cho điện thoại. Mỗi mục ghi:
+chức năng bản máy tính đã có mà điện thoại chưa có (thêm điểm 23–25 ngày 2026-10-15, 26–32 ngày 2026-10-19); mục G: chức năng mới cho điện thoại. Mỗi mục ghi:
 hiện tượng, hậu quả và cách sửa gợi ý. File Flutter nằm ở `D:\tantq\src\me-ron\lib`.
 
 ## A. Lỗi làm sai số liệu (nên sửa trước)
@@ -134,3 +134,57 @@ Thêm 2026-10-15.
     Giao diện thẻ đơn bản máy tính (2026-10-15) khác điện thoại: thêm vạch màu trạng thái bên trái + nhãn trạng thái tròn;
     Đã thanh toán nền xanh, Đã lên đơn nền trắng (như điện thoại), **Huỷ nền xám + chữ mờ** (điện thoại: nền đỏ) - người
     dùng chọn kiểu này vì nhìn lướt dễ phân biệt hơn.
+
+## F (tiếp). Thêm 2026-10-19 - bản máy tính làm 2026-10-16 → 19, điện thoại chưa có
+
+Không ghi phần chỉ hợp với bàn phím máy tính (Tab / ↑↓ chọn gợi ý, phím tắt). Theo thứ tự nên làm: 26–28 giúp ghi đơn nhanh
+hơn mỗi ngày, 29–32 là màn mới / tiện ích.
+
+26. **"Lần trước" trong form thêm đơn.** Chọn khách xong, dưới ô khách hiện 1 dòng đơn gần nhất của khách (theo ngày giao,
+    bỏ đơn Huỷ): "Lần trước (12/10): 2 Bánh bao, 1 Chè · 34.000 đ" (tối đa 4 món, còn lại ghi "+N món") + nút **Chép vào
+    đơn**: chép món + số lượng như Sao chép đơn (mục 18: giá hiện tại, món không còn → món tự do, báo khi giá đổi); giảm
+    giá / ghi chú chỉ chép khi ô đang trống; khách, ngày giao, thanh toán giữ nguyên; đơn đã có món thì hỏi "Thay các món
+    đang có?". Khách quen đặt lại y hệt chỉ còn: chọn khách → Chép vào đơn → Lưu.
+    → `order_form_screen.dart`: khi đổi khách, truy vấn `SELECT … FROM Orders WHERE userId = ? AND status <> Huỷ ORDER BY
+    ngày giao DESC LIMIT 1` (so ngày theo thời điểm, xem mục 1). (bản máy tính: `Core\Orders\LastOrderHint.cs`,
+    `OrderRepository.GetLastOrder`)
+27. **Lưu xong nhập tiếp, không quay về danh sách** - 2 nút mới ở cuối form thêm đơn:
+    - **Lưu và thêm mới**: lưu rồi mở form trống, giữ ngày giao vừa nhập (ghi nhiều đơn cùng ngày giao);
+    - **Lưu và chép cho khách khác**: lưu rồi mở form mới giống hệt đơn vừa lưu (món, số lượng, giảm giá, ngày giao, ghi
+      chú, Đã thanh toán trước) nhưng **bỏ trống khách** để chọn khách khác - nhiều khách đặt cùng 1 thứ (vd cả phòng đặt
+      giống nhau).
+
+    Form mới thay chỗ form cũ trong lịch sử (Back về thẳng danh sách); vẫn hỏi "Cảnh báo trùng đơn" như Lưu thường. Form
+    sửa đơn không hiện 2 nút. → `context.pushReplacement` sang form mới với tham số (ngày giao / id đơn vừa lưu + cờ "bỏ
+    khách"). (bản máy tính: `OrderFormArgs.ForOtherCustomer`, `OrderFormViewModel.SavedId`)
+28. **Form đơn đưa con trỏ đúng chỗ.** Thêm đơn (nút +, Sao chép đơn, Lưu và thêm mới): con trỏ ở sẵn ô Khách hàng và hiện
+    luôn danh sách khách khi ô trống; chọn món xong con trỏ sang ô Số lượng của dòng đó, số cũ bôi đen để gõ đè; Thêm
+    món tự do → con trỏ ở ô Tên, "Tiếp" trên bàn phím → ô Đơn giá. Sửa đơn thì không tự mở bàn phím.
+    → `autofocus` / `FocusNode.requestFocus()` + `textInputAction: TextInputAction.next`, chọn hết chữ bằng
+    `TextSelection(baseOffset: 0, extentOffset: text.length)` khi vào ô số.
+29. **Chi tiết đơn của 1 khách: tên khách chỉ hiện 1 lần** ở đầu khung, các thẻ đơn trong khung bỏ tên (ngày giao lên đầu
+    thẻ) - đỡ lặp, nhìn được nhiều đơn hơn. Điện thoại đang ghi tên trên từng thẻ (`order_detail_screen.dart`).
+30. **Ẩn / hiện mục menu** (Cài đặt): ô tích từng mục theo nhóm (Bán hàng, Thống kê, Danh mục, Dữ liệu), nhóm ẩn hết thì
+    ẩn luôn tiêu đề nhóm, nút "Hiện tất cả"; Đặt hàng luôn hiện. Lưu riêng ngoài database nên nhập backup không mất.
+    Hợp với người chỉ dùng vài màn. → `shared_preferences`; menu ở `main_screen.dart` / `setting_screen.dart`. (bản máy
+    tính: `Core\MenuSettings.cs`)
+31. **Thông tin dữ liệu + Dọn dữ liệu cũ + Khôi phục** (màn mới trong Cài đặt). Database điện thoại lớn dần, các màn chậm
+    (mục 14), mà chưa có cách xoá bớt an toàn.
+    - Tổng quan: số dòng 8 bảng, khoảng ngày đơn / phiếu nhập, khách chưa có đơn, món chưa bán; theo năm (số đơn, huỷ, tiền
+      bán, phiếu nhập, tiền mua), chạm 1 năm mở 12 tháng.
+    - Dọn đơn / phiếu nhập trước 1 mốc (trước năm nay / 1 năm / 2 năm / ngày tự chọn), xem trước số dòng + tiền; **luôn giữ
+      đơn chưa thanh toán** (khách / món của các đơn đó cũng giữ); tuỳ chọn xoá khách / món không còn dùng.
+    - An toàn: trước khi xoá **tự xuất TSV phần sắp xoá** vào thư mục "Truoc khi don" (lỗi xuất = không xoá) + chép file
+      `.db`; xoá trong 1 transaction; xong nhắc xuất backup sang máy khác.
+    - **Khôi phục phần đã dọn**: chọn 1 lần dọn → thêm lại các dòng còn thiếu (id bị chiếm → id mới; khách / món trùng tên →
+      nối vào cái đang có), chép `.db` trước khi khôi phục.
+
+    (bản máy tính: `Core\Data\DataMaintenance.cs`)
+32. **Biểu đồ** (Thống kê), chỉ dữ liệu đơn hàng, không tính Huỷ, mặc định 30 ngày qua:
+    - 4 ô số: doanh thu, số đơn, TB mỗi đơn, số khách - kèm % tăng / giảm so với kỳ trước cùng độ dài;
+    - doanh thu theo ngày / tuần / tháng (tự chọn theo độ dài khoảng ngày);
+    - số đơn theo thứ trong tuần; khách mới / quay lại (cột chồng); 10 món bán chạy;
+    - chạm vào cột xem số; công tắc "Bảng số liệu" hiện bảng thay biểu đồ.
+
+    → `fl_chart` (pubspec chưa có thư viện biểu đồ). Số liệu tính bằng SQL `GROUP BY` như mục 15. (bản máy tính:
+    `Core\Reports\ChartReport.cs`, `Views\Charts.cs`; màu theo bảng màu đã kiểm tra cả nền sáng / tối)
