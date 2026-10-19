@@ -189,6 +189,9 @@ public sealed partial class OrderFormViewModel : ObservableObject
 
     public bool IsEdit => Id != 0;
 
+    /// <summary>Form thêm đơn: hiện nút Lưu và thêm mới / Lưu và chép cho khách khác.</summary>
+    public bool IsNew => !IsEdit;
+
     public OrderStatus OriginalStatus { get; private set; } = OrderStatus.Shipping;
 
     /// <summary>Đơn mới đang chép từ đơn này (Sao chép đơn); null = không phải bản sao.</summary>
@@ -293,11 +296,12 @@ public sealed partial class OrderFormViewModel : ObservableObject
             Id = 0;
             CopiedFromId = copyId;
             OriginalStatus = OrderStatus.Shipping;
-            Customer = Customers.FirstOrDefault(c => c.Id == draft.UserId);
+            // Lưu và chép cho khách khác: bỏ trống khách để nhập khách mới, giữ cả Đã thanh toán trước của đơn vừa lưu.
+            Customer = args.ForOtherCustomer ? null : Customers.FirstOrDefault(c => c.Id == draft.UserId);
             _originalDelivery = draft.Delivery;
             DeliveryDate = new DateTimeOffset(_originalDelivery.Date);
-            IsPrepaid = false;
-            PaymentDate = null;
+            IsPrepaid = args.ForOtherCustomer && source.Status == OrderStatus.Completed;
+            PaymentDate = IsPrepaid ? DeliveryDate : null;
             _originalPayment = null;
             Discount = draft.Discount;
             Note = draft.Note ?? string.Empty;
@@ -430,11 +434,15 @@ public sealed partial class OrderFormViewModel : ObservableObject
         return draft.UserId is { } userId && _orders.HasOtherOrderSameDay(userId, DateOnly.FromDateTime(draft.Delivery), Id);
     }
 
+    /// <summary>Id của đơn vừa lưu (Lưu và chép cho khách khác chép từ đơn này).</summary>
+    public long SavedId { get; private set; }
+
     public bool Save()
     {
         var error = AppServices.Try("Lưu đơn hàng", () =>
         {
             var id = _orders.Save(BuildDraft(), ProductMap);
+            SavedId = id;
             AppLog.For("Orders").LogInformation("{Action} đơn {Id}", IsEdit ? "Sửa" : "Thêm", id);
         });
         Error = error ?? string.Empty;

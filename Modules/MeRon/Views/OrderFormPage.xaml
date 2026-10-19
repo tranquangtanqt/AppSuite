@@ -202,6 +202,22 @@
                         <KeyboardAccelerator Modifiers="Control" Key="S" />
                     </Button.KeyboardAccelerators>
                 </Button>
+                <!-- Chỉ ở form thêm: lưu xong nhập tiếp đơn khác. -->
+                <Button Click="SaveNew_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsNew), Mode=OneWay}"
+                        AutomationProperties.Name="Lưu và thêm mới" ToolTipService.ToolTip="Lưu rồi mở luôn đơn mới trống, cùng ngày giao (Ctrl+Shift+N)">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <SymbolIcon Symbol="Add" />
+                        <TextBlock Text="Lưu và thêm mới" />
+                    </StackPanel>
+                </Button>
+                <Button Click="SaveCopy_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsNew), Mode=OneWay}"
+                        AutomationProperties.Name="Lưu và chép cho khách khác"
+                        ToolTipService.ToolTip="Lưu rồi mở đơn mới giống hệt đơn này (món, số lượng, giảm giá, ngày giao, ghi chú) nhưng bỏ trống khách để chọn khách khác (Ctrl+Shift+K)">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <SymbolIcon Symbol="Copy" />
+                        <TextBlock Text="Lưu và chép cho khách khác" />
+                    </StackPanel>
+                </Button>
                 <Button Content="Quay lại" Click="Back_Click" />
                 <Button Click="CopyOrder_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsEdit), Mode=OneWay}" Margin="24,0,0,0"
                         AutomationProperties.Name="Sao chép đơn" ToolTipService.ToolTip="Tạo đơn mới giống đơn này (cùng ngày giao, giá hiện tại) - không lưu đơn đang sửa">

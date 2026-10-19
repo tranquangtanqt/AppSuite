@@ -324,6 +324,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   thường). GUI Sandbox gõ phím thật 25/25 (4 dòng 3,2,4,5 + lưu được), bộ Tab / ↑↓ 24/25 (ca còn lại do test đọc thứ tự
   UIA khi danh sách mở lên trên). Cảnh báo trùng đơn bằng phím: Enter / Esc = Huỷ, Tab / ← → Vẫn lưu + Enter = lưu (GUI
   7/7). F1 thêm mục "Nhập đơn chỉ bằng bàn phím" + "Chọn trong danh sách gợi ý" (Phím tắt). Cập nhật F1, README (2026-10-19)
+- [x] Form thêm đơn: 2 nút mới ở cuối trang + phím tắt - **Lưu và thêm mới** (Ctrl+Shift+N, có từ trước: đơn mới trống,
+  cùng ngày giao) và **Lưu và chép cho khách khác** (Ctrl+Shift+K: đơn mới giống đơn vừa lưu - món, số lượng, giảm giá,
+  ngày giao, ghi chú, đã thanh toán trước - bỏ trống khách, con trỏ ở ô Khách hàng). Form sửa không hiện 2 nút (phím vẫn
+  dùng được). GUI Sandbox 18/19 (1 ca do dữ liệu test: gõ "thuy" ra lại đúng khách cũ). Cập nhật F1, README (2026-10-19)
 - [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

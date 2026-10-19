@@ -17,7 +17,8 @@ public sealed partial class OrderFormPage : Page
         // Chọn được khách (bấm gợi ý / Enter / Tab) → con trỏ sang nút Thêm món (Enter / Space là thêm dòng, gõ món luôn).
         CustomerSuggest.Attach(CustomerBox, () => ViewModel.Customers, () => ViewModel.Customer, c => ViewModel.Customer = c, FocusAddLine);
         Shortcuts.Ctrl(this, VirtualKey.M, AddLine);
-        Shortcuts.Add(this, VirtualKey.N, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => _ = SaveAsync(thenNew: true));
+        Shortcuts.Add(this, VirtualKey.N, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => _ = SaveAsync(AfterSave.New));
+        Shortcuts.Add(this, VirtualKey.K, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => _ = SaveAsync(AfterSave.CopyForOtherCustomer));
         Shortcuts.Add(this, VirtualKey.C, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () =>
         {
             if (ViewModel.IsEdit)
@@ -165,11 +166,19 @@ public sealed partial class OrderFormPage : Page
     }
 
     /// <summary>Kiểm tra → (trùng đơn cùng ngày thì hỏi "Cảnh báo trùng đơn": Hủy / Vẫn lưu) → lưu → quay lại danh sách.</summary>
-    private async void Save_Click(object sender, RoutedEventArgs e) => await SaveAsync(thenNew: false);
+    private async void Save_Click(object sender, RoutedEventArgs e) => await SaveAsync(AfterSave.Back);
 
-    /// <param name="thenNew">Ctrl+Shift+N: lưu xong mở luôn form đơn mới (cùng ngày giao) để nhập liên tiếp; form mới thay chỗ form này
-    /// trong lịch sử (Quay lại về thẳng danh sách).</param>
-    private async Task SaveAsync(bool thenNew)
+    private async void SaveNew_Click(object sender, RoutedEventArgs e) => await SaveAsync(AfterSave.New);
+
+    private async void SaveCopy_Click(object sender, RoutedEventArgs e) => await SaveAsync(AfterSave.CopyForOtherCustomer);
+
+    /// <summary>Lưu xong thì: về danh sách / mở form đơn mới trống (Ctrl+Shift+N, cùng ngày giao) để nhập liên tiếp /
+    /// mở form đơn mới chép đơn vừa lưu nhưng bỏ trống khách (Ctrl+Shift+K) - nhiều khách đặt giống nhau.</summary>
+    private enum AfterSave { Back, New, CopyForOtherCustomer }
+
+    /// <param name="after">New / CopyForOtherCustomer: form mới thay chỗ form này trong lịch sử (Quay lại về thẳng danh sách);
+    /// con trỏ vào sẵn ô Khách hàng.</param>
+    private async Task SaveAsync(AfterSave after)
     {
         // Ctrl+S khi con trỏ còn trong 1 ô (khách hàng, số tiền...) → chuyển focus để ô đó ghi nhận giá trị trước khi đọc.
         SaveButton.Focus(FocusState.Programmatic);
@@ -189,14 +198,18 @@ public sealed partial class OrderFormPage : Page
         {
             return;
         }
-        if (thenNew)
+        switch (after)
         {
-            var day = ViewModel.DeliveryDate is { } d ? DateOnly.FromDateTime(d.Date) : (DateOnly?)null;
-            ReplaceWithForm(new OrderFormArgs(null, InitialDelivery: day));
-        }
-        else
-        {
-            GoBack();
+            case AfterSave.New:
+                var day = ViewModel.DeliveryDate is { } d ? DateOnly.FromDateTime(d.Date) : (DateOnly?)null;
+                ReplaceWithForm(new OrderFormArgs(null, InitialDelivery: day));
+                break;
+            case AfterSave.CopyForOtherCustomer:
+                ReplaceWithForm(new OrderFormArgs(null, CopyFromId: ViewModel.SavedId, ForOtherCustomer: true));
+                break;
+            default:
+                GoBack();
+                break;
         }
     }
 

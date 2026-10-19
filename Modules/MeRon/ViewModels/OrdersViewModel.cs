@@ -9,8 +9,10 @@ namespace MeRon.ViewModels;
 
 /// <summary>Tham số mở form đơn: <see cref="OrderId"/> null = đơn mới (điền sẵn khách / ngày giao theo bộ lọc đang chọn);
 /// <see cref="CopyFromId"/> = đơn mới chép từ đơn đó (Sao chép đơn), giữ ngày giao của đơn gốc;
-/// kèm <see cref="InitialDelivery"/> thì giao ngày đó (Đặt lại như lần trước ở trang Khách lâu không đặt).</summary>
-public sealed record OrderFormArgs(long? OrderId, long? InitialUserId = null, DateOnly? InitialDelivery = null, long? CopyFromId = null);
+/// kèm <see cref="InitialDelivery"/> thì giao ngày đó (Đặt lại như lần trước ở trang Khách lâu không đặt);
+/// kèm <see cref="ForOtherCustomer"/> thì bỏ trống khách, giữ cả Đã thanh toán trước (Lưu và chép cho khách khác).</summary>
+public sealed record OrderFormArgs(long? OrderId, long? InitialUserId = null, DateOnly? InitialDelivery = null, long? CopyFromId = null,
+    bool ForOtherCustomer = false);
 
 /// <summary>Tham số màn Chi tiết: bộ lọc của danh sách đơn (hoặc của báo cáo, Đợt 3).</summary>
 public sealed record OrderDetailArgs(OrderFilter Filter);
