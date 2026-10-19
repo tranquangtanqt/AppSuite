@@ -312,6 +312,17 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   tắc Bảng số liệu; mặc định 30 ngày qua. Màu đã chạy validate_palette (sáng + tối). Unit test 135/135 (10 mới); GUI
   Sandbox backup thật 11/11 (tổng đơn các tuần = 2.616), tổng quát 37/37, Cài đặt 21/21. Cập nhật F1, README
   (2026-10-16) - chờ thử tay, xem nền tối
+- [x] Ô chọn khách (form đơn, lọc Đặt hàng / Theo đơn hàng) và ô chọn món: **Tab** = chọn gợi ý đầu như Enter (trước: Tab
+  chỉ nhận khi gõ đủ tên, còn lại khách trả về cũ / món báo lỗi); **↑ / ↓** tô gợi ý rồi **Enter / Tab** chọn đúng gợi ý
+  đang tô (khách trùng tên cũng đúng người). Ô món: Tab chọn xong con trỏ sang Số lượng, Shift+Tab chọn rồi lùi; gõ sai +
+  Tab vẫn báo lỗi. GUI Sandbox gõ phím thật 24/25 (1 ca do test đọc thứ tự UIA khi danh sách mở lên trên - app chọn
+  đúng). Cập nhật F1, README (2026-10-19)
+- [x] Danh sách gợi ý (ô khách / ô món) mở **lên trên** (dòng món ở thấp, cửa sổ nhỏ): WinUI đảo thứ tự và có lúc cuộn
+  khuất gợi ý đầu → nay luôn cuộn tới gợi ý đầu (nằm sát ô) - đúng cái Enter / Tab sẽ chọn (`SuggestionList.cs`) (2026-10-19)
+- [x] Nhập đơn liên tục bằng bàn phím: chọn khách (Enter / Tab / bấm gợi ý) → con trỏ sang nút **Thêm món**; Enter / Space
+  thêm dòng → gõ món, Tab / Enter → Số lượng → gõ số, **Enter / Tab → nút Thêm món** để thêm món tiếp (Shift+Tab lùi như
+  thường). GUI Sandbox gõ phím thật 25/25 (4 dòng 3,2,4,5 + lưu được), bộ Tab / ↑↓ 24/25 (ca còn lại do test đọc thứ tự
+  UIA khi danh sách mở lên trên). Cập nhật F1, README (2026-10-19)
 - [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

@@ -125,7 +125,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Command="{x:Bind ViewModel.AddLineCommand}" Click="AddLine_Click" AutomationProperties.Name="Thêm món">
+                        <Button x:Name="AddLineButton" Command="{x:Bind ViewModel.AddLineCommand}" Click="AddLine_Click" AutomationProperties.Name="Thêm món">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <SymbolIcon Symbol="Add" />
                                 <TextBlock Text="Thêm món" />

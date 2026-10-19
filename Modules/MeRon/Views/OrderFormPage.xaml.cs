@@ -14,7 +14,8 @@ public sealed partial class OrderFormPage : Page
     public OrderFormPage()
     {
         InitializeComponent();
-        CustomerSuggest.Attach(CustomerBox, () => ViewModel.Customers, () => ViewModel.Customer, c => ViewModel.Customer = c);
+        // Chọn được khách (bấm gợi ý / Enter / Tab) → con trỏ sang nút Thêm món (Enter / Space là thêm dòng, gõ món luôn).
+        CustomerSuggest.Attach(CustomerBox, () => ViewModel.Customers, () => ViewModel.Customer, c => ViewModel.Customer = c, FocusAddLine);
         Shortcuts.Ctrl(this, VirtualKey.M, AddLine);
         Shortcuts.Add(this, VirtualKey.N, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => _ = SaveAsync(thenNew: true));
         Shortcuts.Add(this, VirtualKey.C, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () =>
@@ -66,10 +67,35 @@ public sealed partial class OrderFormPage : Page
         if (sender is NumberBox { DataContext: OrderLineViewModel line } box)
         {
             LiveNumberBox.Attach(box, line.PreviewQuantity, TextAlignment.Center);
+            // Nhập xong số lượng: Enter / Tab → con trỏ sang nút Thêm món để thêm món tiếp (Shift+Tab lùi như thường).
+            // Enter: NumberBox tự xử lý (ghi số) rồi mới tới đây → nghe cả sự kiện đã Handled.
+            box.AddHandler(KeyDownEvent, new Microsoft.UI.Xaml.Input.KeyEventHandler((_, args) =>
+            {
+                if (args.Key == VirtualKey.Enter)
+                {
+                    args.Handled = true;
+                    FocusAddLine();
+                }
+            }), handledEventsToo: true);
+            box.PreviewKeyDown += (_, args) =>
+            {
+                if (args.Key == VirtualKey.Tab && !SuggestionList.IsShiftDown())
+                {
+                    args.Handled = true;
+                    FocusAddLine();
+                }
+            };
         }
     }
 
-    /// <summary>Chọn được món (bấm gợi ý / Enter) → con trỏ sang ô Số lượng cùng dòng.</summary>
+    private void FocusAddLine() =>
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+        {
+            AddLineButton.StartBringIntoView();
+            AddLineButton.Focus(FocusState.Keyboard);
+        });
+
+    /// <summary>Chọn được món (bấm gợi ý / Enter / Tab) → con trỏ sang ô Số lượng cùng dòng.</summary>
     private void ProductBox_Loaded(object sender, RoutedEventArgs e)
     {
         var box = (AutoSuggestBox)sender;

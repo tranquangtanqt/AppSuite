@@ -3,12 +3,13 @@ using MeRon.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Windows.System;
 
 namespace MeRon.Views;
 
 /// <summary>
 /// Ô chọn món của 1 dòng đơn kiểu autocomplete: gõ (không phân biệt dấu, các từ không cần liền nhau: "bao xiu") → chọn
-/// trong gợi ý (tên · giá); Enter chọn gợi ý đầu. BẮT BUỘC chọn 1 món trong danh sách: rời ô mà chữ không phải tên 1 món
+/// trong gợi ý (tên · giá); ↑ / ↓ tô gợi ý, Enter / Tab chọn gợi ý đang tô (chưa tô = gợi ý đầu). BẮT BUỘC chọn 1 món trong danh sách: rời ô mà chữ không phải tên 1 món
 /// → giữ nguyên chữ, bỏ món đang chọn, báo lỗi đỏ dưới ô (Lưu cũng báo và đưa con trỏ về đây). Món tự do là dòng riêng,
 /// không đi qua ô này.
 /// </summary>
@@ -17,7 +18,7 @@ internal static class ProductSuggest
     private const int MaxSuggestions = 50;
 
     /// <summary>Gắn trong Loaded của ô (ô nằm trong DataTemplate, DataContext = dòng). Gắn 1 lần / ô.
-    /// <paramref name="onChosen"/>: gọi sau khi chọn được món (bấm gợi ý / Enter) - form đưa con trỏ sang ô Số lượng.</summary>
+    /// <paramref name="onChosen"/>: gọi sau khi chọn được món (bấm gợi ý / Enter / Tab) - form đưa con trỏ sang ô Số lượng.</summary>
     public static void Attach(AutoSuggestBox box, Action? onChosen = null)
     {
         if (box.Tag is "attached" || box.DataContext is not OrderLineViewModel line)
@@ -34,14 +35,56 @@ internal static class ProductSuggest
         ProductOption? Exact(string text) =>
             line.Products.FirstOrDefault(p => TextSearch.Fold(p.Name).Trim() == TextSearch.Fold(text).Trim()); // dữ liệu có tên thừa dấu cách ("Chè ")
 
+        // Gợi ý đang tô bằng ↑ / ↓ (ô hiện tên của nó); gõ tiếp thì bỏ.
+        ProductOption? highlighted = null;
+        box.SuggestionChosen += (_, args) => highlighted = args.SelectedItem as ProductOption;
+
+        // Tab: nhận gợi ý đang tô bằng ↑ / ↓, chưa tô thì món trùng tên / gợi ý đầu (như Enter) → con trỏ sang Số lượng.
+        // Shift+Tab: cũng nhận nhưng con trỏ lùi như thường. Không ra món nào → để LostFocus báo lỗi.
+        box.PreviewKeyDown += (_, e) =>
+        {
+            if (e.Key != VirtualKey.Tab || string.IsNullOrWhiteSpace(box.Text))
+            {
+                return;
+            }
+            ProductOption? pick;
+            if (highlighted is not null && highlighted.Name == box.Text)
+            {
+                pick = highlighted;
+            }
+            else if (line.SelectedProduct is { } selected && selected.Name == box.Text)
+            {
+                return;
+            }
+            else
+            {
+                pick = Exact(box.Text) ?? Matches(box.Text).FirstOrDefault();
+            }
+            if (pick is null)
+            {
+                return;
+            }
+            highlighted = null;
+            box.Text = pick.Name;
+            line.ChooseProduct(pick);
+            box.IsSuggestionListOpen = false;
+            if (!SuggestionList.IsShiftDown())
+            {
+                e.Handled = true;
+                onChosen?.Invoke();
+            }
+        };
+
         box.TextChanged += (sender, args) =>
         {
             if (args.Reason != AutoSuggestionBoxTextChangeReason.UserInput)
             {
                 return;
             }
+            highlighted = null;
             var matches = Matches(sender.Text);
             sender.ItemsSource = matches;
+            SuggestionList.ShowFirst(sender);
             // Báo ngay khi gõ không ra món nào; gõ lại ra món thì tắt lỗi (chưa chọn thì Lưu vẫn báo).
             if (matches.Count == 0 && !string.IsNullOrWhiteSpace(sender.Text))
             {
@@ -65,6 +108,7 @@ internal static class ProductSuggest
                 line.RejectProductText(args.QueryText);
                 return;
             }
+            highlighted = null;
             sender.Text = chosen.Name;
             line.ChooseProduct(chosen);
             sender.IsSuggestionListOpen = false;
@@ -79,6 +123,7 @@ internal static class ProductSuggest
             {
                 box.ItemsSource = Matches(string.Empty);
                 box.IsSuggestionListOpen = true;
+                SuggestionList.ShowFirst(box);
             }
         });
 
