@@ -43,7 +43,8 @@ public static class HelpContent
             new("Làm mới", "Trang Đặt hàng: đọc lại danh sách.", "F5"),
             new("Lưu", "Form đơn / phiếu nhập.", "Ctrl+S"),
             new("Lưu và thêm đơn mới", "Form đơn: lưu xong mở luôn form đơn mới cùng ngày giao - nhập liên tiếp nhiều đơn.", "Ctrl+Shift+N"),
-            new("Thêm món / thêm hàng", "Form đơn: thêm dòng món, con trỏ vào ô món. Form phiếu nhập: thêm khoản, con trỏ vào ô Tên hàng.", "Ctrl+M"),
+            new("Chọn trong danh sách gợi ý", "Ô khách hàng, ô lọc theo khách, ô món: gõ vài chữ rồi Enter hoặc Tab = chọn gợi ý đầu; ↑ / ↓ tô gợi ý khác rồi Enter / Tab để chọn đúng gợi ý đó. Shift+Tab: chọn rồi lùi về ô trước.", "Enter", "Tab", "↑ / ↓"),
+            new("Thêm món / thêm hàng", "Form đơn: thêm dòng món, con trỏ vào ô món (hoặc Enter / Space khi con trỏ đang ở nút Thêm món). Form phiếu nhập: thêm khoản, con trỏ vào ô Tên hàng.", "Ctrl+M", "Enter", "Space"),
             new("Tăng / giảm số lượng", "Trong ô Số lượng: mũi tên lên = +1, xuống = −1.", "↑", "↓"),
             new("Sao chép đơn", "Form sửa đơn: như nút Sao chép đơn.", "Ctrl+Shift+C"),
             new("Ô ngày", "Gõ ngày rồi Enter; mũi tên lên / xuống = ±1 ngày; Alt+↓ hoặc F4 mở lịch.", "↑", "↓", "Alt+↓", "F4"),
@@ -64,6 +65,7 @@ public static class HelpContent
 
         new("Thêm / sửa đơn", "", "Form đơn hàng: khách, các món, giảm giá, ngày giao, thanh toán, ghi chú.", "OrderFormPage",
         [
+            new("Nhập đơn chỉ bằng bàn phím", "Gõ khách (↑ / ↓ nếu muốn khách khác) → Tab: chọn khách, con trỏ sang nút Thêm món → Enter / Space: thêm dòng → gõ món (↑ / ↓ nếu muốn) → Tab: sang Số lượng → gõ số → Enter: về nút Thêm món → Enter: thêm món tiếp… → Ctrl+S lưu. Ở ô khách / ô món, Enter và Tab như nhau; ở ô Số lượng cũng vậy. Hỏi Cảnh báo trùng đơn: con trỏ ở sẵn nút Huỷ (Enter hoặc Esc = huỷ, quay lại form); Tab (hoặc ←) sang Vẫn lưu rồi Enter để lưu.","Tab", "Enter", "Space", "Ctrl+S"),
             new("Khách hàng", "Gõ tên / số điện thoại rồi chọn: Enter hoặc Tab = khách đầu danh sách; ↑ / ↓ tô khách khác rồi Enter / Tab để chọn - chọn xong con trỏ sang nút Thêm món (Enter / Space để thêm dòng món). Bắt buộc. Thêm đơn mới (Thêm, Ctrl+N, Lưu và thêm mới, Sao chép đơn) thì con trỏ vào sẵn ô này, ô trống thì hiện luôn danh sách khách để chọn."),
             new("Thêm món", "Nút Thêm món hoặc Ctrl+M: thêm 1 dòng trống, con trỏ vào ngay ô Món và danh sách hiện sẵn tất cả các món (tên · giá). Số lượng bằng − / +, mũi tên lên / xuống trong ô, hoặc gõ thẳng số (nhỏ hơn 1 tự về 1). X = xoá dòng.", "Ctrl+M", "↑", "↓"),
             new("Gõ để chọn món", "Gõ vài chữ của tên món: không cần dấu, các từ không cần liền nhau (vd \"bao xiu\" → Bánh bao xá xíu/trứng sữa); món có tên bắt đầu bằng chữ vừa gõ lên đầu. Enter hoặc Tab = chọn món đầu danh sách; ↑ / ↓ tô món khác rồi Enter / Tab để chọn; hoặc bấm chuột vào món; chọn xong con trỏ nhảy sang ô Số lượng cùng dòng (số cũ bôi đen sẵn, gõ đè luôn); gõ số lượng xong Enter / Tab → con trỏ về nút Thêm món để thêm món tiếp (Enter / Space). Danh sách mở lên trên (dòng ở thấp) thì món đầu nằm sát ô. Gõ đủ tên món (không dấu cũng được) rồi rời ô thì tự nhận món đó.", "Enter", "Tab", "↑ / ↓"),
