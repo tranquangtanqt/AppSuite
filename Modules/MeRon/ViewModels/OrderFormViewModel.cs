@@ -215,7 +215,63 @@ public sealed partial class OrderFormViewModel : ObservableObject
     [ObservableProperty]
     private CustomerOption? _customer;
 
-    partial void OnCustomerChanged(CustomerOption? value) => Error = string.Empty;
+    partial void OnCustomerChanged(CustomerOption? value)
+    {
+        Error = string.Empty;
+        RefreshLastOrder();
+    }
+
+    // ---- "Lần trước" (2026-10-19): đơn gần nhất của khách đang chọn, chỉ ở form thêm đơn ----
+
+    private Order? _lastOrder;
+
+    /// <summary>"Lần trước (12/10): 2 Bánh bao, 1 Chè · 34.000 đ" - rỗng khi sửa đơn / chưa chọn khách / khách chưa có đơn.</summary>
+    public string LastOrderText { get; private set; } = string.Empty;
+
+    public bool HasLastOrder => _lastOrder is not null;
+
+    private void RefreshLastOrder()
+    {
+        _lastOrder = !IsEdit && Customer is { } customer ? _orders.GetLastOrder(customer.Id) : null;
+        LastOrderText = _lastOrder is { } order ? LastOrderHint.Text(order, ProductMap, DateTime.Today) : string.Empty;
+        OnPropertyChanged(nameof(LastOrderText));
+        OnPropertyChanged(nameof(HasLastOrder));
+    }
+
+    /// <summary>Form đã có dòng món nhập dở (đã chọn món / có tên món tự do) → chép "Lần trước" phải hỏi trước khi thay.</summary>
+    public int FilledLineCount => Lines.Count(l => l.IsFree ? !string.IsNullOrWhiteSpace(l.FreeName) : l.SelectedProduct is not null);
+
+    /// <summary>Chép các món của đơn lần trước vào đơn đang nhập (thay các dòng đang có), như Sao chép đơn: giá hiện tại, món
+    /// không còn → món tự do (báo ở đầu form). Giảm giá / ghi chú chỉ chép khi ô đang trống. Khách, ngày giao, thanh toán
+    /// giữ nguyên. False nếu không có đơn lần trước.</summary>
+    public bool ApplyLastOrder()
+    {
+        if (_lastOrder is not { } order)
+        {
+            return false;
+        }
+        var copy = OrderCopier.CopyAsNew(order, DateOnly.FromDateTime(DateTime.Today), ProductMap);
+        Lines.Clear();
+        foreach (var line in copy.Draft.Lines)
+        {
+            Lines.Add(new OrderLineViewModel(this, line));
+        }
+        if (DiscountValue == 0 && copy.Draft.Discount > 0)
+        {
+            Discount = copy.Draft.Discount;
+        }
+        if (string.IsNullOrWhiteSpace(Note) && !string.IsNullOrWhiteSpace(copy.Draft.Note))
+        {
+            Note = copy.Draft.Note!;
+        }
+        // Như Sao chép đơn: chỉ báo khi khác đơn gốc (giá đổi, món không còn).
+        CopyNotice = copy.Notices.Count == 0 ? string.Empty
+            : $"Khác đơn lần trước ({LastOrderHint.Day(order.Delivery, DateTime.Today)}): " + string.Join("; ", copy.Notices) + ".";
+        OnPropertyChanged(nameof(CopyNotice));
+        OnPropertyChanged(nameof(HasCopyNotice));
+        Recalculate();
+        return true;
+    }
 
     [ObservableProperty]
     private double _discount;
@@ -346,6 +402,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
             }
         }
         OnPropertyChanged(string.Empty);
+        RefreshLastOrder(); // Customer gán trước Id / danh mục món → tính lại khi form đã nạp xong
         Recalculate();
         if ((args.OrderId ?? args.CopyFromId) is not null && Id == 0 && CopiedFromId is null)
         {

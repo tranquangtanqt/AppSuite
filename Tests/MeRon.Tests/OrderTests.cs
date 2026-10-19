@@ -190,6 +190,47 @@ public class OrderRepositoryTests
     }
 
     [Fact]
+    public void Last_order_is_newest_delivery_of_the_customer_ignoring_cancelled_and_excluded()
+    {
+        using var temp = new TempFolder();
+        var (_, orders, products) = Setup(temp);
+
+        Assert.Equal(1, orders.GetLastOrder(1)!.Id);
+        Assert.Null(orders.GetLastOrder(1, excludeOrderId: 1));
+        Assert.Null(orders.GetLastOrder(999)); // khách chưa có đơn
+
+        // giao sau → thành "lần trước"; đơn tạo sau nhưng giao sớm hơn thì không
+        var later = orders.Save(new OrderDraft(0, 1, OrderStatus.Shipping, new DateTime(2026, 7, 1, 7, 0, 0), false, null, 0, null,
+            [new OrderLineDraft(2, 3)]), products);
+        orders.Save(new OrderDraft(0, 1, OrderStatus.Shipping, new DateTime(2026, 6, 1), false, null, 0, null,
+            [new OrderLineDraft(2, 1)]), products);
+        Assert.Equal(later, orders.GetLastOrder(1)!.Id);
+        Assert.Equal(3, orders.GetLastOrder(1)!.Items.Single().Quantity);
+
+        orders.SetStatus(later, OrderStatus.Cancelled); // đơn Huỷ không tính
+        Assert.Equal(1, orders.GetLastOrder(1)!.Id);
+    }
+
+    [Fact]
+    public void Last_order_hint_lists_items_with_current_names_and_caps_at_four()
+    {
+        using var temp = new TempFolder();
+        var (_, orders, products) = Setup(temp);
+        var today = new DateTime(2026, 10, 19);
+
+        var id = orders.Save(new OrderDraft(0, 2, OrderStatus.Shipping, new DateTime(2026, 10, 12, 7, 0, 0), false, null, 0, null,
+            [new OrderLineDraft(2, 2), new OrderLineDraft(null, 1, true, "Chè", 15000)]), products);
+        var text = LastOrderHint.Text(orders.Get(id)!, products, today);
+        Assert.Equal($"Lần trước (12/10): 2 {products[2].Name}, 1 Chè · 39.000 đ", text);
+
+        var many = orders.Save(new OrderDraft(0, 2, OrderStatus.Shipping, new DateTime(2025, 12, 31), false, null, 0, null,
+            Enumerable.Range(1, 6).Select(i => new OrderLineDraft(null, i, true, $"Món {i}", 1000)).ToList()), products);
+        var capped = LastOrderHint.Text(orders.Get(many)!, products, today);
+        Assert.StartsWith("Lần trước (31/12/25): 1 Món 1, 2 Món 2, 3 Món 3, 4 Món 4, +2 món · ", capped);
+        Assert.Equal("không có ngày giao", LastOrderHint.Day(null, today));
+    }
+
+    [Fact]
     public void Pay_all_refuses_when_any_already_paid_and_skips_cancelled()
     {
         using var temp = new TempFolder();

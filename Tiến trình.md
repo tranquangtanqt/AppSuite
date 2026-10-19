@@ -328,7 +328,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   cùng ngày giao) và **Lưu và chép cho khách khác** (Ctrl+Shift+K: đơn mới giống đơn vừa lưu - món, số lượng, giảm giá,
   ngày giao, ghi chú, đã thanh toán trước - bỏ trống khách, con trỏ ở ô Khách hàng). Form sửa không hiện 2 nút (phím vẫn
   dùng được). GUI Sandbox 18/19 (1 ca do dữ liệu test: gõ "thuy" ra lại đúng khách cũ). Cập nhật F1, README (2026-10-19)
-- [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
+- [x] Form thêm đơn: dòng **Lần trước** dưới ô Khách hàng - chọn khách xong hiện đơn gần nhất (theo ngày giao, không tính
+  Huỷ): "Lần trước (12/10): 2 Bánh bao, 1 Chè · 34.000 đ" (tối đa 4 món, +N món); **Chép vào đơn / Ctrl+L**: chép món như
+  Sao chép đơn (giá hiện tại, món không còn → món tự do, báo ở đầu form), giảm giá / ghi chú chỉ khi ô trống, đã có món thì
+  hỏi Thay; xong con trỏ ở nút Thêm món. Form sửa không hiện. Unit test 137/137 (2 mới); GUI Sandbox 11/12 (1 ca do test
+  không đọc ô món tự do - ảnh chụp xác nhận đủ 2 dòng, lưu xong Lần trước hiện đúng). Cập nhật F1, README (2026-10-19)- [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
 - [ ] App điện thoại me-ron: 25 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + chức năng

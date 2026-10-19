@@ -46,6 +46,22 @@
                 <AutoSuggestBox x:Name="CustomerBox" Header="Khách hàng" PlaceholderText="Gõ tên hoặc số điện thoại rồi chọn" QueryIcon="Find"
                                 MaxWidth="460" HorizontalAlignment="Left" Width="460" AutomationProperties.Name="Khách hàng"
                                 AutomationProperties.AutomationId="FormCustomerBox" />
+                <!-- Lần trước (form thêm đơn): đơn gần nhất của khách vừa chọn + chép các món đó vào đơn (Ctrl+L). -->
+                <Grid ColumnSpacing="8" MaxWidth="760" HorizontalAlignment="Left" Margin="0,-6,0,0"
+                      Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasLastOrder), Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon Glyph="&#xE81C;" FontSize="14" Opacity="0.7" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.LastOrderText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.85"
+                               VerticalAlignment="Center" AutomationProperties.AutomationId="LastOrderText" />
+                    <HyperlinkButton x:Name="CopyLastButton" Grid.Column="2" Click="CopyLast_Click" Padding="6,2"
+                                     AutomationProperties.Name="Chép vào đơn" ToolTipService.ToolTip="Chép các món của đơn lần trước vào đơn này - giá hiện tại (Ctrl+L)">
+                        <TextBlock Text="Chép vào đơn (Ctrl+L)" />
+                    </HyperlinkButton>
+                </Grid>
 
                 <!-- Các dòng món -->
                 <StackPanel Spacing="4">

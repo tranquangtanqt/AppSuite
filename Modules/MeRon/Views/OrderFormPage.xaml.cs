@@ -26,6 +26,7 @@ public sealed partial class OrderFormPage : Page
                 CopyOrder_Click(this, new RoutedEventArgs());
             }
         });
+        Shortcuts.Ctrl(this, VirtualKey.L, () => _ = CopyLastOrderAsync());
         Shortcuts.EscapeBack(this, GoBack);
         // Thêm đơn (nút Thêm, Ctrl+N, Lưu và thêm mới, Sao chép đơn): con trỏ vào ngay ô Khách hàng - ô trống thì hiện sẵn
         // danh sách khách (GotFocus của CustomerSuggest) để chọn luôn. Đợi 1 nhịp sau Loaded thì ô mới nhận focus được.
@@ -86,6 +87,28 @@ public sealed partial class OrderFormPage : Page
                     FocusAddLine();
                 }
             };
+        }
+    }
+
+    private async void CopyLast_Click(object sender, RoutedEventArgs e) => await CopyLastOrderAsync();
+
+    /// <summary>"Lần trước" → chép các món vào đơn (form đã có món thì hỏi thay). Xong con trỏ về nút Thêm món: thêm món
+    /// khác hoặc Ctrl+S lưu luôn.</summary>
+    private async Task CopyLastOrderAsync()
+    {
+        if (!ViewModel.HasLastOrder)
+        {
+            return;
+        }
+        if (ViewModel.FilledLineCount is var filled and > 0
+            && !await Dialogs.ConfirmAsync(XamlRoot, "Thay các món đang có?",
+                $"Đơn đang có {filled} món. Chép đơn lần trước sẽ thay toàn bộ các dòng món này.", "Thay"))
+        {
+            return;
+        }
+        if (ViewModel.ApplyLastOrder())
+        {
+            FocusAddLine();
         }
     }
 

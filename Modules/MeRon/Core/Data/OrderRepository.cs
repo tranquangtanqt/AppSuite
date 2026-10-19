@@ -68,6 +68,19 @@ public sealed class OrderRepository(MeRonDatabase database)
         return AttachItems(connection, orders).FirstOrDefault();
     }
 
+    /// <summary>Đơn gần nhất của khách theo ngày giao (không tính đơn Huỷ, không tính <paramref name="excludeOrderId"/>) - gợi
+    /// ý "Lần trước" ở form đơn. Null = khách chưa có đơn nào.</summary>
+    public Order? GetLastOrder(long userId, long excludeOrderId = 0)
+    {
+        using var connection = database.Open();
+        var orders = Read(connection,
+            $"SELECT {OrderColumns} FROM Orders AS O LEFT JOIN Users AS U ON O.userId = U.id " +
+            "WHERE O.userId = $userId AND O.status <> $cancelled AND O.id <> $id " +
+            "ORDER BY julianday(replace(O.deliveryDatetime, 'T', ' ')) DESC, O.id DESC LIMIT 1",
+            ("$userId", userId), ("$cancelled", (long)OrderStatus.Cancelled), ("$id", excludeOrderId));
+        return AttachItems(connection, orders).FirstOrDefault();
+    }
+
     /// <summary>Khách đã có đơn khác (không tính đơn Huỷ, không tính chính đơn đang sửa) trong cùng ngày giao? → hỏi "Cảnh
     /// báo trùng đơn".</summary>
     public bool HasOtherOrderSameDay(long userId, DateOnly day, long excludeOrderId)
