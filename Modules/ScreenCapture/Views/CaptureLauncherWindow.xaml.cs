@@ -767,7 +767,7 @@ public sealed partial class CaptureLauncherWindow : Window
             {
                 var name = FileNameTemplate.Resolve(_settings.AutoSaveFileName, info, bitmap.Width, bitmap.Height, _settings.AutoSaveFolder);
                 savedPath = document is not null
-                    ? document.SaveToFolder(_settings.AutoSaveFolder, name)
+                    ? document.SaveToFolder(_settings.AutoSaveFolder, name, autoSave: true)
                     : _fileService.SavePngToFolder(bitmap, _settings.AutoSaveFolder, name);
                 lines.Add($"Đã lưu: {Path.GetFileName(savedPath)}");
                 if (document is not null)
@@ -916,6 +916,13 @@ public sealed partial class CaptureLauncherWindow : Window
         editor.NewImageRequested += (_, size) => _ = NewImageAsync(editor.Content.XamlRoot, size);
         // Tìm chữ: nhớ ngôn ngữ đọc chữ lần trước.
         editor.OcrLanguage = _settings.OcrLanguage;
+        // Đóng ảnh đã tự lưu: đọc cài đặt lúc đóng (đổi trong Cài đặt là dùng ngay); "Không hỏi lại" → ghi cài đặt mới.
+        editor.AutoSavedCloseActionSource = () => _settings.AutoSavedCloseAction;
+        editor.AutoSavedCloseActionChanged += (_, action) =>
+        {
+            _settings.AutoSavedCloseAction = action;
+            _settingsStore.Save(_settings);
+        };
         editor.OcrLanguageChanged += (_, language) =>
         {
             _settings.OcrLanguage = language;

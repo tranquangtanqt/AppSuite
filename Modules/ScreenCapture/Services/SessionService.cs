@@ -8,7 +8,7 @@ namespace ScreenCapture.Services;
 
 /// <summary>1 tab ảnh trong Editor, dạng dữ liệu thuần để ghi/đọc phiên làm việc.</summary>
 public sealed record SessionDocument(Guid Id, string Title, SKBitmap Bitmap, IReadOnlyList<AnnotationShape> Shapes, bool SavedToFile,
-    SessionCropSource? CropSource = null, string? FilePath = null, ImageOrientation Orientation = default);
+    SessionCropSource? CropSource = null, string? FilePath = null, ImageOrientation Orientation = default, string? AutoSavedPath = null);
 
 /// <summary>Ảnh gốc trước lần Cắt / đổi khung đầu tiên của tab + vị trí góc trên-trái của nó theo toạ độ
 /// ảnh hiện tại - lưu qua phiên để mở lại app vẫn kéo khung ra lấy lại được phần đã cắt.</summary>
@@ -94,7 +94,7 @@ public sealed class SessionService
                     crop = new SessionCropSource(cropBitmap, tab.CropOffsetX, tab.CropOffsetY);
                 }
                 documents.Add(new SessionDocument(tab.Id, tab.Title, bitmap, shapes, tab.SavedToFile, crop, tab.FilePath,
-                    new ImageOrientation(((tab.QuarterTurns % 4) + 4) % 4, tab.Flipped)));
+                    new ImageOrientation(((tab.QuarterTurns % 4) + 4) % 4, tab.Flipped), tab.AutoSavedPath));
             }
             return (documents, manifest?.ActiveId);
         }
@@ -127,6 +127,7 @@ public sealed class SessionService
                 Title = doc.Title,
                 SavedToFile = doc.SavedToFile,
                 FilePath = doc.FilePath,
+                AutoSavedPath = doc.AutoSavedPath,
                 Image = WriteBitmap(doc.Bitmap, doc.Id),
                 QuarterTurns = doc.Orientation.QuarterTurns,
                 Flipped = doc.Orientation.Flipped,
@@ -361,6 +362,8 @@ public sealed class SessionService
         public bool SavedToFile { get; set; }
         /// <summary>File gắn với tab (Lưu ghi đè vào đây), null = chưa lưu / phiên cũ.</summary>
         public string? FilePath { get; set; }
+        /// <summary>File do tự lưu sau khi chụp tạo ra (đóng tab được đề nghị xoá - <see cref="AutoSavedFile"/>), null = không.</summary>
+        public string? AutoSavedPath { get; set; }
         public string Image { get; set; } = string.Empty;
         /// <summary>File ảnh gốc trước khi Cắt (null = tab chưa cắt / đổi khung, hoặc phiên cũ).</summary>
         public string? CropOriginal { get; set; }

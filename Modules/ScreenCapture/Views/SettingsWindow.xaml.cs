@@ -102,6 +102,7 @@ public sealed partial class SettingsWindow : Window
         AutoSaveFolderBox.Text = s.AutoSaveFolder;
         AutoSaveFolderPanel.Opacity = s.AutoSave ? 1 : 0.5;
         ShowFileNameTemplate(s.AutoSaveFileName);
+        AutoSavedCloseBox.SelectedIndex = Math.Clamp((int)s.AutoSavedCloseAction, 0, 2);
         RememberTabsBox.IsChecked = s.RememberTabs;
         MaxTabsBox.Value = s.SessionMaxTabs;
         MaxMegabytesBox.Value = s.SessionMaxMegabytes;
@@ -136,6 +137,7 @@ public sealed partial class SettingsWindow : Window
             AutoSave = AutoSaveBox.IsChecked == true,
             AutoSaveFolder = AutoSaveFolderBox.Text.Trim(),
             AutoSaveFileName = string.IsNullOrWhiteSpace(_fileNameTemplate) ? FileNameTemplate.Default : _fileNameTemplate.Trim(),
+            AutoSavedCloseAction = AutoSavedCloseBox.SelectedIndex is >= 0 and <= 2 ? (AutoSavedCloseAction)AutoSavedCloseBox.SelectedIndex : AutoSavedCloseAction.Keep,
             RememberTabs = RememberTabsBox.IsChecked == true,
             SessionMaxTabs = Int(MaxTabsBox, 30),
             SessionMaxMegabytes = Int(MaxMegabytesBox, 300),

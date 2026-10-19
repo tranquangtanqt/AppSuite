@@ -107,7 +107,15 @@
                             <TextBlock x:Name="FileNameTemplatePreview" Style="{StaticResource HintStyle}" />
                             <TextBlock x:Name="FileNameTemplateHelp" Style="{StaticResource HintStyle}" />
                             <TextBlock Style="{StaticResource HintStyle}"
-                                       Text="Trùng tên thì thêm (2). Ảnh đã tự lưu được coi là đã lưu nên đóng tab không hỏi lại (trừ khi sửa thêm)." />
+                                       Text="Trùng tên thì thêm (2). Ảnh đã tự lưu được coi là đã lưu nên đóng tab không hỏi lưu (trừ khi sửa thêm)." />
+                            <TextBlock Text="Khi đóng ảnh đã tự lưu" Margin="0,6,0,0" />
+                            <ComboBox x:Name="AutoSavedCloseBox" MinWidth="260" AutomationProperties.Name="Khi đóng ảnh đã tự lưu">
+                                <ComboBoxItem Content="Giữ file (như cũ)" />
+                                <ComboBoxItem Content="Hỏi có xoá file không" />
+                                <ComboBoxItem Content="Luôn xoá file" />
+                            </ComboBox>
+                            <TextBlock Style="{StaticResource HintStyle}"
+                                       Text="Cho ảnh chụp chỉ dùng 1 lần. Xoá = chuyển vào Thùng rác (lấy lại được). Chỉ xoá file do tự lưu tạo ra - ảnh mở từ file có sẵn, file tự Lưu thành không bao giờ bị xoá; bấm Lưu khi đóng (ảnh đã sửa) thì giữ file. Tắt Editor bằng nút X (nhớ tab cho lần sau) không xoá gì. Menu chuột phải của tab có thêm Đóng và xoá file." />
                         </StackPanel>
                         <StackPanel Spacing="6" Margin="0,12,0,0">
                             <TextBlock Text="Chất lượng JPG" />

@@ -402,10 +402,12 @@ public sealed partial class EditorViewModel : ObservableObject
             : null;
 
     /// <param name="filePath">File gắn với tab (xem <see cref="FilePath"/>), null nếu chưa có.</param>
+    /// <param name="autoSavedPath">File do tự lưu sau khi chụp tạo ra (xem <see cref="AutoSavedPath"/>).</param>
     public void RestoreFromSession(IEnumerable<AnnotationShape> shapes, bool savedToFile, SessionCropSource? crop = null, string? filePath = null,
-        ImageOrientation orientation = default)
+        ImageOrientation orientation = default, string? autoSavedPath = null)
     {
         FilePath = filePath;
+        AutoSavedPath = autoSavedPath;
         Orientation = orientation;
         if (crop is not null)
         {
@@ -430,6 +432,13 @@ public sealed partial class EditorViewModel : ObservableObject
     /// chưa lưu. Lưu (Ctrl+S) ghi thẳng vào file này nếu định dạng ghi được (PNG / JPG / BMP).</summary>
     public string? FilePath { get; private set; }
 
+    /// <summary>File do <b>tự lưu sau khi chụp</b> tạo ra (null = không có / đã Lưu thành sang file khác). Chỉ file này mới
+    /// được đề nghị xoá khi đóng tab (Cài đặt > Lưu ảnh > Khi đóng ảnh đã tự lưu).</summary>
+    public string? AutoSavedPath { get; private set; }
+
+    /// <summary>File tự lưu còn trên ổ và tab vẫn gắn đúng file đó → được xoá khi đóng tab; null = không xoá gì.</summary>
+    public string? DeletableAutoSavedFile => AutoSavedFile.Deletable(AutoSavedPath, FilePath, File.Exists);
+
     /// <summary>Vừa lưu ra file (Lưu / Lưu thành / tự lưu / Lưu tất cả) - Editor ghi lại phiên ngay để tắt app đột ngột
     /// cũng không quên tab đã lưu vào file nào.</summary>
     public event EventHandler? Saved;
@@ -443,9 +452,14 @@ public sealed partial class EditorViewModel : ObservableObject
     /// <summary>Ghi PNG (ảnh + shape) vào thư mục đã chọn sẵn, tên file = tên tab. Dùng cho "Lưu tất cả" / tự lưu.</summary>
     /// <param name="relativeName">Tên file (chưa có đuôi), có thể kèm thư mục con - vd theo mẫu tên khi tự lưu
     /// (<see cref="FileNameTemplate"/>); null = tên tab.</param>
-    public string SaveToFolder(string folder, string? relativeName = null)
+    /// <param name="autoSave">Tự lưu sau khi chụp: nhớ file này là file tự lưu (đóng tab được đề nghị xoá).</param>
+    public string SaveToFolder(string folder, string? relativeName = null, bool autoSave = false)
     {
         var path = _fileService.SavePngToFolder(RenderComposited(), folder, relativeName ?? Title);
+        if (autoSave)
+        {
+            AutoSavedPath = path;
+        }
         MarkSaved(path);
         return path;
     }
@@ -499,6 +513,7 @@ public sealed partial class EditorViewModel : ObservableObject
     private void MarkSaved(string path)
     {
         FilePath = path;
+        AutoSavedPath = AutoSavedFile.AfterSave(AutoSavedPath, path); // Lưu thành sang file khác → không còn là file tự lưu
         _savedToFile = true;
         UndoRedo.MarkClean();
         StatusText = $"Đã lưu: {path}";

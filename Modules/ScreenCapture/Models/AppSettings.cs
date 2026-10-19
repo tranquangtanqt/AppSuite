@@ -40,6 +40,9 @@ public sealed class AppSettings
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ScreenCapture");
     /// <summary>Mẫu tên file khi tự lưu (xem <see cref="FileNameTemplate"/>), vd "{date}_{time}_{app}".</summary>
     public string AutoSaveFileName { get; set; } = FileNameTemplate.Default;
+    /// <summary>Đóng ảnh đã tự lưu (×, Ctrl+W, Đóng tất cả, menu tab): giữ / hỏi / luôn xoá file tự lưu (vào Thùng rác).
+    /// Tắt Editor bằng nút X (nhớ tab cho lần sau) thì không xoá gì.</summary>
+    public AutoSavedCloseAction AutoSavedCloseAction { get; set; } = AutoSavedCloseAction.Keep;
 
     // ---- Phiên làm việc (nhớ tab khi tắt app, xem SessionService) ----
     public bool RememberTabs { get; set; } = true;

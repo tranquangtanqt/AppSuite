@@ -35,7 +35,7 @@ public class SessionServiceTests : IDisposable
         var text = new TextAnnotation { Bounds = new SKRect(1, 2, 30, 20), Text = "Xin chào", FontSize = 18, Bold = true };
         var arrow = new LineArrowAnnotation { Bounds = new SKRect(0, 0, 25, 25), StartHead = ArrowHead.Arrow };
         var first = Doc("2026-10-16 10 01 46", SKColors.Red, new RectangleAnnotation { Bounds = new SKRect(5, 5, 15, 15), CornerRadius = 4 });
-        var second = Doc("bao_cao", SKColors.Blue, text, arrow) with { SavedToFile = true, FilePath = @"C:\anh\bao_cao.png", Orientation = new ImageOrientation(1, true) };
+        var second = Doc("bao_cao", SKColors.Blue, text, arrow) with { SavedToFile = true, FilePath = @"C:\anh\bao_cao.png", Orientation = new ImageOrientation(1, true), AutoSavedPath = @"C:\anh\bao_cao.png" };
 
         new SessionService().Save([first, second], first.Id);
         var (documents, activeId) = new SessionService().Load();
@@ -45,6 +45,8 @@ public class SessionServiceTests : IDisposable
         Assert.Equal(SKColors.Blue, documents[1].Bitmap.GetPixel(3, 3));
         Assert.True(documents[1].SavedToFile);
         Assert.Equal(@"C:\anh\bao_cao.png", documents[1].FilePath);
+        Assert.Equal(@"C:\anh\bao_cao.png", documents[1].AutoSavedPath);
+        Assert.Null(documents[0].AutoSavedPath);
         Assert.Equal(new ImageOrientation(1, true), documents[1].Orientation);
         Assert.Equal(4, Assert.IsType<RectangleAnnotation>(Assert.Single(documents[0].Shapes)).CornerRadius);
         var loadedText = Assert.IsType<TextAnnotation>(documents[1].Shapes[0]);

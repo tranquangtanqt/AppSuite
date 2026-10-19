@@ -97,7 +97,7 @@ public sealed partial class EditorWindow : Window
                 Id = doc.Id,
                 Title = doc.Title,
             };
-            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile, doc.CropSource, doc.FilePath, doc.Orientation);
+            vm.RestoreFromSession(doc.Shapes, doc.SavedToFile, doc.CropSource, doc.FilePath, doc.Orientation, doc.AutoSavedPath);
             AddTab(vm);
         }
         if (capture is not null)
@@ -288,7 +288,14 @@ public sealed partial class EditorWindow : Window
 
     private TabViewItem AddTab(EditorViewModel vm)
     {
-        vm.Saved += (_, _) => TrySaveSession(); // nhớ file vừa lưu của tab ngay (xem EditorViewModel.Saved)
+        vm.Saved += (_, _) =>
+        {
+            TrySaveSession(); // nhớ file vừa lưu của tab ngay (xem EditorViewModel.Saved)
+            if (ReferenceEquals(vm, _viewModel))
+            {
+                UpdateOpenFolderButton();
+            }
+        };
         var tab = new TabViewItem
         {
             // Tên gọn (TabTitle) để thấy nhiều tab hơn; tên đầy đủ ở tooltip. TextBlock để in đậm được tab đang chọn.
@@ -298,6 +305,7 @@ public sealed partial class EditorWindow : Window
         };
         ToolTipService.SetToolTip(tab, vm.Title);
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(tab, vm.Title);
+        AttachTabMenu(tab);
         DocumentTabs.TabItems.Add(tab);
         return tab;
     }
@@ -310,7 +318,7 @@ public sealed partial class EditorWindow : Window
         {
             var documents = DocumentTabs.TabItems.OfType<TabViewItem>()
                 .Select(t => (EditorViewModel)t.Tag)
-                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile, vm.CropSourceForSession, vm.FilePath, vm.Orientation))
+                .Select(vm => new SessionDocument(vm.Id, vm.Title, vm.Bitmap, vm.Annotations.ToList(), vm.SavedToFile, vm.CropSourceForSession, vm.FilePath, vm.Orientation, vm.AutoSavedPath))
                 .ToList();
             _session.Save(documents, _viewModel?.Id);
             return true;
@@ -384,6 +392,7 @@ public sealed partial class EditorWindow : Window
         UpdateNumberStampTab();
         UpdateFormatTab();
         UpdateTabPosition();
+        UpdateOpenFolderButton();
         _zoom = vm.Zoom;
         UpdateZoomLabel();
         UpdateCanvasLayout();
@@ -678,84 +687,6 @@ public sealed partial class EditorWindow : Window
     private async void DocumentTabs_TabCloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args) =>
         await CloseTabAsync(args.Tab);
 
-    /// <summary>Đang hỏi lưu cho 1 tab - giữ Ctrl+W (phím tự lặp) không mở thêm ContentDialog thứ 2
-    /// (WinUI văng lỗi khi 2 ContentDialog cùng mở).</summary>
-    private bool _closingTab;
-
-    /// <summary>Đóng 1 tab (nút × hoặc Ctrl+W / Ctrl+F4): ảnh chưa lưu thì hỏi Lưu / Không lưu / Huỷ.</summary>
-    private async Task CloseTabAsync(TabViewItem? tab)
-    {
-        if (_closingTab || tab is not { Tag: EditorViewModel vm })
-        {
-            return;
-        }
-        CommitInlineText(select: false);
-        _closingTab = true;
-        try
-        {
-            if (!await ConfirmCloseDocumentAsync(vm))
-            {
-                return;
-            }
-        }
-        finally
-        {
-            _closingTab = false;
-        }
-
-        DocumentTabs.TabItems.Remove(tab);
-        UpdateTabPosition(); // đóng tab khác tab đang mở: thứ tự / tổng số vẫn đổi
-        // Ghi lại phiên ngay: file tạm của tab vừa đóng bị xoá luôn khỏi ổ đĩa.
-        TrySaveSession();
-        if (DocumentTabs.TabItems.Count == 0)
-        {
-            // Đóng tab cuối = đóng Editor (đã hỏi lưu cho tab này rồi; thư mục phiên giờ rỗng).
-            _forceClose = true;
-            Close();
-        }
-    }
-
-    private async void CloseAllTabsButton_Click(object sender, RoutedEventArgs e) => await CloseAllTabsAsync();
-
-    /// <summary>"Đóng tất cả": còn ảnh chưa lưu → hỏi Lưu tất cả (chọn 1 thư mục, lưu hết các ảnh chưa
-    /// lưu vào đó, tên file = tên tab) / Đóng không lưu / Huỷ. Xong thì đóng mọi tab = đóng Editor,
-    /// thư mục phiên tạm được dọn rỗng.</summary>
-    private async Task CloseAllTabsAsync()
-    {
-        var unsaved = DocumentTabs.TabItems.OfType<TabViewItem>()
-            .Select(t => (EditorViewModel)t.Tag)
-            .Where(vm => vm.NeedsSave)
-            .ToList();
-
-        if (unsaved.Count > 0)
-        {
-            var dialog = new ContentDialog
-            {
-                XamlRoot = Content.XamlRoot,
-                Title = "Đóng tất cả ảnh",
-                Content = $"Có {unsaved.Count} ảnh chưa được lưu. Chọn 1 thư mục để lưu tất cả trước khi đóng?",
-                PrimaryButtonText = "Lưu tất cả...",
-                SecondaryButtonText = "Đóng không lưu",
-                CloseButtonText = "Huỷ",
-                DefaultButton = ContentDialogButton.Primary,
-            };
-            var result = await dialog.ShowAsync();
-            if (result == ContentDialogResult.None)
-            {
-                return;
-            }
-            if (result == ContentDialogResult.Primary && !await SaveAllToFolderAsync(unsaved))
-            {
-                return; // huỷ chọn thư mục hoặc lưu lỗi → giữ nguyên các tab
-            }
-        }
-
-        DocumentTabs.TabItems.Clear();
-        TrySaveSession(); // 0 tab → thư mục phiên tạm được dọn rỗng
-        _forceClose = true;
-        Close();
-    }
-
     /// <summary>Chọn thư mục rồi lưu từng ảnh vào đó. Trả false nếu huỷ chọn thư mục hoặc có ảnh lưu lỗi
     /// (báo lỗi, không đóng gì để khỏi mất ảnh).</summary>
     private async Task<bool> SaveAllToFolderAsync(IReadOnlyList<EditorViewModel> documents)
@@ -792,35 +723,6 @@ public sealed partial class EditorWindow : Window
             return false;
         }
         return true;
-    }
-
-    /// <summary>Ảnh cần lưu → hỏi Lưu / Không lưu / Huỷ. Trả true nếu được phép đóng.</summary>
-    private async Task<bool> ConfirmCloseDocumentAsync(EditorViewModel vm)
-    {
-        if (!vm.NeedsSave)
-        {
-            return true;
-        }
-
-        var dialog = new ContentDialog
-        {
-            XamlRoot = Content.XamlRoot,
-            Title = "Ảnh chưa được lưu",
-            // File đã lưu bị xoá ngoài app (đã sửa gì thêm thì là "chưa lưu" bình thường): nói rõ, Lưu = ghi lại đúng chỗ cũ.
-            Content = vm.FileMissing && !vm.UndoRedo.IsDirty
-                ? $"File đã lưu không còn trên ổ (bị xoá hoặc đổi tên):\n{vm.FilePath}\n\nLưu lại ảnh \"{vm.Title}\" vào đó trước khi đóng?"
-                : $"Lưu ảnh \"{vm.Title}\" trước khi đóng?",
-            PrimaryButtonText = "Lưu",
-            SecondaryButtonText = "Không lưu",
-            CloseButtonText = "Huỷ",
-            DefaultButton = ContentDialogButton.Primary,
-        };
-        return await dialog.ShowAsync() switch
-        {
-            ContentDialogResult.Primary => await vm.SaveToFileAsync(),
-            ContentDialogResult.Secondary => true,
-            _ => false,
-        };
     }
 
     /// <summary>Đóng cả cửa sổ (nút X hoặc nút Đóng ở tab Tệp): lưu tạm mọi tab vào thư mục phiên để lần

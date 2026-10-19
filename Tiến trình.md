@@ -347,14 +347,14 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 
 ## ScreenCapture
 
-- [ ] **[Đề xuất · Nên làm]** Kéo tab đổi chỗ (người dùng hỏi 2026-10-16). Hiện tắt hẳn: `DocumentTabs` đặt
+- [x] **[Đề xuất · Nên làm]** Kéo tab đổi chỗ (người dùng hỏi 2026-10-16) - **xong 2026-10-19**, xem dòng tổng kết dưới. Hiện tắt hẳn: `DocumentTabs` đặt
   `CanReorderTabs="False" CanDragTabs="False"` (PLAN.md: "chưa có kéo đổi thứ tự tab"). Giải pháp: bật 2 cờ (TabView tự
   làm phần kéo vì TabItems là TabViewItem trực tiếp) + `TabItemsChanged` / `TabDragCompleted` → `UpdateTabPosition()`
   ("Ảnh x / n", chữ đậm) + `TrySaveSession()` (phiên tạm ghi theo thứ tự tab → mở lại giữ thứ tự mới). Cần kiểm: kéo-thả
   file ảnh vào Editor (`AllowDrop` cả cửa sổ) chỉ nhận khi gói kéo có file (StorageItems), không nuốt thao tác kéo tab;
   không cho kéo tab ra ngoài thành cửa sổ riêng (`TabDroppedOutside` bỏ qua); Danh sách ảnh / Ctrl+1…9 theo thứ tự mới.
   Công sức: nhỏ.
-- [ ] **[Đề xuất · Nên làm]** Đóng ảnh đã **tự lưu** thì hỏi xoá luôn file đã lưu (ảnh chỉ dùng 1 lần) - người dùng hỏi
+- [x] **[Đề xuất · Nên làm]** (xong 2026-10-19) Đóng ảnh đã **tự lưu** thì hỏi xoá luôn file đã lưu (ảnh chỉ dùng 1 lần) - người dùng hỏi
   2026-10-16. Hiện: tự lưu xong tab coi là đã lưu → đóng không hỏi gì, file nằm lại trong thư mục tự lưu. Giải pháp:
   - Cờ mới `AutoSavedPath` trên tab (ghi vào phiên tạm): chỉ file do **tự lưu sau khi chụp** tạo ra mới được đề nghị xoá
     - ảnh mở từ file có sẵn (Mở ảnh / kéo-thả) và file người dùng tự Lưu thành **không bao giờ** bị xoá. Lưu đè (Ctrl+S)
@@ -365,7 +365,7 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
     gộp vào hộp hỏi Lưu hiện có. Đóng tất cả: 1 hộp hỏi cho cả loạt ("Xoá N file đã tự lưu?"). Tắt Editor bằng nút X
     (nhớ tab cho lần sau) thì **không** xoá gì. Thêm lệnh "Đóng và xoá file" ở menu chuột phải của tab (mục dưới).
   - Công sức: vừa (cờ + phiên tạm + cài đặt + 2 hộp thoại + F1 / README + unit test phần chọn file được xoá).
-- [ ] **[Đề xuất · Nên làm]** Mở thư mục chứa ảnh của tab - người dùng hỏi 2026-10-16. Tab có `FilePath` (tự lưu / Lưu /
+- [x] **[Đề xuất · Nên làm]** (xong 2026-10-19, chưa làm đường dẫn ở thanh trạng thái) Mở thư mục chứa ảnh của tab - người dùng hỏi 2026-10-16. Tab có `FilePath` (tự lưu / Lưu /
   mở từ file) nên biết thư mục. Giải pháp làm cả 2:
   - **Menu chuột phải trên tab** (ContextFlyout của TabViewItem; Shift+F10 / phím menu cũng mở): Mở thư mục chứa ảnh
     (Explorer chọn sẵn file - `explorer /select,`), Copy đường dẫn file, Lưu thành…, Đóng, Đóng các tab khác, Đóng các
@@ -374,7 +374,15 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   - **Nút "Mở thư mục" ở tab Tệp** của ribbon (cạnh Lưu / Lưu thành) cho ảnh đang mở; tooltip ghi đường dẫn. Có thể thêm
     đường dẫn bấm được ở thanh trạng thái.
   - Công sức: nhỏ - vừa.
-
+- [x] **Tab: kéo đổi chỗ + menu chuột phải + Mở thư mục + đóng ảnh đã tự lưu** (2026-10-19, `Views\EditorWindow.Tabs.cs`):
+  kéo tab đổi thứ tự (ghi phiên tạm theo thứ tự mới); menu chuột phải tab (Mở thư mục chứa ảnh, Copy đường dẫn, Lưu
+  thành…, Đóng / các tab khác / bên phải, Đóng và xoá file); nút Mở thư mục ở tab Tệp; Cài đặt > Lưu ảnh > Khi đóng ảnh
+  đã tự lưu: Giữ (mặc định) / Hỏi (+ Không hỏi lại) / Luôn xoá - vào Thùng rác, chỉ file do tự lưu tạo ra (cờ
+  `AutoSavedPath` trong phiên tạm), đóng nhiều tab hỏi 1 lần. Unit test 41/41 (3 mới); GUI Sandbox 25/27 + chạy lại kéo
+  tab / Explorer: kéo tab qua (lần 1 chuột giả lập kéo nhanh quá không bắt đầu kéo), Explorer mở đúng thư mục nhưng test
+  chưa đọc được file đang chọn sẵn. Thêm GUI 14/14: Luôn xoá (không hỏi, vào Thùng rác), tắt Editor bằng X không xoá gì
+  (phiên tạm nhớ cờ tự lưu), Đóng tất cả (hỏi lưu → 1 hộp "Xoá 2 file đã tự lưu?" → xoá, ảnh mở từ file còn nguyên).
+  Cập nhật F1, README. Người dùng thử tay 2026-10-19: kéo tab OK, Mở thư mục chọn sẵn file OK - còn chờ thử Shift+F10
 - [ ] Thanh tab nhiều ảnh: tab đang mở nền màu chủ đạo + chữ trắng đậm; tên tab gọn (hôm nay chỉ giờ, ngày khác
   "15/10 16:22", đầy đủ ở tooltip); lăn chuột trên thanh tab = cuộn; Danh sách ảnh (nút cuối thanh tab / bấm "Ảnh x / n" /
   Ctrl+Shift+A: ảnh thu nhỏ, lọc theo tên / giờ); Ctrl+Tab / Ctrl+Shift+Tab, Ctrl+PgDn / PgUp, Ctrl+1…8, Ctrl+9. Cập

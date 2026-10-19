@@ -51,7 +51,7 @@ tuỳ chọn về ban đầu.
 | Trang | Tuỳ chọn |
 |---|---|
 | Chung | Hẹn giờ trước khi chụp (0–10 giây); **Sau khi chụp** — các ô tick độc lập: *Mở trong Editor* (mặc định bật; tắt = chụp nhanh liên tục), *Copy vào clipboard*, *Tự lưu file* (= ô Tự động lưu ở trang Lưu ảnh), *Hiện thông báo nhỏ* (góc dưới-phải màn có con trỏ: ảnh thu nhỏ, đã lưu / đã copy, nút *Mở trong Editor* / *Mở thư mục*; không giành focus, tự ẩn sau 6 giây, rê chuột vào thì giữ, đóng trước lần chụp sau); phải chọn ít nhất 1 việc; lưu / copy lỗi mà không mở Editor thì luôn hiện thông báo; **chụp kèm con trỏ chuột** (vẽ con trỏ đúng hình / vị trí lúc chụp — Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước; không áp cho vùng chọn / vùng cố định / chụp cuộn vì con trỏ đang ở góc vùng kéo hoặc đang lăn trang); chạy ngầm ở khay hệ thống; khởi động cùng Windows |
-| Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lại |
+| Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lưu. **Khi đóng ảnh đã tự lưu**: *Giữ file* (mặc định) / *Hỏi có xoá file không* / *Luôn xoá file* (vào Thùng rác) — `AutoSavedCloseAction` |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |
 | Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
@@ -125,6 +125,19 @@ mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để kh
   nguyên), tên đầy đủ ở tooltip. Lăn chuột trên thanh tab = cuộn ngang. **Danh sách ảnh** (nút cuối thanh tab / bấm "Ảnh
   x / n" / `Ctrl+Shift+A`): ảnh thu nhỏ + tên đầy đủ + "● chưa lưu", ô lọc theo tên / giờ (Enter = ảnh đầu khớp, ↓ vào
   danh sách). Phím `Ctrl+Tab`, `Ctrl+PgDn/PgUp`, `Ctrl+1…9` (bắt ở `PreviewKeyDown`).
+- **Tab (2026-10-19, `Views\EditorWindow.Tabs.cs`)**:
+  - **Kéo tab đổi chỗ** (`CanReorderTabs` / `CanDragTabs`; `TabDragCompleted` → "Ảnh x / n" + ghi phiên tạm theo thứ tự
+    mới). Kéo ra ngoài thanh tab không tách cửa sổ.
+  - **Menu chuột phải của tab** (`ContextFlyout`, cả Shift+F10): *Mở thư mục chứa ảnh* (`explorer /select,`; file mất thì
+    mở thư mục cha), *Copy đường dẫn file*, *Lưu thành…*, *Đóng*, *Đóng các tab khác*, *Đóng các tab bên phải*, *Đóng và
+    xoá file* (chỉ ảnh đã tự lưu). Ảnh chưa lưu → Mở thư mục / Copy đường dẫn mờ. Nút **Mở thư mục** ở tab *Tệp* (tooltip =
+    đường dẫn).
+  - **Đóng ảnh đã tự lưu** (Cài đặt > Lưu ảnh): *Giữ* / *Hỏi* (Đóng và xoá file / Đóng, giữ file / Huỷ + "Không hỏi lại" →
+    ghi cài đặt) / *Luôn xoá*; xoá = Thùng rác (`Services\RecycleBin.cs`). Chỉ file do tự lưu sau khi chụp tạo ra
+    (`EditorViewModel.AutoSavedPath`, ghi vào phiên tạm; `Models\AutoSavedFile.cs`): Lưu đè đúng file đó giữ cờ, Lưu thành
+    / Lưu tất cả sang file khác bỏ cờ, file đã mất thì bỏ qua; ảnh mở từ file không bao giờ bị xoá. Đóng ảnh đã sửa: bấm
+    *Lưu* → giữ file, *Không lưu* → theo cài đặt. Đóng nhiều tab (Đóng tất cả / các tab khác / bên phải) → 1 hộp hỏi cho cả
+    loạt. Tắt Editor bằng X (nhớ tab) không xoá gì.
 - **Đóng tất cả** (nút cuối thanh tab): còn ảnh chưa lưu → hỏi *Lưu tất cả...* (chọn 1 thư mục, lưu
   mọi ảnh chưa lưu vào đó, tên file = tên tab, trùng tên thì thêm " (2)" — không ghi đè file có sẵn) /
   *Đóng không lưu* / *Huỷ*. Xong thì đóng mọi tab và Editor, thư mục lưu tạm được dọn sạch. Huỷ chọn
