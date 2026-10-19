@@ -49,6 +49,14 @@ public sealed class AppSettings
     public int SessionMaxTabs { get; set; } = 30;
     public int SessionMaxMegabytes { get; set; } = 300;
 
+    // ---- Mở lại tab vừa đóng (Ctrl+Shift+T, xem ClosedTabStack - chỉ trong bộ nhớ) ----
+    /// <summary>Số tab vừa đóng giữ lại để mở lại; 0 = tắt (đóng là bỏ luôn).</summary>
+    public int ClosedTabsMaxCount { get; set; } = ClosedTabStack<object>.DefaultMaxCount;
+    /// <summary>Bộ nhớ tối đa cho các tab vừa đóng (MB).</summary>
+    public int ClosedTabsMaxMegabytes { get; set; } = (int)(ClosedTabStack<object>.DefaultMaxBytes / (1024 * 1024));
+    public static readonly (int Min, int Max) ClosedTabsMaxCountRange = (0, 50);
+    public static readonly (int Min, int Max) ClosedTabsMaxMegabytesRange = (50, 4000);
+
     // ---- Ảnh mới (hộp thoại New) ----
     /// <summary>Màu nền lần tạo ảnh mới gần nhất (#RRGGBB). Mặc định đen như gợi ý ban đầu (giống PicPick).</summary>
     public string NewImageBackColor { get; set; } = "#000000";

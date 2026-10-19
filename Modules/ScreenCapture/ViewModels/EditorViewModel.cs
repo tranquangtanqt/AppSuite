@@ -15,7 +15,13 @@ public sealed partial class EditorViewModel : ObservableObject
 {
     private readonly IImageFileService _fileService;
     private readonly IClipboardService _clipboardService;
-    private readonly IntPtr _ownerHwnd;
+    private IntPtr _ownerHwnd;
+
+    /// <summary>Tab vừa đóng được mở lại vào cửa sổ Editor mới (Editor đã đóng rồi mở lại) → hộp chọn file thuộc cửa sổ mới.</summary>
+    public void SetOwnerWindow(IntPtr hwnd) => _ownerHwnd = hwnd;
+
+    /// <summary>Bộ nhớ ước tính của tab (ảnh hiện tại + ảnh gốc trước khi cắt) - giới hạn danh sách tab vừa đóng.</summary>
+    public long EstimatedBytes => Bitmap.ByteCount + (CropSourceForSession?.Original.ByteCount ?? 0);
 
     public EditorViewModel(SKBitmap bitmap, IImageFileService fileService, IClipboardService clipboardService,
         IntPtr ownerHwnd)

@@ -52,7 +52,7 @@ tuỳ chọn về ban đầu.
 |---|---|
 | Chung | Hẹn giờ trước khi chụp (0–10 giây); **Sau khi chụp** — các ô tick độc lập: *Mở trong Editor* (mặc định bật; tắt = chụp nhanh liên tục), *Copy vào clipboard*, *Tự lưu file* (= ô Tự động lưu ở trang Lưu ảnh), *Hiện thông báo nhỏ* (góc dưới-phải màn có con trỏ: ảnh thu nhỏ, đã lưu / đã copy, nút *Mở trong Editor* / *Mở thư mục*; không giành focus, tự ẩn sau 6 giây, rê chuột vào thì giữ, đóng trước lần chụp sau); phải chọn ít nhất 1 việc; lưu / copy lỗi mà không mở Editor thì luôn hiện thông báo; **chụp kèm con trỏ chuột** (vẽ con trỏ đúng hình / vị trí lúc chụp — Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước; không áp cho vùng chọn / vùng cố định / chụp cuộn vì con trỏ đang ở góc vùng kéo hoặc đang lăn trang); chạy ngầm ở khay hệ thống; khởi động cùng Windows |
 | Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lưu. **Khi đóng ảnh đã tự lưu**: *Giữ file* (mặc định) / *Hỏi có xoá file không* / *Luôn xoá file* (vào Thùng rác) — `AutoSavedCloseAction` |
-| Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm |
+| Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm. **Mở lại tab vừa đóng** (Ctrl+Shift+T): giữ tối đa N tab (0–50, mặc định 10, 0 = tắt) / M MB (50–4000, mặc định 300) trong bộ nhớ |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |
 | Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
 
@@ -126,6 +126,12 @@ mọi tab. Khi chụp, cả launcher lẫn Editor đều tự thu nhỏ để kh
   x / n" / `Ctrl+Shift+A`): ảnh thu nhỏ + tên đầy đủ + "● chưa lưu", ô lọc theo tên / giờ (Enter = ảnh đầu khớp, ↓ vào
   danh sách). Phím `Ctrl+Tab`, `Ctrl+PgDn/PgUp`, `Ctrl+1…9` (bắt ở `PreviewKeyDown`).
 - **Tab (2026-10-19, `Views\EditorWindow.Tabs.cs`)**:
+  - **Mở lại tab vừa đóng** (`Ctrl+Shift+T`, menu tab, nút cuối *Danh sách ảnh*, menu khay *Mở lại ảnh vừa đóng*):
+    `Models\ClosedTabStack.cs` giữ chính `EditorViewModel` (ảnh, hình vẽ, Undo, zoom) + vị trí lúc đóng, tối đa
+    `ClosedTabsMaxCount` tab / `ClosedTabsMaxMegabytes` MB (Cài đặt > Phiên làm việc, mặc định 10 / 300, 0 tab = tắt;
+    `EstimatedBytes`), bỏ tab cũ nhất (đổi giới hạn là cắt ngay); thuộc launcher nên còn sau khi Editor đóng (mở lại vào cửa sổ Editor mới:
+    `SetOwnerWindow`, handler cũ gỡ ở `DetachDocument`). Không ghi ra ổ - tắt app là mất. Đóng tất cả cất như đóng lần lượt
+    từ trái → mở lại đúng thứ tự.
   - **Kéo tab đổi chỗ** (`CanReorderTabs` / `CanDragTabs`; `TabDragCompleted` → "Ảnh x / n" + ghi phiên tạm theo thứ tự
     mới). Kéo ra ngoài thanh tab không tách cửa sổ.
   - **Menu chuột phải của tab** (`ContextFlyout`, cả Shift+F10): *Mở thư mục chứa ảnh* (`explorer /select,`; file mất thì

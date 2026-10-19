@@ -378,7 +378,14 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   - **Nút "Mở thư mục" ở tab Tệp** của ribbon (cạnh Lưu / Lưu thành) cho ảnh đang mở; tooltip ghi đường dẫn. Có thể thêm
     đường dẫn bấm được ở thanh trạng thái.
   - Công sức: nhỏ - vừa.
-- [x] **Tab: kéo đổi chỗ + menu chuột phải + Mở thư mục + đóng ảnh đã tự lưu** (2026-10-19, `Views\EditorWindow.Tabs.cs`):
+- [x] **Mở lại tab vừa đóng** (2026-10-19, `Models\ClosedTabStack.cs`): Ctrl+Shift+T / menu chuột phải của tab / nút cuối
+  Danh sách ảnh / menu khay "Mở lại ảnh vừa đóng (N)" - tab đóng gần nhất về đúng vị trí cũ, còn nguyên ảnh, hình vẽ,
+  Undo, zoom (giữ chính EditorViewModel); bấm tiếp lùi dần; tối đa 10 tab / ~300 MB; danh sách thuộc launcher nên Editor
+  đóng rồi mở lại vẫn dùng được; tắt app là mất. Unit test 45/45 (4 mới); GUI Sandbox 18/18 (kể cả mở lại vào cửa sổ Editor
+  mới, đóng / mở lại lần 2). Menu khay chưa test GUI (menu Win32). Cập nhật F1, README
+  - Giới hạn đưa vào **Cài đặt > Phiên làm việc** (người dùng yêu cầu): "Mở lại tab vừa đóng: giữ tối đa N tab (0–50, mặc định
+    10, 0 = tắt), M MB (50–4000, mặc định 300)"; đổi là cắt ngay. Unit test 46/46; GUI 7/8 (1 ca do test không đọc câu
+    "đang tắt" - app đúng). Cập nhật F1, README (2026-10-19)- [x] **Tab: kéo đổi chỗ + menu chuột phải + Mở thư mục + đóng ảnh đã tự lưu** (2026-10-19, `Views\EditorWindow.Tabs.cs`):
   kéo tab đổi thứ tự (ghi phiên tạm theo thứ tự mới); menu chuột phải tab (Mở thư mục chứa ảnh, Copy đường dẫn, Lưu
   thành…, Đóng / các tab khác / bên phải, Đóng và xoá file); nút Mở thư mục ở tab Tệp; Cài đặt > Lưu ảnh > Khi đóng ảnh
   đã tự lưu: Giữ (mặc định) / Hỏi (+ Không hỏi lại) / Luôn xoá - vào Thùng rác, chỉ file do tự lưu tạo ra (cờ

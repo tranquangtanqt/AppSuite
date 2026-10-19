@@ -58,6 +58,7 @@ public sealed partial class CaptureLauncherWindow : Window
 
         _settings = _settingsStore.Load();
         _session.ApplySettings(_settings);
+        ApplyClosedTabLimits(_settings);
         _fileService.JpegQuality = _settings.JpegQuality;
 
         _hotkeys = new HotkeyService(hwnd, DispatcherQueue);
@@ -136,7 +137,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab }
 
     private void ShowTrayMenu()
     {
@@ -153,6 +154,7 @@ public sealed partial class CaptureLauncherWindow : Window
             (0, null, true),
             ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
             ((int)TrayCommand.OpenEditor, "Mở Editor", canOpenEditor),
+            ((int)TrayCommand.ReopenClosedTab, _closedTabs.Count > 0 ? $"Mở lại ảnh vừa đóng ({_closedTabs.Count})" : "Mở lại ảnh vừa đóng", _closedTabs.Count > 0),
             ((int)TrayCommand.Settings, "Cài đặt...", true),
             ((int)TrayCommand.Help, "Hướng dẫn", true),
             (0, null, true),
@@ -170,10 +172,45 @@ public sealed partial class CaptureLauncherWindow : Window
             case TrayCommand.ScrollHorizontal: RunInBackground(() => CaptureScrollAsync(ScrollDirection.Horizontal)); break;
             case TrayCommand.OpenLauncher: ShowLauncher(); break;
             case TrayCommand.OpenEditor: OpenExistingEditor(); break;
+            case TrayCommand.ReopenClosedTab: ReopenClosedTab(); break;
             case TrayCommand.Settings: OpenSettings(); break;
             case TrayCommand.Help: OpenHelp(); break;
             case TrayCommand.Exit: _ = ExitAsync(); break;
         }
+    }
+
+    /// <summary>Các tab vừa đóng của Editor (Ctrl+Shift+T) - giữ ở launcher để còn mở lại được sau khi Editor đã đóng (đóng
+    /// tab cuối / Đóng tất cả). Mất khi tắt hẳn app.</summary>
+    private readonly ClosedTabStack<EditorViewModel> _closedTabs = new();
+
+    /// <summary>Giới hạn số tab / MB của danh sách tab vừa đóng (Cài đặt > Phiên làm việc), kẹp trong khoảng cho phép.</summary>
+    private void ApplyClosedTabLimits(AppSettings settings) => _closedTabs.ApplyLimits(
+        Math.Clamp(settings.ClosedTabsMaxCount, AppSettings.ClosedTabsMaxCountRange.Min, AppSettings.ClosedTabsMaxCountRange.Max),
+        Math.Clamp(settings.ClosedTabsMaxMegabytes, AppSettings.ClosedTabsMaxMegabytesRange.Min, AppSettings.ClosedTabsMaxMegabytesRange.Max) * 1024L * 1024);
+
+    /// <summary>Menu khay "Mở lại ảnh vừa đóng": Editor đang mở → mở lại vào đó; chưa mở → mở Editor (kèm tab của phiên tạm
+    /// nếu có) với tab vừa đóng.</summary>
+    private void ReopenClosedTab()
+    {
+        if (_closedTabs.Count == 0)
+        {
+            return;
+        }
+        if (_editor is null)
+        {
+            var (documents, activeId) = _session.Load();
+            _editor = CreateEditor(documents, activeId, capture: null, reopenClosed: true);
+        }
+        else
+        {
+            _editor.ReopenClosedTab();
+            var editorHwnd = WindowNative.GetWindowHandle(_editor);
+            if (NativeMethods.IsIconic(editorHwnd))
+            {
+                NativeMethods.ShowWindow(editorHwnd, NativeMethods.SW_RESTORE);
+            }
+        }
+        _editor.Activate();
     }
 
     private void OpenExistingEditor()
@@ -414,6 +451,7 @@ public sealed partial class CaptureLauncherWindow : Window
             ShowStatus($"Không lưu được cài đặt: {ex.Message}", InfoBarSeverity.Error);
         }
         _session.ApplySettings(settings);
+        ApplyClosedTabLimits(settings); // giảm giới hạn → bỏ ngay tab vừa đóng cũ nhất vượt giới hạn
         _editor?.PersistSession(); // tắt "nhớ tab" → dọn thư mục tạm ngay; đổi giới hạn → áp ngay
         _tray.IsVisible = settings.RunInTray;
         try
@@ -907,9 +945,10 @@ public sealed partial class CaptureLauncherWindow : Window
         DispatcherQueue.TryEnqueue(() => _editor?.Activate());
     }
 
-    private EditorWindow CreateEditor(IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null, string? captureFilePath = null)
+    private EditorWindow CreateEditor(IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null, string? captureFilePath = null,
+        bool reopenClosed = false)
     {
-        var editor = new EditorWindow(_fileService, _clipboardService, _session, restored, activeId, capture, captureTitle, captureFilePath);
+        var editor = new EditorWindow(_fileService, _clipboardService, _session, _closedTabs, restored, activeId, capture, captureTitle, captureFilePath, reopenClosed);
         editor.Closed += (_, _) => _editor = null;
         editor.SettingsRequested += (_, _) => OpenSettings();
         editor.HelpRequested += (_, _) => OpenHelp();

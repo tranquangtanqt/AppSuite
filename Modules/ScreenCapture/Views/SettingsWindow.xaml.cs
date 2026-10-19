@@ -40,7 +40,10 @@ public sealed partial class SettingsWindow : Window
         SetRange(ScrollMaxLengthBox, AppSettings.ScrollMaxLengthRange, 1000);
         SetRange(ScrollSettleBox, AppSettings.ScrollSettleMsRange, 50);
         SetRange(JpegQualityBox, AppSettings.JpegQualityRange, 5);
+        SetRange(ClosedTabsMaxBox, AppSettings.ClosedTabsMaxCountRange, 1);
+        SetRange(ClosedTabsMbBox, AppSettings.ClosedTabsMaxMegabytesRange, 50);
         var defaults = new AppSettings();
+        ClosedTabsHint.Text = $"Tab vừa đóng (cả ảnh, hình vẽ, Undo) được giữ trong bộ nhớ để mở lại bằng Ctrl+Shift+T, menu tab, Danh sách ảnh hoặc menu khay; quá giới hạn thì bỏ tab đóng lâu nhất, tắt app là mất. 0 tab = tắt. Ảnh lớn tốn nhiều RAM (ảnh 4K ≈ 33 MB). Mặc định {defaults.ClosedTabsMaxCount} tab / {defaults.ClosedTabsMaxMegabytes} MB, tối đa {AppSettings.ClosedTabsMaxCountRange.Max} tab / {AppSettings.ClosedTabsMaxMegabytesRange.Max} MB.";
         ScrollMaxStepsHint.Text = $"Mỗi lần lăn khoảng 1/3 vùng chọn. Vùng chọn thấp/hẹp mà trang rất dài thì cần nhiều lần hơn. Mặc định {defaults.ScrollMaxSteps}, từ {AppSettings.ScrollMaxStepsRange.Min} tới {AppSettings.ScrollMaxStepsRange.Max}.";
         ScrollMaxLengthHint.Text = string.Create(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), $"Chiều cao ảnh ghép khi cuộn dọc, chiều rộng khi cuộn ngang. Ảnh càng dài càng tốn RAM (rộng 2000px × dài 60.000px ≈ 480 MB). Mặc định {defaults.ScrollMaxLength:N0}, từ {AppSettings.ScrollMaxLengthRange.Min:N0} tới {AppSettings.ScrollMaxLengthRange.Max:N0}.");
         ScrollSettleHint.Text = $"Thời gian chờ trang cuộn xong và vẽ lại trước khi chụp khung tiếp. Tăng lên nếu trang tải chậm, cuộn mượt lâu, ảnh bị thiếu hoặc lặp/lệch; dưới 300 ms chỉ nên dùng cho app không cuộn mượt. Mặc định {defaults.ScrollSettleMs}, từ {AppSettings.ScrollSettleMsRange.Min} tới {AppSettings.ScrollSettleMsRange.Max}.";
@@ -106,6 +109,8 @@ public sealed partial class SettingsWindow : Window
         RememberTabsBox.IsChecked = s.RememberTabs;
         MaxTabsBox.Value = s.SessionMaxTabs;
         MaxMegabytesBox.Value = s.SessionMaxMegabytes;
+        ClosedTabsMaxBox.Value = s.ClosedTabsMaxCount;
+        ClosedTabsMbBox.Value = s.ClosedTabsMaxMegabytes;
         ScrollMaxStepsBox.Value = s.ScrollMaxSteps;
         ScrollMaxLengthBox.Value = s.ScrollMaxLength;
         ScrollSettleBox.Value = s.ScrollSettleMs;
@@ -141,6 +146,8 @@ public sealed partial class SettingsWindow : Window
             RememberTabs = RememberTabsBox.IsChecked == true,
             SessionMaxTabs = Int(MaxTabsBox, 30),
             SessionMaxMegabytes = Int(MaxMegabytesBox, 300),
+            ClosedTabsMaxCount = Math.Clamp(Int(ClosedTabsMaxBox, defaults.ClosedTabsMaxCount), AppSettings.ClosedTabsMaxCountRange.Min, AppSettings.ClosedTabsMaxCountRange.Max),
+            ClosedTabsMaxMegabytes = Math.Clamp(Int(ClosedTabsMbBox, defaults.ClosedTabsMaxMegabytes), AppSettings.ClosedTabsMaxMegabytesRange.Min, AppSettings.ClosedTabsMaxMegabytesRange.Max),
             ScrollMaxSteps = Int(ScrollMaxStepsBox, defaults.ScrollMaxSteps),
             ScrollMaxLength = Int(ScrollMaxLengthBox, defaults.ScrollMaxLength),
             ScrollSettleMs = Int(ScrollSettleBox, defaults.ScrollSettleMs),

@@ -80,15 +80,20 @@ public sealed partial class EditorWindow : Window
 
     /// <param name="restored">Các tab của phiên trước (SessionService.Load), có thể rỗng.</param>
     /// <param name="capture">Ảnh vừa chụp để mở thành tab mới, null nếu chỉ mở lại phiên cũ.
-    /// Phải có ít nhất 1 trong 2.</param>
+    /// Phải có ít nhất 1 trong 2 (hoặc <paramref name="reopenClosed"/> khi còn tab vừa đóng).</param>
+    /// <param name="closedTabs">Các tab vừa đóng (của launcher - sống qua các lần đóng / mở Editor) để Ctrl+Shift+T mở lại.</param>
+    /// <param name="reopenClosed">Mở lại tab vừa đóng gần nhất (menu khay khi Editor đang đóng).</param>
     public EditorWindow(IImageFileService fileService, IClipboardService clipboardService, SessionService session,
-        IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null, string? captureFilePath = null)
+        ClosedTabStack<EditorViewModel> closedTabs,
+        IReadOnlyList<SessionDocument> restored, Guid? activeId, SKBitmap? capture, string? captureTitle = null, string? captureFilePath = null,
+        bool reopenClosed = false)
     {
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
         _fileService = fileService;
         _clipboardService = clipboardService;
         _session = session;
+        _closedTabs = closedTabs;
 
         foreach (var doc in restored)
         {
@@ -103,6 +108,10 @@ public sealed partial class EditorWindow : Window
         if (capture is not null)
         {
             AddCapture(capture, captureTitle, captureFilePath);
+        }
+        else if (reopenClosed && ReopenClosedTab())
+        {
+            // tab vừa đóng đã mở lại và được chọn
         }
         else
         {
@@ -286,16 +295,10 @@ public sealed partial class EditorWindow : Window
     /// <summary>Ghi lại phiên tạm ngay (sau khi tự lưu ảnh, hoặc đổi tuỳ chọn "nhớ tab" / giới hạn).</summary>
     public void PersistSession() => TrySaveSession();
 
-    private TabViewItem AddTab(EditorViewModel vm)
+    /// <param name="index">Chỗ chèn tab (mở lại tab vừa đóng vào đúng vị trí cũ); null = cuối.</param>
+    private TabViewItem AddTab(EditorViewModel vm, int? index = null)
     {
-        vm.Saved += (_, _) =>
-        {
-            TrySaveSession(); // nhớ file vừa lưu của tab ngay (xem EditorViewModel.Saved)
-            if (ReferenceEquals(vm, _viewModel))
-            {
-                UpdateOpenFolderButton();
-            }
-        };
+        vm.Saved += Document_Saved; // gỡ khi đóng tab (DetachDocument) - tab mở lại có thể sang cửa sổ Editor khác
         var tab = new TabViewItem
         {
             // Tên gọn (TabTitle) để thấy nhiều tab hơn; tên đầy đủ ở tooltip. TextBlock để in đậm được tab đang chọn.
@@ -306,8 +309,25 @@ public sealed partial class EditorWindow : Window
         ToolTipService.SetToolTip(tab, vm.Title);
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(tab, vm.Title);
         AttachTabMenu(tab);
-        DocumentTabs.TabItems.Add(tab);
+        if (index is { } at && at < DocumentTabs.TabItems.Count)
+        {
+            DocumentTabs.TabItems.Insert(Math.Max(0, at), tab);
+        }
+        else
+        {
+            DocumentTabs.TabItems.Add(tab);
+        }
         return tab;
+    }
+
+    /// <summary>Tab vừa lưu ra file: nhớ ngay file đó vào phiên tạm (xem EditorViewModel.Saved).</summary>
+    private void Document_Saved(object? sender, EventArgs e)
+    {
+        TrySaveSession();
+        if (ReferenceEquals(sender, _viewModel))
+        {
+            UpdateOpenFolderButton();
+        }
     }
 
     /// <summary>Ghi các tab đang mở vào thư mục phiên tạm (xem SessionService). Trả false nếu lỗi ghi
@@ -453,6 +473,12 @@ public sealed partial class EditorWindow : Window
             e.Handled = true;
             return;
         }
+        if (shift && e.Key == Windows.System.VirtualKey.T)
+        {
+            ReopenClosedTab();
+            e.Handled = true;
+            return;
+        }
         if (target is not { } index || tabs.Count == 0)
         {
             return;
@@ -496,6 +522,7 @@ public sealed partial class EditorWindow : Window
     {
         TabListFilter.Text = string.Empty;
         FillTabList(string.Empty);
+        UpdateReopenTabButton();
     }
 
     private void TabListFlyout_Opened(object sender, object e)

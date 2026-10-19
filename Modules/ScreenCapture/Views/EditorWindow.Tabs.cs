@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using ScreenCapture.Models;
 using ScreenCapture.Services;
 using ScreenCapture.ViewModels;
+using WinRT.Interop;
 
 namespace ScreenCapture.Views;
 
@@ -99,10 +100,74 @@ public sealed partial class EditorWindow
 
         foreach (var tab in closing)
         {
+            RememberClosedTab(tab);
             DocumentTabs.TabItems.Remove(tab);
+            DetachDocument((EditorViewModel)tab.Tag);
         }
         FinishClosingTabs(toDelete);
         return true;
+    }
+
+    // ---------- Mở lại tab vừa đóng (Ctrl+Shift+T, menu tab, Danh sách ảnh, menu khay) ----------
+
+    private readonly ClosedTabStack<EditorViewModel> _closedTabs;
+
+    /// <summary>Cất tab sắp đóng (cả ảnh, hình vẽ, Undo, zoom) + vị trí của nó để mở lại được.</summary>
+    private void RememberClosedTab(TabViewItem tab)
+    {
+        var vm = (EditorViewModel)tab.Tag;
+        _closedTabs.Push(vm, DocumentTabs.TabItems.IndexOf(tab), vm.EstimatedBytes);
+    }
+
+    /// <summary>Gỡ các handler của cửa sổ này khỏi ảnh đã đóng - ảnh có thể được mở lại ở cửa sổ Editor khác.</summary>
+    private void DetachDocument(EditorViewModel vm)
+    {
+        vm.Saved -= Document_Saved;
+        vm.RequestRedraw -= ViewModel_RequestRedraw;
+        vm.PropertyChanged -= ViewModel_PropertyChanged;
+    }
+
+    /// <summary>Mở lại tab đóng gần nhất vào đúng vị trí cũ và chọn nó. False nếu không còn tab nào.</summary>
+    public bool ReopenClosedTab()
+    {
+        if (_closedTabs.Pop() is not { } entry)
+        {
+            if (_viewModel is not null)
+            {
+                _viewModel.StatusText = _closedTabs.MaxCount == 0
+                    ? "Mở lại tab vừa đóng đang tắt (Cài đặt > Phiên làm việc: giữ tối đa 0 tab)."
+                    : "Không còn tab vừa đóng để mở lại.";
+            }
+            return false;
+        }
+        var vm = entry.Item;
+        vm.SetOwnerWindow(WindowNative.GetWindowHandle(this));
+        var tab = AddTab(vm, entry.Index);
+        SwitchTo(vm);
+        DocumentTabs.SelectedItem = tab;
+        UpdateTabPosition();
+        vm.StatusText = _closedTabs.Count > 0
+            ? $"Đã mở lại {vm.Title} - còn {_closedTabs.Count} tab vừa đóng (Ctrl+Shift+T)."
+            : $"Đã mở lại {vm.Title}.";
+        TrySaveSession();
+        return true;
+    }
+
+    /// <summary>Chữ cho mục menu: "Mở lại tab vừa đóng (10:01:46)".</summary>
+    private string ReopenMenuText() =>
+        _closedTabs.Peek() is { } last ? $"Mở lại tab vừa đóng ({TabTitle.Short(last.Title, DateTime.Now)})" : "Mở lại tab vừa đóng";
+
+    private void ReopenTabButton_Click(object sender, RoutedEventArgs e)
+    {
+        TabListFlyout.Hide();
+        ReopenClosedTab();
+    }
+
+    /// <summary>Nút ở Danh sách ảnh: tên + bật / tắt theo danh sách tab vừa đóng (gọi khi mở Danh sách ảnh).</summary>
+    private void UpdateReopenTabButton()
+    {
+        ReopenTabButton.IsEnabled = _closedTabs.Count > 0;
+        ReopenTabText.Text = ReopenMenuText();
     }
 
     /// <summary>Đã gỡ tab: ghi lại phiên (file tạm của tab vừa đóng bị xoá luôn), xoá file tự lưu, hết tab thì đóng Editor.</summary>
@@ -175,6 +240,12 @@ public sealed partial class EditorWindow
             _closingTab = false;
         }
 
+        // Như đóng lần lượt từ trái sang (mỗi tab ở vị trí 0 lúc đóng): Ctrl+Shift+T mở lại từ tab bên phải nhất, thứ tự cũ.
+        foreach (var vm in all)
+        {
+            _closedTabs.Push(vm, 0, vm.EstimatedBytes);
+            DetachDocument(vm);
+        }
         DocumentTabs.TabItems.Clear();
         TrySaveSession(); // 0 tab → thư mục phiên tạm được dọn rỗng
         DeleteAutoSavedFiles(toDelete);
@@ -307,10 +378,11 @@ public sealed partial class EditorWindow
         var closeRight = Item("Đóng các tab bên phải", "", () => _ = CloseTabsAsync(TabsRightOf(tab)));
         var closeDelete = Item("Đóng và xoá file", "", () => _ = CloseTabsAsync([tab], deleteAutoSaved: true));
         ToolTipService.SetToolTip(closeDelete, "Đóng ảnh và chuyển file đã tự lưu của nó vào Thùng rác");
+        var reopen = Item("Mở lại tab vừa đóng", "", () => ReopenClosedTab(), "Ctrl+Shift+T");
 
         var menu = new MenuFlyout
         {
-            Items = { openFolder, copyPath, saveAs, new MenuFlyoutSeparator(), close, closeOthers, closeRight, closeDelete },
+            Items = { openFolder, copyPath, saveAs, new MenuFlyoutSeparator(), close, closeOthers, closeRight, closeDelete, new MenuFlyoutSeparator(), reopen },
         };
         menu.Opening += (_, _) =>
         {
@@ -322,6 +394,8 @@ public sealed partial class EditorWindow
             closeOthers.IsEnabled = DocumentTabs.TabItems.Count > 1;
             closeRight.IsEnabled = TabsRightOf(tab).Count > 0;
             closeDelete.Visibility = vm.DeletableAutoSavedFile is not null ? Visibility.Visible : Visibility.Collapsed;
+            reopen.IsEnabled = _closedTabs.Count > 0;
+            reopen.Text = ReopenMenuText();
         };
         tab.ContextFlyout = menu;
     }

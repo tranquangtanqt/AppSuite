@@ -137,6 +137,20 @@
                         </StackPanel>
                         <TextBlock Style="{StaticResource HintStyle}"
                                    Text="Ảnh lưu tạm chỉ gồm các tab đang mở; đóng tab là xoá file tạm của tab đó, không tích luỹ qua các lần chạy. Vượt giới hạn thì bỏ các tab cũ nhất khỏi bản lưu tạm. Tắt tuỳ chọn này thì thư mục tạm được dọn sạch và đóng Editor sẽ hỏi lưu như trước." />
+                        <!-- Mở lại tab vừa đóng (Ctrl+Shift+T): giữ trong bộ nhớ, tắt app là mất. -->
+                        <StackPanel Spacing="6" Margin="0,8,0,4">
+                            <TextBlock Text="Mở lại tab vừa đóng (Ctrl+Shift+T)" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="Giữ tối đa" VerticalAlignment="Center" />
+                                <NumberBox x:Name="ClosedTabsMaxBox" Width="100" SpinButtonPlacementMode="Compact"
+                                           AutomationProperties.Name="Số tab vừa đóng giữ lại" />
+                                <TextBlock Text="tab," VerticalAlignment="Center" />
+                                <NumberBox x:Name="ClosedTabsMbBox" Width="110" SpinButtonPlacementMode="Compact"
+                                           AutomationProperties.Name="Bộ nhớ cho tab vừa đóng (MB)" />
+                                <TextBlock Text="MB" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <TextBlock x:Name="ClosedTabsHint" Style="{StaticResource HintStyle}" />
+                        </StackPanel>
                         <StackPanel Spacing="4">
                             <TextBlock Text="Thư mục lưu tạm" />
                             <TextBlock x:Name="SessionFolderText" IsTextSelectionEnabled="True" TextWrapping="Wrap" Style="{StaticResource HintStyle}" />

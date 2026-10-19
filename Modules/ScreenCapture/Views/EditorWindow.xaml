@@ -925,6 +925,15 @@
                                          AutomationProperties.Name="Lọc danh sách ảnh" TextChanged="TabListFilter_TextChanged" KeyDown="TabListFilter_KeyDown" />
                                 <ListView x:Name="TabList" MaxHeight="520" SelectionMode="Single" IsItemClickEnabled="True"
                                           ItemClick="TabList_ItemClick" KeyDown="TabList_KeyDown" AutomationProperties.Name="Các ảnh đang mở" />
+                                <!-- Mở lại tab vừa đóng (Ctrl+Shift+T) - mờ khi không còn tab nào; tên = tab sẽ mở lại (UpdateReopenTabButton). -->
+                                <Button x:Name="ReopenTabButton" Click="ReopenTabButton_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"
+                                        AutomationProperties.Name="Mở lại tab vừa đóng" ToolTipService.ToolTip="Mở lại tab vừa đóng, đúng vị trí cũ, còn nguyên hình vẽ và Undo (Ctrl+Shift+T)">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE7A7;" FontSize="14" />
+                                        <TextBlock x:Name="ReopenTabText" Text="Mở lại tab vừa đóng" />
+                                        <TextBlock Text="Ctrl+Shift+T" Opacity="0.6" />
+                                    </StackPanel>
+                                </Button>
                             </StackPanel>
                         </Flyout>
                     </Button.Flyout>
