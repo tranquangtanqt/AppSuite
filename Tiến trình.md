@@ -331,6 +331,34 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 
 ## ScreenCapture
 
+- [ ] **[Đề xuất · Nên làm]** Kéo tab đổi chỗ (người dùng hỏi 2026-10-16). Hiện tắt hẳn: `DocumentTabs` đặt
+  `CanReorderTabs="False" CanDragTabs="False"` (PLAN.md: "chưa có kéo đổi thứ tự tab"). Giải pháp: bật 2 cờ (TabView tự
+  làm phần kéo vì TabItems là TabViewItem trực tiếp) + `TabItemsChanged` / `TabDragCompleted` → `UpdateTabPosition()`
+  ("Ảnh x / n", chữ đậm) + `TrySaveSession()` (phiên tạm ghi theo thứ tự tab → mở lại giữ thứ tự mới). Cần kiểm: kéo-thả
+  file ảnh vào Editor (`AllowDrop` cả cửa sổ) chỉ nhận khi gói kéo có file (StorageItems), không nuốt thao tác kéo tab;
+  không cho kéo tab ra ngoài thành cửa sổ riêng (`TabDroppedOutside` bỏ qua); Danh sách ảnh / Ctrl+1…9 theo thứ tự mới.
+  Công sức: nhỏ.
+- [ ] **[Đề xuất · Nên làm]** Đóng ảnh đã **tự lưu** thì hỏi xoá luôn file đã lưu (ảnh chỉ dùng 1 lần) - người dùng hỏi
+  2026-10-16. Hiện: tự lưu xong tab coi là đã lưu → đóng không hỏi gì, file nằm lại trong thư mục tự lưu. Giải pháp:
+  - Cờ mới `AutoSavedPath` trên tab (ghi vào phiên tạm): chỉ file do **tự lưu sau khi chụp** tạo ra mới được đề nghị xoá
+    - ảnh mở từ file có sẵn (Mở ảnh / kéo-thả) và file người dùng tự Lưu thành **không bao giờ** bị xoá. Lưu đè (Ctrl+S)
+    vào chính file tự lưu vẫn giữ cờ; file đã bị đổi tên / xoá bên ngoài thì bỏ qua.
+  - Cài đặt > Lưu ảnh, ô mới "Khi đóng ảnh đã tự lưu": **Giữ file** (mặc định, như bây giờ) / **Hỏi có xoá file không**
+    / **Luôn xoá file**. Xoá = chuyển vào **Thùng rác** (lấy lại được), không xoá hẳn.
+  - Hỏi: hộp thoại "Đóng và xoá file / Đóng, giữ file / Huỷ" + ô "Không hỏi lại" (đổi cài đặt). Ảnh còn sửa chưa lưu thì
+    gộp vào hộp hỏi Lưu hiện có. Đóng tất cả: 1 hộp hỏi cho cả loạt ("Xoá N file đã tự lưu?"). Tắt Editor bằng nút X
+    (nhớ tab cho lần sau) thì **không** xoá gì. Thêm lệnh "Đóng và xoá file" ở menu chuột phải của tab (mục dưới).
+  - Công sức: vừa (cờ + phiên tạm + cài đặt + 2 hộp thoại + F1 / README + unit test phần chọn file được xoá).
+- [ ] **[Đề xuất · Nên làm]** Mở thư mục chứa ảnh của tab - người dùng hỏi 2026-10-16. Tab có `FilePath` (tự lưu / Lưu /
+  mở từ file) nên biết thư mục. Giải pháp làm cả 2:
+  - **Menu chuột phải trên tab** (ContextFlyout của TabViewItem; Shift+F10 / phím menu cũng mở): Mở thư mục chứa ảnh
+    (Explorer chọn sẵn file - `explorer /select,`), Copy đường dẫn file, Lưu thành…, Đóng, Đóng các tab khác, Đóng các
+    tab bên phải, Đóng và xoá file (chỉ ảnh đã tự lưu, xem mục trên). Ảnh chưa lưu → "Mở thư mục" mờ, gợi ý mở thư mục
+    tự lưu; file đã bị xoá / đổi tên → mở thư mục cha nếu còn.
+  - **Nút "Mở thư mục" ở tab Tệp** của ribbon (cạnh Lưu / Lưu thành) cho ảnh đang mở; tooltip ghi đường dẫn. Có thể thêm
+    đường dẫn bấm được ở thanh trạng thái.
+  - Công sức: nhỏ - vừa.
+
 - [ ] Thanh tab nhiều ảnh: tab đang mở nền màu chủ đạo + chữ trắng đậm; tên tab gọn (hôm nay chỉ giờ, ngày khác
   "15/10 16:22", đầy đủ ở tooltip); lăn chuột trên thanh tab = cuộn; Danh sách ảnh (nút cuối thanh tab / bấm "Ảnh x / n" /
   Ctrl+Shift+A: ảnh thu nhỏ, lọc theo tên / giờ); Ctrl+Tab / Ctrl+Shift+Tab, Ctrl+PgDn / PgUp, Ctrl+1…8, Ctrl+9. Cập
