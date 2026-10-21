@@ -759,6 +759,12 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] Thử index / ràng buộc / số dòng với MySQL thật
 - [ ] **[Đề xuất · Có thể]** Schema rất lớn (24 MB HTML với 245k cột): cân nhắc nén dữ liệu trong trang hoặc tách file
   theo nhóm bảng nếu trình duyệt mở chậm
+- [x] Đổi nguồn (vd Oracle → MySQL) vẫn trỏ file .db / .html của nguồn cũ: MySQL chưa đọc mà "2. Xuất HTML" vẫn bật
+  và xuất ra bản Oracle; đọc MySQL thành công thì ghi đè `.db` của Oracle. Nguyên nhân: tên file tính theo nguồn của
+  hồ sơ, nhưng nguồn chỉ ghi vào hồ sơ sau khi đã tính lại file đích. Unit test 12/12; GUI Sandbox 16/16 (đổi nguồn tắt /
+  bật đúng nút, xuất đúng `mydb.html` / `ORCL.html`, file Oracle không bị ghi, đọc lỗi báo đúng cổng 3306, mở lại nhớ
+  nguồn) (2026-10-21)
+- [ ] Thử tay: đổi nguồn Oracle ↔ MySQL trên máy thật với DB thật, xuất HTML đúng database
 - [ ] Thử MySQL với máy chủ thật (máy dev không có MySQL — mới thử được trường hợp không kết nối được)
 - [ ] Thử tay GUI: combobox đổi nguồn, hộp thoại kết nối 4 tab (tích Windows Authentication khoá ô user/pass),
   hộp thoại Cài đặt (Lưu / Mặc định / Huỷ), tự mở HTML; regression PostgreSQL + Oracle với DB thật

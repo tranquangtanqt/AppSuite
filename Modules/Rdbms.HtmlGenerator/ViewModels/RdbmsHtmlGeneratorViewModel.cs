@@ -529,6 +529,10 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
 
     partial void OnSelectedSourceChanged(DatabaseSourceType value)
     {
+        // Trước RefreshDatabaseTarget: tên file .db / .html lấy theo CurrentProfile.Source. Trước đây Source chỉ đổi
+        // trong SaveConfig (gọi sau) → đổi Oracle sang MySQL vẫn trỏ file của Oracle: "2. Xuất HTML" xuất bản Oracle,
+        // "1. Đọc database" ghi dữ liệu MySQL đè lên .db của Oracle.
+        CurrentProfile.Source = value;
         OnPropertyChanged(nameof(CanImportDatabase));
         ImportDatabaseCommand.NotifyCanExecuteChanged();
         RefreshDatabaseTarget();
