@@ -385,6 +385,22 @@ public sealed partial class MainWindow : Window
         OraSidBox.IsEnabled = useSid;
     }
 
+    // ----- Nhật ký -----
+
+    /// <summary>Nút Copy cạnh tiêu đề Nhật ký: chép mọi dòng log (mỗi dòng 1 hàng) để dán vào tin nhắn / ghi chú lỗi.</summary>
+    private void CopyLog_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.LogLines.Count == 0)
+        {
+            ViewModel.StatusText = "Nhật ký đang trống - chưa có gì để copy.";
+            return;
+        }
+        var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        package.SetText(string.Join(Environment.NewLine, ViewModel.LogLines));
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+        ViewModel.StatusText = $"Đã copy {ViewModel.LogLines.Count} dòng nhật ký.";
+    }
+
     // ----- Hướng dẫn (F1) -----
 
     private SharedUI.Help.HelpWindow? _helpWindow;

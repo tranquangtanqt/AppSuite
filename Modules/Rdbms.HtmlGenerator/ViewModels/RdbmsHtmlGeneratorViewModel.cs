@@ -263,6 +263,30 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         NextStep = !CanExportHtml ? 1
             : _htmlPath is not null && File.GetLastWriteTimeUtc(_htmlPath) >= File.GetLastWriteTimeUtc(_database.DatabasePath) ? 3
             : 2;
+        OnPropertyChanged(nameof(ConnectionSummary));
+    }
+
+    /// <summary>Dòng dưới Hồ sơ / Nguồn: đang trỏ tới đâu + đã đọc lúc nào.</summary>
+    public string ConnectionSummary
+    {
+        get
+        {
+            var target = SelectedSource switch
+            {
+                DatabaseSourceType.Oracle => $"{OracleConnectionSettings.Host}:{OracleConnectionSettings.Port}/{OracleDatabaseName}",
+                DatabaseSourceType.MySql => $"{MySqlConnectionSettings.Host}:{MySqlConnectionSettings.Port}/{MySqlConnectionSettings.Database}",
+                DatabaseSourceType.SqlServer => $"{SqlServerSchemaImporter.BuildDataSource(SqlServerConnectionSettings)}/{SqlServerConnectionSettings.Database}",
+                _ => $"{PostgresConnectionSettings.Host}:{PostgresConnectionSettings.Port}/{PostgresConnectionSettings.Database}",
+            };
+            if (!CanImportDatabase)
+            {
+                return "Chưa thiết lập kết nối cho nguồn này - bấm Thiết lập kết nối";
+            }
+            var read = _database.Exists
+                ? $"đã đọc lúc {File.GetLastWriteTime(_database.DatabasePath):dd/MM HH:mm}"
+                : "chưa đọc lần nào";
+            return $"{target}   ·   {read}";
+        }
     }
 
     /// <summary>True only while "1. Đọc database" runs - shows the "Huỷ" button next to it.</summary>
@@ -324,6 +348,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
                          $"{import.Indexes.Count} index, {import.Constraints.Count} ràng buộc. File: {_database.DatabasePath}";
             CanExportHtml = true;
             NextStep = 2;
+            OnPropertyChanged(nameof(ConnectionSummary));
         }
         catch (Exception) when (cancellationToken.IsCancellationRequested)
         {
@@ -537,6 +562,9 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         ImportDatabaseCommand.NotifyCanExecuteChanged();
         RefreshDatabaseTarget();
         SaveConfig(); // nhớ nguồn đã chọn cho lần mở sau
+        StatusText = !CanImportDatabase ? $"Nguồn {SourceDisplayName(value)}: chưa thiết lập kết nối."
+            : NextStep == 1 ? $"Nguồn {SourceDisplayName(value)} ({CurrentDatabaseName}): chưa đọc - bấm 1. Đọc database."
+            : $"Nguồn {SourceDisplayName(value)} ({CurrentDatabaseName}): đã có dữ liệu đọc lần trước.";
     }
 
     partial void OnCanExportHtmlChanged(bool value) => ExportHtmlCommand.NotifyCanExecuteChanged();

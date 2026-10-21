@@ -58,9 +58,9 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
 2. **Combobox "Nguồn"** (PostgreSQL / Oracle / MySQL / SQL Server - thứ tự mục = thứ tự enum
    `DatabaseSourceType`) - quyết định `ImportDatabaseCommand` dùng importer nào trong `Services\*SchemaImporter`.
    Nguồn đã chọn được lưu vào config.xml, mở lại module chọn sẵn. Khoá khi đang đọc / xuất.
-   Nút "1. Đọc database → SQLite" chỉ bật khi nguồn đang chọn có đủ thông tin tối thiểu đã lưu
+   Nút "1. Đọc database" chỉ bật khi nguồn đang chọn có đủ thông tin tối thiểu đã lưu
    (Host + Database; Oracle: Host + Service Name hoặc SID tùy chế độ đang chọn).
-3. **"1. Đọc database → SQLite"** - kết nối theo nguồn đã chọn, đọc schema, lưu vào SQLite tại
+3. **"1. Đọc database"** - kết nối theo nguồn đã chọn, đọc schema, lưu vào SQLite tại
    `Data\Database\{ten_database}.db` (`Services\RdbmsHtmlGeneratorDatabase` - bản sao gần như nguyên vẹn của
    `McfDbDefHtmlGeneratorDatabase`, cùng schema 3 bảng `Tables`/`Columns`/`ForeignKeys`). Tên file lấy đúng tên
    database/service đang kết nối (Postgres / MySQL / SQL Server: field `Database`; Oracle: `Service Name` hoặc `SID` tùy
@@ -86,7 +86,7 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    "Ten tieng Nhat"/"Xac dinh", bỏ chú giải/màu "Cot dung chung" vì không áp dụng cho dữ liệu DB quan
    hệ - chỉ còn tô màu khóa chính (vàng nhạt), menu trái + 2 ô tìm kiếm (tên bảng/tên cột), link khóa
    ngoại mở tab mới - xem README của Mcf.DbDef.HtmlGenerator để biết chi tiết các tính năng gốc).
-5. **"Mở file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định. Đóng rồi mở lại module vẫn
+5. **"3. Mở file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định. Đóng rồi mở lại module vẫn
    nhận đúng file `.db`/`.html` đã có sẵn cho database/nguồn đang chọn (`RdbmsHtmlGeneratorViewModel.RefreshDatabaseTarget`
    kiểm tra lại mỗi khi đổi nguồn hoặc lưu settings), không cần import lại nếu đã có cache từ trước.
 6. **"Cài đặt"** - modal chỉnh `AppOptions` (lưu trong `config.xml`, phần `Options`):
@@ -102,6 +102,12 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
 **Nút màu nhấn theo bước**: `RdbmsHtmlGeneratorViewModel.NextStep` (1 = Đọc database, 2 = Xuất HTML, 3 = Mở file HTML)
 → `MainWindow.StepButtonStyle` trả `AccentButtonStyle` cho nút của bước đó, `DefaultButtonStyle` cho các nút còn lại.
 Đọc xong → 2, xuất xong → 3, đọc lỗi → 1; lúc mở module / đổi nguồn tính lại từ file có sẵn (`.html` không cũ hơn `.db` → 3).
+
+**Bố cục cửa sổ (2026-10-21)**: tiêu đề gọn + Cài đặt / Hướng dẫn cùng hàng; thẻ **Kết nối** (nhãn Hồ sơ / Nguồn cùng cột,
+2 combobox cùng rộng, dòng `ConnectionSummary` = Host:Port/Database của nguồn đang chọn + "đã đọc lúc …" theo giờ sửa
+file .db, hoặc nhắc Thiết lập kết nối khi thiếu Host / Database); thẻ **Các bước** (3 nút chia đều bề ngang có biểu
+tượng, ProgressBar chỉ hiện khi bận, dòng trạng thái - đổi nguồn thì trạng thái nói nguồn mới đã đọc chưa); **Nhật ký**
+chiếm phần còn lại, nút **Copy** chép mọi dòng log vào clipboard (`MainWindow.CopyLog_Click`).
 
 **Hướng dẫn (F1)**: nút "Hướng dẫn (F1)" hoặc phím F1 mở cửa sổ Hướng dẫn dùng chung (`SharedUI.Help.HelpWindow`); nội dung ở
 `ViewsHelpContent.cs` - thêm / đổi tính năng thì cập nhật cả 2 chỗ.
@@ -169,7 +175,7 @@ Các importer đọc thẳng vào catalog/data dictionary của DB (không qua `
   luôn để trống/`false` - giữ lại chỉ để model cùng hình dạng, tái dùng được `RdbmsHtmlGeneratorDatabase` mà
   không cần sửa.
 
-Khi cần đọc lại dữ liệu mới nhất: chọn đúng nguồn rồi bấm lại "1. Đọc database → SQLite" rồi
+Khi cần đọc lại dữ liệu mới nhất: chọn đúng nguồn rồi bấm lại "1. Đọc database" rồi
 "2. Xuất HTML".
 
 ## Vì sao độc lập được với MainLauncher?

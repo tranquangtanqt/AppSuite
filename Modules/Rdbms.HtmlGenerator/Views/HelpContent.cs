@@ -13,10 +13,12 @@ internal static class HelpContent
         new("Bắt đầu nhanh", "", "Đọc cấu trúc bảng / cột / khoá từ PostgreSQL, Oracle, MySQL hoặc SQL Server, xuất thành 1 trang HTML tra cứu mở trong trình duyệt.",
         [
             new("1. Chọn Nguồn", "Combobox \"Nguồn\": PostgreSQL / Oracle / MySQL / SQL Server. Nguồn đã chọn được nhớ cho lần mở sau. Nhiều môi trường (dev / test / prod): dùng combobox \"Hồ sơ\" ở trên cùng - xem mục Hồ sơ kết nối."),
-            new("2. Thiết lập kết nối", "Nút \"Thiết lập kết nối\" (mở sẵn tab của nguồn đang chọn): nhập thông tin, bấm Lưu (lưu cả 4 tab, tự điền lại lần mở sau). Nút \"1. Đọc database → SQLite\" chỉ bật khi nguồn đang chọn đã có Host + Database (Oracle: Host + Service Name hoặc SID)."),
-            new("3. Bấm \"1. Đọc database → SQLite\"", "Kết nối, đọc schema, lưu vào Data\\Database\\{tên database}.db. Khung log bên dưới hiện tiến trình. Không kết nối được (sai Host / Port, chưa bật VPN, firewall chặn...) thì sau thời gian chờ (mặc định 10 giây, đổi trong Cài đặt) hiện hộp thoại báo lỗi kèm gợi ý cần kiểm tra; sai mật khẩu / sai tên database / Service Name cũng được báo rõ."),
-            new("4. Bấm \"2. Xuất HTML\" rồi \"Mở file HTML\"", "Sinh và mở Data\\Database\\{tên database}.html - 1 file tự chứa, không cần mạng, gửi cho người khác được."),
-            new("Nút màu xanh = bước tiếp theo", "Chưa đọc database: nút 1 xanh. Đọc xong: nút \"2. Xuất HTML\" xanh. Xuất xong: nút \"Mở file HTML\" xanh. Mở lại module cũng tự nhận đang ở bước nào (HTML cũ hơn dữ liệu vừa đọc thì vẫn là bước 2)."),
+            new("2. Thiết lập kết nối", "Nút \"Thiết lập kết nối\" (mở sẵn tab của nguồn đang chọn): nhập thông tin, bấm Lưu (lưu cả 4 tab, tự điền lại lần mở sau). Nút \"1. Đọc database\" chỉ bật khi nguồn đang chọn đã có Host + Database (Oracle: Host + Service Name hoặc SID)."),
+            new("3. Bấm \"1. Đọc database\"", "Kết nối, đọc schema, lưu vào Data\\Database\\{tên database}.db. Khung Nhật ký bên dưới hiện tiến trình. Không kết nối được (sai Host / Port, chưa bật VPN, firewall chặn...) thì sau thời gian chờ (mặc định 10 giây, đổi trong Cài đặt) hiện hộp thoại báo lỗi kèm gợi ý cần kiểm tra; sai mật khẩu / sai tên database / Service Name cũng được báo rõ."),
+            new("4. Bấm \"2. Xuất HTML\" rồi \"3. Mở file HTML\"", "Sinh và mở Data\\Database\\{tên database}.html - 1 file tự chứa, không cần mạng, gửi cho người khác được."),
+            new("Nút màu xanh = bước tiếp theo", "Chưa đọc database: nút 1 xanh. Đọc xong: nút \"2. Xuất HTML\" xanh. Xuất xong: nút \"3. Mở file HTML\" xanh. Mở lại module cũng tự nhận đang ở bước nào (HTML cũ hơn dữ liệu vừa đọc thì vẫn là bước 2)."),
+            new("Dòng dưới Nguồn", "Cho biết nguồn đang chọn kết nối tới đâu (Host:Port/Database, Oracle: Service Name / SID) và dữ liệu đã đọc lúc nào, hoặc \"chưa đọc lần nào\". Nguồn chưa nhập Host / Database thì nhắc bấm \"Thiết lập kết nối\"."),
+            new("Copy nhật ký", "Nút \"Copy\" cạnh tiêu đề Nhật ký: chép mọi dòng nhật ký để dán vào tin nhắn / ghi chú khi cần báo lỗi."),
             new("Mở lại hướng dẫn này", "Nút Hướng dẫn trên cùng, hoặc phím F1.", "F1"),
         ]),
 
@@ -62,12 +64,12 @@ internal static class HelpContent
 
         new("Nhiều database và cập nhật", "", "Mỗi database có file dữ liệu riêng.",
         [
-            new("Bảng trùng tên ở nhiều schema", "Để trống Schema mà 2 schema có bảng cùng tên (vd public.orders và audit.orders) thì chỉ những bảng trùng đó hiện dạng schema.bảng trong trang HTML (cột, khoá ngoại đổi theo); bảng không trùng giữ tên ngắn. Khung log ghi rõ bảng nào được đổi. Khoá ngoại trỏ sang schema không đọc cũng hiện dạng schema.bảng."),
+            new("Bảng trùng tên ở nhiều schema", "Để trống Schema mà 2 schema có bảng cùng tên (vd public.orders và audit.orders) thì chỉ những bảng trùng đó hiện dạng schema.bảng trong trang HTML (cột, khoá ngoại đổi theo); bảng không trùng giữ tên ngắn. Khung Nhật ký ghi rõ bảng nào được đổi. Khoá ngoại trỏ sang schema không đọc cũng hiện dạng schema.bảng."),
             new("Tên file theo database", "File .db / .html đặt theo tên database (PostgreSQL / MySQL / SQL Server) hoặc Service Name / SID (Oracle) kèm tên hồ sơ, vd \"orders (prod)\" - đọc nhiều database (hoặc cùng database ở dev / prod) không ghi đè lên nhau."),
             new("Đã đọc trước đó", "Mở lại module (hoặc đổi Nguồn) vẫn nhận file .db / .html đã có của database đang chọn - không cần đọc lại nếu schema chưa đổi."),
             new("Huỷ khi đang đọc", "Đang đọc database thì nút \"Huỷ\" hiện cạnh nút 1 - bấm để dừng ngay (kể cả khi còn đang chờ kết nối). Dữ liệu đọc lần trước (file .db) giữ nguyên, vẫn \"2. Xuất HTML\" được."),
             new("Đọc lỗi vẫn giữ bản cũ", "Đọc database bị lỗi (mất mạng, sai mật khẩu...) không xoá dữ liệu lần trước: nút \"2. Xuất HTML\" vẫn bật để xuất lại bản cũ nếu cần; nút 1 có màu xanh để nhắc đọc lại."),
-            new("Lấy dữ liệu mới nhất", "Bấm lại \"1. Đọc database → SQLite\" rồi \"2. Xuất HTML\". Mỗi lần đọc là dựng lại toàn bộ."),
+            new("Lấy dữ liệu mới nhất", "Bấm lại \"1. Đọc database\" rồi \"2. Xuất HTML\". Mỗi lần đọc là dựng lại toàn bộ."),
         ]),
     ];
 }

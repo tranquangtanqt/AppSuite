@@ -764,7 +764,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   hồ sơ, nhưng nguồn chỉ ghi vào hồ sơ sau khi đã tính lại file đích. Unit test 12/12; GUI Sandbox 16/16 (đổi nguồn tắt /
   bật đúng nút, xuất đúng `mydb.html` / `ORCL.html`, file Oracle không bị ghi, đọc lỗi báo đúng cổng 3306, mở lại nhớ
   nguồn) (2026-10-21)
-- [ ] Thử tay: đổi nguồn Oracle ↔ MySQL trên máy thật với DB thật, xuất HTML đúng database
+- [x] Giao diện mới: tiêu đề gọn, Cài đặt / Hướng dẫn cùng hàng tiêu đề; thẻ **Kết nối** (nhãn Hồ sơ / Nguồn thẳng cột,
+  2 combobox cùng rộng, dòng tóm tắt Host:Port/Database + "đã đọc lúc …" / "chưa đọc lần nào" / nhắc Thiết lập kết
+  nối); thẻ **Các bước** (3 nút có biểu tượng chia đều - cửa sổ hẹp không bị cắt, tiến trình chỉ hiện khi bận, trạng
+  thái trong thẻ; đổi nguồn thì trạng thái nói nguồn mới đã đọc chưa thay vì giữ "Đã xuất ...ORCL.html"); **Nhật ký** có
+  tiêu đề + nút **Copy** (chép mọi dòng log). Duyệt bằng ảnh trước / sau (Pictures\AppSuite_UI\Rdbms_2026-10-21).
+  Cập nhật F1, README. Unit test 12/12; GUI Sandbox 29/29 + 26/26 + 21/21 (2026-10-21)
+- [ ] Thử tay: đổi nguồn Oracle ↔ MySQL trên máy thật với DB thật, xuất HTML đúng database; Copy nhật ký rồi dán
 - [ ] Thử MySQL với máy chủ thật (máy dev không có MySQL — mới thử được trường hợp không kết nối được)
 - [ ] Thử tay GUI: combobox đổi nguồn, hộp thoại kết nối 4 tab (tích Windows Authentication khoá ô user/pass),
   hộp thoại Cài đặt (Lưu / Mặc định / Huỷ), tự mở HTML; regression PostgreSQL + Oracle với DB thật
