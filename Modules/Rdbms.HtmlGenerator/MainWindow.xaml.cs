@@ -385,6 +385,58 @@ public sealed partial class MainWindow : Window
         OraSidBox.IsEnabled = useSid;
     }
 
+    // ----- So sánh schema -----
+
+    /// <summary>Mở hộp thoại chọn A / B: A chọn sẵn file của hồ sơ / nguồn đang chọn (chưa đọc thì file mới nhất),
+    /// B = file mới nhất còn lại. Chưa đủ 2 file thì báo cách tạo.</summary>
+    private async void OpenCompareDialog_Click(object sender, RoutedEventArgs e)
+    {
+        var files = ViewModel.ListSchemaFiles();
+        if (files.Count < 2)
+        {
+            ShowErrorDialog("So sánh schema",
+                $"Cần ít nhất 2 lần đọc database để so sánh (hiện có {files.Count}). Mỗi lần bấm \"1. Đọc database\" của 1 hồ sơ / nguồn " +
+                "tạo 1 file - vd thêm hồ sơ \"prod\", đọc database ở cả hồ sơ dev và prod, rồi so sánh.");
+            return;
+        }
+
+        CompareAComboBox.ItemsSource = files;
+        CompareBComboBox.ItemsSource = files;
+        var current = ViewModel.CurrentSchemaFilePath;
+        var a = files.Find(f => string.Equals(f.Path, current, StringComparison.OrdinalIgnoreCase)) ?? files[0];
+        CompareAComboBox.SelectedItem = a;
+        CompareBComboBox.SelectedItem = files.Find(f => !ReferenceEquals(f, a));
+        CompareError.Visibility = Visibility.Collapsed;
+        CompareDialog.XamlRoot = Content.XamlRoot;
+        if (await CompareDialog.ShowAsync() == ContentDialogResult.Primary
+            && CompareAComboBox.SelectedItem is RdbmsHtmlGeneratorViewModel.SchemaFile fileA
+            && CompareBComboBox.SelectedItem is RdbmsHtmlGeneratorViewModel.SchemaFile fileB
+            && await ViewModel.CompareSchemasAsync(fileA, fileB) is { } error)
+        {
+            ShowErrorDialog("Không so sánh được", error);
+        }
+    }
+
+    private void CompareSwap_Click(object sender, RoutedEventArgs e)
+    {
+        (CompareAComboBox.SelectedItem, CompareBComboBox.SelectedItem) = (CompareBComboBox.SelectedItem, CompareAComboBox.SelectedItem);
+    }
+
+    /// <summary>Chưa chọn đủ / chọn trùng 1 file → báo dưới 2 ô, giữ hộp thoại mở.</summary>
+    private void CompareDialog_PrimaryButtonClick(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+    {
+        string? error = CompareAComboBox.SelectedItem is null || CompareBComboBox.SelectedItem is null
+            ? "Hãy chọn cả A và B."
+            : ReferenceEquals(CompareAComboBox.SelectedItem, CompareBComboBox.SelectedItem) ? "Hãy chọn 2 file khác nhau."
+            : null;
+        if (error is not null)
+        {
+            args.Cancel = true;
+            CompareError.Text = error;
+            CompareError.Visibility = Visibility.Visible;
+        }
+    }
+
     // ----- Nhật ký -----
 
     /// <summary>Nút Copy cạnh tiêu đề Nhật ký: chép mọi dòng log (mỗi dòng 1 hàng) để dán vào tin nhắn / ghi chú lỗi.</summary>

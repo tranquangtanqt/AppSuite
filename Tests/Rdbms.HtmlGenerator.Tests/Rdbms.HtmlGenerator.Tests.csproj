@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     Unit test cho phần không phụ thuộc WinUI / máy chủ database của Rdbms.HtmlGenerator: hồ sơ kết nối (chuyển config.xml
-    cũ, kiểm tra tên, tên file theo hồ sơ), lưu / đọc config.xml.
+    cũ, kiểm tra tên, tên file theo hồ sơ), lưu / đọc config.xml, so sánh schema + trang kết quả.
 
     Rdbms.HtmlGenerator là app WinUI nên không ProjectReference được → biên dịch kèm Models\ và vài file Services\ thuần .NET.
   -->
@@ -17,6 +17,8 @@
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Models\**\*.cs" Link="Rdbms.HtmlGenerator\Models\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\ConnectionProfiles.cs" Link="Rdbms.HtmlGenerator\Services\ConnectionProfiles.cs" />
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\ConnectionSettingsStore.cs" Link="Rdbms.HtmlGenerator\Services\ConnectionSettingsStore.cs" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaComparer.cs" Link="Rdbms.HtmlGenerator\Services\SchemaComparer.cs" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaCompareReport.cs" Link="Rdbms.HtmlGenerator\Services\SchemaCompareReport.cs" />
   </ItemGroup>
 
   <ItemGroup>

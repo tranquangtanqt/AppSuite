@@ -770,6 +770,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   thái trong thẻ; đổi nguồn thì trạng thái nói nguồn mới đã đọc chưa thay vì giữ "Đã xuất ...ORCL.html"); **Nhật ký** có
   tiêu đề + nút **Copy** (chép mọi dòng log). Duyệt bằng ảnh trước / sau (Pictures\AppSuite_UI\Rdbms_2026-10-21).
   Cập nhật F1, README. Unit test 12/12; GUI Sandbox 29/29 + 26/26 + 21/21 (2026-10-21)
+- [x] **So sánh schema** giữa 2 lần đọc (vd dev ↔ prod, bản cũ ↔ bản mới): nút "So sánh schema" trên cùng → chọn A / B
+  từ các file .db (A chọn sẵn file của hồ sơ / nguồn đang chọn, Đổi chỗ, chọn trùng báo lỗi, chưa đủ 2 file báo cách
+  tạo) → trang `So sánh {A} - {B}.html`: tóm tắt số bảng, bảng chỉ có ở A / B, bảng có thay đổi (cột thêm / bớt / kiểu /
+  độ dài / Null / mặc định / khoá chính / mô tả; khoá ngoại, index, ràng buộc so theo nội dung, không theo tên hệ thống
+  sinh), ô tích ẩn thay đổi chỉ khác mô tả; .db bản cũ thì bỏ qua index và ghi rõ. Cập nhật F1, README. Unit test 23/23
+  (11 mới); GUI Sandbox 16/16 + ảnh trang kết quả (2026-10-21)
+- [ ] Thử tay: So sánh schema với 2 DB thật (dev / prod) - kiểm tra trang kết quả có báo thừa / thiếu gì không
 - [ ] Thử tay: đổi nguồn Oracle ↔ MySQL trên máy thật với DB thật, xuất HTML đúng database; Copy nhật ký rồi dán
 - [ ] Thử MySQL với máy chủ thật (máy dev không có MySQL — mới thử được trường hợp không kết nối được)
 - [ ] Thử tay GUI: combobox đổi nguồn, hộp thoại kết nối 4 tab (tích Windows Authentication khoá ô user/pass),

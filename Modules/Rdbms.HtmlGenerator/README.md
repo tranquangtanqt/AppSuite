@@ -103,6 +103,17 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
 → `MainWindow.StepButtonStyle` trả `AccentButtonStyle` cho nút của bước đó, `DefaultButtonStyle` cho các nút còn lại.
 Đọc xong → 2, xuất xong → 3, đọc lỗi → 1; lúc mở module / đổi nguồn tính lại từ file có sẵn (`.html` không cũ hơn `.db` → 3).
 
+7. **"So sánh schema" (2026-10-21)** - nút trên hàng tiêu đề → `CompareDialog` chọn A (gốc) / B từ các file
+   `Data\Database\*.db` (`ListSchemaFiles`, mới đọc nhất lên trước; A chọn sẵn file của hồ sơ / nguồn đang chọn; nút
+   Đổi chỗ; chọn trùng báo lỗi, giữ hộp thoại). Chưa đủ 2 file thì báo cách tạo. `CompareSchemasAsync`:
+   `RdbmsHtmlGeneratorDatabase.OpenFile(path)` (chỉ đọc) `.ReadSnapshot` cả 2 → `Services\SchemaComparer.Compare` →
+   `Services\SchemaCompareReport.Build` → `Data\Database\So sánh {A} - {B}.html`, mở trình duyệt, tóm tắt vào trạng thái +
+   nhật ký. Quy tắc so (unit test `Tests\Rdbms.HtmlGenerator.Tests\SchemaComparerTests`): tên bảng / cột không phân biệt
+   hoa thường; cột so Kiểu / Độ dài / Null / Mặc định / Khoá chính (`Level == 0`) / Mô tả, không so thứ tự; khoá ngoại,
+   index, ràng buộc so theo chuỗi định nghĩa (`SchemaComparer.Describe`), không theo tên (tên hệ thống sinh khác nhau ở
+   mỗi môi trường); 1 bên là .db bản cũ (`HasExtendedInfo` = false) thì bỏ qua index / ràng buộc và trang ghi rõ. Trang
+   HTML tĩnh (không nhúng JSON), ô tích ẩn thay đổi chỉ khác mô tả (`TableDiff.OnlyDescriptionChanges`).
+
 **Bố cục cửa sổ (2026-10-21)**: tiêu đề gọn + Cài đặt / Hướng dẫn cùng hàng; thẻ **Kết nối** (nhãn Hồ sơ / Nguồn cùng cột,
 2 combobox cùng rộng, dòng `ConnectionSummary` = Host:Port/Database của nguồn đang chọn + "đã đọc lúc …" theo giờ sửa
 file .db, hoặc nhắc Thiết lập kết nối khi thiếu Host / Database); thẻ **Các bước** (3 nút chia đều bề ngang có biểu

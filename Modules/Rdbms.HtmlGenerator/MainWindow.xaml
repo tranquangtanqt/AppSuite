@@ -27,18 +27,26 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel VerticalAlignment="Center" Spacing="0">
                 <TextBlock Text="Từ điển dữ liệu database" Style="{StaticResource SubtitleTextBlockStyle}" />
                 <TextBlock Text="Đọc cấu trúc bảng / cột từ database rồi xuất trang HTML để tra cứu" Opacity="0.6" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
-            <Button Grid.Column="1" VerticalAlignment="Center" Click="OpenOptionsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" ToolTipService.ToolTip="Cài đặt: giới hạn thời gian kết nối / truy vấn, tự mở HTML">
+            <Button Grid.Column="1" VerticalAlignment="Center" Click="OpenCompareDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}"
+                    ToolTipService.ToolTip="So sánh 2 lần đọc (vd dev với prod, hoặc bản cũ với bản mới): bảng / cột / kiểu / khoá / index thêm, bớt, đổi">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE8AB;" FontSize="14" />
+                    <TextBlock Text="So sánh schema" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="2" VerticalAlignment="Center" Click="OpenOptionsDialog_Click" IsEnabled="{x:Bind local:MainWindow.Not(ViewModel.IsBusy), Mode=OneWay}" ToolTipService.ToolTip="Cài đặt: giới hạn thời gian kết nối / truy vấn, tự mở HTML">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <FontIcon Glyph="&#xE713;" FontSize="14" />
                     <TextBlock Text="Cài đặt" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="2" VerticalAlignment="Center" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
+            <Button Grid.Column="3" VerticalAlignment="Center" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <FontIcon Glyph="&#xE897;" FontSize="14" />
                     <TextBlock Text="Hướng dẫn (F1)" />
@@ -265,6 +273,33 @@
                 </PivotItem>
             </Pivot>
           </StackPanel>
+        </ContentDialog>
+
+        <!-- So sánh schema: chọn 2 file .db đã đọc -->
+        <ContentDialog x:Name="CompareDialog"
+                       Title="So sánh schema"
+                       PrimaryButtonText="So sánh"
+                       CloseButtonText="Huỷ"
+                       DefaultButton="Primary"
+                       PrimaryButtonClick="CompareDialog_PrimaryButtonClick">
+            <StackPanel Spacing="10" MinWidth="440">
+                <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                           Text="Chọn 2 lần đọc database (mỗi lần bấm &quot;1. Đọc database&quot; của 1 hồ sơ / nguồn tạo 1 file). Kết quả: trang HTML liệt kê bảng / cột / kiểu / khoá / index thêm, bớt, đổi của B so với A." />
+                <ComboBox x:Name="CompareAComboBox" Header="A - gốc (vd dev, hoặc bản cũ)" HorizontalAlignment="Stretch"
+                          AutomationProperties.Name="So sánh A" />
+                <Grid>
+                    <Button HorizontalAlignment="Center" Padding="10,4" Click="CompareSwap_Click" ToolTipService.ToolTip="Đổi chỗ A và B">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8CB;" FontSize="12" />
+                            <TextBlock Text="Đổi chỗ A ↔ B" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
+                <ComboBox x:Name="CompareBComboBox" Header="B - so với (vd prod, hoặc bản mới)" HorizontalAlignment="Stretch"
+                          AutomationProperties.Name="So sánh B" />
+                <TextBlock x:Name="CompareError" TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                           Visibility="Collapsed" AutomationProperties.AutomationId="CompareError" />
+            </StackPanel>
         </ContentDialog>
 
         <!-- Tên hồ sơ (Thêm / Đổi tên) -->

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
@@ -523,6 +524,86 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         catch (Exception ex)
         {
             StatusText = $"Lỗi khi xuất HTML: {ex.Message}";
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    // ----- So sánh schema -----
+
+    /// <summary>1 file .db có thể so sánh (mỗi lần "1. Đọc database" của 1 hồ sơ / nguồn tạo 1 file).</summary>
+    public sealed record SchemaFile(string Name, string Path, DateTime ReadAt)
+    {
+        public string Display => $"{Name}   (đọc lúc {ReadAt:dd/MM/yyyy HH:mm})";
+
+        /// <summary>ComboBox hiện ToString() (DisplayMemberPath không đọc được record C# thường trong WinUI 3).</summary>
+        public override string ToString() => Display;
+    }
+
+    /// <summary>Các file .db trong Data\Database, mới đọc nhất lên trước.</summary>
+    public List<SchemaFile> ListSchemaFiles()
+    {
+        var directory = RdbmsHtmlGeneratorDatabase.DataDirectory;
+        if (!Directory.Exists(directory))
+        {
+            return [];
+        }
+        var files = new List<SchemaFile>();
+        foreach (var path in Directory.GetFiles(directory, "*.db"))
+        {
+            files.Add(new SchemaFile(Path.GetFileNameWithoutExtension(path), path, File.GetLastWriteTime(path)));
+        }
+        files.Sort((x, y) => y.ReadAt.CompareTo(x.ReadAt));
+        return files;
+    }
+
+    /// <summary>File .db của hồ sơ / nguồn đang chọn (null nếu chưa đọc) - chọn sẵn làm A.</summary>
+    public string? CurrentSchemaFilePath => _database.Exists ? _database.DatabasePath : null;
+
+    /// <summary>So sánh A (gốc) với B → Data\Database\So sánh {A} - {B}.html, mở trong trình duyệt. Trả lỗi (null = xong).</summary>
+    public async Task<string?> CompareSchemasAsync(SchemaFile a, SchemaFile b)
+    {
+        if (string.Equals(a.Path, b.Path, StringComparison.OrdinalIgnoreCase))
+        {
+            return "Hãy chọn 2 file khác nhau.";
+        }
+        IsBusy = true;
+        StatusText = $"Đang so sánh {a.Name} với {b.Name}...";
+        try
+        {
+            var (diff, path) = await Task.Run(() =>
+            {
+                var snapshotA = RdbmsHtmlGeneratorDatabase.OpenFile(a.Path).ReadSnapshot(a.Name);
+                var snapshotB = RdbmsHtmlGeneratorDatabase.OpenFile(b.Path).ReadSnapshot(b.Name);
+                var result = SchemaComparer.Compare(snapshotA, snapshotB);
+                var invalid = Path.GetInvalidFileNameChars();
+                var fileName = new string($"So sánh {a.Name} - {b.Name}".Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c).ToArray());
+                var htmlPath = Path.Combine(RdbmsHtmlGeneratorDatabase.DataDirectory, fileName + ".html");
+                File.WriteAllText(htmlPath, SchemaCompareReport.Build(result, DateTime.Now));
+                return (result, htmlPath);
+            });
+
+            var summary = diff.IsIdentical
+                ? "giống nhau"
+                : $"{diff.TablesOnlyInA.Count} bảng chỉ có ở A, {diff.TablesOnlyInB.Count} bảng chỉ có ở B, " +
+                  $"{diff.ChangedTables.Count} bảng có thay đổi, {diff.UnchangedTableCount} bảng giống nhau";
+            StatusText = $"So sánh {a.Name} → {b.Name}: {summary}.";
+            AppendLog($"So sánh A = {a.Name} (đọc lúc {a.ReadAt:dd/MM HH:mm}), B = {b.Name} (đọc lúc {b.ReadAt:dd/MM HH:mm}): {summary}.");
+            if (!diff.IndexesCompared)
+            {
+                AppendLog("Chưa so index / ràng buộc: 1 trong 2 file đọc bằng bản cũ - đọc lại file đó để so đủ.");
+            }
+            AppendLog($"Đã xuất: {path}");
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+            return null;
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Lỗi khi so sánh: {ex.Message}";
+            AppendLog($"LỖI so sánh: {ex.Message}");
+            return ex.Message;
         }
         finally
         {

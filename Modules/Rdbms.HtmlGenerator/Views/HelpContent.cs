@@ -41,6 +41,16 @@ internal static class HelpContent
             new("Từ bản cũ", "Thông tin kết nối đã lưu trước khi có hồ sơ tự thành hồ sơ \"Mặc định\" (giữ nguyên nguồn, cả 4 tab và file đã đọc)."),
         ]),
 
+        new("So sánh schema", "", "So 2 lần đọc database - vd dev với prod trước khi deploy, hoặc bản tuần trước với bản hôm nay - ra 1 trang HTML liệt kê chỗ khác nhau.",
+        [
+            new("Chuẩn bị", "Mỗi lần bấm \"1. Đọc database\" của 1 hồ sơ / nguồn tạo 1 file trong Data\\Database. Cần ít nhất 2 file: vd đọc database ở hồ sơ dev và ở hồ sơ prod. Muốn giữ bản cũ để so với bản mới thì chép file .db cũ ra tên khác trong cùng thư mục trước khi đọc lại."),
+            new("Chọn A và B", "Nút \"So sánh schema\" trên cùng: A (gốc) chọn sẵn file của hồ sơ / nguồn đang chọn, B là file còn lại mới đọc nhất. Danh sách ghi rõ mỗi file đọc lúc nào; nút \"Đổi chỗ A ↔ B\" để đảo chiều. Bấm \"So sánh\" → trang HTML mở trong trình duyệt, lưu ở Data\\Database\\So sánh {A} - {B}.html."),
+            new("Trang kết quả", "Trên cùng: số bảng chỉ có ở A, chỉ có ở B, có thay đổi, giống nhau (bấm để nhảy tới). Bên dưới: bảng chỉ có ở 1 bên, rồi từng bảng có thay đổi - cột thêm / bớt, đổi kiểu, độ dài, Null, mặc định, khoá chính, mô tả (cột A đỏ nhạt, B xanh nhạt); khoá ngoại, index, ràng buộc UNIQUE / CHECK chỉ có ở 1 bên."),
+            new("So theo nội dung", "Tên bảng / cột không phân biệt hoa thường. Index, ràng buộc, khoá ngoại so theo định nghĩa (cột, loại, bảng tham chiếu) chứ không theo tên - tên do hệ thống tự đặt (SYS_C..., PK__...) khác nhau ở mỗi môi trường nên không bị báo nhầm. Thứ tự cột khác không tính là thay đổi."),
+            new("Ẩn khác mô tả", "Tích \"Ẩn thay đổi chỉ khác mô tả (comment)\" trên trang để ẩn dòng mô tả và bảng chỉ khác mô tả - comment hay lệch giữa các môi trường, thường không quan trọng."),
+            new("File đọc bằng bản cũ", "File .db đọc bằng bản trước khi có index / ràng buộc thì chỉ so bảng, cột, khoá ngoại - trang ghi rõ; đọc lại file đó để so đủ."),
+        ]),
+
         new("Cài đặt", "", "Nút \"Cài đặt\" trên thanh nút. Bấm Lưu để áp dụng, \"Mặc định\" để điền lại giá trị gốc.",
         [
             new("Giới hạn thời gian kết nối", "Số giây chờ kết nối tới máy chủ (mặc định 10). Quá thời gian thì báo lỗi thay vì chờ mãi. Mạng chậm / qua VPN xa thì tăng lên."),

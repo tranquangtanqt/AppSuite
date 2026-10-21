@@ -28,6 +28,22 @@ public sealed class RdbmsHtmlGeneratorDatabase
         _connectionString = $"Data Source={DatabasePath}";
     }
 
+    private RdbmsHtmlGeneratorDatabase(string databasePath, bool _)
+    {
+        DatabasePath = databasePath;
+        _connectionString = $"Data Source={databasePath};Mode=ReadOnly";
+    }
+
+    /// <summary>Mở 1 file .db có sẵn (chỉ đọc) - cho So sánh schema.</summary>
+    public static RdbmsHtmlGeneratorDatabase OpenFile(string databasePath) => new(databasePath, true);
+
+    /// <summary>Thư mục Data\Database cạnh exe - nơi mọi file .db / .html được ghi.</summary>
+    public static string DataDirectory => Path.Combine(AppContext.BaseDirectory, "Data", "Database");
+
+    /// <summary>Đọc hết dữ liệu của file để so sánh (<see cref="SchemaComparer"/>).</summary>
+    public SchemaSnapshot ReadSnapshot(string name) =>
+        new(name, GetAllTables(), GetAllColumns(), GetAllForeignKeys(), GetAllIndexes(), GetAllConstraints(), HasExtendedInfo());
+
     /// <summary>Replaces characters that PostgreSQL/Oracle allow in a database name but Windows
     /// doesn't allow in a file name (rare in practice, but database names are user-entered).</summary>
     private static string SanitizeFileName(string name)
