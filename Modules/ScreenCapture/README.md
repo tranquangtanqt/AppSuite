@@ -33,6 +33,13 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   cố định bên trái ra ngoài vùng). App lăn ngang (bánh xe ngang / touchpad); nếu cửa sổ không phản
   ứng thì tự chuyển sang **Shift + lăn chuột** (cách trình duyệt, Excel cuộn ngang). Dừng khi tới
   mép phải, Esc, hoặc cùng giới hạn như cuộn dọc (độ dài ảnh tính theo chiều rộng).
+- **Chụp lấy chữ** (2026-10-21; phím tắt mặc định `Ctrl+Alt+T`, hoặc menu khay *Chụp lấy chữ*; không có thẻ ở cửa sổ
+  chính) — overlay như Vùng chọn (kéo chọn vùng / click cửa sổ đang tô viền) → đọc chữ vùng đó bằng `Common.Ocr`
+  (`FormReaders.CreateForSearch`, ngôn ngữ = `OcrLanguage` của khung *Tìm chữ*; bộ đọc tạo 1 lần / ngôn ngữ) → copy chữ vào
+  clipboard. Không mở Editor, không tự lưu / copy ảnh dù Cài đặt "Sau khi chụp" bật. Luôn hiện thông báo nhỏ
+  (`CaptureToastWindow`): "Đã copy chữ: N dòng" + 2 dòng đầu, hoặc "Không đọc được chữ nào" + ngôn ngữ đang chọn, hoặc lỗi;
+  nút *Mở trong Editor* mở ảnh vùng thành tab. `CaptureLauncherWindow.CaptureRegionTextAsync`, `HotkeyAction.RegionText`
+  (thêm cuối enum; settings.json cũ được bổ sung mặc định khi đọc).
 
 ### Hướng dẫn (cửa sổ dùng chung `SharedUI.Help.HelpWindow`)
 
@@ -54,10 +61,10 @@ tuỳ chọn về ban đầu.
 | Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lưu. **Khi đóng ảnh đã tự lưu**: *Giữ file* (mặc định) / *Hỏi có xoá file không* / *Luôn xoá file* (vào Thùng rác) — `AutoSavedCloseAction` |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm. **Mở lại tab vừa đóng** (Ctrl+Shift+T): giữ tối đa N tab (0–50, mặc định 10, 0 = tắt) / M MB (50–4000, mặc định 300) trong bộ nhớ |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |
-| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
+| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất / Chụp lấy chữ — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
 
 - Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`,
-  `Ctrl+Alt+PrtSc` (chụp cuộn dọc). Màn hình hiện tại, Chụp cuộn ngang và Chụp lại lần gần nhất mặc định không có phím.
+  `Ctrl+Alt+PrtSc` (chụp cuộn dọc), `Ctrl+Alt+T` (chụp lấy chữ). Màn hình hiện tại, Chụp cuộn ngang và Chụp lại lần gần nhất mặc định không có phím.
 - Dùng được cả khi app đang thu nhỏ, ẩn ở khay hệ thống hoặc đang ở app khác. Chụp bằng phím tắt
   khi cửa sổ chính đang thu nhỏ / ẩn thì chụp xong nó vẫn giữ nguyên, không bật lên.
 - Phím đã bị app khác giữ (vd PicPick đang chạy) → đánh dấu ⚠ trong trang Phím tắt + thông báo ở
@@ -278,9 +285,11 @@ bị app khác khoá → báo ở thanh trạng thái),
 - *Copy* (`Ctrl+C`) — copy vùng (ảnh + shape đang thấy) vào clipboard.
 - *Cut* (`Ctrl+X`) — copy vùng rồi tô trắng vùng đó trên ảnh nền.
 - *Xoá vùng* (`Delete`) — tô trắng vùng đó trên ảnh nền.
-- *Copy chữ* — đọc chữ trong vùng (OCR, ngôn ngữ theo khung *Tìm chữ*) rồi copy vào clipboard; ảnh đã đọc chữ thì lấy
-  luôn các chữ nằm trong vùng, không đọc lại.
+- *Copy chữ* (`Ctrl+Shift+C`) — đọc chữ trong vùng (OCR, ngôn ngữ theo khung *Tìm chữ*) rồi copy vào clipboard; ảnh đã
+  đọc chữ thì lấy luôn các chữ nằm trong vùng, không đọc lại. `Ctrl+Shift+C` khi không có vùng chọn = chữ cả ảnh.
 - *Bỏ chọn* (`Esc`).
+- **Chuột phải vào trong vùng chọn** (2026-10-21): menu Copy chữ / Copy ảnh vùng chọn / Cut / Cắt ảnh theo vùng / Xoá
+  nội dung vùng / Bỏ chọn, ghi kèm phím tắt (`EditorWindow.ShowRegionMenu`). Chuột phải ngoài vùng giữ hành vi cũ.
 
 Cut/Xoá vùng chỉ đổi pixel ảnh nền, shape (mũi tên, chữ...) nằm trong vùng vẫn giữ nguyên. Tất cả
 Undo được.
@@ -326,6 +335,7 @@ Flatten, Tô màu, Cắt, đổi thứ tự lớp, xoá) đều Undo/Redo đư�
 | `Ctrl+R` / `Ctrl+Shift+R` | Xoay ảnh phải / trái 90° |
 | `Ctrl+E` | Đổi cỡ ảnh… |
 | `Ctrl+F` | Tìm chữ trong ảnh (trong ô tìm: `Enter` / `Shift+Enter` = chỗ khớp kế tiếp / trước, `Esc` = đóng) |
+| `Ctrl+Shift+C` | Copy chữ (OCR) trong vùng chọn; không có vùng chọn = chữ cả ảnh |
 | Nhấp đúp lên chữ / `F2` | Sửa chữ ngay trên ảnh (`Esc` / `Ctrl+Enter` = xong) |
 | `Ctrl` + kéo góc chữ | Đổi cỡ chữ (kéo thường = đổi khung chữ) |
 | `Delete` / `Backspace` | Xoá shape đang chọn |

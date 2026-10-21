@@ -104,6 +104,7 @@ public sealed class AppSettings
         new() { Action = HotkeyAction.ScrollCapture, Ctrl = true, Alt = true, Key = "PrintScreen" },
         new() { Action = HotkeyAction.ScrollCaptureHorizontal, Key = HotkeyBinding.NoKey },
         new() { Action = HotkeyAction.RepeatLast, Key = HotkeyBinding.NoKey },
+        new() { Action = HotkeyAction.RegionText, Ctrl = true, Alt = true, Key = "T" },
     ];
 
     /// <summary>Luôn có đủ 1 binding cho mỗi HotkeyAction (file cũ thiếu action mới thì bổ sung mặc định).</summary>
@@ -137,6 +138,8 @@ public enum HotkeyAction
     ScrollCaptureHorizontal,
     /// <summary>Màn hình đang có con trỏ chuột (thêm 2026-10-07 - đặt cuối để giá trị số của các action cũ không đổi).</summary>
     CurrentMonitor,
+    /// <summary>Chụp lấy chữ: chọn vùng → đọc chữ (OCR) → copy chữ vào clipboard, không mở Editor (thêm 2026-10-21).</summary>
+    RegionText,
 }
 
 public sealed class HotkeyBinding

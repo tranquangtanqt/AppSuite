@@ -599,6 +599,16 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   không đọc lại từ đầu. Unit test mới `WindowsOcrConcurrencyTests` (cần OCR tiếng Nhật của Windows): code cũ tái hiện
   đúng lỗi, code mới đạt; ImageCompare.Tests 106/106, ScreenCapture.Tests 46/46 (2026-10-21)
 - [ ] Thử tay: Tìm chữ tiếng Nhật trên ảnh thật, gõ qua IME (日, 予定...) - ra kết quả, không còn lỗi Operation aborted
+- [x] **Lấy chữ từ ảnh nhanh hơn** (người dùng hỏi 2026-10-21): (1) **Chụp lấy chữ** - phím tắt mới `Ctrl+Alt+T` (đổi
+  được ở Cài đặt > Phím tắt; settings.json cũ tự bổ sung) + menu khay "Chụp lấy chữ": chọn vùng trên màn hình như Vùng chọn
+  → OCR (ngôn ngữ theo khung Tìm chữ) → copy chữ vào clipboard, không mở Editor / không tự lưu; luôn hiện thông báo nhỏ
+  ("Đã copy chữ: N dòng" + 2 dòng đầu / không đọc được + ngôn ngữ đang chọn / lỗi) với nút Mở trong Editor. (2) Editor:
+  **chuột phải vào trong vùng chọn** → menu Copy chữ / Copy ảnh vùng / Cut / Cắt ảnh / Xoá nội dung vùng / Bỏ chọn (kèm phím
+  tắt); **`Ctrl+Shift+C`** = Copy chữ trong vùng chọn, không có vùng = chữ cả ảnh (trước đây Ctrl+Shift+C = copy ảnh như
+  Ctrl+C). Không thêm thẻ ở cửa sổ chính (lưới 8 thẻ). Cập nhật F1, README. Unit test 50/50 (4 mới: phím mặc định đủ /
+  không trùng / Ctrl+Alt+T / settings cũ được bổ sung); GUI Sandbox (Tesseract vie) 12/13 - mục còn lại: clipboard bị ghi
+  đè bởi máy thật đúng lúc test (Sandbox dùng chung clipboard), thông báo vẫn đúng 2 dòng đã copy (2026-10-21)
+- [ ] Thử tay: Ctrl+Alt+T chọn vùng chữ Nhật trên màn hình thật → dán; chuột phải vùng chọn → Copy chữ; Ctrl+Shift+C
 
 ## ImageCompare
 

@@ -1187,6 +1187,31 @@ public sealed partial class EditorWindow : Window
     private void RegionEraseButton_Click(object sender, RoutedEventArgs e) => EraseRegion();
     private void RegionClearButton_Click(object sender, RoutedEventArgs e) => SetRegion(null);
 
+    /// <summary>Menu chuột phải của vùng chọn - cùng các việc ở tab Vùng chọn, kèm phím tắt.</summary>
+    private void ShowRegionMenu(Windows.Foundation.Point position)
+    {
+        var menu = new MenuFlyout();
+        void Add(string text, string glyph, string? keys, Action action)
+        {
+            var item = new MenuFlyoutItem { Text = text, Icon = new FontIcon { Glyph = glyph } };
+            if (keys is not null)
+            {
+                item.KeyboardAcceleratorTextOverride = keys;
+            }
+            item.Click += (_, _) => action();
+            menu.Items.Add(item);
+        }
+        Add("Copy chữ (đọc chữ trong vùng)", "", "Ctrl+Shift+C", () => _ = CopyRegionTextAsync());
+        menu.Items.Add(new MenuFlyoutSeparator());
+        Add("Copy ảnh vùng chọn", "", "Ctrl+C", CopyRegion);
+        Add("Cut", "", "Ctrl+X", CutRegion);
+        Add("Cắt ảnh theo vùng", "", "Enter", CropToRegion);
+        Add("Xoá nội dung vùng", "", "Delete", EraseRegion);
+        menu.Items.Add(new MenuFlyoutSeparator());
+        Add("Bỏ chọn", "", "Esc", () => SetRegion(null));
+        menu.ShowAt(Canvas, new Microsoft.UI.Xaml.Controls.Primitives.FlyoutShowOptions { Position = position });
+    }
+
     private void CropToRegion()
     {
         if (_region is { } r)
@@ -1384,7 +1409,18 @@ public sealed partial class EditorWindow : Window
 
     private void Canvas_PointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        var pos = ToCanvasPoint(e.GetCurrentPoint(Canvas).Position);
+        var point = e.GetCurrentPoint(Canvas);
+        var pos = ToCanvasPoint(point.Position);
+
+        // Chuột phải vào trong vùng chọn: menu các việc của vùng (Copy chữ, Copy, Cắt ảnh...) - không bắt đầu kéo vùng.
+        if (point.Properties.IsRightButtonPressed && _inlineEditor is null && !_isCropping
+            && _region is { } rightClicked && ToRect(rightClicked).Contains(pos))
+        {
+            ShowRegionMenu(point.Position);
+            e.Handled = true;
+            return;
+        }
+
         _dragStartPoint = pos;
 
         // Đang gõ chữ trên ảnh: bấm ra ngoài = xong (không vẽ / chọn gì thêm ở lần bấm này).
@@ -1914,6 +1950,14 @@ public sealed partial class EditorWindow : Window
         if (FocusInTextSearch())
         {
             return; // đang gõ / chọn trong khung Tìm chữ: phím thuộc về ô tìm, danh sách (Backspace không xoá hình đang chọn)
+        }
+
+        // Ctrl+Shift+C: copy chữ (OCR) trong vùng chọn, không có vùng thì cả ảnh. Trước Ctrl+C của vùng chọn (không xét Shift).
+        if (ctrl && shift && e.Key == Windows.System.VirtualKey.C)
+        {
+            _ = CopyRegionTextAsync();
+            e.Handled = true;
+            return;
         }
 
         // Đang có vùng chọn (tool Select): Ctrl+C/Ctrl+X/Delete/Enter/Esc tác động lên vùng đó.

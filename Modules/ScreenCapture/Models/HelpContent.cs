@@ -20,6 +20,7 @@ public static class HelpContent
         (HotkeyAction.ScrollCapture, "Chụp cuộn dọc"),
         (HotkeyAction.ScrollCaptureHorizontal, "Chụp cuộn ngang"),
         (HotkeyAction.RepeatLast, "Chụp lại lần gần nhất"),
+        (HotkeyAction.RegionText, "Chụp lấy chữ (OCR)"),
     ];
 
     public static IReadOnlyList<HelpSection> Build(AppSettings settings) =>
@@ -41,6 +42,7 @@ public static class HelpContent
             new("Vùng cố định", "Chọn vùng, chỉnh kích thước bằng 4 handle góc, nhấn Enter để chụp (Esc để huỷ). Vùng được nhớ lại cho lần sau, kể cả khi tắt mở lại app.", "Enter", "Esc"),
             new("Chụp cuộn dọc", "Kéo chọn vùng nội dung cần cuộn (trang web, tài liệu, danh sách...). App tự lăn chuột, chụp từng khung và ghép thành 1 ảnh dài. Dừng khi tới cuối trang, khi bấm Esc hoặc chạm giới hạn trong Cài đặt > Chụp cuộn. Nên để thanh menu cố định nằm ngoài vùng chọn.", "Esc"),
             new("Chụp cuộn ngang", "Như cuộn dọc nhưng cuộn sang phải và ghép thành 1 ảnh rộng (bảng tính, timeline...). Cửa sổ không cuộn ngang được bằng bánh xe thì app tự dùng Shift + lăn chuột. Nên để cột cố định bên trái nằm ngoài vùng chọn."),
+            new("Chụp lấy chữ", $"Lấy chữ trên màn hình mà không cần mở Editor: phím tắt ({settings.GetHotkey(HotkeyAction.RegionText).Describe()}) hoặc menu khay \"Chụp lấy chữ\" → kéo chọn vùng có chữ (hoặc click 1 cửa sổ đang tô viền) → chữ được đọc (OCR, offline) và copy vào clipboard, dán vào đâu cũng được. Thông báo nhỏ góc màn hình hiện vài dòng đầu; nút Mở trong Editor để xem ảnh vùng đó. Ngôn ngữ đọc theo khung Tìm chữ của Editor (Tiếng Nhật / Tiếng Việt - English). Ảnh vùng không tự lưu, không mở tab.", "Kéo chuột", "Esc"),
             new("Chụp lại lần gần nhất", "Lặp lại kiểu chụp gần nhất; với vùng chọn / vùng cố định thì chụp lại đúng vùng đó ngay. Mặc định chưa có phím tắt - gán trong Cài đặt > Phím tắt; hoặc thẻ \"Chụp lại lần trước\" ở cửa sổ chính."),
             new("Hẹn giờ trước khi chụp", "Chờ 0-10 giây rồi mới chụp, để kịp mở menu / tooltip cần chụp. Đặt trong Cài đặt > Chung."),
         ]),
@@ -177,8 +179,9 @@ public static class HelpContent
             new("Copy vùng", "Copy vùng (ảnh + hình đang thấy) vào clipboard.", "Ctrl+C"),
             new("Cut vùng", "Copy vùng rồi tô trắng vùng đó trên ảnh nền.", "Ctrl+X"),
             new("Xoá vùng", "Tô trắng vùng đó trên ảnh nền (hình vẽ bên trong vẫn giữ).", "Delete"),
-            new("Copy chữ", "Đọc chữ trong vùng chọn (OCR) và copy vào clipboard - ngôn ngữ theo ô ngôn ngữ của khung Tìm chữ. Ảnh đã đọc chữ (khung Tìm chữ) thì lấy luôn các chữ nằm trong vùng, không phải đọc lại."),
+            new("Copy chữ", "Đọc chữ trong vùng chọn (OCR) và copy vào clipboard - ngôn ngữ theo ô ngôn ngữ của khung Tìm chữ. Ảnh đã đọc chữ (khung Tìm chữ) thì lấy luôn các chữ nằm trong vùng, không phải đọc lại. Không có vùng chọn thì Ctrl+Shift+C lấy chữ cả ảnh.", "Ctrl+Shift+C"),
             new("Bỏ chọn", "Bỏ vùng chọn.", "Esc"),
+            new("Menu chuột phải", "Chuột phải vào trong vùng chọn: Copy chữ, Copy ảnh vùng, Cut, Cắt ảnh theo vùng, Xoá nội dung vùng, Bỏ chọn - kèm phím tắt.", "Chuột phải"),
         ]),
 
         new("Zoom", "\uE71E", "Góc dưới bên phải Editor. Mỗi tab nhớ mức zoom riêng; zoom không ảnh hưởng ảnh khi lưu / copy.",
@@ -213,6 +216,7 @@ public static class HelpContent
             new("Xoay ảnh", "Xoay phải / trái 90°.", "Ctrl+R", "Ctrl+Shift+R"),
             new("Đổi cỡ ảnh", "Co giãn ảnh theo % hoặc px.", "Ctrl+E"),
             new("Tìm chữ", "Mở khung Tìm chữ (đang mở: về ô tìm). Trong ô tìm: Enter / Shift+Enter = chỗ khớp kế tiếp / trước, Esc = đóng.", "Ctrl+F"),
+            new("Copy chữ", "Đọc chữ (OCR) trong vùng chọn - không có vùng chọn thì cả ảnh - và copy vào clipboard.", "Ctrl+Shift+C"),
             new("Xoá", "Xoá hình đang chọn (hoặc xoá vùng chọn).", "Delete", "Backspace"),
             new("Bỏ chọn", "Bỏ chọn hình / vùng chọn.", "Esc"),
             new("Vùng chọn", "Cut vùng / Cắt ảnh theo vùng.", "Ctrl+X", "Enter"),

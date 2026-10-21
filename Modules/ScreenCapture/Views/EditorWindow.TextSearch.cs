@@ -391,15 +391,15 @@ public sealed partial class EditorWindow
 
     private async void RegionCopyTextButton_Click(object sender, RoutedEventArgs e) => await CopyRegionTextAsync();
 
-    /// <summary>Copy chữ trong vùng chọn: ảnh đã đọc chữ (khung Tìm chữ) thì lấy các từ nằm trong vùng - không phải đọc lại; chưa
-    /// thì đọc riêng phần ảnh trong vùng.</summary>
+    /// <summary>Copy chữ trong vùng chọn (nút ở tab Vùng chọn, chuột phải vào vùng, Ctrl+Shift+C): ảnh đã đọc chữ (khung Tìm chữ)
+    /// thì lấy các từ nằm trong vùng - không phải đọc lại; chưa thì đọc riêng phần ảnh trong vùng. Không có vùng chọn (Ctrl+Shift+C)
+    /// = cả ảnh.</summary>
     private async Task CopyRegionTextAsync()
     {
-        if (_region is not { } region)
-        {
-            return;
-        }
         var vm = _viewModel;
+        bool whole = _region is null;
+        var region = _region ?? SKRectI.Create(vm.Bitmap.Width, vm.Bitmap.Height);
+        string where = whole ? "của ảnh" : "trong vùng chọn";
         try
         {
             string text;
@@ -411,7 +411,7 @@ public sealed partial class EditorWindow
             }
             else
             {
-                vm.StatusText = "Đang đọc chữ trong vùng chọn…";
+                vm.StatusText = $"Đang đọc chữ {where}…";
                 var (ocrReader, note) = GetReader(_ocrLanguage);
                 using var crop = new SKBitmap(new SKImageInfo(region.Width, region.Height, OcrText.ColorType, OcrText.AlphaType));
                 using (var canvas = new SKCanvas(crop))
@@ -430,12 +430,12 @@ public sealed partial class EditorWindow
 
             if (text.Length == 0)
             {
-                vm.StatusText = $"Không đọc được chữ nào trong vùng chọn ({reader}) - có chữ thì thử đổi ngôn ngữ ở khung Tìm chữ.";
+                vm.StatusText = $"Không đọc được chữ nào {where} ({reader}) - có chữ thì thử đổi ngôn ngữ ở khung Tìm chữ.";
                 return;
             }
             _clipboardService.CopyText(text);
             int lines = text.Split(Environment.NewLine).Length;
-            vm.StatusText = $"Đã copy {lines} dòng chữ trong vùng chọn ({reader}).";
+            vm.StatusText = $"Đã copy {lines} dòng chữ {where} ({reader}).";
         }
         catch (Exception ex)
         {

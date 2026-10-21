@@ -137,7 +137,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab, RegionText }
 
     private void ShowTrayMenu()
     {
@@ -151,6 +151,7 @@ public sealed partial class CaptureLauncherWindow : Window
             ((int)TrayCommand.FixedRegion, "Chụp vùng cố định", true),
             ((int)TrayCommand.Scroll, "Chụp cuộn dọc", true),
             ((int)TrayCommand.ScrollHorizontal, "Chụp cuộn ngang", true),
+            ((int)TrayCommand.RegionText, "Chụp lấy chữ (copy chữ trong vùng)", true),
             (0, null, true),
             ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
             ((int)TrayCommand.OpenEditor, "Mở Editor", canOpenEditor),
@@ -170,6 +171,7 @@ public sealed partial class CaptureLauncherWindow : Window
             case TrayCommand.FixedRegion: RunInBackground(() => CaptureRegionAsync(isFixed: true)); break;
             case TrayCommand.Scroll: RunInBackground(() => CaptureScrollAsync(ScrollDirection.Vertical)); break;
             case TrayCommand.ScrollHorizontal: RunInBackground(() => CaptureScrollAsync(ScrollDirection.Horizontal)); break;
+            case TrayCommand.RegionText: RunInBackground(CaptureRegionTextAsync); break;
             case TrayCommand.OpenLauncher: ShowLauncher(); break;
             case TrayCommand.OpenEditor: OpenExistingEditor(); break;
             case TrayCommand.ReopenClosedTab: ReopenClosedTab(); break;
@@ -482,6 +484,7 @@ public sealed partial class CaptureLauncherWindow : Window
         HotkeyAction.RepeatLast => RepeatLastCaptureAsync,
         HotkeyAction.ScrollCapture => () => CaptureScrollAsync(ScrollDirection.Vertical),
         HotkeyAction.ScrollCaptureHorizontal => () => CaptureScrollAsync(ScrollDirection.Horizontal),
+        HotkeyAction.RegionText => CaptureRegionTextAsync,
         _ => () => Task.CompletedTask,
     });
 
@@ -686,6 +689,112 @@ public sealed partial class CaptureLauncherWindow : Window
         {
             _isCapturing = false;
         }
+    }
+
+    /// <summary>Bộ đọc chữ theo ngôn ngữ - tạo 1 lần (Windows OCR / Tesseract nạp dữ liệu mất thời gian).</summary>
+    private readonly Dictionary<Common.Ocr.FormLanguage, (Common.Ocr.IFormTextReader Reader, string? Note)> _ocrReaders = [];
+
+    /// <summary>Chụp lấy chữ (phím tắt / menu khay): chọn vùng trên màn hình như Vùng chọn → đọc chữ (OCR, ngôn ngữ theo khung
+    /// Tìm chữ của Editor) → copy chữ vào clipboard. Không mở Editor, không tự lưu / copy ảnh; luôn hiện thông báo nhỏ (vài dòng
+    /// đầu đã copy, hoặc lý do không đọc được) kèm nút Mở trong Editor để xem / tìm chữ trên ảnh.</summary>
+    private async Task CaptureRegionTextAsync()
+    {
+        if (!await BeginCaptureAsync())
+        {
+            return;
+        }
+        try
+        {
+            var virtualRect = _captureService.GetVirtualScreenRect();
+            using var frozenScreen = _captureService.CaptureRect(virtualRect);
+            var windows = WindowEnumerator.GetVisibleWindows();
+            var overlay = new RegionOverlayWindow(frozenScreen, virtualRect, isFixed: false, null,
+                "Chụp lấy chữ: kéo chuột chọn vùng có chữ — hoặc click để lấy chữ cả cửa sổ đang tô viền. Esc: huỷ",
+                windows.Select(w => w.Rect).ToList());
+            var selection = await overlay.SelectRegionAsync();
+            if (selection is null)
+            {
+                CancelCapture("Đã huỷ chụp lấy chữ.");
+                return;
+            }
+
+            var cropRect = new SKRectI(
+                selection.Value.Left - virtualRect.Left,
+                selection.Value.Top - virtualRect.Top,
+                selection.Value.Right - virtualRect.Left,
+                selection.Value.Bottom - virtualRect.Top);
+            // Cùng định dạng điểm ảnh với Copy chữ trong vùng chọn của Editor (bộ đọc chữ của Common.Ocr).
+            var cropped = new SKBitmap(new SKImageInfo(cropRect.Width, cropRect.Height, Common.Ocr.OcrText.ColorType, Common.Ocr.OcrText.AlphaType));
+            using (var canvas = new SKCanvas(cropped))
+            {
+                canvas.Clear(SKColors.White);
+                canvas.DrawBitmap(frozenScreen, cropRect, new SKRect(0, 0, cropRect.Width, cropRect.Height));
+            }
+            RestoreLauncherAfterCapture();
+            RestoreEditorAfterCancel(); // Editor đang mở bị thu nhỏ lúc chụp → trả lại như cũ
+
+            var language = _settings.OcrLanguage;
+            string languageName = language == Common.Ocr.FormLanguage.Japanese ? "Tiếng Nhật" : "Tiếng Việt / English";
+            string title;
+            var lines = new List<string>();
+            try
+            {
+                if (!_ocrReaders.TryGetValue(language, out var entry))
+                {
+                    var reader = Common.Ocr.FormReaders.CreateForSearch(language, out var note);
+                    entry = (reader, note);
+                    _ocrReaders[language] = entry;
+                }
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var result = await Task.Run(() => entry.Reader.Read(cropped));
+                string text = result.FullText;
+                Log.LogInformation("Chụp lấy chữ: vùng {Width}x{Height}, {Reader}, {Lines} dòng, {Ms} ms",
+                    cropped.Width, cropped.Height, entry.Reader.Name, result.Lines.Count, stopwatch.ElapsedMilliseconds);
+                if (text.Length == 0)
+                {
+                    title = "Không đọc được chữ nào trong vùng";
+                    lines.Add($"Ngôn ngữ đang chọn: {languageName} - đổi ở khung Tìm chữ (Ctrl+F) của Editor.");
+                }
+                else
+                {
+                    _clipboardService.CopyText(text);
+                    var textLines = text.Split(Environment.NewLine);
+                    title = $"Đã copy chữ: {textLines.Length} dòng";
+                    lines.AddRange(textLines.Take(2));
+                }
+                if (entry.Note is { } note2 && lines.Count < 2)
+                {
+                    lines.Add(note2);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(ex, "Chụp lấy chữ: không đọc được chữ");
+                title = "Không đọc được chữ";
+                lines.Add(ex.Message);
+            }
+            ShowTextToast(cropped, title, lines);
+        }
+        finally
+        {
+            _isCapturing = false;
+        }
+    }
+
+    /// <summary>Thông báo của Chụp lấy chữ: ảnh vùng + kết quả; nút Mở trong Editor mở ảnh vùng (tìm / copy lại chữ ở đó).</summary>
+    private void ShowTextToast(SKBitmap cropped, string title, IReadOnlyList<string> lines)
+    {
+        CloseCaptureToast();
+        var toast = new CaptureToastWindow(cropped, title, lines, () => OpenEditor(cropped), savedPath: null);
+        toast.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_toast, toast))
+            {
+                _toast = null;
+            }
+        };
+        _toast = toast;
+        toast.ShowWithoutFocus();
     }
 
     /// <summary>Vùng cố định đã lưu (settings.json), cắt cho vừa màn hình hiện tại - màn hình có thể đã đổi
