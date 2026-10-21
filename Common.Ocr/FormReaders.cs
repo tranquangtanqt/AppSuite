@@ -127,13 +127,21 @@ public sealed class WindowsFormReader : IFormTextReader
         int pad = 8 * scale; // Windows OCR bỏ sót chữ sát mép ảnh
         var gray = FormPreprocess.Crop(image, SKRectI.Create(image.Width, image.Height), pad, out int w, out int h);
         using var softwareBitmap = ToSoftwareBitmap(gray, w, h);
-        // Đọc lại chạy song song (TextDiffVerifier của ImageCompare) - tài liệu không nói OcrEngine an toàn đa luồng → khoá.
-        Windows.Media.Ocr.OcrResult result;
+        var result = Recognize(softwareBitmap);
+        return OcrText.JoinWords(result.Lines.SelectMany(l => l.Words).Select(w => w.Text));
+    }
+
+    /// <summary>1 OcrEngine chỉ chạy được 1 RecognizeAsync tại 1 thời điểm - gọi thêm khi lần trước chưa xong thì lỗi
+    /// "Another RecognizeAsync operation is already running" (E_ABORT). Đã gặp: Tìm chữ của ScreenCapture gõ "日" qua IME
+    /// → mỗi lần ô tìm đổi lại huỷ + đọc lại, mà huỷ (AsTask(ct)) chỉ thôi chờ chứ lệnh đọc của Windows vẫn chạy. Nên mọi lần
+    /// đọc xếp hàng qua khoá này và luôn chờ lệnh đọc xong hẳn - nơi gọi kiểm tra huỷ sau đó (1 dải ảnh chỉ vài trăm ms).
+    /// Cũng giữ an toàn cho đọc lại song song (TextDiffVerifier của ImageCompare).</summary>
+    private Windows.Media.Ocr.OcrResult Recognize(SoftwareBitmap softwareBitmap)
+    {
         lock (_engine)
         {
-            result = _engine.RecognizeAsync(softwareBitmap).AsTask().GetAwaiter().GetResult();
+            return _engine.RecognizeAsync(softwareBitmap).AsTask().GetAwaiter().GetResult();
         }
-        return OcrText.JoinWords(result.Lines.SelectMany(l => l.Words).Select(w => w.Text));
     }
 
     private static SoftwareBitmap ToSoftwareBitmap(byte[] gray, int width, int height)
@@ -152,7 +160,8 @@ public sealed class WindowsFormReader : IFormTextReader
     {
         var image = FormPreprocess.Prepare(strip, scale);
         using var softwareBitmap = ToSoftwareBitmap(image.Pixels, image.Width, image.Height);
-        var result = _engine.RecognizeAsync(softwareBitmap).AsTask(ct).GetAwaiter().GetResult();
+        var result = Recognize(softwareBitmap);
+        ct.ThrowIfCancellationRequested();
         var lines = new List<OcrLine>();
         foreach (var line in result.Lines)
         {

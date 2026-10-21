@@ -591,6 +591,14 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   'giao' 2, 'khach hang' 1, 'Delivred' ≈, Enter, Copy chữ, Highlight 3 → phiên lưu 3 hình, Copy chữ vùng 2 cách, nhớ /
   lưu ngôn ngữ); máy thật Windows OCR tiếng Nhật: 140 dòng 0,45 s, 受注番号 / 受注数量 khớp, 用途区分 ≈ (OCR đọc 厓途区分).
   Bản publish ScreenCapture 62 → 72 MB. F1 + README (2026-10-08) — cần thử tay trên ảnh thật
+- [x] Bug (người dùng báo): Tìm chữ tiếng Nhật gõ "日" không ra kết quả - "Không đọc được chữ: Operation aborted. Another
+  RecognizeAsync operation is already running!". Gõ qua IME làm ô tìm đổi nhiều lần → mỗi lần huỷ + đọc lại ảnh, mà huỷ
+  chỉ thôi chờ, lệnh đọc của Windows OCR vẫn chạy → lần đọc mới gọi cùng OcrEngine bị từ chối. Sửa ở `Common.Ocr`
+  (`WindowsFormReader.Recognize`: mọi lần đọc trên 1 engine xếp hàng qua khoá, luôn chờ lệnh đọc xong rồi mới xét huỷ -
+  ImageCompare dùng chung cũng được sửa) + ScreenCapture: đang đọc đúng ảnh + ngôn ngữ thì gõ tiếp chờ lần đang chạy,
+  không đọc lại từ đầu. Unit test mới `WindowsOcrConcurrencyTests` (cần OCR tiếng Nhật của Windows): code cũ tái hiện
+  đúng lỗi, code mới đạt; ImageCompare.Tests 106/106, ScreenCapture.Tests 46/46 (2026-10-21)
+- [ ] Thử tay: Tìm chữ tiếng Nhật trên ảnh thật, gõ qua IME (日, 予定...) - ra kết quả, không còn lỗi Operation aborted
 
 ## ImageCompare
 

@@ -130,6 +130,10 @@ public sealed partial class EditorWindow
     private OcrEntry? CachedOcr(EditorViewModel vm) =>
         _ocrCache.TryGetValue(vm, out var entry) && ReferenceEquals(entry.Bitmap, vm.Bitmap) && entry.Language == _ocrLanguage ? entry : null;
 
+    /// <summary>Lần đọc chữ đang chạy - gõ tiếp vào ô tìm (IME đổi chữ nhiều lần cho 1 ký tự) khi ảnh + ngôn ngữ chưa đổi thì
+    /// chờ lần này thay vì huỷ rồi đọc lại từ đầu.</summary>
+    private (EditorViewModel Vm, SKBitmap Bitmap, FormLanguage Language, Task<OcrEntry?> Task)? _ocrRunning;
+
     /// <summary>Đọc chữ ảnh nền của tab (chạy nền, báo % ở khung Tìm chữ). Null nếu bị huỷ (đóng khung, đổi tab / ảnh / ngôn ngữ).</summary>
     private async Task<OcrEntry?> EnsureOcrAsync(EditorViewModel vm)
     {
@@ -137,6 +141,18 @@ public sealed partial class EditorWindow
         {
             return cached;
         }
+        if (_ocrRunning is { } running && ReferenceEquals(running.Vm, vm) && ReferenceEquals(running.Bitmap, vm.Bitmap)
+            && running.Language == _ocrLanguage && !running.Task.IsCompleted && _ocrCts is { IsCancellationRequested: false })
+        {
+            return await running.Task;
+        }
+        var task = ReadOcrAsync(vm);
+        _ocrRunning = (vm, vm.Bitmap, _ocrLanguage, task);
+        return await task;
+    }
+
+    private async Task<OcrEntry?> ReadOcrAsync(EditorViewModel vm)
+    {
         _ocrCts?.Cancel();
         var cts = _ocrCts = new CancellationTokenSource();
         var language = _ocrLanguage;
