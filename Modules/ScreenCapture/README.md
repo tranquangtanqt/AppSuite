@@ -241,6 +241,9 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
     dòng trong danh sách để cuộn tới; `Enter` / `Shift+Enter` = chỗ kế tiếp / trước, `Esc` = đóng khung.
   - *Copy chữ*: toàn bộ chữ của ảnh, mỗi dòng 1 dòng (chữ Nhật không chen dấu cách).
   - *Tô Highlight (N)*: mọi chỗ khớp thành hình Highlight vàng thật (1 bước Undo, lưu / copy kèm ảnh).
+  - *Che Mosaic (N)* / *Làm mờ (N)* (2026-10-21): mọi chỗ khớp thành hình `RedactAnnotation` thật (Mosaic / Blur, nới 4 px,
+    kẹp trong ảnh, mức = thanh Size ≥ 3, tự tăng theo chiều cao chữ - `RedactAnnotation.StrengthToHide`: làm mờ sigma ≥ 1/3, Mosaic ô ≥ 1/4 chiều cao; trước đó chữ 40 px làm mờ Size 3 vẫn đọc được), 1 bước Undo (`EditorViewModel.AddRedactions`) - tìm tên khách / số điện
+    thoại / mã đơn rồi che hết trước khi gửi ảnh. 4 nút chỗ khớp xếp 2 hàng × 2 trong khung Tìm chữ.
 - **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ; **khôi phục được**: kéo handle khung
   ảnh ra lại là hiện lại phần đã cắt — kể cả sau khi tắt mở lại app), *Undo* / *Redo*
   từng bước, *Dán*

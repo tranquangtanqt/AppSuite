@@ -93,6 +93,24 @@ public sealed partial class EditorViewModel : ObservableObject
         StatusText = $"{description}.";
     }
 
+    /// <summary>Tìm chữ → "Che Mosaic" / "Làm mờ": mỗi chỗ khớp thành 1 hình Mosaic / Làm mờ (như vẽ bằng công cụ Che - di chuyển,
+    /// co giãn, xoá được), cả nhóm 1 bước Undo. Mức che = thanh Size hiện tại (tối thiểu 3), tự tăng theo chiều cao chữ của từng
+    /// chỗ cho đủ kín (<see cref="RedactAnnotation.StrengthToHide"/>).</summary>
+    public void AddRedactions(IReadOnlyList<SKRect> areas, RedactMode mode, string description)
+    {
+        float minimum = Math.Max(StrokeWidth, 3);
+        var commands = areas
+            .Select(area => (IEditCommand)new AddAnnotationCommand(Annotations, new RedactAnnotation
+            {
+                Mode = mode,
+                Bounds = area,
+                StrokeWidth = RedactAnnotation.StrengthToHide(mode, area.Height, minimum),
+            }))
+            .ToList();
+        UndoRedo.Do(new CompositeEditCommand(commands, description));
+        StatusText = $"{description}.";
+    }
+
     public void RemoveAnnotation(AnnotationShape shape) =>
         UndoRedo.Do(new RemoveAnnotationCommand(Annotations, shape));
 

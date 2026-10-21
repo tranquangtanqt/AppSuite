@@ -148,6 +148,7 @@ public static class HelpContent
             new("Cách so khớp", "Mặc định không phân biệt dấu / hoa thường (\"khach hang\" khớp \"Khách hàng\"), bỏ qua khoảng trắng. Không thấy chỗ khớp chính xác thì tự tìm gần đúng (sai / thiếu 1 ký tự - OCR hay đọc nhầm), đánh dấu ≈."),
             new("Copy chữ", "Copy toàn bộ chữ đọc được của ảnh, mỗi dòng 1 dòng (chữ Nhật không chen dấu cách). Chỉ 1 phần ảnh: chọn vùng bằng Select rồi bấm Copy chữ ở tab Vùng chọn."),
             new("Tô Highlight", "Biến mọi chỗ khớp thành hình Highlight vàng thật trên ảnh (1 bước Undo) - giữ lại khi lưu / copy, chỉnh / xoá từng cái như hình Highlight thường."),
+            new("Che Mosaic / Làm mờ", "Che mọi chỗ khớp trong 1 bước - vd gõ tên khách, số điện thoại, mã đơn rồi bấm \"Che Mosaic (N)\" trước khi gửi ảnh cho người khác. Mỗi chỗ thành 1 hình Mosaic / Làm mờ thật (như vẽ bằng nhóm Che): di chuyển, co giãn, xoá từng cái được; cả nhóm 1 bước Undo. Vùng che rộng hơn khung chữ 4 px; mức che theo thanh Size (tối thiểu 3) và tự tăng theo cỡ chữ để chữ to cũng không đọc được. Nhiều giá trị khác nhau (nhiều số điện thoại): tìm và che từng cái, hoặc tìm phần chung (vd \"090\"). Nên xem lại ảnh trước khi gửi - chữ OCR đọc sai thì có thể sót."),
             new("Lưu ý", "Chỉ đọc ảnh chụp, không đọc chữ / hình đã vẽ lên. Chữ đọc từ ảnh có thể sai vài ký tự - không thấy thì thử tìm đoạn ngắn hơn. Đóng khung: nút ✕ hoặc Esc."),
         ]),
 

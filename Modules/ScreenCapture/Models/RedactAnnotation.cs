@@ -31,6 +31,21 @@ public sealed class RedactAnnotation : AnnotationShape
     /// <summary>Sigma làm mờ: Size 1 → 4, 3 → 6, 20 → 23. Sigma nhỏ hơn vẫn có thể đọc được chữ.</summary>
     private float Sigma => 3 + Math.Max(1, StrokeWidth);
 
+    /// <summary>Thanh Size lớn nhất (giới hạn của thanh trượt Size).</summary>
+    public const float MaxStrength = 20f;
+
+    /// <summary>Mức (Size) đủ che kín chữ cao <paramref name="textHeight"/> px - dùng khi che tự động các chỗ khớp của Tìm chữ.
+    /// Mức cố định không đủ với chữ to: đã gặp chữ 40 px làm mờ ở Size 3 (sigma 6) vẫn đọc được số điện thoại. Làm mờ cần sigma
+    /// ≥ 1/3 chiều cao chữ, Mosaic cần ô ≥ 1/4 chiều cao. Không dưới <paramref name="minimum"/> (mức người dùng đang chọn), không
+    /// quá <see cref="MaxStrength"/>.</summary>
+    public static float StrengthToHide(RedactMode mode, float textHeight, float minimum)
+    {
+        float needed = mode == RedactMode.Mosaic
+            ? (textHeight / 4f - 4f) / 2f // ô = 4 + 2 × Size
+            : textHeight / 3f - 3f;       // sigma = 3 + Size
+        return Math.Clamp(MathF.Ceiling(needed), Math.Max(1f, minimum), MaxStrength);
+    }
+
     // Ảnh đã xử lý của vùng - tính lại chỉ khi ảnh nền / vùng / chế độ / mức độ đổi, không phải mỗi
     // lần vẽ lại canvas (kéo chuột, hover...).
     private SKBitmap? _cache;

@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using ScreenCapture.Models;
 using ScreenCapture.ViewModels;
 using SkiaSharp;
 
@@ -284,11 +285,15 @@ public sealed partial class EditorWindow
         return item;
     }
 
+    /// <summary>Bật / tắt + ghi số chỗ khớp lên các nút làm việc với chỗ khớp (Tô Highlight, Che Mosaic, Làm mờ).</summary>
     private void UpdateHighlightButton()
     {
-        HighlightMatchesButton.IsEnabled = _textMatches.Count > 0;
-        ((TextBlock)((StackPanel)HighlightMatchesButton.Content).Children[1]).Text =
-            _textMatches.Count > 0 ? $"Tô Highlight ({_textMatches.Count})" : "Tô Highlight";
+        int count = _textMatches.Count;
+        foreach (var (button, label) in new[] { (HighlightMatchesButton, "Tô Highlight"), (MosaicMatchesButton, "Che Mosaic"), (BlurMatchesButton, "Làm mờ") })
+        {
+            button.IsEnabled = count > 0;
+            ((TextBlock)((StackPanel)button.Content).Children[1]).Text = count > 0 ? $"{label} ({count})" : label;
+        }
     }
 
     // ---- Điều khiển trong khung ----
@@ -386,6 +391,28 @@ public sealed partial class EditorWindow
         // Nới 2 px quanh khung chữ OCR (khung sát nét chữ - tô đúng khít trông hụt).
         var areas = _textMatches.Select(m => SKRect.Inflate(ToRect(m.Bounds), 2, 2)).ToList();
         _viewModel.AddHighlights(areas, $"Tô Highlight {areas.Count} chỗ khớp \"{TextSearchBox.Text.Trim()}\"");
+        Canvas.Invalidate();
+    }
+
+    private void MosaicMatchesButton_Click(object sender, RoutedEventArgs e) => RedactMatches(RedactMode.Mosaic);
+
+    private void BlurMatchesButton_Click(object sender, RoutedEventArgs e) => RedactMatches(RedactMode.Blur);
+
+    /// <summary>Che mọi chỗ khớp (tìm tên khách / số điện thoại / mã đơn rồi che hết trước khi gửi ảnh). Nới 4 px quanh khung
+    /// chữ OCR: khung sát nét chữ, che khít quá thì mép chữ (dấu, nét móc) còn lộ.</summary>
+    private void RedactMatches(RedactMode mode)
+    {
+        if (_textMatches.Count == 0)
+        {
+            return;
+        }
+        var bounds = SKRect.Create(_viewModel.Bitmap.Width, _viewModel.Bitmap.Height);
+        var areas = _textMatches
+            .Select(m => SKRect.Intersect(SKRect.Inflate(ToRect(m.Bounds), 4, 4), bounds))
+            .Where(r => !r.IsEmpty)
+            .ToList();
+        string verb = mode == RedactMode.Mosaic ? "Che Mosaic" : "Làm mờ";
+        _viewModel.AddRedactions(areas, mode, $"{verb} {areas.Count} chỗ khớp \"{TextSearchBox.Text.Trim()}\"");
         Canvas.Invalidate();
     }
 

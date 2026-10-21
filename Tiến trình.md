@@ -609,6 +609,15 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   không trùng / Ctrl+Alt+T / settings cũ được bổ sung); GUI Sandbox (Tesseract vie) 12/13 - mục còn lại: clipboard bị ghi
   đè bởi máy thật đúng lúc test (Sandbox dùng chung clipboard), thông báo vẫn đúng 2 dòng đã copy (2026-10-21)
 - [ ] Thử tay: Ctrl+Alt+T chọn vùng chữ Nhật trên màn hình thật → dán; chuột phải vùng chọn → Copy chữ; Ctrl+Shift+C
+- [x] **Che các chỗ tìm thấy** (người dùng chọn 2026-10-21): khung Tìm chữ thêm **Che Mosaic (N)** / **Làm mờ (N)** (4 nút
+  chỗ khớp xếp 2 × 2) - tìm tên khách / số điện thoại / mã đơn rồi che hết trước khi gửi ảnh; mỗi chỗ thành 1 hình Mosaic /
+  Làm mờ thật (sửa / xoá từng cái được), cả nhóm 1 bước Undo, vùng nới 4 px. Mức che tự tăng theo chiều cao chữ
+  (`RedactAnnotation.StrengthToHide`) - ảnh Sandbox lần đầu cho thấy chữ 40 px làm mờ ở Size 3 vẫn đọc được số. Cập nhật
+  F1, README. Unit test 59/59 (9 mới); GUI Sandbox 9/9 (tìm "090" → 2 chỗ, Che Mosaic (2), Undo 1 lần gỡ cả 2, Làm mờ (2),
+  phiên tạm còn đúng 2 hình Làm mờ) (2026-10-21)
+- [ ] Thử tay: Che Mosaic / Làm mờ trên ảnh chụp thật có chữ Nhật (tên khách, 電話番号) - xem đã kín chưa trước khi gửi
+- [ ] **[Đề xuất · Nên có]** Tìm theo mẫu cho Che: "mọi số điện thoại" / "mọi email" / "mọi dãy số ≥ N chữ số" - che hết
+  các giá trị khác nhau trong 1 lần thay vì tìm từng cái
 
 ## ImageCompare
 

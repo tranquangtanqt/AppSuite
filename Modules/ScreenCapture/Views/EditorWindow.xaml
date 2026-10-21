@@ -1017,11 +1017,15 @@
                     <ProgressRing x:Name="TextSearchProgress" Width="16" Height="16" IsActive="False" Visibility="Collapsed" />
                     <TextBlock x:Name="TextSearchStatus" TextWrapping="Wrap" Opacity="0.75" FontSize="12" MaxWidth="290" />
                 </StackPanel>
-                <Grid Grid.Row="5" ColumnSpacing="6">
+                <Grid Grid.Row="5" ColumnSpacing="6" RowSpacing="6">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <Button x:Name="CopyAllTextButton" HorizontalAlignment="Stretch" Click="CopyAllTextButton_Click" IsEnabled="False"
                             ToolTipService.ToolTip="Copy toàn bộ chữ đọc được của ảnh, mỗi dòng 1 dòng">
                         <StackPanel Orientation="Horizontal" Spacing="6">
@@ -1034,6 +1038,21 @@
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <FontIcon Glyph="&#xE7E6;" FontSize="14" />
                             <TextBlock Text="Tô Highlight" />
+                        </StackPanel>
+                    </Button>
+                    <!-- Che mọi chỗ khớp (số điện thoại, tên khách, mã đơn...) trước khi gửi ảnh: thành hình Mosaic / Làm mờ thật -->
+                    <Button x:Name="MosaicMatchesButton" Grid.Row="1" HorizontalAlignment="Stretch" Click="MosaicMatchesButton_Click" IsEnabled="False"
+                            ToolTipService.ToolTip="Che Mosaic lên mọi chỗ khớp - vd tìm tên khách / số điện thoại rồi che hết trước khi gửi ảnh (thành hình Mosaic thật, 1 bước Undo)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE80A;" FontSize="14" />
+                            <TextBlock Text="Che Mosaic" />
+                        </StackPanel>
+                    </Button>
+                    <Button x:Name="BlurMatchesButton" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Click="BlurMatchesButton_Click" IsEnabled="False"
+                            ToolTipService.ToolTip="Làm mờ mọi chỗ khớp (thành hình Làm mờ thật, 1 bước Undo)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xED1A;" FontSize="14" />
+                            <TextBlock Text="Làm mờ" />
                         </StackPanel>
                     </Button>
                 </Grid>
