@@ -25,12 +25,14 @@ internal static class HelpContent
             new("Thẻ thống kê", "Tổng số module / Đang chạy / Đã dừng - luôn tính mọi module trong modules.json (kể cả module đang ẩn). Dòng trên tiêu đề AppSuite ghi \"x/y module đang chạy\"."),
             new("Làm mới", "Kiểm tra lại module nào đang chạy và cập nhật số liệu (thường tự cập nhật khi Chạy / Dừng, không cần bấm)."),
             new("Lưới Module", "Mỗi module 1 thẻ: biểu tượng, tên, mô tả (dài thì rút gọn, rê chuột để xem đủ), trạng thái và 3 nút Chạy / Dừng / Chạy lại. Chỉ hiện module không bị ẩn."),
+            new("Đổi thứ tự module", "Giữ chuột trên 1 thẻ rồi kéo sang chỗ mới, thả ra. Thứ tự dùng chung cho trang Tổng quan và Danh sách module, được nhớ cho lần mở sau (không sửa modules.json). Module đang ẩn giữ nguyên chỗ của nó; module mới thêm vào modules.json đứng cuối. Quay về thứ tự gốc: trang Cài đặt → \"Sắp xếp lại theo modules.json\"."),
         ]),
 
         new("Danh sách module", "", "Danh sách module dạng lưới như trang Tổng quan, kèm nút tải lại cấu hình.",
         [
             new("Tải lại", "Đọc lại Config\\modules.json (vd vừa thêm / sửa module) và dựng lại danh sách. Không mở / đóng module nào - module đang chạy vẫn chạy và vẫn được nhận ra."),
             new("Ẩn / hiện", "Cùng lựa chọn với trang Tổng quan - ẩn ở đây thì trang Tổng quan cũng ẩn và ngược lại."),
+            new("Kéo thả", "Kéo thẻ để đổi thứ tự, giống trang Tổng quan (cùng 1 thứ tự)."),
         ]),
 
         new("Chạy / Dừng / Chạy lại", "", "3 nút trên mỗi thẻ module. Nút nào không dùng được ở trạng thái hiện tại thì mờ.",
@@ -63,11 +65,11 @@ internal static class HelpContent
 
         new("Cài đặt và cấu hình", "", "Trang Cài đặt (cuối menu trái) và các file cấu hình trong thư mục Config cạnh MainLauncher.exe.",
         [
-            new("Trang Cài đặt", "Thư mục cài đặt, File cấu hình module (modules.json), nút \"Tải lại modules.json\", \"Khi đóng MainLauncher mà còn module đang chạy\" và danh sách \"Module hiện trên màn hình\"."),
+            new("Trang Cài đặt", "Thư mục cài đặt, File cấu hình module (modules.json), nút \"Tải lại modules.json\" và \"Sắp xếp lại theo modules.json\" (bỏ thứ tự đã kéo thả), \"Khi đóng MainLauncher mà còn module đang chạy\" và danh sách \"Module hiện trên màn hình\"."),
             new("Khi đóng MainLauncher mà còn module đang chạy", "Hỏi mỗi lần (mặc định) / Luôn đóng hết các module / Luôn để các module chạy tiếp. Đổi là lưu ngay."),
             new("Config\\modules.json", "Danh sách module: Name (tên), Description (mô tả trên thẻ), Path (đường dẫn file .exe, tương đối so với thư mục MainLauncher, vd .\\Modules\\ScreenCapture\\ScreenCapture.exe), Arguments (tham số khi mở), AutoStart (true = tự mở khi mở MainLauncher). Sửa xong bấm Tải lại."),
             new("Config\\appsettings.json", "ModulesConfigPath - vị trí file modules.json (mặc định Config/modules.json)."),
-            new("Config\\launcher-settings.json", "Các module đang ẩn (nút Ẩn / hiện) và lựa chọn khi đóng MainLauncher - do app tự ghi, không cần sửa tay."),
+            new("Config\\launcher-settings.json", "Các module đang ẩn (nút Ẩn / hiện), thứ tự module đã kéo thả và lựa chọn khi đóng MainLauncher - do app tự ghi, không cần sửa tay."),
         ]),
     ];
 }

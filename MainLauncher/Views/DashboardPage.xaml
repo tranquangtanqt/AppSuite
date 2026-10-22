@@ -71,10 +71,14 @@
                 </StackPanel>
                 <TextBlock Text="Đã ẩn hết module - bấm &quot;Ẩn / hiện&quot; để chọn lại (hoặc trang Cài đặt)."
                            Visibility="{x:Bind ViewModel.IsAllHidden, Mode=OneWay}" Opacity="0.7" />
+                <!-- Kéo thả thẻ để đổi thứ tự (lưu launcher-settings.json, chung với Danh sách module) -->
                 <GridView
                     ItemsSource="{x:Bind ViewModel.VisibleModules}"
                     SelectionMode="None"
-                    IsItemClickEnabled="False">
+                    IsItemClickEnabled="False"
+                    CanDragItems="True" CanReorderItems="True" AllowDrop="True"
+                    DragItemsCompleted="ModuleGrid_DragItemsCompleted"
+                    AutomationProperties.Name="Lưới module">
                     <GridView.ItemTemplate>
                         <DataTemplate x:DataType="vm:ModuleViewModel">
                             <controls:ModuleCard Module="{x:Bind}" />

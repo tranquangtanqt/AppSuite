@@ -17,4 +17,7 @@ public sealed partial class ModuleListPage : Page
         Shown = App.Services.GetRequiredService<DashboardViewModel>();
         InitializeComponent();
     }
+
+    /// <summary>Kéo thả xong → lưu thứ tự mới (chung với trang Tổng quan).</summary>
+    private void ModuleGrid_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args) => Shown.CommitDragOrder();
 }

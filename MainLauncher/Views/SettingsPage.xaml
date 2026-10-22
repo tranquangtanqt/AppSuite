@@ -22,7 +22,12 @@
             <TextBlock Text="{x:Bind ViewModel.ModulesConfigPath}" TextWrapping="Wrap" Opacity="0.8" />
         </StackPanel>
 
-        <Button Content="Tải lại modules.json" Command="{x:Bind ViewModel.ReloadModulesCommand}" />
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <Button Content="Tải lại modules.json" Command="{x:Bind ViewModel.ReloadModulesCommand}" />
+            <!-- Thứ tự kéo thả thẻ (launcher-settings.json) → quay về thứ tự trong modules.json -->
+            <Button Content="Sắp xếp lại theo modules.json" Command="{x:Bind ViewModel.ResetOrderCommand}"
+                    ToolTipService.ToolTip="Bỏ thứ tự đã kéo thả, xếp module theo thứ tự trong modules.json" />
+        </StackPanel>
 
         <!-- Đóng MainLauncher mà còn module đang chạy (thứ tự mục = enum CloseModulesOnExit) -->
         <RadioButtons x:Name="CloseModulesOnExitRadio" Header="Khi đóng MainLauncher mà còn module đang chạy" Margin="0,8,0,0"

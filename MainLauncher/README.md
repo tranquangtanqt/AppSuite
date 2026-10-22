@@ -65,6 +65,12 @@ Start/Stop/Restart gọi thẳng `RelayCommand` trên `ModuleViewModel`.
   thước ô theo card đầu tiên, card cao hơn sẽ bị cắt mất hàng nút Start/Stop/Restart. Tên module 1
   dòng, mô tả tối đa 2 dòng, quá thì `…` + tooltip đầy đủ.
 - Cửa sổ launcher mở ở trạng thái maximize (`App.OnLaunched`).
+- **Kéo thả đổi thứ tự (2026-10-22)**: GridView của Tổng quan và Danh sách module bật `CanDragItems` / `CanReorderItems` /
+  `AllowDrop`; GridView tự đổi chỗ trong `VisibleModules`, `DragItemsCompleted` → `DashboardViewModel.CommitDragOrder` →
+  `ModuleListViewModel.ApplyVisibleOrder`: module bị ẩn giữ chỗ, các chỗ của module đang hiện điền theo thứ tự mới, đổi
+  `Modules` bằng `Move` (thẻ không dựng lại) và lưu `LauncherSettings.ModuleOrder` (tên module). Lúc nạp `OrderedConfigs`
+  xếp theo `ModuleOrder`, module không có trong đó đứng sau theo thứ tự modules.json. `ResetOrderCommand` (Cài đặt →
+  "Sắp xếp lại theo modules.json") xoá `ModuleOrder`. modules.json không bị sửa.
 - **Bố cục gọn (2026-10-22, duyệt bằng ảnh trước / sau ở Pictures\AppSuite_UI\MainLauncher_2026-10-22)**: header cao 100 (tên AppSuite
   trước, dòng "x/y module đang chạy" nhỏ bên dưới); thẻ thống kê padding 16,10 + viền, số `TitleTextBlockStyle`; menu trái
   `OpenPaneLength="240"`; mọi trang lề trái 36, tiêu đề `TitleTextBlockStyle`. NavigationView đặt

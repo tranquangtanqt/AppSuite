@@ -377,6 +377,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   thẻ thống kê thấp ~ một nửa + viền, menu trái 320 → 240, thẻ module 186 → 168, các trang cùng lề / cỡ tiêu đề. Sửa kèm:
   gợi ý phím "F1" nổi ở mép trên cửa sổ (`KeyboardAcceleratorPlacementMode="Hidden"`); màu biểu tượng module đổi mỗi lần mở
   app (`string.GetHashCode()` ngẫu nhiên theo tiến trình → băm FNV-1a cố định). GUI Sandbox 28/28 (2026-10-22)
+- [x] **Kéo thả đổi thứ tự module** ở Tổng quan và Danh sách module (chung 1 thứ tự), lưu `launcher-settings.json`
+  (`ModuleOrder`, không sửa modules.json); module ẩn giữ chỗ; module mới đứng cuối; Cài đặt → "Sắp xếp lại theo
+  modules.json". Cập nhật F1, README. GUI Sandbox 11/11 (kéo chuột thật) + giao diện 28/28 (2026-10-22)
 - [ ] ModuleA / ModuleB (module mẫu) vẫn hiện chữ không dấu ("Ung dung quan ly A - chay doc lap voi MainLauncher")
 - [ ] **[Đề xuất · Nên làm]** Stop chờ module tự đóng 5 giây rồi buộc tắt (`ProcessManager.StopProcess`: `CloseMainWindow` +
   `WaitForExit(5000)` + `Kill`) - module đang hỏi "Lưu không?" bị tắt mất phần chưa lưu; chờ 5 giây trên luồng UI nên launcher

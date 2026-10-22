@@ -29,7 +29,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
-                        <TextBlock Text="Áp dụng cho trang Tổng quan và Danh sách module. Module đang ẩn mà đang chạy vẫn hiện tạm để bấm Dừng được."
+                        <TextBlock Text="Áp dụng cho trang Tổng quan và Danh sách module. Module đang ẩn mà đang chạy vẫn hiện tạm để bấm Dừng được. Muốn đổi thứ tự: kéo thả thẻ module."
                                    TextWrapping="Wrap" Opacity="0.6" FontSize="12" />
                         <Button Content="Hiện tất cả" Command="{x:Bind ViewModel.ShowAllModulesCommand}" HorizontalAlignment="Stretch" />
                     </StackPanel>

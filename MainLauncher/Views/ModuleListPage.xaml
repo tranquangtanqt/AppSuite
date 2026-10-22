@@ -25,7 +25,10 @@
 
         <TextBlock Grid.Row="1" Text="Đã ẩn hết module - bấm &quot;Ẩn / hiện&quot; để chọn lại (hoặc trang Cài đặt)."
                    Visibility="{x:Bind Shown.IsAllHidden, Mode=OneWay}" Opacity="0.7" />
-        <GridView Grid.Row="1" ItemsSource="{x:Bind Shown.VisibleModules}" SelectionMode="None" IsItemClickEnabled="False">
+        <!-- Kéo thả thẻ để đổi thứ tự (chung với trang Tổng quan) -->
+        <GridView Grid.Row="1" ItemsSource="{x:Bind Shown.VisibleModules}" SelectionMode="None" IsItemClickEnabled="False"
+                  CanDragItems="True" CanReorderItems="True" AllowDrop="True" DragItemsCompleted="ModuleGrid_DragItemsCompleted"
+                  AutomationProperties.Name="Lưới module">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="vm:ModuleViewModel">
                     <controls:ModuleCard Module="{x:Bind}" />

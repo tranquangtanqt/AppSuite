@@ -46,4 +46,7 @@ public partial class SettingsViewModel : ObservableObject
 
     [RelayCommand]
     private Task ReloadModules() => _moduleList.LoadModulesAsync();
+
+    /// <summary>"Sắp xếp lại theo modules.json": bỏ thứ tự đã kéo thả.</summary>
+    public IRelayCommand ResetOrderCommand => _moduleList.ResetOrderCommand;
 }

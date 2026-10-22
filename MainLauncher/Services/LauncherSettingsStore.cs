@@ -24,6 +24,9 @@ public sealed class LauncherSettings
     public List<string> HiddenModules { get; set; } = [];
 
     public CloseModulesOnExit CloseModulesOnExit { get; set; } = CloseModulesOnExit.Ask;
+
+    /// <summary>Thứ tự module do người dùng kéo thả (tên module). Trống = theo modules.json; module không có ở đây đứng sau.</summary>
+    public List<string> ModuleOrder { get; set; } = [];
 }
 
 /// <summary>Đọc 1 lần Config\launcher-settings.json cạnh exe (<see cref="Current"/>, dùng chung cho cả app) và ghi lại khi

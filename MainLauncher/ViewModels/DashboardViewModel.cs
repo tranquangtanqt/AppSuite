@@ -95,6 +95,10 @@ public partial class DashboardViewModel : ObservableObject
             _dispatcherQueue.TryEnqueue(Update);
     }
 
+    /// <summary>GridView (Tổng quan / Danh sách module) vừa kéo thả đổi chỗ trong VisibleModules → áp thứ tự mới cho mọi module
+    /// và lưu.</summary>
+    public void CommitDragOrder() => _moduleList.ApplyVisibleOrder(VisibleModules.ToList());
+
     [RelayCommand]
     private void ShowAllModules()
     {
