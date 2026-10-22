@@ -19,7 +19,12 @@
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
         Loaded="NavView_Loaded"
+        ItemInvoked="NavView_ItemInvoked"
         SelectionChanged="NavView_SelectionChanged">
+
+        <NavigationView.KeyboardAccelerators>
+            <KeyboardAccelerator Key="F1" Invoked="HelpAccelerator_Invoked" />
+        </NavigationView.KeyboardAccelerators>
 
         <NavigationView.MenuItems>
             <NavigationViewItem Content="Dashboard" Tag="Dashboard">
@@ -40,6 +45,12 @@
         </NavigationView.MenuItems>
 
         <NavigationView.FooterMenuItems>
+            <!-- Mở cửa sổ Hướng dẫn riêng, không chuyển trang (SelectsOnInvoked=False, xử lý ở ItemInvoked) -->
+            <NavigationViewItem Content="Hướng dẫn (F1)" Tag="Help" SelectsOnInvoked="False" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE897;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItem Content="Settings" Tag="Settings">
                 <NavigationViewItem.Icon>
                     <SymbolIcon Symbol="Setting" />

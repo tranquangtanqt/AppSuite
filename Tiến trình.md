@@ -359,6 +359,14 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Settings có danh sách đủ để bật lại; lưu `Config\launcher-settings.json` (không sửa modules.json); module ẩn mà đang chạy
   vẫn hiện tạm để bấm Stop; thẻ thống kê vẫn đủ. README cập nhật. GUI Sandbox 20/20 (ẩn 2 ở cả 2 trang, mở lại app vẫn ẩn,
   ẩn lúc đang chạy → hiện tạm ở cả 2 trang rồi ẩn khi Stop, Settings, Hiện tất cả, ẩn hết → dòng nhắc) (2026-10-22)
+- [x] **Hướng dẫn (F1)**: mục "Hướng dẫn (F1)" ở menu trái + phím F1 mở cửa sổ Hướng dẫn dùng chung (7 mục: Bắt đầu nhanh,
+  Dashboard, Module List, Start / Stop / Restart, Ẩn / hiện module, Logs, Settings và cấu hình - gồm các trường của
+  modules.json). README cập nhật. GUI Sandbox 8/8 (mở từ menu không đổi trang, 1 cửa sổ, tìm không dấu, F1) (2026-10-22)
+- [ ] **[Đề xuất · Nên làm]** Stop chờ module tự đóng 5 giây rồi buộc tắt (`ProcessManager.StopProcess`: `CloseMainWindow` +
+  `WaitForExit(5000)` + `Kill`) - module đang hỏi "Lưu không?" bị tắt mất phần chưa lưu; chờ 5 giây trên luồng UI nên launcher
+  đứng hình lúc đó. Restart còn buộc tắt ngay (`StopProcess(force: true)`), không chờ. Hướng sửa: chờ không chặn UI, quá giờ
+  thì hỏi "Module chưa đóng - Buộc tắt / Chờ tiếp" thay vì tự Kill; Restart đóng nhẹ như Stop trước. (F1 đã ghi rõ cách chạy
+  hiện tại để người dùng lưu trước)
 - [ ] Bản đang dùng ở `Application\` là bản cũ - publish lại MainLauncher (`build\Publish-AppSuite.ps1 -Targets MainLauncher`)
 
 ## ScreenCapture

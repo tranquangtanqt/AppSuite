@@ -25,6 +25,11 @@ sách module, start/stop/restart process, theo dõi trạng thái, truyền tham
 | Logs | `LogsViewModel` | Log runtime live (tối đa 500 dòng gần nhất) |
 | Settings | `SettingsViewModel` | Đường dẫn cấu hình, nút Reload modules.json, ô tích module hiện ở Dashboard |
 
+**Hướng dẫn (F1)** (2026-10-22): mục "Hướng dẫn (F1)" ở cuối menu trái (`SelectsOnInvoked="False"`, mở ở
+`NavView_ItemInvoked` - không đổi trang) hoặc phím F1 (`KeyboardAccelerator` trên NavigationView) mở cửa sổ Hướng dẫn
+dùng chung `SharedUI.Help.HelpWindow` (1 cửa sổ, đóng launcher thì đóng theo). Nội dung ở `Views\HelpContent.cs` - thêm /
+đổi tính năng thì cập nhật cả 2 chỗ.
+
 `ModuleCard` (trong `Controls/`) là `UserControl` nhận `ModuleViewModel` qua `DependencyProperty
 Module`, hiển thị tên/mô tả/trạng thái (chấm màu qua `ModuleStatusToBrushConverter`) và 3 nút
 Start/Stop/Restart gọi thẳng `RelayCommand` trên `ModuleViewModel`.
