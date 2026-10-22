@@ -8,9 +8,13 @@ public sealed partial class ModuleListPage : Page
 {
     public ModuleListViewModel ViewModel { get; }
 
+    /// <summary>Module đang hiện (theo lựa chọn Ẩn / hiện chung với Dashboard).</summary>
+    public DashboardViewModel Shown { get; }
+
     public ModuleListPage()
     {
         ViewModel = App.Services.GetRequiredService<ModuleListViewModel>();
+        Shown = App.Services.GetRequiredService<DashboardViewModel>();
         InitializeComponent();
     }
 }

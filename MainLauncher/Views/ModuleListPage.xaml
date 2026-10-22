@@ -19,9 +19,13 @@
             <TextBlock Text="Module List" Style="{StaticResource TitleLargeTextBlockStyle}" VerticalAlignment="Center" />
             <Button Content="Reload" Command="{x:Bind ViewModel.LoadModulesCommand}" VerticalAlignment="Center" />
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" VerticalAlignment="Center" />
+            <!-- Cùng lựa chọn ẩn / hiện với Dashboard -->
+            <controls:ModuleVisibilityButton VerticalAlignment="Center" Margin="12,0,0,0" />
         </StackPanel>
 
-        <GridView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Modules}" SelectionMode="None" IsItemClickEnabled="False">
+        <TextBlock Grid.Row="1" Text="Đã ẩn hết module - bấm &quot;Ẩn / hiện&quot; để chọn lại (hoặc Settings)."
+                   Visibility="{x:Bind Shown.IsAllHidden, Mode=OneWay}" Opacity="0.7" />
+        <GridView Grid.Row="1" ItemsSource="{x:Bind Shown.VisibleModules}" SelectionMode="None" IsItemClickEnabled="False">
             <GridView.ItemTemplate>
                 <DataTemplate x:DataType="vm:ModuleViewModel">
                     <controls:ModuleCard Module="{x:Bind}" />

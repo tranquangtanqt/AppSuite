@@ -97,6 +97,8 @@ public partial class App : Application
             builder.AddProvider(new RollingFileLoggerProvider(Path.Combine(baseDirectory, "Logs"), "launcher"));
         });
 
+        services.AddSingleton(sp => new LauncherSettingsStore(
+            Path.Combine(configDirectory, "launcher-settings.json"), sp.GetRequiredService<ILogger<LauncherSettingsStore>>()));
         services.AddSingleton<IModuleService, ModuleManager>();
         services.AddSingleton<IProcessManager, ProcessManager>();
 

@@ -23,7 +23,7 @@ sách module, start/stop/restart process, theo dõi trạng thái, truyền tham
 | Dashboard | `DashboardViewModel` | Hero header + thẻ thống kê + lưới `ModuleCard` (xem bên dưới) |
 | Module List | `ModuleListViewModel` | `GridView` các `ModuleCard`, nút Reload |
 | Logs | `LogsViewModel` | Log runtime live (tối đa 500 dòng gần nhất) |
-| Settings | `SettingsViewModel` | Đường dẫn cấu hình, nút Reload modules.json |
+| Settings | `SettingsViewModel` | Đường dẫn cấu hình, nút Reload modules.json, ô tích module hiện ở Dashboard |
 
 `ModuleCard` (trong `Controls/`) là `UserControl` nhận `ModuleViewModel` qua `DependencyProperty
 Module`, hiển thị tên/mô tả/trạng thái (chấm màu qua `ModuleStatusToBrushConverter`) và 3 nút
@@ -50,6 +50,14 @@ Start/Stop/Restart gọi thẳng `RelayCommand` trên `ModuleViewModel`.
   card của Gallery. `DashboardViewModel.Modules` chỉ là tham chiếu tới `ModuleListViewModel.Modules`
   (cùng một collection instance) nên Dashboard và Module List luôn đồng bộ trạng thái mà không cần
   logic tải riêng.
+- **Ẩn / hiện module (Dashboard + Module List, 2026-10-22)**: lưới của cả 2 trang bind `DashboardViewModel.VisibleModules`
+  = các module không có trong `LauncherSettings.HiddenModules`, cộng module bị ẩn nhưng đang chạy (để còn bấm Stop; tính
+  lại ở mỗi `StatusChanged`). `Controls\ModuleVisibilityButton` (cạnh tiêu đề "Modules" của Dashboard và cạnh nút Reload của
+  Module List): `VisibleSummary` ("Đang hiện 10 / 12") + `DropDownButton` "Ẩn / hiện" (flyout ô tích `VisibilityItems` +
+  "Hiện tất cả"); trang Settings bind cùng `VisibilityItems` và luôn liệt kê đủ để bật lại. Đổi là lưu ngay
+  `Config\launcher-settings.json` (`Services\LauncherSettingsStore`, ghi file tạm rồi thay; thiếu / hỏng = hiện hết) - tách
+  khỏi `modules.json` để cập nhật / publish lại không mất lựa chọn. Thẻ thống kê Total / Running / Stopped vẫn tính đủ mọi
+  module. Ẩn hết thì hiện dòng nhắc.
 
 Các file `.png` dùng cho header được copy trực tiếp từ
 `D:\Project\Tantq\WinUI\WinUI-Gallery\WinUIGallery\Assets\` (Microsoft, MIT license, dự án mẫu công

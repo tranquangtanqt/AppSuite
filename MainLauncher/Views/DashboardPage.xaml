@@ -51,13 +51,20 @@
             </StackPanel>
 
             <StackPanel Grid.Row="2" Margin="36,24,36,36" Spacing="12">
-                <TextBlock
-                    Text="Modules"
-                    FontSize="16"
-                    Style="{StaticResource BodyStrongTextBlockStyle}"
-                    AutomationProperties.HeadingLevel="Level2" />
+                <!-- Tiêu đề + Ẩn / hiện từng module (dùng chung với Module List / Settings, lưu Config\launcher-settings.json) -->
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock
+                        Text="Modules"
+                        FontSize="16"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource BodyStrongTextBlockStyle}"
+                        AutomationProperties.HeadingLevel="Level2" />
+                    <controls:ModuleVisibilityButton VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Text="Đã ẩn hết module - bấm &quot;Ẩn / hiện&quot; để chọn lại (hoặc Settings)."
+                           Visibility="{x:Bind ViewModel.IsAllHidden, Mode=OneWay}" Opacity="0.7" />
                 <GridView
-                    ItemsSource="{x:Bind ViewModel.Modules}"
+                    ItemsSource="{x:Bind ViewModel.VisibleModules}"
                     SelectionMode="None"
                     IsItemClickEnabled="False">
                     <GridView.ItemTemplate>

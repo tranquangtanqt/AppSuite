@@ -5,9 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="using:MainLauncher.ViewModels"
     mc:Ignorable="d">
 
-    <StackPanel Padding="24" Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Padding="24" Spacing="16" MaxWidth="700" HorizontalAlignment="Left">
         <TextBlock Text="Settings" Style="{StaticResource TitleLargeTextBlockStyle}" />
 
         <StackPanel Spacing="4">
@@ -21,5 +23,29 @@
         </StackPanel>
 
         <Button Content="Reload modules.json" Command="{x:Bind ViewModel.ReloadModulesCommand}" />
+
+        <!-- Ẩn / hiện module ở Dashboard và Module List (cùng lựa chọn với nút "Ẩn / hiện" ở 2 trang đó) -->
+        <StackPanel Spacing="6" Margin="0,8,0,0">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="Module hiện trên màn hình" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <TextBlock Text="{x:Bind ViewModel.Dashboard.VisibleSummary, Mode=OneWay}" Opacity="0.6" FontSize="12" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="Bỏ tích để ẩn module khỏi Dashboard và Module List (danh sách này luôn đủ để bật lại). Lưu ngay vào Config\launcher-settings.json; module đang ẩn mà đang chạy vẫn hiện tạm để bấm Stop được."
+                       TextWrapping="Wrap" Opacity="0.7" FontSize="12" />
+            <ItemsControl ItemsSource="{x:Bind ViewModel.Dashboard.VisibilityItems}" Margin="0,4,0,0">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ModuleVisibilityItem">
+                        <CheckBox IsChecked="{x:Bind IsVisible, Mode=TwoWay}" AutomationProperties.Name="{x:Bind Name}">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <TextBlock Text="{x:Bind Name}" />
+                                <TextBlock Text="{x:Bind Description}" Opacity="0.6" TextTrimming="CharacterEllipsis" MaxWidth="360" />
+                            </StackPanel>
+                        </CheckBox>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <Button Content="Hiện tất cả" Command="{x:Bind ViewModel.Dashboard.ShowAllModulesCommand}" />
+        </StackPanel>
     </StackPanel>
+    </ScrollViewer>
 </Page>

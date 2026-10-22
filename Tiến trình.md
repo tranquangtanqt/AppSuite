@@ -354,6 +354,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   tạo `LogsViewModel` ngay lúc khởi động (trang Logs có cả dòng từ lúc mở app, trước đây chỉ từ lần đầu mở trang). Thêm:
   lỗi khi chuyển trang / lỗi chưa bắt ghi vào `Logs\launcher-*.log` (trước đây chỉ thấy app tắt). GUI Sandbox 6/6 (bản cũ
   tái hiện: trang không mở được, log có đúng lỗi trên) (2026-10-22)
+- [x] **Ẩn / hiện module ở Dashboard và Module List** (người dùng hỏi 2026-10-22): nút "Ẩn / hiện" cạnh tiêu đề Modules
+  (Dashboard) và cạnh Reload (Module List) - ô tích từng module + Hiện tất cả, dòng "Đang hiện 10 / 12" - cùng 1 lựa chọn,
+  Settings có danh sách đủ để bật lại; lưu `Config\launcher-settings.json` (không sửa modules.json); module ẩn mà đang chạy
+  vẫn hiện tạm để bấm Stop; thẻ thống kê vẫn đủ. README cập nhật. GUI Sandbox 20/20 (ẩn 2 ở cả 2 trang, mở lại app vẫn ẩn,
+  ẩn lúc đang chạy → hiện tạm ở cả 2 trang rồi ẩn khi Stop, Settings, Hiện tất cả, ẩn hết → dòng nhắc) (2026-10-22)
 - [ ] Bản đang dùng ở `Application\` là bản cũ - publish lại MainLauncher (`build\Publish-AppSuite.ps1 -Targets MainLauncher`)
 
 ## ScreenCapture
