@@ -21,8 +21,11 @@ public sealed class ModuleNameToAccentBrushConverter : IValueConverter
     public object Convert(object value, Type targetType, object parameter, string language)
     {
         var name = value as string ?? string.Empty;
-        var index = Math.Abs(name.GetHashCode()) % Palette.Length;
-        return new SolidColorBrush(Palette[index]);
+        // Băm cố định (FNV-1a): string.GetHashCode() của .NET đổi theo mỗi lần chạy → màu biểu tượng đổi mỗi lần mở app.
+        uint hash = 2166136261;
+        foreach (var c in name)
+            hash = (hash ^ c) * 16777619;
+        return new SolidColorBrush(Palette[hash % (uint)Palette.Length]);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)

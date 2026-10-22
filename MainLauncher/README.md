@@ -60,15 +60,19 @@ Start/Stop/Restart gọi thẳng `RelayCommand` trên `ModuleViewModel`.
   làm ảnh nền, làm mờ dần bằng `SharedUI.Controls.OpacityMaskView` (đúng kỹ thuật `HomePageHeader`),
   tiêu đề "AppSuite" + subtitle động (`DashboardViewModel.HeaderSubtitle`, ví dụ "1/2 module đang
   chạy"). Hàng tile liên kết tài liệu (WinUI / Windows App SDK / Gallery / Toolkit) kiểu HomePage gốc
-  đã bỏ (2026-09-29, người dùng thấy thừa) - ảnh nền header thu còn cao 170.
-- **Card module**: chiều cao cố định (`ModuleCard` Height 186) - `GridView` (ItemsWrapGrid) lấy kích
+  đã bỏ (2026-09-29, người dùng thấy thừa) - ảnh nền header thu còn cao 170, rồi 100 (2026-10-22, xem dưới).
+- **Card module**: chiều cao cố định (`ModuleCard` Height 168) - `GridView` (ItemsWrapGrid) lấy kích
   thước ô theo card đầu tiên, card cao hơn sẽ bị cắt mất hàng nút Start/Stop/Restart. Tên module 1
   dòng, mô tả tối đa 2 dòng, quá thì `…` + tooltip đầy đủ.
 - Cửa sổ launcher mở ở trạng thái maximize (`App.OnLaunched`).
+- **Bố cục gọn (2026-10-22, duyệt bằng ảnh trước / sau ở Pictures\AppSuite_UI\MainLauncher_2026-10-22)**: header cao 100 (tên AppSuite
+  trước, dòng "x/y module đang chạy" nhỏ bên dưới); thẻ thống kê padding 16,10 + viền, số `TitleTextBlockStyle`; menu trái
+  `OpenPaneLength="240"`; mọi trang lề trái 36, tiêu đề `TitleTextBlockStyle`. NavigationView đặt
+  `KeyboardAcceleratorPlacementMode="Hidden"` - không thì gợi ý phím "F1" nổi ở mép trên cửa sổ.
 - **Bên dưới header**: thẻ thống kê Total/Running/Stopped (không đổi so với trước), rồi một
   `GridView` các `ModuleCard` - tương đương phần "Recently added samples" GridView của HomePage,
   nhưng hiển thị module thay vì control sample. Mỗi `ModuleCard` có icon vuông màu (màu suy ra từ
-  tên module qua `ModuleNameToAccentBrushConverter`) và chấm trạng thái ở góc trên-phải, giống style
+  tên module qua `ModuleNameToAccentBrushConverter` - băm FNV-1a cố định, không dùng `string.GetHashCode()` vì hàm này đổi theo mỗi lần chạy) và chấm trạng thái ở góc trên-phải, giống style
   card của Gallery. `DashboardViewModel.Modules` chỉ là tham chiếu tới `ModuleListViewModel.Modules`
   (cùng một collection instance) nên Dashboard và Module List luôn đồng bộ trạng thái mà không cần
   logic tải riêng.

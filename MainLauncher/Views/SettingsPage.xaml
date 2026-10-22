@@ -9,8 +9,8 @@
     mc:Ignorable="d">
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
-    <StackPanel Padding="24" Spacing="16" MaxWidth="700" HorizontalAlignment="Left">
-        <TextBlock Text="Cài đặt" Style="{StaticResource TitleLargeTextBlockStyle}" />
+    <StackPanel Padding="36,20,36,24" Spacing="16" MaxWidth="760" HorizontalAlignment="Left">
+        <TextBlock Text="Cài đặt" Style="{StaticResource TitleTextBlockStyle}" />
 
         <StackPanel Spacing="4">
             <TextBlock Text="Thư mục cài đặt" FontWeight="SemiBold" />

@@ -53,7 +53,7 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <shared:OpacityMaskView Grid.RowSpan="3" Height="170" VerticalAlignment="Top">
+        <shared:OpacityMaskView Grid.RowSpan="3" Height="100" VerticalAlignment="Top">
             <shared:OpacityMaskView.OpacityMask>
                 <Rectangle Fill="{ThemeResource HeaderFadeMaskBrush}" />
             </shared:OpacityMaskView.OpacityMask>
@@ -65,15 +65,16 @@
             </Grid>
         </shared:OpacityMaskView>
 
-        <StackPanel Margin="36,32,0,0" VerticalAlignment="Top">
+        <StackPanel Margin="36,20,0,0" VerticalAlignment="Top" Spacing="0">
             <TextBlock
                 Foreground="{ThemeResource HeaderForegroundBrush}"
-                FontSize="16"
-                Text="{x:Bind Subtitle, Mode=OneWay}" />
-            <TextBlock
-                Foreground="{ThemeResource HeaderForegroundBrush}"
-                Style="{StaticResource TitleLargeTextBlockStyle}"
+                Style="{StaticResource TitleTextBlockStyle}"
                 Text="AppSuite" />
+            <TextBlock
+                Foreground="{ThemeResource HeaderForegroundBrush}"
+                Opacity="0.75"
+                FontSize="14"
+                Text="{x:Bind Subtitle, Mode=OneWay}" />
         </StackPanel>
     </Grid>
 </UserControl>

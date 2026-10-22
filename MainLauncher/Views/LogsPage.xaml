@@ -8,13 +8,13 @@
     xmlns:models="using:Common.Models"
     mc:Ignorable="d">
 
-    <Grid Padding="24">
+    <Grid Padding="36,20,36,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Nhật ký" Style="{StaticResource TitleLargeTextBlockStyle}" Grid.Row="0" Margin="0,0,0,16" />
+        <TextBlock Text="Nhật ký" Style="{StaticResource TitleTextBlockStyle}" Grid.Row="0" Margin="0,0,0,16" />
 
         <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Entries}" SelectionMode="None">
             <ListView.ItemTemplate>

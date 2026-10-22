@@ -9,14 +9,14 @@
     xmlns:vm="using:MainLauncher.ViewModels"
     mc:Ignorable="d">
 
-    <Grid Padding="24">
+    <Grid Padding="36,20,36,0">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <StackPanel Orientation="Horizontal" Spacing="12" Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="Danh sách module" Style="{StaticResource TitleLargeTextBlockStyle}" VerticalAlignment="Center" />
+            <TextBlock Text="Danh sách module" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
             <Button Content="Tải lại" ToolTipService.ToolTip="Đọc lại Config\modules.json (không mở / đóng module nào)" Command="{x:Bind ViewModel.LoadModulesCommand}" VerticalAlignment="Center" />
             <ProgressRing IsActive="{x:Bind ViewModel.IsLoading, Mode=OneWay}" Width="20" Height="20" VerticalAlignment="Center" />
             <!-- Cùng lựa chọn ẩn / hiện với Dashboard -->

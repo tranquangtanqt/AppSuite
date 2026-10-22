@@ -373,6 +373,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Chạy lại, trạng thái (Đang chạy / Đã dừng / Lỗi...), "x/y module đang chạy", trang Cài đặt, mô tả 12 module trong
   modules.json; nội dung dòng nhật ký giữ tiếng Anh. Sửa kèm: nút Làm mới bị cắt khi cửa sổ hẹp (thẻ thống kê rộng cố định).
   Cập nhật F1, README. GUI Sandbox 28/28 (đi qua mọi trang, không còn chữ tiếng Anh / không dấu) (2026-10-22)
+- [x] Giao diện gọn hơn (duyệt bằng mockup + ảnh trước / sau, Pictures\AppSuite_UI\MainLauncher_2026-10-22): header 170 → 100,
+  thẻ thống kê thấp ~ một nửa + viền, menu trái 320 → 240, thẻ module 186 → 168, các trang cùng lề / cỡ tiêu đề. Sửa kèm:
+  gợi ý phím "F1" nổi ở mép trên cửa sổ (`KeyboardAcceleratorPlacementMode="Hidden"`); màu biểu tượng module đổi mỗi lần mở
+  app (`string.GetHashCode()` ngẫu nhiên theo tiến trình → băm FNV-1a cố định). GUI Sandbox 28/28 (2026-10-22)
 - [ ] ModuleA / ModuleB (module mẫu) vẫn hiện chữ không dấu ("Ung dung quan ly A - chay doc lap voi MainLauncher")
 - [ ] **[Đề xuất · Nên làm]** Stop chờ module tự đóng 5 giây rồi buộc tắt (`ProcessManager.StopProcess`: `CloseMainWindow` +
   `WaitForExit(5000)` + `Kill`) - module đang hỏi "Lưu không?" bị tắt mất phần chưa lưu; chờ 5 giây trên luồng UI nên launcher

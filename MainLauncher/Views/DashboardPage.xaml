@@ -20,34 +20,34 @@
             <controls:DashboardHeader Grid.Row="0" Subtitle="{x:Bind ViewModel.HeaderSubtitle, Mode=OneWay}" />
 
             <!-- 3 thẻ chia đều bề ngang, mỗi thẻ tối đa 200 (rộng cố định 180 thì cửa sổ hẹp bị cắt mất nút Làm mới) -->
-            <Grid Grid.Row="1" ColumnSpacing="16" Margin="36,12,36,0">
+            <Grid Grid.Row="1" ColumnSpacing="12" Margin="36,0,36,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MaxWidth="200" />
                     <ColumnDefinition Width="*" MaxWidth="200" />
                     <ColumnDefinition Width="*" MaxWidth="200" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Grid.Column="0">
-                    <StackPanel Spacing="4">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Grid.Column="0">
+                    <StackPanel Spacing="0">
                         <TextBlock Text="Tổng số module" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
-                        <TextBlock Text="{x:Bind ViewModel.TotalModules, Mode=OneWay}" Style="{StaticResource TitleLargeTextBlockStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.TotalModules, Mode=OneWay}" Style="{StaticResource TitleTextBlockStyle}" />
                     </StackPanel>
                 </Border>
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Grid.Column="1">
-                    <StackPanel Spacing="4">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Grid.Column="1">
+                    <StackPanel Spacing="0">
                         <TextBlock Text="Đang chạy" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
                         <TextBlock
                             Text="{x:Bind ViewModel.RunningModules, Mode=OneWay}"
-                            Style="{StaticResource TitleLargeTextBlockStyle}"
+                            Style="{StaticResource TitleTextBlockStyle}"
                             Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
                     </StackPanel>
                 </Border>
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Grid.Column="2">
-                    <StackPanel Spacing="4">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="16,10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Grid.Column="2">
+                    <StackPanel Spacing="0">
                         <TextBlock Text="Đã dừng" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
                         <TextBlock
                             Text="{x:Bind ViewModel.StoppedModules, Mode=OneWay}"
-                            Style="{StaticResource TitleLargeTextBlockStyle}"
+                            Style="{StaticResource TitleTextBlockStyle}"
                             Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
                     </StackPanel>
                 </Border>
@@ -55,10 +55,10 @@
                     Grid.Column="3"
                     Content="Làm mới"
                     Command="{x:Bind ViewModel.RefreshStatusCommand}"
-                    VerticalAlignment="Bottom" />
+                    VerticalAlignment="Center" />
             </Grid>
 
-            <StackPanel Grid.Row="2" Margin="36,24,36,36" Spacing="12">
+            <StackPanel Grid.Row="2" Margin="36,20,36,24" Spacing="10">
                 <!-- Tiêu đề + Ẩn / hiện từng module (dùng chung với Module List / Settings, lưu Config\launcher-settings.json) -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <TextBlock

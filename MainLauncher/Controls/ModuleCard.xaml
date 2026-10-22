@@ -12,14 +12,14 @@
         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
         BorderThickness="1"
         CornerRadius="8"
-        Padding="16"
+        Padding="16,14"
         Width="260"
-        Height="186"
+        Height="168"
         Margin="0,0,12,12">
         <Grid>
             <!--  Fixed card height + star row for the description: GridView's ItemsWrapGrid sizes every cell
                   from the first item, so variable-height cards would get their buttons clipped.  -->
-            <Grid RowSpacing="8">
+            <Grid RowSpacing="6">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />

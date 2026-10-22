@@ -16,6 +16,8 @@
     <NavigationView
         x:Name="NavView"
         PaneDisplayMode="Left"
+        OpenPaneLength="240"
+        KeyboardAcceleratorPlacementMode="Hidden"
         IsBackButtonVisible="Collapsed"
         IsSettingsVisible="False"
         Loaded="NavView_Loaded"
