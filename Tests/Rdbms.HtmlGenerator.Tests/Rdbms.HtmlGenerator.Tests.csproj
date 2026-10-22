@@ -23,6 +23,7 @@
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaQualityChecker.cs" Link="Rdbms.HtmlGenerator\Services\SchemaQualityChecker.cs" />
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaQualityReport.cs" Link="Rdbms.HtmlGenerator\Services\SchemaQualityReport.cs" />
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\TableDefinitionWorkbook.cs" Link="Rdbms.HtmlGenerator\Services\TableDefinitionWorkbook.cs" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\TableNameFilter.cs" Link="Rdbms.HtmlGenerator\Services\TableNameFilter.cs" />
   </ItemGroup>
 
   <ItemGroup>

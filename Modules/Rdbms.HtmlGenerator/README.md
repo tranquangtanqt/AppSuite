@@ -95,7 +95,9 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
 5. **"3. Mở file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định. Đóng rồi mở lại module vẫn
    nhận đúng file `.db`/`.html` đã có sẵn cho database/nguồn đang chọn (`RdbmsHtmlGeneratorViewModel.RefreshDatabaseTarget`
    kiểm tra lại mỗi khi đổi nguồn hoặc lưu settings), không cần import lại nếu đã có cache từ trước.
-6. **"Cài đặt"** - modal chỉnh `AppOptions` (lưu trong `config.xml`, phần `Options`):
+6. **"Cài đặt"** - modal chỉnh `AppOptions` (lưu trong `config.xml`, phần `Options`). Nội dung nằm trong `OptionsScroller`
+   (ScrollViewer riêng, `MaxHeight` = chiều cao cửa sổ - 250 lúc mở): ContentDialog tắt cuộn dọc của chính nó, không bọc thì
+   các ô cuối bị cắt mất ở cửa sổ thấp. Mô tả dưới mỗi ô là TextBlock xuống dòng (Description của NumberBox không xuống dòng).
    - *Giới hạn thời gian kết nối* (giây, mặc định 10, 1-600).
    - *Giới hạn thời gian truy vấn* (giây, mặc định 120, 1-3600) - cho mỗi câu đọc schema; Postgres / MySQL /
      SQL Server đặt qua connection string, Oracle đặt trên từng `OracleCommand`.
@@ -103,6 +105,12 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    - *Tự mở thư mục chứa file HTML sau khi xuất* (`explorer.exe /select,"…html"` - chọn sẵn file).
    - *Giữ lại số bản đọc cũ* (`HistoryCount`, mặc định 10, 0-50, `EffectiveHistoryCount`) - xem mục 9. Lưu số nhỏ hơn thì
      `SchemaHistory.Prune` ngay cho file .db đang chọn (các file khác dọn ở lần đọc sau của chúng).
+   - *Bỏ qua bảng / view khi đọc* (`ExcludeTablePatterns`, chuỗi, trống = đọc hết; 2026-10-22) - `Services\TableNameFilter`
+     (unit test `TableNameFilterTests`): `ParsePatterns` tách theo `,` `;` xuống dòng, bỏ trùng; lưu lại gọn "a, b". Mẫu `%` / `*`
+     = nhiều ký tự, `?` = 1 ký tự, `_` là chữ thật (khác LIKE); không phân biệt hoa thường; có `.` thì so với `schema.bảng`.
+     `Apply` chạy trong `ImportDatabaseAsync` ngay sau khi đọc xong, trước `TableNameQualifier` - bỏ bảng khớp (theo schema +
+     tên) cùng cột / khoá ngoại của nó / index / ràng buộc; khoá ngoại bảng khác trỏ tới bảng bị bỏ giữ nguyên. Nhật ký ghi
+     "Bỏ qua N bảng / view theo mẫu ...: tên..." (tối đa 20 tên). Lọc sau khi đọc (không đổi câu SQL của 4 importer).
 
    Nút "Mặc định" điền lại giá trị mặc định (chưa lưu cho tới khi bấm Lưu). Giá trị sửa tay ngoài khoảng
    trong config.xml bị kẹp lại (`EffectiveConnectTimeoutSeconds` / `EffectiveCommandTimeoutSeconds`).

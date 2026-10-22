@@ -18,6 +18,9 @@ public sealed class AppOptions
     /// <summary>Xuất HTML xong thì mở thư mục chứa file (Explorer, chọn sẵn file vừa xuất).</summary>
     public bool OpenFolderAfterExport { get; set; }
 
+    /// <summary>Mẫu tên bảng / view bỏ qua khi đọc (vd "tmp_%, %_bk"), xem Services\TableNameFilter. Trống = đọc hết.</summary>
+    public string ExcludeTablePatterns { get; set; } = string.Empty;
+
     public const int DefaultHistoryCount = 10;
 
     /// <summary>Số lần đọc trước giữ lại trong Data\Database\Lịch sử\{tên} cho mỗi file .db (0 = không giữ).</summary>

@@ -868,6 +868,15 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   bao trùm + DROP INDEX, chưa thống kê; Thông tin: thiếu mô tả bảng / cột, tên khác quy ước), link sang trang từ điển. Cập
   nhật F1, README. Unit test 50/50 (21 mới); GUI Sandbox 23/24 - mục còn lại do kịch bản tìm sai chuỗi (XML ghi `&apos;`),
   link đã kiểm tay trong file (2026-10-22)
+- [x] **Bỏ qua bảng / view khi đọc** theo mẫu tên (Cài đặt, trống = đọc hết): vd `tmp_%, %_bk` - `%` / `*` nhiều ký tự, `?`
+  1 ký tự, `_` là chữ thật; có dấu chấm thì so với `schema.bảng`; bỏ cả cột / khoá ngoại / index / ràng buộc của bảng đó;
+  nhật ký ghi bảng nào bị bỏ. Cập nhật F1, README. Unit test 57/57 (7 mới `TableNameFilterTests`); GUI Sandbox 14/14 với
+  PostgreSQL tạm (không mẫu đọc hết, có mẫu bỏ đúng 2 bảng, `tmpl_settings` giữ, xoá mẫu đọc lại đủ) (2026-10-22)
+- [x] Hộp thoại **Cài đặt không cuộn được** (người dùng báo 2026-10-22: không thấy ô Bỏ qua bảng): ContentDialog tắt cuộn dọc
+  của chính nó → ô "Giữ lại số bản đọc cũ" (từ sáng 2026-10-22) và "Bỏ qua bảng / view" bị cắt mất ở mọi cửa sổ thấp; kiểm thử
+  UIA vẫn đặt được giá trị cho ô khuất nên không phát hiện. Sửa: ScrollViewer riêng, MaxHeight theo cửa sổ lúc mở; mô tả dưới
+  các ô số thành TextBlock xuống dòng (Description của NumberBox bị cắt). GUI Sandbox: cuộn được, 2 ô cuối thấy trọn
+  (2026-10-22)
 - [ ] Thử tay: mở `{tên} テーブル定義書.xlsx` bằng Excel thật (Sandbox không có Excel) - xem bố cục, bấm link, xem trước khi in;
   Kiểm tra chất lượng với DB thật (Oracle lớn: số mục, tốc độ)
 - [ ] Thử tay: đọc lại DB thật 2 lần (có / không đổi schema) → xem dòng nhật ký + nút "So với bản trước"; trang HTML thử lọc

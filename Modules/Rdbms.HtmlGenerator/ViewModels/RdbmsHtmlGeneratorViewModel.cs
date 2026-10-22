@@ -224,7 +224,8 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         _config.Options = options;
         SaveConfig();
         StatusText = $"Đã lưu cài đặt: kết nối tối đa {options.EffectiveConnectTimeoutSeconds} giây, " +
-                     $"mỗi truy vấn tối đa {options.EffectiveCommandTimeoutSeconds} giây, giữ {options.EffectiveHistoryCount} bản đọc cũ.";
+                     $"mỗi truy vấn tối đa {options.EffectiveCommandTimeoutSeconds} giây, giữ {options.EffectiveHistoryCount} bản đọc cũ" +
+                     (options.ExcludeTablePatterns.Length > 0 ? $", bỏ qua bảng khớp {options.ExcludeTablePatterns} (từ lần đọc sau)." : ".");
         // Giảm số bản giữ lại thì dọn ngay cho file đang chọn (các file khác dọn ở lần đọc sau của chúng).
         if (_database.Exists)
         {
@@ -362,6 +363,19 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
             // Importers swallow per-row / foreign-key errors into the log, so a cancel can come back as a normal
             // (partial) result - never save that over the previous .db.
             cancellationToken.ThrowIfCancellationRequested();
+
+            // Cài đặt "Bỏ qua bảng / view khi đọc" (vd tmp_%, %_bk) - trống thì không lọc.
+            var patterns = TableNameFilter.ParsePatterns(options.ExcludeTablePatterns);
+            (import, var excluded) = TableNameFilter.Apply(import, patterns);
+            if (excluded.Count > 0)
+            {
+                AppendLog($"Bỏ qua {excluded.Count} bảng / view theo mẫu {string.Join(", ", patterns)}: " +
+                          string.Join(", ", excluded.Take(20)) + (excluded.Count > 20 ? $"... (+{excluded.Count - 20})" : ""));
+            }
+            else if (patterns.Count > 0)
+            {
+                AppendLog($"Mẫu bỏ qua ({string.Join(", ", patterns)}): không có bảng / view nào khớp.");
+            }
 
             // Same table name in 2+ schemas -> "schema.table" for those only (SQLite / HTML key tables by name).
             (import, var duplicateNames) = TableNameQualifier.QualifyDuplicates(import);

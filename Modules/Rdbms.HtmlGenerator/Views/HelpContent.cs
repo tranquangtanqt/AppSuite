@@ -80,6 +80,7 @@ internal static class HelpContent
             new("Tự mở file HTML sau khi xuất", "Bật thì \"2. Xuất HTML\" xong tự mở trang trong trình duyệt."),
             new("Tự mở thư mục chứa file HTML sau khi xuất", "Bật thì \"2. Xuất HTML\" xong mở Explorer tại Data\\Database, chọn sẵn file vừa xuất - tiện để gửi file cho người khác. Bật được cùng lúc với tuỳ chọn trên."),
             new("Giữ lại số bản đọc cũ", "Số bản đọc trước giữ trong Data\\Database\\Lịch sử cho mỗi database (mặc định 10, tối đa 50) - dùng cho nút \"So với bản trước\" và hộp thoại So sánh schema. Giảm số này thì bản cũ thừa của database đang chọn bị xoá ngay khi Lưu; 0 = không giữ bản nào (Nhật ký vẫn ghi tóm tắt thay đổi sau mỗi lần đọc)."),
+            new("Bỏ qua bảng / view khi đọc", "Để trống = đọc hết (mặc định). Nhập mẫu tên cách nhau bằng dấu phẩy, vd \"tmp_%, %_bk, %_old\" để bỏ bảng tạm / bảng sao lưu khỏi trang HTML, Excel và So sánh: % hoặc * = nhiều ký tự bất kỳ, ? = 1 ký tự, dấu _ là chữ _ thật (tmp_% không bắt tmpl_x - khác LIKE của SQL). Không phân biệt hoa thường. Mẫu có dấu chấm (vd audit.%) so với schema.bảng. Áp dụng từ lần bấm \"1. Đọc database\" sau; Nhật ký ghi rõ đã bỏ bảng nào. \"Thử kết nối\" vẫn đếm cả bảng sẽ bị bỏ."),
         ]),
 
         new("Tra cứu trong trang HTML", "", "Menu trái là danh sách bảng (bấm để xem), bên phải là định nghĩa bảng đang chọn. Ô \"Tên bảng...\" và \"Tên cột (tuỳ chọn)...\" + nút Tìm kiếm kết hợp như dưới đây.",

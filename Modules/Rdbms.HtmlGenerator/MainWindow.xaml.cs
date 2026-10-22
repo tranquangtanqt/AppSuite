@@ -343,8 +343,12 @@ public sealed partial class MainWindow : Window
         OpenHtmlAfterExportSwitch.IsOn = options.OpenHtmlAfterExport;
         OpenFolderAfterExportSwitch.IsOn = options.OpenFolderAfterExport;
         HistoryCountBox.Value = options.EffectiveHistoryCount;
+        ExcludeTablePatternsBox.Text = options.ExcludeTablePatterns;
 
         OptionsDialog.XamlRoot = Content.XamlRoot;
+        // Vùng cuộn vừa cửa sổ: trừ tiêu đề + hàng nút + lề của hộp thoại (~250). ContentDialog không tự cuộn nội dung.
+        OptionsScroller.MaxHeight = Math.Max(200, Content.XamlRoot.Size.Height - 250);
+        OptionsScroller.ChangeView(null, 0, null, disableAnimation: true);
         await OptionsDialog.ShowAsync();
     }
 
@@ -360,6 +364,8 @@ public sealed partial class MainWindow : Window
             OpenHtmlAfterExport = OpenHtmlAfterExportSwitch.IsOn,
             OpenFolderAfterExport = OpenFolderAfterExportSwitch.IsOn,
             HistoryCount = ToSeconds(HistoryCountBox.Value, AppOptions.DefaultHistoryCount),
+            // Gọn lại 1 dòng "tmp_%, %_bk" (bỏ trống / trùng)
+            ExcludeTablePatterns = string.Join(", ", Services.TableNameFilter.ParsePatterns(ExcludeTablePatternsBox.Text)),
         });
     }
 
@@ -373,6 +379,7 @@ public sealed partial class MainWindow : Window
         OpenHtmlAfterExportSwitch.IsOn = defaults.OpenHtmlAfterExport;
         OpenFolderAfterExportSwitch.IsOn = defaults.OpenFolderAfterExport;
         HistoryCountBox.Value = defaults.HistoryCount;
+        ExcludeTablePatternsBox.Text = defaults.ExcludeTablePatterns;
     }
 
     private void OraConnectType_Checked(object sender, RoutedEventArgs e)

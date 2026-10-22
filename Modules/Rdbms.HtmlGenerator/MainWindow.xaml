@@ -354,19 +354,31 @@
                        DefaultButton="Primary"
                        PrimaryButtonClick="OptionsDialog_PrimaryButtonClick"
                        SecondaryButtonClick="OptionsDialog_SecondaryButtonClick">
-            <StackPanel Spacing="14" MinWidth="380">
+            <!-- ContentDialog tắt cuộn dọc của chính nó → nội dung dài hơn cửa sổ bị cắt mất (ô cuối không thấy). Tự cuộn;
+                 MaxHeight đặt theo cửa sổ lúc mở (OpenOptionsDialog_Click). Mô tả là TextBlock riêng để xuống dòng
+                 (Description của NumberBox không xuống dòng, bị cắt). -->
+            <ScrollViewer x:Name="OptionsScroller" VerticalScrollBarVisibility="Auto" MaxHeight="440" Padding="0,0,16,0">
+            <StackPanel Spacing="14" Width="440">
                 <NumberBox x:Name="ConnectTimeoutBox" Header="Giới hạn thời gian kết nối (giây)"
-                           Minimum="1" Maximum="600" SmallChange="5" LargeChange="30" SpinButtonPlacementMode="Inline"
-                           Description="Quá thời gian này mà chưa kết nối được (sai IP, chưa bật VPN, firewall chặn...) thì báo lỗi. Mạng chậm thì tăng lên." />
+                           Minimum="1" Maximum="600" SmallChange="5" LargeChange="30" SpinButtonPlacementMode="Inline" />
+                <TextBlock Margin="0,-10,0,0" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Text="Quá thời gian này mà chưa kết nối được (sai IP, chưa bật VPN, firewall chặn...) thì báo lỗi. Mạng chậm thì tăng lên." />
                 <NumberBox x:Name="CommandTimeoutBox" Header="Giới hạn thời gian truy vấn (giây)"
-                           Minimum="1" Maximum="3600" SmallChange="30" LargeChange="300" SpinButtonPlacementMode="Inline"
-                           Description="Cho mỗi câu truy vấn đọc schema. Database rất nhiều bảng / máy chủ chậm thì tăng lên." />
+                           Minimum="1" Maximum="3600" SmallChange="30" LargeChange="300" SpinButtonPlacementMode="Inline" />
+                <TextBlock Margin="0,-10,0,0" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Text="Cho mỗi câu truy vấn đọc schema. Database rất nhiều bảng / máy chủ chậm thì tăng lên." />
                 <ToggleSwitch x:Name="OpenHtmlAfterExportSwitch" Header="Tự mở file HTML sau khi xuất" OffContent="Tắt" OnContent="Bật" />
                 <ToggleSwitch x:Name="OpenFolderAfterExportSwitch" Header="Tự mở thư mục chứa file HTML sau khi xuất" OffContent="Tắt" OnContent="Bật" />
                 <NumberBox x:Name="HistoryCountBox" Header="Giữ lại số bản đọc cũ (mỗi database)"
-                           Minimum="0" Maximum="50" SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Inline"
-                           Description="Trước khi đọc lại, bản cũ được chép vào Data\Database\Lịch sử để so sánh bản cũ ↔ bản mới. Lần đọc không có thay đổi thì không giữ thêm bản. 0 = không giữ." />
+                           Minimum="0" Maximum="50" SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Inline" />
+                <TextBlock Margin="0,-10,0,0" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Text="Trước khi đọc lại, bản cũ được chép vào Data\Database\Lịch sử để so sánh bản cũ ↔ bản mới. Lần đọc không có thay đổi thì không giữ thêm bản. 0 = không giữ." />
+                <!-- Trống = đọc hết; có mẫu thì bỏ bảng / view khớp (Services\TableNameFilter) -->
+                <StackPanel Spacing="4">
+                    <TextBox x:Name="ExcludeTablePatternsBox" Header="Bỏ qua bảng / view khi đọc (để trống = đọc hết)"
+                             PlaceholderText="vd: tmp_%, %_bk, %_old" AutomationProperties.Name="Bỏ qua bảng / view khi đọc" />
+                    <TextBlock TextWrapping="Wrap" Opacity="0.7" FontSize="12"
+                               Text="Mẫu tên cách nhau bằng dấu phẩy: % hoặc * = nhiều ký tự bất kỳ, ? = 1 ký tự, dấu _ là chữ _ thật (tmp_% không bắt tmpl_x). Không phân biệt hoa thường; có dấu chấm (vd audit.%) thì so với schema.bảng. Áp dụng từ lần bấm &quot;1. Đọc database&quot; sau." />
+                </StackPanel>
             </StackPanel>
+            </ScrollViewer>
         </ContentDialog>
     </Grid>
 </Window>
