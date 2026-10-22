@@ -722,10 +722,10 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 
 ## Rdbms.HtmlGenerator (ModuleE)
 
-- [ ] Nhiều hồ sơ kết nối (dev / test / prod): combobox Hồ sơ + nút ⋯ (Thêm = sao chép hồ sơ đang chọn, Đổi tên, Xoá);
+- [x] Nhiều hồ sơ kết nối (dev / test / prod): combobox Hồ sơ + nút ⋯ (Thêm = sao chép hồ sơ đang chọn, Đổi tên, Xoá);
   mỗi hồ sơ có nguồn + 4 tab kết nối + file `{database} ({hồ sơ})`.db/.html riêng; config.xml cũ tự thành hồ sơ "Mặc
   định" (giữ tên file cũ). Unit test mới `Tests\Rdbms.HtmlGenerator.Tests` 12/12; GUI Sandbox: hồ sơ 26/26, bộ cũ
-  29/29. Cập nhật F1, README (2026-10-16) - chờ thử tay với DB thật (dev / prod)
+  29/29. Cập nhật F1, README (2026-10-16); thử tay với DB thật (dev / prod) theo dõi ở mục "Thử tay: So sánh schema" bên dưới
 - [x] Đổi tiêu đề cửa sổ "Module E" → "Rdbms.HtmlGenerator - Từ điển dữ liệu (PostgreSQL / Oracle)", tiêu đề trong
   trang bỏ "Module E", dòng mô tả sửa đúng tên file `{tên database}.db/.html` (2026-10-09)
 - [x] Không kết nối được thì báo hộp thoại thay vì trông như treo: timeout 10 giây (Postgres + Oracle), lỗi ghi vào
@@ -808,12 +808,23 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] Thử MySQL với máy chủ thật (máy dev không có MySQL — mới thử được trường hợp không kết nối được)
 - [ ] Thử tay GUI: combobox đổi nguồn, hộp thoại kết nối 4 tab (tích Windows Authentication khoá ô user/pass),
   hộp thoại Cài đặt (Lưu / Mặc định / Huỷ), tự mở HTML; regression PostgreSQL + Oracle với DB thật
+- [x] **Lịch sử các lần đọc + "So với bản trước"**: trước khi "1. Đọc database" ghi đè, `.db` cũ chép vào
+  `Data\Database\Lịch sử\{tên}\yyyy-MM-dd HHmmss.db`; đọc xong nhật ký ghi tóm tắt so với lần trước ("1 bảng mới, 2 bảng có
+  thay đổi" / "Không có thay đổi" - khi đó không giữ bản trùng); nút "So với bản trước (đọc lúc …)" dưới trạng thái mở trang
+  So sánh bản cũ ↔ bản đang dùng; hộp thoại So sánh schema liệt kê cả bản cũ; Cài đặt "Giữ lại số bản đọc cũ" (mặc định 10,
+  0 = không giữ). Unit test 29/29 (6 mới `SchemaHistoryTests`); GUI Sandbox 30/30 với PostgreSQL 17 tạm trong Sandbox
+  (2026-10-22)
+- [x] Trang HTML: lọc **Tất cả / Bảng / View** (kèm số lượng, nhãn VIEW / MATERIALIZED VIEW, áp dụng cả cho tìm cột, nhớ lựa
+  chọn) + ô **Tìm cả trong mô tả** (bảng / cột khớp comment, menu trái hiện mô tả khớp, tô chỗ khớp). Edge headless trong
+  Sandbox 20/20 (2026-10-22)
+- [ ] Thử tay: đọc lại DB thật 2 lần (có / không đổi schema) → xem dòng nhật ký + nút "So với bản trước"; trang HTML thử lọc
+  View và tìm theo mô tả tiếng Việt / tiếng Nhật
 - [x] ~~Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X)~~ — thực tế không phải bị gộp mà làm cả lần đọc lỗi;
   đã sửa 2026-10-09 (xem mục bên trên)
 
 ## ModuleC
 
-- [ ] Nút "Huong dan su dung" vẫn là placeholder chưa gắn hành vi (PLAN.md ghi cố ý để sau)
+- [x] Nút "Huong dan su dung" đã gắn cửa sổ Hướng dẫn chung (SharedUI.Help.HelpWindow, F1) - không còn placeholder (kiểm lại 2026-10-22)
 - [ ] **[Đề xuất · Có thể]** Nhớ thư mục nguồn lần trước như Mcf.Screen / Mcf.CrudDiagram (ModuleB, ModuleC,
   Mcf.DbDef.HtmlGenerator chưa lưu)
 

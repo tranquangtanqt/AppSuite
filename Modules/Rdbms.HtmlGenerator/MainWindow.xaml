@@ -170,6 +170,16 @@
                 </Grid>
                 <ProgressBar IsIndeterminate="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
                 <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" TextWrapping="Wrap" />
+                <!-- Chỉ hiện khi Lịch sử có bản đọc trước của file .db đang chọn -->
+                <HyperlinkButton x:Name="CompareWithPreviousButton" Padding="0" Margin="0,-4,0,0"
+                                 Command="{x:Bind ViewModel.CompareWithPreviousCommand}"
+                                 Visibility="{x:Bind ViewModel.HasPreviousRead, Mode=OneWay}"
+                                 ToolTipService.ToolTip="So sánh bản đọc trước (trong Data\Database\Lịch sử) với bản đang dùng: bảng / cột / kiểu / khoá / index thêm, bớt, đổi">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE81C;" FontSize="12" />
+                        <TextBlock Text="{x:Bind ViewModel.PreviousReadText, Mode=OneWay}" FontSize="12" />
+                    </StackPanel>
+                </HyperlinkButton>
             </StackPanel>
         </Border>
 
@@ -335,6 +345,9 @@
                            Description="Cho mỗi câu truy vấn đọc schema. Database rất nhiều bảng / máy chủ chậm thì tăng lên." />
                 <ToggleSwitch x:Name="OpenHtmlAfterExportSwitch" Header="Tự mở file HTML sau khi xuất" OffContent="Tắt" OnContent="Bật" />
                 <ToggleSwitch x:Name="OpenFolderAfterExportSwitch" Header="Tự mở thư mục chứa file HTML sau khi xuất" OffContent="Tắt" OnContent="Bật" />
+                <NumberBox x:Name="HistoryCountBox" Header="Giữ lại số bản đọc cũ (mỗi database)"
+                           Minimum="0" Maximum="50" SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Inline"
+                           Description="Trước khi đọc lại, bản cũ được chép vào Data\Database\Lịch sử để so sánh bản cũ ↔ bản mới. Lần đọc không có thay đổi thì không giữ thêm bản. 0 = không giữ." />
             </StackPanel>
         </ContentDialog>
     </Grid>

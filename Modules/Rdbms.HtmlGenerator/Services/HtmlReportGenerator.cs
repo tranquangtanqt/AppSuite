@@ -153,6 +153,15 @@ public sealed class HtmlReportGenerator
           #searchArea { padding: 10px; display: flex; flex-direction: column; gap: 6px; border-bottom: 1px solid #8884; }
           #searchArea input { width: 100%; padding: 6px 8px; font-size: 14px; }
           #searchButton { padding: 6px 12px; cursor: pointer; }
+          #kindFilter { display: flex; border: 1px solid #8886; border-radius: 4px; overflow: hidden; }
+          #kindFilter button { flex: 1; padding: 4px 6px; font-size: 12px; border: 0; border-right: 1px solid #8886;
+            background: transparent; color: inherit; cursor: pointer; }
+          #kindFilter button:last-child { border-right: 0; }
+          #kindFilter button.on { background: #4a90d9; color: #fff; }
+          #searchArea label { font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+          #searchArea label input { width: auto; margin: 0; }
+          .badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 0 4px; margin-left: 6px; border-radius: 3px;
+            border: 1px solid #8888; opacity: .8; vertical-align: 1px; font-family: "Segoe UI", system-ui, sans-serif; }
           #summary { padding: 6px 10px; font-size: 12px; opacity: .7; }
           #tableList { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
           #tableList li { padding: 8px 12px; cursor: pointer; border-bottom: 1px solid #8882; }
@@ -184,6 +193,12 @@ public sealed class HtmlReportGenerator
           <div id="searchArea">
             <input id="searchBox" type="text" placeholder="Tên bảng..." />
             <input id="columnBox" type="text" placeholder="Tên cột (tuỳ chọn)..." />
+            <div id="kindFilter" role="group" aria-label="Loại">
+              <button type="button" data-kind="all">Tất cả</button>
+              <button type="button" data-kind="table">Bảng</button>
+              <button type="button" data-kind="view">View</button>
+            </div>
+            <label title="Tên bảng / Tên cột khớp cả với mô tả (comment) của bảng / cột"><input id="searchDescription" type="checkbox" />Tìm cả trong mô tả</label>
             <button id="searchButton">Tìm kiếm</button>
           </div>
           <div id="summary"></div>
@@ -225,19 +240,67 @@ public sealed class HtmlReportGenerator
           var searchButton = document.getElementById('searchButton');
           var summaryEl = document.getElementById('summary');
 
+          var kindButtons = Array.prototype.slice.call(document.querySelectorAll('#kindFilter button'));
+          var searchDescriptionBox = document.getElementById('searchDescription');
+
+          // VIEW / MATERIALIZED VIEW / SYSTEM VIEW = view; BASE TABLE / FOREIGN TABLE = bảng.
+          function isView(t) { return /VIEW/i.test(t.kind); }
+          var viewCount = tables.filter(isView).length;
           var totalColumns = tables.reduce(function (sum, t) { return sum + t.columns.length; }, 0);
-          summaryEl.textContent = 'Tổng: ' + tables.length + ' bảng, ' + totalColumns + ' cột. (Xuất lúc ' + data.generatedAt + ')';
+          summaryEl.textContent = 'Tổng: ' + (tables.length - viewCount) + ' bảng, ' + viewCount + ' view, ' + totalColumns +
+            ' cột. (Xuất lúc ' + data.generatedAt + ')';
+          kindButtons.forEach(function (b) {
+            var n = b.dataset.kind === 'view' ? viewCount : b.dataset.kind === 'table' ? tables.length - viewCount : tables.length;
+            b.textContent += ' (' + n + ')';
+          });
+
+          // Bộ lọc nhớ theo trình duyệt (localStorage có thể bị chặn với file:// - khi đó chỉ không nhớ).
+          var kindFilter = 'all';
+          try {
+            kindFilter = localStorage.getItem('rdbms.kindFilter') || 'all';
+            searchDescriptionBox.checked = localStorage.getItem('rdbms.searchDescription') === '1';
+          } catch (e) { }
+          function saveFilters() {
+            try {
+              localStorage.setItem('rdbms.kindFilter', kindFilter);
+              localStorage.setItem('rdbms.searchDescription', searchDescriptionBox.checked ? '1' : '0');
+            } catch (e) { }
+          }
+          function setKindFilter(kind) {
+            kindFilter = kind;
+            kindButtons.forEach(function (b) { b.classList.toggle('on', b.dataset.kind === kind); });
+          }
+          setKindFilter(kindFilter);
+
+          function kindMatches(t) {
+            return kindFilter === 'all' || (kindFilter === 'view') === isView(t);
+          }
 
           var tablesByName = {};
           tables.forEach(function (t) { tablesByName[t.name] = t; });
 
           function tableNameMatches(t, query) {
+            if (!kindMatches(t)) return false;
             if (!query) return true;
-            return t.name.toLowerCase().indexOf(query) >= 0 || t.japaneseName.toLowerCase().indexOf(query) >= 0;
+            return t.name.toLowerCase().indexOf(query) >= 0 || t.japaneseName.toLowerCase().indexOf(query) >= 0
+              || (searchDescriptionBox.checked && t.description.toLowerCase().indexOf(query) >= 0);
           }
 
           function columnMatches(c, query) {
-            return c.name.toLowerCase().indexOf(query) >= 0 || c.japaneseName.toLowerCase().indexOf(query) >= 0;
+            return c.name.toLowerCase().indexOf(query) >= 0 || c.japaneseName.toLowerCase().indexOf(query) >= 0
+              || (searchDescriptionBox.checked && c.description.toLowerCase().indexOf(query) >= 0);
+          }
+
+          // Tô chỗ khớp (không phân biệt hoa thường) - escape từng đoạn, chỉ <mark> là HTML.
+          function highlight(text, query) {
+            text = text || '';
+            if (!query) return escapeHtml(text);
+            var lower = text.toLowerCase(), html = '', pos = 0, i;
+            while ((i = lower.indexOf(query, pos)) >= 0) {
+              html += escapeHtml(text.slice(pos, i)) + '<mark>' + escapeHtml(text.slice(i, i + query.length)) + '</mark>';
+              pos = i + query.length;
+            }
+            return html + escapeHtml(text.slice(pos));
           }
 
           function findListItem(name) {
@@ -251,9 +314,16 @@ public sealed class HtmlReportGenerator
             listEl.innerHTML = '';
             tables.filter(function (t) { return tableNameMatches(t, query); }).forEach(function (t) {
               var li = document.createElement('li');
-              li.innerHTML = '<div class="tname"></div><div class="jname"></div>';
+              // .tname chỉ chứa tên bảng (findListItem so textContent) - nhãn VIEW để ngoài.
+              li.innerHTML = '<div><span class="tname"></span>' + (isView(t) ? '<span class="badge">' + escapeHtml(t.kind) + '</span>' : '') +
+                '</div><div class="jname"></div>';
               li.querySelector('.tname').textContent = t.name;
-              li.querySelector('.jname').textContent = t.japaneseName || t.alias || rowsText(t);
+              var byDescription = query && t.name.toLowerCase().indexOf(query) < 0 && t.japaneseName.toLowerCase().indexOf(query) < 0;
+              if (byDescription) {
+                li.querySelector('.jname').innerHTML = highlight(t.description, query); // khớp nhờ mô tả - cho thấy chỗ khớp
+              } else {
+                li.querySelector('.jname').textContent = t.japaneseName || t.alias || rowsText(t);
+              }
               li.addEventListener('click', function () {
                 var columnQuery = columnBox.value.trim().toLowerCase();
                 if (columnQuery) {
@@ -312,7 +382,8 @@ public sealed class HtmlReportGenerator
               '</div>';
           }
 
-          function buildColumnsTableHtml(columns) {
+          // query: kết quả tìm cột - tô chỗ khớp ở tên cột / mô tả.
+          function buildColumnsTableHtml(columns, query) {
             var html = '<table class="cols"><thead><tr>' +
               '<th>STT</th><th>Tên cột</th><th>Kiểu</th><th>Null</th>' +
               '<th>Mô tả</th></tr></thead><tbody>';
@@ -321,22 +392,23 @@ public sealed class HtmlReportGenerator
               if (c.level === 0) rowClasses.push('pk');
               html += '<tr class="' + rowClasses.join(' ') + '">' +
                 '<td>' + (i + 1) + '</td>' +
-                '<td>' + escapeHtml(c.name) + '</td>' +
+                '<td>' + highlight(c.name, query) + '</td>' +
                 '<td>' + escapeHtml(c.dataType) + '</td>' +
                 '<td>' + escapeHtml(c.nullable) + '</td>' +
-                '<td>' + escapeHtml(c.description) + '</td>' +
+                '<td>' + (query && searchDescriptionBox.checked ? highlight(c.description, query) : escapeHtml(c.description)) + '</td>' +
                 '</tr>';
             });
             html += '</tbody></table>';
             return html;
           }
 
-          function renderColumnGroups(headingHtml, groups) {
+          function renderColumnGroups(headingHtml, groups, query) {
             var html = headingHtml + legendHtml();
             groups.forEach(function (g) {
               html += '<div class="groupBlock"><h2>' + escapeHtml(g.table.name) +
+                (isView(g.table) ? '<span class="badge">' + escapeHtml(g.table.kind) + '</span>' : '') +
                 (g.table.japaneseName ? ' - ' + escapeHtml(g.table.japaneseName) : '') + '</h2>' +
-                buildColumnsTableHtml(g.columns) + '</div>';
+                buildColumnsTableHtml(g.columns, query) + '</div>';
             });
             contentEl.innerHTML = html;
           }
@@ -367,6 +439,7 @@ public sealed class HtmlReportGenerator
               var name = decodeURIComponent(match[1]);
               columnBox.value = '';
               searchBox.value = name;
+              if (tablesByName[name] && !kindMatches(tablesByName[name])) setKindFilter('all'); // link khoá ngoại tới bảng đang bị lọc
               renderList();
               showFullTable(tablesByName[name], findListItem(name));
             }
@@ -417,7 +490,7 @@ public sealed class HtmlReportGenerator
             var matchedCols = t.columns.filter(function (c) { return columnMatches(c, columnQuery); });
             var heading = '<h1>' + escapeHtml(t.name) + (t.alias ? ' (' + escapeHtml(t.alias) + ')' : '') + '</h1>' +
               '<div class="meta">Cột khớp "' + escapeHtml(columnQuery) + '": ' + matchedCols.length + ' / ' + t.columns.length + '</div>';
-            renderColumnGroups(heading, [{ table: t, columns: matchedCols }]);
+            renderColumnGroups(heading, [{ table: t, columns: matchedCols }], columnQuery);
             document.title = 'CSDL - ' + t.name + ' (cột: ' + columnQuery + ')';
           }
 
@@ -436,7 +509,7 @@ public sealed class HtmlReportGenerator
             }
             var heading = '<h1>Kết quả tìm cột "' + escapeHtml(columnQuery) + '"</h1>' +
               '<div class="meta">' + groups.length + ' bảng có cột khớp.</div>';
-            renderColumnGroups(heading, groups);
+            renderColumnGroups(heading, groups, columnQuery);
             document.title = 'CSDL - cột ' + columnQuery + ' (' + groups.length + ' bảng)';
           }
 
@@ -448,14 +521,15 @@ public sealed class HtmlReportGenerator
 
             if (!columnQuery) {
               if (!tableQuery) return;
-              var exact = tables.find(function (t) { return t.name.toLowerCase() === tableQuery; });
               var candidates = tables.filter(function (t) { return tableNameMatches(t, tableQuery); });
+              var exact = candidates.find(function (t) { return t.name.toLowerCase() === tableQuery; });
               var target = exact || (candidates.length === 1 ? candidates[0] : null);
               if (target) showFullTable(target, findListItem(target.name));
               return;
             }
 
-            var candidateTables = tableQuery ? tables.filter(function (t) { return tableNameMatches(t, tableQuery); }) : tables;
+            // tableNameMatches cũng lọc theo Bảng / View (kể cả khi ô Tên bảng trống).
+            var candidateTables = tables.filter(function (t) { return tableNameMatches(t, tableQuery); });
             if (candidateTables.length === 1) {
               showTableColumnMatches(candidateTables[0], findListItem(candidateTables[0].name), columnQuery);
             } else {
@@ -476,6 +550,10 @@ public sealed class HtmlReportGenerator
           searchBox.addEventListener('input', performSearch);
           columnBox.addEventListener('keyup', function (e) { if (e.key === 'Enter') performSearch(); });
           columnBox.addEventListener('input', performSearch);
+          kindButtons.forEach(function (b) {
+            b.addEventListener('click', function () { setKindFilter(b.dataset.kind); saveFilters(); performSearch(); });
+          });
+          searchDescriptionBox.addEventListener('change', function () { saveFilters(); performSearch(); });
 
           performSearch();
           applyHash();

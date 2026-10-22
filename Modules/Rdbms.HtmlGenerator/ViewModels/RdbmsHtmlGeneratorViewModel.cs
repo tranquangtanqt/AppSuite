@@ -224,7 +224,13 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         _config.Options = options;
         SaveConfig();
         StatusText = $"Đã lưu cài đặt: kết nối tối đa {options.EffectiveConnectTimeoutSeconds} giây, " +
-                     $"mỗi truy vấn tối đa {options.EffectiveCommandTimeoutSeconds} giây.";
+                     $"mỗi truy vấn tối đa {options.EffectiveCommandTimeoutSeconds} giây, giữ {options.EffectiveHistoryCount} bản đọc cũ.";
+        // Giảm số bản giữ lại thì dọn ngay cho file đang chọn (các file khác dọn ở lần đọc sau của chúng).
+        if (_database.Exists)
+        {
+            SchemaHistory.Prune(_database.DatabasePath, options.EffectiveHistoryCount);
+            RefreshPreviousRead();
+        }
     }
 
     private void SaveConfig()
@@ -265,6 +271,29 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
             : _htmlPath is not null && File.GetLastWriteTimeUtc(_htmlPath) >= File.GetLastWriteTimeUtc(_database.DatabasePath) ? 3
             : 2;
         OnPropertyChanged(nameof(ConnectionSummary));
+        RefreshPreviousRead();
+    }
+
+    /// <summary>Bản cũ mới nhất trong Lịch sử của file .db đang chọn (null = chưa có) - cho nút "So với bản trước".</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasPreviousRead), nameof(PreviousReadText))]
+    [NotifyCanExecuteChangedFor(nameof(CompareWithPreviousCommand))]
+    private HistoryEntry? _previousRead;
+
+    public bool HasPreviousRead => PreviousRead is not null;
+
+    public string PreviousReadText => PreviousRead is { } p ? $"So với bản trước (đọc lúc {p.ReadAt:dd/MM HH:mm})" : "";
+
+    private void RefreshPreviousRead()
+    {
+        try
+        {
+            PreviousRead = _database.Exists ? SchemaHistory.Latest(_database.DatabasePath) : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            PreviousRead = null;
+        }
     }
 
     /// <summary>Dòng dưới Hồ sơ / Nguồn: đang trỏ tới đâu + đã đọc lúc nào.</summary>
@@ -343,13 +372,39 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
 
             IsImporting = false; // saving to SQLite is quick and must not be interrupted half-way
             StatusText = $"Đang lưu {import.Tables.Count} bảng / {import.Columns.Count} cột vào SQLite...";
-            await _database.ReplaceAllAsync(import);
+
+            // Bản đọc trước → Lịch sử ngay trước khi ghi đè (để so "bản cũ ↔ bản mới" không phải tự chép file).
+            string? previousCopy = null;
+            try
+            {
+                previousCopy = SchemaHistory.Save(_database.DatabasePath);
+            }
+            catch (Exception ex)
+            {
+                AppendLog($"Không lưu được bản đọc trước vào {SchemaHistory.FolderName}: {ex.Message}");
+            }
+
+            try
+            {
+                await _database.ReplaceAllAsync(import);
+            }
+            catch
+            {
+                DeleteQuietly(previousCopy); // .db cũ còn nguyên (transaction) → bản chép là thừa
+                throw;
+            }
 
             StatusText = $"Đã đọc và lưu xong: {import.Tables.Count} bảng, {import.Columns.Count} cột, {import.ForeignKeys.Count} khoá ngoại, " +
                          $"{import.Indexes.Count} index, {import.Constraints.Count} ràng buộc. File: {_database.DatabasePath}";
             CanExportHtml = true;
             NextStep = 2;
             OnPropertyChanged(nameof(ConnectionSummary));
+
+            if (previousCopy is not null)
+            {
+                await LogChangesSincePreviousAsync(previousCopy);
+            }
+            RefreshPreviousRead();
         }
         catch (Exception) when (cancellationToken.IsCancellationRequested)
         {
@@ -375,6 +430,70 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         {
             IsImporting = false;
             IsBusy = false;
+        }
+    }
+
+    /// <summary>Sau khi đọc: so bản vừa chép vào Lịch sử với bản mới, ghi tóm tắt vào nhật ký. Giống hệt → xoá bản chép (không
+    /// giữ bản trùng); khác → giữ, dọn bớt theo Cài đặt (0 = không giữ). Lỗi ở đây không làm hỏng lần đọc.</summary>
+    private async Task LogChangesSincePreviousAsync(string previousCopy)
+    {
+        var readAt = File.GetLastWriteTime(previousCopy);
+        try
+        {
+            var currentPath = _database.DatabasePath;
+            var diff = await Task.Run(() => SchemaComparer.Compare(
+                RdbmsHtmlGeneratorDatabase.OpenFile(previousCopy).ReadSnapshot("Bản trước"),
+                RdbmsHtmlGeneratorDatabase.OpenFile(currentPath).ReadSnapshot("Bản mới")));
+
+            if (diff.IsIdentical)
+            {
+                DeleteQuietly(previousCopy);
+                AppendLog($"Không có thay đổi so với lần đọc trước ({readAt:dd/MM HH:mm}).");
+                return;
+            }
+
+            AppendLog($"So với lần đọc trước ({readAt:dd/MM HH:mm}): {DescribeChanges(diff)}." +
+                      (Options.EffectiveHistoryCount > 0 ? " Bấm \"So với bản trước\" để xem chi tiết." : ""));
+            SchemaHistory.Prune(currentPath, Options.EffectiveHistoryCount);
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Không so được với lần đọc trước: {ex.Message}");
+        }
+    }
+
+    /// <summary>A = bản cũ, B = bản mới: "chỉ có ở B" = bảng mới.</summary>
+    private static string DescribeChanges(SchemaDiff diff)
+    {
+        var parts = new List<string>();
+        if (diff.TablesOnlyInB.Count > 0)
+        {
+            parts.Add($"{diff.TablesOnlyInB.Count} bảng mới");
+        }
+        if (diff.TablesOnlyInA.Count > 0)
+        {
+            parts.Add($"{diff.TablesOnlyInA.Count} bảng bị bỏ");
+        }
+        if (diff.ChangedTables.Count > 0)
+        {
+            var onlyDescription = diff.ChangedTables.Count(t => t.OnlyDescriptionChanges);
+            parts.Add($"{diff.ChangedTables.Count} bảng có thay đổi" + (onlyDescription > 0 ? $" ({onlyDescription} bảng chỉ đổi mô tả)" : ""));
+        }
+        return string.Join(", ", parts);
+    }
+
+    private static void DeleteQuietly(string? path)
+    {
+        if (path is null)
+        {
+            return;
+        }
+        try
+        {
+            File.Delete(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
         }
     }
 
@@ -533,16 +652,21 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
 
     // ----- So sánh schema -----
 
-    /// <summary>1 file .db có thể so sánh (mỗi lần "1. Đọc database" của 1 hồ sơ / nguồn tạo 1 file).</summary>
-    public sealed record SchemaFile(string Name, string Path, DateTime ReadAt)
+    /// <summary>1 file .db có thể so sánh (mỗi lần "1. Đọc database" của 1 hồ sơ / nguồn tạo 1 file; bản cũ nằm trong
+    /// Lịch sử - <paramref name="IsHistory"/>).</summary>
+    public sealed record SchemaFile(string Name, string Path, DateTime ReadAt, bool IsHistory = false)
     {
-        public string Display => $"{Name}   (đọc lúc {ReadAt:dd/MM/yyyy HH:mm})";
+        public string Display => IsHistory ? $"{Name}   (bản cũ)" : $"{Name}   (đọc lúc {ReadAt:dd/MM/yyyy HH:mm})";
 
         /// <summary>ComboBox hiện ToString() (DisplayMemberPath không đọc được record C# thường trong WinUI 3).</summary>
         public override string ToString() => Display;
+
+        /// <summary>Bản cũ của file <paramref name="baseName"/> - tên ghi kèm lúc đọc (vào cả tên trang kết quả).</summary>
+        public static SchemaFile FromHistory(string baseName, HistoryEntry entry) =>
+            new($"{baseName} - bản {entry.ReadAt:dd-MM-yyyy HH.mm}", entry.Path, entry.ReadAt, IsHistory: true);
     }
 
-    /// <summary>Các file .db trong Data\Database, mới đọc nhất lên trước.</summary>
+    /// <summary>Các file .db trong Data\Database + các bản cũ trong Lịch sử, mới đọc nhất lên trước.</summary>
     public List<SchemaFile> ListSchemaFiles()
     {
         var directory = RdbmsHtmlGeneratorDatabase.DataDirectory;
@@ -553,11 +677,32 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         var files = new List<SchemaFile>();
         foreach (var path in Directory.GetFiles(directory, "*.db"))
         {
-            files.Add(new SchemaFile(Path.GetFileNameWithoutExtension(path), path, File.GetLastWriteTime(path)));
+            var name = Path.GetFileNameWithoutExtension(path);
+            files.Add(new SchemaFile(name, path, File.GetLastWriteTime(path)));
+            files.AddRange(SchemaHistory.List(path).Select(entry => SchemaFile.FromHistory(name, entry)));
         }
         files.Sort((x, y) => y.ReadAt.CompareTo(x.ReadAt));
         return files;
     }
+
+    /// <summary>"So với bản trước": A = bản cũ mới nhất trong Lịch sử, B = bản đang dùng → trang So sánh.</summary>
+    [RelayCommand(CanExecute = nameof(CanCompareWithPrevious))]
+    private async Task CompareWithPreviousAsync()
+    {
+        RefreshPreviousRead(); // file có thể đã bị xoá tay
+        if (PreviousRead is not { } previous)
+        {
+            StatusText = "Chưa có bản đọc trước để so.";
+            return;
+        }
+        var current = new SchemaFile(CurrentFileBaseName, _database.DatabasePath, File.GetLastWriteTime(_database.DatabasePath));
+        if (await CompareSchemasAsync(SchemaFile.FromHistory(CurrentFileBaseName, previous), current) is { } error)
+        {
+            ErrorOccurred?.Invoke("Không so sánh được", error);
+        }
+    }
+
+    private bool CanCompareWithPrevious() => !IsBusy && PreviousRead is not null;
 
     /// <summary>File .db của hồ sơ / nguồn đang chọn (null nếu chưa đọc) - chọn sẵn làm A.</summary>
     public string? CurrentSchemaFilePath => _database.Exists ? _database.DatabasePath : null;
@@ -631,6 +776,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
     {
         ImportDatabaseCommand.NotifyCanExecuteChanged();
         ExportHtmlCommand.NotifyCanExecuteChanged();
+        CompareWithPreviousCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedSourceChanged(DatabaseSourceType value)

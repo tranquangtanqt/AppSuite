@@ -86,6 +86,12 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    "Ten tieng Nhat"/"Xac dinh", bỏ chú giải/màu "Cot dung chung" vì không áp dụng cho dữ liệu DB quan
    hệ - chỉ còn tô màu khóa chính (vàng nhạt), menu trái + 2 ô tìm kiếm (tên bảng/tên cột), link khóa
    ngoại mở tab mới - xem README của Mcf.DbDef.HtmlGenerator để biết chi tiết các tính năng gốc).
+   **Lọc Tất cả / Bảng / View + "Tìm cả trong mô tả" (2026-10-22)**: 3 nút `#kindFilter` (kèm số lượng; view = `kind` chứa
+   `VIEW`, gồm MATERIALIZED / SYSTEM VIEW) lọc qua `tableNameMatches`, nên áp dụng cho cả menu trái lẫn tìm cột (kể cả khi
+   ô Tên bảng trống); view có nhãn `.badge`. Ô `#searchDescription`: tên bảng khớp cả `description` của bảng, tên cột khớp
+   cả `description` của cột; bảng khớp nhờ mô tả hiện mô tả dưới tên ở menu trái. Chỗ khớp tô `<mark>` (`highlight()` escape
+   từng đoạn). Link `#table=` tới bảng đang bị lọc ẩn thì về "Tất cả". Lựa chọn nhớ bằng `localStorage` (bọc try/catch - có
+   trình duyệt chặn với file://). Thử bằng Edge headless `--dump-dom` + script chèn vào trang (Sandbox, 20/20).
 5. **"3. Mở file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định. Đóng rồi mở lại module vẫn
    nhận đúng file `.db`/`.html` đã có sẵn cho database/nguồn đang chọn (`RdbmsHtmlGeneratorViewModel.RefreshDatabaseTarget`
    kiểm tra lại mỗi khi đổi nguồn hoặc lưu settings), không cần import lại nếu đã có cache từ trước.
@@ -95,6 +101,8 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
      SQL Server đặt qua connection string, Oracle đặt trên từng `OracleCommand`.
    - *Tự mở file HTML sau khi xuất*.
    - *Tự mở thư mục chứa file HTML sau khi xuất* (`explorer.exe /select,"…html"` - chọn sẵn file).
+   - *Giữ lại số bản đọc cũ* (`HistoryCount`, mặc định 10, 0-50, `EffectiveHistoryCount`) - xem mục 8. Lưu số nhỏ hơn thì
+     `SchemaHistory.Prune` ngay cho file .db đang chọn (các file khác dọn ở lần đọc sau của chúng).
 
    Nút "Mặc định" điền lại giá trị mặc định (chưa lưu cho tới khi bấm Lưu). Giá trị sửa tay ngoài khoảng
    trong config.xml bị kẹp lại (`EffectiveConnectTimeoutSeconds` / `EffectiveCommandTimeoutSeconds`).
@@ -113,6 +121,19 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    index, ràng buộc so theo chuỗi định nghĩa (`SchemaComparer.Describe`), không theo tên (tên hệ thống sinh khác nhau ở
    mỗi môi trường); 1 bên là .db bản cũ (`HasExtendedInfo` = false) thì bỏ qua index / ràng buộc và trang ghi rõ. Trang
    HTML tĩnh (không nhúng JSON), ô tích ẩn thay đổi chỉ khác mô tả (`TableDiff.OnlyDescriptionChanges`).
+   `ListSchemaFiles` liệt kê cả bản cũ trong Lịch sử (`SchemaFile.IsHistory`, tên `{file} - bản dd-MM-yyyy HH.mm`, hiện
+   "(bản cũ)"); B chọn sẵn file *không* phải bản cũ nếu có.
+8. **Lịch sử các lần đọc + "So với bản trước" (2026-10-22)** - `Services\SchemaHistory` (unit test `SchemaHistoryTests`).
+   Trong `ImportDatabaseAsync`, ngay trước `ReplaceAllAsync`, `SchemaHistory.Save` chép `{tên}.db` cũ sang
+   `Data\Database\Lịch sử\{tên}\yyyy-MM-dd HHmmss.db` (tên = giờ sửa file cũ = lúc bản đó được đọc; `File.Copy` giữ giờ sửa).
+   Ghi SQLite lỗi → xoá bản chép. Đọc xong `LogChangesSincePreviousAsync` so bản chép (A) với bản mới (B) bằng
+   `SchemaComparer`: giống hệt → xoá bản chép + nhật ký "Không có thay đổi so với lần đọc trước (…)"; khác → nhật ký
+   "So với lần đọc trước (…): N bảng mới, N bảng bị bỏ, N bảng có thay đổi (N bảng chỉ đổi mô tả)" rồi `Prune` theo Cài đặt.
+   Nhờ bỏ bản trùng, bản mới nhất trong Lịch sử luôn là bản trước lần thay đổi gần nhất. `PreviousRead` (bản mới nhất,
+   tính lại trong `RefreshDatabaseTarget`) → `HyperlinkButton` "So với bản trước (đọc lúc …)" dưới dòng trạng thái, chỉ hiện
+   khi có bản cũ; `CompareWithPreviousCommand` = `CompareSchemasAsync(bản cũ, bản đang dùng)`. `OpenFile` (chỉ đọc) đặt
+   `Pooling=False`, nếu không kết nối trong pool giữ file mở và không xoá được bản vừa so. Đổi tên hồ sơ thì thư mục Lịch sử
+   cũ giữ nguyên tên cũ (file .db cũng vậy).
 
 **Bố cục cửa sổ (2026-10-21)**: tiêu đề gọn + Cài đặt / Hướng dẫn cùng hàng; thẻ **Kết nối** (nhãn Hồ sơ / Nguồn cùng cột,
 2 combobox cùng rộng, dòng `ConnectionSummary` = Host:Port/Database của nguồn đang chọn + "đã đọc lúc …" theo giờ sửa

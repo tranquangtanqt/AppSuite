@@ -31,10 +31,11 @@ public sealed class RdbmsHtmlGeneratorDatabase
     private RdbmsHtmlGeneratorDatabase(string databasePath, bool _)
     {
         DatabasePath = databasePath;
-        _connectionString = $"Data Source={databasePath};Mode=ReadOnly";
+        // Pooling=False: kết nối trong pool giữ file mở → không xoá được bản Lịch sử vừa so (lần đọc giống hệt / dọn bản cũ).
+        _connectionString = $"Data Source={databasePath};Mode=ReadOnly;Pooling=False";
     }
 
-    /// <summary>Mở 1 file .db có sẵn (chỉ đọc) - cho So sánh schema.</summary>
+    /// <summary>Mở 1 file .db có sẵn (chỉ đọc) - cho So sánh schema / Lịch sử.</summary>
     public static RdbmsHtmlGeneratorDatabase OpenFile(string databasePath) => new(databasePath, true);
 
     /// <summary>Thư mục Data\Database cạnh exe - nơi mọi file .db / .html được ghi.</summary>

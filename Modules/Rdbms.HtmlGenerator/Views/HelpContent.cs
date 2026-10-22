@@ -43,8 +43,10 @@ internal static class HelpContent
 
         new("So sánh schema", "", "So 2 lần đọc database - vd dev với prod trước khi deploy, hoặc bản tuần trước với bản hôm nay - ra 1 trang HTML liệt kê chỗ khác nhau.",
         [
-            new("Chuẩn bị", "Mỗi lần bấm \"1. Đọc database\" của 1 hồ sơ / nguồn tạo 1 file trong Data\\Database. Cần ít nhất 2 file: vd đọc database ở hồ sơ dev và ở hồ sơ prod. Muốn giữ bản cũ để so với bản mới thì chép file .db cũ ra tên khác trong cùng thư mục trước khi đọc lại."),
-            new("Chọn A và B", "Nút \"So sánh schema\" trên cùng: A (gốc) chọn sẵn file của hồ sơ / nguồn đang chọn, B là file còn lại mới đọc nhất. Danh sách ghi rõ mỗi file đọc lúc nào; nút \"Đổi chỗ A ↔ B\" để đảo chiều. Bấm \"So sánh\" → trang HTML mở trong trình duyệt, lưu ở Data\\Database\\So sánh {A} - {B}.html."),
+            new("Chuẩn bị", "Mỗi lần bấm \"1. Đọc database\" của 1 hồ sơ / nguồn tạo 1 file trong Data\\Database, vd đọc database ở hồ sơ dev và ở hồ sơ prod. Bản cũ của cùng database được tự giữ trong Lịch sử (mục dưới) nên so \"bản cũ ↔ bản mới\" không cần chép file."),
+            new("So với bản trước", "Đọc lại database mà schema có thay đổi thì Nhật ký ghi tóm tắt, vd \"So với lần đọc trước (21/10 09:15): 1 bảng mới, 2 bảng có thay đổi\", và dưới dòng trạng thái hiện nút \"So với bản trước (đọc lúc ...)\" - bấm để mở trang so sánh bản cũ (A) với bản đang dùng (B). Đọc lại mà không có gì thay đổi thì Nhật ký ghi \"Không có thay đổi so với lần đọc trước\"."),
+            new("Lịch sử các lần đọc", "Trước khi \"1. Đọc database\" ghi đè, file .db cũ được chép vào Data\\Database\\Lịch sử\\{tên file}\\ (tên = lúc đọc bản đó). Lần đọc giống hệt lần trước thì không giữ thêm bản trùng. Mặc định giữ 10 bản mới nhất cho mỗi database - đổi ở Cài đặt (0 = không giữ)."),
+            new("Chọn A và B", "Nút \"So sánh schema\" trên cùng: A (gốc) chọn sẵn file của hồ sơ / nguồn đang chọn, B là file của hồ sơ / nguồn khác mới đọc nhất. Danh sách có cả các bản cũ trong Lịch sử (ghi \"(bản cũ)\"), ghi rõ mỗi file đọc lúc nào; nút \"Đổi chỗ A ↔ B\" để đảo chiều. Bấm \"So sánh\" → trang HTML mở trong trình duyệt, lưu ở Data\\Database\\So sánh {A} - {B}.html."),
             new("Trang kết quả", "Trên cùng: số bảng chỉ có ở A, chỉ có ở B, có thay đổi, giống nhau (bấm để nhảy tới). Bên dưới: bảng chỉ có ở 1 bên, rồi từng bảng có thay đổi - cột thêm / bớt, đổi kiểu, độ dài, Null, mặc định, khoá chính, mô tả (cột A đỏ nhạt, B xanh nhạt); khoá ngoại, index, ràng buộc UNIQUE / CHECK chỉ có ở 1 bên."),
             new("So theo nội dung", "Tên bảng / cột không phân biệt hoa thường. Index, ràng buộc, khoá ngoại so theo định nghĩa (cột, loại, bảng tham chiếu) chứ không theo tên - tên do hệ thống tự đặt (SYS_C..., PK__...) khác nhau ở mỗi môi trường nên không bị báo nhầm. Thứ tự cột khác không tính là thay đổi."),
             new("Ẩn khác mô tả", "Tích \"Ẩn thay đổi chỉ khác mô tả (comment)\" trên trang để ẩn dòng mô tả và bảng chỉ khác mô tả - comment hay lệch giữa các môi trường, thường không quan trọng."),
@@ -57,13 +59,16 @@ internal static class HelpContent
             new("Giới hạn thời gian truy vấn", "Số giây tối đa cho mỗi câu đọc schema (mặc định 120). Database rất nhiều bảng / máy chủ chậm mà báo \"truy vấn quá giờ\" thì tăng lên, hoặc nhập Schema để đọc ít hơn."),
             new("Tự mở file HTML sau khi xuất", "Bật thì \"2. Xuất HTML\" xong tự mở trang trong trình duyệt."),
             new("Tự mở thư mục chứa file HTML sau khi xuất", "Bật thì \"2. Xuất HTML\" xong mở Explorer tại Data\\Database, chọn sẵn file vừa xuất - tiện để gửi file cho người khác. Bật được cùng lúc với tuỳ chọn trên."),
+            new("Giữ lại số bản đọc cũ", "Số bản đọc trước giữ trong Data\\Database\\Lịch sử cho mỗi database (mặc định 10, tối đa 50) - dùng cho nút \"So với bản trước\" và hộp thoại So sánh schema. Giảm số này thì bản cũ thừa của database đang chọn bị xoá ngay khi Lưu; 0 = không giữ bản nào (Nhật ký vẫn ghi tóm tắt thay đổi sau mỗi lần đọc)."),
         ]),
 
         new("Tra cứu trong trang HTML", "", "Menu trái là danh sách bảng (bấm để xem), bên phải là định nghĩa bảng đang chọn. Ô \"Tên bảng...\" và \"Tên cột (tuỳ chọn)...\" + nút Tìm kiếm kết hợp như dưới đây.",
         [
             new("Chỉ nhập Tên bảng", "Hiện toàn bộ cột của bảng: STT, tên cột, kiểu (đã gồm độ dài, vd VARCHAR2(100)), Null, mô tả (comment của cột trong database)."),
             new("Tên bảng + Tên cột", "Chỉ hiện các cột khớp Tên cột trong đúng bảng đó."),
-            new("Chỉ nhập Tên cột", "Tìm mọi bảng có cột khớp, kết quả nhóm theo từng bảng - dùng khi không nhớ cột thuộc bảng nào."),
+            new("Chỉ nhập Tên cột", "Tìm mọi bảng có cột khớp, kết quả nhóm theo từng bảng - dùng khi không nhớ cột thuộc bảng nào. Chỗ khớp được tô vàng."),
+            new("Lọc Tất cả / Bảng / View", "3 nút dưới ô tìm (kèm số lượng): chỉ hiện bảng, chỉ hiện view (gồm cả MATERIALIZED VIEW), hoặc cả hai - áp dụng cho menu trái và cho kết quả tìm cột. View có nhãn VIEW cạnh tên. Bấm link khoá ngoại tới 1 bảng đang bị lọc ẩn thì tự về \"Tất cả\". Trình duyệt nhớ lựa chọn cho lần mở sau."),
+            new("Tìm cả trong mô tả", "Tích ô này thì Tên bảng khớp cả mô tả (comment) của bảng, Tên cột khớp cả mô tả của cột - vd gõ \"khách hàng\" ra các bảng / cột có comment chứa chữ đó dù tên là customers / cust_id. Bảng khớp nhờ mô tả hiện đoạn mô tả (tô chỗ khớp) dưới tên ở menu trái."),
             new("Màu nền", "Vàng nhạt = cột khoá chính."),
             new("Khoá ngoại", "Bảng khoá ngoại phía trên bảng cột: bấm tên bảng tham chiếu để mở bảng đó ở tab mới. Thêm #table=TÊN_BẢNG vào cuối đường dẫn file HTML để chia sẻ link tới 1 bảng."),
             new("Số dòng", "\"≈ 1.234 dòng\" dưới tên bảng ở menu trái và dòng \"Số dòng (ước tính...)\" trên đầu bảng: lấy từ thống kê của database (không đếm thật nên đọc nhanh cả bảng rất lớn), chỉ mới bằng lần thống kê gần nhất (PostgreSQL: ANALYZE / VACUUM; Oracle: DBMS_STATS; MySQL: ước tính của InnoDB; SQL Server: luôn cập nhật). Chưa có thống kê thì ghi rõ; view không có số dòng."),
@@ -79,7 +84,7 @@ internal static class HelpContent
             new("Đã đọc trước đó", "Mở lại module (hoặc đổi Nguồn) vẫn nhận file .db / .html đã có của database đang chọn - không cần đọc lại nếu schema chưa đổi."),
             new("Huỷ khi đang đọc", "Đang đọc database thì nút \"Huỷ\" hiện cạnh nút 1 - bấm để dừng ngay (kể cả khi còn đang chờ kết nối). Dữ liệu đọc lần trước (file .db) giữ nguyên, vẫn \"2. Xuất HTML\" được."),
             new("Đọc lỗi vẫn giữ bản cũ", "Đọc database bị lỗi (mất mạng, sai mật khẩu...) không xoá dữ liệu lần trước: nút \"2. Xuất HTML\" vẫn bật để xuất lại bản cũ nếu cần; nút 1 có màu xanh để nhắc đọc lại."),
-            new("Lấy dữ liệu mới nhất", "Bấm lại \"1. Đọc database\" rồi \"2. Xuất HTML\". Mỗi lần đọc là dựng lại toàn bộ."),
+            new("Lấy dữ liệu mới nhất", "Bấm lại \"1. Đọc database\" rồi \"2. Xuất HTML\". Mỗi lần đọc là dựng lại toàn bộ; bản trước đó được giữ trong Lịch sử để so sánh (xem So sánh schema)."),
         ]),
     ];
 }

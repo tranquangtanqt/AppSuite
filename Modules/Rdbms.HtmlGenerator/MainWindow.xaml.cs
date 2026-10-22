@@ -342,6 +342,7 @@ public sealed partial class MainWindow : Window
         CommandTimeoutBox.Value = options.EffectiveCommandTimeoutSeconds;
         OpenHtmlAfterExportSwitch.IsOn = options.OpenHtmlAfterExport;
         OpenFolderAfterExportSwitch.IsOn = options.OpenFolderAfterExport;
+        HistoryCountBox.Value = options.EffectiveHistoryCount;
 
         OptionsDialog.XamlRoot = Content.XamlRoot;
         await OptionsDialog.ShowAsync();
@@ -358,6 +359,7 @@ public sealed partial class MainWindow : Window
             CommandTimeoutSeconds = ToSeconds(CommandTimeoutBox.Value, AppOptions.DefaultCommandTimeoutSeconds),
             OpenHtmlAfterExport = OpenHtmlAfterExportSwitch.IsOn,
             OpenFolderAfterExport = OpenFolderAfterExportSwitch.IsOn,
+            HistoryCount = ToSeconds(HistoryCountBox.Value, AppOptions.DefaultHistoryCount),
         });
     }
 
@@ -370,6 +372,7 @@ public sealed partial class MainWindow : Window
         CommandTimeoutBox.Value = defaults.CommandTimeoutSeconds;
         OpenHtmlAfterExportSwitch.IsOn = defaults.OpenHtmlAfterExport;
         OpenFolderAfterExportSwitch.IsOn = defaults.OpenFolderAfterExport;
+        HistoryCountBox.Value = defaults.HistoryCount;
     }
 
     private void OraConnectType_Checked(object sender, RoutedEventArgs e)
@@ -405,7 +408,8 @@ public sealed partial class MainWindow : Window
         var current = ViewModel.CurrentSchemaFilePath;
         var a = files.Find(f => string.Equals(f.Path, current, StringComparison.OrdinalIgnoreCase)) ?? files[0];
         CompareAComboBox.SelectedItem = a;
-        CompareBComboBox.SelectedItem = files.Find(f => !ReferenceEquals(f, a));
+        // B: ưu tiên file của hồ sơ / nguồn khác (dev ↔ prod); bản cũ trong Lịch sử đã có nút "So với bản trước".
+        CompareBComboBox.SelectedItem = files.Find(f => !ReferenceEquals(f, a) && !f.IsHistory) ?? files.Find(f => !ReferenceEquals(f, a));
         CompareError.Visibility = Visibility.Collapsed;
         CompareDialog.XamlRoot = Content.XamlRoot;
         if (await CompareDialog.ShowAsync() == ContentDialogResult.Primary

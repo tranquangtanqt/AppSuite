@@ -18,8 +18,15 @@ public sealed class AppOptions
     /// <summary>Xuất HTML xong thì mở thư mục chứa file (Explorer, chọn sẵn file vừa xuất).</summary>
     public bool OpenFolderAfterExport { get; set; }
 
+    public const int DefaultHistoryCount = 10;
+
+    /// <summary>Số lần đọc trước giữ lại trong Data\Database\Lịch sử\{tên} cho mỗi file .db (0 = không giữ).</summary>
+    public int HistoryCount { get; set; } = DefaultHistoryCount;
+
     /// <summary>Clamped copies so a hand-edited config.xml (0, số âm, quá lớn) can't hang or break the import.</summary>
     public int EffectiveConnectTimeoutSeconds => System.Math.Clamp(ConnectTimeoutSeconds, 1, 600);
 
     public int EffectiveCommandTimeoutSeconds => System.Math.Clamp(CommandTimeoutSeconds, 1, 3600);
+
+    public int EffectiveHistoryCount => System.Math.Clamp(HistoryCount, 0, 50);
 }

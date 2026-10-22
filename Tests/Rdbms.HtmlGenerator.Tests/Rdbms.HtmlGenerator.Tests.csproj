@@ -19,6 +19,7 @@
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\ConnectionSettingsStore.cs" Link="Rdbms.HtmlGenerator\Services\ConnectionSettingsStore.cs" />
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaComparer.cs" Link="Rdbms.HtmlGenerator\Services\SchemaComparer.cs" />
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaCompareReport.cs" Link="Rdbms.HtmlGenerator\Services\SchemaCompareReport.cs" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaHistory.cs" Link="Rdbms.HtmlGenerator\Services\SchemaHistory.cs" />
   </ItemGroup>
 
   <ItemGroup>
