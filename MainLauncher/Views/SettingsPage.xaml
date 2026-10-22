@@ -10,19 +10,19 @@
 
     <ScrollViewer VerticalScrollBarVisibility="Auto">
     <StackPanel Padding="24" Spacing="16" MaxWidth="700" HorizontalAlignment="Left">
-        <TextBlock Text="Settings" Style="{StaticResource TitleLargeTextBlockStyle}" />
+        <TextBlock Text="Cài đặt" Style="{StaticResource TitleLargeTextBlockStyle}" />
 
         <StackPanel Spacing="4">
-            <TextBlock Text="Base directory" FontWeight="SemiBold" />
+            <TextBlock Text="Thư mục cài đặt" FontWeight="SemiBold" />
             <TextBlock Text="{x:Bind ViewModel.BaseDirectory}" TextWrapping="Wrap" Opacity="0.8" />
         </StackPanel>
 
         <StackPanel Spacing="4">
-            <TextBlock Text="Modules configuration file" FontWeight="SemiBold" />
+            <TextBlock Text="File cấu hình module" FontWeight="SemiBold" />
             <TextBlock Text="{x:Bind ViewModel.ModulesConfigPath}" TextWrapping="Wrap" Opacity="0.8" />
         </StackPanel>
 
-        <Button Content="Reload modules.json" Command="{x:Bind ViewModel.ReloadModulesCommand}" />
+        <Button Content="Tải lại modules.json" Command="{x:Bind ViewModel.ReloadModulesCommand}" />
 
         <!-- Đóng MainLauncher mà còn module đang chạy (thứ tự mục = enum CloseModulesOnExit) -->
         <RadioButtons x:Name="CloseModulesOnExitRadio" Header="Khi đóng MainLauncher mà còn module đang chạy" Margin="0,8,0,0"
@@ -38,7 +38,7 @@
                 <TextBlock Text="Module hiện trên màn hình" FontWeight="SemiBold" VerticalAlignment="Center" />
                 <TextBlock Text="{x:Bind ViewModel.Dashboard.VisibleSummary, Mode=OneWay}" Opacity="0.6" FontSize="12" VerticalAlignment="Center" />
             </StackPanel>
-            <TextBlock Text="Bỏ tích để ẩn module khỏi Dashboard và Module List (danh sách này luôn đủ để bật lại). Lưu ngay vào Config\launcher-settings.json; module đang ẩn mà đang chạy vẫn hiện tạm để bấm Stop được."
+            <TextBlock Text="Bỏ tích để ẩn module khỏi trang Tổng quan và Danh sách module (danh sách này luôn đủ để bật lại). Lưu ngay vào Config\launcher-settings.json; module đang ẩn mà đang chạy vẫn hiện tạm để bấm Dừng được."
                        TextWrapping="Wrap" Opacity="0.7" FontSize="12" />
             <ItemsControl ItemsSource="{x:Bind ViewModel.Dashboard.VisibilityItems}" Margin="0,4,0,0">
                 <ItemsControl.ItemTemplate>

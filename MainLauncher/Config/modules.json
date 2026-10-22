@@ -1,84 +1,84 @@
 [
   {
     "Name": "ModuleA",
-    "Description": "Application quan ly A",
+    "Description": "Ứng dụng quản lý A",
     "Path": ".\\Modules\\ModuleA\\ModuleA.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "ModuleB",
-    "Description": "Application quan ly B",
+    "Description": "Ứng dụng quản lý B",
     "Path": ".\\Modules\\ModuleB\\ModuleB.exe",
     "Arguments": "--mode=test",
     "AutoStart": false
   },
   {
     "Name": "ModuleC",
-    "Description": "Tim kiem ten bang/cot theo tu dien du lieu",
+    "Description": "Tìm tên bảng / cột theo từ điển dữ liệu",
     "Path": ".\\Modules\\ModuleC\\ModuleC.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "Mcf.DbDef.HtmlGenerator",
-    "Description": "Tu dien du lieu tu Excel (DBDef) -> SQLite -> HTML",
+    "Description": "Từ điển dữ liệu từ Excel (DBDef) → SQLite → HTML",
     "Path": ".\\Modules\\Mcf.DbDef.HtmlGenerator\\Mcf.DbDef.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "Rdbms.HtmlGenerator",
-    "Description": "Tu dien du lieu tu PostgreSQL -> SQLite -> HTML",
+    "Description": "Từ điển dữ liệu từ database (PostgreSQL / Oracle / MySQL / SQL Server) → HTML, Excel テーブル定義書, so sánh schema",
     "Path": ".\\Modules\\Rdbms.HtmlGenerator\\Rdbms.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "CsvEditor",
-    "Description": "CSV/TSV editor",
+    "Description": "Sửa file CSV / TSV",
     "Path": ".\\Modules\\CsvEditor\\CsvEditor.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "Mcf.Screen.HtmlGenerator",
-    "Description": "Tai lieu man hinh (画面説明書) Excel -> SQLite -> HTML",
+    "Description": "Tài liệu màn hình (画面説明書) Excel → SQLite → HTML",
     "Path": ".\\Modules\\Mcf.Screen.HtmlGenerator\\Mcf.Screen.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "Mcf.CrudDiagram.HtmlGenerator",
-    "Description": "CRUD図 tu Excel -> SQLite -> HTML",
+    "Description": "CRUD図 từ Excel → SQLite → HTML",
     "Path": ".\\Modules\\Mcf.CrudDiagram.HtmlGenerator\\Mcf.CrudDiagram.HtmlGenerator.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "ScreenCapture",
-    "Description": "Chup man hinh va chinh sua anh (PicPick-like)",
+    "Description": "Chụp màn hình và chỉnh sửa ảnh (giống PicPick)",
     "Path": ".\\Modules\\ScreenCapture\\ScreenCapture.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "ImageCompare",
-    "Description": "So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)",
+    "Description": "So sánh 2 hình ảnh: khác biệt, cạnh nhau, chồng mờ, tìm ảnh con, tìm chữ (OCR)",
     "Path": ".\\Modules\\ImageCompare\\ImageCompare.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "FileTools",
-    "Description": "Xu ly file text/CSV/log lon: noi, tach, trich, tim, loc, so sanh, theo doi log, thay the, doi encoding; CSV; file trung",
+    "Description": "Xử lý file text / CSV / log lớn: nối, tách, trích, tìm, lọc, so sánh, theo dõi log, thay thế, đổi encoding; CSV; file trùng",
     "Path": ".\\Modules\\FileTools\\FileTools.exe",
     "Arguments": "",
     "AutoStart": false
   },
   {
     "Name": "MeRon",
-    "Description": "Quan ly ban hang (ban may tinh cua app dien thoai me-ron): dat hang, mua hang, thong ke, danh muc; nhap / xuat backup TSV",
+    "Description": "Quản lý bán hàng (bản máy tính của app điện thoại me-ron): đặt hàng, mua hàng, thống kê, danh mục; nhập / xuất backup TSV",
     "Path": ".\\Modules\\MeRon\\MeRon.exe",
     "Arguments": "",
     "AutoStart": false

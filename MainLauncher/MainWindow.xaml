@@ -27,17 +27,17 @@
         </NavigationView.KeyboardAccelerators>
 
         <NavigationView.MenuItems>
-            <NavigationViewItem Content="Dashboard" Tag="Dashboard">
+            <NavigationViewItem Content="Tổng quan" Tag="Dashboard">
                 <NavigationViewItem.Icon>
                     <SymbolIcon Symbol="Home" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="Module List" Tag="Modules">
+            <NavigationViewItem Content="Danh sách module" Tag="Modules">
                 <NavigationViewItem.Icon>
                     <SymbolIcon Symbol="List" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="Logs" Tag="Logs">
+            <NavigationViewItem Content="Nhật ký" Tag="Logs">
                 <NavigationViewItem.Icon>
                     <SymbolIcon Symbol="Document" />
                 </NavigationViewItem.Icon>
@@ -51,7 +51,7 @@
                     <FontIcon Glyph="&#xE897;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
-            <NavigationViewItem Content="Settings" Tag="Settings">
+            <NavigationViewItem Content="Cài đặt" Tag="Settings">
                 <NavigationViewItem.Icon>
                     <SymbolIcon Symbol="Setting" />
                 </NavigationViewItem.Icon>

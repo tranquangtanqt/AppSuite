@@ -18,12 +18,17 @@ sách module, start/stop/restart process, theo dõi trạng thái, truyền tham
 
 ## Điều hướng (NavigationView)
 
-| Trang | ViewModel | Nội dung |
-|---|---|---|
-| Dashboard | `DashboardViewModel` | Hero header + thẻ thống kê + lưới `ModuleCard` (xem bên dưới) |
-| Module List | `ModuleListViewModel` | `GridView` các `ModuleCard`, nút Reload |
-| Logs | `LogsViewModel` | Log runtime live (tối đa 500 dòng gần nhất) |
-| Settings | `SettingsViewModel` | Đường dẫn cấu hình, nút Reload modules.json, ô tích module hiện ở Dashboard |
+| Trang (Tag) | Tên trên giao diện | ViewModel | Nội dung |
+|---|---|---|---|
+| Dashboard | Tổng quan | `DashboardViewModel` | Hero header + thẻ thống kê + lưới `ModuleCard` (xem bên dưới) |
+| Modules | Danh sách module | `ModuleListViewModel` | `GridView` các `ModuleCard`, nút Tải lại |
+| Logs | Nhật ký | `LogsViewModel` | Log runtime live (tối đa 500 dòng gần nhất) |
+| Settings | Cài đặt | `SettingsViewModel` | Đường dẫn cấu hình, nút Tải lại modules.json, khi đóng MainLauncher, ô tích module hiện trên màn hình |
+
+**Giao diện tiếng Việt có dấu (2026-10-22)**: mọi chữ trên giao diện (menu, tiêu đề trang, thẻ thống kê, nút Chạy / Dừng / Chạy
+lại, trạng thái `ModuleViewModel.StatusText` = Đang chạy / Đang mở / Đang đóng / Đã dừng / Lỗi / Chưa rõ, mô tả module trong
+`Config\modules.json`). Tên trong code / Tag / enum giữ tiếng Anh; nội dung dòng nhật ký giữ tiếng Anh (để tra lỗi). Thẻ thống
+kê chia đều bề ngang (`ColumnDefinition Width="*" MaxWidth="200"`) - rộng cố định 180 thì cửa sổ hẹp bị cắt mất nút Làm mới.
 
 **Chỉ 1 bản, đóng / mở lại khi còn module chạy** (2026-10-22):
 - `App.TryBecomePrimaryInstance` (đầu `OnLaunched`): named mutex `Local\AppSuite.MainLauncher`. Đã có bản chạy → bản mới

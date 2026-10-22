@@ -19,25 +19,32 @@
 
             <controls:DashboardHeader Grid.Row="0" Subtitle="{x:Bind ViewModel.HeaderSubtitle, Mode=OneWay}" />
 
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16" Margin="36,12,36,0">
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Width="180">
+            <!-- 3 thẻ chia đều bề ngang, mỗi thẻ tối đa 200 (rộng cố định 180 thì cửa sổ hẹp bị cắt mất nút Làm mới) -->
+            <Grid Grid.Row="1" ColumnSpacing="16" Margin="36,12,36,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MaxWidth="200" />
+                    <ColumnDefinition Width="*" MaxWidth="200" />
+                    <ColumnDefinition Width="*" MaxWidth="200" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Grid.Column="0">
                     <StackPanel Spacing="4">
-                        <TextBlock Text="Total Modules" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
+                        <TextBlock Text="Tổng số module" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
                         <TextBlock Text="{x:Bind ViewModel.TotalModules, Mode=OneWay}" Style="{StaticResource TitleLargeTextBlockStyle}" />
                     </StackPanel>
                 </Border>
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Width="180">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Grid.Column="1">
                     <StackPanel Spacing="4">
-                        <TextBlock Text="Running" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
+                        <TextBlock Text="Đang chạy" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
                         <TextBlock
                             Text="{x:Bind ViewModel.RunningModules, Mode=OneWay}"
                             Style="{StaticResource TitleLargeTextBlockStyle}"
                             Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
                     </StackPanel>
                 </Border>
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Width="180">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8" Padding="20" Grid.Column="2">
                     <StackPanel Spacing="4">
-                        <TextBlock Text="Stopped" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
+                        <TextBlock Text="Đã dừng" Style="{StaticResource CaptionTextBlockStyle}" Opacity="0.7" />
                         <TextBlock
                             Text="{x:Bind ViewModel.StoppedModules, Mode=OneWay}"
                             Style="{StaticResource TitleLargeTextBlockStyle}"
@@ -45,23 +52,24 @@
                     </StackPanel>
                 </Border>
                 <Button
-                    Content="Refresh"
+                    Grid.Column="3"
+                    Content="Làm mới"
                     Command="{x:Bind ViewModel.RefreshStatusCommand}"
                     VerticalAlignment="Bottom" />
-            </StackPanel>
+            </Grid>
 
             <StackPanel Grid.Row="2" Margin="36,24,36,36" Spacing="12">
                 <!-- Tiêu đề + Ẩn / hiện từng module (dùng chung với Module List / Settings, lưu Config\launcher-settings.json) -->
                 <StackPanel Orientation="Horizontal" Spacing="12">
                     <TextBlock
-                        Text="Modules"
+                        Text="Module"
                         FontSize="16"
                         VerticalAlignment="Center"
                         Style="{StaticResource BodyStrongTextBlockStyle}"
                         AutomationProperties.HeadingLevel="Level2" />
                     <controls:ModuleVisibilityButton VerticalAlignment="Center" />
                 </StackPanel>
-                <TextBlock Text="Đã ẩn hết module - bấm &quot;Ẩn / hiện&quot; để chọn lại (hoặc Settings)."
+                <TextBlock Text="Đã ẩn hết module - bấm &quot;Ẩn / hiện&quot; để chọn lại (hoặc trang Cài đặt)."
                            Visibility="{x:Bind ViewModel.IsAllHidden, Mode=OneWay}" Opacity="0.7" />
                 <GridView
                     ItemsSource="{x:Bind ViewModel.VisibleModules}"

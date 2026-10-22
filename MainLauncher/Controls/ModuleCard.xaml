@@ -62,7 +62,7 @@
                         Width="10" Height="10"
                         Fill="{x:Bind Module.Status, Mode=OneWay, Converter={StaticResource ModuleStatusToBrushConverter}}"
                         VerticalAlignment="Center" />
-                    <TextBlock Text="{x:Bind Module.Status, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Bind Module.StatusText, Mode=OneWay}" FontWeight="SemiBold" VerticalAlignment="Center" />
                     <TextBlock
                         Text="{x:Bind Module.ProcessId, Mode=OneWay}"
                         Opacity="0.6" FontSize="12" VerticalAlignment="Center"
@@ -70,9 +70,9 @@
                 </StackPanel>
 
                 <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
-                    <Button Content="Start" Command="{x:Bind Module.StartCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStart, Mode=OneWay}" />
-                    <Button Content="Stop" Command="{x:Bind Module.StopCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStop, Mode=OneWay}" />
-                    <Button Content="Restart" Command="{x:Bind Module.RestartCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStop, Mode=OneWay}" />
+                    <Button Content="Chạy" Command="{x:Bind Module.StartCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStart, Mode=OneWay}" />
+                    <Button Content="Dừng" Command="{x:Bind Module.StopCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStop, Mode=OneWay}" />
+                    <Button Content="Chạy lại" Command="{x:Bind Module.RestartCommand, Mode=OneWay}" IsEnabled="{x:Bind Module.CanStop, Mode=OneWay}" />
                 </StackPanel>
             </Grid>
 

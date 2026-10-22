@@ -73,8 +73,8 @@ public partial class DashboardViewModel : ObservableObject
     private int stoppedModules;
 
     public string HeaderSubtitle => TotalModules == 0
-        ? "Chua co module nao duoc cau hinh"
-        : $"{RunningModules}/{TotalModules} module dang chay";
+        ? "Chưa có module nào được cấu hình"
+        : $"{RunningModules}/{TotalModules} module đang chạy";
 
     [RelayCommand]
     private void RefreshStatus()

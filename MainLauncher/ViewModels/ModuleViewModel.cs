@@ -41,10 +41,22 @@ public partial class ModuleViewModel : ObservableObject, IDisposable
 
     public bool CanStop => Status is ModuleStatus.Running or ModuleStatus.Starting;
 
+    /// <summary>Chữ trạng thái trên thẻ module (enum Status hiện ra tiếng Anh).</summary>
+    public string StatusText => Status switch
+    {
+        ModuleStatus.Running => "Đang chạy",
+        ModuleStatus.Starting => "Đang mở",
+        ModuleStatus.Stopping => "Đang đóng",
+        ModuleStatus.Stopped => "Đã dừng",
+        ModuleStatus.Error => "Lỗi",
+        _ => "Chưa rõ",
+    };
+
     partial void OnStatusChanged(ModuleStatus value)
     {
         OnPropertyChanged(nameof(CanStart));
         OnPropertyChanged(nameof(CanStop));
+        OnPropertyChanged(nameof(StatusText));
     }
 
     [RelayCommand]

@@ -10,7 +10,7 @@
     <StackPanel Orientation="Horizontal" Spacing="12">
         <TextBlock Text="{x:Bind ViewModel.VisibleSummary, Mode=OneWay}" VerticalAlignment="Center" Opacity="0.6" FontSize="12" />
         <DropDownButton Padding="10,4" VerticalAlignment="Center" AutomationProperties.Name="Ẩn / hiện module"
-                        ToolTipService.ToolTip="Chọn module hiện trên màn hình (Dashboard và Module List)">
+                        ToolTipService.ToolTip="Chọn module hiện trên màn hình (Tổng quan và Danh sách module)">
             <StackPanel Orientation="Horizontal" Spacing="6">
                 <FontIcon Glyph="&#xE7B3;" FontSize="12" />
                 <TextBlock Text="Ẩn / hiện" FontSize="12" />
@@ -29,7 +29,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
-                        <TextBlock Text="Áp dụng cho Dashboard và Module List. Module đang ẩn mà đang chạy vẫn hiện tạm để bấm Stop được."
+                        <TextBlock Text="Áp dụng cho trang Tổng quan và Danh sách module. Module đang ẩn mà đang chạy vẫn hiện tạm để bấm Dừng được."
                                    TextWrapping="Wrap" Opacity="0.6" FontSize="12" />
                         <Button Content="Hiện tất cả" Command="{x:Bind ViewModel.ShowAllModulesCommand}" HorizontalAlignment="Stretch" />
                     </StackPanel>

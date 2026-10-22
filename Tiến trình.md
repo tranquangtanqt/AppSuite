@@ -369,6 +369,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
     hết / Luôn để chạy tiếp (`launcher-settings.json`).
   - Mở lại MainLauncher → nhận module đang chạy (đúng đường dẫn .exe): thẻ Running, Stop được, Start mờ.
   Cập nhật F1, README. GUI Sandbox 24/24 (2026-10-22)
+- [x] Giao diện tiếng Việt có dấu: menu (Tổng quan / Danh sách module / Nhật ký / Cài đặt), thẻ thống kê, nút Chạy / Dừng /
+  Chạy lại, trạng thái (Đang chạy / Đã dừng / Lỗi...), "x/y module đang chạy", trang Cài đặt, mô tả 12 module trong
+  modules.json; nội dung dòng nhật ký giữ tiếng Anh. Sửa kèm: nút Làm mới bị cắt khi cửa sổ hẹp (thẻ thống kê rộng cố định).
+  Cập nhật F1, README. GUI Sandbox 28/28 (đi qua mọi trang, không còn chữ tiếng Anh / không dấu) (2026-10-22)
+- [ ] ModuleA / ModuleB (module mẫu) vẫn hiện chữ không dấu ("Ung dung quan ly A - chay doc lap voi MainLauncher")
 - [ ] **[Đề xuất · Nên làm]** Stop chờ module tự đóng 5 giây rồi buộc tắt (`ProcessManager.StopProcess`: `CloseMainWindow` +
   `WaitForExit(5000)` + `Kill`) - module đang hỏi "Lưu không?" bị tắt mất phần chưa lưu; chờ 5 giây trên luồng UI nên launcher
   đứng hình lúc đó. Restart còn buộc tắt ngay (`StopProcess(force: true)`), không chờ. Hướng sửa: chờ không chặn UI, quá giờ

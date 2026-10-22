@@ -97,7 +97,7 @@ public sealed partial class MainWindow : Window
             });
             content.Children.Add(new TextBlock
             {
-                Text = "Đóng hết: đóng từng module như bấm Stop - module chưa tắt sau 5 giây (vd đang hỏi lưu) sẽ bị buộc tắt, nên lưu việc đang làm trước.",
+                Text = "Đóng hết: đóng từng module như bấm Dừng - module chưa tắt sau 5 giây (vd đang hỏi lưu) sẽ bị buộc tắt, nên lưu việc đang làm trước.",
                 TextWrapping = TextWrapping.Wrap,
                 Opacity = 0.7,
                 FontSize = 12,
@@ -163,7 +163,7 @@ public sealed partial class MainWindow : Window
         if (_helpWindow is null)
         {
             _helpWindow = new SharedUI.Help.HelpWindow("AppSuite - Main Launcher", "Mở / đóng các công cụ của AppSuite, ẩn / hiện module, xem nhật ký.",
-                HelpContent.Sections, searchPlaceholder: "Tìm tính năng, vd: Stop, ẩn module, modules.json...");
+                HelpContent.Sections, searchPlaceholder: "Tìm tính năng, vd: dừng module, ẩn module, modules.json...");
             _helpWindow.Closed += (_, _) => _helpWindow = null;
         }
         _helpWindow.Activate();
