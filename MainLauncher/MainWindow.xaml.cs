@@ -1,5 +1,7 @@
 using System;
 using MainLauncher.Views;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -15,6 +17,9 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
+        // Trang dựng lỗi (vd lỗi XAML) → ghi lại lỗi thay vì chỉ thấy app tắt.
+        ContentFrame.NavigationFailed += (_, e) =>
+            App.Services.GetService<ILogger<MainWindow>>()?.LogError(e.Exception, "Không mở được trang {Page}", e.SourcePageType?.Name);
     }
 
     private void NavView_Loaded(object sender, RoutedEventArgs e)
@@ -36,6 +41,15 @@ public sealed partial class MainWindow : Window
         };
 
         if (ContentFrame.CurrentSourcePageType != pageType)
-            ContentFrame.Navigate(pageType);
+        {
+            try
+            {
+                ContentFrame.Navigate(pageType);
+            }
+            catch (Exception ex)
+            {
+                App.Services.GetService<ILogger<MainWindow>>()?.LogError(ex, "Không mở được trang {Page}", pageType.Name);
+            }
+        }
     }
 }

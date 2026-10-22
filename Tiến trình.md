@@ -348,6 +348,13 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [x] Bỏ hàng tile liên kết tài liệu (WinUI / Windows App SDK / Gallery / Toolkit) ở header Dashboard (2026-09-29)
 - [x] Mở cửa sổ ở trạng thái maximize (2026-09-29)
 - [x] README MainLauncher cập nhật theo các thay đổi trên (2026-09-29)
+- [x] Bấm **Logs** ở menu trái → app đơ rồi tắt (người dùng báo 2026-10-22; Event Log: 0xc000027b trong Microsoft.UI.Xaml.dll).
+  Nguyên nhân: `LogsViewModel` cần `InMemoryLoggerProvider` qua DI nhưng provider chỉ được `AddProvider` cho logging, chưa
+  đăng ký → `InvalidOperationException: Unable to resolve service...` lúc dựng LogsPage. Sửa: `services.AddSingleton(InMemoryLog)`;
+  tạo `LogsViewModel` ngay lúc khởi động (trang Logs có cả dòng từ lúc mở app, trước đây chỉ từ lần đầu mở trang). Thêm:
+  lỗi khi chuyển trang / lỗi chưa bắt ghi vào `Logs\launcher-*.log` (trước đây chỉ thấy app tắt). GUI Sandbox 6/6 (bản cũ
+  tái hiện: trang không mở được, log có đúng lỗi trên) (2026-10-22)
+- [ ] Bản đang dùng ở `Application\` là bản cũ - publish lại MainLauncher (`build\Publish-AppSuite.ps1 -Targets MainLauncher`)
 
 ## ScreenCapture
 

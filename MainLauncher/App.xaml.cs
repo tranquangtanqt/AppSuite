@@ -37,6 +37,9 @@ public partial class App : Application
     {
         InitializeComponent();
         Services = ConfigureServices();
+        // Lỗi chưa bắt (vd lỗi XAML khi mở 1 trang) làm app tắt ngay không để lại gì ngoài Event Log - ghi vào Logs\launcher-*.log.
+        UnhandledException += (_, e) =>
+            Services.GetService<ILogger<App>>()?.LogCritical(e.Exception, "Unhandled exception: {Message}", e.Message);
     }
 
     /// <summary>
@@ -52,6 +55,8 @@ public partial class App : Application
         }
         _window.Activate();
 
+        // Tạo ngay (trên luồng UI) để trang Logs có cả các dòng từ lúc khởi động, không chỉ từ lần đầu mở trang.
+        Services.GetRequiredService<LogsViewModel>();
         var logger = Services.GetRequiredService<ILogger<App>>();
         var moduleList = Services.GetRequiredService<ModuleListViewModel>();
         _ = LoadModulesOnStartupAsync(moduleList, logger);
@@ -81,6 +86,9 @@ public partial class App : Application
 
         var services = new ServiceCollection();
         services.AddSingleton<IConfiguration>(configuration);
+        // LogsViewModel nhận provider này qua constructor - AddProvider bên dưới không đăng ký nó vào DI (thiếu dòng này thì
+        // mở trang Logs ném InvalidOperationException và app tắt).
+        services.AddSingleton(InMemoryLog);
 
         services.AddLogging(builder =>
         {
