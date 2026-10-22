@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Common.Interfaces;
 using Common.Logging;
@@ -48,6 +49,13 @@ public partial class App : Application
     /// <param name="args">Details about the launch request and process.</param>
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+        // Chỉ 1 MainLauncher: đã có bản đang chạy thì nhờ bản đó tự đưa cửa sổ lên + báo "AppSuite đang chạy", bản này thoát.
+        if (!TryBecomePrimaryInstance())
+        {
+            Environment.Exit(0);
+            return;
+        }
+
         _window = new MainWindow();
         if (_window.AppWindow.Presenter is OverlappedPresenter presenter)
         {
@@ -61,6 +69,47 @@ public partial class App : Application
         var moduleList = Services.GetRequiredService<ModuleListViewModel>();
         _ = LoadModulesOnStartupAsync(moduleList, logger);
     }
+
+    // ----- Chỉ chạy 1 bản -----
+
+    private const string InstanceMutexName = @"Local\AppSuite.MainLauncher";
+    private const string ActivateEventName = @"Local\AppSuite.MainLauncher.Activate";
+
+    /// <summary>Giữ suốt đời tiến trình (GC thu mutex là bản khác mở được).</summary>
+    private static Mutex? _instanceMutex;
+    private static EventWaitHandle? _activateSignal;
+
+    /// <summary>True = bản đầu tiên (nghe tín hiệu "có người mở lần nữa"); false = đã có bản đang chạy - đã báo cho bản đó.</summary>
+    private bool TryBecomePrimaryInstance()
+    {
+        _instanceMutex = new Mutex(initiallyOwned: true, InstanceMutexName, out var createdNew);
+        if (!createdNew)
+        {
+            // Bản đang chạy cần quyền đưa cửa sổ lên trước - bản này đang ở trước (người dùng vừa mở) nên cho phép được.
+            AllowSetForegroundWindow(ASFW_ANY);
+            if (EventWaitHandle.TryOpenExisting(ActivateEventName, out var signal))
+            {
+                using (signal)
+                    signal.Set();
+            }
+            return false;
+        }
+
+        _activateSignal = new EventWaitHandle(false, EventResetMode.AutoReset, ActivateEventName);
+        var dispatcher = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        new Thread(() =>
+        {
+            while (_activateSignal.WaitOne())
+                dispatcher.TryEnqueue(() => (_window as MainWindow)?.BringToFrontWithNotice());
+        })
+        { IsBackground = true, Name = "MainLauncher single-instance" }.Start();
+        return true;
+    }
+
+    private const int ASFW_ANY = -1;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool AllowSetForegroundWindow(int dwProcessId);
 
     private static async Task LoadModulesOnStartupAsync(ModuleListViewModel moduleList, ILogger logger)
     {

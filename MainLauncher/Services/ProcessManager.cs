@@ -137,6 +137,54 @@ public sealed class ProcessManager : IProcessManager
         }
     }
 
+    public int AttachRunningProcesses(IEnumerable<ModuleConfig> modules)
+    {
+        var attached = 0;
+        foreach (var module in modules)
+        {
+            if (CheckRunning(module.Name))
+                continue;
+
+            string exePath;
+            try
+            {
+                exePath = Path.GetFullPath(module.ResolveExecutablePath(AppContext.BaseDirectory));
+            }
+            catch (Exception)
+            {
+                continue; // Path sai cú pháp - StartProcess sẽ báo lỗi khi bấm Start
+            }
+
+            foreach (var candidate in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(exePath)))
+            {
+                try
+                {
+                    // Cùng tên file nhưng khác thư mục (vd bản Debug / Release khác) thì không phải module này.
+                    if (candidate.HasExited || !string.Equals(candidate.MainModule?.FileName, exePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        candidate.Dispose();
+                        continue;
+                    }
+
+                    candidate.EnableRaisingEvents = true;
+                    candidate.Exited += (_, _) => OnProcessExited(module.Name);
+                    _processes[module.Name] = candidate;
+                    SetStatus(module.Name, ModuleStatus.Running, candidate.Id);
+                    _logger.LogInformation("Module {Module} is already running (PID {Pid}) - now tracked", module.Name, candidate.Id);
+                    if (candidate.HasExited)
+                        OnProcessExited(module.Name); // vừa tắt đúng lúc gắn Exited
+                    attached++;
+                    break;
+                }
+                catch (Exception)
+                {
+                    candidate.Dispose(); // tiến trình của người dùng khác / quyền cao hơn: không đọc được đường dẫn
+                }
+            }
+        }
+        return attached;
+    }
+
     public ModuleProcessInfo GetProcessStatus(string moduleName)
         => _statuses.TryGetValue(moduleName, out var info)
             ? info

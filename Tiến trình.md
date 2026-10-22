@@ -362,6 +362,13 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [x] **Hướng dẫn (F1)**: mục "Hướng dẫn (F1)" ở menu trái + phím F1 mở cửa sổ Hướng dẫn dùng chung (7 mục: Bắt đầu nhanh,
   Dashboard, Module List, Start / Stop / Restart, Ẩn / hiện module, Logs, Settings và cấu hình - gồm các trường của
   modules.json). README cập nhật. GUI Sandbox 8/8 (mở từ menu không đổi trang, 1 cửa sổ, tìm không dấu, F1) (2026-10-22)
+- [x] 3 lỗi trong `_note.txt` (2026-10-22):
+  - Mở MainLauncher khi đang chạy → không mở bản thứ 2, cửa sổ đang có hiện lên trước (kể cả đang thu nhỏ) + thông báo
+    "AppSuite đang chạy" (named mutex + event).
+  - Đóng MainLauncher mà còn module chạy → hỏi "Đóng hết / Để chạy tiếp / Huỷ" + "Nhớ lựa chọn"; Settings: Hỏi / Luôn đóng
+    hết / Luôn để chạy tiếp (`launcher-settings.json`).
+  - Mở lại MainLauncher → nhận module đang chạy (đúng đường dẫn .exe): thẻ Running, Stop được, Start mờ.
+  Cập nhật F1, README. GUI Sandbox 24/24 (2026-10-22)
 - [ ] **[Đề xuất · Nên làm]** Stop chờ module tự đóng 5 giây rồi buộc tắt (`ProcessManager.StopProcess`: `CloseMainWindow` +
   `WaitForExit(5000)` + `Kill`) - module đang hỏi "Lưu không?" bị tắt mất phần chưa lưu; chờ 5 giây trên luồng UI nên launcher
   đứng hình lúc đó. Restart còn buộc tắt ngay (`StopProcess(force: true)`), không chờ. Hướng sửa: chờ không chặn UI, quá giờ

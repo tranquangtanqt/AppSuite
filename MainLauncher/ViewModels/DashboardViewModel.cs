@@ -28,7 +28,7 @@ public partial class DashboardViewModel : ObservableObject
         _processManager = processManager;
         _moduleList = moduleList;
         _settingsStore = settingsStore;
-        _settings = settingsStore.Load();
+        _settings = settingsStore.Current;
         _hidden = new HashSet<string>(_settings.HiddenModules, StringComparer.OrdinalIgnoreCase);
         _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
         _processManager.StatusChanged += (_, _) => RefreshStatus();
@@ -115,7 +115,7 @@ public partial class DashboardViewModel : ObservableObject
         if (!changed)
             return;
         _settings.HiddenModules = _hidden.Order(StringComparer.OrdinalIgnoreCase).ToList();
-        _settingsStore.Save(_settings);
+        _settingsStore.Save();
         RefreshVisibleModules();
     }
 

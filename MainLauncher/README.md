@@ -25,6 +25,18 @@ sách module, start/stop/restart process, theo dõi trạng thái, truyền tham
 | Logs | `LogsViewModel` | Log runtime live (tối đa 500 dòng gần nhất) |
 | Settings | `SettingsViewModel` | Đường dẫn cấu hình, nút Reload modules.json, ô tích module hiện ở Dashboard |
 
+**Chỉ 1 bản, đóng / mở lại khi còn module chạy** (2026-10-22):
+- `App.TryBecomePrimaryInstance` (đầu `OnLaunched`): named mutex `Local\AppSuite.MainLauncher`. Đã có bản chạy → bản mới
+  `AllowSetForegroundWindow(ASFW_ANY)`, `Set()` event `Local\AppSuite.MainLauncher.Activate` rồi `Environment.Exit(0)`; bản
+  đầu có 1 luồng nền chờ event → `MainWindow.BringToFrontWithNotice` (bỏ thu nhỏ, `SetForegroundWindow`, InfoBar "AppSuite
+  đang chạy" góc dưới phải, nền đặc, tự ẩn 6 giây).
+- `MainWindow.AppWindow_Closing`: còn module chạy thì theo `LauncherSettings.CloseModulesOnExit` (Ask / CloseAll /
+  KeepRunning, Settings có RadioButtons, lưu `launcher-settings.json` dạng chữ). Ask = ContentDialog "Đóng hết / Để chạy tiếp
+  / Huỷ" + "Nhớ lựa chọn"; Đóng hết = `StopProcess` song song (Task.Run) rồi mới `Close()`.
+- `IProcessManager.AttachRunningProcesses` (gọi trong `ModuleListViewModel.LoadModulesCoreAsync` trên luồng nền, lúc khởi động
+  và Reload): tìm tiến trình cùng tên file và đúng đường dẫn .exe (`MainModule.FileName`) → gắn `Exited`, trạng thái Running →
+  thẻ hiện Running, Stop được, AutoStart không mở bản thứ 2.
+
 **Hướng dẫn (F1)** (2026-10-22): mục "Hướng dẫn (F1)" ở cuối menu trái (`SelectsOnInvoked="False"`, mở ở
 `NavView_ItemInvoked` - không đổi trang) hoặc phím F1 (`KeyboardAccelerator` trên NavigationView) mở cửa sổ Hướng dẫn
 dùng chung `SharedUI.Help.HelpWindow` (1 cửa sổ, đóng launcher thì đóng theo). Nội dung ở `Views\HelpContent.cs` - thêm /

@@ -40,7 +40,9 @@ internal static class HelpContent
             new("Restart", "Buộc tắt module ngay (không chờ, không hỏi lưu) rồi mở lại - dùng khi module bị treo hoặc vừa cập nhật bản mới. Module còn việc chưa lưu thì lưu trước, hoặc dùng Stop rồi Start."),
             new("Màu trạng thái", "Xanh = đang chạy; cam = đang mở / đang đóng; đỏ = lỗi (vd không tìm thấy file .exe của module - xem Logs); xám = đã dừng."),
             new("Tự đóng module", "Đóng cửa sổ module như bình thường thì MainLauncher tự nhận ra và chuyển thẻ về Stopped."),
-            new("Khi đóng MainLauncher", "Các module đã mở vẫn chạy tiếp, không bị đóng theo."),
+            new("Khi đóng MainLauncher", "Còn module đang chạy thì MainLauncher hỏi \"Đóng cả các module đang chạy?\": Đóng hết (đóng từng module như bấm Stop rồi mới thoát), Để chạy tiếp (module vẫn chạy, chỉ đóng MainLauncher) hoặc Huỷ (không đóng). Tích \"Nhớ lựa chọn\" để lần sau khỏi hỏi - đổi lại ở Settings."),
+            new("Mở lại MainLauncher", "Module vẫn đang chạy từ lần trước được nhận lại: thẻ hiện Running, bấm Stop được, Start bị mờ (không mở bản thứ 2)."),
+            new("Chỉ 1 MainLauncher", "MainLauncher đang chạy mà mở lần nữa (vd bấm lại lối tắt) thì không mở cửa sổ thứ 2: cửa sổ đang có hiện lên trước (kể cả đang thu nhỏ) kèm thông báo nhỏ \"AppSuite đang chạy\"."),
         ]),
 
         new("Ẩn / hiện module", "", "Chỉ hiện những module hay dùng ở Dashboard và Module List.",
@@ -61,10 +63,11 @@ internal static class HelpContent
 
         new("Settings và cấu hình", "", "Trang Settings (cuối menu trái) và các file cấu hình trong thư mục Config cạnh MainLauncher.exe.",
         [
-            new("Trang Settings", "Thư mục cài đặt (Base directory), đường dẫn file modules.json, nút \"Reload modules.json\" và danh sách \"Module hiện trên màn hình\"."),
+            new("Trang Settings", "Thư mục cài đặt (Base directory), đường dẫn file modules.json, nút \"Reload modules.json\", \"Khi đóng MainLauncher mà còn module đang chạy\" và danh sách \"Module hiện trên màn hình\"."),
+            new("Khi đóng MainLauncher mà còn module đang chạy", "Hỏi mỗi lần (mặc định) / Luôn đóng hết các module / Luôn để các module chạy tiếp. Đổi là lưu ngay."),
             new("Config\\modules.json", "Danh sách module: Name (tên), Description (mô tả trên thẻ), Path (đường dẫn file .exe, tương đối so với thư mục MainLauncher, vd .\\Modules\\ScreenCapture\\ScreenCapture.exe), Arguments (tham số khi mở), AutoStart (true = tự mở khi mở MainLauncher). Sửa xong bấm Reload."),
             new("Config\\appsettings.json", "ModulesConfigPath - vị trí file modules.json (mặc định Config/modules.json)."),
-            new("Config\\launcher-settings.json", "Các module đang ẩn (do nút Ẩn / hiện ghi) - không cần sửa tay."),
+            new("Config\\launcher-settings.json", "Các module đang ẩn (nút Ẩn / hiện) và lựa chọn khi đóng MainLauncher - do app tự ghi, không cần sửa tay."),
         ]),
     ];
 }

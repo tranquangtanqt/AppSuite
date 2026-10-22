@@ -58,6 +58,19 @@
             </NavigationViewItem>
         </NavigationView.FooterMenuItems>
 
-        <Frame x:Name="ContentFrame" />
+        <Grid>
+            <Frame x:Name="ContentFrame" />
+            <!-- Mở MainLauncher lần nữa khi đang chạy: đưa cửa sổ này lên + báo nhỏ (tự ẩn); đóng hết module lúc thoát: báo tiến trình.
+                 Góc dưới phải, nền đặc + bóng (nền InfoBar trong suốt, đè lên nội dung trang thì chữ chồng nhau). -->
+            <Border x:Name="NoticeHost" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Margin="0,0,24,24" MaxWidth="420" CornerRadius="6" Translation="0,0,24"
+                    Background="{ThemeResource SolidBackgroundFillColorBaseBrush}">
+                <Border.Shadow>
+                    <ThemeShadow />
+                </Border.Shadow>
+                <InfoBar x:Name="NoticeBar" IsOpen="False" IsClosable="True" Severity="Informational"
+                         Closed="NoticeBar_Closed" AutomationProperties.AutomationId="NoticeBar" />
+            </Border>
+        </Grid>
     </NavigationView>
 </Window>

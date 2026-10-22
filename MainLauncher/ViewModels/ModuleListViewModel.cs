@@ -66,6 +66,10 @@ public partial class ModuleListViewModel : ObservableObject
                 return;
             }
 
+            // Module mở từ lần chạy MainLauncher trước (hoặc mở tay) vẫn đang chạy → hiện Running, Stop được, không Start bản thứ 2.
+            var configs = _moduleService.Modules.ToList();
+            await Task.Run(() => _processManager.AttachRunningProcesses(configs));
+
             foreach (var existing in Modules)
                 existing.Dispose();
             Modules.Clear();

@@ -19,6 +19,10 @@ public interface IProcessManager
 
     bool CheckRunning(string moduleName);
 
+    /// <summary>Nhận lại module đang chạy từ trước (vd mở bằng MainLauncher lần trước, rồi đóng MainLauncher) - tìm tiến
+    /// trình theo đúng đường dẫn .exe của module, theo dõi như module tự mở (Running, Stop được). Trả số module nhận lại.</summary>
+    int AttachRunningProcesses(IEnumerable<ModuleConfig> modules);
+
     ModuleProcessInfo GetProcessStatus(string moduleName);
 
     IReadOnlyCollection<ModuleProcessInfo> GetAllStatuses();

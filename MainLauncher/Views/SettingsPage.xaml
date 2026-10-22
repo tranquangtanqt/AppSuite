@@ -24,6 +24,14 @@
 
         <Button Content="Reload modules.json" Command="{x:Bind ViewModel.ReloadModulesCommand}" />
 
+        <!-- Đóng MainLauncher mà còn module đang chạy (thứ tự mục = enum CloseModulesOnExit) -->
+        <RadioButtons x:Name="CloseModulesOnExitRadio" Header="Khi đóng MainLauncher mà còn module đang chạy" Margin="0,8,0,0"
+                      SelectedIndex="{x:Bind ViewModel.CloseModulesOnExitIndex, Mode=TwoWay}">
+            <x:String>Hỏi mỗi lần (Đóng hết / Để chạy tiếp)</x:String>
+            <x:String>Luôn đóng hết các module</x:String>
+            <x:String>Luôn để các module chạy tiếp</x:String>
+        </RadioButtons>
+
         <!-- Ẩn / hiện module ở Dashboard và Module List (cùng lựa chọn với nút "Ẩn / hiện" ở 2 trang đó) -->
         <StackPanel Spacing="6" Margin="0,8,0,0">
             <StackPanel Orientation="Horizontal" Spacing="12">
