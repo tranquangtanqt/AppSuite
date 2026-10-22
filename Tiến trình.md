@@ -817,6 +817,15 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [x] Trang HTML: lọc **Tất cả / Bảng / View** (kèm số lượng, nhãn VIEW / MATERIALIZED VIEW, áp dụng cả cho tìm cột, nhớ lựa
   chọn) + ô **Tìm cả trong mô tả** (bảng / cột khớp comment, menu trái hiện mô tả khớp, tô chỗ khớp). Edge headless trong
   Sandbox 20/20 (2026-10-22)
+- [x] **Excel định nghĩa bảng (テーブル定義書)**: nút "Excel định nghĩa bảng" (dòng "Xuất thêm") → `{tên} テーブル定義書.xlsx`:
+  sheet テーブル一覧 (link sang từng sheet) + mỗi bảng / view 1 sheet (thông tin bảng, カラム定義 với データ型 / 桁数 tách riêng,
+  インデックス, 外部キー link, 制約), in A4 ngang. **Kiểm tra chất lượng schema**: nút "Kiểm tra chất lượng" → trang HTML 8 quy
+  tắc (Nên sửa: không khoá chính, khoá ngoại khác kiểu; Cân nhắc: khoá ngoại không index + CREATE INDEX, index trùng / bị
+  bao trùm + DROP INDEX, chưa thống kê; Thông tin: thiếu mô tả bảng / cột, tên khác quy ước), link sang trang từ điển. Cập
+  nhật F1, README. Unit test 50/50 (21 mới); GUI Sandbox 23/24 - mục còn lại do kịch bản tìm sai chuỗi (XML ghi `&apos;`),
+  link đã kiểm tay trong file (2026-10-22)
+- [ ] Thử tay: mở `{tên} テーブル定義書.xlsx` bằng Excel thật (Sandbox không có Excel) - xem bố cục, bấm link, xem trước khi in;
+  Kiểm tra chất lượng với DB thật (Oracle lớn: số mục, tốc độ)
 - [ ] Thử tay: đọc lại DB thật 2 lần (có / không đổi schema) → xem dòng nhật ký + nút "So với bản trước"; trang HTML thử lọc
   View và tìm theo mô tả tiếng Việt / tiếng Nhật
 - [x] ~~Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X)~~ — thực tế không phải bị gộp mà làm cả lần đọc lỗi;

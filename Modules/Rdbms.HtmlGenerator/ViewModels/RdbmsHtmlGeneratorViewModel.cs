@@ -650,6 +650,98 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         }
     }
 
+    // ----- Xuất thêm: Excel định nghĩa bảng, Kiểm tra chất lượng -----
+
+    /// <summary>Data\Database\{tên} テーブル定義書.xlsx từ file .db đang chọn, rồi mở file.</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task ExportTableDefinitionAsync()
+    {
+        IsBusy = true;
+        StatusText = "Đang xuất Excel định nghĩa bảng (テーブル定義書)...";
+        var path = Path.Combine(RdbmsHtmlGeneratorDatabase.DataDirectory, $"{SafeFileName(CurrentFileBaseName)} テーブル定義書.xlsx");
+        try
+        {
+            var databasePath = _database.DatabasePath;
+            var baseName = CurrentFileBaseName;
+            var sheets = await Task.Run(() => TableDefinitionWorkbook.Write(
+                RdbmsHtmlGeneratorDatabase.OpenFile(databasePath).ReadSnapshot(baseName), baseName, DateTime.Now, path));
+            StatusText = $"Đã xuất Excel định nghĩa bảng: {sheets} bảng / view (mỗi bảng 1 sheet). File: {path}";
+            AppendLog($"Đã xuất: {path}");
+            OpenExported(path);
+        }
+        catch (IOException ex)
+        {
+            StatusText = $"Không ghi được {Path.GetFileName(path)} - file đang mở trong Excel? Đóng file rồi xuất lại. ({ex.Message})";
+            AppendLog($"LỖI xuất Excel: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Lỗi khi xuất Excel: {ex.Message}";
+            AppendLog($"LỖI xuất Excel: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>Data\Database\Kiểm tra chất lượng {tên}.html từ file .db đang chọn, rồi mở trong trình duyệt.</summary>
+    [RelayCommand(CanExecute = nameof(CanExport))]
+    private async Task CheckQualityAsync()
+    {
+        IsBusy = true;
+        StatusText = "Đang kiểm tra chất lượng schema...";
+        try
+        {
+            var databasePath = _database.DatabasePath;
+            var baseName = CurrentFileBaseName;
+            var dictionary = $"{SafeFileName(baseName)}.html";
+            var path = Path.Combine(RdbmsHtmlGeneratorDatabase.DataDirectory, $"Kiểm tra chất lượng {SafeFileName(baseName)}.html");
+            var report = await Task.Run(() =>
+            {
+                var result = SchemaQualityChecker.Check(RdbmsHtmlGeneratorDatabase.OpenFile(databasePath).ReadSnapshot(baseName));
+                var dictionaryExists = File.Exists(Path.Combine(RdbmsHtmlGeneratorDatabase.DataDirectory, dictionary));
+                File.WriteAllText(path, SchemaQualityReport.Build(result, File.GetLastWriteTime(databasePath), DateTime.Now,
+                    dictionaryExists ? dictionary : null));
+                return result;
+            });
+            var summary = $"{report.Count(QualitySeverity.Error)} nên sửa, {report.Count(QualitySeverity.Warning)} cân nhắc, " +
+                          $"{report.Count(QualitySeverity.Info)} thông tin";
+            StatusText = $"Kiểm tra chất lượng {baseName}: {summary}.";
+            AppendLog($"Kiểm tra chất lượng: {summary}.");
+            AppendLog($"Đã xuất: {path}");
+            OpenExported(path);
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Lỗi khi kiểm tra chất lượng: {ex.Message}";
+            AppendLog($"LỖI kiểm tra chất lượng: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    /// <summary>Mở file vừa xuất bằng chương trình mặc định (máy chưa có Excel thì chỉ ghi nhật ký).</summary>
+    private void OpenExported(string path)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            AppendLog($"Không mở được file ({ex.Message}) - mở tay trong thư mục Data\\Database.");
+        }
+    }
+
+    private static string SafeFileName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return new string(name.Select(c => Array.IndexOf(invalid, c) >= 0 ? '_' : c).ToArray());
+    }
+
     // ----- So sánh schema -----
 
     /// <summary>1 file .db có thể so sánh (mỗi lần "1. Đọc database" của 1 hồ sơ / nguồn tạo 1 file; bản cũ nằm trong
@@ -777,6 +869,8 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         ImportDatabaseCommand.NotifyCanExecuteChanged();
         ExportHtmlCommand.NotifyCanExecuteChanged();
         CompareWithPreviousCommand.NotifyCanExecuteChanged();
+        ExportTableDefinitionCommand.NotifyCanExecuteChanged();
+        CheckQualityCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnSelectedSourceChanged(DatabaseSourceType value)
@@ -794,7 +888,12 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
             : $"Nguồn {SourceDisplayName(value)} ({CurrentDatabaseName}): đã có dữ liệu đọc lần trước.";
     }
 
-    partial void OnCanExportHtmlChanged(bool value) => ExportHtmlCommand.NotifyCanExecuteChanged();
+    partial void OnCanExportHtmlChanged(bool value)
+    {
+        ExportHtmlCommand.NotifyCanExecuteChanged();
+        ExportTableDefinitionCommand.NotifyCanExecuteChanged();
+        CheckQualityCommand.NotifyCanExecuteChanged();
+    }
 
     partial void OnCanOpenHtmlChanged(bool value) => OpenHtmlCommand.NotifyCanExecuteChanged();
 

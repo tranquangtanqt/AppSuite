@@ -53,7 +53,27 @@ internal static class HelpContent
             new("File đọc bằng bản cũ", "File .db đọc bằng bản trước khi có index / ràng buộc thì chỉ so bảng, cột, khoá ngoại - trang ghi rõ; đọc lại file đó để so đủ."),
         ]),
 
-        new("Cài đặt", "", "Nút \"Cài đặt\" trên thanh nút. Bấm Lưu để áp dụng, \"Mặc định\" để điền lại giá trị gốc.",
+        new("Excel định nghĩa bảng (テーブル定義書)", "", "Nút \"Excel định nghĩa bảng\" ở dòng \"Xuất thêm\" (bật khi đã đọc database): xuất Data\\Database\\{tên} テーブル定義書.xlsx từ lần đọc gần nhất rồi mở file. Tiêu đề tiếng Nhật - mẫu khách Nhật hay yêu cầu.",
+        [
+            new("Sheet テーブル一覧", "Sheet đầu: mỗi bảng / view 1 dòng - No, スキーマ, テーブル名 (bấm để sang sheet của bảng), 種別 (テーブル / ビュー / マテリアライズドビュー), 説明 (mô tả), 件数（概算）, カラム数. Có sẵn bộ lọc và cố định hàng tiêu đề."),
+            new("Sheet từng bảng", "Mỗi bảng / view 1 sheet (bảng trước, view sau): データベース, スキーマ, テーブル名, 種別, 説明, 件数, 出力日; ■ カラム定義 (No, カラム名, データ型, 桁数, NOT NULL, PK, 既定値, 説明 - dòng khoá chính tô vàng); ■ インデックス; ■ 外部キー (bấm bảng tham chiếu để sang sheet đó); ■ 制約（UNIQUE / CHECK）. Mục trống ghi（なし）. Link \"← テーブル一覧\" ở góc trên phải."),
+            new("Kiểu và 桁数", "Kiểu tách khỏi độ dài: character varying(100) → データ型 character varying, 桁数 100; numeric(12,2) → numeric, 12,2."),
+            new("Tên sheet", "Excel giới hạn tên sheet 31 ký tự và cấm : \\ / ? * [ ] - tên bảng dài / có ký tự đó được cắt / thay bằng _, trùng thì thêm ~2, ~3..."),
+            new("In", "Mỗi sheet đặt sẵn khổ A4 ngang, vừa 1 trang bề rộng; sheet テーブル一覧 lặp hàng tiêu đề ở mỗi trang."),
+            new("File đang mở", "Đang mở file .xlsx cũ trong Excel thì không ghi được - đóng file rồi bấm lại (file cũ không bị hỏng)."),
+        ]),
+
+        new("Kiểm tra chất lượng schema", "", "Nút \"Kiểm tra chất lượng\" ở dòng \"Xuất thêm\": soát những chỗ thiết kế đáng để ý trong lần đọc gần nhất (không kết nối lại database), ra trang Data\\Database\\Kiểm tra chất lượng {tên}.html và mở trong trình duyệt.",
+        [
+            new("Nên sửa (đỏ)", "Bảng không có khoá chính; khoá ngoại khác kiểu với cột được tham chiếu (vd customer_id bigint ≠ id integer)."),
+            new("Cân nhắc (vàng)", "Khoá ngoại không có index (kèm câu CREATE INDEX gợi ý); index trùng hoặc bị index khác bao trùm, vd (name) với (name, phone) (kèm DROP INDEX gợi ý - không báo index UNIQUE / khoá chính / có WHERE); bảng chưa có thống kê số dòng (chưa ANALYZE)."),
+            new("Thông tin (xám)", "Bảng / view thiếu mô tả; cột thiếu mô tả (gom theo bảng); tên khác kiểu đa số (snake_case với camelCase), lẫn chữ hoa / thường với _, hoặc có khoảng trắng / ký tự đặc biệt. Tích \"Ẩn mục Thông tin\" trên trang để chỉ xem đỏ / vàng."),
+            new("Trang kết quả", "Trên cùng: số mục mỗi mức + bảng tóm tắt từng quy tắc (✓ = không có). Bên dưới mỗi quy tắc: vì sao đáng để ý, các chỗ vi phạm, SQL gợi ý. Tên bảng link sang trang từ điển dữ liệu (cần bấm \"2. Xuất HTML\" trước)."),
+            new("SQL gợi ý", "Chỉ để tham khảo - app không tự chạy gì trên database. Cú pháp có thể cần sửa theo loại database; kiểm tra kỹ trước khi chạy."),
+            new("View", "View chỉ xét mô tả và tên (không có khoá chính / index / thống kê là bình thường)."),
+        ]),
+
+        new("Cài đặt", "","Nút \"Cài đặt\" trên thanh nút. Bấm Lưu để áp dụng, \"Mặc định\" để điền lại giá trị gốc.",
         [
             new("Giới hạn thời gian kết nối", "Số giây chờ kết nối tới máy chủ (mặc định 10). Quá thời gian thì báo lỗi thay vì chờ mãi. Mạng chậm / qua VPN xa thì tăng lên."),
             new("Giới hạn thời gian truy vấn", "Số giây tối đa cho mỗi câu đọc schema (mặc định 120). Database rất nhiều bảng / máy chủ chậm mà báo \"truy vấn quá giờ\" thì tăng lên, hoặc nhập Schema để đọc ít hơn."),

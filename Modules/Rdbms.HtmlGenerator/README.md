@@ -101,7 +101,7 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
      SQL Server đặt qua connection string, Oracle đặt trên từng `OracleCommand`.
    - *Tự mở file HTML sau khi xuất*.
    - *Tự mở thư mục chứa file HTML sau khi xuất* (`explorer.exe /select,"…html"` - chọn sẵn file).
-   - *Giữ lại số bản đọc cũ* (`HistoryCount`, mặc định 10, 0-50, `EffectiveHistoryCount`) - xem mục 8. Lưu số nhỏ hơn thì
+   - *Giữ lại số bản đọc cũ* (`HistoryCount`, mặc định 10, 0-50, `EffectiveHistoryCount`) - xem mục 9. Lưu số nhỏ hơn thì
      `SchemaHistory.Prune` ngay cho file .db đang chọn (các file khác dọn ở lần đọc sau của chúng).
 
    Nút "Mặc định" điền lại giá trị mặc định (chưa lưu cho tới khi bấm Lưu). Giá trị sửa tay ngoài khoảng
@@ -123,7 +123,25 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    HTML tĩnh (không nhúng JSON), ô tích ẩn thay đổi chỉ khác mô tả (`TableDiff.OnlyDescriptionChanges`).
    `ListSchemaFiles` liệt kê cả bản cũ trong Lịch sử (`SchemaFile.IsHistory`, tên `{file} - bản dd-MM-yyyy HH.mm`, hiện
    "(bản cũ)"); B chọn sẵn file *không* phải bản cũ nếu có.
-8. **Lịch sử các lần đọc + "So với bản trước" (2026-10-22)** - `Services\SchemaHistory` (unit test `SchemaHistoryTests`).
+8. **Xuất thêm (2026-10-22)** - dòng "Xuất thêm:" dưới 3 nút bước, 2 nút bật khi có .db (`CanExport`), đọc
+   `OpenFile(.db).ReadSnapshot` rồi mở file kết quả (`OpenExported`: máy không có chương trình mở thì chỉ ghi nhật ký).
+   - **Excel định nghĩa bảng** (`ExportTableDefinitionCommand` → `Services\TableDefinitionWorkbook.Write`, EPPlus 4.5.3.3 như
+     Mcf.*): `Data\Database\{tên} テーブル定義書.xlsx`, tiêu đề tiếng Nhật. Sheet `テーブル一覧` (No / スキーマ / テーブル名 link /
+     種別 / 説明 / 件数（概算） / カラム数, AutoFilter, FreezePanes) + mỗi bảng 1 sheet (bảng trước view, theo schema rồi tên):
+     thông tin bảng, ■ カラム定義 (`SplitType` tách kiểu / 桁数 từ DataType), ■ インデックス + ■ 制約 (chỉ khi `HasExtendedInfo`),
+     ■ 外部キー (link sang sheet bảng tham chiếu), mục trống = （なし）. `AssignSheetNames`: ≤ 31 ký tự, thay `: \ / ? * [ ]`, trùng
+     (không phân biệt hoa thường, kể cả `テーブル一覧`) → `~2`. Ghi file tạm rồi `File.Move` - đang mở trong Excel thì báo lỗi, bản
+     cũ còn nguyên. Unit test `TableDefinitionWorkbookTests` đọc lại bằng EPPlus.
+   - **Kiểm tra chất lượng** (`CheckQualityCommand` → `Services\SchemaQualityChecker.Check` → `SchemaQualityReport.Build`):
+     `Data\Database\Kiểm tra chất lượng {tên}.html`. Quy tắc (`AllRules`, mức Error / Warning / Info): no-pk, fk-type (so
+     `DataType` đầy đủ, chỉ khi bảng tham chiếu có trong lần đọc), fk-index (cột khoá ngoại phải là phần đầu đúng thứ tự của
+     1 index, bỏ ASC / DESC; index biểu thức không tính) + `CREATE INDEX`, dup-index (index thường có cột là phần đầu / trùng
+     index khác, không xét UNIQUE / PK / WHERE / biểu thức; 2 index trùng hẳn chỉ báo 1) + `DROP INDEX`, no-stats
+     (`EstimatedRows` null), no-table-desc, no-col-desc (gom theo bảng), naming (kiểu đa số snake / camel tính riêng cho
+     tên bảng và tên cột; 1 từ không tính). View chỉ xét mô tả / tên. .db bản cũ (`HasExtendedInfo` = false) bỏ fk-index /
+     dup-index / no-stats và trang ghi rõ. Tên bảng link `{tên}.html#table=` nếu trang từ điển đã xuất. Unit test
+     `SchemaQualityCheckerTests`.
+9. **Lịch sử các lần đọc + "So với bản trước" (2026-10-22)** - `Services\SchemaHistory` (unit test `SchemaHistoryTests`).
    Trong `ImportDatabaseAsync`, ngay trước `ReplaceAllAsync`, `SchemaHistory.Save` chép `{tên}.db` cũ sang
    `Data\Database\Lịch sử\{tên}\yyyy-MM-dd HHmmss.db` (tên = giờ sửa file cũ = lúc bản đó được đọc; `File.Copy` giữ giờ sửa).
    Ghi SQLite lỗi → xoá bản chép. Đọc xong `LogChangesSincePreviousAsync` so bản chép (A) với bản mới (B) bằng

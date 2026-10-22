@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <!--
     Unit test cho phần không phụ thuộc WinUI / máy chủ database của Rdbms.HtmlGenerator: hồ sơ kết nối (chuyển config.xml
-    cũ, kiểm tra tên, tên file theo hồ sơ), lưu / đọc config.xml, so sánh schema + trang kết quả.
+    cũ, kiểm tra tên, tên file theo hồ sơ), lưu / đọc config.xml, so sánh schema + trang kết quả, Lịch sử lần đọc, Kiểm tra chất lượng, Excel テーブル定義書.
 
     Rdbms.HtmlGenerator là app WinUI nên không ProjectReference được → biên dịch kèm Models\ và vài file Services\ thuần .NET.
   -->
@@ -20,9 +20,13 @@
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaComparer.cs" Link="Rdbms.HtmlGenerator\Services\SchemaComparer.cs" />
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaCompareReport.cs" Link="Rdbms.HtmlGenerator\Services\SchemaCompareReport.cs" />
     <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaHistory.cs" Link="Rdbms.HtmlGenerator\Services\SchemaHistory.cs" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaQualityChecker.cs" Link="Rdbms.HtmlGenerator\Services\SchemaQualityChecker.cs" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\SchemaQualityReport.cs" Link="Rdbms.HtmlGenerator\Services\SchemaQualityReport.cs" />
+    <Compile Include="..\..\Modules\Rdbms.HtmlGenerator\Services\TableDefinitionWorkbook.cs" Link="Rdbms.HtmlGenerator\Services\TableDefinitionWorkbook.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="EPPlus" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />

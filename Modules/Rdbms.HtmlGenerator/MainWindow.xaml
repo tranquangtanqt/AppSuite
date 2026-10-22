@@ -168,6 +168,24 @@
                         </StackPanel>
                     </Button>
                 </Grid>
+                <!-- Xuất thêm từ cùng file .db (bật khi đã đọc database) -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="Xuất thêm:" VerticalAlignment="Center" Opacity="0.7" FontSize="12" />
+                    <Button Command="{x:Bind ViewModel.ExportTableDefinitionCommand}" Padding="10,4"
+                            ToolTipService.ToolTip="Excel định nghĩa bảng (テーブル定義書, tiêu đề tiếng Nhật): sheet テーブル一覧 + mỗi bảng 1 sheet - cột, kiểu, 桁数, NOT NULL, PK, mặc định, mô tả, index, khoá ngoại, ràng buộc">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE9F9;" FontSize="12" />
+                            <TextBlock Text="Excel định nghĩa bảng" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{x:Bind ViewModel.CheckQualityCommand}" Padding="10,4"
+                            ToolTipService.ToolTip="Trang HTML liệt kê chỗ thiết kế đáng để ý: bảng không có khoá chính, khoá ngoại khác kiểu / không có index, index trùng, thiếu thống kê, thiếu mô tả, tên không theo quy ước">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE9D5;" FontSize="12" />
+                            <TextBlock Text="Kiểm tra chất lượng" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
                 <ProgressBar IsIndeterminate="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
                 <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" TextWrapping="Wrap" />
                 <!-- Chỉ hiện khi Lịch sử có bản đọc trước của file .db đang chọn -->
