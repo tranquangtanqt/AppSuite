@@ -351,6 +351,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 
 ## ScreenCapture
 
+- [x] Popup **Danh sách ảnh** khi nhiều ảnh bị đẩy lên trên (che nút / tab) hoặc bị cắt mất nút "Mở lại tab vừa đóng"; ít ảnh
+  (lọc) thì đúng chỗ (người dùng báo 2026-10-22). Nguyên nhân: danh sách `MaxHeight="520"` cố định + ô lọc + nút ≈ 640 px,
+  cửa sổ thấp không đủ chỗ dưới nút → WinUI dời popup. Sửa: `FitTabListToWindow` (lúc Opening) đặt chiều cao tối đa theo chỗ
+  trống thật dưới nút (160-520). GUI Sandbox 40 ảnh: bản cũ 3/6 (tái hiện: mất nút Mở lại tab), bản sửa 6/6 (phóng to, có lọc,
+  cửa sổ thấp); unit test 59/59 (2026-10-22)
 - [x] **[Đề xuất · Nên làm]** Kéo tab đổi chỗ (người dùng hỏi 2026-10-16) - **xong 2026-10-19**, xem dòng tổng kết dưới. Hiện tắt hẳn: `DocumentTabs` đặt
   `CanReorderTabs="False" CanDragTabs="False"` (PLAN.md: "chưa có kéo đổi thứ tự tab"). Giải pháp: bật 2 cờ (TabView tự
   làm phần kéo vì TabItems là TabViewItem trực tiếp) + `TabItemsChanged` / `TabDragCompleted` → `UpdateTabPosition()`

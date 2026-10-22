@@ -523,6 +523,24 @@ public sealed partial class EditorWindow : Window
         TabListFilter.Text = string.Empty;
         FillTabList(string.Empty);
         UpdateReopenTabButton();
+        FitTabListToWindow();
+    }
+
+    /// <summary>Phần popup Danh sách ảnh ngoài danh sách: khoảng cách tới nút + lề popup + ô lọc + nút "Mở lại tab vừa đóng" +
+    /// 2 khoảng cách + lề dưới (đo trong Sandbox ≈ 125 px logic, để dư).</summary>
+    private const double TabListChromeHeight = 140;
+
+    /// <summary>Danh sách cao cố định 520 thì cửa sổ thấp không đủ chỗ dưới nút: WinUI đẩy cả popup lên trên (che nút) hoặc
+    /// cắt mất nút "Mở lại tab vừa đóng". Đặt chiều cao tối đa theo chỗ trống thật dưới nút (160-520) để popup luôn nằm
+    /// ngay dưới nút; ít ảnh thì danh sách vẫn thấp như cũ.</summary>
+    private void FitTabListToWindow()
+    {
+        if (Content is not FrameworkElement root || root.ActualHeight <= 0)
+        {
+            return;
+        }
+        var buttonBottom = TabListButton.TransformToVisual(root).TransformPoint(new Windows.Foundation.Point(0, TabListButton.ActualHeight)).Y;
+        TabList.MaxHeight = Math.Clamp(root.ActualHeight - buttonBottom - TabListChromeHeight, 160, 520);
     }
 
     private void TabListFlyout_Opened(object sender, object e)
