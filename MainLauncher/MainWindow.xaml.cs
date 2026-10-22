@@ -106,7 +106,7 @@ public sealed partial class MainWindow : Window
             var dialog = new ContentDialog
             {
                 Title = "Đóng cả các module đang chạy?",
-                Content = content,
+                Content = SharedUI.Helpers.DialogContent.Scrollable(content),
                 PrimaryButtonText = "Đóng hết",
                 SecondaryButtonText = "Để chạy tiếp",
                 CloseButtonText = "Huỷ",

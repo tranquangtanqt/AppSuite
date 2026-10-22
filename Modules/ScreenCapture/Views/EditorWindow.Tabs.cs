@@ -325,7 +325,7 @@ public sealed partial class EditorWindow
         {
             XamlRoot = Content.XamlRoot,
             Title = files.Count == 1 ? "Xoá file đã tự lưu?" : $"Xoá {files.Count} file đã tự lưu?",
-            Content = new StackPanel
+            Content = SharedUI.Helpers.DialogContent.Scrollable(new StackPanel
             {
                 Spacing = 8,
                 Children =
@@ -334,7 +334,7 @@ public sealed partial class EditorWindow
                     new TextBlock { Text = "File được chuyển vào Thùng rác (lấy lại được).", Opacity = 0.75 },
                     dontAsk,
                 },
-            },
+            }),
             PrimaryButtonText = files.Count == 1 ? "Đóng và xoá file" : $"Đóng và xoá {files.Count} file",
             SecondaryButtonText = "Đóng, giữ file",
             CloseButtonText = "Huỷ",

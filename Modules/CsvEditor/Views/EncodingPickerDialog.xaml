@@ -11,6 +11,8 @@
     CloseButtonText="Hủy"
     DefaultButton="Primary">
 
+    <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Spacing="12" MinWidth="320">
         <TextBlock TextWrapping="Wrap" Opacity="0.8"
                    Text="Dùng khi nhận diện tự động sai (văn bản hiển thị lỗi hoặc bảng bị lệch cột)." />
@@ -30,4 +32,5 @@
             <ComboBoxItem Content="Dấu gạch đứng (|)" Tag="|" />
         </ComboBox>
     </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

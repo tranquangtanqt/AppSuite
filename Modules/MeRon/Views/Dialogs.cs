@@ -81,7 +81,7 @@ internal static class Dialogs
         {
             XamlRoot = root,
             Title = title,
-            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap, MaxWidth = 480 },
+            Content = SharedUI.Helpers.DialogContent.Scrollable(message, 480),
             PrimaryButtonText = confirmText,
             CloseButtonText = "Huỷ",
             DefaultButton = ContentDialogButton.Close,
@@ -95,7 +95,7 @@ internal static class Dialogs
         {
             XamlRoot = root,
             Title = title,
-            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap, MaxWidth = 480 },
+            Content = SharedUI.Helpers.DialogContent.Scrollable(message, 480),
             CloseButtonText = "Đóng",
         };
         await dialog.ShowAsync();

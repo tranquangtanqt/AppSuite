@@ -13,6 +13,8 @@
     CloseButtonText="Cancel"
     DefaultButton="Primary">
 
+    <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <Grid Width="520" RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -82,4 +84,5 @@
             </ListView>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </ContentDialog>

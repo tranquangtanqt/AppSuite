@@ -14,6 +14,8 @@
     CloseButtonText="Hủy"
     DefaultButton="Primary">
 
+    <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Spacing="10" MinWidth="440" MaxHeight="420">
         <TextBlock TextWrapping="Wrap" Opacity="0.8"
                    Text="Cột ở trên có độ ưu tiên cao hơn (sắp xếp theo cột đó trước, cột dưới dùng để phân định khi bằng nhau)." />
@@ -44,4 +46,5 @@
             </ListView.ItemTemplate>
         </ListView>
     </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

@@ -184,6 +184,8 @@
                 </Grid>
             </ContentDialog.Title>
 
+            <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <Grid ColumnSpacing="24">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*" />
@@ -245,6 +247,7 @@
                     </ListView>
                 </Grid>
             </Grid>
+            </ScrollViewer>
         </ContentDialog>
     </Grid>
 </Window>

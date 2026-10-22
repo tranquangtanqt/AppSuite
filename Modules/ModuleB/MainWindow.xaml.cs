@@ -191,7 +191,7 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             Title = title,
-            Content = message,
+            Content = SharedUI.Helpers.DialogContent.Scrollable(message),
             CloseButtonText = "Dong",
             XamlRoot = Content.XamlRoot,
         };

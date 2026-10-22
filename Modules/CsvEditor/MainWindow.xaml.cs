@@ -550,7 +550,7 @@ public sealed partial class MainWindow : Window
             {
                 XamlRoot = Content.XamlRoot,
                 Title = "Không mở được file",
-                Content = $"{filePath}\n\n{ex.Message}",
+                Content = SharedUI.Helpers.DialogContent.Scrollable($"{filePath}\n\n{ex.Message}"),
                 CloseButtonText = "Đóng",
             }.ShowAsync();
             return false;
@@ -807,7 +807,7 @@ public sealed partial class MainWindow : Window
             {
                 XamlRoot = Content.XamlRoot,
                 Title = "Không lưu được file",
-                Content = ex.Message,
+                Content = SharedUI.Helpers.DialogContent.Scrollable(ex.Message),
                 CloseButtonText = "Đóng",
             }.ShowAsync();
             return false;

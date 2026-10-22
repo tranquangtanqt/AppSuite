@@ -23,6 +23,8 @@
         <x:Double x:Key="ContentDialogMaxWidth">720</x:Double>
     </ContentDialog.Resources>
 
+    <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Spacing="10" MinWidth="680" MaxHeight="480">
         <ComboBox x:Name="JoinComboBox" Header="Kết hợp các điều kiện" SelectedIndex="0" HorizontalAlignment="Left">
             <ComboBoxItem Content="AND (thỏa mãn tất cả)" />
@@ -67,4 +69,5 @@
             </ListView.ItemTemplate>
         </ListView>
     </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

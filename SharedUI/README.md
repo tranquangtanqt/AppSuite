@@ -47,6 +47,19 @@ trợ nhỏ được port kèm để các control trên hoạt động độc l�
 Alt+Tab. App unpackaged không tự lấy icon exe cho cửa sổ WinUI; thiếu file thì bỏ qua. Icon tạo bằng `build\New-AppIcon.ps1`
 (xem README gốc mục "Icon app"). Mọi `MainWindow` của AppSuite và cửa sổ Hướng dẫn dùng chung đã gọi (2026-10-02).
 
+## Hộp thoại không bị cắt (`SharedUI.Helpers.DialogContent`) - 2026-10-22
+
+**ContentDialog của WinUI tắt cuộn dọc của chính nó** (cố định trong template, `ContentScrollViewer` có
+`VerticalScrollBarVisibility="Disabled"`, không đổi bằng style). Nội dung cao hơn cửa sổ bị **cắt mất phần dưới, không có thanh
+cuộn** - và kiểm thử UI Automation vẫn đặt được giá trị cho ô bị khuất nên không phát hiện. Quy ước cho mọi hộp thoại:
+
+- XAML: bọc nội dung trong `<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">`
+  (đã làm cho mọi hộp thoại dài của CsvEditor, ModuleB, ModuleC, ScreenCapture, Rdbms). Không đặt `MaxHeight` cố định cho vùng
+  cuộn bên trong (2 tầng cuộn lồng nhau - ô cuối vẫn khuất).
+- Code: `Content = SharedUI.Helpers.DialogContent.Scrollable(message)` (chữ xuống dòng, chọn / copy được) hoặc
+  `DialogContent.Scrollable(panel)` - nhất là thông báo lỗi `ex.Message` / danh sách file có thể rất dài.
+- Mô tả dưới NumberBox / TextBox: dùng TextBlock `TextWrapping="Wrap"` riêng - `Description` không xuống dòng, bị cắt.
+
 ## Cửa sổ Hướng dẫn dùng chung (`SharedUI.Help`)
 
 `Help/HelpWindow.cs` — cửa sổ Hướng dẫn (F1) của AppSuite, không phải port từ WinUI Gallery: danh mục bên trái, nội dung

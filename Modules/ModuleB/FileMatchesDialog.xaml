@@ -19,6 +19,8 @@
         <x:Double x:Key="ContentDialogMaxHeight">800</x:Double>
     </ContentDialog.Resources>
 
+    <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <Grid Width="900" RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -53,4 +55,5 @@
             </ListView.ItemTemplate>
         </ListView>
     </Grid>
+    </ScrollViewer>
 </ContentDialog>

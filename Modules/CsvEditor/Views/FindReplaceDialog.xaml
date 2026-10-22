@@ -10,6 +10,8 @@
     PrimaryButtonText="Đóng"
     DefaultButton="Primary">
 
+    <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Spacing="10" MinWidth="360">
         <TextBox x:Name="FindTextBox" Header="Tìm" TextChanged="FindTextBox_TextChanged" />
 
@@ -34,4 +36,5 @@
         <Button x:Name="ReplaceAllButton" Content="Thay thế tất cả kết quả" Click="ReplaceAllButton_Click" HorizontalAlignment="Left" />
         <TextBlock x:Name="ReplaceStatusText" Opacity="0.8" />
     </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

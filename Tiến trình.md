@@ -49,6 +49,17 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 
 ## Chung (repo, build, deploy)
 
+- [x] **Rà mọi hộp thoại bị cắt** (2026-10-22, sau lỗi Cài đặt Rdbms): ContentDialog của WinUI tắt cuộn dọc → nội dung dài hơn
+  cửa sổ bị cắt, không có thanh cuộn. Bọc ScrollViewer cho 12 hộp thoại XAML (CsvEditor: Encoding, Lọc, Tìm / thay, Sắp xếp,
+  Thống kê; ModuleB: Danh sách file khớp, Cài đặt; ModuleC: Tìm tên bảng; ScreenCapture: Ảnh mới, Đổi cỡ; Rdbms: Thiết lập
+  kết nối - bỏ vùng cuộn 360 px trong từng tab để chỉ còn 1 thanh cuộn, So sánh) và hộp thoại tạo trong code có nội dung có
+  thể dài (thông báo lỗi `ex.Message`, danh sách file - CsvEditor, FileTools, ModuleB, ScreenCapture, Rdbms, MeRon,
+  MainLauncher) qua `SharedUI.Helpers.DialogContent.Scrollable`. Quy ước ghi ở SharedUI\README. Build solution 0 lỗi; unit test
+  CsvEditor 120, FileTools 132, MeRon 139, Rdbms 57, ScreenCapture 59 đều đạt; GUI Sandbox (cửa sổ ~600 px): Thiết lập kết nối,
+  Cài đặt Rdbms cuộn tới ô cuối, hộp thoại lỗi đọc DB đủ chữ, Ảnh mới vừa khung
+- [ ] Thử tay các hộp thoại CsvEditor (Thống kê / Lọc / Sắp xếp với file nhiều cột), ModuleB, ModuleC ở cửa sổ thấp - chưa mở
+  được tự động trong Sandbox (cần hộp thoại chọn file / dữ liệu)
+
 - [x] Mọi module đăng ký đủ ở `AppSuite.sln`, `modules.json`, `Sync-Modules-Dev.ps1`,
   `Publish-AppSuite.ps1`, README gốc; mọi project cùng .NET 8 / WindowsAppSDK 2.2 (rà 2026-09-29; từ 2026-10-01 dùng component WinUI 2.2.1 + Runtime 2.2.0)
 - [x] README gốc: sửa số project "9 project (MainLauncher + 8 module)" → 11 project (2026-09-29)

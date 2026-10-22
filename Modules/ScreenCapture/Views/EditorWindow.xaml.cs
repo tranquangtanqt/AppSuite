@@ -762,7 +762,7 @@ public sealed partial class EditorWindow : Window
             {
                 XamlRoot = Content.XamlRoot,
                 Title = "Không lưu được một số ảnh",
-                Content = string.Join(Environment.NewLine, failed) + Environment.NewLine + "Các tab vẫn được giữ nguyên.",
+                Content = SharedUI.Helpers.DialogContent.Scrollable(string.Join(Environment.NewLine, failed) + Environment.NewLine + "Các tab vẫn được giữ nguyên."),
                 CloseButtonText = "OK",
             }.ShowAsync();
             return false;

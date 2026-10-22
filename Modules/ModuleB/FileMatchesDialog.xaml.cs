@@ -36,7 +36,7 @@ public sealed partial class FileMatchesDialog : ContentDialog
             var dialog = new ContentDialog
             {
                 Title = "Khong the mo Excel",
-                Content = ex.Message,
+                Content = SharedUI.Helpers.DialogContent.Scrollable(ex.Message),
                 CloseButtonText = "Dong",
                 XamlRoot = XamlRoot,
             };

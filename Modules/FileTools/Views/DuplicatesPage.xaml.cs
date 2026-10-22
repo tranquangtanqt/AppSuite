@@ -19,7 +19,7 @@ public sealed partial class DuplicatesPage : Page
             {
                 XamlRoot = XamlRoot,
                 Title = "Chuyển vào Thùng rác",
-                Content = message,
+                Content = SharedUI.Helpers.DialogContent.Scrollable(message),
                 PrimaryButtonText = "Chuyển",
                 CloseButtonText = "Huỷ",
                 DefaultButton = ContentDialogButton.Close,

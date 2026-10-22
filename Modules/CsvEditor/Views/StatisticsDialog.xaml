@@ -19,6 +19,8 @@
         <x:Double x:Key="ContentDialogMaxWidth">880</x:Double>
     </ContentDialog.Resources>
 
+    <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Spacing="10" MinWidth="780" MaxHeight="520">
         <StackPanel Orientation="Horizontal" Spacing="20">
             <TextBlock x:Name="RowCountText" />
@@ -70,4 +72,5 @@
             </ListView.ItemTemplate>
         </ListView>
     </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

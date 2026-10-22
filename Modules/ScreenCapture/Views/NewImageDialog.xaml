@@ -10,6 +10,8 @@
     CloseButtonText="Hủy"
     DefaultButton="Primary">
 
+    <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <StackPanel Spacing="14" MinWidth="340">
         <TextBlock x:Name="SummaryText" Opacity="0.8" />
 
@@ -46,4 +48,5 @@
             </Button.Flyout>
         </Button>
     </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

@@ -132,7 +132,7 @@ public sealed partial class MainWindow : Window
         var dialog = new ContentDialog
         {
             Title = title,
-            Content = new TextBlock { Text = message, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true },
+            Content = SharedUI.Helpers.DialogContent.Scrollable(message),
             CloseButtonText = "Đóng",
             XamlRoot = Content.XamlRoot,
         };

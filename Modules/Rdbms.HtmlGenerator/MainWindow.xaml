@@ -238,6 +238,8 @@
                        PrimaryButtonClick="DatabaseSettingsDialog_PrimaryButtonClick"
                        SecondaryButtonClick="TestConnection_Click"
                        Closed="DatabaseSettingsDialog_Closed">
+          <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
           <StackPanel Spacing="8">
             <!-- Kết quả "Thử kết nối" (thông tin đang nhập ở tab hiện tại, chưa cần Lưu) - đặt trên cùng để luôn thấy -->
             <InfoBar x:Name="TestConnectionInfoBar" IsOpen="False" IsClosable="False" MaxWidth="460" HorizontalAlignment="Stretch">
@@ -245,7 +247,7 @@
             </InfoBar>
             <Pivot x:Name="SettingsPivot" MinWidth="420" SelectionChanged="SettingsPivot_SelectionChanged">
                 <PivotItem Header="PostgreSQL">
-                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
                             <TextBox x:Name="PgHostBox" Header="Host" PlaceholderText="vd: localhost" />
                             <TextBox x:Name="PgPortBox" Header="Port" PlaceholderText="5432" />
@@ -257,7 +259,7 @@
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem Header="Oracle">
-                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
                             <TextBox x:Name="OraHostBox" Header="Host" PlaceholderText="vd: localhost" />
                             <TextBox x:Name="OraPortBox" Header="Port" PlaceholderText="1521" />
@@ -275,7 +277,7 @@
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem Header="MySQL">
-                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
                             <TextBox x:Name="MyHostBox" Header="Host" PlaceholderText="vd: localhost" />
                             <TextBox x:Name="MyPortBox" Header="Port" PlaceholderText="3306" />
@@ -286,7 +288,7 @@
                     </ScrollViewer>
                 </PivotItem>
                 <PivotItem Header="SQL Server">
-                    <ScrollViewer MaxHeight="360" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Spacing="10" Margin="0,12,0,0">
                             <TextBox x:Name="MsHostBox" Header="Host (hoặc Host\TênInstance)" PlaceholderText="vd: localhost hoặc MAYCHU\SQLEXPRESS" />
                             <TextBox x:Name="MsPortBox" Header="Port (bỏ qua khi nhập tên instance)" PlaceholderText="1433" />
@@ -301,6 +303,7 @@
                 </PivotItem>
             </Pivot>
           </StackPanel>
+          </ScrollViewer>
         </ContentDialog>
 
         <!-- So sánh schema: chọn 2 file .db đã đọc -->
@@ -310,6 +313,8 @@
                        CloseButtonText="Huỷ"
                        DefaultButton="Primary"
                        PrimaryButtonClick="CompareDialog_PrimaryButtonClick">
+            <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Spacing="10" MinWidth="440">
                 <TextBlock TextWrapping="Wrap" Opacity="0.8"
                            Text="Chọn 2 lần đọc database (mỗi lần bấm &quot;1. Đọc database&quot; của 1 hồ sơ / nguồn tạo 1 file). Kết quả: trang HTML liệt kê bảng / cột / kiểu / khoá / index thêm, bớt, đổi của B so với A." />
@@ -328,6 +333,7 @@
                 <TextBlock x:Name="CompareError" TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                            Visibility="Collapsed" AutomationProperties.AutomationId="CompareError" />
             </StackPanel>
+            </ScrollViewer>
         </ContentDialog>
 
         <!-- Tên hồ sơ (Thêm / Đổi tên) -->
