@@ -101,6 +101,98 @@ public sealed class TableDefinitionWorkbookTests : IDisposable
     }
 
     [Fact]
+    public void O_gop_chi_ghi_o_dau_va_so_dong_la_so()
+    {
+        TableDefinitionWorkbook.Write(Shop(), "shop", DateTime.Now, _path);
+
+        using var package = new ExcelPackage(new FileInfo(_path));
+        var sheet = package.Workbook.Worksheets["orders"];
+        var nameRow = FindRow(sheet, 1, "テーブル名");
+        Assert.Equal("orders", sheet.Cells[nameRow, 3].Text);
+        Assert.All(Enumerable.Range(4, 5), c => Assert.Null(sheet.Cells[nameRow, c].Value)); // D..H trống
+        var rows = sheet.Cells[FindRow(sheet, 1, "件数（概算）"), 3];
+        Assert.Equal(12345L, Convert.ToInt64(rows.Value));
+        Assert.Equal("#,##0", rows.Style.Numberformat.Format);
+    }
+
+    [Fact]
+    public void Tieng_Anh()
+    {
+        TableDefinitionWorkbook.Write(Shop(), "shop", new DateTime(2026, 10, 23, 9, 5, 0), _path, TableDefinitionLanguage.English);
+
+        using var package = new ExcelPackage(new FileInfo(_path));
+        Assert.Equal(["Table List", "customers", "orders", "v_orders"], package.Workbook.Worksheets.Select(s => s.Name).ToList());
+        var index = package.Workbook.Worksheets["Table List"];
+        Assert.Equal("Database: 127.0.0.1:5432/shop    Output at: 2026-10-23 09:05", index.Cells[2, 1].Text);
+        Assert.Equal("Tables: 2    Views: 1", index.Cells[3, 1].Text);
+        Assert.Equal("Table name", index.Cells[5, 3].Text);
+        Assert.Equal("View", index.Cells[8, 4].Text);
+
+        var sheet = package.Workbook.Worksheets["orders"];
+        Assert.Equal("Table Definition", sheet.Cells[1, 1].Text);
+        Assert.Equal("'Table List'!A1", sheet.Cells[1, 8].Hyperlink is ExcelHyperLink h ? h.ReferenceAddress : null);
+        Assert.Equal("2026-10-23", sheet.Cells[FindRow(sheet, 1, "Output date"), 3].Text);
+        var header = FindRow(sheet, 1, "■ Columns") + 1;
+        Assert.Equal(["No", "Column name", "Data type", "Length", "NOT NULL", "PK", "Default", "Description"],
+            Enumerable.Range(1, 8).Select(c => sheet.Cells[header, c].Text).ToList());
+        Assert.Equal("✓", sheet.Cells[header + 1, 6].Text);
+        Assert.True(FindRow(sheet, 1, "■ Indexes") > 0);
+        Assert.True(FindRow(sheet, 1, "■ Foreign keys") > 0);
+        Assert.True(FindRow(sheet, 1, "■ Constraints (UNIQUE / CHECK)") > 0);
+
+        var view = package.Workbook.Worksheets["v_orders"];
+        Assert.Equal("(none)", view.Cells[FindRow(view, 1, "■ Foreign keys") + 2, 1].Text);
+    }
+
+    [Fact]
+    public void Tieng_Viet()
+    {
+        TableDefinitionWorkbook.Write(Shop(), "shop", new DateTime(2026, 10, 23, 9, 5, 0), _path, TableDefinitionLanguage.Vietnamese);
+
+        using var package = new ExcelPackage(new FileInfo(_path));
+        Assert.Equal("Danh sách bảng", package.Workbook.Worksheets.First().Name);
+        var sheet = package.Workbook.Worksheets["orders"];
+        Assert.Equal("Định nghĩa bảng", sheet.Cells[1, 1].Text);
+        Assert.Equal("Bảng", sheet.Cells[FindRow(sheet, 1, "Loại"), 3].Text);
+        Assert.Equal("23/10/2026", sheet.Cells[FindRow(sheet, 1, "Ngày xuất"), 3].Text);
+        Assert.Equal("Mặc định", sheet.Cells[FindRow(sheet, 1, "■ Cột") + 1, 7].Text);
+        Assert.True(FindRow(sheet, 1, "■ Khoá ngoại") > 0);
+    }
+
+    [Fact]
+    public void Gia_tri_mac_dinh_bo_ngoac_SQL_Server()
+    {
+        var snapshot = new SchemaSnapshot("ms",
+            [new() { TableName = "t", Kind = "BASE TABLE", SourceFile = "host,1433/ms", SourceSheet = "dbo" }],
+            [
+                new() { TableName = "t", ColumnName = "a", DataType = "int", OrdinalPosition = 1, DefaultValue = "((0))" },
+                new() { TableName = "t", ColumnName = "b", DataType = "datetime", OrdinalPosition = 2, DefaultValue = "(getdate())" },
+            ],
+            [], [], [], true);
+        TableDefinitionWorkbook.Write(snapshot, "ms", DateTime.Now, _path);
+
+        using var package = new ExcelPackage(new FileInfo(_path));
+        var sheet = package.Workbook.Worksheets["t"];
+        var header = FindRow(sheet, 1, "■ カラム定義") + 1;
+        Assert.Equal("0", sheet.Cells[header + 1, 7].Text);
+        Assert.Equal("getdate()", sheet.Cells[header + 2, 7].Text);
+    }
+
+    [Theory]
+    [InlineData("((0))", "0")]
+    [InlineData("(getdate())", "getdate()")]
+    [InlineData("(N'abc')", "N'abc'")]
+    [InlineData("('(x')", "'(x'")]
+    [InlineData("((1)+(2))", "(1)+(2)")]
+    [InlineData("(1)+(2)", "(1)+(2)")]
+    [InlineData("nextval('seq'::regclass)", "nextval('seq'::regclass)")]
+    [InlineData("0", "0")]
+    [InlineData("", "")]
+    [InlineData("(", "(")]
+    public void Bo_ngoac_bao_ngoai(string value, string expected) =>
+        Assert.Equal(expected, DbColumnRecord.StripOuterParentheses(value));
+
+    [Fact]
     public void Db_ban_cu_khong_co_muc_index_va_rang_buoc()
     {
         TableDefinitionWorkbook.Write(Shop(extended: false), "shop", DateTime.Now, _path);

@@ -899,7 +899,15 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   các ô số thành TextBlock xuống dòng (Description của NumberBox bị cắt). GUI Sandbox: cuộn được, 2 ô cuối thấy trọn
   (2026-10-22)
 - [ ] Thử tay: mở `{tên} テーブル定義書.xlsx` bằng Excel thật (Sandbox không có Excel) - xem bố cục, bấm link, xem trước khi in;
-  Kiểm tra chất lượng với DB thật (Oracle lớn: số mục, tốc độ)
+  Kiểm tra chất lượng với DB thật (Oracle lớn: số mục, tốc độ). Người dùng đã xuất thử Z_ADDON_IGUACU_BK (SQL Server) 2026-10-23
+  → báo 既定値 dạng ((0)) (đã sửa, mục dưới); còn xem bố cục / in bản tiếng Anh / tiếng Việt
+- [x] **Excel định nghĩa bảng: chọn ngôn ngữ + sửa từ lần xuất thử thật** (2026-10-23): Cài đặt → "Ngôn ngữ Excel định nghĩa
+  bảng" Tiếng Nhật (mặc định, テーブル定義書) / Tiếng Anh (Table Definition, sheet Table List) / Tiếng Việt (Định nghĩa bảng,
+  sheet Danh sách bảng) - tiêu đề, nhãn, ○ / ✓, định dạng ngày, tên file (mỗi ngôn ngữ 1 file); config.xml cũ → tiếng Nhật.
+  Sửa: 既定値 của SQL Server hiện ((0)) / (getdate()) → bỏ ngoặc bao ngoài (0, getdate()) ở Excel, HTML và trang so sánh; phần
+  đầu sheet bảng ghi giá trị vào cả 6 ô C..H của vùng gộp → chỉ ô đầu; 件数（概算） là chữ "1,997" → số định dạng #,##0. Cập nhật
+  F1, README. Unit test 71/71; GUI Sandbox 31/31 (config cũ → Nhật, chọn Anh / Việt → Lưu → config.xml, xuất 3 file riêng
+  đúng tên sheet / nhãn, mở lại app giữ lựa chọn, Mặc định / Huỷ)
 - [ ] Thử tay: đọc lại DB thật 2 lần (có / không đổi schema) → xem dòng nhật ký + nút "So với bản trước"; trang HTML thử lọc
   View và tìm theo mô tả tiếng Việt / tiếng Nhật
 - [x] ~~Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X)~~ — thực tế không phải bị gộp mà làm cả lần đọc lỗi;

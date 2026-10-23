@@ -21,6 +21,46 @@ public sealed record DbColumnRecord
     public string ValueRestriction { get; init; } = string.Empty;
     public bool IsCommon { get; init; }
 
+    /// <summary><see cref="DefaultValue"/> để hiển thị (HTML, Excel): bỏ cặp ngoặc bao ngoài mà SQL Server tự thêm -
+    /// "((0))" → "0", "(getdate())" → "getdate()", "(N'abc')" → "N'abc'". Giá trị lưu / so sánh vẫn là bản gốc.</summary>
+    public string DisplayDefaultValue => StripOuterParentheses(DefaultValue);
+
+    /// <summary>Bỏ lặp lại cặp ngoặc bao trọn cả chuỗi. "(1)+(2)" giữ nguyên (ngoặc đầu không đóng ở cuối);
+    /// ngoặc trong chuỗi '...' không tính.</summary>
+    public static string StripOuterParentheses(string value)
+    {
+        var text = value.Trim();
+        while (text.Length >= 2 && text[0] == '(' && text[^1] == ')' && ClosingIndex(text) == text.Length - 1)
+        {
+            text = text[1..^1].Trim();
+        }
+        return text;
+
+        // Vị trí ngoặc đóng khớp với ngoặc mở ở đầu chuỗi (-1 nếu không khớp).
+        static int ClosingIndex(string s)
+        {
+            var depth = 0;
+            var inString = false;
+            for (var i = 0; i < s.Length; i++)
+            {
+                var c = s[i];
+                if (c == '\'')
+                {
+                    inString = !inString;
+                }
+                else if (!inString && c == '(')
+                {
+                    depth++;
+                }
+                else if (!inString && c == ')' && --depth == 0)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+    }
+
     /// <summary>Schema of <see cref="TableName"/> as read from the source DB - only used by
     /// TableNameQualifier to tell same-named tables in different schemas apart; not stored in SQLite.</summary>
     public string Schema { get; init; } = string.Empty;

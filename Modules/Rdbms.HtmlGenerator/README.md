@@ -103,6 +103,7 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
      SQL Server đặt qua connection string, Oracle đặt trên từng `OracleCommand`.
    - *Tự mở file HTML sau khi xuất*.
    - *Tự mở thư mục chứa file HTML sau khi xuất* (`explorer.exe /select,"…html"` - chọn sẵn file).
+   - *Ngôn ngữ Excel định nghĩa bảng* (`TableDefinitionLanguage`, mặc định tiếng Nhật; 2026-10-23) - xem mục 8.
    - *Giữ lại số bản đọc cũ* (`HistoryCount`, mặc định 10, 0-50, `EffectiveHistoryCount`) - xem mục 9. Lưu số nhỏ hơn thì
      `SchemaHistory.Prune` ngay cho file .db đang chọn (các file khác dọn ở lần đọc sau của chúng).
    - *Bỏ qua bảng / view khi đọc* (`ExcludeTablePatterns`, chuỗi, trống = đọc hết; 2026-10-22) - `Services\TableNameFilter`
@@ -134,7 +135,14 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
 8. **Xuất thêm (2026-10-22)** - dòng "Xuất thêm:" dưới 3 nút bước, 2 nút bật khi có .db (`CanExport`), đọc
    `OpenFile(.db).ReadSnapshot` rồi mở file kết quả (`OpenExported`: máy không có chương trình mở thì chỉ ghi nhật ký).
    - **Excel định nghĩa bảng** (`ExportTableDefinitionCommand` → `Services\TableDefinitionWorkbook.Write`, EPPlus 4.5.3.3 như
-     Mcf.*): `Data\Database\{tên} テーブル定義書.xlsx`, tiêu đề tiếng Nhật. Sheet `テーブル一覧` (No / スキーマ / テーブル名 link /
+     Mcf.*): `Data\Database\{tên} テーブル定義書.xlsx`, tiêu đề tiếng Nhật. Ngôn ngữ (2026-10-23): Cài đặt → *Ngôn ngữ Excel
+     định nghĩa bảng* (`AppOptions.TableDefinitionLanguage` = `Japanese` / `English` / `Vietnamese`, lưu config.xml theo tên,
+     ComboBox cùng thứ tự enum) → `TableDefinitionWorkbook.For(language)` trả bộ nhãn `Labels` (tiêu đề, tên sheet danh sách
+     `テーブル一覧` / `Table List` / `Danh sách bảng`, nhãn cột, ○ / ✓, định dạng ngày); tên file `{tên} {Labels.Title}.xlsx`
+     nên mỗi ngôn ngữ 1 file. Ô giá trị của vùng gộp chỉ ghi ở ô đầu; 件数 là số (`#,##0`). 既定値 dùng
+     `DbColumnRecord.DisplayDefaultValue` (`StripOuterParentheses`: SQL Server `((0))` → `0`, `(getdate())` → `getdate()`;
+     `(1)+(2)` giữ nguyên, ngoặc trong '...' không tính) - cũng dùng ở HTML và trang so sánh; `DefaultValue` gốc vẫn dùng để
+     so sánh. Sheet `テーブル一覧` (No / スキーマ / テーブル名 link /
      種別 / 説明 / 件数（概算） / カラム数, AutoFilter, FreezePanes) + mỗi bảng 1 sheet (bảng trước view, theo schema rồi tên):
      thông tin bảng, ■ カラム定義 (`SplitType` tách kiểu / 桁数 từ DataType), ■ インデックス + ■ 制約 (chỉ khi `HasExtendedInfo`),
      ■ 外部キー (link sang sheet bảng tham chiếu), mục trống = （なし）. `AssignSheetNames`: ≤ 31 ký tự, thay `: \ / ? * [ ]`, trùng

@@ -21,6 +21,9 @@ public sealed class AppOptions
     /// <summary>Mẫu tên bảng / view bỏ qua khi đọc (vd "tmp_%, %_bk"), xem Services\TableNameFilter. Trống = đọc hết.</summary>
     public string ExcludeTablePatterns { get; set; } = string.Empty;
 
+    /// <summary>Ngôn ngữ của Excel định nghĩa bảng (tiêu đề sheet, nhãn, tên file).</summary>
+    public TableDefinitionLanguage TableDefinitionLanguage { get; set; } = TableDefinitionLanguage.Japanese;
+
     public const int DefaultHistoryCount = 10;
 
     /// <summary>Số lần đọc trước giữ lại trong Data\Database\Lịch sử\{tên} cho mỗi file .db (0 = không giữ).</summary>

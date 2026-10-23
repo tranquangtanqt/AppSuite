@@ -342,6 +342,7 @@ public sealed partial class MainWindow : Window
         CommandTimeoutBox.Value = options.EffectiveCommandTimeoutSeconds;
         OpenHtmlAfterExportSwitch.IsOn = options.OpenHtmlAfterExport;
         OpenFolderAfterExportSwitch.IsOn = options.OpenFolderAfterExport;
+        TableDefinitionLanguageBox.SelectedIndex = LanguageIndex(options.TableDefinitionLanguage);
         HistoryCountBox.Value = options.EffectiveHistoryCount;
         ExcludeTablePatternsBox.Text = options.ExcludeTablePatterns;
 
@@ -363,6 +364,9 @@ public sealed partial class MainWindow : Window
             CommandTimeoutSeconds = ToSeconds(CommandTimeoutBox.Value, AppOptions.DefaultCommandTimeoutSeconds),
             OpenHtmlAfterExport = OpenHtmlAfterExportSwitch.IsOn,
             OpenFolderAfterExport = OpenFolderAfterExportSwitch.IsOn,
+            TableDefinitionLanguage = TableDefinitionLanguageBox.SelectedIndex >= 0
+                ? (TableDefinitionLanguage)TableDefinitionLanguageBox.SelectedIndex
+                : TableDefinitionLanguage.Japanese,
             HistoryCount = ToSeconds(HistoryCountBox.Value, AppOptions.DefaultHistoryCount),
             // Gọn lại 1 dòng "tmp_%, %_bk" (bỏ trống / trùng)
             ExcludeTablePatterns = string.Join(", ", Services.TableNameFilter.ParsePatterns(ExcludeTablePatternsBox.Text)),
@@ -378,9 +382,14 @@ public sealed partial class MainWindow : Window
         CommandTimeoutBox.Value = defaults.CommandTimeoutSeconds;
         OpenHtmlAfterExportSwitch.IsOn = defaults.OpenHtmlAfterExport;
         OpenFolderAfterExportSwitch.IsOn = defaults.OpenFolderAfterExport;
+        TableDefinitionLanguageBox.SelectedIndex = LanguageIndex(defaults.TableDefinitionLanguage);
         HistoryCountBox.Value = defaults.HistoryCount;
         ExcludeTablePatternsBox.Text = defaults.ExcludeTablePatterns;
     }
+
+    /// <summary>Mục của TableDefinitionLanguageBox (cùng thứ tự enum); giá trị lạ trong config.xml → tiếng Nhật.</summary>
+    private static int LanguageIndex(TableDefinitionLanguage language) =>
+        Enum.IsDefined(language) ? (int)language : (int)TableDefinitionLanguage.Japanese;
 
     private void OraConnectType_Checked(object sender, RoutedEventArgs e)
     {

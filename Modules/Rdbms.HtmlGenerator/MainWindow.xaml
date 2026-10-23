@@ -172,7 +172,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <TextBlock Text="Xuất thêm:" VerticalAlignment="Center" Opacity="0.7" FontSize="12" />
                     <Button Command="{x:Bind ViewModel.ExportTableDefinitionCommand}" Padding="10,4"
-                            ToolTipService.ToolTip="Excel định nghĩa bảng (テーブル定義書, tiêu đề tiếng Nhật): sheet テーブル一覧 + mỗi bảng 1 sheet - cột, kiểu, 桁数, NOT NULL, PK, mặc định, mô tả, index, khoá ngoại, ràng buộc">
+                            ToolTipService.ToolTip="Excel định nghĩa bảng (テーブル定義書 - tiếng Nhật / Anh / Việt, chọn ở Cài đặt): sheet danh sách bảng + mỗi bảng 1 sheet - cột, kiểu, 桁数, NOT NULL, PK, mặc định, mô tả, index, khoá ngoại, ràng buộc">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <FontIcon Glyph="&#xE9F9;" FontSize="12" />
                             <TextBlock Text="Excel định nghĩa bảng" FontSize="12" />
@@ -373,6 +373,14 @@
                 <TextBlock Margin="0,-10,0,0" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Text="Cho mỗi câu truy vấn đọc schema. Database rất nhiều bảng / máy chủ chậm thì tăng lên." />
                 <ToggleSwitch x:Name="OpenHtmlAfterExportSwitch" Header="Tự mở file HTML sau khi xuất" OffContent="Tắt" OnContent="Bật" />
                 <ToggleSwitch x:Name="OpenFolderAfterExportSwitch" Header="Tự mở thư mục chứa file HTML sau khi xuất" OffContent="Tắt" OnContent="Bật" />
+                <!-- Thứ tự mục = thứ tự enum TableDefinitionLanguage (Japanese, English, Vietnamese) -->
+                <ComboBox x:Name="TableDefinitionLanguageBox" Header="Ngôn ngữ Excel định nghĩa bảng" MinWidth="240"
+                          AutomationProperties.Name="Ngôn ngữ Excel định nghĩa bảng">
+                    <ComboBoxItem Content="Tiếng Nhật (テーブル定義書)" />
+                    <ComboBoxItem Content="Tiếng Anh (Table Definition)" />
+                    <ComboBoxItem Content="Tiếng Việt (Định nghĩa bảng)" />
+                </ComboBox>
+                <TextBlock Margin="0,-10,0,0" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Text="Tiêu đề sheet, nhãn và tên file của nút &quot;Excel định nghĩa bảng&quot;. Nội dung lấy từ database (tên bảng, cột, mô tả) giữ nguyên." />
                 <NumberBox x:Name="HistoryCountBox" Header="Giữ lại số bản đọc cũ (mỗi database)"
                            Minimum="0" Maximum="50" SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Inline" />
                 <TextBlock Margin="0,-10,0,0" TextWrapping="Wrap" Opacity="0.7" FontSize="12" Text="Trước khi đọc lại, bản cũ được chép vào Data\Database\Lịch sử để so sánh bản cũ ↔ bản mới. Lần đọc không có thay đổi thì không giữ thêm bản. 0 = không giữ." />

@@ -189,7 +189,7 @@ public static class SchemaCompareReport
         }
         if (!string.IsNullOrEmpty(column.DefaultValue))
         {
-            parts.Add($"mặc định {column.DefaultValue}");
+            parts.Add($"mặc định {column.DisplayDefaultValue}");
         }
         return string.Join(", ", parts.Where(p => p.Length > 0));
     }

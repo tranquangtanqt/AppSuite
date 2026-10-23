@@ -666,19 +666,22 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
 
     // ----- Xuất thêm: Excel định nghĩa bảng, Kiểm tra chất lượng -----
 
-    /// <summary>Data\Database\{tên} テーブル定義書.xlsx từ file .db đang chọn, rồi mở file.</summary>
+    /// <summary>Data\Database\{tên} テーブル定義書.xlsx (hoặc "Table Definition" / "Định nghĩa bảng" theo ngôn ngữ ở Cài đặt)
+    /// từ file .db đang chọn, rồi mở file.</summary>
     [RelayCommand(CanExecute = nameof(CanExport))]
     private async Task ExportTableDefinitionAsync()
     {
+        var language = Options.TableDefinitionLanguage;
+        var title = TableDefinitionWorkbook.For(language).Title;
         IsBusy = true;
-        StatusText = "Đang xuất Excel định nghĩa bảng (テーブル定義書)...";
-        var path = Path.Combine(RdbmsHtmlGeneratorDatabase.DataDirectory, $"{SafeFileName(CurrentFileBaseName)} テーブル定義書.xlsx");
+        StatusText = $"Đang xuất Excel định nghĩa bảng ({title})...";
+        var path = Path.Combine(RdbmsHtmlGeneratorDatabase.DataDirectory, $"{SafeFileName(CurrentFileBaseName)} {title}.xlsx");
         try
         {
             var databasePath = _database.DatabasePath;
             var baseName = CurrentFileBaseName;
             var sheets = await Task.Run(() => TableDefinitionWorkbook.Write(
-                RdbmsHtmlGeneratorDatabase.OpenFile(databasePath).ReadSnapshot(baseName), baseName, DateTime.Now, path));
+                RdbmsHtmlGeneratorDatabase.OpenFile(databasePath).ReadSnapshot(baseName), baseName, DateTime.Now, path, language));
             StatusText = $"Đã xuất Excel định nghĩa bảng: {sheets} bảng / view (mỗi bảng 1 sheet). File: {path}";
             AppendLog($"Đã xuất: {path}");
             OpenExported(path);

@@ -80,7 +80,7 @@ public sealed class HtmlReportGenerator
                         dataType = N(c.DataType),
                         length = N(c.Length),
                         nullable = N(c.Nullable),
-                        defaultValue = N(c.DefaultValue),
+                        defaultValue = N(c.DisplayDefaultValue),
                         japaneseName = N(c.JapaneseName),
                         description = N(c.Description),
                         fullName = N(c.FullName),
