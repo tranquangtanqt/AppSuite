@@ -362,7 +362,8 @@ public static class TableDefinitionWorkbook
                 sheet.Cells[row, 1].Value = ++number;
                 sheet.Cells[row, 2].Value = c.ConstraintName;
                 sheet.Cells[row, 3].Value = c.ConstraintType;
-                MergeValue(sheet, row, 4, 8, c.Definition);
+                // SQL Server bọc CHECK trong ngoặc: ([A]=(1) OR [A]=(0)) → [A]=(1) OR [A]=(0)
+                MergeValue(sheet, row, 4, 8, DbColumnRecord.StripOuterParentheses(c.Definition));
                 sheet.Cells[row, 4, row, 8].Style.WrapText = true;
                 row++;
             }

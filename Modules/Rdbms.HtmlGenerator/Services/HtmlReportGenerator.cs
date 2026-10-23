@@ -109,7 +109,7 @@ public sealed class HtmlReportGenerator
                     {
                         name = c.ConstraintName,
                         type = c.ConstraintType,
-                        definition = N(c.Definition),
+                        definition = N(DbColumnRecord.StripOuterParentheses(c.Definition)),
                     })),
             }),
         };

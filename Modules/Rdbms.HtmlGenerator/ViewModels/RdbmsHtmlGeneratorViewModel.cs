@@ -656,6 +656,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         {
             var path = await Task.Run(() => _htmlGenerator.Generate(_database, CurrentFileBaseName));
             _htmlPath = path;
+            _lastExportedPath = path;
             CanOpenHtml = true;
             NextStep = 3;
             StatusText = $"Đã xuất HTML: {path}";
@@ -757,9 +758,33 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         }
     }
 
+    /// <summary>File xuất gần nhất trong phiên này (HTML, Excel, Kiểm tra chất lượng, So sánh) - "Mở thư mục" chọn sẵn file này.</summary>
+    private string? _lastExportedPath;
+
+    /// <summary>Nút "Mở thư mục": Explorer tại Data\Database, chọn sẵn file vừa xuất (chưa xuất gì thì chọn file .db đang dùng,
+    /// chưa có gì thì chỉ mở thư mục).</summary>
+    [RelayCommand]
+    private void OpenOutputFolder()
+    {
+        var folder = RdbmsHtmlGeneratorDatabase.DataDirectory;
+        try
+        {
+            Directory.CreateDirectory(folder);
+            var select = new[] { _lastExportedPath, _htmlPath, _database.DatabasePath }.FirstOrDefault(p => p is not null && File.Exists(p));
+            Process.Start(select is null
+                ? new ProcessStartInfo("explorer.exe", $"\"{folder}\"") { UseShellExecute = true }
+                : new ProcessStartInfo("explorer.exe", $"/select,\"{select}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            StatusText = $"Không mở được thư mục {folder}: {ex.Message}";
+        }
+    }
+
     /// <summary>Mở file vừa xuất bằng chương trình mặc định (máy chưa có Excel thì chỉ ghi nhật ký).</summary>
     private void OpenExported(string path)
     {
+        _lastExportedPath = path;
         try
         {
             Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
@@ -867,6 +892,7 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
                 AppendLog("Chưa so index / ràng buộc: 1 trong 2 file đọc bằng bản cũ - đọc lại file đó để so đủ.");
             }
             AppendLog($"Đã xuất: {path}");
+            _lastExportedPath = path;
             Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
             return null;
         }

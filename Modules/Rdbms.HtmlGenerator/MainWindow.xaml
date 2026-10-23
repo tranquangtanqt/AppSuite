@@ -185,6 +185,15 @@
                             <TextBlock Text="Kiểm tra chất lượng" FontSize="12" />
                         </StackPanel>
                     </Button>
+                    <!-- Luôn bấm được: Explorer tại Data\Database, chọn sẵn file vừa xuất -->
+                    <AppBarSeparator Padding="0" Margin="2,0" />
+                    <Button Command="{x:Bind ViewModel.OpenOutputFolderCommand}" Padding="10,4"
+                            ToolTipService.ToolTip="Mở thư mục Data\Database chứa file .db / HTML / Excel / Kiểm tra / So sánh (chọn sẵn file vừa xuất)">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE838;" FontSize="12" />
+                            <TextBlock Text="Mở thư mục" FontSize="12" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
                 <ProgressBar IsIndeterminate="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
                 <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" TextWrapping="Wrap" />

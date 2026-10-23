@@ -922,6 +922,10 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   đầu sheet bảng ghi giá trị vào cả 6 ô C..H của vùng gộp → chỉ ô đầu; 件数（概算） là chữ "1,997" → số định dạng #,##0. Cập nhật
   F1, README. Unit test 71/71; GUI Sandbox 31/31 (config cũ → Nhật, chọn Anh / Việt → Lưu → config.xml, xuất 3 file riêng
   đúng tên sheet / nhãn, mở lại app giữ lựa chọn, Mặc định / Huỷ)
+- [x] Người dùng xuất thử bản tiếng Anh / tiếng Việt với DB thật (Z_ADDON_IGUACU_BK, 2026-10-23): đúng tên sheet, nhãn, ✓,
+  ngày, mặc định 0 (không còn ((0))). Thêm: nút **Mở thư mục** cuối dòng "Xuất thêm" (luôn bấm được) - Explorer tại
+  Data\Database chọn sẵn file vừa xuất (chưa xuất gì → file .db); định nghĩa CHECK của SQL Server bỏ ngoặc bao ngoài
+  (([A]=(1) OR [A]=(0)) → [A]=(1) OR [A]=(0)) ở Excel + HTML. Cập nhật F1, README. Unit test 77/77; GUI Sandbox 6/6
 - [ ] Thử tay: đọc lại DB thật 2 lần (có / không đổi schema) → xem dòng nhật ký + nút "So với bản trước"; trang HTML thử lọc
   View và tìm theo mô tả tiếng Việt / tiếng Nhật
 - [x] ~~Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X)~~ — thực tế không phải bị gộp mà làm cả lần đọc lỗi;

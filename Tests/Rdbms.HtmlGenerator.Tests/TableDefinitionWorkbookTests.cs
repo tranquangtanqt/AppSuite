@@ -168,7 +168,9 @@ public sealed class TableDefinitionWorkbookTests : IDisposable
                 new() { TableName = "t", ColumnName = "a", DataType = "int", OrdinalPosition = 1, DefaultValue = "((0))" },
                 new() { TableName = "t", ColumnName = "b", DataType = "datetime", OrdinalPosition = 2, DefaultValue = "(getdate())" },
             ],
-            [], [], [], true);
+            [], [],
+            [new() { TableName = "t", ConstraintName = "CK_t_a", ConstraintType = "CHECK", Definition = "([a]=(1) OR [a]=(0))" }],
+            true);
         TableDefinitionWorkbook.Write(snapshot, "ms", DateTime.Now, _path);
 
         using var package = new ExcelPackage(new FileInfo(_path));
@@ -176,6 +178,7 @@ public sealed class TableDefinitionWorkbookTests : IDisposable
         var header = FindRow(sheet, 1, "■ カラム定義") + 1;
         Assert.Equal("0", sheet.Cells[header + 1, 7].Text);
         Assert.Equal("getdate()", sheet.Cells[header + 2, 7].Text);
+        Assert.Equal("[a]=(1) OR [a]=(0)", sheet.Cells[FindRow(sheet, 1, "■ 制約（UNIQUE / CHECK）") + 2, 4].Text);
     }
 
     [Theory]

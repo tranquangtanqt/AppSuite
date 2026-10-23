@@ -56,13 +56,14 @@ internal static class HelpContent
         new("Excel định nghĩa bảng (テーブル定義書)", "", "Nút \"Excel định nghĩa bảng\" ở dòng \"Xuất thêm\" (bật khi đã đọc database): xuất Data\\Database\\{tên} テーブル定義書.xlsx từ lần đọc gần nhất rồi mở file. Mặc định tiêu đề tiếng Nhật (mẫu khách Nhật hay yêu cầu); đổi sang tiếng Anh / tiếng Việt ở Cài đặt.",
         [
             new("Ngôn ngữ", "Cài đặt → \"Ngôn ngữ Excel định nghĩa bảng\": Tiếng Nhật (テーブル定義書, sheet テーブル一覧), Tiếng Anh ({tên} Table Definition.xlsx, sheet Table List) hoặc Tiếng Việt ({tên} Định nghĩa bảng.xlsx, sheet Danh sách bảng). Đổi tiêu đề sheet, nhãn cột, dấu tích (○ / ✓), định dạng ngày; tên bảng, cột, mô tả lấy từ database giữ nguyên. Mỗi ngôn ngữ 1 file riêng nên xuất cả 3 bản không ghi đè nhau."),
-            new("Giá trị mặc định (既定値)", "SQL Server lưu giá trị mặc định kèm ngoặc bao ngoài - ((0)), (getdate()), (N'abc'). Excel, HTML và trang so sánh bỏ ngoặc thừa: 0, getdate(), N'abc'. Biểu thức như (1)+(2) giữ nguyên."),
+            new("Giá trị mặc định (既定値)", "SQL Server lưu giá trị mặc định kèm ngoặc bao ngoài - ((0)), (getdate()), (N'abc'). Excel, HTML và trang so sánh bỏ ngoặc thừa: 0, getdate(), N'abc'. Biểu thức như (1)+(2) giữ nguyên. Ràng buộc CHECK cũng vậy: ([A]=(1) OR [A]=(0)) → [A]=(1) OR [A]=(0)."),
             new("Sheet テーブル一覧", "Sheet đầu: mỗi bảng / view 1 dòng - No, スキーマ, テーブル名 (bấm để sang sheet của bảng), 種別 (テーブル / ビュー / マテリアライズドビュー), 説明 (mô tả), 件数（概算）, カラム数. Có sẵn bộ lọc và cố định hàng tiêu đề."),
             new("Sheet từng bảng", "Mỗi bảng / view 1 sheet (bảng trước, view sau): データベース, スキーマ, テーブル名, 種別, 説明, 件数, 出力日; ■ カラム定義 (No, カラム名, データ型, 桁数, NOT NULL, PK, 既定値, 説明 - dòng khoá chính tô vàng); ■ インデックス; ■ 外部キー (bấm bảng tham chiếu để sang sheet đó); ■ 制約（UNIQUE / CHECK）. Mục trống ghi（なし）. Link \"← テーブル一覧\" ở góc trên phải."),
             new("Kiểu và 桁数", "Kiểu tách khỏi độ dài: character varying(100) → データ型 character varying, 桁数 100; numeric(12,2) → numeric, 12,2."),
             new("Tên sheet", "Excel giới hạn tên sheet 31 ký tự và cấm : \\ / ? * [ ] - tên bảng dài / có ký tự đó được cắt / thay bằng _, trùng thì thêm ~2, ~3..."),
             new("In", "Mỗi sheet đặt sẵn khổ A4 ngang, vừa 1 trang bề rộng; sheet テーブル一覧 lặp hàng tiêu đề ở mỗi trang."),
             new("File đang mở", "Đang mở file .xlsx cũ trong Excel thì không ghi được - đóng file rồi bấm lại (file cũ không bị hỏng)."),
+            new("Mở thư mục", "Nút \"Mở thư mục\" cuối dòng \"Xuất thêm\" (luôn bấm được): mở Data\\Database trong Explorer, chọn sẵn file vừa xuất (HTML / Excel / Kiểm tra / So sánh); chưa xuất gì thì chọn file .db đang dùng. Các bản Nhật / Anh / Việt nằm cạnh nhau ở đây."),
         ]),
 
         new("Kiểm tra chất lượng schema", "", "Nút \"Kiểm tra chất lượng\" ở dòng \"Xuất thêm\": soát những chỗ thiết kế đáng để ý trong lần đọc gần nhất (không kết nối lại database), ra trang Data\\Database\\Kiểm tra chất lượng {tên}.html và mở trong trình duyệt.",

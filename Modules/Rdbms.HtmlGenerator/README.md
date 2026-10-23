@@ -138,6 +138,9 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    "(bản cũ)"); B chọn sẵn file *không* phải bản cũ nếu có.
 8. **Xuất thêm (2026-10-22)** - dòng "Xuất thêm:" dưới 3 nút bước, 2 nút bật khi có .db (`CanExport`), đọc
    `OpenFile(.db).ReadSnapshot` rồi mở file kết quả (`OpenExported`: máy không có chương trình mở thì chỉ ghi nhật ký).
+   Cuối dòng (2026-10-23): nút **Mở thư mục** (`OpenOutputFolderCommand`, luôn bật) → `explorer /select` file xuất gần nhất
+   (`_lastExportedPath`: HTML, Excel, Kiểm tra, So sánh), không có thì `_htmlPath` / .db đang dùng, không có gì thì mở
+   `Data\Database`. Định nghĩa CHECK ở Excel + HTML cũng qua `StripOuterParentheses` (SQL Server `([A]=(1) OR [A]=(0))`).
    - **Excel định nghĩa bảng** (`ExportTableDefinitionCommand` → `Services\TableDefinitionWorkbook.Write`, EPPlus 4.5.3.3 như
      Mcf.*): `Data\Database\{tên} テーブル定義書.xlsx`, tiêu đề tiếng Nhật. Ngôn ngữ (2026-10-23): Cài đặt → *Ngôn ngữ Excel
      định nghĩa bảng* (`AppOptions.TableDefinitionLanguage` = `Japanese` / `English` / `Vietnamese`, lưu config.xml theo tên,
