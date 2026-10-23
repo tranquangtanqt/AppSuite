@@ -39,6 +39,20 @@ internal static class ProductSuggest
         ProductOption? highlighted = null;
         box.SuggestionChosen += (_, args) => highlighted = args.SelectedItem as ProductOption;
 
+        // Bấm chuột vào gợi ý sau khi gõ phím: ô tự mở lại danh sách sau QuerySubmitted (phải bấm lần 2 mới đóng - người
+        // dùng báo 2026-10-23, cùng lỗi ô khách đã sửa 2026-10-14) → đóng thêm 1 lần sau 1 nhịp và bỏ gợi ý cũ (gõ tiếp
+        // thì TextChanged nạp lại, ô trống thì GotFocus mở lại cả danh sách).
+        void CloseList()
+        {
+            highlighted = null;
+            box.IsSuggestionListOpen = false;
+            box.DispatcherQueue.TryEnqueue(() =>
+            {
+                box.IsSuggestionListOpen = false;
+                box.ItemsSource = null;
+            });
+        }
+
         // Tab: nhận gợi ý đang tô bằng ↑ / ↓, chưa tô thì món trùng tên / gợi ý đầu (như Enter) → con trỏ sang Số lượng.
         // Shift+Tab: cũng nhận nhưng con trỏ lùi như thường. Không ra món nào → để LostFocus báo lỗi.
         box.PreviewKeyDown += (_, e) =>
@@ -64,10 +78,9 @@ internal static class ProductSuggest
             {
                 return;
             }
-            highlighted = null;
             box.Text = pick.Name;
             line.ChooseProduct(pick);
-            box.IsSuggestionListOpen = false;
+            CloseList();
             if (!SuggestionList.IsShiftDown())
             {
                 e.Handled = true;
@@ -108,10 +121,9 @@ internal static class ProductSuggest
                 line.RejectProductText(args.QueryText);
                 return;
             }
-            highlighted = null;
             sender.Text = chosen.Name;
             line.ChooseProduct(chosen);
-            sender.IsSuggestionListOpen = false;
+            CloseList();
             onChosen?.Invoke();
         };
 
