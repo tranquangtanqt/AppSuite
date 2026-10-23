@@ -25,6 +25,11 @@
                     <FontIcon Glyph="&#xE719;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Công nợ" Tag="DebtsPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8C7;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItemHeader Content="Thống kê" />
             <NavigationViewItem Content="Theo đơn hàng" Tag="ReportOrderPage">
                 <NavigationViewItem.Icon>

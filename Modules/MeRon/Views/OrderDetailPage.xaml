@@ -51,6 +51,10 @@
             <StackPanel x:Name="CaptureArea" Spacing="14" Padding="12" MaxWidth="820" HorizontalAlignment="Left"
                         Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
                         Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasGroups), Mode=OneWay}">
+                <!-- Tiêu đề ảnh (vd mở từ trang Công nợ: "Đơn chưa thanh toán - tên khách · tính đến ... · Tổng ...") -->
+                <TextBlock Text="{x:Bind ViewModel.CaptureTitle, Mode=OneWay}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
+                           Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.CaptureTitle), Mode=OneWay}"
+                           AutomationProperties.AutomationId="CaptureTitle" />
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Groups}" IsTabStop="False">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate x:DataType="vm:CustomerOrderGroup">

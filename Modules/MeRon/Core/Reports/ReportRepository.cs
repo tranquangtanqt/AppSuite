@@ -160,6 +160,24 @@ public sealed class ReportRepository(MeRonDatabase database, OrderRepository ord
         return Reports.LapsedCustomers.Build(orders, products, customers, today, minDays, minOrders);
     }
 
+    /// <summary>Công nợ (xem <see cref="Reports.CustomerDebts"/>): đơn Đã lên đơn gom theo khách. <paramref name="includeFuture"/> = false
+    /// → chỉ đơn có ngày giao ≤ hôm nay (cùng điều kiện với bộ lọc To = hôm nay của màn Chi tiết).</summary>
+    public IReadOnlyList<CustomerDebt> CustomerDebts(DateOnly today, bool includeFuture)
+    {
+        var where = $"O.status = {(long)OrderStatus.Shipping}" + (includeFuture ? "" : " AND substr(O.deliveryDatetime, 1, 10) <= $today");
+        using var connection = database.Open();
+        var orders = Query(connection,
+            $"SELECT O.userId, O.id, substr(O.deliveryDatetime, 1, 10), O.total FROM Orders AS O WHERE {where}",
+            r => new UnpaidOrderPoint(r.IsDBNull(0) ? null : r.GetInt64(0), r.GetInt64(1),
+                !r.IsDBNull(2) && DateOnly.TryParseExact(r.GetString(2), "yyyy-MM-dd", out var day) ? day : null,
+                r.IsDBNull(3) ? 0 : r.GetInt64(3)),
+            [("$today", DbDate.Day(today))]);
+        var customers = Query(connection, "SELECT id, name, address, phone, note FROM Users",
+                r => new Customer(r.GetInt64(0), Text(r, 1), Text(r, 2), Text(r, 3), Text(r, 4)), [])
+            .ToDictionary(c => c.Id);
+        return Reports.CustomerDebts.Build(orders, customers, today);
+    }
+
     // ---- tiện ích ----
 
     private static string? Text(SqliteDataReader r, int i) => r.IsDBNull(i) ? null : r.GetString(i);

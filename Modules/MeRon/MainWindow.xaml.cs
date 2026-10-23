@@ -19,6 +19,7 @@ public sealed partial class MainWindow : Window
         Closed += (_, _) => _help?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
         MenuSettings = Core.MenuSettings.Load(MenuSettingsPath);
         ApplyMenuSettings();
+        _ = Task.Run(CleanUpCaptures); // ảnh Chụp ảnh cũ → Thùng rác, không chặn lúc mở app
         var start = StartPage();
         Nav.SelectedItem = FindItem(MenuSettings.IsVisible(start) ? start : "OrdersPage");
     }
@@ -60,6 +61,34 @@ public sealed partial class MainWindow : Window
     {
         MenuSettings.ShowAll();
         SaveMenuSettings();
+    }
+
+    // ---------- Ảnh chụp (Pictures\MeRon): tự dọn ảnh cũ - trang Cài đặt ----------
+
+    public void SetCaptureKeepDays(int days)
+    {
+        MenuSettings.CaptureKeepDays = days;
+        SaveMenuSettings();
+    }
+
+    /// <summary>Đưa ảnh MeRon cũ hơn số ngày ở Cài đặt vào Thùng rác (lúc mở app, nút "Dọn ngay"). Trả (đã xoá, lỗi).</summary>
+    public (int Deleted, int Failed) CleanUpCaptures()
+    {
+        try
+        {
+            var result = Core.CaptureFiles.CleanUp(Core.CaptureFiles.Folder, MenuSettings.CaptureKeepDays, DateTime.Now, Core.CaptureFiles.SendToRecycleBin);
+            if (result.Deleted + result.Failed > 0)
+            {
+                AppLog.For("App").LogInformation("Dọn ảnh chụp cũ hơn {Days} ngày: {Deleted} ảnh vào Thùng rác, {Failed} lỗi",
+                    MenuSettings.CaptureKeepDays, result.Deleted, result.Failed);
+            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("App").LogError(ex, "Dọn ảnh chụp cũ lỗi");
+            return (0, 1);
+        }
     }
 
     private void SaveMenuSettings()

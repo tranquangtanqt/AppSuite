@@ -361,6 +361,20 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   gõ lại → gợi ý hiện lại). Unit test 137/137
 - [ ] Thử tay: thêm đơn, gõ món như thường ngày rồi bấm 1 lần vào gợi ý → danh sách phải đóng ngay (nếu còn lỗi: ghi lại
   gõ chữ gì, có dùng Unikey / EVKey không, chuột hay touchpad)
+- [x] **Công nợ** ⭐ (menu Bán hàng, 2026-10-23): đơn Đã lên đơn đã tới ngày giao gom theo khách - tổng nợ, số đơn, đơn cũ
+  nhất bao nhiêu ngày (cam khi ≥ 30), dòng tổng số khách · đơn · tổng nợ; sắp xếp nợ nhiều / nợ lâu, tìm, tuỳ chọn tính cả đơn
+  giao sau hôm nay. Mỗi khách: **Ảnh hoá đơn** (1 bấm → Chi tiết các đơn đang nợ, có tiêu đề, tự chụp ảnh vào clipboard +
+  PNG), **Thanh toán hết** (hỏi lại, 1 lần ghi), tin nhắn nhắc thanh toán, chép SĐT. Cập nhật F1, README, MOBILE_TODO 33. Unit
+  test 141/141 (4 mới); GUI Sandbox 18/18 trên bản sao database thật (113 khách / 330 đơn / 12.996.000 đ; ảnh hoá đơn 9 đơn đúng)
+- [x] Thanh toán toàn bộ (Chi tiết) và Thanh toán hết (Công nợ) ghi thêm **ngày thanh toán = lúc bấm** (trước chỉ đổi trạng
+  thái, ngày để trống - như điện thoại); đơn đã thanh toán từ trước giữ ngày cũ (người dùng chọn 2026-10-23). Unit test 141/141
+- [x] Người dùng xem trang Công nợ (ảnh 2026-10-23): giao diện ổn; góp ý → nút **"Ảnh hoá đơn" đổi thành "Chi tiết"** (chỉ mở
+  màn Chi tiết các đơn đang nợ, vẫn có dòng tiêu đề trong ảnh, không tự chụp - Chụp ảnh ở đó) vì tự chụp mỗi lần bấm sinh nhiều
+  ảnh; **tự dọn ảnh chụp cũ**: Cài đặt → khung Ảnh chụp "Tự xoá ảnh cũ hơn N ngày" (mặc định 30, 0 = giữ hết, lưu
+  settings.json), mỗi lần mở app đưa ảnh MeRon (chi_tiet_don_hang_… / hoa_don_cong_no_… trong Pictures\MeRon) cũ hơn N ngày vào
+  Thùng rác, ảnh khác giữ nguyên; nút Dọn ngay, Mở thư mục ảnh, đếm số ảnh (`Core\CaptureFiles.cs`). Cập nhật F1, README,
+  MOBILE_TODO. Unit test 145/145 (4 mới); GUI Sandbox 16/16
+- [ ] Thử tay: gửi thử 1 ảnh (Công nợ → Chi tiết → Chụp ảnh) qua Zalo
 - [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

@@ -27,7 +27,7 @@ public sealed partial class OrderDetailPage : Page
         var args = e.Parameter as OrderDetailArgs ?? new OrderDetailArgs(Core.Models.OrderFilter.Today());
         try
         {
-            ViewModel.Load(args.Filter);
+            ViewModel.Load(args.Filter, args.Title);
         }
         catch (Exception ex)
         {
@@ -90,9 +90,10 @@ public sealed partial class OrderDetailPage : Page
                 96 * scale, 96 * scale, pixels.ToArray());
             await encoder.FlushAsync();
 
-            var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "MeRon");
-            Directory.CreateDirectory(folder);
-            var file = Path.Combine(folder, $"chi_tiet_don_hang_{DateTime.Now:yyyyMMdd_HHmmss}.png");
+            // Tên file theo Core\CaptureFiles (ảnh cũ tự vào Thùng rác sau số ngày ở Cài đặt); mở từ trang Công nợ thì tên riêng.
+            Directory.CreateDirectory(Core.CaptureFiles.Folder);
+            var file = Core.CaptureFiles.NewPath(
+                string.IsNullOrEmpty(ViewModel.CaptureTitle) ? Core.CaptureFiles.DetailPrefix : Core.CaptureFiles.DebtPrefix, DateTime.Now);
             stream.Seek(0);
             await using (var output = File.Create(file))
             {

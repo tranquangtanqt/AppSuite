@@ -25,6 +25,28 @@ public class MenuSettingsTests : IDisposable
     }
 
     [Fact]
+    public void Capture_keep_days_default_clamp_and_round_trip()
+    {
+        Assert.Equal(MenuSettings.DefaultCaptureKeepDays, MenuSettings.Load(FilePath).CaptureKeepDays);
+
+        // File cũ chỉ có HiddenMenu → mặc định 30, vẫn giữ mục ẩn.
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(FilePath, "{ \"HiddenMenu\": [\"AddressesPage\"] }");
+        var old = MenuSettings.Load(FilePath);
+        Assert.Equal((30, false), (old.CaptureKeepDays, old.IsVisible("AddressesPage")));
+
+        old.CaptureKeepDays = 7;
+        old.Save(FilePath);
+        var loaded = MenuSettings.Load(FilePath);
+        Assert.Equal((7, false), (loaded.CaptureKeepDays, loaded.IsVisible("AddressesPage")));
+
+        loaded.CaptureKeepDays = -5;
+        Assert.Equal(0, loaded.CaptureKeepDays);
+        loaded.CaptureKeepDays = 99999;
+        Assert.Equal(MenuSettings.MaxCaptureKeepDays, loaded.CaptureKeepDays);
+    }
+
+    [Fact]
     public void Hidden_pages_survive_save_and_load()
     {
         var settings = new MenuSettings();

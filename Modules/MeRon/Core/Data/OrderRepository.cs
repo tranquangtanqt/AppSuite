@@ -178,17 +178,28 @@ public sealed class OrderRepository(MeRonDatabase database)
         {
             throw new MeRonValidationException("Không cho phép thanh toán với đơn có trạng thái đã thanh toán.");
         }
-        var ids = orders.Where(o => o.Status == OrderStatus.Shipping).Select(o => o.Id).ToList();
+        return PayShipping(orders.Where(o => o.Status == OrderStatus.Shipping).Select(o => o.Id).ToList());
+    }
+
+    /// <summary>Chuyển các đơn (theo mã) đang Đã lên đơn sang Đã thanh toán trong 1 lần ghi, ghi ngày thanh toán =
+    /// <paramref name="paidAt"/> (mặc định lúc bấm; cùng định dạng form đơn ghi khi tích "Đã thanh toán trước") - đơn đã đổi
+    /// trạng thái (đã thanh toán / huỷ ở nơi khác) thì bỏ qua. Trả số đơn đã chuyển. Dùng cho "Thanh toán toàn bộ" (Chi tiết)
+    /// và "Thanh toán hết" (Công nợ).</summary>
+    public int PayShipping(IReadOnlyList<long> ids, DateTime? paidAt = null)
+    {
         using var connection = database.Open();
         using var transaction = connection.BeginTransaction();
         var now = MeRonDatabase.Now();
+        var payment = DbDate.Format(paidAt ?? DateTime.Now);
+        var changed = 0;
         foreach (var id in ids)
         {
-            Execute(connection, "UPDATE Orders SET status = $status, updatedAt = $now WHERE id = $id AND status = $shipping",
-                ("$status", (long)OrderStatus.Completed), ("$now", now), ("$id", id), ("$shipping", (long)OrderStatus.Shipping));
+            changed += Execute(connection,
+                "UPDATE Orders SET status = $status, paymentDatetime = $payment, updatedAt = $now WHERE id = $id AND status = $shipping",
+                ("$status", (long)OrderStatus.Completed), ("$payment", payment), ("$now", now), ("$id", id), ("$shipping", (long)OrderStatus.Shipping));
         }
         transaction.Commit();
-        return ids.Count;
+        return changed;
     }
 
     // ---- tiện ích ----

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MeRon.Views.DebtsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MeRon.ViewModels"
+    xmlns:local="using:MeRon.Views"
+    NavigationCacheMode="Enabled">
+
+    <Grid Padding="24,12,24,0" RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Công nợ" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,4,0,0" CornerRadius="14" Padding="12,3,12,4"
+                    Background="#26E8590C">
+                <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                           TextWrapping="Wrap" AutomationProperties.AutomationId="DebtSummary" />
+            </Border>
+            <TextBox x:Name="SearchBox" Grid.Column="2" Width="280" Style="{StaticResource DefaultTextBoxStyle}"
+                     PlaceholderText="Tìm theo tên hoặc số điện thoại" AutomationProperties.Name="Tìm khách"
+                     Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+        <!-- Bộ lọc: tính cả đơn giao sau hôm nay, sắp xếp -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16">
+            <CheckBox x:Name="IncludeFutureBox" Content="Tính cả đơn giao sau hôm nay (đặt trước)"
+                      IsChecked="{x:Bind ViewModel.IncludeFuture, Mode=TwoWay}" AutomationProperties.Name="Tính cả đơn giao sau hôm nay" />
+            <DropDownButton x:Name="SortButton" AutomationProperties.Name="Sắp xếp">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE8CB;" FontSize="14" />
+                    <TextBlock x:Name="SortText" Text="Sắp xếp" FontSize="14" />
+                </StackPanel>
+                <DropDownButton.Flyout>
+                    <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedLeft" />
+                </DropDownButton.Flyout>
+            </DropDownButton>
+        </StackPanel>
+
+        <InfoBar Grid.Row="2" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
+                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
+        <InfoBar Grid.Row="2" Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="DebtMessage" />
+
+        <TextBlock Grid.Row="3" Opacity="0.75" TextWrapping="Wrap"
+                   Text="Đơn &quot;Đã lên đơn&quot; (chưa thanh toán) đã tới ngày giao, gộp theo khách. Ô bên trái = đơn cũ nhất đã giao bao nhiêu ngày (cam khi từ 30 ngày). Chi tiết: các đơn đang nợ của khách - bấm Chụp ảnh ở đó để gửi Zalo (Ctrl+V)." />
+
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,12,24" MaxWidth="980" HorizontalAlignment="Left">
+                <TextBlock Text="Không có đơn nào chưa thanh toán 🎉" Opacity="0.75" Margin="0,24,0,0"
+                           Visibility="{x:Bind local:Ui.VisibleIfNot(ViewModel.HasData), Mode=OneWay}" />
+                <ItemsRepeater x:Name="RowsRepeater" ItemsSource="{x:Bind ViewModel.Rows}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="8" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="vm:DebtRow">
+                            <!-- Thẻ khách: ô số ngày đơn cũ nhất (cam khi ≥ 30 ngày), thông tin, tổng nợ, nút -->
+                            <Border Padding="14,12" CornerRadius="10" BorderThickness="1"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    AutomationProperties.Name="{x:Bind AccessibleName}">
+                                <Grid ColumnSpacing="14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="64" CornerRadius="10" Padding="0,8" VerticalAlignment="Center" Background="{x:Bind local:Ui.LapsedBackground(IsOverdue)}"
+                                            ToolTipService.ToolTip="Đơn cũ nhất chưa thanh toán đã giao bao nhiêu ngày">
+                                        <StackPanel HorizontalAlignment="Center">
+                                            <TextBlock Text="{x:Bind DaysText}" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"
+                                                       Foreground="{x:Bind local:Ui.LapsedForeground(IsOverdue)}" />
+                                            <TextBlock Text="ngày" FontSize="12" HorizontalAlignment="Center" Foreground="{x:Bind local:Ui.LapsedForeground(IsOverdue)}" />
+                                        </StackPanel>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Spacing="10">
+                                            <Border Width="26" Height="26" CornerRadius="13" Background="{x:Bind local:Ui.AvatarBrush(Name)}" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind local:Ui.Initial(Name)}" Foreground="White" FontWeight="SemiBold" FontSize="12"
+                                                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Border>
+                                            <TextBlock Text="{x:Bind Name}" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Text="{x:Bind Contact}" Opacity="0.75" Visibility="{x:Bind local:Ui.VisibleIf(HasContact)}" />
+                                        <TextBlock Text="{x:Bind OrdersText}" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="2" Text="{x:Bind AmountText}" FontSize="20" FontWeight="Bold" VerticalAlignment="Center"
+                                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                        <Button Tag="{x:Bind}" Click="Detail_Click" AutomationProperties.Name="Chi tiết"
+                                                IsEnabled="{x:Bind HasCustomer}"
+                                                ToolTipService.ToolTip="Các đơn đang nợ của khách - ở đó Chụp ảnh để gửi Zalo, Thanh toán toàn bộ, sửa từng đơn">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <SymbolIcon Symbol="View" />
+                                                <TextBlock Text="Chi tiết" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Tag="{x:Bind}" Click="PayAll_Click" Style="{StaticResource AccentButtonStyle}" AutomationProperties.Name="Thanh toán hết"
+                                                ToolTipService.ToolTip="Chuyển mọi đơn đang nợ của khách sang Đã thanh toán (có hỏi lại)">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE8C7;" FontSize="16" />
+                                                <TextBlock Text="Thanh toán hết" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Tag="{x:Bind}" Click="CopyMessage_Click" AutomationProperties.Name="Chép tin nhắn nhắc nợ"
+                                                IsEnabled="{x:Bind HasCustomer}" ToolTipService.ToolTip="Chép tin nhắn nhắc thanh toán để dán vào Zalo (gửi kèm ảnh)">
+                                            <SymbolIcon Symbol="Message" />
+                                        </Button>
+                                        <Button Tag="{x:Bind}" Click="CopyPhone_Click" AutomationProperties.Name="Chép số điện thoại"
+                                                ToolTipService.ToolTip="Chép số điện thoại" Visibility="{x:Bind local:Ui.VisibleIf(HasPhone)}">
+                                            <SymbolIcon Symbol="Phone" />
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

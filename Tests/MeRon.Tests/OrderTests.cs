@@ -245,6 +245,7 @@ public class OrderRepositoryTests
         var unpaid = orders.Query(new OrderFilter(null, June28, June28));
         Assert.Equal(1, orders.PayAll(unpaid));
         Assert.Equal(OrderStatus.Completed, orders.Get(3)!.Status);
+        Assert.Equal(DateTime.Today, orders.Get(3)!.Payment?.Date); // ghi ngày thanh toán = lúc bấm
         Assert.Equal(OrderStatus.Cancelled, orders.Get(cancelled)!.Status);
     }
 

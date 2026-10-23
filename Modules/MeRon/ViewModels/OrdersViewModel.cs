@@ -15,7 +15,8 @@ public sealed record OrderFormArgs(long? OrderId, long? InitialUserId = null, Da
     bool ForOtherCustomer = false);
 
 /// <summary>Tham số màn Chi tiết: bộ lọc của danh sách đơn (hoặc của báo cáo, Đợt 3).</summary>
-public sealed record OrderDetailArgs(OrderFilter Filter);
+/// <param name="Title">Dòng tiêu đề trên cùng phần được chụp ảnh (vd mở từ trang Công nợ: các đơn đang nợ của 1 khách); null = không có.</param>
+public sealed record OrderDetailArgs(OrderFilter Filter, string? Title = null);
 
 /// <summary>
 /// Trang Đặt hàng: bộ lọc trạng thái / khách / khoảng ngày giao + sắp xếp, danh sách thẻ đơn. Như điện thoại: vào trang từ
@@ -182,8 +183,13 @@ public sealed partial class OrderDetailViewModel : ObservableObject
     [ObservableProperty]
     private string _message = string.Empty;
 
-    public void Load(OrderFilter filter)
+    /// <summary>Tiêu đề trên ảnh chụp (<see cref="OrderDetailArgs.Title"/>).</summary>
+    [ObservableProperty]
+    private string _captureTitle = string.Empty;
+
+    public void Load(OrderFilter filter, string? title = null)
     {
+        CaptureTitle = title ?? string.Empty;
         Filter = filter;
         _orders = AppServices.Orders.Query(filter);
         Groups.Clear();
@@ -210,7 +216,7 @@ public sealed partial class OrderDetailViewModel : ObservableObject
         if (error is null)
         {
             AppLog.For("Orders").LogInformation("Thanh toán toàn bộ {Count} đơn", count);
-            Load(Filter);
+            Load(Filter, CaptureTitle);
             Message = $"Đã chuyển {VnFormat.Number(count)} đơn sang Đã thanh toán.";
         }
         return error;

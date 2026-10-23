@@ -28,6 +28,33 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
+
+            <!-- Ảnh "Chụp ảnh" (Pictures\MeRon): tự đưa ảnh cũ vào Thùng rác khi mở app (Core\CaptureFiles) -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
+                            <FontIcon Glyph="&#xE722;" FontSize="15" Foreground="#E8590C" />
+                        </Border>
+                        <TextBlock Text="Ảnh chụp" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="Mỗi lần bấm Chụp ảnh (màn Chi tiết), ảnh được chép vào clipboard và lưu thêm 1 file PNG vào Pictures\MeRon. Ảnh cũ hơn số ngày dưới đây tự đưa vào Thùng rác mỗi lần mở app (lấy lại được từ Thùng rác). Chỉ xoá ảnh do MeRon tự đặt tên (chi_tiet_don_hang_…, hoa_don_cong_no_…), file khác trong thư mục giữ nguyên." />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Tự xoá ảnh cũ hơn" VerticalAlignment="Center" />
+                        <NumberBox x:Name="KeepDaysBox" Minimum="0" Maximum="3650" Width="90" SpinButtonPlacementMode="Hidden"
+                                   AutomationProperties.Name="Số ngày giữ ảnh chụp" ValueChanged="KeepDays_ValueChanged" />
+                        <TextBlock Text="ngày  (0 = giữ hết)" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="Dọn ngay" Click="CleanNow_Click" AutomationProperties.Name="Dọn ảnh cũ ngay" />
+                        <Button Content="Mở thư mục ảnh" Click="OpenFolder_Click" AutomationProperties.Name="Mở thư mục ảnh" />
+                        <TextBlock x:Name="CaptureStatus" VerticalAlignment="Center" Opacity="0.8" TextWrapping="Wrap"
+                                   AutomationProperties.AutomationId="CaptureStatus" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </Page>

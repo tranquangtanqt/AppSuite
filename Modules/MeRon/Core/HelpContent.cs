@@ -15,7 +15,7 @@ public static class HelpContent
 {
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
-        ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage",
+        ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage", "DebtsPage",
          "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ChartsPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "DataInfoPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
@@ -86,8 +86,8 @@ public static class HelpContent
         [
             new("Mở", "Nút Chi tiết ở trang Đặt hàng - dùng đúng bộ lọc đang chọn (trạng thái, khách, khoảng ngày). Mỗi khách 1 khung: tên khách ghi 1 lần ở đầu khung, các thẻ đơn bên trong chỉ có ngày giao + trạng thái (không lặp lại tên); cuối khung là Tổng đơn của khách."),
             new("Sửa đơn", "Bấm vào 1 đơn để mở form sửa; Lưu / Quay lại thì về lại Chi tiết (đã cập nhật).", "Click"),
-            new("Thanh toán toàn bộ", "Hiện khi còn đơn Đã lên đơn. Hỏi xác nhận rồi chuyển mọi đơn Đã lên đơn trong danh sách sang Đã thanh toán. Trong danh sách có đơn đã thanh toán từ trước thì từ chối cả lần (tránh thanh toán trùng) - lọc trạng thái Đã lên đơn trước khi mở Chi tiết. Đơn Huỷ không bị đổi."),
-            new("Chụp ảnh", "Chụp toàn bộ danh sách (cả phần phải cuộn) → chép vào clipboard để dán (Ctrl+V) vào Zalo / Messenger, và lưu file PNG trong Pictures\\MeRon."),
+            new("Thanh toán toàn bộ", "Hiện khi còn đơn Đã lên đơn. Hỏi xác nhận rồi chuyển mọi đơn Đã lên đơn trong danh sách sang Đã thanh toán. Trong danh sách có đơn đã thanh toán từ trước thì từ chối cả lần (tránh thanh toán trùng) - lọc trạng thái Đã lên đơn trước khi mở Chi tiết. Đơn Huỷ không bị đổi. Ngày thanh toán của các đơn = lúc bấm."),
+            new("Chụp ảnh", "Chụp toàn bộ danh sách (cả phần phải cuộn) → chép vào clipboard để dán (Ctrl+V) vào Zalo / Messenger, và lưu file PNG trong Pictures\\MeRon. Ảnh cũ hơn 30 ngày (đổi ở Cài đặt → Ảnh chụp) tự vào Thùng rác khi mở app. Mở từ trang Công nợ thì ảnh có thêm dòng tiêu đề \"Đơn chưa thanh toán - tên · tính đến ngày · Tổng\"."),
         ]),
 
         new("Mua hàng", "", "Phiếu nhập / mua nguyên liệu theo ngày.", "PurchasesPage",
@@ -141,6 +141,17 @@ public static class HelpContent
         [
             new("Xếp hạng", "Khách đặt nhiều tiền nhất trong khoảng ngày lên đầu (không tính đơn Huỷ), tối đa 100 khách; mỗi dòng: hạng (1 / 2 / 3 vàng / bạc / đồng), ô tròn chữ cái đầu, tên + thanh tỷ lệ so với khách đặt nhiều nhất, số đơn, tổng tiền."),
             new("Xem đơn", "Bấm 1 khách → màn Chi tiết các đơn của khách trong khoảng ngày (mọi trạng thái).", "Click"),
+        ]),
+
+        new("Công nợ", "", "Khách nào còn nợ bao nhiêu: đơn chưa thanh toán gộp theo khách, xem / chụp ảnh các đơn đang nợ và thanh toán hết 1 lần.", "DebtsPage",
+        [
+            new("Mỗi khách", "Đơn \"Đã lên đơn\" (chưa thanh toán) đã tới ngày giao (hôm nay hoặc trước đó), gộp theo khách: ô to bên trái = đơn cũ nhất đã giao bao nhiêu ngày (cam khi từ 30 ngày - nên nhắc trước, xám khi chưa); tên, SĐT, địa chỉ; số đơn + ngày giao đơn cũ nhất – mới nhất; tổng nợ (chữ cam to). Dòng trên cùng: số khách, số đơn, tổng nợ."),
+            new("Đơn đặt trước", "Mặc định không tính đơn giao sau hôm nay (chưa giao thì chưa phải nợ). Tích \"Tính cả đơn giao sau hôm nay\" để tính cả; ô ngày khi đó tính theo đơn đã giao cũ nhất (chưa tới ngày giao = 0)."),
+            new("Sắp xếp / Tìm", "Nợ nhiều nhất trước (mặc định) hoặc Nợ lâu nhất trước. Gõ tên hoặc số điện thoại (không dấu cũng được) để lọc.", "Ctrl+F"),
+            new("Chi tiết", "Mở màn Chi tiết chỉ các đơn đang nợ của khách, trên cùng có dòng tiêu đề \"Đơn chưa thanh toán - tên · tính đến ngày · Tổng\". Ở đó bấm Chụp ảnh → ảnh (kèm dòng tiêu đề) vào clipboard, mở Zalo bấm Ctrl+V để gửi; còn Thanh toán toàn bộ, bấm 1 đơn để sửa.", "Ctrl+V"),
+            new("Thanh toán hết", "Hỏi lại rồi chuyển mọi đơn đang nợ của khách (đúng các đơn đang tính trên thẻ) sang Đã thanh toán trong 1 lần, ghi ngày thanh toán = lúc bấm. Đơn đã được thanh toán ở chỗ khác trong lúc đó thì bỏ qua (giữ ngày cũ)."),
+            new("Tin nhắn", "Nút tin nhắn: chép tin nhắc thanh toán soạn sẵn (gọi tên như tin hỏi thăm, số đơn, từ ngày, tổng tiền) để dán vào Zalo cùng ảnh chụp ở màn Chi tiết. Nút điện thoại: chép số điện thoại.", "Ctrl+V"),
+            new("Đơn không có khách", "Đơn không gắn khách gộp thành 1 dòng \"(không có khách)\" - vẫn Thanh toán hết được, không có ảnh / tin nhắn."),
         ]),
 
         new("Khách lâu không đặt", "", "Khách trước đây hay đặt mà dạo này không đặt nữa - để nhắn hỏi thăm, mời đặt lại.", "LapsedCustomersPage",
@@ -222,10 +233,11 @@ public static class HelpContent
             new("Xoá", "Nút Xoá trong hộp thoại sửa. Khách hàng đã ghi địa chỉ này vẫn giữ nguyên chữ đã ghi."),
         ]),
 
-        new("Cài đặt", "", "Ẩn / hiện các mục của menu bên trái.", "SettingsPage",
+        new("Cài đặt", "", "Ẩn / hiện các mục của menu bên trái, tự dọn ảnh chụp cũ.", "SettingsPage",
         [
             new("Ẩn mục menu", "Mục Cài đặt ở cuối menu (cạnh Hướng dẫn) → khung Menu bên trái: bỏ tích mục ít dùng (vd Địa chỉ, Danh mục món ăn) là mục đó biến khỏi menu ngay; tích lại để hiện. Nhóm ẩn hết mục thì tiêu đề nhóm (Thống kê, Danh mục...) cũng ẩn. Hiện tất cả = trả về như cũ."),
             new("Luôn hiện", "Đặt hàng (trang mở đầu), Cài đặt và Hướng dẫn không ẩn được. Ẩn trang Xuất thì nút Mở trang Xuất (cảnh báo ở trang Nhập) vẫn mở được trang đó."),
+            new("Ảnh chụp", "Khung Ảnh chụp: Tự xoá ảnh cũ hơn … ngày (mặc định 30, 0 = giữ hết) - mỗi lần mở app, ảnh do nút Chụp ảnh lưu trong Pictures\\MeRon (chi_tiet_don_hang_…, hoa_don_cong_no_…) cũ hơn số ngày đó được đưa vào Thùng rác (lấy lại được); file khác trong thư mục giữ nguyên. Dọn ngay: dọn luôn không cần mở lại app. Mở thư mục ảnh: mở Pictures\\MeRon. Dòng bên cạnh cho biết đang có bao nhiêu ảnh."),
             new("Lưu ở đâu", "Lưu ngay khi đổi, trong file settings.json cạnh database (%LOCALAPPDATA%\\AppSuite\\MeRon) - tắt app mở lại vẫn giữ; nhập backup hay Xoá toàn bộ dữ liệu không ảnh hưởng."),
         ]),
     ];

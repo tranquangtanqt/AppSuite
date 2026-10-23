@@ -106,14 +106,21 @@ public static class LapsedCustomers
     /// </summary>
     public static string ZaloMessage(LapsedCustomer customer)
     {
-        var words = customer.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).SkipWhile(HasDigit).Reverse().SkipWhile(HasDigit).Reverse().ToList();
+        var product = customer.TopProducts.Count > 0 ? customer.TopProducts[0] : "bánh";
+        return $"Dạ em chào {FriendlyName(customer.Name)} ạ! Lâu rồi chưa thấy mình đặt {product}. Tuần này mình có cần đặt không ạ? Em làm sẵn cho mình nha.";
+    }
+
+    /// <summary>Tên để gọi trong tin nhắn (dùng chung với nhắc nợ - <see cref="CustomerDebts.ReminderMessage"/>): bỏ chữ có số ở
+    /// đầu / cuối ("908 Chị Huyền" → "Chị Huyền"), viết hoa hết thì đổi thành chữ hoa đầu từ, không còn gì thì "anh/chị".</summary>
+    public static string FriendlyName(string fullName)
+    {
+        var words = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries).SkipWhile(HasDigit).Reverse().SkipWhile(HasDigit).Reverse().ToList();
         var name = words.Count > 0 ? string.Join(' ', words) : "anh/chị";
         if (name.Any(char.IsLetter) && name == name.ToUpper(Vietnamese))
         {
             name = Vietnamese.TextInfo.ToTitleCase(name.ToLower(Vietnamese)); // "KHÁNH QUỲNH" → "Khánh Quỳnh"
         }
-        var product = customer.TopProducts.Count > 0 ? customer.TopProducts[0] : "bánh";
-        return $"Dạ em chào {name} ạ! Lâu rồi chưa thấy mình đặt {product}. Tuần này mình có cần đặt không ạ? Em làm sẵn cho mình nha.";
+        return name;
     }
 
     private static readonly System.Globalization.CultureInfo Vietnamese = System.Globalization.CultureInfo.GetCultureInfo("vi-VN");
