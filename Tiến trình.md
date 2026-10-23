@@ -59,6 +59,16 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
   Cài đặt Rdbms cuộn tới ô cuối, hộp thoại lỗi đọc DB đủ chữ, Ảnh mới vừa khung
 - [ ] Thử tay các hộp thoại CsvEditor (Thống kê / Lọc / Sắp xếp với file nhiều cột), ModuleB, ModuleC ở cửa sổ thấp - chưa mở
   được tự động trong Sandbox (cần hộp thoại chọn file / dữ liệu)
+- [x] **Vá bảo mật package kéo theo** (2026-10-23): `Directory.Packages.props` bật `CentralPackageTransitivePinningEnabled` +
+  ghim SQLitePCLRaw 2.1.6 → 2.1.14 (SQLite bên trong có lỗ hổng High, GHSA-2m69-gcr7-jv3q - MeRon, Rdbms, Mcf.*, ModuleB),
+  System.Drawing.Common 4.7.0 → 4.7.3 (Critical), System.Text.RegularExpressions 4.3.0 → 4.3.1, System.Security.Cryptography.Pkcs
+  → 8.0.2 (EPPlus / driver database kéo theo). Kéo theo: Microsoft.Extensions.Configuration* của 4 module dùng EPPlus 3.1 → 8.0.
+  `dotnet list package --vulnerable --include-transitive` sạch cả 25 project. Build 0 lỗi; unit test MeRon 137, Mcf.DbDef 11,
+  Mcf.Screen 29, Mcf.CrudDiagram 21, Rdbms 57, CsvEditor 120, FileTools 131, ImageCompare 106, ScreenCapture 59 đạt; Sandbox
+  (Release, framework-dependent): MeRon bản cũ tạo database → MeRon bản mới mở đúng file đó; 6 module dùng SQLite mở cửa sổ,
+  không lỗi Event Log. App điện thoại me-ron không ảnh hưởng (Flutter sqflite, định dạng file SQLite không đổi)
+- [ ] **Lên .NET 10** trước 2026-11-10 (.NET 8 và .NET 9 cùng hết hỗ trợ ngày này) - cần Visual Studio 2026 (VS 2022 17.14 không
+  mở được dự án net10.0); chờ người dùng cài VS 2026 Community
 
 - [x] Mọi module đăng ký đủ ở `AppSuite.sln`, `modules.json`, `Sync-Modules-Dev.ps1`,
   `Publish-AppSuite.ps1`, README gốc; mọi project cùng .NET 8 / WindowsAppSDK 2.2 (rà 2026-09-29; từ 2026-10-01 dùng component WinUI 2.2.1 + Runtime 2.2.0)
