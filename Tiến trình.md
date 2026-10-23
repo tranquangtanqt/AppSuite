@@ -353,7 +353,15 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Huỷ): "Lần trước (12/10): 2 Bánh bao, 1 Chè · 34.000 đ" (tối đa 4 món, +N món); **Chép vào đơn / Ctrl+L**: chép món như
   Sao chép đơn (giá hiện tại, món không còn → món tự do, báo ở đầu form), giảm giá / ghi chú chỉ khi ô trống, đã có món thì
   hỏi Thay; xong con trỏ ở nút Thêm món. Form sửa không hiện. Unit test 137/137 (2 mới); GUI Sandbox 11/12 (1 ca do test
-  không đọc ô món tự do - ảnh chụp xác nhận đủ 2 dòng, lưu xong Lần trước hiện đúng). Cập nhật F1, README (2026-10-19)- [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
+  không đọc ô món tự do - ảnh chụp xác nhận đủ 2 dòng, lưu xong Lần trước hiện đúng). Cập nhật F1, README (2026-10-19)
+- [x] Form đơn - ô chọn món: bấm 1 lần vào gợi ý (vd "Cháo dưỡng nhan") mà danh sách không đóng, phải bấm lần 2 (người dùng
+  báo 2026-10-23, có ảnh). Sửa như ô khách hôm 2026-10-14: `ProductSuggest.CloseList` - đóng thêm 1 lần sau 1 nhịp và bỏ
+  gợi ý cũ (gõ tiếp thì nạp lại) cho cả bấm chuột, Enter và Tab. Sandbox CHƯA tái hiện được lỗi trên bản cũ (gõ phím ảo, gõ
+  Unicode kiểu Unikey "Cháo", bấm gợi ý thứ 2, dòng 2 trùng món đều đóng ngay); bản mới đạt 13/13 + 11/11 (bấm chuột, Tab,
+  gõ lại → gợi ý hiện lại). Unit test 137/137
+- [ ] Thử tay: thêm đơn, gõ món như thường ngày rồi bấm 1 lần vào gợi ý → danh sách phải đóng ngay (nếu còn lỗi: ghi lại
+  gõ chữ gì, có dùng Unikey / EVKey không, chuột hay touchpad)
+- [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)
 - [ ] App điện thoại me-ron: 25 điểm (lỗi sai số liệu, toàn vẹn dữ liệu, nhập/xuất TSV, tìm kiếm, bảo mật Drive + chức năng
@@ -926,6 +934,12 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   ngày, mặc định 0 (không còn ((0))). Thêm: nút **Mở thư mục** cuối dòng "Xuất thêm" (luôn bấm được) - Explorer tại
   Data\Database chọn sẵn file vừa xuất (chưa xuất gì → file .db); định nghĩa CHECK của SQL Server bỏ ngoặc bao ngoài
   (([A]=(1) OR [A]=(0)) → [A]=(1) OR [A]=(0)) ở Excel + HTML. Cập nhật F1, README. Unit test 77/77; GUI Sandbox 6/6
+- [x] **Sơ đồ quan hệ trong trang HTML** (2026-10-23): mỗi bảng có khung SVG tự vẽ (không thư viện) - bảng đang xem ở giữa,
+  bảng con (có FK trỏ tới) bên trái, bảng cha bên phải; hộp chỉ ghi cột PK / FK liên quan, đường nối từ cột FK tới cột được
+  tham chiếu (mũi tên, rê chuột xem cột); bấm hộp mở bảng đó (Back quay lại); tự tham chiếu = vòng cung; bảng ngoài file = viền
+  đứt; tối đa 8 bảng mỗi bên + "+N bảng khác"; thu gọn được; sáng / tối. Cập nhật F1, README. Thử bằng template + dữ liệu mẫu,
+  ảnh Edge headless (orders 6 bảng, categories tự tham chiếu, tenants 15 bảng con, giao diện tối, bấm hộp → customers)
+- [ ] Thử tay: xuất lại HTML của DB thật (Z_ADDON_IGUACU_BK / Oracle) → xem sơ đồ với bảng nhiều khoá ngoại, tên dài
 - [ ] Thử tay: đọc lại DB thật 2 lần (có / không đổi schema) → xem dòng nhật ký + nút "So với bản trước"; trang HTML thử lọc
   View và tìm theo mô tả tiếng Việt / tiếng Nhật
 - [x] ~~Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X)~~ — thực tế không phải bị gộp mà làm cả lần đọc lỗi;

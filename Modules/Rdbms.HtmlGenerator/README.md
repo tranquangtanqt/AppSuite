@@ -90,6 +90,14 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    "Ten tieng Nhat"/"Xac dinh", bỏ chú giải/màu "Cot dung chung" vì không áp dụng cho dữ liệu DB quan
    hệ - chỉ còn tô màu khóa chính (vàng nhạt), menu trái + 2 ô tìm kiếm (tên bảng/tên cột), link khóa
    ngoại mở tab mới - xem README của Mcf.DbDef.HtmlGenerator để biết chi tiết các tính năng gốc).
+   **Sơ đồ quan hệ (2026-10-23)**: `renderRelationDiagram(t)` trong template, SVG tự vẽ (không thư viện / mạng), khung
+   `<details open>` trên mục Khoá ngoại. `incomingByTable` (dựng 1 lần từ mọi `foreignKeys`) → trái = bảng con, giữa = bảng
+   đang xem, phải = bảng cha (bảng vừa cha vừa con giữ bên phải); tự tham chiếu = vòng cung bên phải hộp giữa. Mỗi hộp chỉ có
+   cột PK + cột tham gia quan hệ (tag PK / FK), đường cong Bézier từ hàng cột FK tới hàng cột được tham chiếu, `marker-end`
+   mũi tên, `<title>` = "bảng (cột) → bảng (cột)". Bảng không có trong file (schema khác / bị lọc) = viền đứt, không bấm được.
+   `ER_MAX_SIDE` = 8 hộp mỗi bên, còn lại "+N bảng ... khác" (tooltip tên). Bấm hộp → `location.hash = '#table=...'` →
+   `applyHash` (Back quay lại). Rộng ước theo số ký tự Consolas; khung `overflow-x: auto`. Màu theo `color-scheme`
+   (Canvas / currentColor). Thử: template + dữ liệu mẫu, ảnh Edge headless sáng / tối, bảng 15 con, tự tham chiếu, bấm hộp.
    **Lọc Tất cả / Bảng / View + "Tìm cả trong mô tả" (2026-10-22)**: 3 nút `#kindFilter` (kèm số lượng; view = `kind` chứa
    `VIEW`, gồm MATERIALIZED / SYSTEM VIEW) lọc qua `tableNameMatches`, nên áp dụng cho cả menu trái lẫn tìm cột (kể cả khi
    ô Tên bảng trống); view có nhãn `.badge`. Ô `#searchDescription`: tên bảng khớp cả `description` của bảng, tên cột khớp
