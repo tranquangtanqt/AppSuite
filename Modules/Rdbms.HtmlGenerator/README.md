@@ -79,7 +79,11 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    phân biệt "không kết nối được" với "kết nối được nhưng truy vấn lỗi / quá giờ" mà không phải dò message của
    từng driver. Lỗi → ghi vào log + `ErrorOccurred` → `MainWindow` hiện ContentDialog; `DescribeConnectionError`
    dịch lỗi thường gặp (không tới được host, sai user/password, database / Service Name không tồn tại, truy vấn
-   quá giờ) thành gợi ý dễ hiểu.
+   quá giờ) thành gợi ý dễ hiểu. Phần "Chi tiết" (thông báo gốc) qua `ErrorDetail` → `Services\ServerMessageText.Clean`
+   (2026-10-23): PostgreSQL trên Windows tiếng Nhật gửi lỗi đăng nhập bằng Shift-JIS trước khi thống nhất UTF-8, Npgsql đọc
+   như UTF-8 → chữ vỡ (U+FFFD, không khôi phục được) → thay bằng dòng "sai bảng mã" + `SqlState` + nghĩa tiếng Nhật chuẩn
+   của mã hay gặp (28P01, 28000, 3D000, 53300, 57P03, 42501). Thông báo đọc được (kể cả tiếng Nhật UTF-8) giữ nguyên;
+   không ép bảng mã vì máy chủ Linux tiếng Nhật dùng UTF-8 / EUC-JP. Unit test `ServerMessageTextTests`.
 4. **"2. Xuất HTML"** - đọc lại `{ten_database}.db`, sinh 1 file HTML tĩnh, tự chứa tại
    `Data\Database\{ten_database}.html` (cùng quy ước đặt tên như bước 3;
    `Services\HtmlReportGenerator`, có sửa riêng so với Mcf.DbDef.HtmlGenerator: cột "STT" thay cho "Level", bỏ cột

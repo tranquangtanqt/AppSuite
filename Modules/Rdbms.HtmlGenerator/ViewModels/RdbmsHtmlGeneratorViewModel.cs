@@ -436,9 +436,10 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
             CanExportHtml = _database.Exists;
             NextStep = 1;
             var hint = DescribeConnectionError(ex, SettingsFor(SelectedSource));
-            StatusText = $"Lỗi khi đọc database: {ex.Message}";
-            AppendLog($"LỖI: {ex.Message}");
-            ErrorOccurred?.Invoke("Không đọc được database", $"{hint}\n\nChi tiết: {ex.Message}");
+            var detail = ErrorDetail(ex);
+            StatusText = $"Lỗi khi đọc database: {detail}";
+            AppendLog($"LỖI: {detail}");
+            ErrorOccurred?.Invoke("Không đọc được database", $"{hint}\n\nChi tiết: {detail}");
         }
         finally
         {
@@ -554,8 +555,24 @@ public sealed partial class RdbmsHtmlGeneratorViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            return (false, null, $"{DescribeConnectionError(ex, settings)}\n\nChi tiết: {ex.Message}");
+            return (false, null, $"{DescribeConnectionError(ex, settings)}\n\nChi tiết: {ErrorDetail(ex)}");
         }
+    }
+
+    /// <summary>ex.Message cho phần "Chi tiết"; thông báo PostgreSQL bị vỡ chữ (máy chủ tiếng Nhật) thay bằng dòng giải thích
+    /// + mã lỗi - xem Services\ServerMessageText.</summary>
+    private static string ErrorDetail(Exception ex)
+    {
+        string? sqlState = null;
+        for (Exception? e = ex; e is not null; e = e.InnerException)
+        {
+            if (e is Npgsql.PostgresException postgres)
+            {
+                sqlState = postgres.SqlState;
+                break;
+            }
+        }
+        return ServerMessageText.Clean(ex.Message, sqlState);
     }
 
     /// <summary>Turns the driver exception into a plain-language reason + what to check.</summary>

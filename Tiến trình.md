@@ -838,8 +838,11 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   mật khẩu (28P01), Oracle sai mật khẩu (1017) / sai Service Name (12514). Build 0 warning (2026-10-09)
 - [ ] Thử Oracle với tài khoản thật sau khi thêm `BindByName` (máy dev không có mật khẩu Oracle / PostgreSQL để thử
   đường thành công)
-- [ ] **[Đề xuất · Có thể]** Thông báo lỗi PostgreSQL lúc đăng nhập bị lỗi font khi máy chủ dùng locale tiếng Nhật
-  (máy chủ gửi trước khi thống nhất bảng mã) - phần gợi ý tiếng Việt vẫn đúng
+- [x] Thông báo lỗi PostgreSQL lúc đăng nhập bị lỗi font khi máy chủ dùng locale tiếng Nhật (máy chủ gửi Shift-JIS
+  trước khi thống nhất UTF-8, chữ vỡ thành "�p�X���[�h...") - phần "Chi tiết" thay bằng dòng "thông báo gốc bị sai bảng mã"
+  + mã lỗi + nghĩa tiếng Nhật chuẩn (vd 28P01 パスワード認証に失敗しました); thông báo đọc được giữ nguyên (2026-10-23).
+  Unit test 77/77 (thêm `ServerMessageTextTests`: tạo chữ vỡ thật bằng Shift-JIS → UTF-8)
+- [ ] Thử tay với máy chủ PostgreSQL tiếng Nhật thật: sai mật khẩu → hộp thoại lỗi không còn chữ vỡ
 - [x] Trang HTML thêm **số dòng ước tính** (menu trái + đầu bảng, từ thống kê của DB), bảng **Index** (cột, DESC,
   biểu thức, loại, INCLUDE / WHERE) và **Ràng buộc UNIQUE / CHECK** cho cả 4 nguồn; `.db` cũ vẫn xuất được, trang nhắc
   đọc lại. Thử console PostgreSQL 17 tạm + SQL Server LocalDB, ảnh HTML bằng Edge headless trong Sandbox, GUI Sandbox
