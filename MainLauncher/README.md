@@ -23,7 +23,7 @@ sách module, start/stop/restart process, theo dõi trạng thái, truyền tham
 | Dashboard | Tổng quan | `DashboardViewModel` | Hero header + thẻ thống kê + lưới `ModuleCard` (xem bên dưới) |
 | Modules | Danh sách module | `ModuleListViewModel` | `GridView` các `ModuleCard`, nút Tải lại |
 | Logs | Nhật ký | `LogsViewModel` | Log runtime live (tối đa 500 dòng gần nhất) |
-| Settings | Cài đặt | `SettingsViewModel` | Đường dẫn cấu hình, nút Tải lại modules.json, khi đóng MainLauncher, ô tích module hiện trên màn hình |
+| Settings | Cài đặt | `SettingsViewModel` | Đường dẫn cấu hình, nút Tải lại modules.json, khởi động cùng Windows, khi đóng MainLauncher, ô tích module hiện trên màn hình |
 
 **Giao diện tiếng Việt có dấu (2026-10-22)**: mọi chữ trên giao diện (menu, tiêu đề trang, thẻ thống kê, nút Chạy / Dừng / Chạy
 lại, trạng thái `ModuleViewModel.StatusText` = Đang chạy / Đang mở / Đang đóng / Đã dừng / Lỗi / Chưa rõ, mô tả module trong
@@ -38,6 +38,18 @@ kê chia đều bề ngang (`ColumnDefinition Width="*" MaxWidth="200"`) - rộn
 - `MainWindow.AppWindow_Closing`: còn module chạy thì theo `LauncherSettings.CloseModulesOnExit` (Ask / CloseAll /
   KeepRunning, Settings có RadioButtons, lưu `launcher-settings.json` dạng chữ). Ask = ContentDialog "Đóng hết / Để chạy tiếp
   / Huỷ" + "Nhớ lựa chọn"; Đóng hết = `StopProcess` song song (Task.Run) rồi mới `Close()`.
+- Thu xuống khay hệ thống (2026-10-23): `Services\TrayIcon` (Shell_NotifyIcon + window subclass như ScreenCapture
+  TrayIconService, icon `Assets\MainLauncher.ico`). `LauncherSettings.CloseToTray` (mặc định true, Cài đặt bật / tắt →
+  `LauncherSettingsStore.Saved` → icon hiện / ẩn ngay). `AppWindow_Closing` luôn `Cancel`: CloseToTray → `HideToTray`
+  (`AppWindow.Hide`, bong bóng lần đầu mỗi phiên), không thì `ExitAsync`. Menu chuột phải: Mở AppSuite / "N module đang
+  chạy" (mờ) / Thoát AppSuite → `ExitAsync` (logic CloseModulesOnExit cũ; Hỏi thì `BringToFront` trước để hiện hộp thoại).
+  `BringToFront` dùng chung cho icon khay và mở lần 2.
+- Khởi động cùng Windows (2026-10-23): `Services\StartupRegistration` ghi `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`
+  giá trị `AppSuite MainLauncher` = `"…\MainLauncher.exe" --startup` (chỉ user hiện tại, không cần admin). Trạng thái đọc từ
+  registry mỗi lần mở trang Cài đặt (không lưu json): `On` / `Off` / `OtherPath` (trỏ exe thư mục khác) / `DisabledByUser`
+  (Task Manager tắt = byte đầu lẻ ở `...\Explorer\StartupApproved\Run`). Bật = ghi đè mục + xoá dấu StartupApproved; tắt = xoá
+  cả hai. `App.OnLaunched`: có `--startup` và `LauncherSettings.StartMinimized` (mặc định true) → `HideToTray` nếu CloseToTray,
+  không thì Maximize rồi Minimize (bấm là hiện cỡ to). Module không tự chạy theo (dùng `AutoStart` trong modules.json).
 - `IProcessManager.AttachRunningProcesses` (gọi trong `ModuleListViewModel.LoadModulesCoreAsync` trên luồng nền, lúc khởi động
   và Reload): tìm tiến trình cùng tên file và đúng đường dẫn .exe (`MainModule.FileName`) → gắn `Exited`, trạng thái Running →
   thẻ hiện Running, Stop được, AutoStart không mở bản thứ 2.

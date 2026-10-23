@@ -62,6 +62,16 @@ public partial class App : Application
             presenter.Maximize();
         }
         _window.Activate();
+        // Windows mở lúc đăng nhập ("Khởi động cùng Windows") → không mở cửa sổ: nằm ở khay hệ thống (nếu dùng khay) hoặc thu
+        // nhỏ ở thanh tác vụ; bấm vào thì hiện lại cỡ phóng to.
+        var settings = Services.GetRequiredService<LauncherSettingsStore>().Current;
+        if (StartupRegistration.IsStartupLaunch() && settings.StartMinimized)
+        {
+            if (settings.CloseToTray)
+                ((MainWindow)_window).HideToTray(balloon: false);
+            else if (_window.AppWindow.Presenter is OverlappedPresenter startupPresenter)
+                startupPresenter.Minimize();
+        }
 
         // Tạo ngay (trên luồng UI) để trang Logs có cả các dòng từ lúc khởi động, không chỉ từ lần đầu mở trang.
         Services.GetRequiredService<LogsViewModel>();

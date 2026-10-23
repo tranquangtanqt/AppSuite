@@ -42,7 +42,7 @@ internal static class HelpContent
             new("Chạy lại", "Buộc tắt module ngay (không chờ, không hỏi lưu) rồi mở lại - dùng khi module bị treo hoặc vừa cập nhật bản mới. Module còn việc chưa lưu thì lưu trước, hoặc dùng Dừng rồi Chạy."),
             new("Trạng thái", "Đang chạy (chấm xanh, kèm số tiến trình); Đang mở / Đang đóng (cam); Lỗi (đỏ - vd không tìm thấy file .exe của module, xem Nhật ký); Đã dừng (xám)."),
             new("Tự đóng module", "Đóng cửa sổ module như bình thường thì MainLauncher tự nhận ra và chuyển thẻ về Đã dừng."),
-            new("Khi đóng MainLauncher", "Còn module đang chạy thì MainLauncher hỏi \"Đóng cả các module đang chạy?\": Đóng hết (đóng từng module như bấm Dừng rồi mới thoát), Để chạy tiếp (module vẫn chạy, chỉ đóng MainLauncher) hoặc Huỷ (không đóng). Tích \"Nhớ lựa chọn\" để lần sau khỏi hỏi - đổi lại ở trang Cài đặt."),
+            new("Khi đóng MainLauncher", "Nếu bật \"Khi bấm X: thu xuống khay hệ thống\" (mặc định) thì bấm X chỉ ẩn cửa sổ - thoát hẳn bằng chuột phải biểu tượng ở khay → Thoát AppSuite. Khi thoát hẳn mà còn module đang chạy thì MainLauncher hỏi \"Đóng cả các module đang chạy?\": Đóng hết (đóng từng module như bấm Dừng rồi mới thoát), Để chạy tiếp (module vẫn chạy, chỉ đóng MainLauncher) hoặc Huỷ (không đóng). Tích \"Nhớ lựa chọn\" để lần sau khỏi hỏi - đổi lại ở trang Cài đặt."),
             new("Mở lại MainLauncher", "Module vẫn đang chạy từ lần trước được nhận lại: thẻ hiện Đang chạy, bấm Dừng được, Chạy bị mờ (không mở bản thứ 2)."),
             new("Chỉ 1 MainLauncher", "MainLauncher đang chạy mà mở lần nữa (vd bấm lại lối tắt) thì không mở cửa sổ thứ 2: cửa sổ đang có hiện lên trước (kể cả đang thu nhỏ) kèm thông báo nhỏ \"AppSuite đang chạy\"."),
         ]),
@@ -65,11 +65,13 @@ internal static class HelpContent
 
         new("Cài đặt và cấu hình", "", "Trang Cài đặt (cuối menu trái) và các file cấu hình trong thư mục Config cạnh MainLauncher.exe.",
         [
-            new("Trang Cài đặt", "Thư mục cài đặt, File cấu hình module (modules.json), nút \"Tải lại modules.json\" và \"Sắp xếp lại theo modules.json\" (bỏ thứ tự đã kéo thả), \"Khi đóng MainLauncher mà còn module đang chạy\" và danh sách \"Module hiện trên màn hình\"."),
+            new("Trang Cài đặt", "Thư mục cài đặt, File cấu hình module (modules.json), nút \"Tải lại modules.json\" và \"Sắp xếp lại theo modules.json\" (bỏ thứ tự đã kéo thả), \"Khởi động cùng Windows\", \"Khi đóng MainLauncher mà còn module đang chạy\" và danh sách \"Module hiện trên màn hình\"."),
+            new("Thu xuống khay hệ thống", "\"Khi bấm X: thu xuống khay hệ thống\" (mặc định bật): bấm X thì cửa sổ ẩn đi, các module vẫn chạy, biểu tượng AppSuite nằm ở khay hệ thống (góc phải thanh tác vụ - có thể nằm trong nút ^, kéo ra ngoài để luôn thấy). Bấm biểu tượng để mở lại. Chuột phải: Mở AppSuite, số module đang chạy, Thoát AppSuite - thoát hẳn, còn module đang chạy thì hỏi như khi đóng (mục \"Khi đóng MainLauncher\"). Tắt công tắc thì bấm X là thoát như trước."),
+            new("Khởi động cùng Windows", "Bật công tắc thì đăng nhập Windows xong MainLauncher tự mở (chỉ tài khoản Windows đang dùng, không cần quyền admin). Ô tích \"không mở cửa sổ\" (mặc định bật): mở sẵn nhưng nằm ở khay hệ thống (hoặc thanh tác vụ nếu tắt \"thu xuống khay\"), bấm vào là hiện. Module không tự chạy theo - muốn module nào tự mở thì đặt AutoStart trong modules.json. Dòng chữ dưới công tắc cho biết trạng thái thật: đã bị tắt ở Task Manager > Startup apps, hoặc đang đăng ký cho MainLauncher ở thư mục khác (vd đã chép AppSuite sang chỗ mới) - bật lại công tắc để sửa. Chuyển / xoá thư mục AppSuite thì nhớ tắt công tắc trước."),
             new("Khi đóng MainLauncher mà còn module đang chạy", "Hỏi mỗi lần (mặc định) / Luôn đóng hết các module / Luôn để các module chạy tiếp. Đổi là lưu ngay."),
             new("Config\\modules.json", "Danh sách module: Name (tên), Description (mô tả trên thẻ), Path (đường dẫn file .exe, tương đối so với thư mục MainLauncher, vd .\\Modules\\ScreenCapture\\ScreenCapture.exe), Arguments (tham số khi mở), AutoStart (true = tự mở khi mở MainLauncher). Sửa xong bấm Tải lại."),
             new("Config\\appsettings.json", "ModulesConfigPath - vị trí file modules.json (mặc định Config/modules.json)."),
-            new("Config\\launcher-settings.json", "Các module đang ẩn (nút Ẩn / hiện), thứ tự module đã kéo thả và lựa chọn khi đóng MainLauncher - do app tự ghi, không cần sửa tay."),
+            new("Config\\launcher-settings.json", "Các module đang ẩn (nút Ẩn / hiện), thứ tự module đã kéo thả, lựa chọn khi đóng MainLauncher và \"thu nhỏ khi khởi động cùng Windows\" - do app tự ghi, không cần sửa tay. Bật / tắt khởi động cùng Windows nằm ở registry của Windows, không ở file này."),
         ]),
     ];
 }

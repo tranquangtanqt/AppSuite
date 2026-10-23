@@ -401,6 +401,17 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [x] **Kéo thả đổi thứ tự module** ở Tổng quan và Danh sách module (chung 1 thứ tự), lưu `launcher-settings.json`
   (`ModuleOrder`, không sửa modules.json); module ẩn giữ chỗ; module mới đứng cuối; Cài đặt → "Sắp xếp lại theo
   modules.json". Cập nhật F1, README. GUI Sandbox 11/11 (kéo chuột thật) + giao diện 28/28 (2026-10-22)
+- [x] **Khởi động cùng Windows** (Cài đặt, 2026-10-23): công tắc ghi `HKCU\...\CurrentVersion\Run` ("AppSuite MainLauncher" =
+  exe + `--startup`, chỉ tài khoản hiện tại, không cần admin); trạng thái đọc từ registry mỗi lần mở trang - báo khi bị tắt
+  ở Task Manager hoặc đang trỏ MainLauncher ở thư mục khác, bật lại là sửa. Ô "thu nhỏ xuống thanh tác vụ" (mặc định bật,
+  launcher-settings.json). Module không tự chạy theo (dùng AutoStart). Cập nhật F1, README. GUI Sandbox 21/21 (bật / tắt →
+  registry, giả lập Task Manager tắt + đường dẫn cũ, chạy `--startup` thu nhỏ / bỏ tích thì mở to)
+- [ ] Thử tay: bật công tắc ở bản `Application\` thật, đăng xuất / đăng nhập lại Windows → MainLauncher tự mở, nằm ở khay
+- [x] **Bấm X thu xuống khay hệ thống** (Cài đặt, mặc định bật, 2026-10-23): bấm X ẩn cửa sổ, module chạy tiếp, icon AppSuite ở
+  khay (bong bóng "AppSuite vẫn đang chạy" lần đầu); bấm icon mở lại; chuột phải: Mở AppSuite / "N module đang chạy" /
+  Thoát AppSuite (thoát hẳn, còn module thì hỏi như cũ). Tắt công tắc → icon mất, X là thoát. Khởi động cùng Windows + bật
+  khay → nằm sẵn ở khay. `Services\TrayIcon` (Win32, như ScreenCapture). Cập nhật F1, README. GUI Sandbox 22/22
+- [ ] Windows 11 mặc định để icon mới trong nút ^ - xem có cần nhắc người dùng kéo icon ra thanh tác vụ không (thử tay)
 - [ ] ModuleA / ModuleB (module mẫu) vẫn hiện chữ không dấu ("Ung dung quan ly A - chay doc lap voi MainLauncher")
 - [ ] **[Đề xuất · Nên làm]** Stop chờ module tự đóng 5 giây rồi buộc tắt (`ProcessManager.StopProcess`: `CloseMainWindow` +
   `WaitForExit(5000)` + `Kill`) - module đang hỏi "Lưu không?" bị tắt mất phần chưa lưu; chờ 5 giây trên luồng UI nên launcher

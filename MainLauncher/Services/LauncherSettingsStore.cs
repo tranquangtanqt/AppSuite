@@ -27,6 +27,14 @@ public sealed class LauncherSettings
 
     /// <summary>Thứ tự module do người dùng kéo thả (tên module). Trống = theo modules.json; module không có ở đây đứng sau.</summary>
     public List<string> ModuleOrder { get; set; } = [];
+
+    /// <summary>Khi Windows mở MainLauncher lúc đăng nhập (--startup): thu nhỏ xuống thanh tác vụ thay vì mở to. Bật / tắt
+    /// "Khởi động cùng Windows" nằm ở registry (StartupRegistration), không ở đây.</summary>
+    public bool StartMinimized { get; set; } = true;
+
+    /// <summary>Bấm X: ẩn cửa sổ xuống khay hệ thống (module chạy tiếp; thoát hẳn bằng menu chuột phải ở icon khay) thay vì thoát.
+    /// Bật thì icon ở khay luôn hiện khi MainLauncher đang chạy.</summary>
+    public bool CloseToTray { get; set; } = true;
 }
 
 /// <summary>Đọc 1 lần Config\launcher-settings.json cạnh exe (<see cref="Current"/>, dùng chung cho cả app) và ghi lại khi
@@ -51,6 +59,9 @@ public sealed class LauncherSettingsStore
     public string Path { get; }
 
     public LauncherSettings Current { get; }
+
+    /// <summary>Sau mỗi lần <see cref="Save"/> (vd cửa sổ chính bật / tắt icon khay theo CloseToTray).</summary>
+    public event Action? Saved;
 
     private LauncherSettings Load()
     {
@@ -82,5 +93,6 @@ public sealed class LauncherSettingsStore
         {
             _logger.LogError(ex, "Không lưu được {Path}", Path);
         }
+        Saved?.Invoke();
     }
 }

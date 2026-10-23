@@ -29,6 +29,25 @@
                     ToolTipService.ToolTip="Bỏ thứ tự đã kéo thả, xếp module theo thứ tự trong modules.json" />
         </StackPanel>
 
+        <!-- Khởi động cùng Windows: registry HKCU Run (Services\StartupRegistration), đọc lại mỗi lần mở trang -->
+        <StackPanel Spacing="4" Margin="0,8,0,0">
+            <ToggleSwitch x:Name="StartWithWindowsSwitch" Header="Khởi động cùng Windows" OffContent="Tắt" OnContent="Bật"
+                          IsOn="{x:Bind ViewModel.StartWithWindows, Mode=TwoWay}" AutomationProperties.Name="Khởi động cùng Windows" />
+            <TextBlock x:Name="StartupStatusText" Text="{x:Bind ViewModel.StartupStatus, Mode=OneWay}" TextWrapping="Wrap"
+                       Opacity="0.7" FontSize="12" AutomationProperties.AutomationId="StartupStatusText" />
+            <CheckBox x:Name="StartMinimizedCheckBox" Content="Khi khởi động cùng Windows: không mở cửa sổ (nằm sẵn ở khay hệ thống, hoặc thanh tác vụ nếu tắt mục dưới)"
+                      IsChecked="{x:Bind ViewModel.StartMinimized, Mode=TwoWay}" Margin="0,4,0,0" />
+        </StackPanel>
+
+        <!-- Bấm X → ẩn xuống khay hệ thống (Services\TrayIcon); thoát hẳn bằng menu chuột phải ở icon -->
+        <StackPanel Spacing="4" Margin="0,8,0,0">
+            <ToggleSwitch x:Name="CloseToTraySwitch" Header="Khi bấm X: thu xuống khay hệ thống (không thoát)" OffContent="Tắt - bấm X là thoát"
+                          OnContent="Bật" IsOn="{x:Bind ViewModel.CloseToTray, Mode=TwoWay}"
+                          AutomationProperties.Name="Khi bấm X: thu xuống khay hệ thống" />
+            <TextBlock Text="Bật: bấm X thì cửa sổ ẩn đi, các module vẫn chạy, biểu tượng AppSuite nằm ở khay hệ thống (góc phải thanh tác vụ, có thể trong nút ^). Bấm biểu tượng để mở lại; chuột phải → Thoát AppSuite để tắt hẳn."
+                       TextWrapping="Wrap" Opacity="0.7" FontSize="12" />
+        </StackPanel>
+
         <!-- Đóng MainLauncher mà còn module đang chạy (thứ tự mục = enum CloseModulesOnExit) -->
         <RadioButtons x:Name="CloseModulesOnExitRadio" Header="Khi đóng MainLauncher mà còn module đang chạy" Margin="0,8,0,0"
                       SelectedIndex="{x:Bind ViewModel.CloseModulesOnExitIndex, Mode=TwoWay}">
