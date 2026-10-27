@@ -264,6 +264,23 @@ public class OrderRepositoryTests
     }
 
     [Fact]
+    public void Set_delivery_day_keeps_time_and_single_pay_writes_payment_date()
+    {
+        using var temp = new TempFolder();
+        var (_, orders, _) = Setup(temp);
+
+        // đơn 3: "2026-06-28 07:00:00" → ngày mới, giữ 07:00
+        Assert.True(orders.SetDeliveryDay(3, new DateOnly(2026, 7, 2)));
+        Assert.Equal(new DateTime(2026, 7, 2, 7, 0, 0), orders.Get(3)!.Delivery);
+        Assert.False(orders.SetDeliveryDay(999, June28));
+
+        // Đã thanh toán 1 đơn từ menu thẻ = PayShipping 1 mã; đơn đã thanh toán thì bỏ qua
+        Assert.Equal(1, orders.PayShipping([3]));
+        Assert.Equal(DateTime.Today, orders.Get(3)!.Payment?.Date);
+        Assert.Equal(0, orders.PayShipping([1]));
+    }
+
+    [Fact]
     public void Delete_removes_order_and_its_items()
     {
         using var temp = new TempFolder();

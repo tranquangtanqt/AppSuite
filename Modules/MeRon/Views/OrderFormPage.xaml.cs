@@ -15,7 +15,9 @@ public sealed partial class OrderFormPage : Page
     {
         InitializeComponent();
         // Chọn được khách (bấm gợi ý / Enter / Tab) → con trỏ sang nút Thêm món (Enter / Space là thêm dòng, gõ món luôn).
-        CustomerSuggest.Attach(CustomerBox, () => ViewModel.Customers, () => ViewModel.Customer, c => ViewModel.Customer = c, FocusAddLine);
+        // Tên chưa có → "＋ Thêm khách mới": hộp thoại Thêm khách hàng điền sẵn tên, lưu xong chọn luôn, đơn đang soạn giữ nguyên.
+        CustomerSuggest.Attach(CustomerBox, () => ViewModel.Customers, () => ViewModel.Customer, c => ViewModel.Customer = c, FocusAddLine,
+            AddCustomerAsync);
         Shortcuts.Ctrl(this, VirtualKey.M, AddLine);
         Shortcuts.Add(this, VirtualKey.N, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => _ = SaveAsync(AfterSave.New));
         Shortcuts.Add(this, VirtualKey.K, VirtualKeyModifiers.Control | VirtualKeyModifiers.Shift, () => _ = SaveAsync(AfterSave.CopyForOtherCustomer));
@@ -37,6 +39,16 @@ public sealed partial class OrderFormPage : Page
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => CustomerBox.Focus(FocusState.Programmatic));
             }
         };
+    }
+
+    private async Task<CustomerOption?> AddCustomerAsync(string name)
+    {
+        if (await CustomerForm.ShowAsync(XamlRoot, null, name) is not { } id)
+        {
+            return null;
+        }
+        ViewModel.ReloadCustomers();
+        return ViewModel.Customers.FirstOrDefault(c => c.Id == id);
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)

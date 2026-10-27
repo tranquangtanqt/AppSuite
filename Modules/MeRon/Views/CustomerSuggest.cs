@@ -10,13 +10,16 @@ namespace MeRon.Views;
 /// Ô chọn khách hàng kiểu autocomplete (như AppUserAutocomplete của điện thoại): gõ tên / số điện thoại (không phân biệt
 /// dấu) → chọn trong gợi ý; ↑ / ↓ tô gợi ý, Enter / Tab chọn gợi ý đang tô (chưa tô = gợi ý đầu); xoá trắng ô = bỏ chọn. Rời ô mà chữ không khớp khách nào thì trả lại
 /// tên khách đang chọn - tránh tưởng đã chọn mà thật ra chưa.
+/// Có <c>addNew</c> (form đơn): gõ tên chưa có khách nào trùng → gợi ý cuối "＋ Thêm khách mới" (bấm / tô rồi Enter / Tab;
+/// không khớp khách nào thì Enter cũng mở) → hộp thoại Thêm khách hàng, lưu xong chọn luôn khách đó.
 /// </summary>
 internal static class CustomerSuggest
 {
     private const int MaxSuggestions = 50;
 
     public static void Attach(AutoSuggestBox box, Func<IReadOnlyList<CustomerOption>> customers,
-        Func<CustomerOption?> current, Action<CustomerOption?> choose, Action? onChosen = null)
+        Func<CustomerOption?> current, Action<CustomerOption?> choose, Action? onChosen = null,
+        Func<string, Task<CustomerOption?>>? addNew = null)
     {
         box.DisplayMemberPath = nameof(CustomerOption.Display);
         box.TextMemberPath = nameof(CustomerOption.Name);
@@ -47,6 +50,44 @@ internal static class CustomerSuggest
             });
         }
 
+        // Gợi ý + "＋ Thêm khách mới" ở cuối khi chưa có khách trùng nguyên tên.
+        List<CustomerOption> Suggestions(string text)
+        {
+            var list = Matches(text);
+            if (addNew is not null && !string.IsNullOrWhiteSpace(text)
+                && !customers().Any(c => TextSearch.Fold(c.Name) == TextSearch.Fold(text.Trim())))
+            {
+                list.Add(CustomerOption.New(text));
+            }
+            return list;
+        }
+
+        async void AddNew(string name)
+        {
+            CloseList();
+            if (addNew is null)
+            {
+                return;
+            }
+            if (await addNew(name.Trim()) is { } added)
+            {
+                box.Text = added.Name;
+                choose(added);
+                if (onChosen is not null)
+                {
+                    onChosen();
+                }
+                else
+                {
+                    box.Focus(FocusState.Programmatic);
+                }
+            }
+            else
+            {
+                box.Focus(FocusState.Programmatic);
+            }
+        }
+
         // Tab / Shift+Tab: nhận gợi ý đang tô bằng ↑ / ↓, chưa tô thì gợi ý đầu (như Enter), rồi con trỏ đi tiếp như thường
         // (có onChosen thì Tab đi theo onChosen như Enter).
         box.PreviewKeyDown += (_, e) =>
@@ -68,7 +109,12 @@ internal static class CustomerSuggest
             {
                 pick = Best(box.Text);
             }
-            if (pick is not null)
+            if (pick is { IsNew: true })
+            {
+                e.Handled = true;
+                AddNew(pick.Name);
+            }
+            else if (pick is not null)
             {
                 box.Text = pick.Name;
                 choose(pick);
@@ -95,7 +141,7 @@ internal static class CustomerSuggest
             }
             else
             {
-                sender.ItemsSource = Matches(sender.Text);
+                sender.ItemsSource = Suggestions(sender.Text);
             }
             SuggestionList.ShowFirst(sender);
         };
@@ -106,6 +152,15 @@ internal static class CustomerSuggest
             if (chosen is null && !string.IsNullOrWhiteSpace(args.QueryText))
             {
                 chosen = Best(args.QueryText);
+                if (chosen is null && addNew is not null)
+                {
+                    chosen = CustomerOption.New(args.QueryText);
+                }
+            }
+            if (chosen is { IsNew: true })
+            {
+                AddNew(chosen.Name);
+                return;
             }
             if (chosen is not null)
             {

@@ -81,14 +81,6 @@ public sealed class CustomersViewModel : ListViewModel<Customer, CustomerRow>
         TextSearch.Matches(item.Name, query) || TextSearch.Matches(item.Phone, query);
 
     protected override CustomerRow MakeRow(int index, Customer item) => new(index, item);
-
-    /// <summary>Gợi ý cho ô Địa chỉ: tên các địa chỉ trong danh mục (ô vẫn cho gõ tự do như điện thoại).</summary>
-    public IReadOnlyList<string> AddressSuggestions() =>
-        Repository.GetAddresses().Select(a => a.Name ?? a.Code).Distinct().ToList();
-
-    public string? Save(Customer customer) => AppServices.Try("Lưu khách hàng", () => Repository.SaveCustomer(customer));
-
-    public string? Delete(long id) => AppServices.Try("Xoá khách hàng", () => Repository.DeleteCustomer(id));
 }
 
 // ---- Món ăn ----

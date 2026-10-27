@@ -334,6 +334,9 @@ public sealed partial class OrderFormViewModel : ObservableObject
         }
     }
 
+    /// <summary>Đọc lại danh sách khách (vừa thêm khách mới ngay trong form) - giữ nguyên đơn đang soạn.</summary>
+    public void ReloadCustomers() => Customers = CustomerOption.From(AppServices.MasterData.GetCustomers());
+
     public void Load(OrderFormArgs args)
     {
         _typingDiscount = null;

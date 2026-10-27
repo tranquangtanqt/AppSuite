@@ -48,7 +48,12 @@ public sealed class OrderCardViewModel(Order order)
 /// <summary>Lựa chọn khách hàng trong ô tìm khách (lọc đơn, form đơn).</summary>
 public sealed record CustomerOption(long Id, string Name, string? Phone, string? Address)
 {
-    public string Display => string.IsNullOrWhiteSpace(Phone) ? Name : $"{Name}  ·  {Phone}";
+    /// <summary>Gợi ý cuối danh sách ở form đơn: chưa có khách tên này → mở hộp thoại Thêm khách hàng (<see cref="Name"/> = chữ đang gõ).</summary>
+    public bool IsNew { get; init; }
+
+    public string Display => IsNew ? $"＋ Thêm khách mới \"{Name}\"" : string.IsNullOrWhiteSpace(Phone) ? Name : $"{Name}  ·  {Phone}";
+
+    public static CustomerOption New(string name) => new(0, name.Trim(), null, null) { IsNew = true };
 
     public override string ToString() => Name;
 

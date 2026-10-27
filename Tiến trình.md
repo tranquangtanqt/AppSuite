@@ -381,6 +381,15 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   (2026-10-27)
 - [x] Ô **Giá bán** (Thêm / sửa món ăn) bỏ khung nút ▲▼ bật ra cạnh ô khi bấm vào (NumberBox Compact → Hidden, như mọi ô số
   khác - rà cả module chỉ còn chỗ này); ↑ / ↓ vẫn ±1.000. GUI Sandbox 5/5 (2026-10-27)
+- [x] Thao tác nhanh (người dùng chọn 1 + 3 trong danh sách đề xuất 2026-10-27):
+  **Chuột phải thẻ đơn** (Đặt hàng / Chi tiết / Theo món ăn): Đã thanh toán, Giao hôm nay / ngày mai (giữ giờ giao), Huỷ đơn
+  (hỏi lại) - không mở form, danh sách tự tải lại; **Thêm khách mới ngay trong form đơn** ("＋ Thêm khách mới" cuối gợi ý /
+  Enter khi không khớp → hộp thoại điền sẵn tên, lưu xong chọn luôn, đơn đang nhập giữ nguyên). Cập nhật F1, README. Unit
+  test 147/147 (1 mới); GUI Sandbox 23/23 (bản sao database thật; chuột phải thật)
+- [ ] Đề xuất còn lại (2026-10-27): ô món ưu tiên món khách hay đặt; gõ "2 chao" = món + số lượng; dán tin Zalo → đơn nháp;
+  danh sách giao hàng theo khu + phiếu chuẩn bị; so cùng kỳ năm trước (Biểu đồ); món tăng / giảm; món theo thứ; doanh thu theo
+  khu; công nợ theo tuổi nợ
+- [ ] Thử tay: chuột phải thẻ đơn ở trang Chi tiết (Sandbox chỉ chạy trang Đặt hàng)
 - [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

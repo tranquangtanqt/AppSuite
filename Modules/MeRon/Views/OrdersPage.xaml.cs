@@ -12,7 +12,7 @@ namespace MeRon.Views;
 /// vào lại từ menu cũng giữ (mặc định chỉ ở lần đầu mở trong phiên). Trang KHÔNG cache: SelectorBar trong trang cache tự áp lại
 /// tab cũ khi gắn lại vào cửa sổ, lúc có lúc không (quay lại từ Chi tiết thì bộ lọc tự về "Tất cả").
 /// </summary>
-public sealed partial class OrdersPage : Page
+public sealed partial class OrdersPage : Page, IOrderListPage
 {
     private static readonly OrdersViewModel Session = new();
 
@@ -114,6 +114,8 @@ public sealed partial class OrdersPage : Page
     }
 
     private void Refresh_Click(object sender, RoutedEventArgs e) => ViewModel.Load();
+
+    public void ReloadOrders() => ViewModel.Load();
 
     private void Add_Click(object sender, RoutedEventArgs e) => Frame.Navigate(typeof(OrderFormPage), ViewModel.NewOrderArgs());
 

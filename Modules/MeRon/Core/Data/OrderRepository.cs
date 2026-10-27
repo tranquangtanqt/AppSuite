@@ -158,6 +158,23 @@ public sealed class OrderRepository(MeRonDatabase database)
             ("$status", (long)status), ("$now", MeRonDatabase.Now()), ("$id", id));
     }
 
+    /// <summary>Đổi ngày giao (menu chuột phải thẻ đơn: Giao hôm nay / ngày mai), giữ giờ giao cũ. Trả false nếu đơn không còn.</summary>
+    public bool SetDeliveryDay(long id, DateOnly day)
+    {
+        using var connection = database.Open();
+        using var transaction = connection.BeginTransaction();
+        string? old;
+        using (var command = Command(connection, "SELECT deliveryDatetime FROM Orders WHERE id = $id", [("$id", id)]))
+        {
+            old = command.ExecuteScalar() as string;
+        }
+        var time = DbDate.Parse(old) is { } d ? TimeOnly.FromDateTime(d) : TimeOnly.MinValue;
+        var changed = Execute(connection, "UPDATE Orders SET deliveryDatetime = $delivery, updatedAt = $now WHERE id = $id",
+            ("$delivery", DbDate.Format(day.ToDateTime(time))), ("$now", MeRonDatabase.Now()), ("$id", id));
+        transaction.Commit();
+        return changed > 0;
+    }
+
     public void Delete(long id)
     {
         using var connection = database.Open();

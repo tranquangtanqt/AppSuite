@@ -6,7 +6,7 @@ using Microsoft.UI.Xaml.Navigation;
 namespace MeRon.Views;
 
 /// <summary>Thống kê theo món ăn. Vào từ menu = tất cả món, hôm nay; quay lại từ form đơn = giữ bộ lọc.</summary>
-public sealed partial class ReportProductPage : Page
+public sealed partial class ReportProductPage : Page, IOrderListPage
 {
     public ReportProductViewModel ViewModel { get; } = new();
 
@@ -29,6 +29,8 @@ public sealed partial class ReportProductPage : Page
         ViewModel.LoadProducts();
         ViewModel.Load();
     }
+
+    public void ReloadOrders() => ViewModel.Load();
 
     private void Order_Click(object sender, RoutedEventArgs e)
     {

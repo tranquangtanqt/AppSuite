@@ -12,9 +12,11 @@ using Windows.Storage.Streams;
 
 namespace MeRon.Views;
 
-public sealed partial class OrderDetailPage : Page
+public sealed partial class OrderDetailPage : Page, IOrderListPage
 {
     public OrderDetailViewModel ViewModel { get; } = new();
+
+    private OrderDetailArgs _args = new(Core.Models.OrderFilter.Today());
 
     public OrderDetailPage()
     {
@@ -24,7 +26,13 @@ public sealed partial class OrderDetailPage : Page
     /// <summary>Mỗi lần vào (kể cả quay lại từ form sửa đơn) đọc lại theo bộ lọc đã truyền.</summary>
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        var args = e.Parameter as OrderDetailArgs ?? new OrderDetailArgs(Core.Models.OrderFilter.Today());
+        _args = e.Parameter as OrderDetailArgs ?? new OrderDetailArgs(Core.Models.OrderFilter.Today());
+        ReloadOrders();
+    }
+
+    public void ReloadOrders()
+    {
+        var args = _args;
         try
         {
             ViewModel.Load(args.Filter, args.Title);
