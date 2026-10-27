@@ -379,6 +379,8 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   theo = Đến ngày** (người dùng chọn) (Đặt hàng, Mua hàng, 4 báo cáo, Biểu đồ; ô trống thì không ép; chỉ tải lại 1 lần).
   Cập nhật F1, README. Unit test 146/146 (1 mới); GUI Sandbox 16/16 (gõ ngày + phím ↑ / ↓ thật, trang Đặt hàng + Mua hàng)
   (2026-10-27)
+- [x] Ô **Giá bán** (Thêm / sửa món ăn) bỏ khung nút ▲▼ bật ra cạnh ô khi bấm vào (NumberBox Compact → Hidden, như mọi ô số
+  khác - rà cả module chỉ còn chỗ này); ↑ / ↓ vẫn ±1.000. GUI Sandbox 5/5 (2026-10-27)
 - [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

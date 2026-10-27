@@ -118,7 +118,10 @@ internal static class Dialogs
         return box;
     }
 
-    /// <summary>Ô số tiền (VNĐ, số nguyên không âm, nhóm hàng nghìn).</summary>
+    /// <summary>
+    /// Ô số tiền (VNĐ, số nguyên không âm, nhóm hàng nghìn). Không có nút tăng / giảm (kiểu Compact bật ra khung ▲▼ lơ lửng cạnh ô
+    /// khi bấm vào - như các ô số khác của app); ↑ / ↓ vẫn ±1.000.
+    /// </summary>
     public static NumberBox Money(string header, long? value)
     {
         var box = new NumberBox
@@ -128,7 +131,7 @@ internal static class Dialogs
             Minimum = 0,
             SmallChange = 1000,
             LargeChange = 10000,
-            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+            SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Hidden,
             NumberFormatter = Format.MoneyFormatter(),
         };
         AutomationProperties.SetName(box, header);
