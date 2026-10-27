@@ -46,6 +46,10 @@
                 <AutoSuggestBox x:Name="CustomerBox" Header="Khách hàng" PlaceholderText="Gõ tên hoặc số điện thoại rồi chọn" QueryIcon="Find"
                                 MaxWidth="460" HorizontalAlignment="Left" Width="460" AutomationProperties.Name="Khách hàng"
                                 AutomationProperties.AutomationId="FormCustomerBox" />
+                <!-- Trùng đơn: khách đã có đơn khác cùng ngày giao - báo ngay khi chọn khách / đổi ngày giao (Lưu vẫn hỏi lại). -->
+                <InfoBar Severity="Warning" IsClosable="False" MaxWidth="760" HorizontalAlignment="Left" Margin="0,-6,0,0"
+                         IsOpen="{x:Bind ViewModel.HasDuplicateWarning, Mode=OneWay}" Message="{x:Bind ViewModel.DuplicateWarning, Mode=OneWay}"
+                         AutomationProperties.AutomationId="DuplicateWarning" />
                 <!-- Lần trước (form thêm đơn): đơn gần nhất của khách vừa chọn + chép các món đó vào đơn (Ctrl+L). -->
                 <Grid ColumnSpacing="8" MaxWidth="760" HorizontalAlignment="Left" Margin="0,-6,0,0"
                       Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasLastOrder), Mode=OneWay}">

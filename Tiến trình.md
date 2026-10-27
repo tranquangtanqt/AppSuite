@@ -394,7 +394,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   2026-10-27). Cập nhật F1, README
 - [x] Form đơn: **gõ số lượng cùng tên món** - "2 chao" / "chao 2" (cả "2x chao", "chao x2") rồi Enter / Tab → món + số
   lượng, con trỏ sang nút Thêm món (không tự thêm dòng - người dùng đổi 2026-10-27); ↑ / ↓ tô món khác vẫn giữ số; tên món có đúng số đó ("Combo 2") vẫn là
-  tên, số trong "40k" không tính (2026-10-27). Cập nhật F1, README. Unit test 162/162; GUI Sandbox 24/24
+  tên, số trong "40k" không tính (2026-10-27). Cập nhật F1, README. Unit test 162/162; GUI Sandbox 26/26
+- [x] Form đơn: **báo trùng đơn ngay khi chọn khách** / đổi ngày giao (khung vàng dưới ô Khách hàng, tự tắt khi hết trùng);
+  Lưu vẫn hỏi Cảnh báo trùng đơn như cũ - kiểm tra 2 lần (người dùng đề nghị 2026-10-27). Cập nhật F1, README
 - [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

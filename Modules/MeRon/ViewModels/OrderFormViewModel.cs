@@ -219,6 +219,40 @@ public sealed partial class OrderFormViewModel : ObservableObject
     {
         Error = string.Empty;
         RefreshLastOrder();
+        RefreshDuplicate();
+    }
+
+    partial void OnDeliveryDateChanged(DateTimeOffset? value) => RefreshDuplicate();
+
+    // ---- Trùng đơn (2026-10-27): báo ngay khi chọn khách / đổi ngày giao; Lưu vẫn hỏi lại "Cảnh báo trùng đơn" ----
+
+    /// <summary>"Khách hàng này đã có đơn đặt hàng giao ngày 28/10…" - rỗng khi chưa chọn khách / không trùng.</summary>
+    public string DuplicateWarning { get; private set; } = string.Empty;
+
+    public bool HasDuplicateWarning => DuplicateWarning.Length > 0;
+
+    private void RefreshDuplicate()
+    {
+        var day = DateOnly.FromDateTime(Pick(DeliveryDate, _originalDelivery));
+        bool duplicate;
+        try
+        {
+            duplicate = _loaded && Customer is { } customer && _orders.HasOtherOrderSameDay(customer.Id, day, Id);
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("Orders").LogWarning(ex, "Kiểm tra trùng đơn lỗi");
+            duplicate = false; // Lưu vẫn kiểm tra lại
+        }
+        var text = duplicate
+            ? $"Khách hàng này đã có đơn đặt hàng giao ngày {day:dd/MM/yyyy}. Kiểm tra lại để tránh nhập trùng (bấm Lưu sẽ hỏi lại)."
+            : string.Empty;
+        if (text != DuplicateWarning)
+        {
+            DuplicateWarning = text;
+            OnPropertyChanged(nameof(DuplicateWarning));
+            OnPropertyChanged(nameof(HasDuplicateWarning));
+        }
     }
 
     // ---- "Lần trước" (2026-10-19): đơn gần nhất của khách đang chọn, chỉ ở form thêm đơn ----
@@ -337,8 +371,12 @@ public sealed partial class OrderFormViewModel : ObservableObject
     /// <summary>Đọc lại danh sách khách (vừa thêm khách mới ngay trong form) - giữ nguyên đơn đang soạn.</summary>
     public void ReloadCustomers() => Customers = CustomerOption.From(AppServices.MasterData.GetCustomers());
 
+    // Load gán Customer / DeliveryDate trước Id và ngày gốc → chưa kiểm tra trùng cho tới khi nạp xong.
+    private bool _loaded;
+
     public void Load(OrderFormArgs args)
     {
+        _loaded = false;
         _typingDiscount = null;
         Customers = CustomerOption.From(AppServices.MasterData.GetCustomers());
         var products = AppServices.MasterData.GetProducts();
@@ -406,6 +444,8 @@ public sealed partial class OrderFormViewModel : ObservableObject
         }
         OnPropertyChanged(string.Empty);
         RefreshLastOrder(); // Customer gán trước Id / danh mục món → tính lại khi form đã nạp xong
+        _loaded = true;
+        RefreshDuplicate();
         Recalculate();
         if ((args.OrderId ?? args.CopyFromId) is not null && Id == 0 && CopiedFromId is null)
         {
