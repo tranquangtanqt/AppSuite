@@ -37,4 +37,11 @@ public static class DateRanges
             _ => (today, today),
         };
     }
+
+    /// <summary>
+    /// Sau khi đổi 1 ô mà Từ ngày lớn hơn Đến ngày: đổi Từ → Đến ngày = Từ ngày; đổi Đến → Từ ngày = Đến ngày
+    /// (thiếu 1 trong 2 thì giữ nguyên).
+    /// </summary>
+    public static (DateOnly? From, DateOnly? To) Fix(DateOnly? from, DateOnly? to, bool toChanged) =>
+        from is { } f && to is { } t && f > t ? (toChanged ? (t, t) : (f, f)) : (from, to);
 }

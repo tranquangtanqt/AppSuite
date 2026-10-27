@@ -65,9 +65,38 @@ public sealed partial class OrdersViewModel : ObservableObject
 
     partial void OnStatusChanged(OrderStatus? value) => AutoReload();
 
-    partial void OnFromDateChanged(DateTimeOffset? value) => AutoReload();
+    partial void OnFromDateChanged(DateTimeOffset? value)
+    {
+        if (!FixRange(toChanged: false))
+        {
+            AutoReload();
+        }
+    }
 
-    partial void OnToDateChanged(DateTimeOffset? value) => AutoReload();
+    partial void OnToDateChanged(DateTimeOffset? value)
+    {
+        if (!FixRange(toChanged: true))
+        {
+            AutoReload();
+        }
+    }
+
+    /// <summary>Từ ngày &gt; Đến ngày → kéo ô kia theo ô vừa đổi (<see cref="DateRanges.Fix"/>; lần đặt đó tự tải lại).</summary>
+    private bool FixRange(bool toChanged)
+    {
+        var (from, to) = DateRanges.Fix(DayOf(FromDate), DayOf(ToDate), toChanged);
+        if (from != DayOf(FromDate))
+        {
+            FromDate = ToOffset(from);
+            return true;
+        }
+        if (to != DayOf(ToDate))
+        {
+            ToDate = ToOffset(to);
+            return true;
+        }
+        return false;
+    }
 
     partial void OnCustomerChanged(CustomerOption? value) => AutoReload();
 

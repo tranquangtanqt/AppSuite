@@ -28,9 +28,38 @@ public sealed partial class DateRangeFilter : ObservableObject
 
     public DateOnly? To => ToDate is { } v ? DateOnly.FromDateTime(v.Date) : null;
 
-    partial void OnFromDateChanged(DateTimeOffset? value) => Raise();
+    partial void OnFromDateChanged(DateTimeOffset? value)
+    {
+        if (!FixRange(toChanged: false))
+        {
+            Raise();
+        }
+    }
 
-    partial void OnToDateChanged(DateTimeOffset? value) => Raise();
+    partial void OnToDateChanged(DateTimeOffset? value)
+    {
+        if (!FixRange(toChanged: true))
+        {
+            Raise();
+        }
+    }
+
+    /// <summary>Từ ngày &gt; Đến ngày → kéo ô kia theo ô vừa đổi (<see cref="DateRanges.Fix"/>; lần đặt đó tự báo Changed).</summary>
+    private bool FixRange(bool toChanged)
+    {
+        var (from, to) = DateRanges.Fix(From, To, toChanged);
+        if (from != From)
+        {
+            FromDate = ToOffset(from);
+            return true;
+        }
+        if (to != To)
+        {
+            ToDate = ToOffset(to);
+            return true;
+        }
+        return false;
+    }
 
     public void Apply(DateRangePreset preset)
     {

@@ -79,6 +79,20 @@ public class OrderCalculatorTests
     }
 
     [Fact]
+    public void To_date_never_before_from_date()
+    {
+        var d1 = new DateOnly(2026, 3, 1);
+        var d2 = new DateOnly(2026, 3, 5);
+        Assert.Equal((d2, d2), DateRanges.Fix(d2, d1, toChanged: false));
+        Assert.Equal((d1, d1), DateRanges.Fix(d2, d1, toChanged: true));
+        Assert.Equal((d1, d2), DateRanges.Fix(d1, d2, toChanged: false));
+        Assert.Equal((d1, d2), DateRanges.Fix(d1, d2, toChanged: true));
+        Assert.Equal((d1, d1), DateRanges.Fix(d1, d1, toChanged: true));
+        Assert.Equal((d2, (DateOnly?)null), DateRanges.Fix(d2, null, toChanged: false));
+        Assert.Equal(((DateOnly?)null, d1), DateRanges.Fix(null, d1, toChanged: true));
+    }
+
+    [Fact]
     public void Parses_both_phone_date_formats()
     {
         Assert.Equal(new DateTime(2026, 6, 27, 14, 20, 53, 242), DbDate.Parse("2026-06-27T14:20:53.242992")!.Value.AddTicks(-9920));
