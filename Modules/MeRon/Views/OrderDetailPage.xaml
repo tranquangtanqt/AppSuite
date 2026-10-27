@@ -20,6 +20,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <Button Click="Back_Click" AutomationProperties.Name="Quay lại" ToolTipService.ToolTip="Quay lại danh sách đơn">
                 <SymbolIcon Symbol="Back" />
@@ -34,7 +35,14 @@
                     <TextBlock Text="Chụp ảnh" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="4" Style="{StaticResource AccentButtonStyle}" Click="PayAll_Click" AutomationProperties.Name="Thanh toán toàn bộ"
+            <Button Grid.Column="4" Click="OpenPictures_Click" AutomationProperties.Name="Thư mục ảnh"
+                    ToolTipService.ToolTip="Mở thư mục ảnh chụp (Pictures\MeRon) - vừa chụp thì chọn sẵn ảnh đó">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="Folder" />
+                    <TextBlock Text="Thư mục ảnh" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="5" Style="{StaticResource AccentButtonStyle}" Click="PayAll_Click" AutomationProperties.Name="Thanh toán toàn bộ"
                     Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.CanPayAll), Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <FontIcon Glyph="&#xE8C7;" FontSize="16" />

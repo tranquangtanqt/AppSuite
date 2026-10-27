@@ -74,6 +74,25 @@ public sealed partial class OrderDetailPage : Page, IOrderListPage
         }
     }
 
+    private string? _lastCapture;
+
+    /// <summary>Explorer ở Pictures\MeRon; vừa chụp ở trang này (file còn) thì chọn sẵn ảnh đó.</summary>
+    private async void OpenPictures_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var args = _lastCapture is { } file && File.Exists(file)
+                ? $"/select,\"{file}\""
+                : $"\"{Directory.CreateDirectory(Core.CaptureFiles.Folder).FullName}\"";
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", args) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("Orders").LogError(ex, "Mở thư mục ảnh lỗi");
+            await Dialogs.ShowMessageAsync(XamlRoot, "Không mở được thư mục ảnh", ex.Message);
+        }
+    }
+
     /// <summary>
     /// Như nút "Chụp ảnh" của điện thoại (chụp danh sách gộp theo khách để gửi): chụp toàn bộ danh sách (cả phần phải cuộn)
     /// → chép vào clipboard + lưu PNG vào Pictures\MeRon.
@@ -113,6 +132,7 @@ public sealed partial class OrderDetailPage : Page, IOrderListPage
             package.SetBitmap(RandomAccessStreamReference.CreateFromStream(stream));
             Clipboard.SetContent(package);
 
+            _lastCapture = file;
             AppLog.For("Orders").LogInformation("Chụp ảnh Chi tiết {W}x{H}: {File}", bitmap.PixelWidth, bitmap.PixelHeight, file);
             ViewModel.Message = $"Đã chép ảnh vào clipboard (Ctrl+V để dán) và lưu {file}";
         }

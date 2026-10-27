@@ -390,6 +390,8 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   danh sách giao hàng theo khu + phiếu chuẩn bị; so cùng kỳ năm trước (Biểu đồ); món tăng / giảm; món theo thứ; doanh thu theo
   khu; công nợ theo tuổi nợ
 - [ ] Thử tay: chuột phải thẻ đơn ở trang Chi tiết (Sandbox chỉ chạy trang Đặt hàng)
+- [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị
+  2026-10-27). Cập nhật F1, README
 - [ ] Biểu đồ đợt sau (khi dùng Mua hàng): bán − mua theo tháng, lãi theo món (cần giá vốn)
 - [ ] Để sau: Nhập dữ liệu khi thư mục chỉ có 1 vài file .tsv (hiện báo lỗi thiếu file, không nhập; thư mục cha chọn bản
   mới nhất dù thiếu file) → cân nhắc chế độ "chỉ thay các bảng có file" hoặc chỉ chọn bản đủ 8 file (2026-10-13)

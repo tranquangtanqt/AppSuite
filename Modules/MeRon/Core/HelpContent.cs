@@ -88,7 +88,7 @@ public static class HelpContent
             new("Mở", "Nút Chi tiết ở trang Đặt hàng - dùng đúng bộ lọc đang chọn (trạng thái, khách, khoảng ngày). Mỗi khách 1 khung: tên khách ghi 1 lần ở đầu khung, các thẻ đơn bên trong chỉ có ngày giao + trạng thái (không lặp lại tên); cuối khung là Tổng đơn của khách."),
             new("Sửa đơn", "Bấm vào 1 đơn để mở form sửa; Lưu / Quay lại thì về lại Chi tiết (đã cập nhật).", "Click"),
             new("Thanh toán toàn bộ", "Hiện khi còn đơn Đã lên đơn. Hỏi xác nhận rồi chuyển mọi đơn Đã lên đơn trong danh sách sang Đã thanh toán. Trong danh sách có đơn đã thanh toán từ trước thì từ chối cả lần (tránh thanh toán trùng) - lọc trạng thái Đã lên đơn trước khi mở Chi tiết. Đơn Huỷ không bị đổi. Ngày thanh toán của các đơn = lúc bấm."),
-            new("Chụp ảnh", "Chụp toàn bộ danh sách (cả phần phải cuộn) → chép vào clipboard để dán (Ctrl+V) vào Zalo / Messenger, và lưu file PNG trong Pictures\\MeRon. Ảnh cũ hơn 30 ngày (đổi ở Cài đặt → Ảnh chụp) tự vào Thùng rác khi mở app. Mở từ trang Công nợ thì ảnh có thêm dòng tiêu đề \"Đơn chưa thanh toán - tên · tính đến ngày · Tổng\"."),
+            new("Chụp ảnh", "Chụp toàn bộ danh sách (cả phần phải cuộn) → chép vào clipboard để dán (Ctrl+V) vào Zalo / Messenger, và lưu file PNG trong Pictures\\MeRon. Ảnh cũ hơn 30 ngày (đổi ở Cài đặt → Ảnh chụp) tự vào Thùng rác khi mở app. Mở từ trang Công nợ thì ảnh có thêm dòng tiêu đề \"Đơn chưa thanh toán - tên · tính đến ngày · Tổng\". Nút Thư mục ảnh: mở Pictures\\MeRon trong Explorer - vừa chụp thì chọn sẵn ảnh vừa lưu (để kéo thả / đính kèm)."),
         ]),
 
         new("Mua hàng", "", "Phiếu nhập / mua nguyên liệu theo ngày.", "PurchasesPage",
