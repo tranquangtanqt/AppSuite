@@ -78,6 +78,36 @@ public class OrderCalculatorTests
         Assert.Equal(((DateOnly?)null, (DateOnly?)null), DateRanges.Resolve(DateRangePreset.All, today));
     }
 
+    [Theory]
+    [InlineData("2 chao", "chao", 2)]
+    [InlineData("chao 2", "chao", 2)]
+    [InlineData("  12x banh bao ", "banh bao", 12)]
+    [InlineData("2 x xoi", "xoi", 2)]
+    [InlineData("2 xoi", "xoi", 2)]
+    [InlineData("bánh xèo x3", "bánh xèo", 3)]
+    [InlineData("chao * 999", "chao", 999)]
+    [InlineData("chao", "chao", null)]
+    [InlineData("chao2", "chao2", null)]
+    [InlineData("0 chao", "0 chao", null)]
+    [InlineData("1000 chao", "1000 chao", null)]
+    [InlineData("2 3", "2 3", null)]
+    [InlineData("5", "5", null)]
+    [InlineData("", "", null)]
+    public void Quantity_typed_with_product_name(string text, string name, int? quantity)
+    {
+        Assert.Equal((name, quantity), QuantityText.Split(text));
+    }
+
+    [Fact]
+    public void Number_in_product_name_must_be_a_whole_number()
+    {
+        Assert.True(QuantityText.HasNumber("Combo 2", 2));
+        Assert.True(QuantityText.HasNumber("Trà 2/3 đường", 3));
+        Assert.False(QuantityText.HasNumber("Yến chưng 40k", 4));
+        Assert.False(QuantityText.HasNumber("Cháo", 2));
+        Assert.False(QuantityText.HasNumber(null, 1));
+    }
+
     [Fact]
     public void To_date_never_before_from_date()
     {

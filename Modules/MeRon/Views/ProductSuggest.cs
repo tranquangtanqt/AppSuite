@@ -11,15 +11,17 @@ namespace MeRon.Views;
 /// Ô chọn món của 1 dòng đơn kiểu autocomplete: gõ (không phân biệt dấu, các từ không cần liền nhau: "bao xiu") → chọn
 /// trong gợi ý (tên · giá); ↑ / ↓ tô gợi ý, Enter / Tab chọn gợi ý đang tô (chưa tô = gợi ý đầu). BẮT BUỘC chọn 1 món trong danh sách: rời ô mà chữ không phải tên 1 món
 /// → giữ nguyên chữ, bỏ món đang chọn, báo lỗi đỏ dưới ô (Lưu cũng báo và đưa con trỏ về đây). Món tự do là dòng riêng,
-/// không đi qua ô này.
+/// không đi qua ô này. Gõ kèm số lượng ("2 chao" / "chao 2", <see cref="QuantityText"/>) → gợi ý theo tên, chọn được món thì
+/// đặt luôn số lượng đó và con trỏ sang nút Thêm món (bỏ qua ô Số lượng). Tên món có số ở cuối ("Combo 2") vẫn ưu tiên khớp nguyên chữ.
 /// </summary>
 internal static class ProductSuggest
 {
     private const int MaxSuggestions = 50;
 
     /// <summary>Gắn trong Loaded của ô (ô nằm trong DataTemplate, DataContext = dòng). Gắn 1 lần / ô.
-    /// <paramref name="onChosen"/>: gọi sau khi chọn được món (bấm gợi ý / Enter / Tab) - form đưa con trỏ sang ô Số lượng.</summary>
-    public static void Attach(AutoSuggestBox box, Action? onChosen = null)
+    /// <paramref name="onChosen"/>: gọi sau khi chọn được món (bấm gợi ý / Enter / Tab) - form đưa con trỏ sang ô Số lượng.
+    /// <paramref name="onChosenWithQuantity"/>: thay cho onChosen khi đã gõ kèm số lượng - form đưa con trỏ sang nút Thêm món.</summary>
+    public static void Attach(AutoSuggestBox box, Action? onChosen = null, Action? onChosenWithQuantity = null)
     {
         if (box.Tag is "attached" || box.DataContext is not OrderLineViewModel line)
         {
@@ -34,6 +36,55 @@ internal static class ProductSuggest
 
         ProductOption? Exact(string text) =>
             line.Products.FirstOrDefault(p => TextSearch.Fold(p.Name).Trim() == TextSearch.Fold(text).Trim()); // dữ liệu có tên thừa dấu cách ("Chè ")
+
+        // Gợi ý theo chữ gõ: tách được số lượng mà không món nào có đúng số đó trong tên ("Combo 2") → gợi ý theo phần tên,
+        // kèm số lượng ("4 yen" không bị "Yến chưng 40k" giữ lại vì 4 nằm trong 40).
+        (List<ProductOption> Matches, int? Quantity) Suggest(string text)
+        {
+            var matches = Matches(text);
+            if (QuantityText.Split(text) is not (var name, { } quantity))
+            {
+                return (matches, null);
+            }
+            var named = matches.Where(p => QuantityText.HasNumber(p.Name, quantity)).ToList();
+            if (named.Count > 0)
+            {
+                return (named, null);
+            }
+            var byName = Matches(name);
+            return byName.Count > 0 ? (byName, quantity) : (matches, null);
+        }
+
+        // Món + số lượng cho chữ gõ (Enter / Tab chưa tô gợi ý): trùng nguyên tên trước, rồi trùng tên sau khi tách số, rồi gợi ý đầu.
+        (ProductOption? Product, int? Quantity) Pick(string text)
+        {
+            if (Exact(text) is { } exact)
+            {
+                return (exact, null);
+            }
+            var (matches, quantity) = Suggest(text);
+            return quantity is null
+                ? (matches.FirstOrDefault(), null)
+                : (Exact(QuantityText.Split(text).Name) ?? matches.FirstOrDefault(), quantity);
+        }
+
+        // Số lượng gõ kèm ở lần gõ phím gần nhất (↑ / ↓ tô gợi ý thì ô hiện tên món, mất số → nhớ ở đây).
+        int? typedQuantity = null;
+
+        void Choose(ProductOption product, int? quantity)
+        {
+            box.Text = product.Name;
+            line.ChooseProduct(product);
+            if (quantity is { } q)
+            {
+                line.Quantity = q;
+            }
+            typedQuantity = null;
+            CloseList();
+        }
+
+        void AfterChosen(int? quantity) =>
+            (quantity is not null && onChosenWithQuantity is not null ? onChosenWithQuantity : onChosen)?.Invoke();
 
         // Gợi ý đang tô bằng ↑ / ↓ (ô hiện tên của nó); gõ tiếp thì bỏ.
         ProductOption? highlighted = null;
@@ -62,9 +113,11 @@ internal static class ProductSuggest
                 return;
             }
             ProductOption? pick;
+            int? quantity = null;
             if (highlighted is not null && highlighted.Name == box.Text)
             {
                 pick = highlighted;
+                quantity = typedQuantity;
             }
             else if (line.SelectedProduct is { } selected && selected.Name == box.Text)
             {
@@ -72,19 +125,17 @@ internal static class ProductSuggest
             }
             else
             {
-                pick = Exact(box.Text) ?? Matches(box.Text).FirstOrDefault();
+                (pick, quantity) = Pick(box.Text);
             }
             if (pick is null)
             {
                 return;
             }
-            box.Text = pick.Name;
-            line.ChooseProduct(pick);
-            CloseList();
+            Choose(pick, quantity);
             if (!SuggestionList.IsShiftDown())
             {
                 e.Handled = true;
-                onChosen?.Invoke();
+                AfterChosen(quantity);
             }
         };
 
@@ -95,7 +146,8 @@ internal static class ProductSuggest
                 return;
             }
             highlighted = null;
-            var matches = Matches(sender.Text);
+            var (matches, quantity) = Suggest(sender.Text);
+            typedQuantity = quantity;
             sender.ItemsSource = matches;
             SuggestionList.ShowFirst(sender);
             // Báo ngay khi gõ không ra món nào; gõ lại ra món thì tắt lỗi (chưa chọn thì Lưu vẫn báo).
@@ -115,16 +167,16 @@ internal static class ProductSuggest
             {
                 return;
             }
-            var chosen = args.ChosenSuggestion as ProductOption ?? Exact(args.QueryText) ?? Matches(args.QueryText).FirstOrDefault();
+            // ↑ / ↓ rồi Enter: ChosenSuggestion là null, ô đang hiện tên gợi ý đã tô → nhận gợi ý đó kèm số đã gõ.
+            var suggestion = args.ChosenSuggestion as ProductOption ?? (highlighted?.Name == args.QueryText ? highlighted : null);
+            var (chosen, quantity) = suggestion is not null ? (suggestion, typedQuantity) : Pick(args.QueryText);
             if (chosen is null)
             {
                 line.RejectProductText(args.QueryText);
                 return;
             }
-            sender.Text = chosen.Name;
-            line.ChooseProduct(chosen);
-            CloseList();
-            onChosen?.Invoke();
+            Choose(chosen, quantity);
+            AfterChosen(quantity);
         };
 
         // Ô trống mà có con trỏ → mở sẵn cả danh sách. Mở sau 1 nhịp: ô vừa tạo (bấm Thêm món) thì popup gợi ý chưa sẵn
@@ -154,11 +206,14 @@ internal static class ProductSuggest
             {
                 return;
             }
-            // Gõ đúng nguyên tên 1 món (không dấu cũng được) mà chưa bấm chọn → nhận luôn; còn lại là lỗi.
+            // Gõ đúng nguyên tên 1 món (không dấu cũng được, kèm số lượng cũng được) mà chưa bấm chọn → nhận luôn; còn lại là lỗi.
             if (Exact(text) is { } exact)
             {
-                box.Text = exact.Name;
-                line.ChooseProduct(exact);
+                Choose(exact, null);
+            }
+            else if (QuantityText.Split(text) is (var name, { } quantity) && Exact(name) is { } named)
+            {
+                Choose(named, quantity);
             }
             else
             {

@@ -131,11 +131,12 @@ public sealed partial class OrderFormPage : Page
             AddLineButton.Focus(FocusState.Keyboard);
         });
 
-    /// <summary>Chọn được món (bấm gợi ý / Enter / Tab) → con trỏ sang ô Số lượng cùng dòng.</summary>
+    /// <summary>Chọn được món (bấm gợi ý / Enter / Tab) → con trỏ sang ô Số lượng cùng dòng. Gõ kèm số lượng ("2 chao")
+    /// thì số lượng đã có → con trỏ sang nút Thêm món (không tự thêm dòng: đơn 1 món thì khỏi phải xoá dòng trống).</summary>
     private void ProductBox_Loaded(object sender, RoutedEventArgs e)
     {
         var box = (AutoSuggestBox)sender;
-        ProductSuggest.Attach(box, () => FocusSameLine(box, "QuantityBox"));
+        ProductSuggest.Attach(box, () => FocusSameLine(box, "QuantityBox"), FocusAddLine);
     }
 
     /// <summary>Gõ xong tên món tự do, Enter → con trỏ sang ô Đơn giá cùng dòng.</summary>
