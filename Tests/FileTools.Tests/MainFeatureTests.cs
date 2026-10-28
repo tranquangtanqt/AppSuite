@@ -125,6 +125,27 @@ public class MergeTests
         Assert.Equal(["a.csv", "b.txt"], top);
         Assert.Equal(["a.csv", "d.csv"], all);
     }
+
+    [Fact]
+    public void Listing_sorts_descending_for_every_order()
+    {
+        using var temp = new TempDir();
+        var f1 = temp.Write("log1.txt", "aaa");
+        var f2 = temp.Write("log2.txt", "a");
+        var f10 = temp.Write("log10.txt", "aa");
+        File.SetLastWriteTime(f1, new DateTime(2026, 1, 2));
+        File.SetLastWriteTime(f2, new DateTime(2026, 1, 3));
+        File.SetLastWriteTime(f10, new DateTime(2026, 1, 1));
+
+        string[] Names(FileSortOrder order, bool descending) =>
+            FileListing.List(temp.Path, "*.txt", false, order, descending).Select(f => f.Name).ToArray();
+
+        Assert.Equal(["log1.txt", "log2.txt", "log10.txt"], Names(FileSortOrder.NameNatural, false));
+        Assert.Equal(["log10.txt", "log2.txt", "log1.txt"], Names(FileSortOrder.NameNatural, true));
+        Assert.Equal(["log2.txt", "log1.txt", "log10.txt"], Names(FileSortOrder.Modified, true));
+        Assert.Equal(["log1.txt", "log10.txt", "log2.txt"], Names(FileSortOrder.Size, true));
+        Assert.Equal("Mới → cũ", FileListing.DirectionText(FileSortOrder.Modified, true));
+    }
 }
 
 public class SplitTests

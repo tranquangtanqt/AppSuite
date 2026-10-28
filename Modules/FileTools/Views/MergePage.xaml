@@ -60,7 +60,9 @@
                         <TextBlock Grid.Column="1" Text="Dung lượng" FontWeight="SemiBold" HorizontalAlignment="Right" />
                         <TextBlock Grid.Column="2" Text="Ngày sửa" FontWeight="SemiBold" />
                     </Grid>
-                    <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Files}" SelectedItem="{x:Bind ViewModel.SelectedFile, Mode=TwoWay}">
+                    <!-- Kéo 1 dòng lên / xuống để đổi thứ tự (ListView tự đổi chỗ trong ObservableCollection). -->
+                    <ListView x:Name="FileList" Grid.Row="1" ItemsSource="{x:Bind ViewModel.Files}" SelectedItem="{x:Bind ViewModel.SelectedFile, Mode=TwoWay}"
+                              CanDragItems="True" CanReorderItems="True" AllowDrop="True" PreviewKeyDown="FileList_PreviewKeyDown">
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="vm:FileItem">
                                 <Grid ColumnSpacing="12" ToolTipService.ToolTip="{x:Bind FullName}">
@@ -76,13 +78,21 @@
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
+                    <StackPanel Grid.Row="1" Spacing="6" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="24" IsHitTestVisible="False"
+                                Opacity="0.6" Visibility="{x:Bind ViewModel.IsEmpty, Mode=OneWay}">
+                        <FontIcon Glyph="&#xE896;" FontSize="28" />
+                        <TextBlock Text="Kéo-thả thư mục hoặc file vào đây" HorizontalAlignment="Center" FontWeight="SemiBold" />
+                        <TextBlock Text="hoặc chọn Thư mục nguồn ở trên rồi bấm Liệt kê file" HorizontalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" />
+                    </StackPanel>
                 </Grid>
             </Border>
             <StackPanel Grid.Column="1" Spacing="8" Width="190">
                 <ComboBox Header="Thứ tự nối" HorizontalAlignment="Stretch" ItemsSource="{x:Bind vm:MergeViewModel.SortNames}" SelectedIndex="{x:Bind ViewModel.SortIndex, Mode=TwoWay}" />
-                <Button HorizontalAlignment="Stretch" Content="Sắp xếp lại" Command="{x:Bind ViewModel.ResortCommand}" />
-                <Button HorizontalAlignment="Stretch" Content="▲ Lên" Command="{x:Bind ViewModel.MoveUpCommand}" />
-                <Button HorizontalAlignment="Stretch" Content="▼ Xuống" Command="{x:Bind ViewModel.MoveDownCommand}" />
+                <Button HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Content="{x:Bind ViewModel.SortDirectionText, Mode=OneWay}"
+                        Command="{x:Bind ViewModel.ToggleSortDirectionCommand}" AutomationProperties.Name="Đổi chiều sắp xếp"
+                        ToolTipService.ToolTip="Bấm để đảo chiều (tăng ↔ giảm). Đổi kiểu / chiều là danh sách tự sắp lại." />
+                <Button HorizontalAlignment="Stretch" Content="▲ Lên" Command="{x:Bind ViewModel.MoveUpCommand}" ToolTipService.ToolTip="Đưa file đang chọn lên trên (Alt+↑ trong danh sách). Có thể kéo dòng để đổi chỗ." />
+                <Button HorizontalAlignment="Stretch" Content="▼ Xuống" Command="{x:Bind ViewModel.MoveDownCommand}" ToolTipService.ToolTip="Đưa file đang chọn xuống dưới (Alt+↓ trong danh sách). Có thể kéo dòng để đổi chỗ." />
                 <Button HorizontalAlignment="Stretch" Content="Bỏ khỏi danh sách" Command="{x:Bind ViewModel.RemoveCommand}" />
             </StackPanel>
         </Grid>

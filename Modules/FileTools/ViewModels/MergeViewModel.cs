@@ -42,7 +42,17 @@ public sealed partial class MergeViewModel : JobViewModel, IUsesSharedFile
     private bool _recursive;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SortDirectionText))]
     private int _sortIndex;
+
+    /// <summary>Giảm dần (Z → A, mới → cũ, lớn → nhỏ). Đổi kiểu / chiều là danh sách tự sắp lại.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SortDirectionText))]
+    private bool _sortDescending;
+
+    public string SortDirectionText => "⇅  " + FileListing.DirectionText((FileSortOrder)SortIndex, SortDescending);
+
+    public bool IsEmpty => Files.Count == 0;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(MoveUpCommand), nameof(MoveDownCommand), nameof(RemoveCommand))]
@@ -69,6 +79,7 @@ public sealed partial class MergeViewModel : JobViewModel, IUsesSharedFile
         Files.CollectionChanged += (_, _) =>
         {
             Summary = Files.Count == 0 ? "Chưa có file nào." : $"{Files.Count} file · {FileItem.FormatSize(Files.Sum(f => f.Length))}";
+            OnPropertyChanged(nameof(IsEmpty));
             MergeCommand.NotifyCanExecuteChanged();
         };
     }
@@ -94,7 +105,7 @@ public sealed partial class MergeViewModel : JobViewModel, IUsesSharedFile
         }
         try
         {
-            foreach (var file in FileListing.List(SourceFolder, Patterns, Recursive, (FileSortOrder)SortIndex))
+            foreach (var file in FileListing.List(SourceFolder, Patterns, Recursive, (FileSortOrder)SortIndex, SortDescending))
             {
                 Files.Add(new FileItem(file));
             }
@@ -137,15 +148,28 @@ public sealed partial class MergeViewModel : JobViewModel, IUsesSharedFile
         }
     }
 
+    partial void OnSortIndexChanged(int value) => Resort();
+
+    partial void OnSortDescendingChanged(bool value) => Resort();
+
     [RelayCommand]
+    private void ToggleSortDirection() => SortDescending = !SortDescending;
+
+    /// <summary>Sắp lại danh sách đang có theo kiểu + chiều đang chọn (thứ tự kéo tay bị thay).</summary>
     private void Resort()
     {
-        var sorted = FileListing.Sort(Files.Select(f => new FileInfo(f.FullName)), (FileSortOrder)SortIndex).ToList();
+        if (IsBusy || Files.Count < 2)
+        {
+            return;
+        }
+        var selected = SelectedFile?.FullName;
+        var sorted = FileListing.Sort(Files.Select(f => new FileInfo(f.FullName)), (FileSortOrder)SortIndex, SortDescending).ToList();
         Files.Clear();
         foreach (var file in sorted)
         {
             Files.Add(new FileItem(file));
         }
+        SelectedFile = Files.FirstOrDefault(f => f.FullName == selected);
     }
 
     [RelayCommand(CanExecute = nameof(CanMove))]

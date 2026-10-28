@@ -11,7 +11,7 @@ public enum FileSortOrder
 /// <summary>Liệt kê file trong thư mục theo mẫu lọc ("*.csv;*.txt"), có / không thư mục con.</summary>
 public static class FileListing
 {
-    public static List<FileInfo> List(string folder, string patterns, bool recursive, FileSortOrder order)
+    public static List<FileInfo> List(string folder, string patterns, bool recursive, FileSortOrder order, bool descending = false)
     {
         var option = recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
         var masks = patterns.Split([';', ',', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -23,14 +23,30 @@ public static class FileListing
             .SelectMany(m => new DirectoryInfo(folder).EnumerateFiles(m, option))
             .Where(f => !f.Name.StartsWith("~$", StringComparison.Ordinal) && !f.Name.EndsWith(".partial", StringComparison.OrdinalIgnoreCase))
             .DistinctBy(f => f.FullName, StringComparer.OrdinalIgnoreCase);
-        return Sort(files, order).ToList();
+        return Sort(files, order, descending).ToList();
     }
 
-    public static IEnumerable<FileInfo> Sort(IEnumerable<FileInfo> files, FileSortOrder order) => order switch
+    /// <summary>Tăng dần: tên A → Z (2 trước 10), cũ → mới, nhỏ → lớn. Giảm dần = đảo ngược đúng thứ tự đó.</summary>
+    public static IEnumerable<FileInfo> Sort(IEnumerable<FileInfo> files, FileSortOrder order, bool descending = false)
     {
-        FileSortOrder.Modified => files.OrderBy(f => f.LastWriteTimeUtc).ThenBy(f => f.FullName, NaturalComparer.Instance),
-        FileSortOrder.Size => files.OrderBy(f => f.Length).ThenBy(f => f.FullName, NaturalComparer.Instance),
-        _ => files.OrderBy(f => f.FullName, NaturalComparer.Instance),
+        var sorted = order switch
+        {
+            FileSortOrder.Modified => files.OrderBy(f => f.LastWriteTimeUtc).ThenBy(f => f.FullName, NaturalComparer.Instance),
+            FileSortOrder.Size => files.OrderBy(f => f.Length).ThenBy(f => f.FullName, NaturalComparer.Instance),
+            _ => files.OrderBy(f => f.FullName, NaturalComparer.Instance),
+        };
+        return descending ? sorted.Reverse() : sorted;
+    }
+
+    /// <summary>Chữ trên nút đổi chiều, vd "Cũ → mới".</summary>
+    public static string DirectionText(FileSortOrder order, bool descending) => (order, descending) switch
+    {
+        (FileSortOrder.Modified, false) => "Cũ → mới",
+        (FileSortOrder.Modified, true) => "Mới → cũ",
+        (FileSortOrder.Size, false) => "Nhỏ → lớn",
+        (FileSortOrder.Size, true) => "Lớn → nhỏ",
+        (_, false) => "A → Z (1 → 10)",
+        (_, true) => "Z → A (10 → 1)",
     };
 }
 

@@ -183,6 +183,11 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   ngày: `CM_dong10-20_20261028_110604.sql` (cùng đổi cho file tạm của Tìm, So sánh, Theo dõi log). F1, README. Unit test
   131/131 (2026-10-28)
 - [ ] Thử tay: Trích dòng không tự mở, tên file có ngày
+- [x] Nối file (theo nhận xét UI): nút ⇅ đảo chiều sắp xếp (A → Z / Z → A, Cũ → mới / Mới → cũ, Nhỏ → lớn / Lớn → nhỏ,
+  lưu vào Mẫu); đổi Thứ tự nối / chiều là tự sắp lại (bỏ nút Sắp xếp lại); danh sách trống hiện hướng dẫn kéo-thả; kéo dòng
+  để đổi thứ tự; Alt+↑ / Alt+↓ trong danh sách = Lên / Xuống. Không làm: mục "Tuỳ chọn nâng cao" (chỉ 3 ô tick), tổng
+  số file · dung lượng (đã có). F1, README. Unit test 132/132; GUI Sandbox 9/9 (2026-10-28)
+- [ ] Thử tay: kéo dòng đổi thứ tự trong Nối file + kéo-thả file từ Explorer thả lên danh sách vẫn thêm được
 
 ## MeRon (module mới — bản máy tính của app điện thoại me-ron, `Modules/MeRon/PLAN.md`)
 
