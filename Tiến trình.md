@@ -178,6 +178,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   tên thêm "(Lọc dòng)", Đổi xuống dòng → Xuống dòng LF + Encoding giữ như nguồn, Đổi dấu phân cách → Tab), chuyển trang
   giữ file đang làm (Xem file → Tìm → Đổi encoding → CSV, đổi file ở trang khác thì trang kia đổi theo), Shift+Enter
   thêm dòng / Enter = Tìm (10 dòng khớp), Lọc ra file giữ tiêu đề, CSV ghi ra .tsv. `ft_merge` 19/19 (2026-10-08)
+- [x] Xem file → Trích dòng: bỏ ô "Mở file sau khi trích" (trích xong không tự mở, đã có nút Mở kết quả); tên file thêm
+  ngày: `CM_dong10-20_20261028_110604.sql` (cùng đổi cho file tạm của Tìm, So sánh, Theo dõi log). F1, README. Unit test
+  131/131 (2026-10-28)
+- [ ] Thử tay: Trích dòng không tự mở, tên file có ngày
 
 ## MeRon (module mới — bản máy tính của app điện thoại me-ron, `Modules/MeRon/PLAN.md`)
 

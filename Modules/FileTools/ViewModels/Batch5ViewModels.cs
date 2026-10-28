@@ -100,7 +100,7 @@ public sealed partial class CompareViewModel : JobViewModel, IUsesSharedFile
             IgnoreCase = IgnoreCase,
             IgnoreWhitespace = IgnoreWhitespace,
             ContextLines = (int)Math.Clamp(ContextLines, 0, 50),
-            ReportPath = Path.Combine(Shell.TempFolder, $"sosanh_{Path.GetFileNameWithoutExtension(PathA)}_{Path.GetFileNameWithoutExtension(PathB)}_{DateTime.Now:HHmmss}.html"),
+            ReportPath = Path.Combine(Shell.TempFolder, $"sosanh_{Path.GetFileNameWithoutExtension(PathA)}_{Path.GetFileNameWithoutExtension(PathB)}_{DateTime.Now:yyyyMMdd_HHmmss}.html"),
         };
         Rows.Clear();
         Summary = string.Empty;
@@ -244,7 +244,7 @@ public sealed partial class TailViewModel : ObservableObject, IUsesSharedFile
         try
         {
             Directory.CreateDirectory(Shell.TempFolder);
-            var path = Path.Combine(Shell.TempFolder, $"{Path.GetFileNameWithoutExtension(SourcePath)}_theodoi_{DateTime.Now:HHmmss}.log");
+            var path = Path.Combine(Shell.TempFolder, $"{Path.GetFileNameWithoutExtension(SourcePath)}_theodoi_{DateTime.Now:yyyyMMdd_HHmmss}.log");
             File.WriteAllLines(path, Lines, new System.Text.UTF8Encoding(false));
             Shell.Open(path);
         }

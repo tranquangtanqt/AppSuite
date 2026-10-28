@@ -10,7 +10,7 @@ public sealed record InfoRow(string Label, string Value);
 
 /// <summary>Trang "Xem file" (gộp 2 trang cũ Thông tin file + Trích dòng). Thông tin: 1 lượt đọc → số dòng, kiểu xuống dòng,
 /// encoding, dòng dài nhất; file dạng bảng thêm dấu phân cách, số cột, bản ghi lệch cột - chọn file là tự phân tích.
-/// Trích dòng: N dòng đầu / dòng X–Y / N dòng cuối → file tạm (%TEMP%\AppSuite\FileTools) rồi mở.</summary>
+/// Trích dòng: N dòng đầu / dòng X–Y / N dòng cuối → file tạm (%TEMP%\AppSuite\FileTools), tên kèm ngày giờ; không tự mở - xem bằng nút Mở kết quả.</summary>
 public sealed partial class InfoViewModel : SourceFileViewModel
 {
     public ObservableCollection<InfoRow> Rows { get; } = [];
@@ -30,9 +30,6 @@ public sealed partial class InfoViewModel : SourceFileViewModel
 
     [ObservableProperty]
     private bool _includeHeader;
-
-    [ObservableProperty]
-    private bool _openAfter = true;
 
     public string TempFolder => Shell.TempFolder;
 
@@ -102,7 +99,7 @@ public sealed partial class InfoViewModel : SourceFileViewModel
         var options = new ExtractOptions
         {
             SourcePath = SourcePath,
-            OutputPath = Path.Combine(Shell.TempFolder, $"{Path.GetFileNameWithoutExtension(SourcePath)}_{tag}_{DateTime.Now:HHmmss}{Path.GetExtension(SourcePath)}"),
+            OutputPath = Path.Combine(Shell.TempFolder, $"{Path.GetFileNameWithoutExtension(SourcePath)}_{tag}_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(SourcePath)}"),
             Mode = mode,
             Count = (long)Math.Max(1, Count),
             From = (long)Math.Max(1, From),
@@ -117,9 +114,5 @@ public sealed partial class InfoViewModel : SourceFileViewModel
             string where = r.FirstLineNumber is { } first ? $" (từ dòng {first:N0})" : string.Empty;
             return (options.OutputPath, [$"{r.Lines:N0} dòng{where}, {r.Encoding} → {options.OutputPath}"]);
         });
-        if (OpenAfter && ResultPath == options.OutputPath && File.Exists(options.OutputPath))
-        {
-            OpenResultCommand.Execute(null);
-        }
     }
 }

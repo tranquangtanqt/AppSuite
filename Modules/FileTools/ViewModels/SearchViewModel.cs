@@ -94,7 +94,7 @@ public sealed partial class SearchViewModel : MatchViewModel
             Match = BuildMatch(terms, MatchAllIndex == 1),
             MaxResults = (int)Math.Clamp(MaxResults, 1, 1_000_000),
             ExportPath = ExportMatches
-                ? Path.Combine(Shell.TempFolder, $"{Path.GetFileNameWithoutExtension(SourcePath)}_tim_{DateTime.Now:HHmmss}{Path.GetExtension(SourcePath)}")
+                ? Path.Combine(Shell.TempFolder, $"{Path.GetFileNameWithoutExtension(SourcePath)}_tim_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(SourcePath)}")
                 : null,
             ExportLineNumbers = ExportLineNumbers,
             Encoding = Output.Encoding,

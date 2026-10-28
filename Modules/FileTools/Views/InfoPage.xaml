@@ -74,7 +74,6 @@
                     </StackPanel>
                     <StackPanel Spacing="8" Margin="0,24,0,0">
                         <CheckBox Content="Kèm dòng tiêu đề (dòng 1)" IsChecked="{x:Bind ViewModel.IncludeHeader, Mode=TwoWay}" />
-                        <CheckBox Content="Mở file sau khi trích" IsChecked="{x:Bind ViewModel.OpenAfter, Mode=TwoWay}" />
                     </StackPanel>
                 </StackPanel>
                 <Grid ColumnSpacing="8">
