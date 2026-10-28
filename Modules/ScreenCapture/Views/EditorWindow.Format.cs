@@ -15,10 +15,11 @@ public sealed partial class EditorWindow
 {
     /// <summary>Định dạng cho shape vẽ tiếp theo của từng công cụ (giữ suốt phiên chạy, mỗi công cụ 1 bộ riêng - đường
     /// thẳng không lấy đầu mũi tên của công cụ Mũi tên). Color1 / Color2 / Size là thiết lập chung (EditorViewModel), lấy
-    /// lúc vẽ: FillColor / BackgroundColor ở đây chỉ đánh dấu "có tô" (khác null), màu thật là Color2.</summary>
+    /// lúc vẽ: FillColor / BackgroundColor ở đây chỉ đánh dấu "có tô" (khác null) và độ đục của nền, màu thật là Color2.</summary>
     private readonly Dictionary<CaptureTool, AnnotationShape> _toolDefaults = new()
     {
         [CaptureTool.Rectangle] = new RectangleAnnotation(),
+        [CaptureTool.FilledRectangle] = new RectangleAnnotation { FillColor = FilledRectangleDefaultColor.WithAlpha(FilledRectangleAlpha) },
         [CaptureTool.Ellipse] = new EllipseAnnotation(),
         [CaptureTool.Line] = new LineArrowAnnotation { EndHead = ArrowHead.None },
         [CaptureTool.Arrow] = new LineArrowAnnotation(),
@@ -26,6 +27,12 @@ public sealed partial class EditorWindow
         [CaptureTool.Text] = new TextAnnotation(),
         [CaptureTool.Callout] = new CalloutAnnotation { FillColor = SKColors.White },
     };
+
+    /// <summary>Độ đục nền của "Chữ nhật tô" (~37%) - trong mờ như Highlight để chữ bên dưới vẫn đọc được.</summary>
+    private const byte FilledRectangleAlpha = 96;
+
+    /// <summary>Màu nền "Chữ nhật tô" khi Color2 còn là trắng (vàng như Highlight).</summary>
+    private static readonly SKColor FilledRectangleDefaultColor = new(255, 235, 59);
 
     /// <summary>Màu viền chữ chọn gần nhất - giữ lại khi tắt rồi bật lại ô "Viền chữ".</summary>
     private SKColor _textOutlineColor = SKColors.White;
@@ -88,9 +95,10 @@ public sealed partial class EditorWindow
         }
         shape.Color = _viewModel.StrokeColor;
         shape.StrokeWidth = _viewModel.StrokeWidth;
-        if (shape.FillColor is not null)
+        if (shape.FillColor is { } fill)
         {
-            shape.FillColor = _viewModel.FillColor;
+            // Giữ độ đục của bộ định dạng (Chữ nhật tô: nền trong mờ).
+            shape.FillColor = _viewModel.FillColor.WithAlpha(fill.Alpha);
         }
         if (shape is TextAnnotation { BackgroundColor: not null } text)
         {
@@ -243,7 +251,9 @@ public sealed partial class EditorWindow
         {
             HighlightAnnotation => Set(s.Color, color.WithAlpha(90), v => s.Color = v),
             TextAnnotation { BackgroundColor: not null } text => Set(text.BackgroundColor, color, v => text.BackgroundColor = v),
-            RectangleAnnotation or EllipseAnnotation or CalloutAnnotation when s.FillColor is not null => Set(s.FillColor, color, v => s.FillColor = v),
+            // Giữ độ đục của nền (Chữ nhật tô trong mờ) - ô Color2 không chọn độ trong.
+            RectangleAnnotation or EllipseAnnotation or CalloutAnnotation when s.FillColor is { } fill
+                => Set(s.FillColor, color.WithAlpha(fill.Alpha), v => s.FillColor = v),
             _ => false,
         });
     }

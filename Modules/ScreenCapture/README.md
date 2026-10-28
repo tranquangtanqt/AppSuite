@@ -197,7 +197,10 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
   `Shift` = vùng vuông) → hiện tab contextual **"Vùng chọn"** (xem dưới). Vùng đã chọn có 8 handle:
   kéo handle để chỉnh kích thước, kéo bên trong vùng để di chuyển; bấm ngoài vùng = chọn lại / bỏ chọn.
   *Xoá* (hoặc phím `Delete`/`Backspace`), *Lên trên* / *Xuống dưới* (đổi thứ tự lớp).
-- **Vẽ hình** — Chữ nhật, Elip, Đường thẳng, Mũi tên, Bút, Highlight (marker tô trong mờ), Text, Chú thích.
+- **Vẽ hình** — Chữ nhật, Chữ nhật tô, Elip, Đường thẳng, Mũi tên, Bút, Highlight (marker tô trong mờ), Text, Chú thích.
+  - *Chữ nhật tô* (như "Highlight Rectangle" của PicPick) — viền Color1, nền Color2 trong mờ ~37% (`CaptureTool.FilledRectangle`,
+    vẽ ra `RectangleAnnotation` có `FillColor` alpha 96 → sửa như chữ nhật thường). Color2 đang trắng thì tự đổi sang vàng;
+    đổi Color2 cho hình đã vẽ giữ nguyên độ trong mờ của nền.
   - *Text* — bấm vào ảnh rồi **gõ chữ ngay tại chỗ** (gõ được Unikey / IME tiếng Nhật): `Enter` xuống dòng; `Esc`,
     `Ctrl+Enter` hoặc bấm ra ngoài là xong (1 bước Undo). Sửa chữ đã có: nhấp đúp lên chữ, hoặc chọn rồi `F2` / `Enter`.
     Trong lúc gõ, ribbon tự mở tab *Định dạng* với phông / cỡ / màu của chữ đó — đổi gì áp luôn cho chữ đang gõ. Kéo

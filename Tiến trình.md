@@ -753,6 +753,10 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] Thử tay: Che Mosaic / Làm mờ trên ảnh chụp thật có chữ Nhật (tên khách, 電話番号) - xem đã kín chưa trước khi gửi
 - [ ] **[Đề xuất · Nên có]** Tìm theo mẫu cho Che: "mọi số điện thoại" / "mọi email" / "mọi dãy số ≥ N chữ số" - che hết
   các giá trị khác nhau trong 1 lần thay vì tìm từng cái
+- [x] **Chữ nhật tô** (người dùng xin 2026-10-28, như "Highlight Rectangle" của PicPick): nút riêng cạnh Chữ nhật - viền
+  Color1, nền Color2 trong mờ ~37% (chữ bên dưới vẫn đọc được); Color2 đang trắng → tự đổi vàng; hình vẽ ra là chữ nhật có
+  tô nền (tab Định dạng sửa như thường); đổi Color2 giữ độ trong mờ. F1 + README. GUI Sandbox 7/7 (2026-10-28)
+- [ ] Thử tay: Chữ nhật tô trên ảnh chụp thật (màu, độ mờ có vừa mắt không)
 
 ## ImageCompare
 

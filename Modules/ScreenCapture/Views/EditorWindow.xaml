@@ -159,6 +159,14 @@
                                         <TextBlock Text="Chữ nhật" FontSize="10" />
                                     </StackPanel>
                                 </ToggleButton>
+                                <ToggleButton x:Name="FilledRectangleToolButton" Style="{StaticResource ToolButtonStyle}" Click="FilledRectangleToolButton_Click"
+                                              ToolTipService.ToolTip="Chữ nhật tô nền trong mờ: viền Color1, nền Color2 (chữ bên dưới vẫn đọc được). Color2 đang là trắng thì tự đổi sang vàng.">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <Rectangle Width="20" Height="16" Margin="0,1" HorizontalAlignment="Center" Fill="#99FFC107"
+                                                   Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" />
+                                        <TextBlock Text="Chữ nhật tô" FontSize="10" />
+                                    </StackPanel>
+                                </ToggleButton>
                                 <ToggleButton x:Name="EllipseToolButton" Style="{StaticResource ToolButtonStyle}" Click="EllipseToolButton_Click">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xEA3B;" />

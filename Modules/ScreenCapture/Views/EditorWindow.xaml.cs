@@ -74,7 +74,7 @@ public sealed partial class EditorWindow : Window
     // StampsToolButton is a plain Button (Flyout is Button-only in WinUI3, ToggleButton has no
     // Flyout property) - nó không có IsChecked nên không nằm trong danh sách bật/tắt dưới đây.
     private List<ToggleButton> ToolButtons => [
-        MoveToolButton, SelectToolButton, RectangleToolButton, EllipseToolButton, LineToolButton, ArrowToolButton,
+        MoveToolButton, SelectToolButton, RectangleToolButton, FilledRectangleToolButton, EllipseToolButton, LineToolButton, ArrowToolButton,
         PenToolButton, HighlightToolButton, TextToolButton, CalloutToolButton, FillToolButton, MosaicToolButton, BlurToolButton,
     ];
 
@@ -1516,7 +1516,7 @@ public sealed partial class EditorWindow : Window
 
         switch (_viewModel.SelectedTool)
         {
-            case CaptureTool.Rectangle:
+            case CaptureTool.Rectangle or CaptureTool.FilledRectangle:
                 _draftShape = Styled(new RectangleAnnotation { Bounds = new SKRect(pos.X, pos.Y, pos.X, pos.Y) });
                 Canvas.CapturePointer(e.Pointer);
                 break;
@@ -2136,6 +2136,16 @@ public sealed partial class EditorWindow : Window
     private void MoveToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Move, MoveToolButton);
     private void SelectToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Select, SelectToolButton);
     private void RectangleToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Rectangle, RectangleToolButton);
+    private void FilledRectangleToolButton_Click(object sender, RoutedEventArgs e)
+    {
+        SelectTool(CaptureTool.FilledRectangle, FilledRectangleToolButton);
+        // Nền trắng trong mờ gần như không thấy (Color2 mặc định là trắng) → đổi sang vàng như bút Highlight.
+        if (_viewModel.FillColor == SKColors.White)
+        {
+            Color2ColorPicker.Color = ToWindowsColor(FilledRectangleDefaultColor);
+        }
+    }
+
     private void EllipseToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Ellipse, EllipseToolButton);
     private void LineToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Line, LineToolButton);
     private void ArrowToolButton_Click(object sender, RoutedEventArgs e) => SelectTool(CaptureTool.Arrow, ArrowToolButton);

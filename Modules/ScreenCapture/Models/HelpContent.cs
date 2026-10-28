@@ -97,6 +97,7 @@ public static class HelpContent
         new("Vẽ hình", "\uE70F", "Nhóm Vẽ hình ở tab Trang chủ. Màu nét = Color1, màu nền = Color2, độ dày = Size (1-20px).",
         [
             new("Chữ nhật, Elip", "Kéo để vẽ khung. Giữ Shift = hình vuông / hình tròn (cả lúc vẽ lẫn lúc kéo handle).", "Shift"),
+            new("Chữ nhật tô", "Chữ nhật viền Color1, nền Color2 trong mờ (~37%) - đánh dấu 1 vùng mà chữ bên dưới vẫn đọc được. Color2 đang là trắng thì tự đổi sang vàng. Hình vẽ ra là chữ nhật thường có tô nền: sửa màu, bo góc, kiểu nét ở tab Định dạng; đổi Color2 vẫn giữ độ trong mờ. Bấm đâu bên trong cũng chọn được hình.", "Shift"),
             new("Đường thẳng, Mũi tên", "Kéo từ điểm đầu tới điểm cuối. Giữ Shift = khoá hướng theo bội số 45°. Khi đang chọn: bấm gần 1 đầu rồi kéo để đổi hướng / độ dài, bấm khúc giữa để di chuyển cả đường.", "Shift"),
             new("Bút", "Vẽ tự do (khoanh tròn, gạch chân...). Luôn vẽ nét mới kể cả khi bắt đầu trên hình khác; sửa nét đã vẽ bằng Move."),
             new("Highlight", "Bút dạ quang tô trong mờ lên chữ cần làm nổi bật."),
