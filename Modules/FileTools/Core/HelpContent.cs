@@ -112,19 +112,19 @@ public static class HelpContent
             new("Lưu ý", "Thay theo từng dòng: chữ cần tìm không được vắt qua xuống dòng."),
         ]),
 
-        new("CSV: Tách theo cột", "", "Mỗi giá trị của 1 cột → 1 file riêng.", "CsvSplitPage",
-        [
-            new("Cách dùng", "Chọn file CSV, chọn cột (vd mã khách hàng, tháng, chi nhánh), bấm Tách theo cột. Kết quả: <tên>_<giá trị>.csv trong thư mục <tên>_theo_<cột>."),
-            new("Chi tiết", "Giữ thứ tự bản ghi, lặp dòng tiêu đề ở mọi file; giá trị trống → file _(trong). Giá trị chỉ khác hoa / thường (A / a) vẫn ra 2 file riêng."),
-            new("Giới hạn", "Cột có hơn 5.000 giá trị khác nhau thì dừng, không tạo file nào - thường là chọn nhầm cột (mã đơn, số tiền)."),
-        ]),
-
-        new("CSV: Bỏ dòng trùng", "", "Bỏ dòng trùng, giữ lần xuất hiện đầu tiên.", "DedupePage",
+        new("Bỏ dòng trùng", "", "Bỏ dòng trùng trong file text / log / CSV, giữ lần xuất hiện đầu tiên.", "DedupePage",
         [
             new("So cả dòng", "2 dòng giống hệt nhau thì bỏ dòng sau. Dùng được cả cho file text / log thường."),
             new("Chỉ theo các cột đã tích", "Vd tích cột Mã khách hàng: mỗi mã chỉ giữ dòng đầu tiên, dù các cột khác khác nhau."),
             new("Tuỳ chọn", "Không phân biệt hoa / thường; bỏ khoảng trắng đầu / cuối khi so. Nhật ký ghi số thứ tự vài dòng trùng đầu tiên để kiểm tra."),
             new("RAM", "So cả dòng phải nhớ mỗi dòng ~14 byte: 25 triệu dòng ≈ 360 MB. Không đủ RAM thì báo lỗi rõ - khi đó so theo cột hoặc tách file trước."),
+        ]),
+
+        new("CSV: Tách theo cột", "", "Mỗi giá trị của 1 cột → 1 file riêng.", "CsvSplitPage",
+        [
+            new("Cách dùng", "Chọn file CSV, chọn cột (vd mã khách hàng, tháng, chi nhánh), bấm Tách theo cột. Kết quả: <tên>_<giá trị>.csv trong thư mục <tên>_theo_<cột>."),
+            new("Chi tiết", "Giữ thứ tự bản ghi, lặp dòng tiêu đề ở mọi file; giá trị trống → file _(trong). Giá trị chỉ khác hoa / thường (A / a) vẫn ra 2 file riêng."),
+            new("Giới hạn", "Cột có hơn 5.000 giá trị khác nhau thì dừng, không tạo file nào - thường là chọn nhầm cột (mã đơn, số tiền)."),
         ]),
 
         new("CSV: Chọn cột / đổi dấu phân cách", "", "Giữ các cột cần dùng, đổi thứ tự cột, và / hoặc đổi , ↔ Tab ↔ ; ↔ |.", "ColumnsPage",

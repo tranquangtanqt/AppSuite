@@ -24,9 +24,9 @@
             <NavigationViewItemHeader Content="Biến đổi" />
             <NavigationViewItem Content="Đổi encoding / xuống dòng" Tag="EncodingPage" Icon="Font" />
             <NavigationViewItem Content="Thay thế hàng loạt" Tag="ReplacePage" Icon="Edit" />
+            <NavigationViewItem Content="Bỏ dòng trùng" Tag="DedupePage" Icon="Remove" />
             <NavigationViewItemHeader Content="CSV" />
             <NavigationViewItem Content="Tách theo cột" Tag="CsvSplitPage" Icon="ViewAll" />
-            <NavigationViewItem Content="Bỏ dòng trùng" Tag="DedupePage" Icon="Remove" />
             <NavigationViewItem Content="Chọn cột / đổi dấu phân cách" Tag="ColumnsPage" Icon="List" />
             <NavigationViewItemHeader Content="Thư mục" />
             <NavigationViewItem Content="Tìm file trùng" Tag="DuplicatesPage" Icon="Copy" />

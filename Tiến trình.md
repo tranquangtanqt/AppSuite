@@ -187,6 +187,8 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   lưu vào Mẫu); đổi Thứ tự nối / chiều là tự sắp lại (bỏ nút Sắp xếp lại); danh sách trống hiện hướng dẫn kéo-thả; kéo dòng
   để đổi thứ tự; Alt+↑ / Alt+↓ trong danh sách = Lên / Xuống. Không làm: mục "Tuỳ chọn nâng cao" (chỉ 3 ô tick), tổng
   số file · dung lượng (đã có). F1, README. Unit test 132/132; GUI Sandbox 9/9 (2026-10-28)
+- [x] Menu: Bỏ dòng trùng chuyển từ nhóm CSV sang nhóm Biến đổi (dùng cho cả file text / log, không chỉ CSV); F1 bỏ
+  tiền tố "CSV:", README (2026-10-28)
 - [ ] Thử tay: kéo dòng đổi thứ tự trong Nối file + kéo-thả file từ Explorer thả lên danh sách vẫn thêm được
 
 ## MeRon (module mới — bản máy tính của app điện thoại me-ron, `Modules/MeRon/PLAN.md`)
