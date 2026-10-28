@@ -51,7 +51,7 @@ public static class HelpContent
         new("Tách file", "", "Tách 1 file lớn thành nhiều phần, không bao giờ cắt ngang 1 dòng.", "SplitPage",
         [
             new("Các bước", "1) Chọn file nguồn. 2) Chọn cách tách + nhập số. 3) Kiểm tra thư mục chứa các phần (mặc định <tên>_parts cạnh file gốc). 4) Tách file."),
-            new("3 cách tách", "Dung lượng mỗi phần (MB) - vd để gửi mail / tải lên; Số dòng mỗi phần - vd 1 triệu dòng cho Excel (giới hạn 1.048.576 dòng); Số phần - chia đều."),
+            new("3 cách tách", "Dung lượng mỗi phần (MB) - vd để gửi mail / tải lên; Số dòng mỗi phần - vd 1 triệu dòng cho Excel (giới hạn 1.048.576 dòng); Số phần - chia đều. Chọn 1 cách rồi nhập số ở ô cùng hàng (ô của 2 cách kia mờ, không dùng). Nút Tách file ở cuối hàng Thư mục chứa các phần."),
             new("CSV", "File .csv / .tsv đọc theo bản ghi: ô trong ngoặc kép có xuống dòng không bị cắt đôi. Lặp dòng tiêu đề ở mọi phần (tự tick với file CSV)."),
             new("Tên các phần", "<tên>.part001.csv, part002... Nối lại đúng bản gốc bằng trang Nối file (encoding \"Giữ như file nguồn\")."),
         ]),
@@ -60,7 +60,7 @@ public static class HelpContent
         [
             new("Thông tin file", "Chọn hoặc kéo-thả file là tự phân tích (1 lượt đọc); bấm Phân tích lại nếu file vừa đổi. Hiện dung lượng, encoding, số dòng và dòng trống, kiểu xuống dòng (CRLF / LF / lẫn lộn), dòng cuối có xuống dòng không, dòng dài nhất."),
             new("File dạng bảng", "Dấu phân cách, tên cột, số bản ghi và các bản ghi lệch số cột so với dòng tiêu đề (kèm số thứ tự vài bản ghi đầu) - dùng để tìm dòng lỗi trước khi nhập vào hệ thống."),
-            new("Trích dòng: 3 cách lấy", "N dòng đầu; từ dòng X đến dòng Y; N dòng cuối, rồi bấm Trích dòng. Chỉ đọc đúng phần cần: file vài GB vẫn gần như tức thì (N dòng cuối đọc ngược từ cuối file)."),
+            new("Trích dòng: 3 cách lấy", "Lấy đầu file [N] dòng đầu; Từ dòng [X] đến dòng [Y]; Lấy cuối file [N] dòng cuối. Chọn 1 cách, nhập số ở ô cùng hàng (ô của cách khác mờ; N dùng chung cho đầu / cuối), rồi bấm Trích dòng. Chỉ đọc đúng phần cần: file vài GB vẫn gần như tức thì (N dòng cuối đọc ngược từ cuối file)."),
             new("Kèm dòng tiêu đề", "Chèn dòng 1 lên đầu khi lấy đoạn giữa / cuối của CSV để mở bằng Excel vẫn có tên cột."),
             new("File kết quả", "Ghi vào thư mục tạm, tên = tên file gốc + cách lấy + ngày giờ, vd CM_dong10-20_20261028_110604.sql. Xem bằng nút Mở kết quả (CSV mở bằng CsvEditor nếu có) hoặc Mở thư mục."),
             new("Mở file sau khi trích", "Tick thì trích xong tự mở file luôn (như bấm Mở kết quả). Mặc định không tick."),

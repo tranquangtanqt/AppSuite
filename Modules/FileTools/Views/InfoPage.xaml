@@ -58,24 +58,46 @@
         <Border Grid.Row="3" BorderThickness="1" CornerRadius="4" Padding="12,8,12,12" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
             <StackPanel Spacing="10">
                 <TextBlock Text="Trích dòng ra file tạm" FontWeight="SemiBold" />
-                <StackPanel Orientation="Horizontal" Spacing="32">
-                    <RadioButtons Header="Lấy" SelectedIndex="{x:Bind ViewModel.ModeIndex, Mode=TwoWay}">
-                        <x:String>N dòng đầu</x:String>
-                        <x:String>Từ dòng X đến dòng Y</x:String>
-                        <x:String>N dòng cuối</x:String>
-                    </RadioButtons>
-                    <StackPanel Spacing="8">
-                        <NumberBox Header="N (số dòng)" Width="200" Minimum="1" SmallChange="1000" SpinButtonPlacementMode="Compact"
-                                   Value="{x:Bind ViewModel.Count, Mode=TwoWay}" />
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <NumberBox Header="Từ dòng X" Width="160" Minimum="1" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.From, Mode=TwoWay}" />
-                            <NumberBox Header="Đến dòng Y" Width="160" Minimum="1" SpinButtonPlacementMode="Compact" Value="{x:Bind ViewModel.To, Mode=TwoWay}" />
-                        </StackPanel>
-                    </StackPanel>
-                    <StackPanel Spacing="8" Margin="0,24,0,0">
-                        <CheckBox Content="Kèm dòng tiêu đề (dòng 1)" IsChecked="{x:Bind ViewModel.IncludeHeader, Mode=TwoWay}" />
-                        <CheckBox Content="Mở file sau khi trích" IsChecked="{x:Bind ViewModel.OpenAfter, Mode=TwoWay}" />
-                    </StackPanel>
+                <!-- Mỗi lựa chọn cùng hàng với ô số của nó; chỉ ô của lựa chọn đang chọn sửa được. N dùng chung cho đầu / cuối. -->
+                <Grid ColumnSpacing="12" RowSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" MinWidth="130" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <RadioButton GroupName="ExtractMode" Tag="0" Content="Lấy đầu file" Checked="Mode_Checked"
+                                 IsChecked="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 0), Mode=OneWay}" />
+                    <NumberBox Grid.Column="1" Width="160" VerticalAlignment="Center" Minimum="1" SmallChange="1000" SpinButtonPlacementMode="Compact"
+                               AutomationProperties.Name="N dòng đầu" Value="{x:Bind ViewModel.Count, Mode=TwoWay}"
+                               IsEnabled="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 0), Mode=OneWay}" />
+                    <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="dòng đầu" />
+
+                    <RadioButton Grid.Row="1" GroupName="ExtractMode" Tag="1" Content="Từ dòng" Checked="Mode_Checked"
+                                 IsChecked="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 1), Mode=OneWay}" />
+                    <NumberBox Grid.Row="1" Grid.Column="1" Width="160" VerticalAlignment="Center" Minimum="1" SpinButtonPlacementMode="Compact"
+                               AutomationProperties.Name="Từ dòng X" Value="{x:Bind ViewModel.From, Mode=TwoWay}"
+                               IsEnabled="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 1), Mode=OneWay}" />
+                    <TextBlock Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Text="đến dòng" />
+                    <NumberBox Grid.Row="1" Grid.Column="3" Width="160" VerticalAlignment="Center" Minimum="1" SpinButtonPlacementMode="Compact"
+                               AutomationProperties.Name="Đến dòng Y" Value="{x:Bind ViewModel.To, Mode=TwoWay}"
+                               IsEnabled="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 1), Mode=OneWay}" />
+
+                    <RadioButton Grid.Row="2" GroupName="ExtractMode" Tag="2" Content="Lấy cuối file" Checked="Mode_Checked"
+                                 IsChecked="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 2), Mode=OneWay}" />
+                    <NumberBox Grid.Row="2" Grid.Column="1" Width="160" VerticalAlignment="Center" Minimum="1" SmallChange="1000" SpinButtonPlacementMode="Compact"
+                               AutomationProperties.Name="N dòng cuối" Value="{x:Bind ViewModel.Count, Mode=TwoWay}"
+                               IsEnabled="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 2), Mode=OneWay}" />
+                    <TextBlock Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Text="dòng cuối" />
+                </Grid>
+                <StackPanel Orientation="Horizontal" Spacing="24">
+                    <CheckBox Content="Kèm dòng tiêu đề (dòng 1)" IsChecked="{x:Bind ViewModel.IncludeHeader, Mode=TwoWay}" />
+                    <CheckBox Content="Mở file sau khi trích" IsChecked="{x:Bind ViewModel.OpenAfter, Mode=TwoWay}" />
                 </StackPanel>
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>

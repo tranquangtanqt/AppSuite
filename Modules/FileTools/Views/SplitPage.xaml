@@ -13,7 +13,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" MinHeight="140" />
         </Grid.RowDefinitions>
 
@@ -35,21 +34,42 @@
             <TextBlock Text="{x:Bind ViewModel.SourceInfo, Mode=OneWay}" Opacity="0.7" />
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="32">
-            <RadioButtons Header="Tách theo" SelectedIndex="{x:Bind ViewModel.ModeIndex, Mode=TwoWay}">
-                <x:String>Dung lượng mỗi phần</x:String>
-                <x:String>Số dòng mỗi phần</x:String>
-                <x:String>Số phần (chia đều)</x:String>
-            </RadioButtons>
-            <StackPanel Spacing="8">
-                <NumberBox Header="Dung lượng (MB)" Width="200" Minimum="0.01" SmallChange="10" SpinButtonPlacementMode="Compact"
-                           Value="{x:Bind ViewModel.SizeMb, Mode=TwoWay}" />
-                <NumberBox Header="Số dòng" Width="200" Minimum="1" SmallChange="100000" SpinButtonPlacementMode="Compact"
-                           Value="{x:Bind ViewModel.LinesPerPart, Mode=TwoWay}" />
-                <NumberBox Header="Số phần" Width="200" Minimum="1" Maximum="10000" SpinButtonPlacementMode="Compact"
-                           Value="{x:Bind ViewModel.Parts, Mode=TwoWay}" />
-            </StackPanel>
-            <CheckBox VerticalAlignment="Top" Margin="0,24,0,0" Content="Lặp dòng tiêu đề (CSV) ở mọi phần" IsChecked="{x:Bind ViewModel.RepeatHeader, Mode=TwoWay}" />
+        <!-- Mỗi lựa chọn cùng hàng với ô số của nó; chỉ ô của lựa chọn đang chọn sửa được. -->
+        <StackPanel Grid.Row="2" Spacing="8">
+            <TextBlock Text="Tách theo" />
+            <Grid ColumnSpacing="12" RowSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" MinWidth="200" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <RadioButton GroupName="SplitMode" Tag="0" Content="Dung lượng mỗi phần" Checked="Mode_Checked"
+                             IsChecked="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 0), Mode=OneWay}" />
+                <NumberBox Grid.Column="1" Width="180" VerticalAlignment="Center" Minimum="0.01" SmallChange="10" SpinButtonPlacementMode="Compact"
+                           AutomationProperties.Name="Dung lượng (MB)" Value="{x:Bind ViewModel.SizeMb, Mode=TwoWay}"
+                           IsEnabled="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 0), Mode=OneWay}" />
+                <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="MB" />
+
+                <RadioButton Grid.Row="1" GroupName="SplitMode" Tag="1" Content="Số dòng mỗi phần" Checked="Mode_Checked"
+                             IsChecked="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 1), Mode=OneWay}" />
+                <NumberBox Grid.Row="1" Grid.Column="1" Width="180" VerticalAlignment="Center" Minimum="1" SmallChange="100000" SpinButtonPlacementMode="Compact"
+                           AutomationProperties.Name="Số dòng" Value="{x:Bind ViewModel.LinesPerPart, Mode=TwoWay}"
+                           IsEnabled="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 1), Mode=OneWay}" />
+                <TextBlock Grid.Row="1" Grid.Column="2" VerticalAlignment="Center" Text="dòng" />
+
+                <RadioButton Grid.Row="2" GroupName="SplitMode" Tag="2" Content="Số phần (chia đều)" Checked="Mode_Checked"
+                             IsChecked="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 2), Mode=OneWay}" />
+                <NumberBox Grid.Row="2" Grid.Column="1" Width="180" VerticalAlignment="Center" Minimum="1" Maximum="10000" SpinButtonPlacementMode="Compact"
+                           AutomationProperties.Name="Số phần" Value="{x:Bind ViewModel.Parts, Mode=TwoWay}"
+                           IsEnabled="{x:Bind views:ModeChoice.Is(ViewModel.ModeIndex, 2), Mode=OneWay}" />
+                <TextBlock Grid.Row="2" Grid.Column="2" VerticalAlignment="Center" Text="phần" />
+            </Grid>
+            <CheckBox Content="Lặp dòng tiêu đề (CSV) ở mọi phần" IsChecked="{x:Bind ViewModel.RepeatHeader, Mode=TwoWay}" />
         </StackPanel>
 
         <Grid Grid.Row="3" ColumnSpacing="8">
@@ -57,15 +77,15 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox Header="Thư mục chứa các phần" Text="{x:Bind ViewModel.OutputFolder, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseOutputCommand}" />
             <views:OutputPanel Grid.Column="2" Settings="{x:Bind ViewModel.Output}" />
+            <Button Grid.Column="3" VerticalAlignment="Bottom" Content="Tách file" MinWidth="110" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.SplitCommand}" />
         </Grid>
 
-        <Button Grid.Row="4" Content="Tách file" MinWidth="110" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.SplitCommand}" />
-
-        <views:JobPanel Grid.Row="5" Job="{x:Bind ViewModel}" />
+        <views:JobPanel Grid.Row="4" Job="{x:Bind ViewModel}" />
     </Grid>
     </ScrollViewer>
 </Page>

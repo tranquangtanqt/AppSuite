@@ -189,6 +189,9 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   số file · dung lượng (đã có). F1, README. Unit test 132/132; GUI Sandbox 9/9 (2026-10-28)
 - [x] Menu: Bỏ dòng trùng chuyển từ nhóm CSV sang nhóm Biến đổi (dùng cho cả file text / log, không chỉ CSV); F1 bỏ
   tiền tố "CSV:", README (2026-10-28)
+- [x] Bố cục Tách file + Xem file → Trích dòng: mỗi lựa chọn cùng hàng với ô số + đơn vị (trước: ô số lệch hàng, cả 3
+  ô đều sửa được), ô của lựa chọn không chọn bị mờ (`Views/ModeChoice.cs`); nút Tách file lên hàng Thư mục chứa các
+  phần; ô tick Trích dòng xuống dưới. F1, README. Unit test 132/132; GUI Sandbox 6/6 (2026-10-28)
 - [ ] Thử tay: kéo dòng đổi thứ tự trong Nối file + kéo-thả file từ Explorer thả lên danh sách vẫn thêm được
 
 ## MeRon (module mới — bản máy tính của app điện thoại me-ron, `Modules/MeRon/PLAN.md`)
