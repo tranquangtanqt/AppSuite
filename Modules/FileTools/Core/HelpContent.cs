@@ -59,7 +59,8 @@ public static class HelpContent
             new("File dạng bảng", "Dấu phân cách, tên cột, số bản ghi và các bản ghi lệch số cột so với dòng tiêu đề (kèm số thứ tự vài bản ghi đầu) - dùng để tìm dòng lỗi trước khi nhập vào hệ thống."),
             new("Trích dòng: 3 cách lấy", "N dòng đầu; từ dòng X đến dòng Y; N dòng cuối, rồi bấm Trích dòng. Chỉ đọc đúng phần cần: file vài GB vẫn gần như tức thì (N dòng cuối đọc ngược từ cuối file)."),
             new("Kèm dòng tiêu đề", "Chèn dòng 1 lên đầu khi lấy đoạn giữa / cuối của CSV để mở bằng Excel vẫn có tên cột."),
-            new("File kết quả", "Ghi vào thư mục tạm, tên = tên file gốc + cách lấy + ngày giờ, vd CM_dong10-20_20261028_110604.sql. Trích xong không tự mở: bấm Mở kết quả (CSV mở bằng CsvEditor nếu có) hoặc Mở thư mục."),
+            new("File kết quả", "Ghi vào thư mục tạm, tên = tên file gốc + cách lấy + ngày giờ, vd CM_dong10-20_20261028_110604.sql. Xem bằng nút Mở kết quả (CSV mở bằng CsvEditor nếu có) hoặc Mở thư mục."),
+            new("Mở file sau khi trích", "Tick thì trích xong tự mở file luôn (như bấm Mở kết quả). Mặc định không tick."),
         ]),
 
         new("Tìm / Lọc dòng", "", "Tìm chữ / regex trong file lớn, hoặc giữ / bỏ các dòng khớp rồi ghi ra file mới.", "SearchPage",
