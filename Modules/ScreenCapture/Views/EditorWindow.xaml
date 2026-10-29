@@ -1007,13 +1007,28 @@
                         <FontIcon Glyph="&#xE711;" FontSize="12" />
                     </Button>
                 </Grid>
-                <ComboBox x:Name="OcrLanguageBox" Grid.Row="1" HorizontalAlignment="Stretch" SelectionChanged="OcrLanguageBox_SelectionChanged"
-                          AutomationProperties.Name="Ngôn ngữ chữ"
-                          ToolTipService.ToolTip="Ngôn ngữ chữ trong ảnh - chọn đúng thì đọc chính xác hơn (chọn sai: danh sách toàn ký tự rác)">
-                    <ComboBoxItem Content="Tiếng Nhật" Tag="Japanese"
-                                  ToolTipService.ToolTip="Windows OCR (tiếng Nhật); máy chưa có gói OCR tiếng Nhật của Windows thì dùng Tesseract" />
-                    <ComboBoxItem Content="Tiếng Việt / English" Tag="VietnameseEnglish" ToolTipService.ToolTip="Tesseract - đọc cả tiếng Việt lẫn tiếng Anh" />
-                </ComboBox>
+                <Grid Grid.Row="1" ColumnSpacing="6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="OcrLanguageBox" HorizontalAlignment="Stretch" SelectionChanged="OcrLanguageBox_SelectionChanged"
+                              AutomationProperties.Name="Ngôn ngữ chữ"
+                              ToolTipService.ToolTip="Ngôn ngữ chữ trong ảnh - chọn đúng thì đọc chính xác hơn (chọn sai: danh sách toàn ký tự rác)">
+                        <ComboBoxItem Content="Tiếng Nhật" Tag="Japanese"
+                                      ToolTipService.ToolTip="Windows OCR (tiếng Nhật); máy chưa có gói OCR tiếng Nhật của Windows thì dùng Tesseract" />
+                        <ComboBoxItem Content="Tiếng Việt / English" Tag="VietnameseEnglish" ToolTipService.ToolTip="Tesseract - đọc cả tiếng Việt lẫn tiếng Anh" />
+                    </ComboBox>
+                    <!-- Đọc kỹ (TextRecognizer.RecognizeCarefully): đọc lại từng dải dòng chữ - bắt chữ đọc thường bỏ sót -->
+                    <Button x:Name="CarefulReadButton" Grid.Column="1" Click="CarefulReadButton_Click" IsEnabled="False"
+                            AutomationProperties.Name="Đọc kỹ"
+                            ToolTipService.ToolTip="Đọc kỹ cả ảnh (chậm hơn 1,5–3 lần): đọc lại riêng từng dòng chữ - tìm được chữ mà lần đọc thường bỏ sót (dòng đang chọn có nền màu / viền chấm, chữ nhỏ trong giao diện rối). Chỉ cho Tiếng Việt / English">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE890;" FontSize="14" />
+                            <TextBlock Text="Đọc kỹ" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
                 <TextBox x:Name="TextSearchBox" Grid.Row="2" PlaceholderText="Chữ cần tìm (trống: xem mọi dòng)"
                          AutomationProperties.Name="Chữ cần tìm" TextChanged="TextSearchBox_TextChanged" KeyDown="TextSearchBox_KeyDown"
                          ToolTipService.ToolTip="Enter: chỗ khớp kế tiếp · Shift+Enter: chỗ trước · Esc: đóng" />

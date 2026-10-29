@@ -54,6 +54,11 @@ public static class FormReaders
         return new PageTextReader();
     }
 
+    /// <summary>Bộ đọc kỹ cho Tìm chữ / Copy chữ trong vùng chọn (<see cref="TextRecognizer.RecognizeCarefully"/>); null với
+    /// tiếng Nhật (Windows OCR tự tìm dòng chữ, không đọc lại theo dải được).</summary>
+    public static IFormTextReader? CreateCarefulForSearch(FormLanguage language) =>
+        language == FormLanguage.VietnameseEnglish ? new PageTextReader(careful: true) : null;
+
     /// <summary>Bộ đọc dùng để đọc lại từng chỗ nghi khác (TextDiffVerifier của ImageCompare): bộ đọc chính, cộng
     /// Tesseract jpn khi bộ chính là Windows OCR - font bitmap mà engine này đọc sai thì engine kia có khi đúng. Đo trên
     /// ảnh thật: chỉ Windows OCR còn 31 chỗ khác (+1,2 s); thêm Tesseract còn 28 (+3,5 s).</summary>

@@ -35,7 +35,8 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   mép phải, Esc, hoặc cùng giới hạn như cuộn dọc (độ dài ảnh tính theo chiều rộng).
 - **Chụp lấy chữ** (2026-10-21; phím tắt mặc định `Ctrl+Alt+T`, hoặc menu khay *Chụp lấy chữ*; không có thẻ ở cửa sổ
   chính) — overlay như Vùng chọn (kéo chọn vùng / click cửa sổ đang tô viền) → đọc chữ vùng đó bằng `Common.Ocr`
-  (`FormReaders.CreateForSearch`, ngôn ngữ = `OcrLanguage` của khung *Tìm chữ*; bộ đọc tạo 1 lần / ngôn ngữ) → copy chữ vào
+  (`FormReaders.CreateForSearch`, ngôn ngữ = `OcrLanguage` của khung *Tìm chữ*; bộ đọc tạo 1 lần / ngôn ngữ; Tiếng Việt /
+  English đọc kỹ - `FormReaders.CreateCarefulForSearch`, 2026-10-29) → copy chữ vào
   clipboard. Không mở Editor, không tự lưu / copy ảnh dù Cài đặt "Sau khi chụp" bật. Luôn hiện thông báo nhỏ
   (`CaptureToastWindow`): "Đã copy chữ: N dòng" + 2 dòng đầu, hoặc "Không đọc được chữ nào" + ngôn ngữ đang chọn, hoặc lỗi;
   nút *Mở trong Editor* mở ảnh vùng thành tab. `CaptureLauncherWindow.CaptureRegionTextAsync`, `HotkeyAction.RegionText`
@@ -244,6 +245,11 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
     trắng, không thấy thì tự tìm gần đúng (sai / thiếu 1 ký tự, dấu `≈`). Chỗ khớp tô vàng đè lên ảnh (chỉ để xem), bấm 1
     dòng trong danh sách để cuộn tới; `Enter` / `Shift+Enter` = chỗ kế tiếp / trước, `Esc` = đóng khung.
   - *Copy chữ*: toàn bộ chữ của ảnh, mỗi dòng 1 dòng (chữ Nhật không chen dấu cách).
+  - *Đọc kỹ* (2026-10-29; nút cạnh ô ngôn ngữ, chỉ Tiếng Việt / English): đọc lại cả ảnh bằng
+    `TextRecognizer.RecognizeCarefully` - tách ảnh thành các dải dòng chữ theo nét chữ từng hàng pixel (bỏ hàng "gai" =
+    đường kẻ / viền chấm), đọc riêng từng dải, dải nào tin cậy hơn hẳn (≥ 25%) thì thay chữ đọc thường. Bắt được dòng đang
+    chọn (nền màu + viền chấm) và chữ nhỏ trong giao diện rối mà đọc thường bỏ sót; chậm hơn 1,5–3 lần. Kết quả thay kết
+    quả đọc thường của tab (`OcrEntry.Careful`) tới khi ảnh đổi; nút tắt khi ảnh đã đọc kỹ / đang đọc / Tiếng Nhật.
   - *Tô Highlight (N)*: mọi chỗ khớp thành hình Highlight vàng thật (1 bước Undo, lưu / copy kèm ảnh).
   - *Che Mosaic (N)* / *Làm mờ (N)* (2026-10-21): mọi chỗ khớp thành hình `RedactAnnotation` thật (Mosaic / Blur, nới 4 px,
     kẹp trong ảnh, mức = thanh Size ≥ 3, tự tăng theo chiều cao chữ - `RedactAnnotation.StrengthToHide`: làm mờ sigma ≥ 1/3, Mosaic ô ≥ 1/4 chiều cao; trước đó chữ 40 px làm mờ Size 3 vẫn đọc được), 1 bước Undo (`EditorViewModel.AddRedactions`) - tìm tên khách / số điện
@@ -292,8 +298,10 @@ bị app khác khoá → báo ở thanh trạng thái),
 - *Copy* (`Ctrl+C`) — copy vùng (ảnh + shape đang thấy) vào clipboard.
 - *Cut* (`Ctrl+X`) — copy vùng rồi tô trắng vùng đó trên ảnh nền.
 - *Xoá vùng* (`Delete`) — tô trắng vùng đó trên ảnh nền.
-- *Copy chữ* (`Ctrl+Shift+C`) — đọc chữ trong vùng (OCR, ngôn ngữ theo khung *Tìm chữ*) rồi copy vào clipboard; ảnh đã
-  đọc chữ thì lấy luôn các chữ nằm trong vùng, không đọc lại. `Ctrl+Shift+C` khi không có vùng chọn = chữ cả ảnh.
+- *Copy chữ* (`Ctrl+Shift+C`) — đọc chữ trong vùng (OCR, ngôn ngữ theo khung *Tìm chữ*) rồi copy vào clipboard. Tiếng
+  Việt / English (2026-10-29): luôn đọc kỹ riêng phần ảnh trong vùng (`RecognizeCarefully`) - không lọc từ kết quả đọc cả
+  ảnh, vì chữ bị lần đọc đó bỏ sót thì lọc cũng không ra (vd dòng lỗi đang chọn trong Error List của VS). Tiếng Nhật: ảnh
+  đã đọc chữ thì lấy luôn các chữ nằm trong vùng. `Ctrl+Shift+C` khi không có vùng chọn = chữ cả ảnh (dùng kết quả đã đọc).
 - *Bỏ chọn* (`Esc`).
 - **Chuột phải vào trong vùng chọn** (2026-10-21): menu Copy chữ / Copy ảnh vùng chọn / Cut / Cắt ảnh theo vùng / Xoá
   nội dung vùng / Bỏ chọn, ghi kèm phím tắt (`EditorWindow.ShowRegionMenu`). Chuột phải ngoài vùng giữ hành vi cũ.

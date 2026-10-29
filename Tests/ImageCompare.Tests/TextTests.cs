@@ -182,6 +182,59 @@ public class OcrTests
         Assert.Contains(ocr.Lines, l => l.Text == "The problem may have been caused by a configuration change or by the");
     }
 
+    /// <summary>Danh sách kiểu giao diện (Segoe UI 12 px, 2 cột) có dòng đang chọn = nền xanh + viền chấm: đọc thường bỏ sót các
+    /// dòng đang chọn, đọc kỹ (đọc lại theo dải dòng chữ) ra đủ, đúng dấu.</summary>
+    [Fact]
+    public void Careful_reading_finds_selected_rows()
+    {
+        string[] lines =
+        [
+            "Trạng thái: Đã giao hàng", "Khách hàng đã thanh toán đủ", "Tách file theo dung lượng", "Ngày tạo đơn: 28/10/2026",
+            "Số lượng tồn kho hiện tại", "Ghi chú của nhân viên bán hàng", "Xuất báo cáo doanh thu tháng", "Địa chỉ giao hàng mới nhất",
+            "Thông tin người nhận hàng", "Mở thư mục chứa kết quả",
+        ];
+        using var bmp = Images.New(900, 30 + lines.Length * 22, SKColors.White);
+        using (var canvas = new SKCanvas(bmp))
+        using (var typeface = SKTypeface.FromFamilyName("Segoe UI"))
+        using (var font = new SKFont(typeface, 12) { Edging = SKFontEdging.SubpixelAntialias })
+        using (var text = new SKPaint { Color = SKColors.Black, IsAntialias = true })
+        using (var selected = new SKPaint { Color = new SKColor(204, 232, 255) })
+        using (var dots = new SKPaint { Color = SKColors.Gray, Style = SKPaintStyle.Stroke, PathEffect = SKPathEffect.CreateDash([1, 1], 0) })
+        {
+            for (int i = 0; i < lines.Length; i++)
+            {
+                int y = 20 + i * 22;
+                if (i % 5 == 2)
+                {
+                    canvas.DrawRect(10, y - 14, 880, 19, selected);
+                    canvas.DrawRect(10.5f, y - 13.5f, 879, 18, dots);
+                }
+                canvas.DrawText(lines[i], 20, y, font, text);
+                canvas.DrawText("Cột 2: " + lines[i].Split(' ')[0], 500, y, font, text);
+            }
+        }
+
+        var ocr = TextRecognizer.RecognizeCarefully(bmp, TestContext.Current.CancellationToken);
+
+        foreach (var line in lines)
+        {
+            Assert.Contains(ocr.Lines, l => l.Text.StartsWith(line));
+        }
+    }
+
+    /// <summary>Ảnh đọc thường đã tốt: đọc kỹ giữ nguyên (dải đọc lại phải tin cậy hơn hẳn mới thay).</summary>
+    [Fact]
+    public void Careful_reading_keeps_good_text()
+    {
+        using var decoded = SKBitmap.Decode(Path.Combine(AppContext.BaseDirectory, "TestData", "english-dialog.png"));
+        using var bmp = ImageUtil.Normalize(decoded);
+
+        var normal = TextRecognizer.Recognize(bmp, TestContext.Current.CancellationToken);
+        var careful = TextRecognizer.RecognizeCarefully(bmp, TestContext.Current.CancellationToken);
+
+        Assert.Equal(normal.FullText, careful.FullText);
+    }
+
     [Fact]
     public void Match_bounds_are_in_original_image_coordinates()
     {

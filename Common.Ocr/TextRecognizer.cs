@@ -55,10 +55,12 @@ public static class TextRecognizer
     public static string DataPath { get; set; } = Path.Combine(AppContext.BaseDirectory, "tessdata");
 
     /// <param name="progress">Phần đã đọc 0–1 (sau mỗi dải).</param>
-    public static OcrResult Recognize(SKBitmap bitmap, CancellationToken ct = default, IProgress<double>? progress = null)
+    public static OcrResult Recognize(SKBitmap bitmap, CancellationToken ct = default, IProgress<double>? progress = null) =>
+        Recognize(bitmap, bitmap.Width <= 2400 ? 2 : 1, ct, progress);
+
+    private static OcrResult Recognize(SKBitmap bitmap, int scale, CancellationToken ct, IProgress<double>? progress)
     {
         var sw = Stopwatch.StartNew();
-        int scale = bitmap.Width <= 2400 ? 2 : 1;
         var strips = new List<(int Top, int Bottom, int CoreTop, int CoreBottom)>();
         for (int core = 0; core < bitmap.Height; core += StripHeight)
         {
@@ -87,6 +89,169 @@ public static class TextRecognizer
         });
         ct.ThrowIfCancellationRequested();
         return new OcrResult(results.SelectMany(r => r).ToList(), sw.Elapsed);
+    }
+
+    private static readonly int[] BandPaddings = [3, 6]; // px nới trên / dưới dải dòng chữ - mỗi dải đọc cả 2, giữ bản tin cậy hơn
+    private const double BandBetter = 1.25; // bản đọc theo dải phải hơn bản đọc thường ≥ 25% mới thay (ảnh đọc tốt giữ nguyên)
+
+    /// <summary>Đọc kỹ (chậm hơn đọc thường ~1,5–3 lần): đọc thường, rồi tách ảnh thành các dải dòng chữ (theo nét chữ từng hàng
+    /// pixel), đọc lại riêng từng dải; dải nào bản đọc lại tin cậy hơn hẳn thì thay chữ đọc thường trong dải đó.
+    ///
+    /// - Tesseract tự tìm dòng chữ (PSM Auto) hay bỏ sót chữ nhỏ trong giao diện rối: dòng đang chọn (nền màu + viền chấm),
+    ///   ô lưới, khung đỏ. Cùng dòng đó cắt sát (bỏ viền chấm) thì đọc đúng - đo trên ảnh VS (Error List): đọc thường bỏ
+    ///   sót dòng lỗi, đọc kỹ ra đúng "Resource file "My Project\Resources.resx" cannot be found."; ảnh 24 dòng tiếng Việt
+    ///   có 5 dòng đang chọn: đọc thường 16/24 dòng đúng, đọc kỹ 23/24 (xem PLAN.md ImageCompare).
+    /// - Dải = các hàng pixel liền nhau có nét chữ (nhiều cặp pixel cạnh nhau lệch sáng hơn hẳn hàng trống gần đó); hàng
+    ///   "gai" (đường kẻ, viền chấm 1–2 px) không tính là chữ → dải dừng ở viền, không dính viền.
+    /// - Đọc dải ở ×2 cả khi ảnh rộng (dải thấp, không tốn bộ nhớ).</summary>
+    /// <param name="progress">Phần đã đọc 0–1.</param>
+    public static OcrResult RecognizeCarefully(SKBitmap bitmap, CancellationToken ct = default, IProgress<double>? progress = null)
+    {
+        var sw = Stopwatch.StartNew();
+        var normal = Recognize(bitmap, ct, progress is null ? null : new ScaledProgress(progress, 0, 0.3)).Lines;
+        var bands = TextBands(bitmap);
+        var bandLines = new List<OcrLine>?[bands.Count]; // null = giữ bản đọc thường
+        int done = 0;
+        var parallel = new ParallelOptions
+        {
+            CancellationToken = ct,
+            MaxDegreeOfParallelism = Math.Clamp(Environment.ProcessorCount / 2, 1, 4),
+        };
+        Parallel.For(0, bands.Count, parallel, i =>
+        {
+            var (top, bottom) = bands[i];
+            List<OcrLine> best = [];
+            double bestScore = 0;
+            foreach (int padding in BandPaddings)
+            {
+                var area = new SKRectI(0, Math.Max(0, top - padding), bitmap.Width, Math.Min(bitmap.Height, bottom + padding));
+                var lines = ReadArea(bitmap, area);
+                double score = Score(lines.SelectMany(l => l.Words));
+                if (score > bestScore)
+                {
+                    (best, bestScore) = (lines, score);
+                }
+            }
+            double normalScore = Score(normal.SelectMany(l => l.Words).Where(w => InBand(w, bands[i])));
+            bandLines[i] = bestScore > normalScore * BandBetter ? best : null;
+            progress?.Report(0.3 + 0.7 * Interlocked.Increment(ref done) / bands.Count);
+        });
+        ct.ThrowIfCancellationRequested();
+
+        // Chữ đọc thường trong dải được thay bị bỏ; dòng của dải chèn trước dòng đầu tiên nằm dưới nó.
+        var replaced = Enumerable.Range(0, bands.Count).Where(i => bandLines[i] is not null).Select(i => bands[i]).ToList();
+        var result = normal
+            .Select(l => l.Words.Where(w => !replaced.Any(b => InBand(w, b))).ToList())
+            .Where(words => words.Count > 0)
+            .Select(NewLine)
+            .ToList();
+        foreach (var line in bandLines.OfType<List<OcrLine>>().SelectMany(l => l))
+        {
+            int at = result.FindIndex(l => l.Bounds.Top > line.Bounds.Top);
+            result.Insert(at < 0 ? result.Count : at, line);
+        }
+        return new OcrResult(result, sw.Elapsed);
+    }
+
+    /// <summary>Điểm của 1 bản đọc = Σ độ tin cậy × số chữ cái / chữ số (ký tự rác "|", "—" không cộng điểm).</summary>
+    private static double Score(IEnumerable<OcrWord> words) => words.Sum(w => w.Confidence * w.Text.Count(char.IsLetterOrDigit));
+
+    private static bool InBand(OcrWord word, (int Top, int Bottom) band) =>
+        word.Bounds.MidY >= band.Top - BandPaddings[0] && word.Bounds.MidY < band.Bottom + BandPaddings[0];
+
+    /// <summary>Đọc riêng 1 vùng (×2), kết quả theo toạ độ ảnh gốc. Bỏ "từ" không có chữ cái / chữ số ở đầu / cuối dòng: viền
+    /// chấm, vạch cột hai bên dòng đọc ra "¡", "|", "{".</summary>
+    private static List<OcrLine> ReadArea(SKBitmap bitmap, SKRectI area)
+    {
+        using var crop = new SKBitmap(new SKImageInfo(area.Width, area.Height, SKColorType.Bgra8888, SKAlphaType.Premul));
+        using (var canvas = new SKCanvas(crop))
+        {
+            canvas.Clear(SKColors.White);
+            canvas.DrawBitmap(bitmap, area, SKRect.Create(area.Width, area.Height));
+        }
+        var lines = new List<OcrLine>();
+        foreach (var line in Recognize(crop, 2, CancellationToken.None, null).Lines)
+        {
+            var words = line.Words
+                .SkipWhile(w => !w.Text.Any(char.IsLetterOrDigit))
+                .Reverse().SkipWhile(w => !w.Text.Any(char.IsLetterOrDigit)).Reverse()
+                .Select(w => w with { Bounds = SKRectI.Create(area.Left + w.Bounds.Left, area.Top + w.Bounds.Top, w.Bounds.Width, w.Bounds.Height) })
+                .ToList();
+            if (words.Count > 0)
+            {
+                lines.Add(NewLine(words));
+            }
+        }
+        return lines;
+    }
+
+    private const int EdgeContrast = 40; // 2 pixel cạnh nhau lệch sáng hơn mức này = 1 nét
+    private const int BandWindow = 12;   // px trên / dưới để tìm hàng trống (nền) và hàng nhiều nét nhất quanh 1 hàng
+
+    /// <summary>Các dải dòng chữ [Top, Bottom) theo hàng pixel. Hàng có chữ = số nét vượt hàng ít nét nhất quanh đó (nền, kể cả
+    /// viền dọc / vạch cột chạy suốt) một khoảng ≥ 1/8 chênh lệch với hàng nhiều nét nhất. Dải ≤ 3 px (gạch chân, viền) bỏ.</summary>
+    private static List<(int Top, int Bottom)> TextBands(SKBitmap bitmap)
+    {
+        var gray = ToGray(bitmap, 0, bitmap.Height, 1);
+        int height = gray.Height;
+        var count = new int[height];
+        for (int y = 0; y < height; y++)
+        {
+            int row = y * gray.Width;
+            for (int x = 1; x < gray.Width; x++)
+            {
+                if (Math.Abs(gray.Pixels[row + x] - gray.Pixels[row + x - 1]) > EdgeContrast)
+                {
+                    count[y]++;
+                }
+            }
+        }
+        // Hàng "gai" (đường kẻ, viền chấm của dòng đang chọn) nhiều nét hơn hẳn 2 hàng cách nó 2 px → không phải chữ.
+        var spike = new bool[height];
+        for (int y = 0; y < height; y++)
+        {
+            int around = Math.Max(y >= 2 ? count[y - 2] : 0, y + 2 < height ? count[y + 2] : 0);
+            spike[y] = count[y] > 2 * around + 5;
+        }
+        var ink = new bool[height];
+        for (int y = 0; y < height; y++)
+        {
+            int floor = int.MaxValue, peak = 0;
+            for (int k = Math.Max(0, y - BandWindow); k < Math.Min(height, y + BandWindow + 1); k++)
+            {
+                floor = Math.Min(floor, count[k]);
+                if (!spike[k])
+                {
+                    peak = Math.Max(peak, count[k]);
+                }
+            }
+            ink[y] = !spike[y] && count[y] > floor + Math.Max(3, (peak - floor) / 8);
+        }
+        var bands = new List<(int, int)>();
+        for (int y = 0; y < height;)
+        {
+            if (!ink[y])
+            {
+                y++;
+                continue;
+            }
+            int top = y;
+            while (y < height && ink[y])
+            {
+                y++;
+            }
+            if (y - top > 3)
+            {
+                bands.Add((top, y));
+            }
+        }
+        return bands;
+    }
+
+    /// <summary>Báo tiến độ của 1 bước con vào khoảng [from, to] của tiến độ chung.</summary>
+    private sealed class ScaledProgress(IProgress<double> inner, double from, double to) : IProgress<double>
+    {
+        public void Report(double value) => inner.Report(from + (to - from) * value);
     }
 
     /// <summary>Dải ảnh xám đã phóng; <see cref="Inverted"/> = dải nền tối, đọc với màu đảo.</summary>

@@ -764,6 +764,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   ~10–20%. Dùng chung cho Tìm chữ / Copy chữ của ScreenCapture và Tìm chữ của ImageCompare. Unit test mới (ảnh thật)
   - ImageCompare 107/107, ScreenCapture 59/59 (2026-10-29)
 - [ ] Thử tay: Tìm chữ trên ảnh có chữ Anh / đường dẫn / URL (và ảnh tiếng Việt - dấu vẫn đúng như trước)
+- [x] Bug (người dùng báo 2026-10-29): Tìm chữ không ra dòng lỗi đang chọn trong Error List của VS ("Resource file "My
+  Project\Resources.resx" cannot be found.") - Copy chữ trong vùng cũng không ra (chỉ lọc từ lần đọc cả ảnh). Sửa:
+  `TextRecognizer.RecognizeCarefully` (tách dải dòng chữ, đọc lại từng dải, giữ bản tin cậy hơn hẳn); nút **Đọc kỹ** cạnh ô
+  ngôn ngữ của khung Tìm chữ (đọc lại cả ảnh, chậm hơn 1,5–3 lần); Copy chữ trong vùng chọn và Chụp lấy chữ luôn đọc kỹ
+  (Tiếng Việt / English). F1, README, PLAN. Unit test ImageCompare 109/109, ScreenCapture 59/59; GUI Sandbox 14/14 (2026-10-29)
+- [ ] Thử tay: Đọc kỹ / Copy chữ trong vùng trên ảnh VS thật (Error List) và ảnh tiếng Việt
+- [ ] Ý tưởng: nút Đọc kỹ cho Tìm chữ của ImageCompare (dùng chung `RecognizeCarefully`)
 
 ## ImageCompare
 

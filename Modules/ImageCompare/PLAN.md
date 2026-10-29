@@ -107,6 +107,18 @@ dev chỉ có gói OCR tiếng Anh / tiếng Nhật).
     SingleLine hay dính từ "bya"), giữ bản `eng` khi độ tin cậy ≥ `vie`. Dòng có dấu giữ nguyên `vie` → 24 dòng tiếng
     Việt (Segoe UI 12 / 13,3 px) đúng y như trước (11/24, 21/24), còn `vie+eng` cả trang mất dấu (`Trạng thai`,
     `Tach file`, `giá tri`). Chậm thêm ~10–20% (ảnh nhiều dòng Anh tới ~60%). Thiếu `eng.traineddata` → bỏ qua bước này.
+  - **2026-10-29: đọc kỹ (`TextRecognizer.RecognizeCarefully`, nút Đọc kỹ + Copy chữ trong vùng chọn của ScreenCapture).**
+    Ảnh VS (Project Properties + Error List): đọc thường bỏ sót dòng lỗi đang chọn `Resource file "My Project\Resources.resx"
+    cannot be found.` - Tesseract (PSM Auto) không nhận ra dòng có nền màu + viền chấm; cắt sát dòng đó (không dính viền) thì
+    đọc đúng, cắt dư 3 px dính viền chấm là ra rỗng. Đã thử: thêm 1 lượt SparseText cả ảnh (chỉ ra 1 phần dòng, rác từ viền
+    chấm), SparseText theo dải chồng nhau (cắt ngang chữ), tìm khung chữ bằng SparseText rồi đọc từng đoạn (đoạn dính viền vẫn
+    rỗng). Cách chọn: tách dải dòng chữ theo số nét (2 pixel cạnh nhau lệch sáng > 40) từng hàng - hàng có chữ = vượt hàng ít
+    nét nhất trong ±12 px một khoảng ≥ 1/8 chênh lệch với hàng nhiều nét nhất; hàng "gai" (nét > 2 × hàng cách 2 px) là viền /
+    đường kẻ, không tính; đọc mỗi dải nới 3 px và 6 px, giữ bản điểm cao hơn (Σ độ tin cậy × số chữ cái / số); thay chữ đọc
+    thường trong dải khi điểm hơn ≥ 25% (thấp hơn thì ảnh vốn đọc tốt bị đổi: hộp thoại VS `\WisualStudio`). Kết quả: ảnh VS
+    10 → 15/28 cụm chữ (có dòng lỗi); 24 dòng tiếng Việt có 5 dòng đang chọn 16 → 24/24 dòng đúng; hộp thoại VS giữ nguyên;
+    14 ảnh thật chậm hơn 1,1–3,2 lần (lâu nhất 6,9 s, ảnh tiếng Nhật đọc bằng "vie"). Chỉ Tesseract tiếng Việt / Anh -
+    Windows OCR tiếng Nhật tự tìm dòng, không có bước này.
 - **VC++ runtime chép kèm** (`Ocr\vcruntime\win-x64|win-x86\` → cạnh exe): `tesseract50.dll` cần
   msvcp140 / vcruntime140(_1); máy chưa cài VC++ Redistributable (vd Windows Sandbox) sẽ không đọc được chữ.
   Dạng app-local được Microsoft cho phép phân phối lại. Thư mục đặt tên `win-x64` vì `.gitignore` bỏ qua `x64/`.

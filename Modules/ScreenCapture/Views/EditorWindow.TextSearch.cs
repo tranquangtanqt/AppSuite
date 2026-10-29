@@ -20,7 +20,7 @@ namespace ScreenCapture.Views;
 public sealed partial class EditorWindow
 {
     /// <summary>Kết quả đọc chữ của 1 tab: đúng với <paramref name="Bitmap"/> (ảnh đổi = đọc lại) và ngôn ngữ đã chọn.</summary>
-    private sealed record OcrEntry(SKBitmap Bitmap, FormLanguage Language, OcrResult Result, string Reader);
+    private sealed record OcrEntry(SKBitmap Bitmap, FormLanguage Language, OcrResult Result, string Reader, bool Careful = false);
 
     private readonly ConditionalWeakTable<EditorViewModel, OcrEntry> _ocrCache = new();
     /// <summary>Bộ đọc theo ngôn ngữ, tạo 1 lần (Tesseract giữ pool engine, Windows OCR tạo engine theo ngôn ngữ).</summary>
@@ -152,27 +152,29 @@ public sealed partial class EditorWindow
         return await task;
     }
 
-    private async Task<OcrEntry?> ReadOcrAsync(EditorViewModel vm)
+    /// <param name="careful">Đọc kỹ (nút Đọc kỹ, <see cref="FormReaders.CreateCarefulForSearch"/>) - chỉ tiếng Việt / Anh.</param>
+    private async Task<OcrEntry?> ReadOcrAsync(EditorViewModel vm, bool careful = false)
     {
         _ocrCts?.Cancel();
         var cts = _ocrCts = new CancellationTokenSource();
         var language = _ocrLanguage;
         var bitmap = vm.Bitmap;
-        var (reader, note) = GetReader(language);
+        var (reader, note) = careful && FormReaders.CreateCarefulForSearch(language) is { } carefulReader ? (carefulReader, null) : GetReader(language);
         // Đọc trên bản sao: trong lúc đọc (vài trăm ms - vài giây) người dùng vẫn sửa ảnh được.
         var copy = bitmap.Copy();
-        SetTextSearchBusy(true, "Đang đọc chữ…");
+        string busy = careful ? "Đang đọc kỹ" : "Đang đọc chữ";
+        SetTextSearchBusy(true, $"{busy}…");
         try
         {
             var progress = new Progress<double>(p =>
             {
                 if (ReferenceEquals(cts, _ocrCts))
                 {
-                    TextSearchStatus.Text = $"Đang đọc chữ… {p * 100:0}%";
+                    TextSearchStatus.Text = $"{busy}… {p * 100:0}%";
                 }
             });
             var result = await Task.Run(() => reader.Read(copy, cts.Token, progress), cts.Token);
-            var entry = new OcrEntry(bitmap, language, result, note is null ? reader.Name : $"{reader.Name} - {note}");
+            var entry = new OcrEntry(bitmap, language, result, note is null ? reader.Name : $"{reader.Name} - {note}", careful);
             _ocrCache.AddOrUpdate(vm, entry);
             Log.LogInformation("Đọc chữ {Width}×{Height} bằng {Reader}: {Lines} dòng, {Ms} ms",
                 bitmap.Width, bitmap.Height, reader.Name, result.Lines.Count, (int)result.Elapsed.TotalMilliseconds);
@@ -196,6 +198,10 @@ public sealed partial class EditorWindow
     {
         TextSearchProgress.IsActive = busy;
         TextSearchProgress.Visibility = busy ? Visibility.Visible : Visibility.Collapsed;
+        if (busy)
+        {
+            CarefulReadButton.IsEnabled = false;
+        }
         if (status is not null)
         {
             TextSearchStatus.Text = status;
@@ -238,6 +244,7 @@ public sealed partial class EditorWindow
         TextResultList.Items.Clear();
         _textFocus = null;
         CopyAllTextButton.IsEnabled = ocr.Lines.Count > 0;
+        CarefulReadButton.IsEnabled = !entry.Careful && FormReaders.CreateCarefulForSearch(entry.Language) is not null;
         string read = $"{ocr.Lines.Count} dòng · {entry.Reader} · {ocr.Elapsed.TotalSeconds:0.0} s";
 
         if (query.Length == 0)
@@ -301,6 +308,30 @@ public sealed partial class EditorWindow
     private void TextSearchBox_TextChanged(object sender, TextChangedEventArgs e) => _ = RefreshTextSearchAsync();
 
     private void TextSearchOption_Click(object sender, RoutedEventArgs e) => _ = RefreshTextSearchAsync();
+
+    /// <summary>Đọc kỹ cả ảnh (chỉ Tiếng Việt / English): kết quả thay lần đọc thường trong bộ nhớ của tab - tìm / Copy chữ / Copy
+    /// chữ trong vùng dùng luôn kết quả này cho tới khi ảnh đổi.</summary>
+    private async void CarefulReadButton_Click(object sender, RoutedEventArgs e)
+    {
+        var vm = _viewModel;
+        var task = ReadOcrAsync(vm, careful: true);
+        _ocrRunning = (vm, vm.Bitmap, _ocrLanguage, task);
+        try
+        {
+            if (await task is null)
+            {
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Không đọc kỹ được chữ");
+            SetTextSearchBusy(false, $"Không đọc được chữ: {ex.Message}");
+            CarefulReadButton.IsEnabled = true;
+            return;
+        }
+        await RefreshTextSearchAsync();
+    }
 
     private void OcrLanguageBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -418,28 +449,30 @@ public sealed partial class EditorWindow
 
     private async void RegionCopyTextButton_Click(object sender, RoutedEventArgs e) => await CopyRegionTextAsync();
 
-    /// <summary>Copy chữ trong vùng chọn (nút ở tab Vùng chọn, chuột phải vào vùng, Ctrl+Shift+C): ảnh đã đọc chữ (khung Tìm chữ)
-    /// thì lấy các từ nằm trong vùng - không phải đọc lại; chưa thì đọc riêng phần ảnh trong vùng. Không có vùng chọn (Ctrl+Shift+C)
-    /// = cả ảnh.</summary>
+    /// <summary>Copy chữ trong vùng chọn (nút ở tab Vùng chọn, chuột phải vào vùng, Ctrl+Shift+C). Tiếng Việt / English: luôn đọc
+    /// kỹ riêng phần ảnh trong vùng (<see cref="FormReaders.CreateCarefulForSearch"/>) - lần đọc cả ảnh có thể đã bỏ sót chữ trong
+    /// vùng, khoanh vùng là để lấy cho được chữ ở đó; vùng nhỏ đọc nhanh. Tiếng Nhật: ảnh đã đọc chữ (khung Tìm chữ) thì lấy các từ
+    /// nằm trong vùng, chưa thì đọc riêng vùng. Không có vùng chọn (Ctrl+Shift+C) = cả ảnh, dùng kết quả đã đọc nếu có.</summary>
     private async Task CopyRegionTextAsync()
     {
         var vm = _viewModel;
         bool whole = _region is null;
         var region = _region ?? SKRectI.Create(vm.Bitmap.Width, vm.Bitmap.Height);
         string where = whole ? "của ảnh" : "trong vùng chọn";
+        var careful = whole ? null : FormReaders.CreateCarefulForSearch(_ocrLanguage);
         try
         {
             string text;
             string reader;
-            if (CachedOcr(vm) is { } entry)
+            if (careful is null && CachedOcr(vm) is { } entry)
             {
                 text = TextInArea(entry.Result, region);
                 reader = entry.Reader;
             }
             else
             {
-                vm.StatusText = $"Đang đọc chữ {where}…";
-                var (ocrReader, note) = GetReader(_ocrLanguage);
+                vm.StatusText = careful is null ? $"Đang đọc chữ {where}…" : $"Đang đọc kỹ chữ {where}…";
+                var (ocrReader, note) = careful is null ? GetReader(_ocrLanguage) : (careful, null);
                 using var crop = new SKBitmap(new SKImageInfo(region.Width, region.Height, OcrText.ColorType, OcrText.AlphaType));
                 using (var canvas = new SKCanvas(crop))
                 {

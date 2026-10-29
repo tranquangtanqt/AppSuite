@@ -745,11 +745,13 @@ public sealed partial class CaptureLauncherWindow : Window
                     entry = (reader, note);
                     _ocrReaders[language] = entry;
                 }
+                // Đã khoanh vùng để lấy chữ → tiếng Việt / English đọc kỹ (như Copy chữ trong vùng chọn của Editor).
+                var ocrReader = Common.Ocr.FormReaders.CreateCarefulForSearch(language) ?? entry.Reader;
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                var result = await Task.Run(() => entry.Reader.Read(cropped));
+                var result = await Task.Run(() => ocrReader.Read(cropped));
                 string text = result.FullText;
                 Log.LogInformation("Chụp lấy chữ: vùng {Width}x{Height}, {Reader}, {Lines} dòng, {Ms} ms",
-                    cropped.Width, cropped.Height, entry.Reader.Name, result.Lines.Count, stopwatch.ElapsedMilliseconds);
+                    cropped.Width, cropped.Height, ocrReader.Name, result.Lines.Count, stopwatch.ElapsedMilliseconds);
                 if (text.Length == 0)
                 {
                     title = "Không đọc được chữ nào trong vùng";
