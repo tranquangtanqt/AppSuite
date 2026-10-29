@@ -757,6 +757,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   Color1, nền Color2 trong mờ ~37% (chữ bên dưới vẫn đọc được); Color2 đang trắng → tự đổi vàng; hình vẽ ra là chữ nhật có
   tô nền (tab Định dạng sửa như thường); đổi Color2 giữ độ trong mờ. F1 + README. GUI Sandbox 7/7 (2026-10-28)
 - [ ] Thử tay: Chữ nhật tô trên ảnh chụp thật (màu, độ mờ có vừa mắt không)
+- [x] Bug (người dùng báo 2026-10-29): Tìm chữ (Tiếng Việt / English) đọc sai chữ Anh trên hộp thoại VS -
+  `C:\Users\tantq\vAppData\…`, `resolve this ¡ssue.` → `Common.Ocr` thêm dữ liệu `eng` (4,1 MB): dòng không có chữ
+  tiếng Việt có dấu được đọc lại bằng "eng", giữ bản tin cậy hơn; dòng có dấu giữ nguyên "vie" (đo: 24 dòng tiếng Việt
+  không đổi, "vie+eng" cả trang thì mất dấu). 14 ảnh chụp thật: thêm `localhost:8020`, `Ver2.0` đọc đúng; chậm thêm
+  ~10–20%. Dùng chung cho Tìm chữ / Copy chữ của ScreenCapture và Tìm chữ của ImageCompare. Unit test mới (ảnh thật)
+  - ImageCompare 107/107, ScreenCapture 59/59 (2026-10-29)
+- [ ] Thử tay: Tìm chữ trên ảnh có chữ Anh / đường dẫn / URL (và ảnh tiếng Việt - dấu vẫn đúng như trước)
 
 ## ImageCompare
 

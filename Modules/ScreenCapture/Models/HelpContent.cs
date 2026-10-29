@@ -144,7 +144,7 @@ public static class HelpContent
 
         new("Tìm chữ", "", "Nút Tìm chữ (nhóm Chữ, tab Trang chủ) hoặc Ctrl+F: đọc chữ trong ảnh (OCR, chạy offline) và tìm - khung bên phải ảnh.",
         [
-            new("Ngôn ngữ", "Tiếng Nhật (Windows OCR; máy chưa có gói OCR tiếng Nhật của Windows thì dùng Tesseract, kém chính xác hơn) hoặc Tiếng Việt / English (Tesseract). Chọn sai ngôn ngữ thì danh sách toàn ký tự rác. App nhớ ngôn ngữ lần trước."),
+            new("Ngôn ngữ", "Tiếng Nhật (Windows OCR; máy chưa có gói OCR tiếng Nhật của Windows thì dùng Tesseract, kém chính xác hơn) hoặc Tiếng Việt / English (Tesseract; dòng chữ Anh, đường dẫn, URL được đọc lại bằng dữ liệu tiếng Anh cho đúng hơn). Chọn sai ngôn ngữ thì danh sách toàn ký tự rác. App nhớ ngôn ngữ lần trước."),
             new("Cách dùng", "Mỗi ảnh chỉ đọc 1 lần (1 màn hình ~0,5–2 giây); ảnh đổi (cắt, xoay, hiệu ứng, Undo...) thì tự đọc lại. Ô tìm trống: liệt kê mọi dòng đọc được. Gõ chữ: các chỗ khớp tô vàng trên ảnh (chỉ để xem, không vẽ vào ảnh), danh sách bên dưới - bấm để cuộn tới.", "Ctrl+F", "Enter", "Shift+Enter"),
             new("Cách so khớp", "Mặc định không phân biệt dấu / hoa thường (\"khach hang\" khớp \"Khách hàng\"), bỏ qua khoảng trắng. Không thấy chỗ khớp chính xác thì tự tìm gần đúng (sai / thiếu 1 ký tự - OCR hay đọc nhầm), đánh dấu ≈."),
             new("Copy chữ", "Copy toàn bộ chữ đọc được của ảnh, mỗi dòng 1 dòng (chữ Nhật không chen dấu cách). Chỉ 1 phần ảnh: chọn vùng bằng Select rồi bấm Copy chữ ở tab Vùng chọn."),

@@ -21,9 +21,8 @@ public sealed record OcrResult(IReadOnlyList<OcrLine> Lines, TimeSpan Elapsed)
     public string FullText => string.Join(Environment.NewLine, Lines.Select(l => l.Text));
 }
 
-/// <summary>Đọc chữ trong ảnh bằng Tesseract (dữ liệu tiếng Việt tessdata_fast, thư mục
-/// <c>tessdata</c> cạnh exe - chỉ "vie": thử nghiệm đọc chữ tiếng Anh / code / đường dẫn đúng ngang "vie+eng",
-/// còn tiếng Việt thì đúng dấu hơn, nhanh hơn ~1,5 lần và bớt 4 MB dữ liệu).
+/// <summary>Đọc chữ trong ảnh bằng Tesseract (dữ liệu tessdata_fast, thư mục <c>tessdata</c> cạnh exe): đọc cả trang
+/// bằng "vie" (đúng dấu tiếng Việt hơn "vie+eng", nhanh hơn ~1,5 lần), dòng chữ Anh đọc lại bằng "eng" (xem dưới).
 ///
 /// - Chữ màn hình nhỏ (x-height 6–8 px) Tesseract đọc kém → ảnh không quá rộng được phóng ×2 trước khi đọc
 ///   (thử nghiệm: ×2 đọc đúng dấu tiếng Việt, ×3 không hơn mà chậm hơn).
@@ -35,16 +34,22 @@ public sealed record OcrResult(IReadOnlyList<OcrLine> Lines, TimeSpan Elapsed)
 /// - Engine khởi tạo mất ~50–200 ms → giữ lại trong pool dùng cho lần sau (TesseractEngine không thread-safe:
 ///   mỗi lúc 1 engine chỉ đọc 1 dải).
 /// - Không lọc từng từ theo độ tin cậy: từ đúng đôi khi chỉ được 12–14 điểm ("Khách hàng H") - chỉ bỏ cả dòng
-///   khi trung bình quá thấp (rác đọc từ icon / hình vẽ).</summary>
+///   khi trung bình quá thấp (rác đọc từ icon / hình vẽ).
+/// - Dòng không có chữ tiếng Việt có dấu (chữ Anh, đường dẫn, URL) đọc lại bằng "eng", giữ bản tin cậy hơn: "vie" đọc
+///   sai chữ Anh trên màn hình ("C:\Users\x\vAppData", "this ¡ssue", "localhost8020", "Ver2.I"). Không đọc cả trang bằng
+///   "vie+eng" vì mất dấu tiếng Việt ("Trạng thai", "Tach file"); dòng có dấu giữ nguyên bản "vie" (xem PLAN.md ImageCompare).</summary>
 public static class TextRecognizer
 {
     private const string Languages = "vie";
+    private const string EnglishLanguages = "eng";
     private const int StripHeight = 600; // px ảnh gốc - mỗi dải ~0,3–0,5 s → huỷ nhanh, báo tiến độ mịn
     private const int StripOverlap = 80;  // > chiều cao 1 dòng chữ lớn
     private const float RetryBelow = 50;  // độ tin cậy trung bình của dòng dưới mức này → đọc lại với màu đảo
     private const float DropBelow = 15;   // sau khi đọc lại vẫn dưới mức này → bỏ dòng
 
     private static readonly ConcurrentBag<TesseractEngine> Pool = [];
+    private static readonly ConcurrentBag<TesseractEngine> EnglishPool = [];
+    private const string VietnameseLetters = "àáảãạăằắẳẵặâầấẩẫậđèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ";
 
     /// <summary>Thư mục chứa *.traineddata.</summary>
     public static string DataPath { get; set; } = Path.Combine(AppContext.BaseDirectory, "tessdata");
@@ -100,21 +105,24 @@ public static class TextRecognizer
             {
                 lines = ReadLines(page, 0, 0);
             }
+            var inverted = new bool[lines.Count]; // dòng đã đọc lại với màu đảo
             for (int i = 0; i < lines.Count; i++)
             {
                 if (Confidence(lines[i]) >= RetryBelow)
                 {
                     continue;
                 }
-                var area = SKRectI.Intersect(SKRectI.Inflate(lines[i].Bounds, 4 * scale, 4 * scale), SKRectI.Create(gray.Width, gray.Height));
+                var area = LineArea(lines[i], gray, scale);
                 using var pix = ToPix(gray, area, !gray.Inverted);
                 using var page = engine.Process(pix, PageSegMode.SingleLine);
                 var words = ReadLines(page, area.Left, area.Top).SelectMany(l => l.Words).ToList();
                 if (words.Count > 0 && words.Average(w => w.Confidence) > Confidence(lines[i]) + 10)
                 {
                     lines[i] = NewLine(words);
+                    inverted[i] = true;
                 }
             }
+            ReadEnglishLines(lines, inverted, gray, scale);
             return lines
                 .Where(l => Confidence(l) >= DropBelow)
                 .Select(l => NewLine(l.Words.Select(w => w with
@@ -129,6 +137,45 @@ public static class TextRecognizer
             Pool.Add(engine);
         }
     }
+
+    /// <summary>Đọc lại bằng "eng" các dòng không có chữ tiếng Việt có dấu, thay khi "eng" tin cậy bằng / hơn "vie".
+    /// PSM SingleBlock: đã thử trên ảnh thật - SingleLine hay dính 2 từ ("bya") và đọc kém đường dẫn hơn.</summary>
+    private static void ReadEnglishLines(List<OcrLine> lines, bool[] inverted, GrayStrip gray, int scale)
+    {
+        if (!lines.Any(l => !IsVietnamese(l)) || RentEnglish() is not { } engine)
+        {
+            return;
+        }
+        try
+        {
+            for (int i = 0; i < lines.Count; i++)
+            {
+                if (IsVietnamese(lines[i]))
+                {
+                    continue;
+                }
+                var area = LineArea(lines[i], gray, scale);
+                using var pix = ToPix(gray, area, gray.Inverted ^ inverted[i]);
+                using var page = engine.Process(pix, PageSegMode.SingleBlock);
+                var words = ReadLines(page, area.Left, area.Top).SelectMany(l => l.Words).ToList();
+                if (words.Count > 0 && words.Average(w => w.Confidence) >= Confidence(lines[i]))
+                {
+                    lines[i] = NewLine(words);
+                }
+            }
+        }
+        finally
+        {
+            EnglishPool.Add(engine);
+        }
+    }
+
+    private static bool IsVietnamese(OcrLine line) =>
+        line.Words.Any(w => w.Text.Any(c => VietnameseLetters.Contains(char.ToLowerInvariant(c))));
+
+    /// <summary>Khung dòng nới 4 px (ảnh gốc) để đọc lại riêng dòng đó.</summary>
+    private static SKRectI LineArea(OcrLine line, GrayStrip gray, int scale) =>
+        SKRectI.Intersect(SKRectI.Inflate(line.Bounds, 4 * scale, 4 * scale), SKRectI.Create(gray.Width, gray.Height));
 
     private static float Confidence(OcrLine line) => line.Words.Average(w => w.Confidence);
 
@@ -153,6 +200,18 @@ public static class TextRecognizer
             throw new FileNotFoundException($"Thiếu dữ liệu nhận dạng chữ trong {DataPath}");
         }
         return new TesseractEngine(DataPath, Languages, EngineMode.LstmOnly);
+    }
+
+    /// <summary>Engine "eng"; null khi thiếu eng.traineddata (bản cũ chỉ có "vie") → giữ nguyên bản đọc "vie".</summary>
+    private static TesseractEngine? RentEnglish()
+    {
+        if (EnglishPool.TryTake(out var engine))
+        {
+            return engine;
+        }
+        return File.Exists(Path.Combine(DataPath, EnglishLanguages + ".traineddata"))
+            ? new TesseractEngine(DataPath, EnglishLanguages, EngineMode.LstmOnly)
+            : null;
     }
 
     /// <summary>Cắt dải [top, bottom) của ảnh, phóng ×<paramref name="scale"/>, đổi sang xám 8 bit.</summary>

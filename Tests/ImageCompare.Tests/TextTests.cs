@@ -167,6 +167,21 @@ public class OcrTests
         Assert.Single(TextSearch.Find(ocr, "#1500", false, false));
     }
 
+    /// <summary>Ảnh chụp thật hộp thoại Visual Studio (chữ Anh, Segoe UI 9pt): chỉ "vie" đọc ra "\vAppData" và "¡ssue" -
+    /// dòng không dấu được đọc lại bằng "eng".</summary>
+    [Fact]
+    public void Reads_english_screen_text_and_paths()
+    {
+        using var decoded = SKBitmap.Decode(Path.Combine(AppContext.BaseDirectory, "TestData", "english-dialog.png"));
+        using var bmp = ImageUtil.Normalize(decoded);
+
+        var ocr = TextRecognizer.Recognize(bmp, TestContext.Current.CancellationToken);
+
+        Assert.Contains(ocr.Lines, l => l.Text.Contains(@"C:\Users\tantq\AppData\Roaming\Microsoft"));
+        Assert.Contains(ocr.Lines, l => l.Text.EndsWith("could help resolve this issue."));
+        Assert.Contains(ocr.Lines, l => l.Text == "The problem may have been caused by a configuration change or by the");
+    }
+
     [Fact]
     public void Match_bounds_are_in_original_image_coordinates()
     {

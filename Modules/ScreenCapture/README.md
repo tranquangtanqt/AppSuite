@@ -236,7 +236,8 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
 - **Chữ** — *Tìm chữ* (`Ctrl+F`): khung bên phải ảnh, đọc chữ trong ảnh (OCR, offline) rồi tìm — cùng cách tìm với
   *Tìm chữ* của ImageCompare (thư viện dùng chung `Common.Ocr`):
   - *Ngôn ngữ*: Tiếng Nhật (Windows OCR; máy chưa có gói OCR tiếng Nhật của Windows thì Tesseract dự phòng) hoặc Tiếng
-    Việt / English (Tesseract). Nhớ qua lần mở app (`OcrLanguage` trong settings.json).
+    Việt / English (Tesseract "vie"; dòng không có chữ tiếng Việt có dấu - chữ Anh, đường dẫn, URL - đọc lại bằng "eng",
+    giữ bản tin cậy hơn). Nhớ qua lần mở app (`OcrLanguage` trong settings.json).
   - Mỗi ảnh đọc 1 lần (nhớ theo tab + ảnh + ngôn ngữ); ảnh đổi (cắt, xoay, hiệu ứng, Undo...) thì đọc lại. Chỉ đọc ảnh
     chụp, không đọc hình đã vẽ lên.
   - Ô tìm trống: danh sách mọi dòng đọc được. Gõ chữ: không phân biệt dấu / hoa thường (2 ô tick để bật), bỏ qua khoảng
@@ -400,7 +401,7 @@ làm Startup Project, F5. Không cần mở `MainLauncher` hay `AppSuite.sln`.
   tới đoạn thẳng).
 - **Tìm chữ** (`Views/EditorWindow.TextSearch.cs`): OCR + tìm chữ dùng thư viện chung `Common.Ocr` (cùng ImageCompare);
   csproj import `Common.Ocr.targets` để chép native Tesseract x64 + tessdata + VC++ runtime cạnh exe (bản publish nặng
-  thêm ~10 MB). Kết quả đọc nhớ theo tab (`ConditionalWeakTable`), đọc trên bản sao ảnh ở luồng nền.
+  thêm ~14 MB, gồm tessdata vie + eng + jpn). Kết quả đọc nhớ theo tab (`ConditionalWeakTable`), đọc trên bản sao ảnh ở luồng nền.
 - Không có DI container, giống mọi module khác trong AppSuite — service khởi tạo thủ công trong
   code-behind của View.
 - **Log**: `Logs\screencapture-yyyy-MM-dd.log` cạnh exe (`Services/AppLog.cs`, qua

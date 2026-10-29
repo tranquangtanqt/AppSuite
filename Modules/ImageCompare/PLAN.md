@@ -101,6 +101,12 @@ dev chỉ có gói OCR tiếng Anh / tiếng Nhật).
     chọn fast.
   - `vie` vs `vie+eng`: chữ tiếng Anh / code / đường dẫn đúng ngang nhau (6/8 dòng khó, cùng lỗi), nhưng
     `vie+eng` sai dấu tiếng Việt nhiều hơn (10/13 so với 13/13) và chậm hơn ~1,5 lần → chỉ `vie`.
+  - **2026-10-29: thêm `eng` (4,1 MB) chỉ để đọc lại dòng chữ Anh.** Ảnh chụp thật hộp thoại VS: `vie` đọc
+    `C:\Users\x\vAppData`, `this ¡ssue`; trên 14 ảnh chụp màn hình thật còn `localhost8020`, `PRease VWer2.I`. Cách làm:
+    đọc cả trang bằng `vie` như cũ, dòng **không có chữ tiếng Việt có dấu** đọc lại riêng bằng `eng` (PSM SingleBlock -
+    SingleLine hay dính từ "bya"), giữ bản `eng` khi độ tin cậy ≥ `vie`. Dòng có dấu giữ nguyên `vie` → 24 dòng tiếng
+    Việt (Segoe UI 12 / 13,3 px) đúng y như trước (11/24, 21/24), còn `vie+eng` cả trang mất dấu (`Trạng thai`,
+    `Tach file`, `giá tri`). Chậm thêm ~10–20% (ảnh nhiều dòng Anh tới ~60%). Thiếu `eng.traineddata` → bỏ qua bước này.
 - **VC++ runtime chép kèm** (`Ocr\vcruntime\win-x64|win-x86\` → cạnh exe): `tesseract50.dll` cần
   msvcp140 / vcruntime140(_1); máy chưa cài VC++ Redistributable (vd Windows Sandbox) sẽ không đọc được chữ.
   Dạng app-local được Microsoft cho phép phân phối lại. Thư mục đặt tên `win-x64` vì `.gitignore` bỏ qua `x64/`.

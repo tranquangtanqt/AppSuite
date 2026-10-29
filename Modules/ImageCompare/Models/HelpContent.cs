@@ -57,7 +57,7 @@ internal static class HelpContent
 
         new("Tìm chữ", "", "Đọc chữ trong 1 ảnh (tiếng Nhật hoặc tiếng Việt / Anh) và tìm chữ trong đó - chỉ cần 1 ảnh.",
         [
-            new("Ngôn ngữ", "Ô ngôn ngữ cạnh Ảnh A / B (dùng chung với So chữ): Tiếng Nhật (Windows OCR; máy chưa có gói OCR tiếng Nhật thì dùng Tesseract, kém chính xác hơn) hoặc Tiếng Việt / English. Chọn sai ngôn ngữ thì danh sách dòng toàn ký tự rác và tìm không thấy gì. Bảng bên phải ghi đang \"Đọc bằng\" bộ nào."),
+            new("Ngôn ngữ", "Ô ngôn ngữ cạnh Ảnh A / B (dùng chung với So chữ): Tiếng Nhật (Windows OCR; máy chưa có gói OCR tiếng Nhật thì dùng Tesseract, kém chính xác hơn) hoặc Tiếng Việt / English (dòng chữ Anh, đường dẫn, URL được đọc lại bằng dữ liệu tiếng Anh cho đúng hơn). Chọn sai ngôn ngữ thì danh sách dòng toàn ký tự rác và tìm không thấy gì. Bảng bên phải ghi đang \"Đọc bằng\" bộ nào."),
             new("Cách dùng", "Chọn Ảnh A hoặc Ảnh B. Ô tìm trống: liệt kê mọi dòng đọc được (khung xanh mảnh). Gõ chữ: các chỗ khớp tô vàng + số, danh sách bên phải - bấm để phóng tới.", "Ctrl+F"),
             new("Cách so khớp", "Mặc định không phân biệt hoa / thường và dấu (\"thanh toan\" khớp \"Thanh toán\"); bật Phân biệt dấu / Phân biệt hoa/thường khi cần. Khoảng trắng không tính (OCR hay dính từ)."),
             new("Gần đúng (≈)", "Không thấy chỗ nào khớp chính xác thì tự tìm chỗ chỉ sai / thiếu / thừa 1 ký tự (cụm từ 7 ký tự trở lên: 2) - OCR hay đọc nhầm 1 chữ (受注数量 → 受淺数量) hoặc sót chữ (受注金額合計 → 受注金合計). Kết quả gần đúng có dấu ≈, màu tím. Chỉ khi tắt Phân biệt dấu / hoa thường và cụm từ 3 ký tự trở lên."),
