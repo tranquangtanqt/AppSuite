@@ -193,6 +193,11 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   ô đều sửa được), ô của lựa chọn không chọn bị mờ (`Views/ModeChoice.cs`); nút Tách file lên hàng Thư mục chứa các
   phần; ô tick Trích dòng xuống dưới. F1, README. Unit test 132/132; GUI Sandbox 6/6 (2026-10-28)
 - [ ] Thử tay: kéo dòng đổi thứ tự trong Nối file + kéo-thả file từ Explorer thả lên danh sách vẫn thêm được
+- [x] Tìm / Lọc dòng: bấm đúp (hoặc Enter) 1 dòng kết quả → trích ±N dòng quanh nó (ô "Bấm đúp 1 dòng → trích ± N dòng"
+  ở góc phải tiêu đề danh sách, mặc định 20, lưu vào Mẫu) ra file tạm `{tên}_quanh{số dòng}_{ngày giờ}` rồi mở; nhật ký
+  ghi dòng khớp là dòng thứ mấy trong file trích; CSV kèm dòng tiêu đề; dùng file của lần Tìm (dù ô File nguồn đã đổi).
+  F1, README. Unit test 133/133; GUI Sandbox 7/7 (2026-11-02)
+- [ ] Thử tay: bấm đúp dòng kết quả Tìm trên file log thật (file mở bằng app mặc định có đúng đoạn không)
 
 ## MeRon (module mới — bản máy tính của app điện thoại me-ron, `Modules/MeRon/PLAN.md`)
 

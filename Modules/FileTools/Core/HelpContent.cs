@@ -70,6 +70,7 @@ public static class HelpContent
         [
             new("Từ khoá", "Mỗi dòng 1 từ khoá; chọn dòng khớp khi chứa 1 trong / tất cả các từ. Enter = Tìm, Shift+Enter = thêm dòng từ khoá.", "Enter", "Shift+Enter"),
             new("Tìm", "Bấm Tìm: hiện số dòng + nội dung dòng khớp. Chỉ hiện N dòng đầu (mặc định 10.000) nhưng vẫn đếm hết; tick Xuất dòng khớp ra file tạm để lấy toàn bộ (kèm số dòng gốc nếu tick)."),
+            new("Xem quanh 1 dòng khớp", "Bấm đúp (hoặc chọn rồi Enter) 1 dòng kết quả: trích N dòng trước và N dòng sau nó (ô \"Bấm đúp 1 dòng → trích ± N dòng\" ở góc phải trên danh sách kết quả, mặc định 20) ra file tạm tên có số dòng + ngày giờ, rồi mở luôn. Nhật ký ghi dòng khớp là dòng thứ mấy trong file trích. File CSV kèm dòng tiêu đề."),
             new("Lọc ra file mới", "Chọn Giữ dòng khớp / Bỏ dòng khớp, file kết quả (mặc định <tên>_loc cạnh file gốc), bấm Lọc ra file. Ví dụ: giữ các dòng ERROR hoặc WARN của log; bỏ các dòng \"healthcheck\"; giữ đơn hàng của 3 mã khách hàng."),
             new("CSV", "Lọc theo bản ghi (ô nhiều dòng không bị tách); tick Luôn giữ dòng tiêu đề để file kết quả vẫn có tên cột."),
             new("Không phân biệt dấu (mặc định bật)", "\"thanh toan\" khớp \"Thanh toán\", \"da\" khớp \"đã\". Tắt khi cần khớp đúng dấu."),

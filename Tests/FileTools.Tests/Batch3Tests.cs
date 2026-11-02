@@ -116,6 +116,23 @@ public class SearchTests
     }
 
     [Fact]
+    public void Hit_line_number_extracts_the_lines_around_it()
+    {
+        // Bấm đúp 1 dòng kết quả = trích Range [n - N, n + N] theo số dòng của SearchHit.
+        using var temp = new TempDir();
+        var src = temp.Write("f.txt", Text.Lines(100));
+        var hit = TextSearcher.Search(new SearchOptions { SourcePath = src, Match = new MatchOptions { Terms = ["line 50"] } }).Hits.Single();
+
+        var r = LineExtractor.Extract(new ExtractOptions
+        {
+            SourcePath = src, OutputPath = temp.File("around.txt"), Mode = ExtractMode.Range, From = hit.LineNumber - 2, To = hit.LineNumber + 2,
+        });
+
+        Assert.Equal(5, r.Lines);
+        Assert.Equal(["line 48", "line 49", "line 50", "line 51", "line 52"], File.ReadAllLines(temp.File("around.txt")));
+    }
+
+    [Fact]
     public void Keeps_at_most_max_results_but_counts_all()
     {
         using var temp = new TempDir();
