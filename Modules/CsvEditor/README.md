@@ -29,13 +29,13 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 ## Toolbar
 
-`Mở` `🕘` `Lưu` `Xuất ▾` | `↶` `↷` | `Dòng ▾` `Cột ▾` | `Tìm` `→` `Lọc` `Sắp xếp` `📊` … `?` (giao diện làm lại
+`Mở` `🕘` `Lưu` `Xuất ▾` | `↶` `↷` | `Dòng ▾` `Cột ▾` | `Tìm` `→` `Lọc` `Sắp xếp` `📊` `▤` … `?` (giao diện làm lại
 2026-11-03: tiếng Việt, việc ít dùng gom vào menu thả xuống - vừa 1 hàng ở cửa sổ ~1000 px). Nút có phím tắt đều nằm ngoài
 menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đang mở). Tiêu đề cửa sổ = tên file (`● ` khi chưa lưu).
 
 - `Xuất ▾`: *Lưu thành file khác...*, *Xuất Excel (.xlsx)...*. `Dòng ▾`: *Thêm dòng*, *Nhân bản dòng đang chọn*, *Xoá dòng
   đang chọn*. `Cột ▾`: *Thêm cột...*, *Đổi tên cột đang chọn...*, *Xoá cột đang chọn* (chưa chọn ô nào → thanh trạng thái
-  nhắc). `→` = Đi tới dòng, `📊` = Thống kê, `↶ ↷` = Hoàn tác / Làm lại (tooltip ghi thao tác sẽ hoàn tác).
+  nhắc). `→` = Đi tới dòng, `📊` = Thống kê, `▤` = Xem dọc (`Ctrl+R`), `↶ ↷` = Hoàn tác / Làm lại (tooltip ghi thao tác sẽ hoàn tác).
 - **Màn hình bắt đầu** (lúc chưa mở file / chưa có cột - `UpdateStartScreen`): vùng kéo-thả viền nét đứt, *Mở file...*,
   *Bảng trống* (ẩn màn hình rồi mở hộp thoại Thêm cột) và danh sách file gần đây (bấm 1 dòng để mở).
 - **Thẻ đang lọc / sắp xếp** (`ChipsBar`, `RefreshChips`) phía trên bảng: `Hiện x / y dòng`, `Lọc: Trạng thái = "Đã giao" ✕`
@@ -78,6 +78,12 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
   Sau mỗi thao tác, selection tự chuyển sang dòng liên quan (dòng mới/dòng vừa copy/dòng thế chỗ
   dòng bị xóa) thay vì mất selection.
 - **Add/Delete/Rename Column**: theo cột đang focus trong bảng (`CurrentColumn`).
+- **Xem dọc 1 dòng** (`▤` / `Ctrl+R` / chuột phải ô → *Xem dọc dòng này*, 2026-11-03): khung 400 px bên phải bảng (bảng
+  chừa lề phải) liệt kê dòng đang chọn thành `số. tên cột | giá trị` - đọc 1 bản ghi file nhiều cột (vd file IF 123 cột)
+  không phải cuộn ngang. Ô *Tìm cột hoặc giá trị* lọc danh sách (không phân biệt hoa thường). Sửa ngay trong khung: rời ô
+  hoặc `Enter` ghi qua `SetCell` (1 bước Hoàn tác, bảng cập nhật), `Shift+Enter` xuống dòng trong ô, `Esc` trả lại giá trị
+  cũ; Hoàn tác / Làm lại cập nhật lại khung. `˄ ˅` sang dòng trên / dưới; khung theo dòng đang chọn trên bảng (giữ tham
+  chiếu dòng nên lọc / sắp xếp không lẫn dòng). Mục của khung: `ViewModels/RecordField`.
 - **Fill handle**: chọn 1 ô, bấm-giữ-kéo ô vuông nhỏ ở góc dưới-phải xuống các dòng dưới để điền
   y nguyên giá trị; giữ `Ctrl` khi thả chuột để tự tăng dần (+1 mỗi dòng) nếu giá trị là số nguyên.
   Chỉ hỗ trợ kéo xuống, không tự cuộn khi kéo ra ngoài vùng đang hiển thị.
@@ -99,7 +105,7 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
 - **Statistics**: Row/Column Count, Duplicate Row, và theo từng cột: Empty/Unique/Min/Max/
   Average/Sum (Min/Max/Avg/Sum chỉ tính nếu cột có giá trị số).
 - **Menu chuột phải** (`Grid_ContextRequested` chọn menu theo chỗ bấm - hit-test `DataGridColumnHeader` / `DataGridCell`):
-  - trên ô: *Sao chép*, *Dán*, *Lọc theo / Lọc bỏ giá trị này* (chữ trên mục ghi luôn cột + giá trị), *Chèn dòng bên dưới*,
+  - trên ô: *Sao chép*, *Dán*, *Lọc theo / Lọc bỏ giá trị này* (chữ trên mục ghi luôn cột + giá trị), *Xem dọc dòng này*, *Chèn dòng bên dưới*,
     *Nhân bản dòng*, *Xoá dòng đang chọn*. Ô bấm được chọn (nếu nằm ngoài vùng đang chọn) để Dán / Xoá làm đúng chỗ.
     Shift+F10 / phím Menu → menu ô cho ô đang chọn.
   - trên tiêu đề cột: *Sắp xếp tăng dần / giảm dần*, *Bỏ ô lọc của cột này*, *Đổi tên cột...*, *Chèn cột bên phải...*, *Xoá cột*.

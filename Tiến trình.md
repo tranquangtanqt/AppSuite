@@ -1093,6 +1093,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   bước Shift-JIS mới thì có thể bị đọc nhầm). Màn hình bắt đầu: trước đó ghi nhầm "tự nhận Shift-JIS" khi chưa làm - giờ đúng.
   Cập nhật F1, README, PLAN. Unit test 125/125 (+5: Shift-JIS có / không kana, lưu giữ byte, mẫu cắt giữa chữ, Latin-1);
   GUI Sandbox 8/8 (nhãn Shift-JIS, tiêu đề / ô tiếng Nhật, ㈱, kana nửa cỡ, không cảnh báo)
+- [x] **Xem dọc 1 dòng** (người dùng yêu cầu 2026-11-03 - file IF 123 cột phải cuộn ngang để đọc 1 bản ghi): nút ▤ cuối
+  thanh công cụ / `Ctrl+R` / chuột phải ô → *Xem dọc dòng này* mở khung 400 px bên phải: "Dòng x / y", ˄ ˅ sang dòng trên /
+  dưới, ✕ đóng, ô *Tìm cột hoặc giá trị*, danh sách `số. tên cột | ô giá trị`. Sửa trong khung: rời ô / Enter ghi vào bảng
+  (1 bước Hoàn tác), Shift+Enter xuống dòng trong ô, Esc trả lại; Hoàn tác / Làm lại cập nhật khung; khung theo dòng đang
+  chọn trên bảng. Cập nhật F1, README. Unit test 125/125; GUI Sandbox 17/17 (file 123 cột: chưa chọn dòng → nhắc, chọn dòng 3
+  → 123 ô đúng giá trị, tìm "ext" → 3 cột, tìm theo giá trị, sửa CO_CD → bảng + tiêu đề ●, Hoàn tác → khung về cũ,
+  dòng dưới / trên, đóng → nút tắt)
 - [ ] Người dùng thử tay giao diện mới CsvEditor trên máy thật (kéo-thả vào màn hình bắt đầu, Bảng trống, Shift+F10)
 - [ ] **[Đề xuất · Có thể]** Thiết kế lại giao diện - đợt 2 (mục 5–7 còn lại): (5) sọc dòng, số canh phải, cố định cột đầu,
   ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn; (7) lỗi dữ liệu

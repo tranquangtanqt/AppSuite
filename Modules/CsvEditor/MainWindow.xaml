@@ -7,6 +7,7 @@
     xmlns:controls="using:CommunityToolkit.WinUI.UI.Controls"
     xmlns:primitives="using:CommunityToolkit.WinUI.UI.Controls.Primitives"
     xmlns:models="using:CsvEditor.Models"
+    xmlns:vm="using:CsvEditor.ViewModels"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -56,6 +57,7 @@
                 <MenuFlyoutItem Tag="FilterByValue" Text="Lọc theo giá trị này" Click="FilterByValueItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71C;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Tag="ExcludeValue" Text="Lọc bỏ giá trị này" Click="ExcludeValueItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE711;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Xem dọc dòng này" Click="RecordViewMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8A0;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Text="Chèn dòng bên dưới" Click="InsertRowMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Text="Nhân bản dòng" Click="DuplicateRowMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Text="Xoá dòng đang chọn" Click="DeleteRowsMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
@@ -175,6 +177,13 @@
                     <Button Click="StatisticsButton_Click" ToolTipService.ToolTip="Thống kê từng cột (đếm, trống, tổng, nhỏ nhất / lớn nhất...)" AutomationProperties.Name="Thống kê">
                         <FontIcon Glyph="&#xE9D9;" FontSize="14" />
                     </Button>
+                    <ToggleButton x:Name="RecordViewToggle" Click="RecordViewToggle_Click"
+                                  ToolTipService.ToolTip="Xem dọc dòng đang chọn: tên cột - giá trị, sửa được, tìm cột (Ctrl+R)" AutomationProperties.Name="Xem dọc">
+                        <FontIcon Glyph="&#xE8A0;" FontSize="14" />
+                        <ToggleButton.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="R" Modifiers="Control" />
+                        </ToggleButton.KeyboardAccelerators>
+                    </ToggleButton>
                 </StackPanel>
             </ScrollViewer>
 
@@ -325,6 +334,62 @@
                         IsHitTestVisible="False" />
             </Border>
         </Canvas>
+
+        <!-- Khung Xem dọc (SetRecordPaneOpen / UpdateRecordPane): dòng đang chọn thành danh sách "số. tên cột | giá trị" -
+             đọc 1 bản ghi nhiều cột không phải cuộn ngang. Nằm đè bên phải hàng của bảng; mở khung thì bảng chừa lề phải. -->
+        <Border x:Name="RecordPane" Grid.Row="3" Width="400" HorizontalAlignment="Right" Visibility="Collapsed"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="8" Padding="12,10">
+            <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock x:Name="RecordTitle" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    <Button Grid.Column="1" Click="RecordPrevButton_Click" ToolTipService.ToolTip="Dòng trên" AutomationProperties.Name="Dòng trên">
+                        <FontIcon Glyph="&#xE70E;" FontSize="12" />
+                    </Button>
+                    <Button Grid.Column="2" Click="RecordNextButton_Click" ToolTipService.ToolTip="Dòng dưới" AutomationProperties.Name="Dòng dưới">
+                        <FontIcon Glyph="&#xE70D;" FontSize="12" />
+                    </Button>
+                    <Button Grid.Column="3" Click="RecordCloseButton_Click" ToolTipService.ToolTip="Đóng khung Xem dọc (Ctrl+R)" AutomationProperties.Name="Đóng xem dọc">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                    </Button>
+                </Grid>
+                <TextBox x:Name="RecordSearchBox" Grid.Row="1" PlaceholderText="Tìm cột hoặc giá trị..." TextChanged="RecordSearchBox_TextChanged" />
+                <TextBlock x:Name="RecordEmptyText" Grid.Row="2" Text="Chọn 1 dòng trong bảng để xem dọc." Opacity="0.7" TextWrapping="Wrap" />
+                <ScrollViewer Grid.Row="2" Padding="0,0,12,0">
+                    <ItemsControl x:Name="RecordFieldList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RecordField">
+                                <Grid ColumnSpacing="8" Padding="0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="140" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{x:Bind Label}" Opacity="0.75" TextWrapping="Wrap" VerticalAlignment="Center"
+                                               ToolTipService.ToolTip="{x:Bind Label}" />
+                                    <!-- Enter = ghi + sang ô dưới, Shift+Enter = xuống dòng trong ô, Esc = trả lại giá trị cũ;
+                                         rời ô cũng ghi (RecordValue_LostFocus) - 1 bước Hoàn tác như sửa trên bảng. -->
+                                    <TextBox Grid.Column="1" Text="{x:Bind EditText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="{x:Bind ColumnName}"
+                                             TextWrapping="Wrap" AcceptsReturn="True" MinWidth="0"
+                                             LostFocus="RecordValue_LostFocus" PreviewKeyDown="RecordValue_PreviewKeyDown" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
 
         <!-- Màn hình bắt đầu (chưa mở file nào - UpdateStartScreen): vùng kéo-thả, nút Mở file, file gần đây, bảng trống. -->
         <ScrollViewer x:Name="StartScreen" Grid.Row="1" Grid.RowSpan="3" Visibility="Collapsed">

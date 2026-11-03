@@ -73,6 +73,9 @@ public sealed partial class MainWindow : Window
                 case nameof(CsvEditorViewModel.ActiveFilter) or nameof(CsvEditorViewModel.ActiveSort) or nameof(CsvEditorViewModel.RowCount):
                     RefreshChips();
                     break;
+                case nameof(CsvEditorViewModel.CanUndo):
+                    UpdateRecordPane(); // mọi sửa / hoàn tác / làm lại đều đổi CanUndo → cập nhật giá trị trong khung Xem dọc
+                    break;
             }
         };
 
@@ -131,6 +134,10 @@ public sealed partial class MainWindow : Window
         var show = !_startDismissed && CurrentFilePath is null && ViewModel.Columns.Count == 0;
         StartScreen.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
         Grid.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+        if (show && IsRecordPaneOpen)
+        {
+            SetRecordPaneOpen(false);
+        }
         if (!show)
         {
             return;
@@ -315,6 +322,7 @@ public sealed partial class MainWindow : Window
 
         RefreshChips();
         UpdateStartScreen();
+        UpdateRecordPane(rebuild: true);
     }
 
     /// <summary>Widest of the column name and a sample of its cell values (measured the same way their
@@ -436,7 +444,11 @@ public sealed partial class MainWindow : Window
 
     private void Grid_CurrentCellChanged(object? sender, object e) => UpdateFillHandlePosition();
 
-    private void Grid_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateFillHandlePosition();
+    private void Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateFillHandlePosition();
+        UpdateRecordPane();
+    }
 
     /// <summary>Repositions the handle onto the bottom-right corner of the current cell, or hides it
     /// when there is no valid current cell or its row isn't realized on screen right now (DataGrid
@@ -1505,6 +1517,143 @@ public sealed partial class MainWindow : Window
         if (IssuesListView.SelectedItem is ValidationIssue { RowIndex: { } rowIndex })
         {
             NavigateToCell(new CellRef(rowIndex, 0));
+        }
+    }
+
+    // ----- Xem dọc 1 dòng -----
+
+    private const double RecordPaneGap = 8;
+
+    /// <summary>Dòng đang hiện trong khung (giữ tham chiếu, không giữ số thứ tự: lọc / sắp xếp đổi vị trí dòng).</summary>
+    private CsvRow? _recordRow;
+    private readonly List<RecordField> _recordFields = new();
+
+    private bool IsRecordPaneOpen => RecordPane.Visibility == Visibility.Visible;
+
+    private void RecordViewToggle_Click(object sender, RoutedEventArgs e) => SetRecordPaneOpen(RecordViewToggle.IsChecked == true);
+
+    private void RecordViewMenuItem_Click(object sender, RoutedEventArgs e) => SetRecordPaneOpen(true);
+
+    private void RecordCloseButton_Click(object sender, RoutedEventArgs e) => SetRecordPaneOpen(false);
+
+    private void SetRecordPaneOpen(bool open)
+    {
+        RecordViewToggle.IsChecked = open;
+        RecordPane.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+        Grid.Margin = new Thickness(0, 0, open ? RecordPane.Width + RecordPaneGap : 0, 0);
+        UpdateFillHandlePosition();
+        UpdateRecordPane(rebuild: true);
+    }
+
+    /// <summary>Đưa dòng đang chọn vào khung. Cùng dòng, cùng số cột → chỉ cập nhật giá trị đã đổi (sau sửa / hoàn tác),
+    /// giữ nguyên ô đang gõ và vị trí cuộn; khác dòng hoặc <paramref name="rebuild"/> → dựng lại danh sách.</summary>
+    private void UpdateRecordPane(bool rebuild = false)
+    {
+        if (!IsRecordPaneOpen)
+        {
+            return;
+        }
+
+        var index = Grid.SelectedIndex;
+        var row = index >= 0 && index < ViewModel.ViewRows.Count ? ViewModel.ViewRows[index] : null;
+        RecordTitle.Text = row is null ? "Xem dọc" : $"Dòng {index + 1:N0} / {ViewModel.ViewRows.Count:N0}";
+        RecordEmptyText.Visibility = row is null ? Visibility.Visible : Visibility.Collapsed;
+
+        if (!rebuild && ReferenceEquals(row, _recordRow) && _recordFields.Count == ViewModel.Columns.Count)
+        {
+            foreach (var field in _recordFields)
+            {
+                var value = row?.GetCell(field.ColumnIndex) ?? string.Empty;
+                if (value != field.Value)
+                {
+                    field.Value = value;
+                    field.EditText = value;
+                }
+            }
+            return;
+        }
+
+        _recordRow = row;
+        _recordFields.Clear();
+        if (row is not null)
+        {
+            var columns = ViewModel.Columns;
+            for (var i = 0; i < columns.Count; i++)
+            {
+                _recordFields.Add(new RecordField(i, columns[i].Name, row.GetCell(i)));
+            }
+        }
+        ApplyRecordSearch();
+    }
+
+    private void RecordSearchBox_TextChanged(object sender, TextChangedEventArgs e) => ApplyRecordSearch();
+
+    /// <summary>Ô tìm: giữ các dòng có tên cột hoặc giá trị chứa chữ đã gõ (không phân biệt hoa thường).</summary>
+    private void ApplyRecordSearch()
+    {
+        var query = RecordSearchBox.Text.Trim();
+        RecordFieldList.ItemsSource = query.Length == 0
+            ? _recordFields.ToList()
+            : _recordFields.Where(field => field.ColumnName.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || field.Value.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+
+    private void RecordValue_LostFocus(object sender, RoutedEventArgs e) => CommitRecordField((FrameworkElement)sender);
+
+    /// <summary>Ghi chữ đã sửa vào bảng (1 bước Hoàn tác, như sửa ô trên bảng). Dòng đã bị lọc mất khỏi bảng thì trả lại
+    /// giá trị cũ và báo ở thanh trạng thái.</summary>
+    private void CommitRecordField(FrameworkElement box)
+    {
+        if (box.DataContext is not RecordField field || _recordRow is null || field.EditText == field.Value)
+        {
+            return;
+        }
+
+        var viewIndex = ViewModel.ViewRows.IndexOf(_recordRow);
+        if (viewIndex < 0)
+        {
+            field.EditText = field.Value;
+            ViewModel.StatusMessage = "Dòng này không còn trong bảng đang hiện - chưa ghi thay đổi.";
+            return;
+        }
+
+        field.Value = field.EditText; // trước SetCell: UpdateRecordPane (qua CanUndo) thấy giá trị đã khớp, không ghi đè ô
+        ViewModel.SetCell(viewIndex, field.ColumnIndex, field.EditText);
+    }
+
+    /// <summary>Enter = ghi + sang ô dưới; Shift+Enter = xuống dòng trong ô; Esc = trả lại giá trị đang có trong bảng.</summary>
+    private void RecordValue_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (sender is not TextBox { DataContext: RecordField field } box)
+        {
+            return;
+        }
+
+        if (e.Key == Windows.System.VirtualKey.Escape)
+        {
+            field.EditText = field.Value;
+            box.SelectAll();
+            e.Handled = true;
+        }
+        else if (e.Key == Windows.System.VirtualKey.Enter
+            && !Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down))
+        {
+            CommitRecordField(box);
+            FocusManager.TryMoveFocus(FocusNavigationDirection.Next, new FindNextElementOptions { SearchRoot = RecordPane });
+            e.Handled = true;
+        }
+    }
+
+    private void RecordPrevButton_Click(object sender, RoutedEventArgs e) => StepRecord(-1);
+
+    private void RecordNextButton_Click(object sender, RoutedEventArgs e) => StepRecord(1);
+
+    private void StepRecord(int delta)
+    {
+        var index = Grid.SelectedIndex + delta;
+        if (index >= 0 && index < ViewModel.ViewRows.Count)
+        {
+            SelectRow(ViewModel.ViewRows[index]);
         }
     }
 }
