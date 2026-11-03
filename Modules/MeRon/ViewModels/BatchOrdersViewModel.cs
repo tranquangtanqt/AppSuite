@@ -43,9 +43,9 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
         : Match.Line.Customer;
 
     public string ItemsText => string.Join(", ", Match.Items.Select(i =>
-        i.Product is { } p ? $"{i.Source.Quantity} {p.Name}"
-        : i.FreePrice is > 0 ? $"{i.Source.Quantity} {i.Name} (món tự do {VnFormat.Money(i.FreePrice)})"
-        : $"{i.Source.Quantity} {i.Name} ⚠"));
+        i.IsFree ? $"{i.Label} (món tự do {VnFormat.Money(i.FreePrice)})"
+        : i.IsResolved ? i.Label
+        : $"{i.Label} ⚠"));
 
     public string TotalText => Match.CanSave ? VnFormat.Money(Match.Total) : "?";
 
@@ -61,12 +61,20 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
     /// <summary>Nhiều khách khớp → ô chọn khách.</summary>
     public IReadOnlyList<Customer> CustomerChoices => Match.Customer is null ? Match.CustomerCandidates : [];
 
-    /// <summary>Món đầu tiên có nhiều món khớp (vd "bún" → Bún chả / Bún chả cá) → ô chọn món.</summary>
-    public int ItemChoiceIndex => Match.Items.ToList().FindIndex(i => !i.IsResolved && i.Candidates.Count > 1);
+    /// <summary>Mọi món (sắp theo tên) - ô chọn món cho chữ lạ không có gợi ý nào (vd "pana" khi chưa có chữ viết tắt).</summary>
+    public IReadOnlyList<Product> AllProducts { get; init; } = [];
 
-    public IReadOnlyList<Product> ItemChoices => ItemChoiceIndex >= 0 ? Match.Items[ItemChoiceIndex].Candidates : [];
+    /// <summary>Món đầu tiên chưa ghép được → ô chọn món: nhiều món khớp (vd "bún" → Bún chả / Bún chả cá) thì chỉ các món
+    /// đó, không món nào khớp thì cả danh sách (gõ chữ đầu để nhảy tới).</summary>
+    public int ItemChoiceIndex => Match.Items.ToList().FindIndex(i => !i.IsResolved);
 
-    public string ItemChoicePlaceholder => ItemChoiceIndex >= 0 ? $"Chọn món cho \"{Match.Items[ItemChoiceIndex].Name}\"..." : string.Empty;
+    public IReadOnlyList<Product> ItemChoices => ItemChoiceIndex < 0 ? []
+        : Match.Items[ItemChoiceIndex].Candidates.Count > 1 ? Match.Items[ItemChoiceIndex].Candidates : AllProducts;
+
+    public string ItemChoicePlaceholder => ItemChoiceIndex < 0 ? string.Empty
+        : Match.Items[ItemChoiceIndex].Candidates.Count > 1
+            ? $"Chọn món cho \"{Match.Items[ItemChoiceIndex].Name}\"..."
+            : $"\"{Match.Items[ItemChoiceIndex].Name}\" là món nào?...";
 
     public string AccessibleName => $"Dòng {Match.Line.Number}: {CustomerText} - {ItemsText}";
 }
@@ -134,7 +142,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         static string Items(IEnumerable<(long Quantity, string? Name)> items) => string.Join(", ", items.Select(i => $"{i.Quantity} {i.Name}"));
         string Book(ReconcileEntry e) =>
             $"dòng {e.Draft!.Line.Number} · {(e.Draft.Customer?.Name ?? e.Draft.Line.Customer)}: "
-            + Items(e.Draft.Items.Select(i => (i.Source.Quantity, (string?)(i.Product?.Name ?? i.Name))));
+            + string.Join(", ", e.Draft.Items.Select(i => i.Label));
         static string App(Order o) =>
             $"{o.UserName ?? "(không có khách)"}: {Items(o.Items.Select(i => (i.Quantity, i.SnapshotName)))} · {VnFormat.Money(o.Total)} · {OrderStatusText.Label(o.Status)}";
 
@@ -192,6 +200,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
 
             var customers = AppServices.MasterData.GetCustomers();
             var products = AppServices.MasterData.GetProducts();
+            var sortedProducts = products.OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
             var abbreviations = new Abbreviations(AbbreviationsText);
             var matches = parsed.Lines.Select(line => BatchOrderMatcher.Match(line, customers, products, abbreviations)).ToList();
 
@@ -206,7 +215,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
                 var entry = entries.FirstOrDefault(e => ReferenceEquals(e.Draft, match));
                 var fresh = match.Warnings.Count == 0 && entry?.Kind is not (ReconcileKind.Matched or ReconcileKind.Different);
                 var isChecked = match.CanSave && (_checkOverrides.TryGetValue(line.Raw, out var forced) ? forced : fresh);
-                var row = new BatchRowViewModel(match, isChecked, entry);
+                var row = new BatchRowViewModel(match, isChecked, entry) { AllProducts = sortedProducts };
                 row.PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName == nameof(BatchRowViewModel.IsChecked))
@@ -319,6 +328,10 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         UndoText = string.Empty;
         Refresh();
     }
+
+    /// <summary>Thêm 1 dòng "chữ = tên món" vào bảng Chữ viết tắt (tự lưu).</summary>
+    public void AddAbbreviation(string word, string fullName) =>
+        AbbreviationsText = (AbbreviationsText.TrimEnd() + $"\n{word} = {fullName}").TrimStart('\n');
 
     /// <summary>Viết lại dòng của <paramref name="row"/> (chọn khách / món trên bảng nháp) rồi đọc lại.</summary>
     public void RewriteLine(BatchRowViewModel row, string newLine)

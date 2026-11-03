@@ -104,12 +104,24 @@ public sealed partial class BatchOrdersPage : Page
         }
     }
 
-    private void ItemChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    /// <summary>Chọn món cho chữ chưa ghép được. Chữ lạ 1 từ, không món nào khớp (vd "pana") → hỏi "Nhớ: pana = Panacota?" để
+    /// lần sau tự hiểu (thêm vào bảng Chữ viết tắt). Chữ khớp nhiều món (vd "bún") thì không hỏi: thêm "bún = Bún chả cá" sẽ đổi
+    /// cả "bún chả" thành sai.</summary>
+    private async void ItemChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (RowOf(sender) is { } row && (sender as ComboBox)?.SelectedItem is Product product && product.Name is { } name)
+        if (RowOf(sender) is not { } row || (sender as ComboBox)?.SelectedItem is not Product { Name: { } name })
         {
-            ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, itemIndex: row.ItemChoiceIndex, itemName: name));
+            return;
         }
+        var item = row.Match.Items[row.ItemChoiceIndex];
+        var word = item.Source.Name.Trim();
+        if (item.Candidates.Count == 0 && !word.Contains(' ') && Core.TextSearch.Fold(word) != Core.TextSearch.Fold(name)
+            && await Dialogs.ConfirmAsync(XamlRoot, "Nhớ chữ viết tắt?",
+                $"Lần sau tự hiểu \"{word}\" là \"{name}\"? (thêm dòng \"{word} = {name}\" vào bảng Chữ viết tắt - sửa / xoá được ở đó)", "Nhớ"))
+        {
+            ViewModel.AddAbbreviation(word, name);
+        }
+        ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, itemIndex: row.ItemChoiceIndex, itemName: name));
     }
 
     /// <summary>Chọn đúng dòng đó trong ô chữ để sửa tay.</summary>

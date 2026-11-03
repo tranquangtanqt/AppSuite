@@ -108,8 +108,19 @@
             </DropDownButton>
         </Grid>
 
-        <InfoBar Grid.Row="3" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
-                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
+        <StackPanel Grid.Row="3" Spacing="6">
+            <InfoBar Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
+                     IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
+            <!-- Nhắc xuất (RefreshUnsynced): đơn tạo / sửa trên máy tính sẽ bị lần nhập backup từ điện thoại sau đè mất -->
+            <InfoBar x:Name="UnsyncedBar" Severity="Warning" IsClosable="True" Title="Chưa xuất sang điện thoại"
+                     AutomationProperties.AutomationId="OrdersUnsyncedBar" Closed="UnsyncedBar_Closed">
+                <!-- ActionButton chỉ nhận 1 nút → 2 nút đặt ở Content (dưới câu nhắc) -->
+                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
+                    <Button x:Name="UploadDriveButton" Content="Xuất lên Google Drive" Click="UploadDrive_Click" Style="{StaticResource AccentButtonStyle}" />
+                    <Button Content="Mở trang Xuất" Click="OpenExport_Click" />
+                </StackPanel>
+            </InfoBar>
+        </StackPanel>
 
         <Grid Grid.Row="4">
             <!-- Mỗi thẻ là 1 nút: bấm chuột, Tab + Enter, trình đọc màn hình đều mở được đơn. ItemsRepeater vẫn ảo hoá

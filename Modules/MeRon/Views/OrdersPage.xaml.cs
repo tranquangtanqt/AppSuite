@@ -63,7 +63,56 @@ public sealed partial class OrdersPage : Page, IOrderListPage
         SyncStatusBar();
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, SyncStatusBar);
         ShowSort();
+        RefreshUnsynced();
     }
+
+    // ---------- Nhắc xuất: thay đổi trên máy tính chưa xuất sang điện thoại ----------
+
+    /// <summary>Số dòng lúc bấm ✕ - còn đúng số đó thì không nhắc lại (trong phiên); có thêm thay đổi thì nhắc lại.</summary>
+    private static long _dismissedCount = -1;
+
+    private void RefreshUnsynced()
+    {
+        var edits = Services.AppServices.Database.GetUnsyncedEdits();
+        UnsyncedBar.Severity = InfoBarSeverity.Warning;
+        UnsyncedBar.Title = "Chưa xuất sang điện thoại";
+        UnsyncedBar.Message = edits.Describe() + " Lần nhập backup từ điện thoại sau sẽ đè mất - nên xuất trước.";
+        UploadDriveButton.IsEnabled = true;
+        UploadDriveButton.Content = string.IsNullOrEmpty(Services.GoogleServices.Auth?.Email)
+            ? "Xuất lên Google Drive (đăng nhập ở trang Xuất)"
+            : "Xuất lên Google Drive";
+        UnsyncedBar.IsOpen = edits.Any && edits.Count != _dismissedCount;
+    }
+
+    private void UnsyncedBar_Closed(InfoBar sender, InfoBarClosedEventArgs args)
+    {
+        if (args.Reason == InfoBarCloseReason.CloseButton)
+        {
+            _dismissedCount = Services.AppServices.Database.GetUnsyncedEdits().Count;
+        }
+    }
+
+    /// <summary>Đã đăng nhập Google (trang Xuất) → xuất + tải lên Drive ngay tại đây (bộ đếm về 0); chưa → mở trang Xuất.</summary>
+    private async void UploadDrive_Click(object sender, RoutedEventArgs e)
+    {
+        var export = new ExportViewModel();
+        export.RefreshGoogle();
+        if (!export.IsSignedIn)
+        {
+            App.MainWindow?.SelectMenu("ExportPage");
+            return;
+        }
+        UploadDriveButton.IsEnabled = false;
+        UnsyncedBar.Message = "Đang xuất và tải lên Google Drive...";
+        await export.UploadToDriveAsync();
+        var left = Services.AppServices.Database.GetUnsyncedEdits();
+        UnsyncedBar.Severity = left.Any ? InfoBarSeverity.Error : InfoBarSeverity.Success;
+        UnsyncedBar.Title = left.Any ? "Chưa xuất được" : "Đã xuất";
+        UnsyncedBar.Message = export.DriveStatus + (left.Any ? string.Empty : " Nhập bản này vào điện thoại để điện thoại có các đơn mới.");
+        UploadDriveButton.IsEnabled = left.Any;
+    }
+
+    private void OpenExport_Click(object sender, RoutedEventArgs e) => App.MainWindow?.SelectMenu("ExportPage");
 
     /// <summary>
     /// ViewModel sống cả phiên, trang thì không - gỡ mọi chỗ nghe ViewModel (x:Bind, danh sách thẻ): trang cũ đã gỡ khỏi cửa sổ

@@ -5,8 +5,9 @@ using MeRon.Core.Models;
 namespace MeRon.Core.Orders;
 
 /// <summary>1 món trên 1 dòng chữ dán vào: số lượng + tên (chưa ghép với danh sách món). <see cref="Price"/> = giá ghi ngay
-/// sau món ("1 phần cá 45k"); <see cref="Unsure"/> = có dấu ? (người / AI chép lại đọc không chắc).</summary>
-public sealed record BatchItem(long Quantity, string Name, long? Price, bool Unsure);
+/// sau món ("1 phần cá 45k"); <see cref="Unsure"/> = có dấu ? (người / AI chép lại đọc không chắc). <see cref="Text"/> = chữ
+/// như ghi trong sổ (cả số lượng, bỏ giá / dấu ?) - tên của món tự do ("5 lạng tôm").</summary>
+public sealed record BatchItem(long Quantity, string Name, long? Price, bool Unsure, string Text);
 
 /// <summary>1 dòng = 1 đơn: <c>khách | món; món | giá | CK</c>. <see cref="Number"/> = số dòng (từ 1) trong ô chữ.</summary>
 public sealed record BatchLine(int Number, string Raw, string Customer, bool CustomerUnsure, IReadOnlyList<BatchItem> Items, long? Price, bool Paid,
@@ -117,6 +118,7 @@ public static partial class BatchOrderParser
             price = value;
             rest = priceMatch.Groups[1].Value.Trim();
         }
+        var written = rest;
 
         long quantity = 1;
         if (GluedQuantity().Match(rest) is { Success: true } glued)
@@ -129,7 +131,7 @@ public static partial class BatchOrderParser
             quantity = q;
             rest = split.Name.Trim();
         }
-        return new BatchItem(Math.Max(1, quantity), rest, price, unsure);
+        return new BatchItem(Math.Max(1, quantity), rest, price, unsure, written);
     }
 
     /// <summary>"45k" / "1,5k" → 45000 / 1500; "45.000" / "45,000" / "45000" → 45000. Không phải giá → null.</summary>
@@ -210,10 +212,21 @@ public sealed class Abbreviations
             .Select(word => _map.TryGetValue(TextSearch.Fold(word), out var full) ? full : word));
 }
 
-/// <summary>1 món đã ghép: <see cref="Product"/> (món trong danh sách) hoặc món tự do có <see cref="FreePrice"/>.</summary>
+/// <summary>1 món đã ghép: <see cref="Product"/> (món trong danh sách) hoặc món tự do có <see cref="FreePrice"/>. Món tự do
+/// (người dùng chốt 2026-11-03): tên = chữ như ghi trong sổ kể cả số lượng ("5 lạng tôm"), số lượng 1, đơn giá = giá ghi
+/// ("5 lạng tôm 100k" → 1 × 100.000, không phải 5 × 100.000).</summary>
 public sealed record BatchItemMatch(BatchItem Source, string Name, Product? Product, IReadOnlyList<Product> Candidates, long? FreePrice)
 {
     public bool IsResolved => Product is not null || FreePrice is > 0;
+
+    public bool IsFree => Product is null && FreePrice is > 0;
+
+    public long Quantity => IsFree ? 1 : Source.Quantity;
+
+    /// <summary>Tên lưu vào đơn (món tự do) / hiện trên bảng nháp.</summary>
+    public string FreeName => Source.Text;
+
+    public string Label => Product is { } p ? $"{Source.Quantity} {p.Name}" : IsFree ? FreeName : $"{Source.Quantity} {Name}";
 
     public long UnitPrice => Product?.Price ?? FreePrice ?? 0;
 }
@@ -230,12 +243,12 @@ public sealed record BatchLineMatch(
 {
     public bool CanSave => Problems.Count == 0;
 
-    public long Total => Items.Sum(i => i.UnitPrice * i.Source.Quantity);
+    public long Total => Items.Sum(i => i.UnitPrice * i.Quantity);
 
     public OrderDraft ToDraft(DateOnly day) => new(0, Customer?.Id, OrderStatus.Shipping, day.ToDateTime(TimeOnly.MinValue), Line.Paid, null, 0, null,
         Items.Select(i => i.Product is { } p
-            ? new OrderLineDraft(p.Id, i.Source.Quantity)
-            : new OrderLineDraft(null, i.Source.Quantity, true, i.Name, i.FreePrice)).ToList());
+            ? new OrderLineDraft(p.Id, i.Quantity)
+            : new OrderLineDraft(null, i.Quantity, true, i.FreeName, i.FreePrice)).ToList());
 }
 
 /// <summary>

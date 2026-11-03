@@ -42,7 +42,7 @@ public class BatchOrderTests
         Assert.Equal(new DateOnly(2026, 10, 29), text.Day);
         Assert.Equal(2, text.Lines.Count);
         Assert.Equal(3, text.Lines[0].Number);
-        Assert.Equal(new BatchItem(3, "sc uống", null, false), text.Lines[0].Items.Single());
+        Assert.Equal(new BatchItem(3, "sc uống", null, false, "3 sc uống"), text.Lines[0].Items.Single());
         Assert.Equal(45000, text.Lines[1].Price);
         Assert.True(text.Lines[1].Paid);
         Assert.False(text.Lines[0].Paid);
@@ -123,14 +123,18 @@ public class BatchOrderTests
         Assert.Null(inline.Items.Single().Product);
         Assert.Equal(45000, inline.Items.Single().FreePrice);
 
+        // Người dùng chốt: món tự do tên = chữ như ghi kể cả số lượng, số lượng 1, đơn giá = giá ghi ("5 lạng tôm 100k" = 100.000).
+        var shrimp = MatchLine("1101 | 5 lạng tôm 100k").Items.Single();
+        Assert.Equal(("5 lạng tôm", 1L, 100000L), (shrimp.FreeName, shrimp.Quantity, shrimp.UnitPrice));
+
         var column = MatchLine("706 | 1 giò; 2 phần cá | 45k | CK");
         Assert.True(column.CanSave);
-        Assert.Equal(30000 + 2 * 45000, column.Total);
+        Assert.Equal(30000 + 45000, column.Total);
 
         var draft = column.ToDraft(new DateOnly(2026, 10, 29));
         Assert.True(draft.IsPrepaid);
         Assert.Equal(new DateTime(2026, 10, 29), draft.Delivery);
-        Assert.Equal(new OrderLineDraft(null, 2, true, "phần cá", 45000), draft.Lines[1]);
+        Assert.Equal(new OrderLineDraft(null, 1, true, "2 phần cá", 45000), draft.Lines[1]);
         OrderCalculator.Validate(draft); // lưu được như đơn nhập tay
     }
 
@@ -220,10 +224,10 @@ public class BatchOrderTests
     [Fact]
     public void Reconcile_compares_free_items_by_name_without_accents_and_price()
     {
-        var same = Reconcile("706 | 1 phần cá 45k", DbOrder(1, 1, OrderStatus.Shipping, (null, "Phần cá", 45000, 1)));
+        var same = Reconcile("706 | 1 phần cá 45k", DbOrder(1, 1, OrderStatus.Shipping, (null, "1 Phần cá", 45000, 1)));
         Assert.Equal(ReconcileKind.Matched, same.Single().Kind);
 
-        var otherPrice = Reconcile("706 | 1 phần cá 45k", DbOrder(1, 1, OrderStatus.Shipping, (null, "phần cá", 50000, 1)));
+        var otherPrice = Reconcile("706 | 1 phần cá 45k", DbOrder(1, 1, OrderStatus.Shipping, (null, "1 phần cá", 50000, 1)));
         Assert.Equal(ReconcileKind.Different, otherPrice.Single().Kind);
     }
 }

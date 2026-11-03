@@ -433,8 +433,20 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   32/33 (dòng còn lại: script không thấy thẻ cuối chưa cuộn tới - đơn đó có trong bảng so khớp): dòng khác đơn → "MeRon
   thiếu 1 Giò; MeRon thừa 3 Sữa chua uống", dòng trùng → ✓ khớp, bảng tổng hợp Chỉ có trong MeRon (5) / Khớp (1) / Chưa so
   được (1), hoàn tác → hết "đã có trong MeRon"
-- [ ] Người dùng xác nhận: "lá" là món gì; giá ghi kèm số lượng > 1 (vd "5 lạng tôm 100k") là đơn giá (hiện tính 500.000) hay
-  tổng của dòng
+- [x] **Món tự do có giá ghi kèm** (người dùng chốt 2026-11-03): "5 lạng tôm 100k" = món tự do tên "5 lạng tôm", số lượng 1,
+  đơn giá 100.000 (trước tính 5 × 100.000 = 500.000); "2 phần cá | 45k" = "2 phần cá" 1 × 45.000. So khớp món tự do theo tên
+  này. Unit test cập nhật; GUI Sandbox: thẻ Thảo "5 lạng tôm (món tự do 100.000 đ)", tổng 100.000
+- [x] **Nhớ chữ viết tắt trên bảng nháp** (2026-11-03): chữ lạ không khớp món nào → ô chọn món có cả danh sách (trước chỉ có
+  Sửa dòng); chọn món cho chữ 1 từ → hỏi "Nhớ chữ viết tắt?" → Nhớ thêm "pn = Panacota" vào bảng (chữ khớp nhiều món như
+  "bún" thì không hỏi - sẽ làm sai "bún chả"). GUI Sandbox: "2 pn" → chọn Panacota → Nhớ → bảng có "pn = Panacota", dòng mới
+  "1 pn" tự hiểu
+- [x] **Nhắc xuất trên trang Đặt hàng** (người dùng yêu cầu 2026-11-03; ý "Nhắc sao lưu" trong `_note.txt`): còn thay đổi
+  chưa xuất → khung vàng "Chưa xuất sang điện thoại" (số dòng, từ lúc nào, lần nhập backup sau sẽ đè mất) + nút Xuất lên
+  Google Drive (đã đăng nhập Google: xuất + tải lên ngay tại trang, bộ đếm về 0; chưa: mở trang Xuất) + Mở trang Xuất; ✕ ẩn đến
+  khi có thay đổi mới. Câu cảnh báo dùng chung với trang Nhập (`UnsyncedEdits.Describe`). Cập nhật F1, README. Unit test
+  183/183; GUI Sandbox 44/44 cả lô Nhập đơn hàng loạt (nhắc hiện, nút khi chưa đăng nhập → trang Xuất, ✕ → ẩn kể cả vào lại,
+  thay đổi mới → hiện lại). Chưa thử tải lên Drive thật trong Sandbox (không có mạng / tài khoản Google)
+- [ ] Người dùng xác nhận: "lá" là món gì (chữ viết tắt)
 - [ ] Nhập đơn hàng loạt từ Excel / CSV (đề xuất cũ 2026-11-02) - làm khi có file mẫu
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị
   2026-10-27). Cập nhật F1, README

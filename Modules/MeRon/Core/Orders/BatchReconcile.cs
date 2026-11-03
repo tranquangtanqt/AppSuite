@@ -86,8 +86,8 @@ public static class BatchReconciler
     public static IReadOnlyList<string> Differences(BatchLineMatch draft, Order order)
     {
         var book = draft.Items
-            .GroupBy(i => i.Product is { } p ? $"p{p.Id}" : $"f{TextSearch.Fold(i.Name).Trim()}|{i.FreePrice}")
-            .ToDictionary(g => g.Key, g => (Name: g.First().Product?.Name ?? g.First().Name, Quantity: g.Sum(i => i.Source.Quantity)));
+            .GroupBy(i => i.Product is { } p ? $"p{p.Id}" : $"f{TextSearch.Fold(i.FreeName).Trim()}|{i.FreePrice}")
+            .ToDictionary(g => g.Key, g => (Name: g.First().Product?.Name ?? g.First().FreeName, Quantity: g.Sum(i => i.Quantity)));
         var app = order.Items
             .GroupBy(i => i.ProductId is { } id ? $"p{id}" : $"f{TextSearch.Fold(i.SnapshotName).Trim()}|{i.SnapshotPrice}")
             .ToDictionary(g => g.Key, g => (Name: g.First().SnapshotName ?? string.Empty, Quantity: g.Sum(i => i.Quantity)));

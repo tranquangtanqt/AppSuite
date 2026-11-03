@@ -483,11 +483,7 @@ public sealed partial class ImportViewModel : ObservableObject
     /// <summary>Đọc lại bộ đếm (vào trang, sau khi nhập): có dòng thêm / sửa / xoá trên máy chưa xuất → câu cảnh báo.</summary>
     public void RefreshUnsynced()
     {
-        var edits = _database.GetUnsyncedEdits();
-        UnsyncedText = edits.Any
-            ? $"Trên máy tính có {VnFormat.Number(edits.Count)} dòng dữ liệu đã thêm / sửa / xoá chưa xuất" +
-              (edits.Since is { } since ? $" (từ {since:dd/MM/yyyy HH:mm}" + (edits.Last is { } last && last - since >= TimeSpan.FromMinutes(1) ? $", lần cuối {last:dd/MM/yyyy HH:mm})." : ").") : ".")
-            : string.Empty;
+        UnsyncedText = _database.GetUnsyncedEdits().Describe();
     }
 
     public void OpenExportPage() => App.MainWindow?.SelectMenu("ExportPage");

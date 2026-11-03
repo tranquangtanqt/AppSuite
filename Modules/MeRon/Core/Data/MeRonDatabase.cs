@@ -242,4 +242,10 @@ public sealed class MeRonDatabase
 public sealed record UnsyncedEdits(long Count, DateTime? Since, DateTime? Last)
 {
     public bool Any => Count > 0;
+
+    /// <summary>Câu cảnh báo dùng chung (trang Nhập, nhắc xuất ở trang Đặt hàng); không có thay đổi → rỗng.</summary>
+    public string Describe() => !Any
+        ? string.Empty
+        : $"Trên máy tính có {VnFormat.Number(Count)} dòng dữ liệu đã thêm / sửa / xoá chưa xuất" +
+          (Since is { } since ? $" (từ {since:dd/MM/yyyy HH:mm}" + (Last is { } last && last - since >= TimeSpan.FromMinutes(1) ? $", lần cuối {last:dd/MM/yyyy HH:mm})." : ").") : ".");
 }
