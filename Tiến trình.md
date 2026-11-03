@@ -410,6 +410,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   danh sách giao hàng theo khu + phiếu chuẩn bị; so cùng kỳ năm trước (Biểu đồ); món tăng / giảm; món theo thứ; doanh thu theo
   khu; công nợ theo tuổi nợ
 - [ ] Thử tay: chuột phải thẻ đơn ở trang Chi tiết (Sandbox chỉ chạy trang Đặt hàng)
+- [ ] **[Đề xuất · Nên làm]** Nhập đơn hàng loạt (người dùng hỏi 2026-11-02): nguồn Excel / CSV, dán chữ (tin Zalo, ghi chú),
+  ảnh (OCR tiếng Việt của Common.Ocr - chữ in / ảnh màn hình được, viết tay kém) → **bảng nháp** lưu riêng (sửa được, tô
+  dòng chưa khớp khách / món hoặc trùng đơn, tắt app vẫn còn) → "Lưu N đơn" chỉ dòng hợp lệ / được tích, hoàn tác cả đợt.
+  Chờ người dùng trả lời: loại file / ảnh thường có, mẫu 1 đơn thật, khách / món chưa có thì tự tạo hay bắt chọn. Gợi ý
+  làm Excel/CSV + dán chữ + nháp trước, ảnh sau
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị
   2026-10-27). Cập nhật F1, README
 - [x] Form đơn: **gõ số lượng cùng tên món** - "2 chao" / "chao 2" (cả "2x chao", "chao x2") rồi Enter / Tab → món + số
@@ -1062,3 +1067,9 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [x] Thử tay trên máy thật: kéo-thả file từ Explorer vào CsvEditor (Sandbox không tự động hoá được: UIPI chặn thả từ
   Explorer vào app chạy quyền cao); mở file .xlsx vừa xuất bằng Excel thật (Sandbox không có Excel) — OK (2026-10-05)
 - [ ] **[Đề xuất · Có thể]** Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột; tự giãn độ rộng cột
+- [ ] **[Đề xuất · Nên làm]** Thiết kế lại giao diện (đề xuất 2026-11-02, chờ người dùng chọn mục; gợi ý làm 1–4 trước,
+  thử bản nháp + ảnh trước / sau trong Sandbox): (1) thanh công cụ gọn, tiếng Việt, gom Dòng ▾ / Cột ▾ / Xuất ▾, bỏ tiêu đề
+  "Module F"; (2) màn hình bắt đầu: kéo-thả + Mở file + file gần đây; (3) thẻ "Đang lọc ✕" / "Sắp xếp ✕" thay nút Clear;
+  (4) menu chuột phải đầy đủ tiếng Việt (ô + tiêu đề cột, lọc theo giá trị này); (5) sọc dòng, số canh phải, cố định
+  cột đầu, ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn;
+  (7) lỗi dữ liệu thành InfoBar bấm nhảy tới dòng
