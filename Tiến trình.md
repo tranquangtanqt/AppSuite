@@ -1075,9 +1075,16 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   (3) thẻ `Hiện x / y dòng` · `Lọc: … ✕` · `Ô lọc: … ✕` · `Sắp xếp: … ↓ ✕` (bấm chữ = sửa) thay nút Clear Filter / Clear Sort
   và nút ✕ góc bảng; (4) menu chuột phải tiếng Việt - trên ô: Sao chép, Dán, Lọc / Lọc bỏ theo giá trị ô, Chèn / Nhân bản
   / Xoá dòng; trên tiêu đề cột (mới): Sắp xếp tăng / giảm, Bỏ ô lọc cột, Đổi tên, Chèn cột bên phải, Xoá cột. Kèm: Cột ▾ khi
-  chưa chọn ô thì thanh trạng thái nhắc (trước im lặng); cột rộng thêm để tên cột không bị cắt ("Thành tiề"). Cập nhật F1,
+  chưa chọn ô thì thanh trạng thái nhắc (trước im lặng). Cập nhật F1,
   README. Build 0 warning, unit test 120/120; GUI Sandbox: mở file qua 🕘, Dòng ▾, chuột phải ô → lọc theo giá trị (12 / 60
   dòng), chuột phải tiêu đề → sắp xếp giảm, thẻ + tiêu đề cửa sổ đúng
+- [x] **Ô lọc ở tiêu đề cột hụt so với cột 1 đoạn** (người dùng báo, file 123 cột, 2026-11-03; lỗi có từ trước đợt giao diện
+  mới): template tiêu đề của Toolkit DataGrid chừa cột `Auto` MinWidth 32 cho mũi tên sắp xếp (app không sắp xếp bằng bấm
+  tiêu đề) và căn trái ContentPresenter, nên ô lọc chỉ rộng bằng MinWidth 64 của TextBox, tên cột bị cắt sớm, nút ✕ xoá ô
+  lọc nằm trong phần bị cắt (không bao giờ thấy). Đặt Width cũ theo tiêu đề không có tác dụng. Sửa: `FilterTextBox_Loaded`
+  bỏ cột mũi tên + giãn ContentPresenter, ô lọc `Stretch`; bỏ luôn phần nới cột +16 px vừa thêm (nguyên nhân "Thành tiề" là
+  32 px này). Unit test 120/120; GUI Sandbox: khoảng hở ô lọc → cột kế 74 → 26 px (= Padding + vạch), tên cột đủ chữ, gõ
+  "5003" → Hiện 1 / 5 dòng + thẻ Ô lọc + nút ✕ trong ô hiện
 - [ ] Người dùng thử tay giao diện mới CsvEditor trên máy thật (kéo-thả vào màn hình bắt đầu, Bảng trống, Shift+F10)
 - [ ] **[Đề xuất · Có thể]** Thiết kế lại giao diện - đợt 2 (mục 5–7 còn lại): (5) sọc dòng, số canh phải, cố định cột đầu,
   ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn; (7) lỗi dữ liệu

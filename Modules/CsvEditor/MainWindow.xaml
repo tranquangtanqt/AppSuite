@@ -275,15 +275,12 @@
                 <DataTemplate x:Key="FilterHeaderTemplate">
                     <StackPanel Spacing="4" Padding="0,2,0,4" HorizontalAlignment="Stretch">
                         <TextBlock Text="{Binding ColumnName}" />
-                        <!-- HorizontalAlignment=Stretch alone does not fill the column: the header's own
-                             default template does not stretch its ContentPresenter to the header's full
-                             width regardless of HorizontalContentAlignment, so this is sized explicitly
-                             instead (see FilterTextBox_Loaded). The clear button overlays the TextBox's
-                             right edge rather than sizing the Grid itself, since the Grid has nothing
-                             else dictating its width beyond the TextBox's own explicit Width. -->
-                        <Grid HorizontalAlignment="Left">
+                        <!-- Lấp đầy phần nội dung của tiêu đề; phần này chỉ rộng hết cột sau khi FilterTextBox_Loaded bỏ
+                             chỗ chừa cho mũi tên sắp xếp. (Cách cũ đặt Width theo độ rộng tiêu đề: vẫn bị cắt theo phần
+                             nội dung hẹp, mất luôn nút ✕.) Nút ✕ đè lên mép phải của ô. -->
+                        <Grid HorizontalAlignment="Stretch">
                             <TextBox Text="{Binding FilterText, Mode=TwoWay}" PlaceholderText="Lọc..."
-                                     HorizontalAlignment="Left" Loaded="FilterTextBox_Loaded" />
+                                     HorizontalAlignment="Stretch" Loaded="FilterTextBox_Loaded" />
                             <Button Padding="4" Margin="0,0,4,0" Background="Transparent" BorderThickness="0"
                                     HorizontalAlignment="Right" VerticalAlignment="Center"
                                     Click="ClearFilterButton_Click" ToolTipService.ToolTip="Xoá ô lọc"
@@ -347,7 +344,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE710;" FontSize="14" /><TextBlock Text="Bảng trống" /></StackPanel>
                         </Button>
                     </StackPanel>
-                    <TextBlock Text="Tự nhận dấu phân cách (phẩy, chấm phẩy, Tab, |) và bảng mã (UTF-8, Shift-JIS...)."
+                    <TextBlock Text="Tự nhận dấu phân cách (phẩy, chấm phẩy, Tab, |) và bảng mã (UTF-8, UTF-16). Nhận sai thì bấm nhãn bảng mã ở thanh dưới cùng để chọn lại."
                                Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
 
                     <StackPanel x:Name="StartRecentPanel" Spacing="2" Margin="0,8,0,0">

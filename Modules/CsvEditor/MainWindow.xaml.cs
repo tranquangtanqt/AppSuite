@@ -338,7 +338,7 @@ public sealed partial class MainWindow : Window
             }
         }
 
-        return Math.Clamp(maxWidth + 40, 100, 400);
+        return Math.Clamp(maxWidth + 24, 100, 400);
     }
 
     private static double EstimateTextWidth(string text)
@@ -348,24 +348,25 @@ public sealed partial class MainWindow : Window
         return measuring.DesiredSize.Width;
     }
 
-    /// <summary>The header's own template does not stretch the filter TextBox to the column's full
-    /// width (see comment in MainWindow.xaml), so this sets it directly from the realized
-    /// DataGridColumnHeader ancestor's ActualWidth, and keeps tracking it via SizeChanged in case the
-    /// header is re-measured after this TextBox's own Loaded already fired (e.g. window resize).</summary>
+    /// <summary>Template tiêu đề cột của Toolkit (đo trong Sandbox): nội dung nằm trong Grid 2 cột - `*` cho nội dung,
+    /// `Auto` MinWidth 32 cho mũi tên sắp xếp, chừa chỗ cả khi không sắp xếp bằng bấm tiêu đề (CanUserSortColumns=False) -
+    /// và ContentPresenter căn trái (chỉ rộng bằng nội dung). Hậu quả: ô lọc chỉ rộng bằng MinWidth 64 của TextBox, hụt so
+    /// với cột 1 đoạn, tên cột bị cắt sớm, nút ✕ xoá ô lọc rơi vào phần bị cắt. Bỏ cột mũi tên + giãn ContentPresenter (giá
+    /// trị đặt trực tiếp thắng giá trị của template) để tên cột và ô lọc lấp đầy cột, kể cả khi đổi cỡ.</summary>
     private void FilterTextBox_Loaded(object sender, RoutedEventArgs e)
     {
-        var textBox = (TextBox)sender;
-        if (FindAncestor<DataGridColumnHeader>(textBox) is not { } header)
+        if (FindAncestor<ContentPresenter>((TextBox)sender) is not { } presenter)
         {
             return;
         }
 
-        SetFilterBoxWidth(textBox, header.ActualWidth);
-        header.SizeChanged += (_, args) => SetFilterBoxWidth(textBox, args.NewSize.Width);
+        presenter.HorizontalAlignment = HorizontalAlignment.Stretch;
+        if (VisualTreeHelper.GetParent(presenter) is Microsoft.UI.Xaml.Controls.Grid { ColumnDefinitions.Count: 2 } headerGrid)
+        {
+            headerGrid.ColumnDefinitions[1].MinWidth = 0;
+            headerGrid.ColumnDefinitions[1].Width = new GridLength(0);
+        }
     }
-
-    private static void SetFilterBoxWidth(TextBox textBox, double headerWidth) =>
-        textBox.Width = Math.Max(0, headerWidth - 4);
 
     private static T? FindAncestor<T>(DependencyObject element) where T : DependencyObject
     {
