@@ -34,7 +34,7 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đang mở). Tiêu đề cửa sổ = tên file (`● ` khi chưa lưu).
 
 - `Xuất ▾`: *Lưu thành file khác...*, *Xuất Excel (.xlsx)...*. `Dòng ▾`: *Thêm dòng*, *Nhân bản dòng đang chọn*, *Xoá dòng
-  đang chọn*. `Cột ▾`: *Thêm cột...*, *Đổi tên cột đang chọn...*, *Xoá cột đang chọn* (chưa chọn ô nào → thanh trạng thái
+  đang chọn*. `Cột ▾`: *Đi tới cột...* (`Ctrl+Shift+G`), *Thêm cột...*, *Đổi tên cột đang chọn...*, *Xoá cột đang chọn* (chưa chọn ô nào → thanh trạng thái
   nhắc). `→` = Đi tới dòng, `📊` = Thống kê, `▤` = Xem dọc (`Ctrl+R`), `↶ ↷` = Hoàn tác / Làm lại (tooltip ghi thao tác sẽ hoàn tác).
 - **Màn hình bắt đầu** (lúc chưa mở file / chưa có cột - `UpdateStartScreen`): vùng kéo-thả viền nét đứt, *Mở file...*,
   *Bảng trống* (ẩn màn hình rồi mở hộp thoại Thêm cột) và danh sách file gần đây (bấm 1 dòng để mở).
@@ -91,6 +91,12 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
   điều hướng Trước/Sau giữa các kết quả (tự cuộn dọc+ngang tới đúng ô khớp). Hotkey: `Ctrl+F`.
 - **Replace**: cùng dialog với Find, "Thay thế tất cả kết quả" ghi đè toàn bộ kết quả đang tìm được,
   gộp thành 1 bước Undo. Hotkey: `Ctrl+H`.
+- **Đi tới cột** (`Cột ▾` / `Ctrl+Shift+G`, 2026-11-03): hộp thoại AutoSuggestBox - gõ 1 phần tên cột, gợi ý `số. tên`
+  (tối đa 30) theo `Services/ColumnFinder`: trùng hẳn tên → vị trí cột nếu gõ toàn số → tên bắt đầu bằng → tên chứa (không
+  phân biệt hoa thường). Chọn gợi ý (chuột / ↓ Enter) hoặc Enter = cột khớp nhất; không khớp → báo trong hộp thoại. Cuộn ngang
+  tới cột, giữ dòng đang chọn; thanh trạng thái ghi `Cột x/y: tên` (+ số cột khác cũng khớp). Phím tắt gắn ở `RootGrid`
+  (mục trong menu thả xuống không nhận phím tắt khi menu đóng), `KeyboardAcceleratorPlacementMode="Hidden"` để không nổi
+  tooltip "Ctrl+Shift+G" khi rê chuột.
 - **Go To** (`Ctrl+G`): đi tới dòng số N — theo số ở đầu dòng của bảng (tức là theo lọc / sắp xếp đang hiện), giữ cột
   đang chọn. Nhập số rồi `Enter`; số ngoài phạm vi thì báo ngay trong hộp thoại.
 - **Filter**: nhiều điều kiện `== != > < >= <= Contains Regex`, mỗi điều kiện có thể `NOT`, kết hợp
@@ -139,7 +145,7 @@ chỉ bọc ngoặc kép khi cần, giữ delimiter/encoding/BOM, Save As), **Se
 hoa thường), **Sort** (số / chữ, nhiều cột, không đổi dữ liệu gốc), **Filter** (mọi toán tử, NOT,
 AND/OR), **Statistics**, **Undo/Redo** (mọi thao tác sửa, dán / thay thế = 1 bước, trạng thái "chưa lưu"). Thêm sau:
 dòng tiêu đề / dòng dài, **Export .xlsx** (đọc lại bằng Open XML SDK + kiểm schema), clipboard dạng Tab, file gần đây —
-tổng 120 test (2026-10-02); tự nhận Shift-JIS + mẫu 8 KB cắt giữa chữ - 125 test (2026-11-03).
+tổng 120 test (2026-10-02); tự nhận Shift-JIS + mẫu 8 KB cắt giữa chữ - 125 test; Đi tới cột (`ColumnFinderTests`) - 131 test (2026-11-03).
 
 ```powershell
 dotnet test Tests\CsvEditor.Tests          # hoặc: dotnet run --project Tests\CsvEditor.Tests

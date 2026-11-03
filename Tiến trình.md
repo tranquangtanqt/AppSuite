@@ -1100,6 +1100,14 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   chọn trên bảng. Cập nhật F1, README. Unit test 125/125; GUI Sandbox 17/17 (file 123 cột: chưa chọn dòng → nhắc, chọn dòng 3
   → 123 ô đúng giá trị, tìm "ext" → 3 cột, tìm theo giá trị, sửa CO_CD → bảng + tiêu đề ●, Hoàn tác → khung về cũ,
   dòng dưới / trên, đóng → nút tắt)
+- [x] **Đi tới cột theo tên** (người dùng yêu cầu 2026-11-03): Cột ▾ → *Đi tới cột...* / `Ctrl+Shift+G` mở hộp thoại gõ 1
+  phần tên cột - gợi ý `số. tên` (trùng tên → vị trí cột nếu gõ toàn số → bắt đầu bằng → chứa, `Services/ColumnFinder`),
+  chọn gợi ý hoặc Enter = cột khớp nhất, không khớp → báo trong hộp thoại; cuộn ngang tới cột, giữ dòng đang chọn, thanh
+  trạng thái `Cột x/y: tên`. Lỗi phát hiện khi test: phím tắt gắn ở cả khung cửa sổ làm rê chuột đâu cũng nổi tooltip
+  "Ctrl+Shift+G" → tắt (`KeyboardAcceleratorPlacementMode="Hidden"`); gõ "2" ban đầu nhảy tới ITEM_012 (luật "số chỉ là vị trí
+  khi không tên nào chứa số đó") → đổi: vị trí cột ưu tiên, chỉ sau tên trùng hẳn. Cập nhật F1, README. Unit test 131/131
+  (+6 ColumnFinder); GUI Sandbox 14/14 (file 123 cột: ext_data → EXT_DATA_NO, item_120 / số 2, không khớp, Ctrl+Shift+G + gõ
+  thật → 10 gợi ý ITEM_090..099, ↓↓ Enter → ITEM_091, không còn tooltip khi rê chuột)
 - [ ] Người dùng thử tay giao diện mới CsvEditor trên máy thật (kéo-thả vào màn hình bắt đầu, Bảng trống, Shift+F10)
 - [ ] **[Đề xuất · Có thể]** Thiết kế lại giao diện - đợt 2 (mục 5–7 còn lại): (5) sọc dòng, số canh phải, cố định cột đầu,
   ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn; (7) lỗi dữ liệu

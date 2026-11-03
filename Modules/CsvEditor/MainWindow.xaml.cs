@@ -1213,6 +1213,111 @@ public sealed partial class MainWindow : Window
         ViewModel.StatusMessage = $"Dòng {lineNumber:N0}/{rowCount:N0}.";
     }
 
+    /// <summary>1 gợi ý trong hộp thoại Đi tới cột - AutoSuggestBox hiện (và điền vào ô) bằng ToString.</summary>
+    private sealed record ColumnChoice(int Index, string Name)
+    {
+        public override string ToString() => $"{Index + 1}. {Name}";
+    }
+
+    private void GoToColumnAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        GoToColumn_Click(sender, new RoutedEventArgs());
+    }
+
+    /// <summary>Ctrl+Shift+G / Cột ▾ → Đi tới cột: gõ 1 phần tên cột (hoặc số thứ tự), chọn trong gợi ý hoặc Enter = cột khớp
+    /// nhất (<see cref="ColumnFinder"/>) → cuộn ngang tới cột đó, giữ dòng đang chọn. Không khớp thì báo ngay trong hộp thoại.</summary>
+    private async void GoToColumn_Click(object sender, RoutedEventArgs e)
+    {
+        var columns = ViewModel.Columns;
+        if (columns.Count == 0)
+        {
+            ViewModel.StatusMessage = "Chưa có cột nào để đi tới.";
+            return;
+        }
+
+        var box = new AutoSuggestBox
+        {
+            Header = $"Tên cột (gõ 1 phần) hoặc số thứ tự cột (1 – {columns.Count:N0})",
+            PlaceholderText = "vd: EXT_DATA",
+            MinWidth = 340,
+        };
+        var error = new TextBlock { Foreground = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"], TextWrapping = TextWrapping.Wrap };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Đi tới cột",
+            Content = new StackPanel { Spacing = 8, Children = { box, error } },
+            PrimaryButtonText = "Đi tới",
+            CloseButtonText = "Hủy",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+
+        ColumnChoice? chosen = null;
+        int? target = null;
+        var otherMatches = 0;
+        bool TryAccept()
+        {
+            if (chosen is not null && box.Text == chosen.ToString())
+            {
+                target = chosen.Index;
+                otherMatches = 0;
+                return true;
+            }
+            var matches = ColumnFinder.Find(columns, box.Text);
+            if (matches.Count > 0)
+            {
+                target = matches[0];
+                otherMatches = matches.Count - 1;
+                return true;
+            }
+            error.Text = box.Text.Trim().Length == 0 ? "Gõ tên cột hoặc số thứ tự cột." : $"Không có cột nào tên chứa \"{box.Text.Trim()}\".";
+            return false;
+        }
+
+        box.TextChanged += (_, args) =>
+        {
+            if (args.Reason == AutoSuggestionBoxTextChangeReason.UserInput)
+            {
+                error.Text = string.Empty;
+                box.ItemsSource = ColumnFinder.Find(columns, box.Text).Take(30).Select(i => new ColumnChoice(i, columns[i].Name)).ToList();
+            }
+        };
+        box.SuggestionChosen += (_, args) => chosen = args.SelectedItem as ColumnChoice;
+        box.QuerySubmitted += (_, args) =>
+        {
+            if (args.ChosenSuggestion is ColumnChoice choice)
+            {
+                chosen = choice;
+            }
+            if (TryAccept())
+            {
+                dialog.Hide();
+            }
+        };
+        dialog.PrimaryButtonClick += (_, args) => args.Cancel = !TryAccept();
+        dialog.Opened += (_, _) => box.Focus(FocusState.Programmatic);
+
+        await dialog.ShowAsync();
+        if (target is not { } columnIndex)
+        {
+            return;
+        }
+
+        var column = Grid.Columns[columnIndex];
+        if (ViewModel.ViewRows.Count > 0)
+        {
+            NavigateToCell(new CellRef(Math.Max(Grid.SelectedIndex, 0), columnIndex));
+            Grid.Focus(FocusState.Programmatic);
+        }
+        else
+        {
+            Grid.ScrollIntoView(null, column);
+        }
+        ViewModel.StatusMessage = $"Cột {columnIndex + 1:N0}/{columns.Count:N0}: {columns[columnIndex].Name}"
+            + (otherMatches > 0 ? $" (còn {otherMatches} cột khác khớp - chọn trong gợi ý để tới cột khác)." : ".");
+    }
+
     private async void ReplaceButton_Click(object sender, RoutedEventArgs e) => await ShowFindReplaceDialogAsync();
 
     private async Task ShowFindReplaceDialogAsync()
