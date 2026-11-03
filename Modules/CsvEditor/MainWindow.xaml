@@ -75,6 +75,10 @@
                 <MenuFlyoutItem Text="Sắp xếp giảm dần (Z → A, 9 → 1)" Click="SortDescendingItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Tag="ClearColumnFilter" Text="Bỏ ô lọc của cột này" Click="ClearColumnFilterItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE711;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Ẩn cột này" Click="HideColumnItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xED1A;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Tag="FreezeTo" Text="Cố định đến cột này" Click="FreezeToColumnItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE718;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Tag="Unfreeze" Text="Bỏ cố định cột" Click="UnfreezeColumns_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77A;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutSeparator />
                 <MenuFlyoutItem Text="Đổi tên cột..." Click="HeaderRenameItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Text="Chèn cột bên phải..." Click="InsertColumnRightItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Text="Xoá cột" Click="HeaderDeleteItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
@@ -153,6 +157,9 @@
                         <DropDownButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
                                 <MenuFlyoutItem x:Name="GoToColumnMenuItem" Text="Đi tới cột..." Click="GoToColumn_Click" KeyboardAcceleratorTextOverride="Ctrl+Shift+G"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE721;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="ShowHideColumnsMenuItem" Text="Ẩn / hiện cột..." Click="ShowHideColumns_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7B3;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Cố định đến cột đang chọn" Click="FreezeToCurrentColumn_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE718;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Bỏ cố định cột" Click="UnfreezeColumns_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77A;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem Text="Thêm cột..." Click="AddColumnButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                                 <MenuFlyoutItem Text="Đổi tên cột đang chọn..." Click="RenameColumnButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
@@ -242,6 +249,32 @@
                     </Button>
                     <Button Style="{StaticResource ChipCloseButtonStyle}" Click="ClearActiveSortButton_Click"
                             ToolTipService.ToolTip="Bỏ sắp xếp (về thứ tự trong file)" AutomationProperties.Name="Bỏ sắp xếp">
+                        <FontIcon Glyph="&#xE10A;" FontSize="10" />
+                    </Button>
+                </StackPanel>
+            </Border>
+            <Border x:Name="HiddenColumnsChip" Style="{StaticResource ChipBorderStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="ShowHideColumns_Click" ToolTipService.ToolTip="Chọn cột ẩn / hiện">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xED1A;" FontSize="12" />
+                            <TextBlock x:Name="HiddenColumnsChipText" MaxWidth="420" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource ChipCloseButtonStyle}" Click="ShowAllColumns_Click"
+                            ToolTipService.ToolTip="Hiện tất cả cột" AutomationProperties.Name="Hiện tất cả cột">
+                        <FontIcon Glyph="&#xE10A;" FontSize="10" />
+                    </Button>
+                </StackPanel>
+            </Border>
+            <Border x:Name="FrozenColumnsChip" Style="{StaticResource ChipBorderStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Padding="10,4,4,4">
+                        <FontIcon Glyph="&#xE718;" FontSize="12" />
+                        <TextBlock x:Name="FrozenColumnsChipText" MaxWidth="420" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button Style="{StaticResource ChipCloseButtonStyle}" Click="UnfreezeColumns_Click"
+                            ToolTipService.ToolTip="Bỏ cố định cột" AutomationProperties.Name="Bỏ cố định cột">
                         <FontIcon Glyph="&#xE10A;" FontSize="10" />
                     </Button>
                 </StackPanel>

@@ -41,7 +41,7 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
   vẽ**~~ · ~~**2. hiệu ứng ảnh**~~ — cả 2 xong + test GUI Sandbox 2026-10-06, còn người dùng thử tay ·
   **3. chụp & công cụ** — đề xuất làm 3 lượt (2026-10-06): ~~(a) 1 màn hình, mẫu tên file, kèm con trỏ, việc tự làm sau
   khi chụp~~ (xong 2026-10-07) · (b) hút màu + bảng màu, in, lưu PDF · (c) lasso, cửa sổ con, kính lúp / thước…
-- CsvEditor: freeze cột đầu, ẩn / hiện cột, tự giãn độ rộng cột
+- CsvEditor: ~~freeze cột đầu, ẩn / hiện cột~~ (2026-11-03), tự giãn độ rộng cột
 - Chung: nhớ kích thước / vị trí cửa sổ + file gần đây cho mọi module (helper chung trong `Common`); nhớ thư mục nguồn
   ModuleB / ModuleC / Mcf.DbDef; ~~chuyển Hướng dẫn của ScreenCapture / FileTools sang bản dùng chung~~ (2026-10-08)
 - Kỹ thuật: giảm tiếp dung lượng publish (runtime chung), unit test còn thiếu (Rdbms.HtmlGenerator, ModuleB/C, ScreenCapture),
@@ -1066,7 +1066,7 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   1 ô). Unit test 120/120 (2026-10-02)
 - [x] Thử tay trên máy thật: kéo-thả file từ Explorer vào CsvEditor (Sandbox không tự động hoá được: UIPI chặn thả từ
   Explorer vào app chạy quyền cao); mở file .xlsx vừa xuất bằng Excel thật (Sandbox không có Excel) — OK (2026-10-05)
-- [ ] **[Đề xuất · Có thể]** Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột; tự giãn độ rộng cột
+- [ ] **[Đề xuất · Có thể]** ~~Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột~~ (xong 2026-11-03, xem dưới); tự giãn độ rộng cột
 - [x] **Thiết kế lại giao diện - đợt 1 (mục 1–4 của đề xuất 2026-11-02)** (2026-11-03, duyệt qua bản nháp + ảnh trước /
   sau trong Sandbox, ảnh ở `Pictures\AppSuite_CsvEditor_giao_dien_moi_2026-11-03`): (1) thanh công cụ tiếng Việt
   `Mở 🕘 Lưu Xuất▾ | ↶ ↷ | Dòng▾ Cột▾ | Tìm → Lọc Sắp xếp 📊 … ?` vừa 1 hàng ở ~1000 px (trước ~20 nút, tràn), giữ mọi phím
@@ -1108,6 +1108,14 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   khi không tên nào chứa số đó") → đổi: vị trí cột ưu tiên, chỉ sau tên trùng hẳn. Cập nhật F1, README. Unit test 131/131
   (+6 ColumnFinder); GUI Sandbox 14/14 (file 123 cột: ext_data → EXT_DATA_NO, item_120 / số 2, không khớp, Ctrl+Shift+G + gõ
   thật → 10 gợi ý ITEM_090..099, ↓↓ Enter → ITEM_091, không còn tooltip khi rê chuột)
+- [x] **Ẩn / hiện cột, cố định cột** (người dùng yêu cầu 2026-11-03; mục cũ "[Đề xuất · Có thể] Cố định cột đầu; ẩn / hiện
+  cột" - còn lại tự giãn độ rộng cột): chuột phải tiêu đề → *Ẩn cột này* / *Cố định cột 1 – N (đến cột này)* / *Bỏ cố định
+  cột*; Cột ▾ → *Ẩn / hiện cột...* (tick từng cột, ô tìm, Hiện tất cả / Bỏ tick tất cả, phải còn ≥ 1 cột), *Cố định đến cột
+  đang chọn*, *Bỏ cố định cột*. Chỉ là cách xem - lưu / xuất Excel / Xem dọc vẫn đủ cột. Thẻ `Đang ẩn N cột: 5 tên đầu, … ✕`
+  và `Cố định N cột đầu (đến …) ✕`. Giữ khi thêm / xoá / đổi tên cột, bỏ khi mở file khác; Đi tới cột đang ẩn → tự hiện.
+  Cập nhật F1, README. Unit test 131/131; GUI Sandbox 20/20 (file 123 cột: ẩn CO_CD bằng chuột phải, ẩn 113 cột ITEM bằng
+  hộp thoại, đi tới ITEM_050 → hiện lại, ✕ hiện tất cả, cố định 3 cột → cuộn tới ITEM_120 vẫn thấy DATA_LNO..DATA_NO, bỏ cố
+  định, mở file khác → bỏ hết)
 - [ ] Người dùng thử tay giao diện mới CsvEditor trên máy thật (kéo-thả vào màn hình bắt đầu, Bảng trống, Shift+F10)
 - [ ] **[Đề xuất · Có thể]** Thiết kế lại giao diện - đợt 2 (mục 5–7 còn lại): (5) sọc dòng, số canh phải, cố định cột đầu,
   ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn; (7) lỗi dữ liệu

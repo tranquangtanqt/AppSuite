@@ -216,10 +216,21 @@ public sealed partial class MainWindow : Window
         SortChip.Visibility = sort.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         SetChipText(SortChipText, "Sắp xếp: " + string.Join(", ", sort.Select(s => $"{ColumnName(s.ColumnIndex)} {(s.Descending ? "↓" : "↑")}")));
 
+        var hidden = Grid.Columns.Where(column => column.Visibility == Visibility.Collapsed).ToList();
+        HiddenColumnsChip.Visibility = hidden.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        SetChipText(HiddenColumnsChipText, $"Đang ẩn {hidden.Count} cột: "
+            + string.Join(", ", hidden.Take(5).Select(column => ((FilterHeaderItem)column.Header).ColumnName))
+            + (hidden.Count > 5 ? ", …" : string.Empty));
+
+        var frozen = Grid.FrozenColumnCount;
+        FrozenColumnsChip.Visibility = frozen == 0 ? Visibility.Collapsed : Visibility.Visible;
+        SetChipText(FrozenColumnsChipText, frozen == 0 ? string.Empty
+            : $"Cố định {frozen} cột đầu (đến {ColumnName(frozen - 1)})");
+
         var filtered = filter is not null || quick.Count > 0;
         ShownRowsText.Text = filtered ? $"Hiện {ViewModel.ViewRows.Count:N0} / {ViewModel.RowCount:N0} dòng" : string.Empty;
         ShownRowsText.Visibility = filtered ? Visibility.Visible : Visibility.Collapsed;
-        ChipsBar.Visibility = filtered || sort.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        ChipsBar.Visibility = filtered || sort.Count > 0 || hidden.Count > 0 || frozen > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private static void SetChipText(TextBlock textBlock, string text)
@@ -297,6 +308,15 @@ public sealed partial class MainWindow : Window
         Grid.Columns.Clear();
         ViewModel.ClearQuickFilters();
 
+        // Ẩn / cố định cột là cách xem của từng file: mở file khác thì bỏ; thêm / xoá / đổi tên cột, mở lại cùng file (đổi
+        // encoding...) thì giữ - ẩn theo tên cột (vị trí dịch đi khi thêm / xoá cột), cố định theo số cột đầu.
+        if (!string.Equals(_columnViewPath, CurrentFilePath, StringComparison.OrdinalIgnoreCase))
+        {
+            _columnViewPath = CurrentFilePath;
+            _hiddenColumnNames.Clear();
+            _frozenColumnCount = 0;
+        }
+
         var filterHeaderStyle = (Style)Grid.Resources["FilterHeaderStyle"];
         var columns = ViewModel.Columns;
         for (var i = 0; i < columns.Count; i++)
@@ -311,6 +331,7 @@ public sealed partial class MainWindow : Window
                     RefreshChips();
                 }),
                 HeaderStyle = filterHeaderStyle,
+                Visibility = _hiddenColumnNames.Contains(columns[i].Name) ? Visibility.Collapsed : Visibility.Visible,
                 Width = new DataGridLength(EstimateColumnWidth(columnIndex, columns[i].Name), DataGridLengthUnitType.Pixel),
                 Binding = new Binding
                 {
@@ -320,6 +341,7 @@ public sealed partial class MainWindow : Window
             });
         }
 
+        Grid.FrozenColumnCount = Math.Min(_frozenColumnCount, columns.Count);
         RefreshChips();
         UpdateStartScreen();
         UpdateRecordPane(rebuild: true);
@@ -1305,6 +1327,10 @@ public sealed partial class MainWindow : Window
         }
 
         var column = Grid.Columns[columnIndex];
+        if (column.Visibility == Visibility.Collapsed)
+        {
+            SetColumnsHidden(new HashSet<string>(_hiddenColumnNames.Where(name => name != columns[columnIndex].Name)));
+        }
         if (ViewModel.ViewRows.Count > 0)
         {
             NavigateToCell(new CellRef(Math.Max(Grid.SelectedIndex, 0), columnIndex));
@@ -1466,6 +1492,10 @@ public sealed partial class MainWindow : Window
             var headerMenu = (MenuFlyout)RootGrid.Resources["HeaderMenu"];
             MenuItem(headerMenu, "ClearColumnFilter").IsEnabled =
                 Grid.Columns[_menuColumnIndex].Header is FilterHeaderItem { FilterText.Length: > 0 };
+            MenuItem(headerMenu, "FreezeTo").Text = _menuColumnIndex == 0
+                ? "Cố định cột này (cột đầu)"
+                : $"Cố định cột 1 – {_menuColumnIndex + 1} (đến cột này)";
+            MenuItem(headerMenu, "Unfreeze").IsEnabled = Grid.FrozenColumnCount > 0;
             headerMenu.ShowAt(Grid, showOptions);
             return;
         }
@@ -1761,4 +1791,142 @@ public sealed partial class MainWindow : Window
             SelectRow(ViewModel.ViewRows[index]);
         }
     }
+
+    // ----- Ẩn / hiện cột, cố định cột -----
+
+    /// <summary>File mà <see cref="_hiddenColumnNames"/> / <see cref="_frozenColumnCount"/> thuộc về (RebuildColumns bỏ khi
+    /// mở file khác). Chỉ là cách xem: lưu file / xuất Excel vẫn đủ mọi cột.</summary>
+    private string? _columnViewPath;
+    private readonly HashSet<string> _hiddenColumnNames = new();
+    private int _frozenColumnCount;
+
+    private void SetColumnsHidden(HashSet<string> hiddenNames)
+    {
+        _hiddenColumnNames.Clear();
+        _hiddenColumnNames.UnionWith(hiddenNames);
+        foreach (var column in Grid.Columns)
+        {
+            column.Visibility = _hiddenColumnNames.Contains(((FilterHeaderItem)column.Header).ColumnName) ? Visibility.Collapsed : Visibility.Visible;
+        }
+        RefreshChips();
+    }
+
+    private void HideColumnItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_menuColumnIndex < 0 || _menuColumnIndex >= Grid.Columns.Count)
+        {
+            return;
+        }
+        if (Grid.Columns.Count(column => column.Visibility == Visibility.Visible) <= 1)
+        {
+            ViewModel.StatusMessage = "Không ẩn được cột cuối cùng đang hiện.";
+            return;
+        }
+        SetColumnsHidden(new HashSet<string>(_hiddenColumnNames) { ViewModel.Columns[_menuColumnIndex].Name });
+    }
+
+    private void ShowAllColumns_Click(object sender, RoutedEventArgs e) => SetColumnsHidden(new HashSet<string>());
+
+    /// <summary>Cột ▾ → Ẩn / hiện cột... (hoặc bấm thẻ "Đang ẩn"): danh sách cột có ô tick (tick = hiện), ô tìm theo tên,
+    /// nút Hiện tất cả / Bỏ tick tất cả (theo các cột đang lọc thấy). Phải còn ít nhất 1 cột hiện.</summary>
+    private async void ShowHideColumns_Click(object sender, RoutedEventArgs e)
+    {
+        var columns = ViewModel.Columns;
+        if (columns.Count == 0)
+        {
+            ViewModel.StatusMessage = "Chưa có cột nào.";
+            return;
+        }
+
+        var boxes = columns.Select((column, index) => new CheckBox
+        {
+            Content = $"{index + 1}. {column.Name}",
+            Tag = column.Name,
+            IsChecked = !_hiddenColumnNames.Contains(column.Name),
+            MinWidth = 0,
+        }).ToList();
+        var list = new StackPanel();
+        boxes.ForEach(list.Children.Add);
+
+        var search = new TextBox { PlaceholderText = "Tìm cột..." };
+        search.TextChanged += (_, _) =>
+        {
+            var query = search.Text.Trim();
+            foreach (var box in boxes)
+            {
+                box.Visibility = query.Length == 0 || ((string)box.Tag).Contains(query, StringComparison.OrdinalIgnoreCase)
+                    ? Visibility.Visible : Visibility.Collapsed;
+            }
+        };
+        Button SetAllButton(string text, bool isChecked)
+        {
+            var button = new Button { Content = text };
+            button.Click += (_, _) => boxes.Where(box => box.Visibility == Visibility.Visible).ToList().ForEach(box => box.IsChecked = isChecked);
+            return button;
+        }
+
+        var error = new TextBlock { Foreground = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"], TextWrapping = TextWrapping.Wrap };
+        var dialog = new ContentDialog
+        {
+            XamlRoot = Content.XamlRoot,
+            Title = "Ẩn / hiện cột",
+            Content = new StackPanel
+            {
+                Spacing = 8,
+                MinWidth = 340,
+                Children =
+                {
+                    new TextBlock { Text = "Bỏ tick cột muốn ẩn khi xem - lưu file / xuất Excel vẫn đủ mọi cột.", TextWrapping = TextWrapping.Wrap, Opacity = 0.8 },
+                    search,
+                    new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { SetAllButton("Hiện tất cả", true), SetAllButton("Bỏ tick tất cả", false) } },
+                    // ContentDialog không tự cuộn: danh sách dài (file 100+ cột) tự cuộn trong khung này.
+                    new ScrollViewer { Content = list, MaxHeight = 320 },
+                    error,
+                },
+            },
+            PrimaryButtonText = "Áp dụng",
+            CloseButtonText = "Hủy",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        dialog.PrimaryButtonClick += (_, args) =>
+        {
+            if (boxes.All(box => box.IsChecked != true))
+            {
+                error.Text = "Phải còn ít nhất 1 cột hiện.";
+                args.Cancel = true;
+            }
+        };
+
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            SetColumnsHidden(new HashSet<string>(boxes.Where(box => box.IsChecked != true).Select(box => (string)box.Tag)));
+        }
+    }
+
+    /// <summary>Cố định cột 1..n khi cuộn ngang (DataGrid.FrozenColumnCount) - n = cột vừa chuột phải / cột của ô đang chọn.</summary>
+    private void SetFrozenColumns(int count)
+    {
+        _frozenColumnCount = Math.Clamp(count, 0, Grid.Columns.Count);
+        Grid.FrozenColumnCount = _frozenColumnCount;
+        RefreshChips();
+    }
+
+    private void FreezeToColumnItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_menuColumnIndex >= 0)
+        {
+            SetFrozenColumns(_menuColumnIndex + 1);
+        }
+    }
+
+    private void FreezeToCurrentColumn_Click(object sender, RoutedEventArgs e)
+    {
+        var columnIndex = CurrentColumnIndexOrHint("cố định đến");
+        if (columnIndex >= 0)
+        {
+            SetFrozenColumns(columnIndex + 1);
+        }
+    }
+
+    private void UnfreezeColumns_Click(object sender, RoutedEventArgs e) => SetFrozenColumns(0);
 }

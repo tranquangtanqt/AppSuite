@@ -34,7 +34,7 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đang mở). Tiêu đề cửa sổ = tên file (`● ` khi chưa lưu).
 
 - `Xuất ▾`: *Lưu thành file khác...*, *Xuất Excel (.xlsx)...*. `Dòng ▾`: *Thêm dòng*, *Nhân bản dòng đang chọn*, *Xoá dòng
-  đang chọn*. `Cột ▾`: *Đi tới cột...* (`Ctrl+Shift+G`), *Thêm cột...*, *Đổi tên cột đang chọn...*, *Xoá cột đang chọn* (chưa chọn ô nào → thanh trạng thái
+  đang chọn*. `Cột ▾`: *Đi tới cột...* (`Ctrl+Shift+G`), *Ẩn / hiện cột...*, *Cố định đến cột đang chọn*, *Bỏ cố định cột*, *Thêm cột...*, *Đổi tên cột đang chọn...*, *Xoá cột đang chọn* (chưa chọn ô nào → thanh trạng thái
   nhắc). `→` = Đi tới dòng, `📊` = Thống kê, `▤` = Xem dọc (`Ctrl+R`), `↶ ↷` = Hoàn tác / Làm lại (tooltip ghi thao tác sẽ hoàn tác).
 - **Màn hình bắt đầu** (lúc chưa mở file / chưa có cột - `UpdateStartScreen`): vùng kéo-thả viền nét đứt, *Mở file...*,
   *Bảng trống* (ẩn màn hình rồi mở hộp thoại Thêm cột) và danh sách file gần đây (bấm 1 dòng để mở).
@@ -78,6 +78,12 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
   Sau mỗi thao tác, selection tự chuyển sang dòng liên quan (dòng mới/dòng vừa copy/dòng thế chỗ
   dòng bị xóa) thay vì mất selection.
 - **Add/Delete/Rename Column**: theo cột đang focus trong bảng (`CurrentColumn`).
+- **Ẩn / hiện cột, cố định cột** (2026-11-03): chuột phải tiêu đề → *Ẩn cột này* / *Cố định cột 1 – N (đến cột này)* / *Bỏ
+  cố định cột*; `Cột ▾` → *Ẩn / hiện cột...* (hộp thoại tick từng cột, ô tìm, Hiện tất cả / Bỏ tick tất cả theo cột đang
+  thấy, phải còn ≥ 1 cột hiện). Chỉ là cách xem (`DataGridColumn.Visibility`, `DataGrid.FrozenColumnCount`): lưu, xuất .xlsx,
+  khung Xem dọc vẫn đủ cột. Thẻ `Đang ẩn N cột: … ✕` (✕ = hiện tất cả) và `Cố định N cột đầu (đến …) ✕`. Ẩn nhớ theo tên cột
+  (thêm / xoá cột không lệch), cố định theo số cột đầu; mở file khác thì bỏ cả 2 (`_columnViewPath`). *Đi tới cột* tới 1 cột
+  đang ẩn thì hiện cột đó.
 - **Xem dọc 1 dòng** (`▤` / `Ctrl+R` / chuột phải ô → *Xem dọc dòng này*, 2026-11-03): khung 400 px bên phải bảng (bảng
   chừa lề phải) liệt kê dòng đang chọn thành `số. tên cột | giá trị` - đọc 1 bản ghi file nhiều cột (vd file IF 123 cột)
   không phải cuộn ngang. Ô *Tìm cột hoặc giá trị* lọc danh sách (không phân biệt hoa thường). Sửa ngay trong khung: rời ô
