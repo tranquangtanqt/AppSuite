@@ -410,11 +410,32 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   danh sách giao hàng theo khu + phiếu chuẩn bị; so cùng kỳ năm trước (Biểu đồ); món tăng / giảm; món theo thứ; doanh thu theo
   khu; công nợ theo tuổi nợ
 - [ ] Thử tay: chuột phải thẻ đơn ở trang Chi tiết (Sandbox chỉ chạy trang Đặt hàng)
-- [ ] **[Đề xuất · Nên làm]** Nhập đơn hàng loạt (người dùng hỏi 2026-11-02): nguồn Excel / CSV, dán chữ (tin Zalo, ghi chú),
-  ảnh (OCR tiếng Việt của Common.Ocr - chữ in / ảnh màn hình được, viết tay kém) → **bảng nháp** lưu riêng (sửa được, tô
-  dòng chưa khớp khách / món hoặc trùng đơn, tắt app vẫn còn) → "Lưu N đơn" chỉ dòng hợp lệ / được tích, hoàn tác cả đợt.
-  Chờ người dùng trả lời: loại file / ảnh thường có, mẫu 1 đơn thật, khách / món chưa có thì tự tạo hay bắt chọn. Gợi ý
-  làm Excel/CSV + dán chữ + nháp trước, ảnh sau
+- [x] **Nhập đơn hàng loạt - dán chữ → bảng nháp → lưu** (người dùng hỏi 2026-11-02, mẫu thật = ảnh 1 trang sổ ghi tay;
+  làm 2026-11-03). Sổ viết tay: Common.Ocr không đọc được chữ viết tay, OCR offline khác không chắc → người dùng nhờ Claude
+  (claude.ai / app điện thoại, gói đang có - không cần API key) chép ảnh thành chữ theo mẫu, nút **Câu lệnh cho Claude** chép
+  sẵn câu lệnh. Trang mới **Nhập đơn hàng loạt** (menu Bán hàng): ô chữ tự lưu, mỗi dòng `khách | món; món | giá | CK`
+  (hoặc `khách: món + món`, `3sc`, `45k`, `?` = đọc không chắc, dòng `Ngày | 29/10`); **Làm mới** (F5) ghép khách theo Tên +
+  Địa chỉ (từ có số trùng nguyên từ), món theo bảng **chữ viết tắt** sửa được (mặc định sc = sữa chua, pm = phô mai, bb = bánh
+  bao, pana = panacota); món lạ có giá → món tự do (45k = đơn giá); CK = Đã thanh toán (người dùng chốt). Bảng nháp: viền đỏ
+  chưa lưu được / cam nên xem lại (đọc không chắc, khách đã có đơn ngày đó), ＋ Thêm khách (popup, điền sẵn tên + số căn hộ),
+  ô Chọn khách / Chọn món (viết lại dòng trong ô chữ), Sửa dòng, Chỉ hiện dòng cần xem; **Lưu N đơn** (Ctrl+S) bỏ dòng đã lưu
+  khỏi ô chữ; **Hoàn tác lô vừa lưu**. Code: `Core/Orders/BatchOrders.cs` (+ `CustomerForm` nhận địa chỉ điền sẵn). Cập nhật F1,
+  README. Unit test 180/180 (+18 BatchOrderTests; 2 bỏ qua là test cần backup thật); GUI Sandbox 26/27 trên database thử 6 khách
+  / 12 món (dòng còn lại là kiểm tra của script không thấy thẻ cuối chưa cuộn tới - ảnh cho thấy thẻ đúng): đọc 7 dòng sổ, thêm
+  khách 1201, chọn món "bún", chọn khách "Hà", lọc, lưu 6 đơn (1 đã thanh toán), dán lại → báo trùng, hoàn tác, mở lại app
+  vẫn còn ô chữ + chữ viết tắt
+- [x] **Nhập đơn hàng loạt - So khớp với MeRon** (người dùng yêu cầu 2026-11-03): mỗi lần Làm mới, từng dòng so với đơn
+  (không Huỷ) cùng ngày giao: ✓ Đã có trong MeRon (cùng khách + món + số lượng + thanh toán) / ≠ Khác đơn trong MeRon (ghi
+  rõ MeRon thiếu / thừa món, số lượng sổ / MeRon, CK) - 2 loại này không tự tick (thay cảnh báo "khách đã có đơn ngày đó") /
+  Chưa có trong MeRon (tick sẵn); khách 2 đơn / ngày: cặp giống hệt ghép trước. Nút **So khớp ngày dd/MM**: bảng Khác / Chỉ
+  có trong sổ / Chỉ có trong MeRon (sổ không ghi) / Chưa so được / Khớp + Chép kết quả. Tóm tắt lên hàng riêng (cửa sổ hẹp
+  không dồn chữ). Code `Core/Orders/BatchReconcile.cs`. Cập nhật F1, README. Unit test 183/183 (+3 so khớp); GUI Sandbox
+  32/33 (dòng còn lại: script không thấy thẻ cuối chưa cuộn tới - đơn đó có trong bảng so khớp): dòng khác đơn → "MeRon
+  thiếu 1 Giò; MeRon thừa 3 Sữa chua uống", dòng trùng → ✓ khớp, bảng tổng hợp Chỉ có trong MeRon (5) / Khớp (1) / Chưa so
+  được (1), hoàn tác → hết "đã có trong MeRon"
+- [ ] Người dùng xác nhận: "lá" là món gì; giá ghi kèm số lượng > 1 (vd "5 lạng tôm 100k") là đơn giá (hiện tính 500.000) hay
+  tổng của dòng
+- [ ] Nhập đơn hàng loạt từ Excel / CSV (đề xuất cũ 2026-11-02) - làm khi có file mẫu
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị
   2026-10-27). Cập nhật F1, README
 - [x] Form đơn: **gõ số lượng cùng tên món** - "2 chao" / "chao 2" (cả "2x chao", "chao x2") rồi Enter / Tab → món + số

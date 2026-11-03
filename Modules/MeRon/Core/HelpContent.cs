@@ -15,7 +15,7 @@ public static class HelpContent
 {
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
-        ["OrdersPage", "OrderFormPage", "OrderDetailPage", "PurchasesPage", "PurchaseFormPage", "DebtsPage",
+        ["OrdersPage", "OrderFormPage", "OrderDetailPage", "BatchOrdersPage", "PurchasesPage", "PurchaseFormPage", "DebtsPage",
          "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ChartsPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "DataInfoPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
@@ -82,6 +82,18 @@ public static class HelpContent
             new("Lưu", "Nút Lưu hoặc Ctrl+S. Khách đã có đơn khác cùng ngày giao (không tính đơn huỷ) thì hỏi Cảnh báo trùng đơn: Huỷ hoặc Vẫn lưu. Không phải đợi tới lúc Lưu: chọn khách xong (hoặc đổi Ngày giao hàng) là dưới ô Khách hàng hiện ngay khung vàng \"Khách hàng này đã có đơn đặt hàng giao ngày …\"; đổi khách / ngày không trùng nữa thì khung tự tắt. Bấm Lưu vẫn hỏi lại như trên. Form thêm đơn có thêm 2 nút: Lưu và thêm mới (Ctrl+Shift+N) = lưu xong mở luôn đơn mới trống cùng ngày giao; Lưu và chép cho khách khác (Ctrl+Shift+K) = lưu xong mở đơn mới giống hệt đơn vừa lưu nhưng bỏ trống khách để chọn khách khác (2 phím này dùng được cả khi sửa đơn). Esc = quay lại không lưu.", "Ctrl+S", "Ctrl+Shift+N", "Ctrl+Shift+K", "Esc"),
             new("Huỷ đơn / Xoá đơn", "Huỷ đơn: chuyển sang Huỷ, giữ lại để tra cứu, không tính vào báo cáo. Xoá đơn: xoá hẳn đơn và các dòng món, không hoàn tác. Đơn đã huỷ sửa và Lưu vẫn giữ Huỷ."),
             new("Sao chép đơn", "Khách quen đặt lặp lại: chuột phải 1 đơn (trang Đặt hàng, Chi tiết, Theo món ăn; hoặc Shift+F10 - menu còn có Đã thanh toán, Giao hôm nay / ngày mai, Huỷ đơn) → Sao chép đơn, hoặc nút Sao chép đơn trong form sửa (Ctrl+Shift+C). Mở form Thêm đặt hàng điền sẵn khách, các món + số lượng, món tự do, giảm giá, ghi chú; giữ nguyên ngày giờ giao của đơn gốc (đơn gốc không có ngày giao → hôm nay), Đã lên đơn, chưa thanh toán; món tính giá hiện tại - giá đổi so với đơn gốc thì báo ở đầu form; món không còn trong danh sách chép thành món tự do. Chưa lưu gì cho đến khi bấm Lưu.", "Chuột phải", "Ctrl+Shift+C"),
+        ]),
+
+        new("Nhập đơn hàng loạt", "", "Dán nhiều đơn 1 lúc (chép từ sổ ghi tay, tin nhắn Zalo...) → bảng nháp để soát → lưu cả lô.", "BatchOrdersPage",
+        [
+            new("Mẫu chữ", "Mỗi dòng 1 đơn: khách | món; món | giá | CK. Vd \"706 Mỹ Ly | 3 sc uống; 1 giò\", \"1201 | 1 phần cá | 45k | CK\". Không có dấu | thì viết \"khách: món + món\". Món cách nhau bằng ; hoặc + hoặc dấu phẩy; số lượng trước tên (\"3 sc\", \"3sc\") hoặc sau (\"sc x3\"). Dòng \"Ngày | 29/10\" đặt ngày giao cho cả lô."),
+            new("Sổ ghi tay → chữ", "Bấm Câu lệnh cho Claude: chép sẵn câu lệnh mẫu. Mở Claude (claude.ai hoặc app điện thoại), dán câu lệnh, gửi kèm ảnh trang sổ; Claude chép lại đúng mẫu trên - copy kết quả dán vào ô chữ. Chữ Claude đọc không chắc có dấu ? (vd \"pana?\")."),
+            new("Bảng nháp", "Bấm Làm mới (F5) để đọc ô chữ. Mỗi dòng 1 thẻ: khách, các món, tổng tiền, Đã thanh toán (dòng có CK). Viền đỏ = chưa lưu được (chưa có khách, món lạ...), viền cam = nên xem lại (đọc không chắc, khác đơn trong MeRon, giá ghi khác giá món) - mặc định không tick, xem xong tự tick. Chỉ hiện dòng cần xem: lọc nhanh các dòng đó.", "F5"),
+            new("So khớp với MeRon", "Mỗi lần Làm mới, từng dòng được so với các đơn (không tính đơn Huỷ) cùng ngày giao ở ô Ngày giao: ✓ Đã có trong MeRon (cùng khách, cùng món + số lượng, cùng thanh toán - không tick để khỏi lưu trùng), ≠ Khác đơn trong MeRon (ghi rõ lệch: MeRon thiếu / thừa món, số lượng sổ / MeRon, CK - không tick), Chưa có trong MeRon (tick sẵn). Khách có 2 đơn trong ngày: cặp giống hệt được ghép trước. Nút So khớp ngày dd/MM: bảng tổng hợp các nhóm Khác / Chỉ có trong sổ / Chỉ có trong MeRon (đơn sổ không ghi) / Chưa so được / Khớp, nút Chép kết quả."),
+            new("Ghép khách", "Mọi từ của chữ khách phải có trong Tên + Địa chỉ của khách (không cần dấu): \"706 Mỹ Ly\", \"W1 Tuấn Chung\". Số căn hộ / toà phải trùng nguyên từ (101 không khớp 1101). Chưa có khách → nút ＋ Thêm khách (điền sẵn tên + số căn hộ vào Địa chỉ); nhiều khách khớp → ô Chọn khách."),
+            new("Ghép món, chữ viết tắt", "Ô Chữ viết tắt bên phải: mỗi dòng \"sc = sữa chua\" - đổi từng TỪ trước khi tìm món (\"3 sc uống\" → Sữa chua uống). Tìm món không cần dấu / dấu cách (\"phomai\" = Phô mai); phải ra đúng 1 món, nhiều món khớp (vd \"bún\") → ô Chọn món. Món không có trong danh sách mà có ghi giá (\"1 phần cá 45k\", hoặc giá ở cột riêng của dòng) → món tự do với đơn giá đó; không ghi giá → phải sửa."),
+            new("Sửa", "Chọn khách / món trên thẻ là ô chữ tự sửa theo và bảng nháp đọc lại. Sửa tay: nút Sửa dòng chọn đúng dòng đó trong ô chữ, sửa xong bấm Làm mới. Ô chữ và chữ viết tắt tự lưu - tắt app mở lại vẫn còn."),
+            new("Lưu, Hoàn tác", "Lưu N đơn đã tick (Ctrl+S): tạo các đơn giao ngày ở ô Ngày giao (CK = Đã thanh toán, không CK = Đã lên đơn), bỏ các dòng đã lưu khỏi ô chữ. Lỡ tay: Hoàn tác lô vừa lưu xoá đúng các đơn đó và trả dòng về ô chữ.", "Ctrl+S"),
         ]),
 
         new("Chi tiết đơn", "", "Toàn bộ đơn khớp bộ lọc, gộp theo từng khách.", "OrderDetailPage",

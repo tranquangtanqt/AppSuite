@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MeRon.Views.BatchOrdersPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MeRon.ViewModels"
+    xmlns:models="using:MeRon.Core.Models"
+    xmlns:local="using:MeRon.Views"
+    NavigationCacheMode="Enabled">
+
+    <Grid Padding="24,12,24,16" RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Nhập đơn hàng loạt" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <local:DateBox Grid.Column="1" Date="{x:Bind ViewModel.Day, Mode=TwoWay}" AllowEmpty="False" Width="150" Margin="16,0,0,0"
+                           HorizontalAlignment="Left" VerticalAlignment="Center" AutomationProperties.Name="Ngày giao" PlaceholderText="Ngày giao" />
+            <Button Grid.Column="2" Click="CopyPrompt_Click" ToolTipService.ToolTip="Chép câu lệnh mẫu: dán vào Claude (claude.ai / app điện thoại) cùng ảnh trang sổ, Claude chép lại đúng mẫu trang này đọc được">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                    <TextBlock Text="Câu lệnh cho Claude" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Column="3" Click="Refresh_Click" ToolTipService.ToolTip="Đọc lại ô chữ + khách / món / chữ viết tắt mới nhất (F5)">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="Refresh" />
+                    <TextBlock Text="Làm mới" />
+                </StackPanel>
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F5" />
+                </Button.KeyboardAccelerators>
+            </Button>
+        </Grid>
+
+        <!-- Ô chữ (nguồn gốc của bảng nháp, tự lưu) + bảng chữ viết tắt -->
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="260" />
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="PasteBox" Header="Dán chữ - mỗi dòng 1 đơn: khách | món; món | giá | CK  (vd: 706 Mỹ Ly | 3 sc uống)"
+                     Text="{x:Bind ViewModel.Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
+                     Height="150" ScrollViewer.VerticalScrollBarVisibility="Auto" FontFamily="Consolas"
+                     PlaceholderText="Ngày | 29/10&#x0a;706 Mỹ Ly | 3 sc uống&#x0a;W1 Tuấn Chung | 1 bún; 10 nấm; 1 giò&#x0a;1201 | 1 phần cá | 45k | CK"
+                     AutomationProperties.Name="Dán chữ đơn hàng" />
+            <TextBox Grid.Column="1" Header="Chữ viết tắt (mỗi dòng: sc = sữa chua)"
+                     Text="{x:Bind ViewModel.AbbreviationsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
+                     Height="150" ScrollViewer.VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Chữ viết tắt" />
+        </Grid>
+
+        <!-- Tóm tắt 1 hàng riêng, các nút hàng dưới: cửa sổ hẹp thì tóm tắt không bị dồn thành cột chữ nhỏ -->
+        <Grid Grid.Row="2" ColumnSpacing="12" RowSpacing="8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.ColumnSpan="5" Text="{x:Bind ViewModel.Summary, Mode=OneWay}" VerticalAlignment="Center" TextWrapping="Wrap" FontWeight="SemiBold"
+                       AutomationProperties.AutomationId="BatchSummary" />
+            <CheckBox Grid.Row="1" Grid.Column="1" Content="Chỉ hiện dòng cần xem" IsChecked="{x:Bind ViewModel.OnlyNeedsReview, Mode=TwoWay}" MinWidth="0" />
+            <Button Grid.Row="1" Grid.Column="2" Click="Reconcile_Click" AutomationProperties.Name="So khớp"
+                    ToolTipService.ToolTip="Đối chiếu bảng nháp với các đơn đã có trong MeRon cùng ngày giao: khớp / khác / chỉ có trong sổ / chỉ có trong MeRon">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE9D5;" FontSize="14" />
+                    <TextBlock Text="{x:Bind ViewModel.ReconcileButtonText, Mode=OneWay}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Row="1" Grid.Column="3" Click="Undo_Click" Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.UndoText), Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="Undo" />
+                    <TextBlock Text="{x:Bind ViewModel.UndoText, Mode=OneWay}" />
+                </StackPanel>
+            </Button>
+            <Button Grid.Row="1" Grid.Column="4" Style="{StaticResource AccentButtonStyle}" Click="Save_Click" AutomationProperties.Name="Lưu các đơn đã tick"
+                    IsEnabled="{x:Bind local:BatchOrdersPage.Positive(ViewModel.CheckedCount), Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Symbol="Save" />
+                    <TextBlock Text="{x:Bind local:BatchOrdersPage.SaveText(ViewModel.CheckedCount), Mode=OneWay}" />
+                </StackPanel>
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control" Key="S" />
+                </Button.KeyboardAccelerators>
+            </Button>
+        </Grid>
+
+        <StackPanel Grid.Row="3" Spacing="6">
+            <InfoBar Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
+                     IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
+            <InfoBar Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+                     IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="BatchMessage" />
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
+            <ItemsRepeater ItemsSource="{x:Bind ViewModel.Rows}" AutomationProperties.Name="Bảng nháp">
+                <ItemsRepeater.Layout>
+                    <StackLayout Spacing="6" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
+                    <DataTemplate x:DataType="vm:BatchRowViewModel">
+                        <Grid CornerRadius="8" BorderThickness="1" Padding="10,8" ColumnSpacing="12"
+                              BorderBrush="{x:Bind local:BatchOrdersPage.RowBorder(CanSave, NeedsReview)}"
+                              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox IsChecked="{x:Bind IsChecked, Mode=TwoWay}" IsEnabled="{x:Bind CanSave}" MinWidth="0" VerticalAlignment="Top"
+                                      AutomationProperties.Name="{x:Bind AccessibleName}" />
+                            <StackPanel Grid.Column="1" Spacing="2">
+                                <TextBlock Text="{x:Bind CustomerText}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="{x:Bind LineText}" Opacity="0.6" FontSize="12" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" Spacing="4">
+                                <TextBlock Text="{x:Bind ItemsText}" TextWrapping="Wrap" />
+                                <TextBlock Text="{x:Bind ReconcileText}" TextWrapping="Wrap" FontSize="12"
+                                           Foreground="{x:Bind local:BatchOrdersPage.ReconcileBrush(IsMatched, IsDifferent)}"
+                                           Visibility="{x:Bind local:Ui.VisibleIfText(ReconcileText)}" />
+                                <TextBlock Text="{x:Bind ProblemText}" TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                           Visibility="{x:Bind local:Ui.VisibleIfText(ProblemText)}" />
+                                <TextBlock Text="{x:Bind WarningText}" TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                           Visibility="{x:Bind local:Ui.VisibleIfText(WarningText)}" />
+                                <!-- Cách sửa ngay trên dòng; sửa chữ thì bấm Sửa dòng (nhảy tới dòng trong ô chữ) rồi Làm mới -->
+                                <StackPanel Orientation="Horizontal" Spacing="6" Visibility="{x:Bind NeedsReview}">
+                                    <Button Content="＋ Thêm khách" Click="AddCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind NeedsNewCustomer}" />
+                                    <ComboBox ItemsSource="{x:Bind CustomerChoices}" PlaceholderText="Chọn khách..." Tag="{x:Bind}" MinWidth="180"
+                                              SelectionChanged="CustomerChoice_SelectionChanged" AutomationProperties.Name="Chọn khách"
+                                              Visibility="{x:Bind local:BatchOrdersPage.VisibleIfAny(CustomerChoices.Count)}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Customer">
+                                                <TextBlock Text="{x:Bind local:BatchOrdersPage.CustomerLabel(Name, Address)}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <ComboBox ItemsSource="{x:Bind ItemChoices}" PlaceholderText="{x:Bind ItemChoicePlaceholder}" Tag="{x:Bind}" MinWidth="200"
+                                              SelectionChanged="ItemChoice_SelectionChanged" AutomationProperties.Name="Chọn món"
+                                              Visibility="{x:Bind local:BatchOrdersPage.VisibleIfAny(ItemChoices.Count)}">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Product">
+                                                <TextBlock Text="{x:Bind Name}" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                    <Button Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, xong bấm Làm mới (F5)" />
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Grid.Column="3" Spacing="2" MinWidth="90">
+                                <TextBlock Text="{x:Bind TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                                <Border HorizontalAlignment="Right" CornerRadius="8" Padding="6,1" Visibility="{x:Bind Paid}"
+                                        Background="{x:Bind local:BatchOrdersPage.PaidSoft(Paid)}">
+                                    <TextBlock Text="Đã thanh toán" FontSize="11" Foreground="{x:Bind local:BatchOrdersPage.PaidSolid(Paid)}" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
+        </ScrollViewer>
+    </Grid>
+</Page>

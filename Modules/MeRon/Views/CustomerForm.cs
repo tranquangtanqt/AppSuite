@@ -13,7 +13,8 @@ namespace MeRon.Views;
 internal static class CustomerForm
 {
     /// <summary>Trả về mã khách vừa lưu / xoá; null = bấm Huỷ.</summary>
-    public static async Task<long?> ShowAsync(XamlRoot root, Customer? customer, string? initialName = null)
+    /// <param name="initialAddress">Địa chỉ điền sẵn cho khách mới (Nhập đơn hàng loạt: số căn hộ / toà trong chữ khách).</param>
+    public static async Task<long?> ShowAsync(XamlRoot root, Customer? customer, string? initialName = null, string? initialAddress = null)
     {
         var name = Dialogs.Text("Tên", customer?.Name ?? initialName);
         var phone = Dialogs.Text("Số điện thoại", customer?.Phone);
@@ -23,7 +24,7 @@ internal static class CustomerForm
             Header = "Địa chỉ",
             IsEditable = true,
             ItemsSource = AppServices.MasterData.GetAddresses().Select(a => a.Name ?? a.Code).Distinct().ToList(),
-            Text = customer?.Address ?? string.Empty,
+            Text = customer?.Address ?? initialAddress ?? string.Empty,
             PlaceholderText = "Gõ hoặc chọn",
             HorizontalAlignment = HorizontalAlignment.Stretch,
         };

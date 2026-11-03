@@ -20,6 +20,11 @@
                     <FontIcon Glyph="&#xE7BF;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Nhập đơn hàng loạt" Tag="BatchOrdersPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE8FD;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItem Content="Mua hàng" Tag="PurchasesPage">
                 <NavigationViewItem.Icon>
                     <FontIcon Glyph="&#xE719;" />
