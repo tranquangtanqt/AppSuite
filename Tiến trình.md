@@ -1067,9 +1067,18 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [x] Thử tay trên máy thật: kéo-thả file từ Explorer vào CsvEditor (Sandbox không tự động hoá được: UIPI chặn thả từ
   Explorer vào app chạy quyền cao); mở file .xlsx vừa xuất bằng Excel thật (Sandbox không có Excel) — OK (2026-10-05)
 - [ ] **[Đề xuất · Có thể]** Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột; tự giãn độ rộng cột
-- [ ] **[Đề xuất · Nên làm]** Thiết kế lại giao diện (đề xuất 2026-11-02, chờ người dùng chọn mục; gợi ý làm 1–4 trước,
-  thử bản nháp + ảnh trước / sau trong Sandbox): (1) thanh công cụ gọn, tiếng Việt, gom Dòng ▾ / Cột ▾ / Xuất ▾, bỏ tiêu đề
-  "Module F"; (2) màn hình bắt đầu: kéo-thả + Mở file + file gần đây; (3) thẻ "Đang lọc ✕" / "Sắp xếp ✕" thay nút Clear;
-  (4) menu chuột phải đầy đủ tiếng Việt (ô + tiêu đề cột, lọc theo giá trị này); (5) sọc dòng, số canh phải, cố định
-  cột đầu, ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn;
-  (7) lỗi dữ liệu thành InfoBar bấm nhảy tới dòng
+- [x] **Thiết kế lại giao diện - đợt 1 (mục 1–4 của đề xuất 2026-11-02)** (2026-11-03, duyệt qua bản nháp + ảnh trước /
+  sau trong Sandbox, ảnh ở `Pictures\AppSuite_CsvEditor_giao_dien_moi_2026-11-03`): (1) thanh công cụ tiếng Việt
+  `Mở 🕘 Lưu Xuất▾ | ↶ ↷ | Dòng▾ Cột▾ | Tìm → Lọc Sắp xếp 📊 … ?` vừa 1 hàng ở ~1000 px (trước ~20 nút, tràn), giữ mọi phím
+  tắt; tiêu đề cửa sổ = tên file (● khi chưa lưu) thay "Module F - CSV/TSV Editor"; ô "Dòng đầu là tiêu đề" xuống thanh
+  trạng thái cạnh encoding / delimiter; (2) màn hình bắt đầu: vùng kéo-thả, Mở file..., Bảng trống, file gần đây bấm để mở;
+  (3) thẻ `Hiện x / y dòng` · `Lọc: … ✕` · `Ô lọc: … ✕` · `Sắp xếp: … ↓ ✕` (bấm chữ = sửa) thay nút Clear Filter / Clear Sort
+  và nút ✕ góc bảng; (4) menu chuột phải tiếng Việt - trên ô: Sao chép, Dán, Lọc / Lọc bỏ theo giá trị ô, Chèn / Nhân bản
+  / Xoá dòng; trên tiêu đề cột (mới): Sắp xếp tăng / giảm, Bỏ ô lọc cột, Đổi tên, Chèn cột bên phải, Xoá cột. Kèm: Cột ▾ khi
+  chưa chọn ô thì thanh trạng thái nhắc (trước im lặng); cột rộng thêm để tên cột không bị cắt ("Thành tiề"). Cập nhật F1,
+  README. Build 0 warning, unit test 120/120; GUI Sandbox: mở file qua 🕘, Dòng ▾, chuột phải ô → lọc theo giá trị (12 / 60
+  dòng), chuột phải tiêu đề → sắp xếp giảm, thẻ + tiêu đề cửa sổ đúng
+- [ ] Người dùng thử tay giao diện mới CsvEditor trên máy thật (kéo-thả vào màn hình bắt đầu, Bảng trống, Shift+F10)
+- [ ] **[Đề xuất · Có thể]** Thiết kế lại giao diện - đợt 2 (mục 5–7 còn lại): (5) sọc dòng, số canh phải, cố định cột đầu,
+  ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn; (7) lỗi dữ liệu
+  thành InfoBar bấm nhảy tới dòng

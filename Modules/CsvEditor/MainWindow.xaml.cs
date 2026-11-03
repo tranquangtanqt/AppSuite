@@ -3,6 +3,7 @@ using System.Numerics;
 using CommunityToolkit.WinUI.UI.Controls;
 using CommunityToolkit.WinUI.UI.Controls.Primitives;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Input;
@@ -62,6 +63,18 @@ public sealed partial class MainWindow : Window
         SharedUI.Helpers.WindowIcon.Apply(this);
 
         ViewModel.ColumnsChanged += (_, _) => RebuildColumns();
+        ViewModel.PropertyChanged += (_, args) =>
+        {
+            switch (args.PropertyName)
+            {
+                case nameof(CsvEditorViewModel.FileName) or nameof(CsvEditorViewModel.IsDirty):
+                    UpdateTitle();
+                    break;
+                case nameof(CsvEditorViewModel.ActiveFilter) or nameof(CsvEditorViewModel.ActiveSort) or nameof(CsvEditorViewModel.RowCount):
+                    RefreshChips();
+                    break;
+            }
+        };
 
         // Bấm X khi còn thay đổi chưa lưu: hỏi Lưu / Không lưu / Hủy (trước đây đóng luôn, mất thay đổi).
         AppWindow.Closing += async (_, args) =>
@@ -93,6 +106,141 @@ public sealed partial class MainWindow : Window
     public string IssuesHeaderText(int count) => $"Cảnh báo ({count})";
 
     public string SaveStateText(bool isDirty) => isDirty ? "● Chưa lưu" : "Đã lưu";
+
+    public string UndoToolTip(string? description) => description is null ? "Hoàn tác (Ctrl+Z)" : $"Hoàn tác: {description} (Ctrl+Z)";
+
+    public string RedoToolTip(string? description) => description is null ? "Làm lại (Ctrl+Y)" : $"Làm lại: {description} (Ctrl+Y)";
+
+    /// <summary>Tiêu đề cửa sổ = tên file (● khi chưa lưu) - nhìn taskbar / Alt+Tab là biết file nào.</summary>
+    private void UpdateTitle()
+    {
+        var name = string.IsNullOrEmpty(ViewModel.FileName) ? null : ViewModel.FileName;
+        Title = name is null && !ViewModel.IsDirty
+            ? "CsvEditor"
+            : $"{(ViewModel.IsDirty ? "● " : string.Empty)}{name ?? "Bảng mới"} - CsvEditor";
+    }
+
+    // ----- Màn hình bắt đầu -----
+
+    /// <summary>Bấm "Bảng trống" ở màn hình bắt đầu: ẩn màn hình đó dù chưa mở file.</summary>
+    private bool _startDismissed;
+
+    /// <summary>Hiện màn hình bắt đầu khi chưa có file / cột nào (lúc mới mở app), dựng lại danh sách file gần đây.</summary>
+    private void UpdateStartScreen()
+    {
+        var show = !_startDismissed && CurrentFilePath is null && ViewModel.Columns.Count == 0;
+        StartScreen.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+        Grid.Visibility = show ? Visibility.Collapsed : Visibility.Visible;
+        if (!show)
+        {
+            return;
+        }
+
+        StartRecentList.Children.Clear();
+        var paths = _recentFiles.Paths;
+        StartRecentPanel.Visibility = paths.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        foreach (var path in paths)
+        {
+            var button = new Button
+            {
+                Tag = path,
+                HorizontalAlignment = HorizontalAlignment.Stretch,
+                HorizontalContentAlignment = HorizontalAlignment.Left,
+                Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(8, 6, 8, 6),
+                Content = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 10,
+                    Children =
+                    {
+                        new FontIcon { Glyph = "", FontSize = 14, VerticalAlignment = VerticalAlignment.Center },
+                        new TextBlock { Text = Path.GetFileName(path), VerticalAlignment = VerticalAlignment.Center },
+                        new TextBlock
+                        {
+                            Text = Path.GetDirectoryName(path),
+                            Opacity = 0.6,
+                            VerticalAlignment = VerticalAlignment.Center,
+                            TextTrimming = TextTrimming.CharacterEllipsis,
+                            MaxWidth = 340,
+                        },
+                    },
+                },
+            };
+            ToolTipService.SetToolTip(button, path);
+            AutomationProperties.SetName(button, Path.GetFileName(path));
+            button.Click += RecentItem_Click;
+            StartRecentList.Children.Add(button);
+        }
+    }
+
+    private void NewTableButton_Click(object sender, RoutedEventArgs e)
+    {
+        _startDismissed = true;
+        UpdateStartScreen();
+        AddColumnButton_Click(sender, e);
+    }
+
+    // ----- Thẻ lọc / sắp xếp đang áp dụng -----
+
+    /// <summary>Hiện thẻ cho lọc nâng cao, ô lọc ở tiêu đề cột, sắp xếp đang áp dụng + "Hiện x / y dòng" khi đang lọc.
+    /// Gọi sau mỗi lần đổi lọc / sắp xếp (ViewModel đã dựng lại ViewRows).</summary>
+    private void RefreshChips()
+    {
+        var filter = ViewModel.ActiveFilter;
+        FilterChip.Visibility = filter is null ? Visibility.Collapsed : Visibility.Visible;
+        if (filter is not null)
+        {
+            var join = filter.Join == FilterJoin.And ? " và " : " hoặc ";
+            SetChipText(FilterChipText, "Lọc: " + string.Join(join, filter.Conditions.Select(DescribeCondition)));
+        }
+
+        var quick = Grid.Columns
+            .Select(column => column.Header)
+            .OfType<FilterHeaderItem>()
+            .Where(item => !string.IsNullOrEmpty(item.FilterText))
+            .Select(item => $"{item.ColumnName} chứa \"{item.FilterText}\"")
+            .ToList();
+        QuickFilterChip.Visibility = quick.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        SetChipText(QuickFilterChipText, "Ô lọc: " + string.Join(", ", quick));
+
+        var sort = ViewModel.ActiveSort;
+        SortChip.Visibility = sort.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        SetChipText(SortChipText, "Sắp xếp: " + string.Join(", ", sort.Select(s => $"{ColumnName(s.ColumnIndex)} {(s.Descending ? "↓" : "↑")}")));
+
+        var filtered = filter is not null || quick.Count > 0;
+        ShownRowsText.Text = filtered ? $"Hiện {ViewModel.ViewRows.Count:N0} / {ViewModel.RowCount:N0} dòng" : string.Empty;
+        ShownRowsText.Visibility = filtered ? Visibility.Visible : Visibility.Collapsed;
+        ChipsBar.Visibility = filtered || sort.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private static void SetChipText(TextBlock textBlock, string text)
+    {
+        textBlock.Text = text;
+        ToolTipService.SetToolTip(textBlock, text);
+    }
+
+    private string ColumnName(int columnIndex) =>
+        columnIndex >= 0 && columnIndex < ViewModel.Columns.Count ? ViewModel.Columns[columnIndex].Name : $"Cột {columnIndex + 1}";
+
+    private string DescribeCondition(FilterCondition condition)
+    {
+        var op = condition.Operator switch
+        {
+            FilterOperator.Equal => "=",
+            FilterOperator.NotEqual => "≠",
+            FilterOperator.GreaterThan => ">",
+            FilterOperator.LessThan => "<",
+            FilterOperator.GreaterOrEqual => "≥",
+            FilterOperator.LessOrEqual => "≤",
+            FilterOperator.Contains => "chứa",
+            FilterOperator.Regex => "khớp",
+            _ => "?",
+        };
+        var text = $"{ColumnName(condition.ColumnIndex)} {op} \"{condition.Value}\"";
+        return condition.Negate ? $"không ({text})" : text;
+    }
 
     // ----- DataGrid column/row wiring -----
 
@@ -150,7 +298,11 @@ public sealed partial class MainWindow : Window
 
             Grid.Columns.Add(new DataGridTextColumn
             {
-                Header = new FilterHeaderItem(columns[i].Name, text => ViewModel.SetQuickFilter(columnIndex, text)),
+                Header = new FilterHeaderItem(columns[i].Name, text =>
+                {
+                    ViewModel.SetQuickFilter(columnIndex, text);
+                    RefreshChips();
+                }),
                 HeaderStyle = filterHeaderStyle,
                 Width = new DataGridLength(EstimateColumnWidth(columnIndex, columns[i].Name), DataGridLengthUnitType.Pixel),
                 Binding = new Binding
@@ -160,6 +312,9 @@ public sealed partial class MainWindow : Window
                 },
             });
         }
+
+        RefreshChips();
+        UpdateStartScreen();
     }
 
     /// <summary>Widest of the column name and a sample of its cell values (measured the same way their
@@ -183,7 +338,7 @@ public sealed partial class MainWindow : Window
             }
         }
 
-        return Math.Clamp(maxWidth + 24, 100, 400);
+        return Math.Clamp(maxWidth + 40, 100, 400);
     }
 
     private static double EstimateTextWidth(string text)
@@ -649,6 +804,7 @@ public sealed partial class MainWindow : Window
         if (!File.Exists(path))
         {
             _recentFiles.Remove(path);
+            UpdateStartScreen();
             ViewModel.StatusMessage = $"Không còn file {Path.GetFileName(path)} - đã bỏ khỏi danh sách gần đây.";
             await new ContentDialog
             {
@@ -905,19 +1061,35 @@ public sealed partial class MainWindow : Window
         Grid.ScrollIntoView(row, null);
     }
 
-    private async void AddColumnButton_Click(object sender, RoutedEventArgs e)
+    private async void AddColumnButton_Click(object sender, RoutedEventArgs e) => await AddColumnAsync(ViewModel.Columns.Count);
+
+    private async Task AddColumnAsync(int index)
     {
         var dialog = new ColumnDialog("Thêm cột") { XamlRoot = Content.XamlRoot };
         if (await dialog.ShowAsync() == ContentDialogResult.Primary && !string.IsNullOrWhiteSpace(dialog.ColumnName))
         {
-            ViewModel.AddColumn(ViewModel.Columns.Count, dialog.ColumnName);
+            ViewModel.AddColumn(index, dialog.ColumnName);
         }
     }
 
-    private async void DeleteColumnButton_Click(object sender, RoutedEventArgs e)
+    /// <summary>Cột của ô đang chọn (Cột ▾ trên thanh công cụ); chưa chọn ô nào thì báo ở thanh trạng thái, trả -1.</summary>
+    private int CurrentColumnIndexOrHint(string action)
     {
         var columnIndex = Grid.CurrentColumn is { } currentColumn ? Grid.Columns.IndexOf(currentColumn) : -1;
         if (columnIndex < 0)
+        {
+            ViewModel.StatusMessage = $"Chọn 1 ô trong cột cần {action} trước (hoặc chuột phải vào tiêu đề cột).";
+        }
+        return columnIndex;
+    }
+
+    private async void DeleteColumnButton_Click(object sender, RoutedEventArgs e) => await DeleteColumnAsync(CurrentColumnIndexOrHint("xoá"));
+
+    private async void RenameColumnButton_Click(object sender, RoutedEventArgs e) => await RenameColumnAsync(CurrentColumnIndexOrHint("đổi tên"));
+
+    private async Task DeleteColumnAsync(int columnIndex)
+    {
+        if (columnIndex < 0 || columnIndex >= ViewModel.Columns.Count)
         {
             return;
         }
@@ -938,10 +1110,9 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private async void RenameColumnButton_Click(object sender, RoutedEventArgs e)
+    private async Task RenameColumnAsync(int columnIndex)
     {
-        var columnIndex = Grid.CurrentColumn is { } currentColumn ? Grid.Columns.IndexOf(currentColumn) : -1;
-        if (columnIndex < 0)
+        if (columnIndex < 0 || columnIndex >= ViewModel.Columns.Count)
         {
             return;
         }
@@ -1140,6 +1311,151 @@ public sealed partial class MainWindow : Window
     }
 
     // ----- Context menu -----
+
+    /// <summary>Ô / tiêu đề cột vừa bấm chuột phải - các mục menu làm việc trên đó (không phải ô đang chọn trước đó).</summary>
+    private int _menuRowIndex = -1;
+    private int _menuColumnIndex = -1;
+
+    /// <summary>Chuột phải trong bảng: trên tiêu đề cột → menu cột (sắp xếp, đổi tên, chèn, xoá); trên ô → menu ô (chép,
+    /// dán, lọc theo giá trị, dòng). Ô bấm được chọn luôn (ngoài vùng đang chọn) để Dán / Xoá dòng làm đúng chỗ. Shift+F10 /
+    /// phím Menu (không có toạ độ) → menu ô cho ô đang chọn.</summary>
+    private void Grid_ContextRequested(UIElement sender, ContextRequestedEventArgs args)
+    {
+        args.Handled = true;
+        DataGridColumnHeader? header = null;
+        DataGridCell? cell = null;
+        DataGridRow? row = null;
+        var hasPoint = args.TryGetPosition(Grid, out var point);
+        if (hasPoint)
+        {
+            var windowPoint = Grid.TransformToVisual(null).TransformPoint(point);
+            foreach (var element in VisualTreeHelper.FindElementsInHostCoordinates(windowPoint, Grid))
+            {
+                header ??= FindAncestorOrSelf<DataGridColumnHeader>(element);
+                cell ??= FindAncestorOrSelf<DataGridCell>(element);
+                row ??= FindAncestorOrSelf<DataGridRow>(element);
+            }
+        }
+
+        var showOptions = hasPoint ? new Microsoft.UI.Xaml.Controls.Primitives.FlyoutShowOptions { Position = point } : new Microsoft.UI.Xaml.Controls.Primitives.FlyoutShowOptions();
+        if (header is not null)
+        {
+            _menuColumnIndex = Grid.Columns.ToList().FindIndex(column => ReferenceEquals(column.Header, header.Content));
+            if (_menuColumnIndex < 0)
+            {
+                return;
+            }
+            var headerMenu = (MenuFlyout)RootGrid.Resources["HeaderMenu"];
+            MenuItem(headerMenu, "ClearColumnFilter").IsEnabled =
+                Grid.Columns[_menuColumnIndex].Header is FilterHeaderItem { FilterText.Length: > 0 };
+            headerMenu.ShowAt(Grid, showOptions);
+            return;
+        }
+
+        if (row is not null)
+        {
+            _menuRowIndex = row.GetIndex();
+            _menuColumnIndex = cell is null ? -1 : Grid.Columns.ToList().FindIndex(column => column.GetCellContent(row) is { } content
+                && FindAncestor<DataGridCell>(content) == cell);
+            if (row.DataContext is CsvRow item && !Grid.SelectedItems.Contains(item))
+            {
+                Grid.SelectedItem = item;
+            }
+            if (_menuColumnIndex >= 0)
+            {
+                Grid.CurrentColumn = Grid.Columns[_menuColumnIndex];
+            }
+        }
+        else if (hasPoint)
+        {
+            return; // vùng trống / tiêu đề dòng ngoài bảng
+        }
+        else
+        {
+            _menuRowIndex = Grid.SelectedIndex;
+            _menuColumnIndex = Grid.CurrentColumn is { } current ? Grid.Columns.IndexOf(current) : -1;
+        }
+
+        var cellMenu = (MenuFlyout)RootGrid.Resources["CellMenu"];
+        var hasCell = _menuRowIndex >= 0 && _menuRowIndex < ViewModel.ViewRows.Count && _menuColumnIndex >= 0;
+        var value = hasCell ? ViewModel.ViewRows[_menuRowIndex].GetCell(_menuColumnIndex) : string.Empty;
+        var shown = value.Length > 24 ? value[..24] + "…" : value;
+        var filterBy = MenuItem(cellMenu, "FilterByValue");
+        var exclude = MenuItem(cellMenu, "ExcludeValue");
+        filterBy.IsEnabled = exclude.IsEnabled = hasCell;
+        filterBy.Text = hasCell ? $"Lọc: {ColumnName(_menuColumnIndex)} = \"{shown}\"" : "Lọc theo giá trị này";
+        exclude.Text = hasCell ? $"Lọc bỏ: {ColumnName(_menuColumnIndex)} ≠ \"{shown}\"" : "Lọc bỏ giá trị này";
+        cellMenu.ShowAt(Grid, showOptions);
+    }
+
+    private static MenuFlyoutItem MenuItem(MenuFlyout menu, string tag) =>
+        menu.Items.OfType<MenuFlyoutItem>().First(item => item.Tag as string == tag);
+
+    private void FilterByValueItem_Click(object sender, RoutedEventArgs e) => FilterByMenuCell(FilterOperator.Equal);
+
+    private void ExcludeValueItem_Click(object sender, RoutedEventArgs e) => FilterByMenuCell(FilterOperator.NotEqual);
+
+    /// <summary>Thêm điều kiện "cột = / ≠ giá trị ô vừa bấm" vào lọc nâng cao đang có (nối bằng VÀ, như Excel lọc tiếp trên
+    /// kết quả đang hiện). Lọc đang có là HOẶC nhiều điều kiện thì không nối được - thay bằng điều kiện mới và báo.</summary>
+    private void FilterByMenuCell(FilterOperator op)
+    {
+        if (_menuRowIndex < 0 || _menuRowIndex >= ViewModel.ViewRows.Count || _menuColumnIndex < 0)
+        {
+            return;
+        }
+
+        var condition = new FilterCondition
+        {
+            ColumnIndex = _menuColumnIndex,
+            Operator = op,
+            Value = ViewModel.ViewRows[_menuRowIndex].GetCell(_menuColumnIndex),
+        };
+        var current = ViewModel.ActiveFilter;
+        var filter = new FilterExpression();
+        var replaced = current is { Join: FilterJoin.Or, Conditions.Count: > 1 };
+        if (current is not null && !replaced)
+        {
+            filter.Conditions.AddRange(current.Conditions);
+        }
+        filter.Conditions.Add(condition);
+        ViewModel.ApplyFilter(filter);
+        if (replaced)
+        {
+            ViewModel.StatusMessage = "Lọc cũ dạng HOẶC không nối thêm được - đã thay bằng lọc theo giá trị vừa chọn.";
+        }
+    }
+
+    private void SortAscendingItem_Click(object sender, RoutedEventArgs e) => SortByMenuColumn(descending: false);
+
+    private void SortDescendingItem_Click(object sender, RoutedEventArgs e) => SortByMenuColumn(descending: true);
+
+    private void SortByMenuColumn(bool descending)
+    {
+        if (_menuColumnIndex >= 0)
+        {
+            ViewModel.ApplySort(new List<(int, bool)> { (_menuColumnIndex, descending) });
+        }
+    }
+
+    private void ClearColumnFilterItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_menuColumnIndex >= 0 && _menuColumnIndex < Grid.Columns.Count && Grid.Columns[_menuColumnIndex].Header is FilterHeaderItem item)
+        {
+            item.FilterText = string.Empty;
+        }
+    }
+
+    private async void HeaderRenameItem_Click(object sender, RoutedEventArgs e) => await RenameColumnAsync(_menuColumnIndex);
+
+    private async void HeaderDeleteItem_Click(object sender, RoutedEventArgs e) => await DeleteColumnAsync(_menuColumnIndex);
+
+    private async void InsertColumnRightItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (_menuColumnIndex >= 0)
+        {
+            await AddColumnAsync(_menuColumnIndex + 1);
+        }
+    }
 
     private void CopyMenuItem_Click(object sender, RoutedEventArgs e)
     {

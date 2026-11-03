@@ -29,22 +29,30 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 ## Toolbar
 
-`Open` `🕘` ☐ *Dòng đầu là tiêu đề* `Save` `Save As` `Export .xlsx` | `Undo` `Redo` | `Add Row` `Delete Row` `Copy Row`
-`Add Column` `Delete Column` `Rename Column` | `Find` `Replace` `Go To` `Filter` `Clear Filter` `Sort` `Clear Sort`
-`Statistics` | `?`.
+`Mở` `🕘` `Lưu` `Xuất ▾` | `↶` `↷` | `Dòng ▾` `Cột ▾` | `Tìm` `→` `Lọc` `Sắp xếp` `📊` … `?` (giao diện làm lại
+2026-11-03: tiếng Việt, việc ít dùng gom vào menu thả xuống - vừa 1 hàng ở cửa sổ ~1000 px). Nút có phím tắt đều nằm ngoài
+menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đang mở). Tiêu đề cửa sổ = tên file (`● ` khi chưa lưu).
 
+- `Xuất ▾`: *Lưu thành file khác...*, *Xuất Excel (.xlsx)...*. `Dòng ▾`: *Thêm dòng*, *Nhân bản dòng đang chọn*, *Xoá dòng
+  đang chọn*. `Cột ▾`: *Thêm cột...*, *Đổi tên cột đang chọn...*, *Xoá cột đang chọn* (chưa chọn ô nào → thanh trạng thái
+  nhắc). `→` = Đi tới dòng, `📊` = Thống kê, `↶ ↷` = Hoàn tác / Làm lại (tooltip ghi thao tác sẽ hoàn tác).
+- **Màn hình bắt đầu** (lúc chưa mở file / chưa có cột - `UpdateStartScreen`): vùng kéo-thả viền nét đứt, *Mở file...*,
+  *Bảng trống* (ẩn màn hình rồi mở hộp thoại Thêm cột) và danh sách file gần đây (bấm 1 dòng để mở).
+- **Thẻ đang lọc / sắp xếp** (`ChipsBar`, `RefreshChips`) phía trên bảng: `Hiện x / y dòng`, `Lọc: Trạng thái = "Đã giao" ✕`
+  (lọc nâng cao), `Ô lọc: Tên chứa "an" ✕` (các ô lọc ở tiêu đề cột), `Sắp xếp: Thành tiền ↓ ✕`. Bấm chữ = mở lại hộp
+  thoại, ✕ = bỏ. Thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc trên-trái bảng (bỏ).
 - **Hướng dẫn** (nút `?` cuối thanh công cụ, `F1`): mọi tính năng theo danh mục + tìm không dấu. Nội dung ở
   `Views/HelpContent.cs` (cửa sổ dùng chung `SharedUI.Help.HelpWindow`) — thêm / đổi tính năng thì cập nhật cả ở đó.
 
-- **Open** (`Ctrl+O`): chọn `.csv`/`.tsv`/`.txt`, tự nhận diện delimiter (`,` `Tab` `;` `|`) và encoding
+- **Mở** (`Ctrl+O`): chọn `.csv`/`.tsv`/`.txt`, tự nhận diện delimiter (`,` `Tab` `;` `|`) và encoding
   (UTF-8, UTF-8 BOM, UTF-16 LE/BE). Nếu nhận diện sai, bấm vào nhãn "Encoding"/"Delimiter" ở thanh
   trạng thái để mở lại file với lựa chọn thủ công. Mở lỗi (file bị khoá, không có quyền…) hiện hộp thoại báo lỗi.
 - **Kéo-thả**: thả file `.csv`/`.tsv`/`.txt` vào bất kỳ chỗ nào trong cửa sổ để mở (thả nhiều file → mở file đầu
   tiên). Còn thay đổi chưa lưu thì hỏi như Open.
-- **File gần đây** (nút 🕘 cạnh Open): 10 file mở / Save As gần nhất, mới nhất trước; trùng tên thì kèm tên thư mục, di
+- **File gần đây** (nút 🕘 cạnh Mở, và danh sách ở màn hình bắt đầu): 10 file mở / Save As gần nhất, mới nhất trước; trùng tên thì kèm tên thư mục, di
   chuột thấy đường dẫn đầy đủ. File đã bị xoá / chuyển chỗ → báo và tự bỏ khỏi danh sách; *Xoá danh sách* ở cuối menu.
   Lưu ở `Data\Config\recent-files.json` cạnh exe.
-- **Dòng đầu là tiêu đề** (checkbox cạnh Open, mặc định có tick — người dùng tự chọn, không tự đoán): bỏ tick cho
+- **Dòng đầu là tiêu đề** (checkbox ở thanh trạng thái cạnh encoding / delimiter - cùng nhóm "cách đọc file"; mặc định có tick — người dùng tự chọn, không tự đoán): bỏ tick cho
   file không có dòng tên cột → mọi dòng là dữ liệu, cột tự đặt tên `Cột 1`, `Cột 2`… (số cột = dòng dài nhất, không
   cắt field nào); tên này chỉ để hiển thị — Save không ghi dòng tên cột. Đổi lựa chọn khi đang mở file → mở lại file đó
   (giữ encoding / delimiter; có thay đổi chưa lưu thì hỏi trước).
@@ -79,16 +87,23 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
   đang chọn. Nhập số rồi `Enter`; số ngoài phạm vi thì báo ngay trong hộp thoại.
 - **Filter**: nhiều điều kiện `== != > < >= <= Contains Regex`, mỗi điều kiện có thể `NOT`, kết hợp
   toàn bộ danh sách bằng 1 phép `AND` hoặc `OR` chung (không phải cây biểu thức lồng nhau). Mở lại
-  dialog sẽ hiện đúng điều kiện đang áp dụng; nút **Clear Filter** cạnh bên bỏ lọc ngay không cần
-  mở dialog (chỉ sáng khi đang có lọc).
+  dialog sẽ hiện đúng điều kiện đang áp dụng; ✕ trên thẻ *Lọc* bỏ lọc ngay không cần mở dialog. Chuột phải 1 ô →
+  *Lọc: cột = "giá trị"* / *Lọc bỏ: cột ≠ "giá trị"* thêm 1 điều kiện `Equal` / `NotEqual` vào lọc đang có (nối `AND`; lọc
+  đang có là `OR` nhiều điều kiện thì thay hẳn và báo ở thanh trạng thái).
 - **Sort**: nhiều cột theo thứ tự ưu tiên (kéo Lên/Xuống để đổi thứ tự), so sánh theo số nếu cả 2 ô
   parse được số (dấu chấm thập phân "2.5", hoặc dấu thập phân của máy "2,5"; không đoán dấu phân nhóm
-  "1,000" - xem `Services/CsvNumber`), ngược lại so chuỗi. Filter/Statistics đọc số cùng quy tắc. Mở lại dialog sẽ hiện đúng sort đang áp dụng; nút **Clear
-  Sort** cạnh bên bỏ sắp xếp ngay không cần mở dialog (chỉ sáng khi đang có sort).
+  "1,000" - xem `Services/CsvNumber`), ngược lại so chuỗi. Filter/Statistics đọc số cùng quy tắc. Mở lại dialog sẽ hiện đúng sort đang áp dụng; ✕ trên thẻ
+  *Sắp xếp* bỏ sắp xếp ngay. Chuột phải tiêu đề cột → sắp xếp tăng / giảm theo riêng cột đó.
 - **Statistics**: Row/Column Count, Duplicate Row, và theo từng cột: Empty/Unique/Min/Max/
   Average/Sum (Min/Max/Avg/Sum chỉ tính nếu cột có giá trị số).
-- **Context menu** (chuột phải trên bảng): Copy, Paste, Delete, Insert Row, Duplicate Row. Copy / Paste dùng dạng Tab
-  như Excel (ô có tab / xuống dòng / ngoặc kép được bọc `"…"`), nên dán qua lại với Excel vẫn đúng từng ô.
+- **Menu chuột phải** (`Grid_ContextRequested` chọn menu theo chỗ bấm - hit-test `DataGridColumnHeader` / `DataGridCell`):
+  - trên ô: *Sao chép*, *Dán*, *Lọc theo / Lọc bỏ giá trị này* (chữ trên mục ghi luôn cột + giá trị), *Chèn dòng bên dưới*,
+    *Nhân bản dòng*, *Xoá dòng đang chọn*. Ô bấm được chọn (nếu nằm ngoài vùng đang chọn) để Dán / Xoá làm đúng chỗ.
+    Shift+F10 / phím Menu → menu ô cho ô đang chọn.
+  - trên tiêu đề cột: *Sắp xếp tăng dần / giảm dần*, *Bỏ ô lọc của cột này*, *Đổi tên cột...*, *Chèn cột bên phải...*, *Xoá cột*.
+
+  Sao chép / Dán dùng dạng Tab như Excel (ô có tab / xuống dòng / ngoặc kép được bọc `"…"`), nên dán qua lại với Excel vẫn
+  đúng từng ô.
 
 ## Dữ liệu lớn
 

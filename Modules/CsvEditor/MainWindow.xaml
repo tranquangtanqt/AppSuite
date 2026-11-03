@@ -10,143 +10,229 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="Module F - CSV/TSV Editor">
+    Title="CsvEditor">
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
     <!-- Kéo-thả file CSV/TSV vào bất kỳ chỗ nào trong cửa sổ để mở (Background Transparent để cả vùng trống nhận thả). -->
-    <Grid Padding="12" RowSpacing="8" Background="Transparent" AllowDrop="True" DragOver="Root_DragOver" Drop="Root_Drop">
+    <Grid x:Name="RootGrid" Padding="12" RowSpacing="8" Background="Transparent" AllowDrop="True" DragOver="Root_DragOver" Drop="Root_Drop">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Toolbar -->
-        <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,16">
-            <StackPanel Orientation="Horizontal" Spacing="6">
-                <Button x:Name="OpenButton" Click="OpenButton_Click" ToolTipService.ToolTip="Mở file CSV/TSV (Ctrl+O) - hoặc kéo-thả file vào cửa sổ">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Open" /></StackPanel>
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="O" Modifiers="Control" />
-                    </Button.KeyboardAccelerators>
-                </Button>
-                <!-- Menu dựng lại mỗi lần mở (RecentMenu_Opening) từ Data\Config\recent-files.json. -->
-                <DropDownButton x:Name="RecentButton" ToolTipService.ToolTip="File gần đây">
-                    <FontIcon Glyph="&#xE81C;" FontSize="14" />
-                    <DropDownButton.Flyout>
-                        <MenuFlyout x:Name="RecentMenu" Placement="BottomEdgeAlignedLeft" Opening="RecentMenu_Opening" />
-                    </DropDownButton.Flyout>
-                </DropDownButton>
-                <!-- Người dùng tự chọn file có dòng tiêu đề hay không (không tự đoán). Đổi khi đang mở file → mở lại file đó. -->
-                <CheckBox x:Name="HasHeaderBox" Content="Dòng đầu là tiêu đề" IsChecked="True" MinWidth="0" VerticalAlignment="Center"
-                          Click="HasHeaderBox_Click"
-                          ToolTipService.ToolTip="Bỏ tick nếu file không có dòng tên cột: mọi dòng là dữ liệu, cột tự đặt tên Cột 1, Cột 2… (chỉ để hiển thị, lưu file không ghi dòng tên cột)" />
-                <Button x:Name="SaveButton" Click="SaveButton_Click" IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" ToolTipService.ToolTip="Lưu (Ctrl+S)">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Save" /></StackPanel>
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="S" Modifiers="Control" />
-                    </Button.KeyboardAccelerators>
-                </Button>
-                <Button x:Name="SaveAsButton" Click="SaveAsButton_Click" ToolTipService.ToolTip="Lưu thành file khác">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE792;" FontSize="14" /><TextBlock Text="Save As" /></StackPanel>
-                </Button>
-                <Button x:Name="ExportXlsxButton" Click="ExportXlsxButton_Click"
-                        ToolTipService.ToolTip="Xuất các dòng đang hiện (theo lọc / sắp xếp) ra file Excel .xlsx - file CSV đang mở không đổi">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xEDE1;" FontSize="14" /><TextBlock Text="Export .xlsx" /></StackPanel>
-                </Button>
+        <Grid.Resources>
+            <!-- Thẻ "đang lọc / đang sắp xếp": bấm phần chữ = mở lại hộp thoại, bấm ✕ = bỏ. -->
+            <Style x:Key="ChipBorderStyle" TargetType="Border">
+                <Setter Property="CornerRadius" Value="14" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="BorderBrush" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+                <Setter Property="Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
+            </Style>
+            <Style x:Key="ChipBodyButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="14,0,0,14" />
+                <Setter Property="Padding" Value="10,4,4,4" />
+            </Style>
+            <Style x:Key="ChipCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="CornerRadius" Value="0,14,14,0" />
+                <Setter Property="Padding" Value="6,4,10,4" />
+                <Setter Property="VerticalAlignment" Value="Stretch" />
+            </Style>
 
-                <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <!-- Menu chuột phải trên ô (Grid_ContextRequested chọn menu theo chỗ bấm: ô hay tiêu đề cột). -->
+            <MenuFlyout x:Key="CellMenu">
+                <MenuFlyoutItem Text="Sao chép" Click="CopyMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Dán" Click="PasteMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77F;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Tag="FilterByValue" Text="Lọc theo giá trị này" Click="FilterByValueItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71C;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Tag="ExcludeValue" Text="Lọc bỏ giá trị này" Click="ExcludeValueItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE711;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Chèn dòng bên dưới" Click="InsertRowMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Nhân bản dòng" Click="DuplicateRowMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Xoá dòng đang chọn" Click="DeleteRowsMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+            </MenuFlyout>
 
-                <Button Command="{x:Bind ViewModel.UndoCommand}" ToolTipService.ToolTip="{x:Bind ViewModel.UndoDescription, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE7A7;" FontSize="14" /><TextBlock Text="Undo" /></StackPanel>
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="Z" Modifiers="Control" />
-                    </Button.KeyboardAccelerators>
-                </Button>
-                <Button Command="{x:Bind ViewModel.RedoCommand}" ToolTipService.ToolTip="{x:Bind ViewModel.RedoDescription, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE7A6;" FontSize="14" /><TextBlock Text="Redo" /></StackPanel>
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="Y" Modifiers="Control" />
-                        <KeyboardAccelerator Key="Z" Modifiers="Control,Shift" />
-                    </Button.KeyboardAccelerators>
-                </Button>
+            <!-- Menu chuột phải trên tiêu đề cột. -->
+            <MenuFlyout x:Key="HeaderMenu">
+                <MenuFlyoutItem Text="Sắp xếp tăng dần (A → Z, 1 → 9)" Click="SortAscendingItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Sắp xếp giảm dần (Z → A, 9 → 1)" Click="SortDescendingItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Tag="ClearColumnFilter" Text="Bỏ ô lọc của cột này" Click="ClearColumnFilterItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE711;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutSeparator />
+                <MenuFlyoutItem Text="Đổi tên cột..." Click="HeaderRenameItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Chèn cột bên phải..." Click="InsertColumnRightItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Xoá cột" Click="HeaderDeleteItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+            </MenuFlyout>
+        </Grid.Resources>
 
-                <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <!-- Thanh công cụ: thao tác hay dùng để ngoài, việc ít dùng gom vào Dòng ▾ / Cột ▾ / Xuất ▾. Nút có phím tắt phải
+             nằm ngoài menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đang mở). -->
+        <Grid Grid.Row="0" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Padding="0,0,0,16">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button x:Name="OpenButton" Click="OpenButton_Click" ToolTipService.ToolTip="Mở file CSV / TSV (Ctrl+O) - hoặc kéo-thả file vào cửa sổ">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Mở" /></StackPanel>
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="O" Modifiers="Control" />
+                        </Button.KeyboardAccelerators>
+                    </Button>
+                    <!-- Menu dựng lại mỗi lần mở (RecentMenu_Opening) từ Data\Config\recent-files.json. -->
+                    <DropDownButton x:Name="RecentButton" ToolTipService.ToolTip="File gần đây" AutomationProperties.Name="File gần đây">
+                        <FontIcon Glyph="&#xE81C;" FontSize="14" />
+                        <DropDownButton.Flyout>
+                            <MenuFlyout x:Name="RecentMenu" Placement="BottomEdgeAlignedLeft" Opening="RecentMenu_Opening" />
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                    <Button x:Name="SaveButton" Click="SaveButton_Click" IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" ToolTipService.ToolTip="Lưu (Ctrl+S)">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Lưu" /></StackPanel>
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="S" Modifiers="Control" />
+                        </Button.KeyboardAccelerators>
+                    </Button>
+                    <DropDownButton x:Name="ExportButton" ToolTipService.ToolTip="Lưu thành file khác / xuất Excel">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xEDE1;" FontSize="14" /><TextBlock Text="Xuất" /></StackPanel>
+                        <DropDownButton.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuFlyoutItem x:Name="SaveAsButton" Text="Lưu thành file khác..." Click="SaveAsButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE792;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="ExportXlsxButton" Text="Xuất Excel (.xlsx)..." Click="ExportXlsxButton_Click"
+                                                ToolTipService.ToolTip="Xuất các dòng đang hiện (theo lọc / sắp xếp) ra file Excel .xlsx - file CSV đang mở không đổi"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xEDE1;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
 
-                <Button Click="AddRowButton_Click" ToolTipService.ToolTip="Thêm dòng">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE710;" FontSize="14" /><TextBlock Text="Add Row" /></StackPanel>
-                </Button>
-                <Button Click="DeleteRowButton_Click" ToolTipService.ToolTip="Xóa dòng đang chọn">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE738;" FontSize="14" /><TextBlock Text="Delete Row" /></StackPanel>
-                </Button>
-                <Button Click="DuplicateRowButton_Click" ToolTipService.ToolTip="Sao chép dòng đang chọn">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8C8;" FontSize="14" /><TextBlock Text="Copy Row" /></StackPanel>
-                </Button>
-                <Button Click="AddColumnButton_Click" ToolTipService.ToolTip="Thêm cột">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE711;" FontSize="14" /><TextBlock Text="Add Column" /></StackPanel>
-                </Button>
-                <Button Click="DeleteColumnButton_Click" ToolTipService.ToolTip="Xóa cột đang chọn">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE738;" FontSize="14" /><TextBlock Text="Delete Column" /></StackPanel>
-                </Button>
-                <Button Click="RenameColumnButton_Click" ToolTipService.ToolTip="Đổi tên cột đang chọn">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE70F;" FontSize="14" /><TextBlock Text="Rename Column" /></StackPanel>
-                </Button>
+                    <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+                    <Button Command="{x:Bind ViewModel.UndoCommand}" ToolTipService.ToolTip="{x:Bind UndoToolTip(ViewModel.UndoDescription), Mode=OneWay}" AutomationProperties.Name="Hoàn tác">
+                        <FontIcon Glyph="&#xE7A7;" FontSize="14" />
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="Z" Modifiers="Control" />
+                        </Button.KeyboardAccelerators>
+                    </Button>
+                    <Button Command="{x:Bind ViewModel.RedoCommand}" ToolTipService.ToolTip="{x:Bind RedoToolTip(ViewModel.RedoDescription), Mode=OneWay}" AutomationProperties.Name="Làm lại">
+                        <FontIcon Glyph="&#xE7A6;" FontSize="14" />
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="Y" Modifiers="Control" />
+                            <KeyboardAccelerator Key="Z" Modifiers="Control,Shift" />
+                        </Button.KeyboardAccelerators>
+                    </Button>
 
-                <Button Click="FindButton_Click" ToolTipService.ToolTip="Tìm kiếm (Ctrl+F)">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE721;" FontSize="14" /><TextBlock Text="Find" /></StackPanel>
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="F" Modifiers="Control" />
-                    </Button.KeyboardAccelerators>
-                </Button>
-                <Button Click="ReplaceButton_Click" ToolTipService.ToolTip="Tìm và thay thế (Ctrl+H)">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8AC;" FontSize="14" /><TextBlock Text="Replace" /></StackPanel>
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="H" Modifiers="Control" />
-                    </Button.KeyboardAccelerators>
-                </Button>
-                <Button x:Name="GoToButton" Click="GoToButton_Click" ToolTipService.ToolTip="Đi tới dòng (Ctrl+G)">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE72A;" FontSize="14" /><TextBlock Text="Go To" /></StackPanel>
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="G" Modifiers="Control" />
-                    </Button.KeyboardAccelerators>
-                </Button>
-                <Button Click="FilterButton_Click" ToolTipService.ToolTip="Lọc dữ liệu">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><TextBlock Text="Filter" /></StackPanel>
-                </Button>
-                <Button Click="ClearActiveFilterButton_Click" IsEnabled="{x:Bind ViewModel.IsFilterActive, Mode=OneWay}"
-                        ToolTipService.ToolTip="Bỏ lọc đang áp dụng">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><FontIcon Glyph="&#xE10A;" FontSize="10" /><TextBlock Text="Clear Filter" /></StackPanel>
-                </Button>
-                <Button Click="SortButton_Click" ToolTipService.ToolTip="Sắp xếp">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8CB;" FontSize="14" /><TextBlock Text="Sort" /></StackPanel>
-                </Button>
-                <Button Click="ClearActiveSortButton_Click" IsEnabled="{x:Bind ViewModel.IsSortActive, Mode=OneWay}"
-                        ToolTipService.ToolTip="Bỏ sắp xếp đang áp dụng">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8CB;" FontSize="14" /><FontIcon Glyph="&#xE10A;" FontSize="10" /><TextBlock Text="Clear Sort" /></StackPanel>
-                </Button>
-                <Button Click="StatisticsButton_Click" ToolTipService.ToolTip="Thống kê">
-                    <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE9D9;" FontSize="14" /><TextBlock Text="Statistics" /></StackPanel>
-                </Button>
+                    <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+                    <DropDownButton x:Name="RowMenuButton" ToolTipService.ToolTip="Thêm / nhân bản / xoá dòng">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8FD;" FontSize="14" /><TextBlock Text="Dòng" /></StackPanel>
+                        <DropDownButton.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuFlyoutItem Text="Thêm dòng" Click="AddRowButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Nhân bản dòng đang chọn" Click="DuplicateRowButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Xoá dòng đang chọn" Click="DeleteRowButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                    <DropDownButton x:Name="ColumnMenuButton" ToolTipService.ToolTip="Thêm / đổi tên / xoá cột (cột của ô đang chọn) - chuột phải tiêu đề cột cũng có">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8A9;" FontSize="14" /><TextBlock Text="Cột" /></StackPanel>
+                        <DropDownButton.Flyout>
+                            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                <MenuFlyoutItem Text="Thêm cột..." Click="AddColumnButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Đổi tên cột đang chọn..." Click="RenameColumnButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Xoá cột đang chọn" Click="DeleteColumnButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                            </MenuFlyout>
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
 
-                <Button x:Name="HelpButton" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)" AutomationProperties.Name="Hướng dẫn">
-                    <FontIcon Glyph="&#xE897;" FontSize="14" />
-                    <Button.KeyboardAccelerators>
-                        <KeyboardAccelerator Key="F1" />
-                    </Button.KeyboardAccelerators>
-                </Button>
-            </StackPanel>
-        </ScrollViewer>
+                    <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                    <Button Click="FindButton_Click" ToolTipService.ToolTip="Tìm (Ctrl+F) / thay thế (Ctrl+H)">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE721;" FontSize="14" /><TextBlock Text="Tìm" /></StackPanel>
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="F" Modifiers="Control" />
+                            <KeyboardAccelerator Key="H" Modifiers="Control" />
+                        </Button.KeyboardAccelerators>
+                    </Button>
+                    <Button x:Name="GoToButton" Click="GoToButton_Click" ToolTipService.ToolTip="Đi tới dòng (Ctrl+G)" AutomationProperties.Name="Đi tới dòng">
+                        <FontIcon Glyph="&#xE72A;" FontSize="14" />
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="G" Modifiers="Control" />
+                        </Button.KeyboardAccelerators>
+                    </Button>
+                    <Button Click="FilterButton_Click" ToolTipService.ToolTip="Lọc nâng cao (nhiều điều kiện, và / hoặc)">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><TextBlock Text="Lọc" /></StackPanel>
+                    </Button>
+                    <Button Click="SortButton_Click" ToolTipService.ToolTip="Sắp xếp theo nhiều cột">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8CB;" FontSize="14" /><TextBlock Text="Sắp xếp" /></StackPanel>
+                    </Button>
+                    <Button Click="StatisticsButton_Click" ToolTipService.ToolTip="Thống kê từng cột (đếm, trống, tổng, nhỏ nhất / lớn nhất...)" AutomationProperties.Name="Thống kê">
+                        <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Button x:Name="HelpButton" Grid.Column="1" VerticalAlignment="Top" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)" AutomationProperties.Name="Hướng dẫn">
+                <FontIcon Glyph="&#xE897;" FontSize="14" />
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F1" />
+                </Button.KeyboardAccelerators>
+            </Button>
+        </Grid>
+
+        <!-- Thẻ lọc / sắp xếp đang áp dụng (RefreshChips) - thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc bảng. -->
+        <StackPanel x:Name="ChipsBar" Grid.Row="1" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+            <TextBlock x:Name="ShownRowsText" VerticalAlignment="Center" Opacity="0.8" />
+            <Border x:Name="FilterChip" Style="{StaticResource ChipBorderStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="FilterButton_Click" ToolTipService.ToolTip="Sửa điều kiện lọc">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE71C;" FontSize="12" />
+                            <TextBlock x:Name="FilterChipText" MaxWidth="420" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource ChipCloseButtonStyle}" Click="ClearActiveFilterButton_Click"
+                            ToolTipService.ToolTip="Bỏ lọc" AutomationProperties.Name="Bỏ lọc">
+                        <FontIcon Glyph="&#xE10A;" FontSize="10" />
+                    </Button>
+                </StackPanel>
+            </Border>
+            <Border x:Name="QuickFilterChip" Style="{StaticResource ChipBorderStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Orientation="Horizontal" Spacing="6" Padding="10,4,4,4">
+                        <FontIcon Glyph="&#xE71C;" FontSize="12" />
+                        <TextBlock x:Name="QuickFilterChipText" MaxWidth="420" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Button Style="{StaticResource ChipCloseButtonStyle}" Click="ClearAllFiltersButton_Click"
+                            ToolTipService.ToolTip="Xoá mọi ô lọc ở tiêu đề cột" AutomationProperties.Name="Xoá ô lọc">
+                        <FontIcon Glyph="&#xE10A;" FontSize="10" />
+                    </Button>
+                </StackPanel>
+            </Border>
+            <Border x:Name="SortChip" Style="{StaticResource ChipBorderStyle}">
+                <StackPanel Orientation="Horizontal">
+                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="SortButton_Click" ToolTipService.ToolTip="Sửa cách sắp xếp">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8CB;" FontSize="12" />
+                            <TextBlock x:Name="SortChipText" MaxWidth="420" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource ChipCloseButtonStyle}" Click="ClearActiveSortButton_Click"
+                            ToolTipService.ToolTip="Bỏ sắp xếp (về thứ tự trong file)" AutomationProperties.Name="Bỏ sắp xếp">
+                        <FontIcon Glyph="&#xE10A;" FontSize="10" />
+                    </Button>
+                </StackPanel>
+            </Border>
+        </StackPanel>
 
         <!-- Validation issues -->
-        <Expander Grid.Row="1" Header="{x:Bind IssuesHeaderText(ViewModel.Issues.Count), Mode=OneWay}" IsExpanded="False"
+        <Expander Grid.Row="2" Header="{x:Bind IssuesHeaderText(ViewModel.Issues.Count), Mode=OneWay}" IsExpanded="False"
                   Visibility="{x:Bind VisibleIfAny(ViewModel.Issues.Count), Mode=OneWay}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
             <ListView x:Name="IssuesListView" ItemsSource="{x:Bind ViewModel.Issues}" MaxHeight="160" DoubleTapped="IssuesListView_DoubleTapped">
                 <ListView.ItemTemplate>
@@ -170,7 +256,7 @@
              here (compile-time XAML) because DataTemplate has no public code-only constructor. -->
         <controls:DataGrid
             x:Name="Grid"
-            Grid.Row="2"
+            Grid.Row="3"
             ItemsSource="{x:Bind ViewModel.ViewRows, Mode=OneWay}"
             AutoGenerateColumns="False"
             HeadersVisibility="All"
@@ -182,7 +268,8 @@
             CellEditEnding="Grid_CellEditEnding"
             Loaded="Grid_Loaded"
             CurrentCellChanged="Grid_CurrentCellChanged"
-            SelectionChanged="Grid_SelectionChanged">
+            SelectionChanged="Grid_SelectionChanged"
+            ContextRequested="Grid_ContextRequested">
             <controls:DataGrid.Resources>
                 <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
                 <DataTemplate x:Key="FilterHeaderTemplate">
@@ -195,11 +282,11 @@
                              right edge rather than sizing the Grid itself, since the Grid has nothing
                              else dictating its width beyond the TextBox's own explicit Width. -->
                         <Grid HorizontalAlignment="Left">
-                            <TextBox Text="{Binding FilterText, Mode=TwoWay}" PlaceholderText="Filter"
+                            <TextBox Text="{Binding FilterText, Mode=TwoWay}" PlaceholderText="Lọc..."
                                      HorizontalAlignment="Left" Loaded="FilterTextBox_Loaded" />
                             <Button Padding="4" Margin="0,0,4,0" Background="Transparent" BorderThickness="0"
                                     HorizontalAlignment="Right" VerticalAlignment="Center"
-                                    Click="ClearFilterButton_Click" ToolTipService.ToolTip="Xóa filter"
+                                    Click="ClearFilterButton_Click" ToolTipService.ToolTip="Xoá ô lọc"
                                     Visibility="{Binding FilterText, Converter={StaticResource EmptyStringToVisibilityConverter}}">
                                 <FontIcon Glyph="&#xE10A;" FontSize="10" />
                             </Button>
@@ -212,25 +299,15 @@
                     <Setter Property="Padding" Value="8,8" />
                 </Style>
             </controls:DataGrid.Resources>
-            <controls:DataGrid.ContextFlyout>
-                <MenuFlyout>
-                    <MenuFlyoutItem Text="Copy" Click="CopyMenuItem_Click" />
-                    <MenuFlyoutItem Text="Paste" Click="PasteMenuItem_Click" />
-                    <MenuFlyoutItem Text="Delete" Click="DeleteRowsMenuItem_Click" />
-                    <MenuFlyoutSeparator />
-                    <MenuFlyoutItem Text="Insert Row" Click="InsertRowMenuItem_Click" />
-                    <MenuFlyoutItem Text="Duplicate Row" Click="DuplicateRowMenuItem_Click" />
-                </MenuFlyout>
-            </controls:DataGrid.ContextFlyout>
         </controls:DataGrid>
 
         <!-- Excel-like "fill handle": a small square glued to the bottom-right corner of the current
              cell (see UpdateFillHandlePosition) - dragging it down copies the cell's value into the
              rows below, or (holding Ctrl) auto-increments a numeric value by 1 per row instead of
-             copying it verbatim. A transparent Canvas overlaid on the DataGrid, same trick as the
-             corner button below: it has no Background of its own, so pointer hit-testing falls
-             through to the grid everywhere except the handle/preview, which do have one. -->
-        <Canvas x:Name="FillHandleLayer" Grid.Row="2">
+             copying it verbatim. A transparent Canvas overlaid on the DataGrid: it has no Background
+             of its own, so pointer hit-testing falls through to the grid everywhere except the
+             handle/preview, which do have one. -->
+        <Canvas x:Name="FillHandleLayer" Grid.Row="3">
             <Border x:Name="FillPreviewBorder"
                     BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1.5"
                     Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.15"
@@ -252,23 +329,37 @@
             </Border>
         </Canvas>
 
-        <!-- Overlaid on the DataGrid's empty top-left corner cell (same Grid.Row, added after so it
-             draws on top) - the DataGrid has no public API for that corner's content (only an internal
-             template part), so this floats a real Button there instead rather than trying to inject
-             into the DataGrid itself. Width matches RowHeaderWidth="48" above. Top margin is a manual
-             estimate of where the filter TextBox row starts within the header (header Padding top=8 +
-             column-name TextBlock line + StackPanel Spacing=4), to line up with it vertically instead
-             of the column-name row above it - there's no exact height to read since the header's own
-             height is Auto or the built-in resize grip would be tracked instead. -->
-        <Button Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Top"
-                Width="48" Margin="0,32,0,0" Padding="0" Height="32"
-                Background="Transparent" BorderThickness="0"
-                Click="ClearAllFiltersButton_Click" ToolTipService.ToolTip="Xóa tất cả filter">
-            <FontIcon Glyph="&#xE10A;" FontSize="12" />
-        </Button>
+        <!-- Màn hình bắt đầu (chưa mở file nào - UpdateStartScreen): vùng kéo-thả, nút Mở file, file gần đây, bảng trống. -->
+        <ScrollViewer x:Name="StartScreen" Grid.Row="1" Grid.RowSpan="3" Visibility="Collapsed">
+            <Grid MaxWidth="600" Margin="0,24" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <Rectangle RadiusX="12" RadiusY="12" StrokeThickness="1.5" StrokeDashArray="5,3"
+                           Stroke="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                           Fill="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <StackPanel Padding="32,28" Spacing="12">
+                    <FontIcon Glyph="&#xE8E5;" FontSize="36" HorizontalAlignment="Center" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    <TextBlock Text="Kéo-thả file CSV / TSV / TXT vào đây" Style="{StaticResource SubtitleTextBlockStyle}"
+                               HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                        <Button x:Name="StartOpenButton" Style="{StaticResource AccentButtonStyle}" Click="OpenButton_Click">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Mở file...  (Ctrl+O)" /></StackPanel>
+                        </Button>
+                        <Button x:Name="NewTableButton" Click="NewTableButton_Click" ToolTipService.ToolTip="Bắt đầu bảng trống: đặt tên cột đầu tiên rồi nhập dữ liệu, Lưu để chọn chỗ lưu">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE710;" FontSize="14" /><TextBlock Text="Bảng trống" /></StackPanel>
+                        </Button>
+                    </StackPanel>
+                    <TextBlock Text="Tự nhận dấu phân cách (phẩy, chấm phẩy, Tab, |) và bảng mã (UTF-8, Shift-JIS...)."
+                               Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
+
+                    <StackPanel x:Name="StartRecentPanel" Spacing="2" Margin="0,8,0,0">
+                        <TextBlock Text="File gần đây" Style="{StaticResource BodyStrongTextBlockStyle}" Margin="0,0,0,4" />
+                        <StackPanel x:Name="StartRecentList" Spacing="2" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
 
         <!-- Status bar -->
-        <Grid Grid.Row="3" ColumnSpacing="16">
+        <Grid Grid.Row="4" ColumnSpacing="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -281,6 +372,11 @@
                            IsTapEnabled="True" Tapped="EncodingLabel_Tapped" ToolTipService.ToolTip="Bấm để đổi encoding/delimiter" />
                 <TextBlock Text="{x:Bind ViewModel.DelimiterLabel, Mode=OneWay}" Opacity="0.8"
                            IsTapEnabled="True" Tapped="EncodingLabel_Tapped" ToolTipService.ToolTip="Bấm để đổi encoding/delimiter" />
+                <!-- Cùng nhóm với encoding / dấu phân cách: cách đọc file. Người dùng tự chọn (không tự đoán); đổi khi đang mở
+                     file → mở lại file đó. -->
+                <CheckBox x:Name="HasHeaderBox" Content="Dòng đầu là tiêu đề" IsChecked="True" MinWidth="0" MinHeight="0" Padding="6,0,0,0"
+                          VerticalAlignment="Center" Click="HasHeaderBox_Click"
+                          ToolTipService.ToolTip="Bỏ tick nếu file không có dòng tên cột: mọi dòng là dữ liệu, cột tự đặt tên Cột 1, Cột 2… (chỉ để hiển thị, lưu file không ghi dòng tên cột)" />
                 <TextBlock Opacity="0.8"><Run Text="Dòng:" /><Run Text="{x:Bind ViewModel.RowCount, Mode=OneWay}" /></TextBlock>
                 <TextBlock Opacity="0.8"><Run Text="Cột:" /><Run Text="{x:Bind ViewModel.ColumnCount, Mode=OneWay}" /></TextBlock>
                 <TextBlock Text="{x:Bind SaveStateText(ViewModel.IsDirty), Mode=OneWay}" Opacity="0.8" />
