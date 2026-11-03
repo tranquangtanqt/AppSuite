@@ -55,6 +55,20 @@ public sealed class SaveTests : IDisposable
     }
 
     [Fact]
+    public async Task Keeps_shift_jis_bytes()
+    {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+        var sjis = Encoding.GetEncoding(932);
+        var path = _dir.Write("j.csv", "コード,名称\r\nA1,東京本社\r\n", sjis);
+        var original = File.ReadAllBytes(path);
+        var opened = await Csv.OpenAsync(path);
+
+        await Csv.FileService().SaveAsync(opened.Document, null, CancellationToken.None);
+
+        Assert.Equal(original, File.ReadAllBytes(path)); // tự nhận Shift-JIS → lưu lại đúng từng byte, không đổi sang UTF-8
+    }
+
+    [Fact]
     public async Task Keeps_utf8_without_bom()
     {
         var path = _dir.Write("n.csv", "A,B\n1,2\n", Csv.Utf8NoBom);

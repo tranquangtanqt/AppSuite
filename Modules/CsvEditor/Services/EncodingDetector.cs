@@ -5,7 +5,7 @@ namespace CsvEditor.Services;
 
 /// <summary>
 /// Sniffs a file's text encoding from its byte preamble (BOM), falling back to trying a strict UTF-8
-/// decode of the first block when no BOM is present. See PLAN.md for the exact heuristic.
+/// decode of the first block when no BOM is present, then a strict Shift-JIS decode. See PLAN.md for the exact heuristic.
 /// </summary>
 public sealed class EncodingDetector : IEncodingDetector
 {
@@ -45,19 +45,83 @@ public sealed class EncodingDetector : IEncodingDetector
                 "Không có BOM, đoán là UTF-16 dựa trên mẫu byte 0x00 xen kẽ - kiểm tra lại nếu văn bản hiển thị sai.");
         }
 
+        // Mẫu chỉ là 8 KB đầu: chữ nhiều byte bị cắt ở cuối mẫu không phải lỗi (trừ khi đã hết file).
+        var wholeFile = read < SampleBytes;
+        if (TryDecodeStrict(new UTF8Encoding(false), buffer, read, wholeFile, out _))
+        {
+            return new EncodingDetectionResult(new UTF8Encoding(false), DetectionConfidence.High, null);
+        }
+
+        // Không phải UTF-8: file từ hệ thống / Excel tiếng Nhật thường là Shift-JIS (CP932). Đọc được trọn vẹn theo
+        // Shift-JIS thì dùng luôn; trông như tiếng Nhật thật thì chắc chắn, không thì vẫn dùng nhưng nhắc kiểm tra.
+        var shiftJis = ShiftJis;
+        if (TryDecodeStrict(shiftJis, buffer, read, wholeFile, out var sjisText))
+        {
+            return LooksJapanese(sjisText)
+                ? new EncodingDetectionResult(shiftJis, DetectionConfidence.High, null)
+                : new EncodingDetectionResult(
+                    shiftJis,
+                    DetectionConfidence.Medium,
+                    "Không phải UTF-8, đoán là Shift-JIS (tiếng Nhật) - nếu chữ hiển thị sai, bấm nhãn bảng mã ở thanh trạng thái để chọn lại.");
+        }
+
+        return new EncodingDetectionResult(
+            new UTF8Encoding(false),
+            DetectionConfidence.Low,
+            "Không xác định được encoding (không phải UTF-8 / UTF-16 / Shift-JIS hợp lệ), dùng UTF-8 mặc định - chọn lại thủ công nếu văn bản hiển thị sai.");
+    }
+
+    /// <summary>Shift-JIS của Windows (CP932, có ký tự mở rộng NEC / IBM như ①, ㈱). .NET mặc định không có code page
+    /// cũ - đăng ký provider ở đây (gọi lại nhiều lần không sao) để cả project test, không qua App, cũng dùng được.</summary>
+    private static Encoding ShiftJis
+    {
+        get
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            return Encoding.GetEncoding(932);
+        }
+    }
+
+    /// <summary>Giải mã không thay thế byte lỗi. <paramref name="flush"/> = false: byte dở dang ở cuối mẫu (chữ bị cắt
+    /// giữa chừng) được bỏ qua thay vì tính là lỗi.</summary>
+    private static bool TryDecodeStrict(Encoding encoding, byte[] buffer, int length, bool flush, out string text)
+    {
+        var strict = (Encoding)encoding.Clone();
+        strict.DecoderFallback = DecoderFallback.ExceptionFallback;
+        var chars = new char[strict.GetMaxCharCount(length)];
         try
         {
-            new UTF8Encoding(false, throwOnInvalidBytes: true).GetString(buffer, 0, read);
-            return new EncodingDetectionResult(new UTF8Encoding(false), DetectionConfidence.High, null);
+            var count = strict.GetDecoder().GetChars(buffer, 0, length, chars, 0, flush);
+            text = new string(chars, 0, count);
+            return true;
         }
         catch (DecoderFallbackException)
         {
-            return new EncodingDetectionResult(
-                new UTF8Encoding(false),
-                DetectionConfidence.Low,
-                "Không xác định được encoding (không phải UTF-8/UTF-16 hợp lệ), dùng UTF-8 mặc định - chọn lại thủ công nếu văn bản hiển thị sai.");
+            text = string.Empty;
+            return false;
         }
     }
+
+    /// <summary>Có kana (cả kana nửa cỡ ｶﾅ hay gặp ở file hệ thống cũ) hoặc ít nhất 2 kanji / chữ toàn cỡ liền nhau (tên,
+    /// địa chỉ chỉ có kanji như 山田太郎). File Latin-1 / Windows-1252 đọc nhầm thành Shift-JIS (é, ü… ghép với chữ cái
+    /// kế tiếp thành 1 cặp hợp lệ) chỉ ra kanji lẻ loi giữa chữ Latin, không có kana.</summary>
+    private static bool LooksJapanese(string text)
+    {
+        for (var i = 0; i < text.Length; i++)
+        {
+            if (IsKana(text[i]) || (i > 0 && IsWideJapanese(text[i]) && IsWideJapanese(text[i - 1])))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsKana(char c) => c is (>= 'ぁ' and <= 'ヿ') or (>= 'ｦ' and <= 'ﾟ');
+
+    private static bool IsWideJapanese(char c) =>
+        c is (>= '　' and <= 'ヿ') or (>= '一' and <= '鿿') or (>= '！' and <= '｠');
 
     private static bool LooksLikeUtf16NoBom(byte[] buffer, int length)
     {

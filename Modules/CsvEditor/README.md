@@ -45,7 +45,9 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
   `Views/HelpContent.cs` (cửa sổ dùng chung `SharedUI.Help.HelpWindow`) — thêm / đổi tính năng thì cập nhật cả ở đó.
 
 - **Mở** (`Ctrl+O`): chọn `.csv`/`.tsv`/`.txt`, tự nhận diện delimiter (`,` `Tab` `;` `|`) và encoding
-  (UTF-8, UTF-8 BOM, UTF-16 LE/BE). Nếu nhận diện sai, bấm vào nhãn "Encoding"/"Delimiter" ở thanh
+  (UTF-8, UTF-8 BOM, UTF-16 LE/BE, **Shift-JIS** - file không phải UTF-8 hợp lệ mà đọc trọn vẹn được theo Shift-JIS /
+  CP932; có kana hoặc 2 kanji liền nhau thì không cảnh báo, không thì kèm 1 cảnh báo "đoán là Shift-JIS"; lưu lại giữ
+  nguyên Shift-JIS). Nếu nhận diện sai, bấm vào nhãn "Encoding"/"Delimiter" ở thanh
   trạng thái để mở lại file với lựa chọn thủ công. Mở lỗi (file bị khoá, không có quyền…) hiện hộp thoại báo lỗi.
 - **Kéo-thả**: thả file `.csv`/`.tsv`/`.txt` vào bất kỳ chỗ nào trong cửa sổ để mở (thả nhiều file → mở file đầu
   tiên). Còn thay đổi chưa lưu thì hỏi như Open.
@@ -131,7 +133,7 @@ chỉ bọc ngoặc kép khi cần, giữ delimiter/encoding/BOM, Save As), **Se
 hoa thường), **Sort** (số / chữ, nhiều cột, không đổi dữ liệu gốc), **Filter** (mọi toán tử, NOT,
 AND/OR), **Statistics**, **Undo/Redo** (mọi thao tác sửa, dán / thay thế = 1 bước, trạng thái "chưa lưu"). Thêm sau:
 dòng tiêu đề / dòng dài, **Export .xlsx** (đọc lại bằng Open XML SDK + kiểm schema), clipboard dạng Tab, file gần đây —
-tổng 120 test (2026-10-02).
+tổng 120 test (2026-10-02); tự nhận Shift-JIS + mẫu 8 KB cắt giữa chữ - 125 test (2026-11-03).
 
 ```powershell
 dotnet test Tests\CsvEditor.Tests          # hoặc: dotnet run --project Tests\CsvEditor.Tests

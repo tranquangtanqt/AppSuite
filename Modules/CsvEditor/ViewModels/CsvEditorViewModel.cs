@@ -598,6 +598,11 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             return "UTF-16 BE";
         }
 
+        if (encoding.CodePage == 932)
+        {
+            return "Shift-JIS";
+        }
+
         return encoding.EncodingName;
     }
 

@@ -1085,6 +1085,14 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   bỏ cột mũi tên + giãn ContentPresenter, ô lọc `Stretch`; bỏ luôn phần nới cột +16 px vừa thêm (nguyên nhân "Thành tiề" là
   32 px này). Unit test 120/120; GUI Sandbox: khoảng hở ô lọc → cột kế 74 → 26 px (= Padding + vạch), tên cột đủ chữ, gõ
   "5003" → Hiện 1 / 5 dòng + thẻ Ô lọc + nút ✕ trong ô hiện
+- [x] **Tự nhận Shift-JIS** (người dùng yêu cầu 2026-11-03 - trước phải bấm đổi bảng mã mỗi lần): file không BOM, không
+  phải UTF-8 hợp lệ mà đọc trọn vẹn theo Shift-JIS (CP932, có ký tự mở rộng ①, ㈱) → mở bằng Shift-JIS, nhãn "Shift-JIS",
+  lưu lại đúng từng byte. Có kana (cả kana nửa cỡ ｶﾅ) hoặc 2 kanji liền nhau → không cảnh báo; không thì vẫn dùng kèm cảnh
+  báo "đoán là Shift-JIS" (file Latin-1 có é… đôi khi cũng ghép thành cặp Shift-JIS hợp lệ). Kèm sửa: mẫu 8 KB đầu cắt giữa
+  1 chữ nhiều byte không còn bị coi là "không phải UTF-8" (file UTF-8 tiếng Nhật / Việt > 8 KB có thể bị báo nhầm, và với
+  bước Shift-JIS mới thì có thể bị đọc nhầm). Màn hình bắt đầu: trước đó ghi nhầm "tự nhận Shift-JIS" khi chưa làm - giờ đúng.
+  Cập nhật F1, README, PLAN. Unit test 125/125 (+5: Shift-JIS có / không kana, lưu giữ byte, mẫu cắt giữa chữ, Latin-1);
+  GUI Sandbox 8/8 (nhãn Shift-JIS, tiêu đề / ô tiếng Nhật, ㈱, kana nửa cỡ, không cảnh báo)
 - [ ] Người dùng thử tay giao diện mới CsvEditor trên máy thật (kéo-thả vào màn hình bắt đầu, Bảng trống, Shift+F10)
 - [ ] **[Đề xuất · Có thể]** Thiết kế lại giao diện - đợt 2 (mục 5–7 còn lại): (5) sọc dòng, số canh phải, cố định cột đầu,
   ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn; (7) lỗi dữ liệu

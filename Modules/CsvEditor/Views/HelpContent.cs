@@ -21,7 +21,7 @@ internal static class HelpContent
 
         new("Mở & lưu file", "", "Mở CSV / TSV / TXT, file không có dòng tiêu đề, file lớn; lưu và xuất Excel.",
         [
-            new("Mở", "Chọn file .csv / .tsv / .txt. Tự nhận diện delimiter (dấu phẩy, Tab, chấm phẩy, gạch đứng) và encoding (UTF-8, UTF-8 BOM, UTF-16).", "Ctrl+O"),
+            new("Mở", "Chọn file .csv / .tsv / .txt. Tự nhận diện delimiter (dấu phẩy, Tab, chấm phẩy, gạch đứng) và encoding (UTF-8, UTF-8 BOM, UTF-16, Shift-JIS của file tiếng Nhật - không cần chọn tay).", "Ctrl+O"),
             new("Màn hình bắt đầu", "Hiện khi chưa mở file: vùng kéo-thả, nút Mở file..., nút Bảng trống (đặt tên cột đầu tiên rồi nhập dữ liệu, Lưu để chọn chỗ lưu) và danh sách file gần đây (bấm 1 dòng để mở)."),
             new("Kéo-thả file", "Thả file .csv / .tsv / .txt vào bất kỳ chỗ nào trong cửa sổ để mở. Thả nhiều file thì mở file đầu tiên."),
             new("File gần đây", "Nút 🕘 cạnh Mở (và danh sách ở màn hình bắt đầu): 10 file mở / lưu thành file khác gần nhất, mới nhất trước; di chuột lên để xem đường dẫn đầy đủ. File đã bị xoá / chuyển chỗ thì báo và tự bỏ khỏi danh sách. Xoá danh sách ở cuối menu 🕘."),

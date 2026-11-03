@@ -94,8 +94,11 @@ không raise `PropertyChanged` per-row - chỉ raise `StructureChanged` 1 lần)
 
 ### 4. Encoding/Delimiter detection
 
-- Encoding: đọc preamble 4 byte (BOM UTF-8/UTF-16 LE/BE); không BOM thì thử decode UTF-8 nghiêm ngặt
-  8KB đầu, lỗi thì kiểm tra mẫu byte `0x00` xen kẽ (nghi UTF-16 no-BOM) trước khi fallback UTF-8.
+- Encoding: đọc preamble 4 byte (BOM UTF-8/UTF-16 LE/BE); không BOM thì kiểm tra mẫu byte `0x00` xen kẽ (nghi
+  UTF-16 no-BOM), rồi decode UTF-8 nghiêm ngặt 8KB đầu, lỗi thì decode Shift-JIS (CP932) nghiêm ngặt (2026-11-03) -
+  có kana hoặc 2 kanji liền nhau → chắc chắn, không thì vẫn dùng kèm cảnh báo; cả 2 lỗi → fallback UTF-8 kèm cảnh
+  báo. Chữ nhiều byte bị cắt ở cuối mẫu 8KB không tính là lỗi (trước đây file UTF-8 tiếng Nhật / Việt > 8KB có thể
+  bị báo "không phải UTF-8" nếu điểm cắt rơi giữa 1 chữ).
 - Delimiter: tokenize (quote-aware) 20 dòng đầu cho 4 ứng viên `, \t ; |`, chọn theo
   `score = (Mode(count) - 1) * (1 - variance)`; file `.tsv` ưu tiên thử Tab trước.
 - Cả 2 đều có thể bị người dùng ghi đè qua `EncodingPickerDialog` (bấm vào nhãn Encoding/Delimiter ở

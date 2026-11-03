@@ -344,7 +344,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE710;" FontSize="14" /><TextBlock Text="Bảng trống" /></StackPanel>
                         </Button>
                     </StackPanel>
-                    <TextBlock Text="Tự nhận dấu phân cách (phẩy, chấm phẩy, Tab, |) và bảng mã (UTF-8, UTF-16). Nhận sai thì bấm nhãn bảng mã ở thanh dưới cùng để chọn lại."
+                    <TextBlock Text="Tự nhận dấu phân cách (phẩy, chấm phẩy, Tab, |) và bảng mã (UTF-8, UTF-16, Shift-JIS). Nhận sai thì bấm nhãn bảng mã ở thanh dưới cùng để chọn lại."
                                Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
 
                     <StackPanel x:Name="StartRecentPanel" Spacing="2" Margin="0,8,0,0">
