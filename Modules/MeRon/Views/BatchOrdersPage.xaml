@@ -27,12 +27,28 @@
             <TextBlock Text="Nhập đơn hàng loạt" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
             <local:DateBox Grid.Column="1" Date="{x:Bind ViewModel.Day, Mode=TwoWay}" AllowEmpty="False" Width="150" Margin="16,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center" AutomationProperties.Name="Ngày giao" PlaceholderText="Ngày giao" />
-            <Button Grid.Column="2" Click="CopyPrompt_Click" ToolTipService.ToolTip="Chép câu lệnh mẫu: dán vào Claude (claude.ai / app điện thoại) cùng ảnh trang sổ, Claude chép lại đúng mẫu trang này đọc được">
+            <!-- 1 nút tách (gọn cho cửa sổ hẹp): thân nút = mở Project Claude, ▾ = chép câu lệnh mẫu -->
+            <SplitButton Grid.Column="2" Click="OpenClaudeSplit_Click" AutomationProperties.Name="Mở Claude"
+                         ToolTipService.ToolTip="Mở Project &quot;MeRon – đọc sổ đơn&quot; trên claude.ai (trình duyệt): gửi ảnh trang sổ, Claude chép lại theo mẫu - copy kết quả dán vào ô chữ. ▾: chép câu lệnh mẫu (app điện thoại / chat khác)">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <FontIcon Glyph="&#xE8C8;" FontSize="14" />
-                    <TextBlock Text="Câu lệnh cho Claude" />
+                    <FontIcon Glyph="&#xE722;" FontSize="14" />
+                    <TextBlock Text="Mở Claude" />
                 </StackPanel>
-            </Button>
+                <SplitButton.Flyout>
+                    <MenuFlyout Placement="BottomEdgeAlignedRight">
+                        <MenuFlyoutItem Text="Mở Claude (gửi ảnh trang sổ)" Click="OpenClaude_Click">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE722;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem Text="Chép câu lệnh mẫu cho Claude" Click="CopyPrompt_Click">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE8C8;" />
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                    </MenuFlyout>
+                </SplitButton.Flyout>
+            </SplitButton>
             <Button Grid.Column="3" Click="Refresh_Click" ToolTipService.ToolTip="Đọc lại ô chữ + khách / món / chữ viết tắt mới nhất (F5)">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="Refresh" />

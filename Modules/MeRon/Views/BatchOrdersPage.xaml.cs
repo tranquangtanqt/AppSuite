@@ -186,4 +186,17 @@ public sealed partial class BatchOrdersPage : Page
         Clipboard.SetContent(package);
         ViewModel.Message = "Đã chép câu lệnh mẫu - mở Claude (claude.ai hoặc app điện thoại), dán câu lệnh (Ctrl+V), gửi kèm ảnh trang sổ, rồi chép kết quả dán vào ô chữ ở đây.";
     }
+
+    /// <summary>Project "MeRon – đọc sổ đơn" trên claude.ai - đã có sẵn hướng dẫn chép sổ theo mẫu, chỉ cần gửi ảnh.</summary>
+    private const string ClaudeProjectUrl = "https://claude.ai/project/01a1a082-e5ca-770f-921c-7a51f689414d";
+
+    private void OpenClaudeSplit_Click(SplitButton sender, SplitButtonClickEventArgs args) => OpenClaude_Click(sender, new RoutedEventArgs());
+
+    private async void OpenClaude_Click(object sender, RoutedEventArgs e)
+    {
+        var opened = await Windows.System.Launcher.LaunchUriAsync(new Uri(ClaudeProjectUrl));
+        ViewModel.Message = opened
+            ? "Đã mở Claude trên trình duyệt - gửi ảnh trang sổ (kéo thả hoặc Ctrl+V), rồi chép kết quả dán vào ô chữ ở đây và bấm Làm mới (F5)."
+            : "Không mở được trình duyệt - tự mở " + ClaudeProjectUrl;
+    }
 }

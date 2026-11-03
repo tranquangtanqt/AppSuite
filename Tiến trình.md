@@ -446,6 +446,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   khi có thay đổi mới. Câu cảnh báo dùng chung với trang Nhập (`UnsyncedEdits.Describe`). Cập nhật F1, README. Unit test
   183/183; GUI Sandbox 44/44 cả lô Nhập đơn hàng loạt (nhắc hiện, nút khi chưa đăng nhập → trang Xuất, ✕ → ẩn kể cả vào lại,
   thay đổi mới → hiện lại). Chưa thử tải lên Drive thật trong Sandbox (không có mạng / tài khoản Google)
+- [x] **Nhập đơn hàng loạt - nút Mở Claude ▾** (người dùng yêu cầu 2026-11-03): mở Project claude.ai "MeRon – đọc sổ đơn"
+  (đã có hướng dẫn chép sổ) trên trình duyệt - gửi ảnh trang sổ, dán kết quả vào ô chữ; gộp với Câu lệnh cho Claude thành 1 nút
+  tách (▾ → Chép câu lệnh mẫu) để ô Ngày giao không bị ép ở cửa sổ hẹp. Cập nhật F1, README (2026-11-03)
 - [ ] Người dùng xác nhận: "lá" là món gì (chữ viết tắt)
 - [ ] Nhập đơn hàng loạt từ Excel / CSV (đề xuất cũ 2026-11-02) - làm khi có file mẫu
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị
