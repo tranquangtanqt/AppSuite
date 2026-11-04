@@ -47,7 +47,8 @@ internal static class HelpContent
             new("Kéo điền (fill handle)", "Chọn 1 ô, kéo ô vuông nhỏ ở góc dưới-phải xuống các dòng dưới để chép giá trị. Giữ Ctrl khi thả chuột để tự tăng số (+1 mỗi dòng).", "Kéo", "Ctrl + kéo"),
             new("Chuột phải trên ô", "Sao chép, Dán, Lọc theo giá trị của ô (Lọc: cột = \"giá trị\"), Lọc bỏ giá trị đó (≠), Xem dọc dòng này, Chèn dòng bên dưới, Nhân bản dòng, Xoá dòng đang chọn. Ô bấm chuột phải được chọn luôn."),
             new("Chuột phải trên tiêu đề cột", "Sắp xếp tăng dần / giảm dần theo cột đó, Bỏ ô lọc của cột, Đổi tên cột, Chèn cột bên phải, Xoá cột."),
-            new("Sao chép / Dán với Excel", "Sao chép các dòng đang chọn dạng Tab - dán thẳng vào Excel đúng từng ô (ô có xuống dòng / tab được bọc ngoặc kép như Excel). Dán: dán khối ô copy từ Excel vào từ ô đang chọn."),
+            new("Chọn vùng ô", "Kéo chuột qua các ô, hoặc bấm 1 ô rồi Shift+bấm ô khác, hoặc Shift+mũi tên (Ctrl+Shift+mũi tên tới mép bảng). Thanh trạng thái hiện Đếm, Tổng, Trung bình của vùng (Tổng và TB chỉ tính ô là số). Esc hoặc bấm 1 ô để bỏ vùng. Lọc, sắp xếp cũng bỏ vùng. Kéo chuột chưa tự cuộn bảng: vùng dài thì dùng Shift+bấm.", "Shift+mũi tên"),
+            new("Sao chép / Dán vùng ô", "Ctrl+C chép vùng đang chọn, không có vùng thì chép 1 ô; chuột phải có thêm Sao chép cả dòng. Dạng Tab nên dán qua lại với Excel đúng từng ô (ô có xuống dòng vẫn giữ nguyên 1 ô). Ctrl+V dán từ góc trái trên, 1 bước Hoàn tác, bỏ qua cột đang ẩn và dòng đang bị lọc; phần vượt mép bảng bị bỏ và báo ở thanh trạng thái. Chép 1 ô rồi dán lên vùng thì điền cả vùng.", "Ctrl+C", "Ctrl+V"),
             new("Undo / Redo", "Hoàn tác từng bước: sửa ô, thêm / xoá dòng, cột, dán, kéo điền, Replace All (mỗi thao tác là 1 bước dù đổi nhiều ô). Lọc / sắp xếp không phải thao tác sửa nên không vào Undo.", "Ctrl+Z", "Ctrl+Y", "Ctrl+Shift+Z"),
         ]),
 

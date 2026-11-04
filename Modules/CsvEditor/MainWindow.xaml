@@ -66,8 +66,9 @@
 
             <!-- Menu chuột phải trên ô (Grid_ContextRequested chọn menu theo chỗ bấm: ô hay tiêu đề cột). -->
             <MenuFlyout x:Key="CellMenu">
-                <MenuFlyoutItem Text="Sao chép" Click="CopyMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
-                <MenuFlyoutItem Text="Dán" Click="PasteMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77F;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Sao chép" KeyboardAcceleratorTextOverride="Ctrl+C" Click="CopyMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Sao chép cả dòng" Click="CopyRowsMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Dán" KeyboardAcceleratorTextOverride="Ctrl+V" Click="PasteMenuItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77F;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem Tag="FilterByValue" Text="Lọc theo giá trị này" Click="FilterByValueItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71C;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Tag="ExcludeValue" Text="Lọc bỏ giá trị này" Click="ExcludeValueItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE711;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
@@ -336,6 +337,7 @@
             Loaded="Grid_Loaded"
             CurrentCellChanged="Grid_CurrentCellChanged"
             SelectionChanged="Grid_SelectionChanged"
+            PreviewKeyDown="Grid_PreviewKeyDown"
             ContextRequested="Grid_ContextRequested">
             <!-- Dòng gọn: mặc định ô, dòng, tiêu đề dòng đều có MinHeight ~32. Đặt thấp nhất 26 ở ô, không đặt RowHeight cố định:
                  ô có xuống dòng phải tự cao lên, cố định thì mất dòng đầu và cuối (còn
@@ -395,6 +397,11 @@
              of its own, so pointer hit-testing falls through to the grid everywhere except the
              handle/preview, which do have one. -->
         <Canvas x:Name="FillHandleLayer" Grid.Row="3">
+            <!-- Vùng ô đang chọn (MainWindow.Range.cs). -->
+            <Border x:Name="RangeOverlay" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="2"
+                    Visibility="Collapsed" IsHitTestVisible="False">
+                <Border Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.15" />
+            </Border>
             <Border x:Name="FillPreviewBorder"
                     BorderBrush="{ThemeResource AccentFillColorDefaultBrush}" BorderThickness="1.5"
                     Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.15"
@@ -512,6 +519,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -535,14 +543,15 @@
             <TextBlock Grid.Column="3" Opacity="0.8" VerticalAlignment="Center"><Run Text="Dòng: " /><Run Text="{x:Bind ViewModel.RowCount, Mode=OneWay}" /></TextBlock>
             <TextBlock Grid.Column="4" Opacity="0.8" VerticalAlignment="Center"><Run Text="Cột: " /><Run Text="{x:Bind ViewModel.ColumnCount, Mode=OneWay}" /></TextBlock>
             <TextBlock Grid.Column="5" Text="{x:Bind SaveStateText(ViewModel.IsDirty), Mode=OneWay}" Opacity="0.8" VerticalAlignment="Center" />
-            <TextBlock Grid.Column="6" Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Opacity="0.8" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+            <TextBlock x:Name="RangeStatsText" Grid.Column="6" VerticalAlignment="Center" Visibility="Collapsed" />
+            <TextBlock Grid.Column="7" Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Opacity="0.8" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
                        ToolTipService.ToolTip="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" />
 
-            <ProgressBar Grid.Column="7" Width="140" VerticalAlignment="Center"
+            <ProgressBar Grid.Column="8" Width="140" VerticalAlignment="Center"
                          Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
                          Value="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}" Maximum="100" />
 
-            <Button Grid.Column="8" Content="Huỷ" Click="CancelButton_Click" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+            <Button Grid.Column="9" Content="Huỷ" Click="CancelButton_Click" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
         </Grid>
     </Grid>
 </Window>

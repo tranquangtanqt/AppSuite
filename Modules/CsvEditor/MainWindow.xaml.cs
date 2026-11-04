@@ -66,8 +66,13 @@ public sealed partial class MainWindow : Window
         SharedUI.Helpers.WindowIcon.Apply(this);
         AppWindow.TitleBar.PreferredTheme = Microsoft.UI.Windowing.TitleBarTheme.UseDefaultAppMode; // mặc định thanh tiêu đề luôn sáng, kể cả chế độ tối
 
-        Grid.LayoutUpdated += (_, _) => UpdateFrozenDivider();
+        Grid.LayoutUpdated += (_, _) =>
+        {
+            UpdateFrozenDivider();
+            UpdateRangeOverlay();
+        };
 
+        InitRangeSelection();
         FindPanel.ViewModel = ViewModel;
         FindPanel.MatchNavigated += (_, match) => NavigateToCell(match);
         FindPanel.CloseRequested += (_, _) => Grid.Focus(FocusState.Programmatic);
@@ -563,6 +568,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        CollapseRangeToCurrentCell();
         box.IsSpellCheckEnabled = false; // dữ liệu bảng, tiếng Việt bị gạch đỏ
         box.PreviewKeyDown -= CellEditor_PreviewKeyDown;
         box.PreviewKeyDown += CellEditor_PreviewKeyDown;
@@ -626,11 +632,25 @@ public sealed partial class MainWindow : Window
         _gridScrollViewer ??= FindDescendants<ScrollViewer>(Grid).FirstOrDefault();
         if (_gridScrollViewer is not null)
         {
-            _gridScrollViewer.ViewChanged += (_, _) => UpdateFillHandlePosition();
+            _gridScrollViewer.ViewChanged += (_, _) =>
+            {
+                UpdateFillHandlePosition();
+                UpdateRangeOverlay();
+            };
         }
     }
 
-    private void Grid_CurrentCellChanged(object? sender, object e) => UpdateFillHandlePosition();
+    private void Grid_CurrentCellChanged(object? sender, object e)
+    {
+        UpdateFillHandlePosition();
+        // Vùng do MainWindow.Range.cs đặt thì ô hiện tại trùng đầu vùng. Ô khác (bấm ô, mũi tên, Tìm...) nghĩa là thôi chọn vùng, trừ
+        // lúc đang kéo chuột hay giữ Shift: DataGrid đổi ô ngay khi nhấn, trước khi Grid_RangePointerPressed kịp nối dài vùng.
+        // _changingRange: SetRange đặt dòng rồi mới đặt cột, giữa 2 bước ô hiện tại chưa trùng đầu vùng.
+        if (!_changingRange && !_rangeDragging && _range?.Active != CurrentCell() && !IsDown(Windows.System.VirtualKey.Shift))
+        {
+            CollapseRangeToCurrentCell();
+        }
+    }
 
     private void Grid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -653,7 +673,7 @@ public sealed partial class MainWindow : Window
 
         var rowIndex = Grid.SelectedIndex;
         var column = Grid.CurrentColumn;
-        if (rowIndex < 0 || rowIndex >= ViewModel.ViewRows.Count || column is null)
+        if (rowIndex < 0 || rowIndex >= ViewModel.ViewRows.Count || column is null || HasBlockRange)
         {
             return;
         }
@@ -1676,13 +1696,17 @@ public sealed partial class MainWindow : Window
             _menuRowIndex = row.GetIndex();
             _menuColumnIndex = cell is null ? -1 : Grid.Columns.ToList().FindIndex(column => column.GetCellContent(row) is { } content
                 && FindAncestor<DataGridCell>(content) == cell);
-            if (row.DataContext is CsvRow item && !Grid.SelectedItems.Contains(item))
+            var insideRange = _range is { IsSingleCell: false } range && range.Contains(new CellRef(_menuRowIndex, _menuColumnIndex));
+            if (!insideRange)
             {
-                Grid.SelectedItem = item;
-            }
-            if (_menuColumnIndex >= 0)
-            {
-                Grid.CurrentColumn = Grid.Columns[_menuColumnIndex];
+                if (row.DataContext is CsvRow item && !Grid.SelectedItems.Contains(item))
+                {
+                    Grid.SelectedItem = item;
+                }
+                if (_menuColumnIndex >= 0)
+                {
+                    Grid.CurrentColumn = Grid.Columns[_menuColumnIndex];
+                }
             }
         }
         else if (hasPoint)
@@ -1776,41 +1800,17 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void CopyMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        var selectedRows = Grid.SelectedItems.Cast<CsvRow>().ToList();
-        if (selectedRows.Count == 0)
-        {
-            return;
-        }
+    private void CopyMenuItem_Click(object sender, RoutedEventArgs e) => CopySelection();
 
-        // Dạng Tab như Excel: ô có tab / xuống dòng được bọc ngoặc kép nên dán sang Excel vẫn đúng 1 ô.
-        var text = TabularClipboard.Format(selectedRows.Select(row => Enumerable.Range(0, ViewModel.Columns.Count).Select(row.GetCell)));
-        var package = new DataPackage();
-        package.SetText(text);
-        Clipboard.SetContent(package);
+    private void CopyRowsMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (Grid.SelectedItems.Count > 0)
+        {
+            SetClipboardText(FormatSelectedRows());
+        }
     }
 
-    private async void PasteMenuItem_Click(object sender, RoutedEventArgs e)
-    {
-        var clipboardContent = Clipboard.GetContent();
-        if (!clipboardContent.Contains(StandardDataFormats.Text))
-        {
-            return;
-        }
-
-        var text = await clipboardContent.GetTextAsync();
-        var block = TabularClipboard.Parse(text);
-        if (block.Count == 0)
-        {
-            return;
-        }
-
-        var anchorRowIndex = Grid.SelectedIndex >= 0 ? Grid.SelectedIndex : 0;
-        var currentColumnIndex = Grid.CurrentColumn is { } pasteColumn ? Grid.Columns.IndexOf(pasteColumn) : -1;
-        var anchorColumnIndex = Math.Max(currentColumnIndex, 0);
-        ViewModel.PasteBlock(anchorRowIndex, anchorColumnIndex, block);
-    }
+    private async void PasteMenuItem_Click(object sender, RoutedEventArgs e) => await PasteFromClipboardAsync();
 
     private void DeleteRowsMenuItem_Click(object sender, RoutedEventArgs e) => DeleteSelectedRows();
 

@@ -123,7 +123,7 @@ public sealed class CsvEditService : ICsvEditService
     /// <summary>Batches an arbitrary set of cell writes (not necessarily a contiguous block - Find &
     /// Replace All's matches can land anywhere) into one undoable command, the same way
     /// <see cref="PasteBlock"/> does.</summary>
-    public void ReplaceCells(IReadOnlyList<(CsvRow Row, int ColumnIndex, string Value)> replacements)
+    public void ReplaceCells(IReadOnlyList<(CsvRow Row, int ColumnIndex, string Value)> replacements, string? description = null)
     {
         var subCommands = new List<IEditCommand>();
         foreach (var (row, columnIndex, value) in replacements)
@@ -140,6 +140,6 @@ public sealed class CsvEditService : ICsvEditService
             return;
         }
 
-        UndoRedo.Do(new CompositeEditCommand(subCommands, $"Thay thế {subCommands.Count} ô"));
+        UndoRedo.Do(new CompositeEditCommand(subCommands, description ?? $"Thay thế {subCommands.Count} ô"));
     }
 }

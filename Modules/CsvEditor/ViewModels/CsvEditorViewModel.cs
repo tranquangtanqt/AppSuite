@@ -6,6 +6,9 @@ using CsvEditor.Services;
 
 namespace CsvEditor.ViewModels;
 
+/// <summary>Kết quả dán: số dòng / cột đã dán, phần bị bỏ vì vượt mép bảng, ô cuối của phần đã dán.</summary>
+public readonly record struct RangePasteResult(int Rows, int Columns, int SkippedRows, int SkippedColumns, CellRef? LastCell);
+
 /// <summary>
 /// Orchestrates the whole editor: owns the loaded <see cref="CsvDocument"/> (through
 /// <see cref="ICsvEditService"/>), the filter/sort view-state, and exposes RelayCommands for the
@@ -475,6 +478,52 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             _hiddenColumns = hidden;
             RefreshMatches();
         }
+    }
+
+    public RangeStatistics ComputeRangeStatistics(CellRange range) => RangeStatistics.Compute(ViewRows, range, _hiddenColumns);
+
+    private IEnumerable<int> VisibleColumnsFrom(int columnIndex) =>
+        Enumerable.Range(columnIndex, Math.Max(ColumnCount - columnIndex, 0)).Where(column => !_hiddenColumns.Contains(column));
+
+    /// <summary>Text dạng Tab của vùng ô (dán được sang Excel), bỏ cột đang ẩn.</summary>
+    public string FormatRange(CellRange range)
+    {
+        var columns = VisibleColumnsFrom(range.Left).TakeWhile(column => column <= range.Right).ToList();
+        return TabularClipboard.Format(ViewRows.Skip(range.Top).Take(range.Bottom - range.Top + 1)
+            .Select(row => columns.Select(row.GetCell)));
+    }
+
+    /// <summary>Dán khối chữ từ ô <paramref name="start"/> theo bảng đang hiện: dòng đang bị lọc và cột đang ẩn được bỏ qua, không
+    /// bị ghi đè lúc người dùng không thấy. Phần vượt mép bảng thì bỏ và báo lại. 1 bước Hoàn tác.</summary>
+    public RangePasteResult PasteRange(CellRef start, IReadOnlyList<IReadOnlyList<string>> block)
+    {
+        var columns = VisibleColumnsFrom(start.ColumnIndex).ToList();
+        var rowCount = Math.Min(block.Count, Math.Max(ViewRows.Count - start.RowIndex, 0));
+        var widest = block.Count == 0 ? 0 : block.Max(row => row.Count);
+        var columnCount = Math.Min(widest, columns.Count);
+        var replacements = new List<(CsvRow, int, string)>();
+        for (var r = 0; r < rowCount; r++)
+        {
+            for (var c = 0; c < block[r].Count && c < columns.Count; c++)
+            {
+                replacements.Add((ViewRows[start.RowIndex + r], columns[c], block[r][c]));
+            }
+        }
+
+        _editService.ReplaceCells(replacements, $"Dán {replacements.Count} ô");
+        CellRef? last = rowCount > 0 && columnCount > 0 ? new CellRef(start.RowIndex + rowCount - 1, columns[columnCount - 1]) : null;
+        return new RangePasteResult(rowCount, columnCount, block.Count - rowCount, widest - columnCount, last);
+    }
+
+    /// <summary>Điền 1 giá trị vào mọi ô thấy được của vùng (dán 1 ô lên vùng nhiều ô, như Excel). Trả về số ô.</summary>
+    public int FillRange(CellRange range, string value)
+    {
+        var columns = VisibleColumnsFrom(range.Left).TakeWhile(column => column <= range.Right).ToList();
+        var replacements = ViewRows.Skip(range.Top).Take(range.Bottom - range.Top + 1)
+            .SelectMany(row => columns.Select(column => (row, column, value)))
+            .ToList();
+        _editService.ReplaceCells(replacements, $"Dán {replacements.Count} ô");
+        return replacements.Count;
     }
 
     /// <summary>Đóng thanh tìm: bỏ kết quả, thôi tính lại khi bảng đổi.</summary>

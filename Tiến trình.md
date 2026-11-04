@@ -1071,6 +1071,10 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 
 ## CsvEditor (ModuleF — `Note/ModuleF.txt`)
 
+- [x] Chọn vùng ô (kéo chuột, Shift+bấm, Shift+mũi tên, Ctrl+Shift+mũi tên), Ctrl+C / Ctrl+V theo vùng dạng Tab (dán qua lại Excel, bỏ cột ẩn và dòng bị lọc, 1 bước Hoàn tác, chép 1 ô dán lên vùng thì điền cả vùng), Đếm / Tổng / TB ở thanh trạng thái, chuột phải thêm Sao chép cả dòng. Cập nhật F1, README. Unit test 180/180; GUI Sandbox 22/22, lặp Shift+mũi tên 20/20, toàn bộ 46/47 (bấm đúp giả lập) (2026-11-04)
+- [ ] Thử tay: kéo chọn vùng bằng chuột thật, dán qua lại với Excel thật, bấm đúp sửa ô sau khi có chọn vùng
+- [ ] Kéo chuột chọn vùng chưa tự cuộn bảng khi ra mép (hiện dùng Shift+bấm cho vùng dài)
+
 Đánh giá giao diện theo ui-ux-pro-max (quy tắc WinUI / UX + ảnh Sandbox ~1010×600 logical, 2026-11-04):
 - [x] Thẻ lọc tràn: 5 thẻ cùng lúc thì thẻ cuối bị cắt → `Views/WrapPanel` tự xuống hàng (vị trí tính ở `Services/WrapLayout`, có unit test) (2026-11-04)
 - [x] Tìm / Thay thế: hộp thoại che bảng → thanh tìm `Views/FindBar` (Ctrl+F / Ctrl+H, Enter / Shift+Enter, Esc), kết quả tự tính lại khi sửa / lọc / sắp xếp để Thay thế tất cả không ghi nhầm ô; ô trống không báo gì; tìm chỉ ở cột đang hiện. Sửa 2 lỗi sập app có từ trước: gõ regex dở ("("), nhảy tới ô ở cột đang ẩn. Cập nhật F1, README. Unit test 146/146; GUI Sandbox 31/31 (2026-11-04)
