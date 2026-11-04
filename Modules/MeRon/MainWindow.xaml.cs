@@ -14,7 +14,7 @@ public sealed partial class MainWindow : Window
     {
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
-        AppWindow.TitleBar.PreferredTheme = Microsoft.UI.Windowing.TitleBarTheme.UseDefaultAppMode; // mặc định thanh tiêu đề luôn sáng, kể cả chế độ tối
+        App.ApplyTitleBarTheme(AppWindow);
         AppWindow.Resize(new SizeInt32(1280, 860));
         AppLog.For("App").LogInformation("Khởi động MeRon");
         Closed += (_, _) => _help?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
@@ -50,6 +50,12 @@ public sealed partial class MainWindow : Window
             }
         }
         return entries;
+    }
+
+    public void SetTheme(Core.AppTheme theme)
+    {
+        MenuSettings.Theme = theme;
+        SaveMenuSettings();
     }
 
     public void SetMenuVisible(string page, bool visible)
@@ -219,6 +225,7 @@ public sealed partial class MainWindow : Window
             _help = new SharedUI.Help.HelpWindow("MeRon", "Quản lý bán hàng - dữ liệu từ app điện thoại me-ron.",
                 HelpSections, accent: Windows.UI.Color.FromArgb(0xFF, 0xC2, 0x41, 0x0C),
                 searchPlaceholder: "Tìm, vd: nhap, trung ten, xoa...", searchSummary: true);
+            App.ApplyTitleBarTheme(_help.AppWindow);
             _help.Closed += (_, _) => _help = null;
         }
         _help.ShowSection(Core.HelpContent.ForPage(ContentFrame.Content?.GetType().Name).Title);

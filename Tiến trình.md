@@ -201,6 +201,8 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 
 ## MeRon (module mới — bản máy tính của app điện thoại me-ron, `Modules/MeRon/PLAN.md`)
 
+- [x] Cài đặt → Giao diện: Theo Windows / Sáng / Tối, lưu `settings.json`, áp dụng lúc khởi động (`Application.RequestedTheme`) + nút Mở lại ngay; cả hộp thoại, cửa sổ Hướng dẫn, thanh tiêu đề. Cập nhật F1, README. Unit test 187/187; GUI Sandbox 17/17 (2026-11-04)
+
 Đánh giá giao diện theo ui-ux-pro-max (ảnh Sandbox nền xám, 1422×808 và 1000×700, sáng / tối, 2026-11-04):
 - [x] Số tiền trong thẻ tự thu nhỏ khi thiếu chỗ (Viewbox), thẻ trạng thái chia đều + tự xuống hàng, form đơn thấy đủ cột Thành tiền (2026-11-04)
 - [x] Công nợ, Khách lâu không đặt: ô tìm không giãn cao, hàng tiêu đề chia lại, trước đây cửa sổ hẹp làm mất cả danh sách (2026-11-04)

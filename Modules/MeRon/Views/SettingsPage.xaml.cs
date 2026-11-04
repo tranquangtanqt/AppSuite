@@ -18,11 +18,33 @@ public sealed partial class SettingsPage : Page
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         Build();
+        _loadingTheme = true;
+        ThemeChoice.SelectedIndex = (int)(Window?.MenuSettings.Theme ?? AppTheme.System);
+        _loadingTheme = false;
+        ShowRestart();
         _loadingCapture = true;
         KeepDaysBox.Value = Window?.MenuSettings.CaptureKeepDays ?? MenuSettings.DefaultCaptureKeepDays;
         _loadingCapture = false;
         ShowCaptureStatus();
     }
+
+    // ---------- Giao diện ----------
+
+    private bool _loadingTheme;
+
+    private void Theme_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_loadingTheme && ThemeChoice.SelectedIndex >= 0)
+        {
+            Window?.SetTheme((AppTheme)ThemeChoice.SelectedIndex);
+            ShowRestart();
+        }
+    }
+
+    private void ShowRestart() =>
+        RestartPanel.Visibility = Window?.MenuSettings.Theme != App.Theme ? Visibility.Visible : Visibility.Collapsed;
+
+    private void Restart_Click(object sender, RoutedEventArgs e) => App.Restart();
 
     // ---------- Ảnh chụp ----------
 

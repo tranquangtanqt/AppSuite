@@ -2,6 +2,14 @@ using System.Text.Json;
 
 namespace MeRon.Core;
 
+/// <summary>Giao diện: theo chế độ của Windows, luôn sáng, luôn tối.</summary>
+public enum AppTheme
+{
+    System,
+    Light,
+    Dark,
+}
+
 /// <summary>
 /// Cài đặt của trang Cài đặt: các trang người dùng ẩn khỏi menu trái, số ngày giữ ảnh chụp (<see cref="CaptureKeepDays"/>).
 /// Lưu file settings.json cạnh database (MERON_DB_PATH đổi chỗ thì đổi theo) - không nằm trong database nên nhập backup /
@@ -9,6 +17,9 @@ namespace MeRon.Core;
 /// </summary>
 public sealed class MenuSettings
 {
+    /// <summary>Giao diện sáng / tối, đọc lúc khởi động app (App.xaml.cs).</summary>
+    public AppTheme Theme { get; set; }
+
     public const string FileName = "settings.json";
 
     public const int DefaultCaptureKeepDays = 30;
@@ -63,6 +74,10 @@ public sealed class MenuSettings
                 {
                     settings.CaptureKeepDays = days;
                 }
+                if (Enum.TryParse<AppTheme>(stored.Theme, out var theme) && Enum.IsDefined(theme))
+                {
+                    settings.Theme = theme;
+                }
             }
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
@@ -75,7 +90,7 @@ public sealed class MenuSettings
     public void Save(string path)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
-        var stored = new Stored { HiddenMenu = [.. _hidden.Order(StringComparer.Ordinal)], CaptureKeepDays = CaptureKeepDays };
+        var stored = new Stored { HiddenMenu = [.. _hidden.Order(StringComparer.Ordinal)], CaptureKeepDays = CaptureKeepDays, Theme = Theme.ToString() };
         File.WriteAllText(path, JsonSerializer.Serialize(stored, new JsonSerializerOptions { WriteIndented = true }));
     }
 
@@ -85,5 +100,8 @@ public sealed class MenuSettings
 
         /// <summary>null = file cũ (trước 2026-10-23) → mặc định 30.</summary>
         public int? CaptureKeepDays { get; set; }
+
+        /// <summary>null = file cũ (trước 2026-11-04) → theo Windows.</summary>
+        public string? Theme { get; set; }
     }
 }

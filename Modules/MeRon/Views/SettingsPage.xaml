@@ -8,6 +8,29 @@
         <StackPanel Padding="24,12,24,24" Spacing="14" MaxWidth="1000" HorizontalAlignment="Left">
             <TextBlock Text="Cài đặt" Style="{StaticResource TitleTextBlockStyle}" />
 
+            <!-- Giao diện: áp dụng khi app khởi động (xem App.xaml.cs) nên đổi xong cần mở lại -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
+                            <FontIcon Glyph="&#xE790;" FontSize="15" Foreground="#E8590C" />
+                        </Border>
+                        <TextBlock Text="Giao diện" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <RadioButtons x:Name="ThemeChoice" MaxColumns="3" AutomationProperties.Name="Giao diện" SelectionChanged="Theme_SelectionChanged">
+                        <x:String>Theo Windows</x:String>
+                        <x:String>Sáng</x:String>
+                        <x:String>Tối</x:String>
+                    </RadioButtons>
+                    <StackPanel x:Name="RestartPanel" Orientation="Horizontal" Spacing="12" Visibility="Collapsed">
+                        <TextBlock Text="Mở lại app để áp dụng." VerticalAlignment="Center" />
+                        <Button Content="Mở lại ngay" Click="Restart_Click" AutomationProperties.Name="Mở lại ngay"
+                                ToolTipService.ToolTip="Đóng rồi mở lại MeRon. Đơn đang nhập dở chưa Lưu sẽ mất." />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- Menu bên trái: bỏ tích = ẩn mục khỏi menu (lưu ngay, MenuSettings) -->
             <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">

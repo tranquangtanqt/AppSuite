@@ -248,8 +248,9 @@ public static class HelpContent
             new("Xoá", "Nút Xoá trong hộp thoại sửa. Khách hàng đã ghi địa chỉ này vẫn giữ nguyên chữ đã ghi."),
         ]),
 
-        new("Cài đặt", "", "Ẩn / hiện các mục của menu bên trái, tự dọn ảnh chụp cũ.", "SettingsPage",
+        new("Cài đặt", "", "Giao diện sáng / tối, ẩn / hiện các mục của menu bên trái, tự dọn ảnh chụp cũ.", "SettingsPage",
         [
+            new("Giao diện", "Khung Giao diện: Theo Windows (mặc định), Sáng hoặc Tối. Đổi xong bấm Mở lại ngay để áp dụng (đơn đang nhập dở chưa Lưu sẽ mất), hoặc để lần mở app sau. Áp dụng cho cả hộp thoại và cửa sổ Hướng dẫn."),
             new("Ẩn mục menu", "Mục Cài đặt ở cuối menu (cạnh Hướng dẫn) → khung Menu bên trái: bỏ tích mục ít dùng (vd Địa chỉ, Danh mục món ăn) là mục đó biến khỏi menu ngay; tích lại để hiện. Nhóm ẩn hết mục thì tiêu đề nhóm (Thống kê, Danh mục...) cũng ẩn. Hiện tất cả = trả về như cũ."),
             new("Luôn hiện", "Đặt hàng (trang mở đầu), Cài đặt và Hướng dẫn không ẩn được. Ẩn trang Xuất thì nút Mở trang Xuất (cảnh báo ở trang Nhập) vẫn mở được trang đó."),
             new("Ảnh chụp", "Khung Ảnh chụp: Tự xoá ảnh cũ hơn … ngày (mặc định 30, 0 = giữ hết) - mỗi lần mở app, ảnh do nút Chụp ảnh lưu trong Pictures\\MeRon (chi_tiet_don_hang_…, hoa_don_cong_no_…) cũ hơn số ngày đó được đưa vào Thùng rác (lấy lại được); file khác trong thư mục giữ nguyên. Dọn ngay: dọn luôn không cần mở lại app. Mở thư mục ảnh: mở Pictures\\MeRon. Dòng bên cạnh cho biết đang có bao nhiêu ảnh."),

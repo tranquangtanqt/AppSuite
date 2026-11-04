@@ -47,6 +47,30 @@ public class MenuSettingsTests : IDisposable
     }
 
     [Fact]
+    public void Theme_defaults_to_windows_and_survives_save_and_load()
+    {
+        Assert.Equal(AppTheme.System, MenuSettings.Load(FilePath).Theme);
+
+        var settings = MenuSettings.Load(FilePath);
+        settings.Theme = AppTheme.Dark;
+        settings.Save(FilePath);
+
+        Assert.Equal(AppTheme.Dark, MenuSettings.Load(FilePath).Theme);
+    }
+
+    [Theory]
+    [InlineData("{ \"HiddenMenu\": [] }")]
+    [InlineData("{ \"Theme\": \"Xanh\" }")]
+    [InlineData("{ \"Theme\": \"9\" }")]
+    public void Old_or_unknown_theme_falls_back_to_windows(string json)
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(FilePath, json);
+
+        Assert.Equal(AppTheme.System, MenuSettings.Load(FilePath).Theme);
+    }
+
+    [Fact]
     public void Hidden_pages_survive_save_and_load()
     {
         var settings = new MenuSettings();
