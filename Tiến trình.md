@@ -1071,6 +1071,19 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 
 ## CsvEditor (ModuleF — `Note/ModuleF.txt`)
 
+Đánh giá giao diện theo ui-ux-pro-max (quy tắc WinUI / UX + ảnh Sandbox ~1010×600 logical, 2026-11-04):
+- [ ] Thẻ lọc tràn: 5 thẻ cùng lúc thì thẻ cuối bị cắt, không cuộn được (`ChipsBar` là StackPanel ngang)
+- [ ] Tìm / Thay thế là hộp thoại che bảng: đổi thành thanh tìm không chặn thao tác; ô trống đang báo "Không tìm thấy kết quả."
+- [ ] Thông báo thanh trạng thái bị cắt không có "...", tràn khi tên file dài; tương phản 4.4:1 (dưới mức 4.5:1)
+- [ ] Nhãn bảng mã / dấu phân cách ở thanh dưới là chữ bấm được: không thấy là bấm được, không dùng được bằng bàn phím
+- [ ] Bảng ít dòng: cỡ dòng + ô lọc luôn hiện (~10 dòng ở 600 logical); thêm cỡ gọn và ẩn / hiện hàng ô lọc
+- [ ] Bảng khó đọc: không kẻ ô, không sọc dòng, số canh trái, cột cố định không có vạch ngăn
+- [ ] Lọc ra 0 dòng: bảng trống không có lời nhắc; chưa mở file mà Dòng / Cột / Tìm / Lọc / Sắp xếp / Thống kê vẫn bấm được
+- [ ] Trợ năng: 12/24 nút không có tên (nút chữ trong StackPanel), mọi ô lọc cùng tên "Lọc...", chưa có AccessKey
+- [ ] Việt hoá + nhất quán: AND / NOT, Min / Max, Contains / Equals..., "Hủy" / "huỷ", "Dòng:60" thiếu dấu cách, icon Mở khác kiểu, ◀ ▶ dạng ký tự
+- [ ] File gần đây: thư mục bị cắt không có "..." khi tên file dài (StackPanel ngang)
+- [ ] Chế độ tối: thanh tiêu đề vẫn sáng (thấy trong Sandbox, cần xem trên máy thật)
+
 - [x] Các tính năng theo spec: mở/lưu CSV/TSV (tự nhận delimiter/encoding), sửa ô, thêm/xoá dòng/cột,
   đổi tên cột, Find/Replace, Filter, Sort nhiều cột, Statistics, Undo/Redo, context menu, validation
 - [x] Unit test theo spec: Open, Save, Search, Sort, Filter, Statistics, Undo, Redo — `Tests\CsvEditor.Tests`
