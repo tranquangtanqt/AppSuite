@@ -67,6 +67,7 @@ internal static class HelpContent
         [
             new("Thống kê", "Nút 📊 cạnh Sắp xếp. Số dòng, số cột, dòng trùng; theo từng cột: số ô rỗng, giá trị khác nhau, Nhỏ nhất / Lớn nhất / Trung bình / Tổng (với cột số)."),
             new("Cảnh báo", "Khung Cảnh báo (N) dưới thanh công cụ: dòng lệch số cột, ngoặc kép không đóng, cột nhiều ô rỗng, độ tin cậy thấp khi nhận diện dấu phân cách / bảng mã. Bấm đúp 1 cảnh báo để nhảy tới dòng đó. Lệch cột / cột rỗng được tính lại sau khi sửa và khi lưu."),
+            new("Phím Alt", "Nhấn Alt: mỗi nút trên thanh công cụ hiện 1 chữ tắt, nhấn chữ đó để bấm nút (vd Alt rồi T = Tìm, Alt rồi O = Lọc). Trình đọc màn hình đọc được tên mọi nút và ô lọc theo tên cột."),
             new("Cửa sổ hẹp", "Cửa sổ hẹp thì các nút Xuất, Dòng, Cột, Tìm, Lọc, Sắp xếp chỉ còn icon để mọi nút vẫn thấy; rê chuột để xem tên. Mở rộng cửa sổ thì chữ hiện lại."),
             new("Thanh trạng thái", "Tên file, nút bảng mã · dấu phân cách (bấm để đổi, chỉ bấm được khi đã mở file), ô tick Dòng đầu là tiêu đề, số dòng / cột, trạng thái đã lưu / chưa lưu, thông báo. Tên file và thông báo dài tự rút gọn \"...\" - rê chuột để xem đủ."),
         ]),

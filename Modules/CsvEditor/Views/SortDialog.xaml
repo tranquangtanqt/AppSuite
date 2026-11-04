@@ -36,11 +36,11 @@
                         </Grid.ColumnDefinitions>
 
                         <ComboBox x:Name="ColumnComboBox" Grid.Column="0"
-                                  SelectedIndex="{x:Bind ColumnIndex, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+                                  SelectedIndex="{x:Bind ColumnIndex, Mode=TwoWay}" HorizontalAlignment="Stretch" AutomationProperties.Name="Cột" />
                         <CheckBox Grid.Column="1" Content="Giảm dần" IsChecked="{x:Bind Descending, Mode=TwoWay}" />
-                        <Button Grid.Column="2" Content="↑" Click="MoveUpButton_Click" Tag="{x:Bind}" />
-                        <Button Grid.Column="3" Content="↓" Click="MoveDownButton_Click" Tag="{x:Bind}" />
-                        <Button Grid.Column="4" Content="✕" Click="RemoveColumnButton_Click" Tag="{x:Bind}" />
+                        <Button Grid.Column="2" Content="↑" Click="MoveUpButton_Click" Tag="{x:Bind}" AutomationProperties.Name="Lên trên" />
+                        <Button Grid.Column="3" Content="↓" Click="MoveDownButton_Click" Tag="{x:Bind}" AutomationProperties.Name="Xuống dưới" />
+                        <Button Grid.Column="4" Content="✕" Click="RemoveColumnButton_Click" Tag="{x:Bind}" AutomationProperties.Name="Xoá cột sắp xếp" />
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

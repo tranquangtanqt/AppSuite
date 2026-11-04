@@ -64,6 +64,7 @@ public sealed partial class MainWindow : Window
 
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
+        AppWindow.TitleBar.PreferredTheme = Microsoft.UI.Windowing.TitleBarTheme.UseDefaultAppMode; // mặc định thanh tiêu đề luôn sáng, kể cả chế độ tối
 
         Grid.LayoutUpdated += (_, _) => UpdateFrozenDivider();
 
@@ -168,34 +169,49 @@ public sealed partial class MainWindow : Window
             {
                 Tag = path,
                 HorizontalAlignment = HorizontalAlignment.Stretch,
-                HorizontalContentAlignment = HorizontalAlignment.Left,
+                HorizontalContentAlignment = HorizontalAlignment.Stretch,
                 Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent),
                 BorderThickness = new Thickness(0),
                 Padding = new Thickness(8, 6, 8, 6),
-                Content = new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    Spacing = 10,
-                    Children =
-                    {
-                        new FontIcon { Glyph = "", FontSize = 14, VerticalAlignment = VerticalAlignment.Center },
-                        new TextBlock { Text = Path.GetFileName(path), VerticalAlignment = VerticalAlignment.Center },
-                        new TextBlock
-                        {
-                            Text = Path.GetDirectoryName(path),
-                            Opacity = 0.6,
-                            VerticalAlignment = VerticalAlignment.Center,
-                            TextTrimming = TextTrimming.CharacterEllipsis,
-                            MaxWidth = 340,
-                        },
-                    },
-                },
+                Content = RecentRow(path),
             };
             ToolTipService.SetToolTip(button, path);
             AutomationProperties.SetName(button, Path.GetFileName(path));
             button.Click += RecentItem_Click;
             StartRecentList.Children.Add(button);
         }
+    }
+
+    /// <summary>1 dòng File gần đây: tên file + thư mục. Dùng Grid: trong StackPanel ngang chữ được rộng vô hạn nên TextTrimming
+    /// không chạy, thư mục bị cắt ngang không có "...".</summary>
+    private static Grid RecentRow(string path)
+    {
+        var icon = new FontIcon { Glyph = "\uE8A5", FontSize = 14, VerticalAlignment = VerticalAlignment.Center };
+        var name = new TextBlock
+        {
+            Text = Path.GetFileName(path),
+            MaxWidth = 340,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        var folder = new TextBlock
+        {
+            Text = Path.GetDirectoryName(path),
+            Opacity = 0.6,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+
+        var row = new Grid { ColumnSpacing = 10 };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        Microsoft.UI.Xaml.Controls.Grid.SetColumn(name, 1);
+        Microsoft.UI.Xaml.Controls.Grid.SetColumn(folder, 2);
+        row.Children.Add(icon);
+        row.Children.Add(name);
+        row.Children.Add(folder);
+        return row;
     }
 
     private async void NewTableButton_Click(object sender, RoutedEventArgs e)
@@ -312,6 +328,8 @@ public sealed partial class MainWindow : Window
         }
 
         public string ColumnName { get; }
+
+        public string FilterBoxName => $"Lọc cột {ColumnName}";
 
         public Visibility FilterBoxVisibility
         {

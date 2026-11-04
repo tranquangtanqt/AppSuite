@@ -46,9 +46,9 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <ComboBox x:Name="ColumnComboBox" Grid.Column="0" SelectedIndex="{x:Bind ColumnIndex, Mode=TwoWay}" />
+                        <ComboBox x:Name="ColumnComboBox" Grid.Column="0" SelectedIndex="{x:Bind ColumnIndex, Mode=TwoWay}" AutomationProperties.Name="Cột" />
 
-                        <ComboBox Grid.Column="1" SelectedIndex="{x:Bind OperatorIndex, Mode=TwoWay}">
+                        <ComboBox Grid.Column="1" SelectedIndex="{x:Bind OperatorIndex, Mode=TwoWay}" AutomationProperties.Name="Phép so sánh">
                             <ComboBoxItem Content="=" />
                             <ComboBoxItem Content="!=" />
                             <ComboBoxItem Content="&gt;" />
@@ -59,11 +59,11 @@
                             <ComboBoxItem Content="Regex" />
                         </ComboBox>
 
-                        <TextBox Grid.Column="2" Text="{x:Bind Value, Mode=TwoWay}" PlaceholderText="Giá trị" />
+                        <TextBox Grid.Column="2" Text="{x:Bind Value, Mode=TwoWay}" PlaceholderText="Giá trị" AutomationProperties.Name="Giá trị" />
 
                         <CheckBox Grid.Column="3" Content="Phủ định" IsChecked="{x:Bind Negate, Mode=TwoWay}" ToolTipService.ToolTip="Lấy các dòng KHÔNG thoả điều kiện này" />
 
-                        <Button Grid.Column="4" Content="✕" Click="RemoveConditionButton_Click" Tag="{x:Bind}" />
+                        <Button Grid.Column="4" Content="✕" Click="RemoveConditionButton_Click" Tag="{x:Bind}" AutomationProperties.Name="Xoá điều kiện" />
                     </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>

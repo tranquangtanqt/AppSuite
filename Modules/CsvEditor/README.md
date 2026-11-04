@@ -29,6 +29,8 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 ## Toolbar
 
+Alt hiện chữ tắt (`AccessKey`): M Mở, G File gần đây, L Lưu, X Xuất, H Hoàn tác, A Làm lại, D Dòng, C Cột, T Tìm, I Đi tới dòng, O Lọc, S Sắp xếp, K Thống kê, V Xem dọc, N Hướng dẫn. Mọi nút và ô lọc có `AutomationProperties.Name`.
+
 Cửa sổ hẹp hơn 1040 logical (`RootGrid_SizeChanged`): Xuất, Dòng, Cột, Tìm, Lọc, Sắp xếp chỉ còn icon + tooltip.
 
 `Mở` `🕘` `Lưu` `Xuất ▾` | `↶` `↷` | `Dòng ▾` `Cột ▾` | `Tìm` `→` `Lọc` `Sắp xếp` `📊` `▤` … `?` (giao diện làm lại

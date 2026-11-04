@@ -1081,14 +1081,15 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [x] Bảng dễ đọc: kẻ ô, vạch ngăn cột cố định (`FrozenDivider`); số giữ canh trái theo lựa chọn của người dùng. Cập nhật F1, README. GUI Sandbox 46/47 + sửa ô bằng F2 3/3 (mục không đạt: bấm đúp giả lập không vào chế độ sửa) (2026-11-04)
 - [x] Ô có xuống dòng (2026-11-04): dòng gọn cố định làm cắt mất dòng đầu / cuối → chiều cao tối thiểu 26, ô nhiều dòng tự cao lên. Sửa lỗi mất dữ liệu có từ trước: F2 + Enter trên ô nhiều dòng làm mất các dòng sau (ô nhập 1 dòng) → ô nhập nhiều dòng, Enter = ghi, Shift+Enter = xuống dòng. Sửa lỗi hỏng xuống dòng: DataGrid ghi chữ thô (\r) đè giá trị, lưu ra CR thay vì CRLF, Hoàn tác không về đúng → `Services/CellText`, bộ gán `CsvRow[]`. Unit test 169/169; GUI Sandbox ô nhiều dòng 17/17
 - [x] Shift+Enter xuống dòng ở mọi ô khi sửa (trước đây chỉ ô đã có xuống dòng), F2 chọn cả ô thì xuống dòng ở cuối chữ, không xoá; tắt gạch đỏ chính tả ở ô sửa. Cập nhật F1, README. Unit test 169/169; GUI Sandbox 10/10 (2026-11-04)
-- [ ] Thử tay: bấm đúp sửa ô bằng chuột thật ở dòng gọn
+- [x] Người dùng thử tay: bấm đúp sửa ô bằng chuột thật ở dòng gọn - OK (2026-11-04)
 - [x] Thanh công cụ ở cửa sổ hẹp (người dùng báo 2026-11-04, cửa sổ ~948 logical): dưới 1040 logical chỉ còn icon + tooltip, bỏ khoảng trống thanh cuộn, thêm tên trợ năng cho 6 nút. Thẻ nền đặc cho bảng: đã thử, người dùng chọn giữ nền hiện tại (2026-11-04)
 - [x] Lọc ra 0 dòng: giữa bảng hiện lời nhắc + nút Bỏ lọc. Chưa có cột: khoá Xuất, Dòng, Cột, Tìm, Đi tới dòng, Lọc, Sắp xếp, Thống kê, Xem dọc; Bảng trống rồi huỷ thì về màn hình bắt đầu (2026-11-04)
-- [ ] Trợ năng: 12/24 nút không có tên (nút chữ trong StackPanel), mọi ô lọc cùng tên "Lọc...", chưa có AccessKey
+- [x] Trợ năng: mọi nút có tên (19/19 trên màn hình đã kiểm tra), ô lọc tên theo cột ("Lọc cột Mã đơn"), nút trong hộp thoại Lọc / Sắp xếp; Alt hiện chữ tắt 15 nút (`AccessKey`). Cập nhật F1, README. Unit test 169/169; GUI Sandbox 7/7, toàn bộ 46/47 (2026-11-04)
 - [x] Việt hoá: hộp thoại Lọc (Thoả mãn tất cả / 1 trong các điều kiện, Phủ định), Tìm, Thống kê (Nhỏ nhất / Lớn nhất), Chọn bảng mã / dấu phân cách; thống nhất "Huỷ"; "Dòng: 60"; Trước / Sau dùng icon. Cập nhật F1, README. Unit test 137/137; GUI Sandbox 44/46 (2 lỗi do cách kiểm tra, ảnh cho thấy đúng) (2026-11-04)
-- [ ] Icon nút Mở khác kiểu các icon còn lại
-- [ ] File gần đây: thư mục bị cắt không có "..." khi tên file dài (StackPanel ngang)
-- [ ] Chế độ tối: thanh tiêu đề vẫn sáng (thấy trong Sandbox, cần xem trên máy thật)
+- [x] Icon Mở đổi sang thư mục nét mảnh, cùng kiểu các icon khác (2026-11-04)
+- [x] File gần đây: tên file và thư mục tự rút gọn "..." (Grid thay StackPanel ngang), rê chuột xem đủ đường dẫn (2026-11-04)
+- [x] Chế độ tối: thanh tiêu đề tối theo app (`AppWindow.TitleBar.PreferredTheme`), Sandbox đạt, chưa xem trên máy thật (2026-11-04)
+- [ ] Thanh tiêu đề chế độ tối ở các module khác: mới sửa CsvEditor, có thể đưa vào `SharedUI`
 
 - [x] Các tính năng theo spec: mở/lưu CSV/TSV (tự nhận delimiter/encoding), sửa ô, thêm/xoá dòng/cột,
   đổi tên cột, Find/Replace, Filter, Sort nhiều cột, Statistics, Undo/Redo, context menu, validation

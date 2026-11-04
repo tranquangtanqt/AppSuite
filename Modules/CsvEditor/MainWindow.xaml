@@ -103,26 +103,26 @@
             </Grid.ColumnDefinitions>
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
                 <StackPanel x:Name="ToolbarPanel" Orientation="Horizontal" Spacing="4">
-                    <Button x:Name="OpenButton" Click="OpenButton_Click" ToolTipService.ToolTip="Mở file CSV / TSV (Ctrl+O) - hoặc kéo-thả file vào cửa sổ">
-                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Mở" /></StackPanel>
+                    <Button x:Name="OpenButton" Click="OpenButton_Click" AccessKey="M" AutomationProperties.Name="Mở" ToolTipService.ToolTip="Mở file CSV / TSV (Ctrl+O) - hoặc kéo-thả file vào cửa sổ">
+                        <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xED25;" FontSize="14" /><TextBlock Text="Mở" /></StackPanel>
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="O" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
                     <!-- Menu dựng lại mỗi lần mở (RecentMenu_Opening) từ Data\Config\recent-files.json. -->
-                    <DropDownButton x:Name="RecentButton" ToolTipService.ToolTip="File gần đây" AutomationProperties.Name="File gần đây">
+                    <DropDownButton x:Name="RecentButton" AccessKey="G" ToolTipService.ToolTip="File gần đây" AutomationProperties.Name="File gần đây">
                         <FontIcon Glyph="&#xE81C;" FontSize="14" />
                         <DropDownButton.Flyout>
                             <MenuFlyout x:Name="RecentMenu" Placement="BottomEdgeAlignedLeft" Opening="RecentMenu_Opening" />
                         </DropDownButton.Flyout>
                     </DropDownButton>
-                    <Button x:Name="SaveButton" Click="SaveButton_Click" IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" ToolTipService.ToolTip="Lưu (Ctrl+S)">
+                    <Button x:Name="SaveButton" Click="SaveButton_Click" AccessKey="L" AutomationProperties.Name="Lưu" IsEnabled="{x:Bind ViewModel.IsDirty, Mode=OneWay}" ToolTipService.ToolTip="Lưu (Ctrl+S)">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE74E;" FontSize="14" /><TextBlock Text="Lưu" /></StackPanel>
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="S" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
-                    <DropDownButton x:Name="ExportButton" AutomationProperties.Name="Xuất" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Lưu thành file khác / xuất Excel">
+                    <DropDownButton x:Name="ExportButton" AccessKey="X" AutomationProperties.Name="Xuất" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Lưu thành file khác / xuất Excel">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xEDE1;" FontSize="14" /><TextBlock Text="Xuất" Tag="ToolbarLabel" /></StackPanel>
                         <DropDownButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -135,13 +135,13 @@
 
                     <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                    <Button Command="{x:Bind ViewModel.UndoCommand}" ToolTipService.ToolTip="{x:Bind UndoToolTip(ViewModel.UndoDescription), Mode=OneWay}" AutomationProperties.Name="Hoàn tác">
+                    <Button Command="{x:Bind ViewModel.UndoCommand}" AccessKey="H" ToolTipService.ToolTip="{x:Bind UndoToolTip(ViewModel.UndoDescription), Mode=OneWay}" AutomationProperties.Name="Hoàn tác">
                         <FontIcon Glyph="&#xE7A7;" FontSize="14" />
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="Z" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
-                    <Button Command="{x:Bind ViewModel.RedoCommand}" ToolTipService.ToolTip="{x:Bind RedoToolTip(ViewModel.RedoDescription), Mode=OneWay}" AutomationProperties.Name="Làm lại">
+                    <Button Command="{x:Bind ViewModel.RedoCommand}" AccessKey="A" ToolTipService.ToolTip="{x:Bind RedoToolTip(ViewModel.RedoDescription), Mode=OneWay}" AutomationProperties.Name="Làm lại">
                         <FontIcon Glyph="&#xE7A6;" FontSize="14" />
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="Y" Modifiers="Control" />
@@ -151,7 +151,7 @@
 
                     <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                    <DropDownButton x:Name="RowMenuButton" AutomationProperties.Name="Dòng" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Thêm / nhân bản / xoá dòng">
+                    <DropDownButton x:Name="RowMenuButton" AccessKey="D" AutomationProperties.Name="Dòng" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Thêm / nhân bản / xoá dòng">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8FD;" FontSize="14" /><TextBlock Text="Dòng" Tag="ToolbarLabel" /></StackPanel>
                         <DropDownButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -161,7 +161,7 @@
                             </MenuFlyout>
                         </DropDownButton.Flyout>
                     </DropDownButton>
-                    <DropDownButton x:Name="ColumnMenuButton" AutomationProperties.Name="Cột" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Đi tới cột theo tên (Ctrl+Shift+G); thêm / đổi tên / xoá cột (cột của ô đang chọn) - chuột phải tiêu đề cột cũng có">
+                    <DropDownButton x:Name="ColumnMenuButton" AccessKey="C" AutomationProperties.Name="Cột" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Đi tới cột theo tên (Ctrl+Shift+G); thêm / đổi tên / xoá cột (cột của ô đang chọn) - chuột phải tiêu đề cột cũng có">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8A9;" FontSize="14" /><TextBlock Text="Cột" Tag="ToolbarLabel" /></StackPanel>
                         <DropDownButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -180,28 +180,28 @@
 
                     <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                    <Button Click="FindButton_Click" AutomationProperties.Name="Tìm" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Tìm (Ctrl+F) / thay thế (Ctrl+H)">
+                    <Button Click="FindButton_Click" AccessKey="T" AutomationProperties.Name="Tìm" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Tìm (Ctrl+F) / thay thế (Ctrl+H)">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE721;" FontSize="14" /><TextBlock Text="Tìm" Tag="ToolbarLabel" /></StackPanel>
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="F" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
-                    <Button x:Name="GoToButton" Click="GoToButton_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Đi tới dòng (Ctrl+G)" AutomationProperties.Name="Đi tới dòng">
+                    <Button x:Name="GoToButton" Click="GoToButton_Click" AccessKey="I" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Đi tới dòng (Ctrl+G)" AutomationProperties.Name="Đi tới dòng">
                         <FontIcon Glyph="&#xE72A;" FontSize="14" />
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="G" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
-                    <Button Click="FilterButton_Click" AutomationProperties.Name="Lọc" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Lọc nâng cao (nhiều điều kiện, và / hoặc)">
+                    <Button Click="FilterButton_Click" AccessKey="O" AutomationProperties.Name="Lọc" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Lọc nâng cao (nhiều điều kiện, và / hoặc)">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><TextBlock Text="Lọc" Tag="ToolbarLabel" /></StackPanel>
                     </Button>
-                    <Button Click="SortButton_Click" AutomationProperties.Name="Sắp xếp" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Sắp xếp theo nhiều cột">
+                    <Button Click="SortButton_Click" AccessKey="S" AutomationProperties.Name="Sắp xếp" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Sắp xếp theo nhiều cột">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8CB;" FontSize="14" /><TextBlock Text="Sắp xếp" Tag="ToolbarLabel" /></StackPanel>
                     </Button>
-                    <Button Click="StatisticsButton_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Thống kê từng cột (đếm, trống, tổng, nhỏ nhất / lớn nhất...)" AutomationProperties.Name="Thống kê">
+                    <Button Click="StatisticsButton_Click" AccessKey="K" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Thống kê từng cột (đếm, trống, tổng, nhỏ nhất / lớn nhất...)" AutomationProperties.Name="Thống kê">
                         <FontIcon Glyph="&#xE9D9;" FontSize="14" />
                     </Button>
-                    <ToggleButton x:Name="RecordViewToggle" Click="RecordViewToggle_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}"
+                    <ToggleButton x:Name="RecordViewToggle" Click="RecordViewToggle_Click" AccessKey="V" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}"
                                   ToolTipService.ToolTip="Xem dọc dòng đang chọn: tên cột - giá trị, sửa được, tìm cột (Ctrl+R)" AutomationProperties.Name="Xem dọc">
                         <FontIcon Glyph="&#xE8A0;" FontSize="14" />
                         <ToggleButton.KeyboardAccelerators>
@@ -211,7 +211,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Button x:Name="HelpButton" Grid.Column="1" VerticalAlignment="Top" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)" AutomationProperties.Name="Hướng dẫn">
+            <Button x:Name="HelpButton" Grid.Column="1" AccessKey="N" VerticalAlignment="Top" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)" AutomationProperties.Name="Hướng dẫn">
                 <FontIcon Glyph="&#xE897;" FontSize="14" />
                 <Button.KeyboardAccelerators>
                     <KeyboardAccelerator Key="F1" />
@@ -227,7 +227,7 @@
             <TextBlock x:Name="ShownRowsText" VerticalAlignment="Center" Opacity="0.8" />
             <Border x:Name="FilterChip" Style="{StaticResource ChipBorderStyle}">
                 <StackPanel Orientation="Horizontal">
-                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="FilterButton_Click" ToolTipService.ToolTip="Sửa điều kiện lọc">
+                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="FilterButton_Click" ToolTipService.ToolTip="Sửa điều kiện lọc" AutomationProperties.Name="Sửa điều kiện lọc">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <FontIcon Glyph="&#xE71C;" FontSize="12" />
                             <TextBlock x:Name="FilterChipText" MaxWidth="420" TextTrimming="CharacterEllipsis" />
@@ -253,7 +253,7 @@
             </Border>
             <Border x:Name="SortChip" Style="{StaticResource ChipBorderStyle}">
                 <StackPanel Orientation="Horizontal">
-                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="SortButton_Click" ToolTipService.ToolTip="Sửa cách sắp xếp">
+                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="SortButton_Click" ToolTipService.ToolTip="Sửa cách sắp xếp" AutomationProperties.Name="Sửa cách sắp xếp">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <FontIcon Glyph="&#xE8CB;" FontSize="12" />
                             <TextBlock x:Name="SortChipText" MaxWidth="420" TextTrimming="CharacterEllipsis" />
@@ -267,7 +267,7 @@
             </Border>
             <Border x:Name="HiddenColumnsChip" Style="{StaticResource ChipBorderStyle}">
                 <StackPanel Orientation="Horizontal">
-                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="ShowHideColumns_Click" ToolTipService.ToolTip="Chọn cột ẩn / hiện">
+                    <Button Style="{StaticResource ChipBodyButtonStyle}" Click="ShowHideColumns_Click" ToolTipService.ToolTip="Chọn cột ẩn / hiện" AutomationProperties.Name="Chọn cột ẩn / hiện">
                         <StackPanel Orientation="Horizontal" Spacing="6">
                             <FontIcon Glyph="&#xED1A;" FontSize="12" />
                             <TextBlock x:Name="HiddenColumnsChipText" MaxWidth="420" TextTrimming="CharacterEllipsis" />
@@ -358,11 +358,11 @@
                              chỗ chừa cho mũi tên sắp xếp. (Cách cũ đặt Width theo độ rộng tiêu đề: vẫn bị cắt theo phần
                              nội dung hẹp, mất luôn nút ✕.) Nút ✕ đè lên mép phải của ô. -->
                         <Grid HorizontalAlignment="Stretch" Visibility="{Binding FilterBoxVisibility}">
-                            <TextBox Text="{Binding FilterText, Mode=TwoWay}" PlaceholderText="Lọc..."
+                            <TextBox Text="{Binding FilterText, Mode=TwoWay}" PlaceholderText="Lọc..." AutomationProperties.Name="{Binding FilterBoxName}"
                                      HorizontalAlignment="Stretch" Loaded="FilterTextBox_Loaded" />
                             <Button Padding="4" Margin="0,0,4,0" Background="Transparent" BorderThickness="0"
                                     HorizontalAlignment="Right" VerticalAlignment="Center"
-                                    Click="ClearFilterButton_Click" ToolTipService.ToolTip="Xoá ô lọc"
+                                    Click="ClearFilterButton_Click" ToolTipService.ToolTip="Xoá ô lọc" AutomationProperties.Name="Xoá chữ trong ô lọc"
                                     Visibility="{Binding FilterText, Converter={StaticResource EmptyStringToVisibilityConverter}}">
                                 <FontIcon Glyph="&#xE10A;" FontSize="10" />
                             </Button>
@@ -479,14 +479,14 @@
                            Stroke="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
                            Fill="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
                 <StackPanel Padding="32,28" Spacing="12">
-                    <FontIcon Glyph="&#xE8E5;" FontSize="36" HorizontalAlignment="Center" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    <FontIcon Glyph="&#xED25;" FontSize="36" HorizontalAlignment="Center" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                     <TextBlock Text="Kéo-thả file CSV / TSV / TXT vào đây" Style="{StaticResource SubtitleTextBlockStyle}"
                                HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                        <Button x:Name="StartOpenButton" Style="{StaticResource AccentButtonStyle}" Click="OpenButton_Click">
-                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8E5;" FontSize="14" /><TextBlock Text="Mở file...  (Ctrl+O)" /></StackPanel>
+                        <Button x:Name="StartOpenButton" Style="{StaticResource AccentButtonStyle}" Click="OpenButton_Click" AutomationProperties.Name="Mở file">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xED25;" FontSize="14" /><TextBlock Text="Mở file...  (Ctrl+O)" /></StackPanel>
                         </Button>
-                        <Button x:Name="NewTableButton" Click="NewTableButton_Click" ToolTipService.ToolTip="Bắt đầu bảng trống: đặt tên cột đầu tiên rồi nhập dữ liệu, Lưu để chọn chỗ lưu">
+                        <Button x:Name="NewTableButton" Click="NewTableButton_Click" AutomationProperties.Name="Bảng trống" ToolTipService.ToolTip="Bắt đầu bảng trống: đặt tên cột đầu tiên rồi nhập dữ liệu, Lưu để chọn chỗ lưu">
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE710;" FontSize="14" /><TextBlock Text="Bảng trống" /></StackPanel>
                         </Button>
                     </StackPanel>
