@@ -27,18 +27,18 @@
             <TextBlock Text="Nhập đơn hàng loạt" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
             <local:DateBox Grid.Column="1" Date="{x:Bind ViewModel.Day, Mode=TwoWay}" AllowEmpty="False" Width="150" Margin="16,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center" AutomationProperties.Name="Ngày giao" PlaceholderText="Ngày giao" />
-            <!-- 1 nút tách (gọn cho cửa sổ hẹp): thân nút = mở Project Claude, ▾ = chép câu lệnh mẫu -->
-            <SplitButton Grid.Column="2" Click="OpenClaudeSplit_Click" AutomationProperties.Name="Mở Claude"
-                         ToolTipService.ToolTip="Mở Project &quot;MeRon – đọc sổ đơn&quot; trên claude.ai (trình duyệt): gửi ảnh trang sổ, Claude chép lại theo mẫu - copy kết quả dán vào ô chữ. ▾: chép câu lệnh mẫu (app điện thoại / chat khác)">
+            <!-- 1 nút tách (gọn cho cửa sổ hẹp): thân nút = chép link Project Claude, ▾ = chép câu lệnh mẫu -->
+            <SplitButton Grid.Column="2" Click="CopyClaudeLinkSplit_Click" AutomationProperties.Name="Chép link Claude"
+                         ToolTipService.ToolTip="Chép link Project &quot;MeRon – đọc sổ đơn&quot; trên claude.ai: tự mở trình duyệt, dán link, gửi ảnh trang sổ, Claude chép lại theo mẫu - copy kết quả dán vào ô chữ. ▾: chép câu lệnh mẫu (app điện thoại / chat khác)">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <FontIcon Glyph="&#xE722;" FontSize="14" />
-                    <TextBlock Text="Mở Claude" />
+                    <FontIcon Glyph="&#xE71B;" FontSize="14" />
+                    <TextBlock Text="Chép link Claude" />
                 </StackPanel>
                 <SplitButton.Flyout>
                     <MenuFlyout Placement="BottomEdgeAlignedRight">
-                        <MenuFlyoutItem Text="Mở Claude (gửi ảnh trang sổ)" Click="OpenClaude_Click">
+                        <MenuFlyoutItem Text="Chép link Claude (gửi ảnh trang sổ)" Click="CopyClaudeLink_Click">
                             <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE722;" />
+                                <FontIcon Glyph="&#xE71B;" />
                             </MenuFlyoutItem.Icon>
                         </MenuFlyoutItem>
                         <MenuFlyoutItem Text="Chép câu lệnh mẫu cho Claude" Click="CopyPrompt_Click">

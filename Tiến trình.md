@@ -449,6 +449,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [x] **Nhập đơn hàng loạt - nút Mở Claude ▾** (người dùng yêu cầu 2026-11-03): mở Project claude.ai "MeRon – đọc sổ đơn"
   (đã có hướng dẫn chép sổ) trên trình duyệt - gửi ảnh trang sổ, dán kết quả vào ô chữ; gộp với Câu lệnh cho Claude thành 1 nút
   tách (▾ → Chép câu lệnh mẫu) để ô Ngày giao không bị ép ở cửa sổ hẹp. Cập nhật F1, README (2026-11-03)
+- [x] **Nút Mở Claude → Chép link Claude ▾** (người dùng yêu cầu 2026-11-04): không tự mở trình duyệt nữa, thân nút (và mục
+  trong ▾) chỉ chép link Project vào clipboard, người dùng tự mở trình duyệt và dán link. Cập nhật F1, README. GUI Sandbox
+  14/14 (không mở trình duyệt, clipboard đúng link, Chép câu lệnh mẫu vẫn chạy, ô Ngày giao đủ rộng) (2026-11-04)
 - [ ] Người dùng xác nhận: "lá" là món gì (chữ viết tắt)
 - [ ] Nhập đơn hàng loạt từ Excel / CSV (đề xuất cũ 2026-11-02) - làm khi có file mẫu
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị

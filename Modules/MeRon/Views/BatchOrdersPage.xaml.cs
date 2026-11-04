@@ -190,13 +190,13 @@ public sealed partial class BatchOrdersPage : Page
     /// <summary>Project "MeRon – đọc sổ đơn" trên claude.ai - đã có sẵn hướng dẫn chép sổ theo mẫu, chỉ cần gửi ảnh.</summary>
     private const string ClaudeProjectUrl = "https://claude.ai/project/01a1a082-e5ca-770f-921c-7a51f689414d";
 
-    private void OpenClaudeSplit_Click(SplitButton sender, SplitButtonClickEventArgs args) => OpenClaude_Click(sender, new RoutedEventArgs());
+    private void CopyClaudeLinkSplit_Click(SplitButton sender, SplitButtonClickEventArgs args) => CopyClaudeLink_Click(sender, new RoutedEventArgs());
 
-    private async void OpenClaude_Click(object sender, RoutedEventArgs e)
+    private void CopyClaudeLink_Click(object sender, RoutedEventArgs e)
     {
-        var opened = await Windows.System.Launcher.LaunchUriAsync(new Uri(ClaudeProjectUrl));
-        ViewModel.Message = opened
-            ? "Đã mở Claude trên trình duyệt - gửi ảnh trang sổ (kéo thả hoặc Ctrl+V), rồi chép kết quả dán vào ô chữ ở đây và bấm Làm mới (F5)."
-            : "Không mở được trình duyệt - tự mở " + ClaudeProjectUrl;
+        var package = new DataPackage();
+        package.SetText(ClaudeProjectUrl);
+        Clipboard.SetContent(package);
+        ViewModel.Message = "Đã chép link Claude - mở trình duyệt, dán link (Ctrl+V), gửi ảnh trang sổ, rồi chép kết quả dán vào ô chữ ở đây và bấm Làm mới (F5).";
     }
 }
