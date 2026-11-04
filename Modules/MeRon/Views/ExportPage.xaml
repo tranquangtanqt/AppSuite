@@ -18,8 +18,8 @@
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
-                            <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="#E8590C" />
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                            <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
                         <TextBlock Text="Xuất bộ backup TSV" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
@@ -54,8 +54,8 @@
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#261C7ED6">
-                            <FontIcon Glyph="&#xE753;" FontSize="15" Foreground="#1C7ED6" />
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource BlueSoftBrush}">
+                            <FontIcon Glyph="&#xE753;" FontSize="15" Foreground="{StaticResource BlueBrush}" />
                         </Border>
                         <TextBlock Text="Tải bộ backup lên Google Drive" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
@@ -103,8 +103,8 @@
                     Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}">
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E03131">
-                            <FontIcon Glyph="&#xE74D;" FontSize="15" Foreground="#E03131" />
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource RedSoftBrush}">
+                            <FontIcon Glyph="&#xE74D;" FontSize="15" Foreground="{StaticResource RedBrush}" />
                         </Border>
                         <TextBlock Text="Xoá toàn bộ dữ liệu ở máy" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>

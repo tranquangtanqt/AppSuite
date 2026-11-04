@@ -37,8 +37,8 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Border Width="30" Height="30" CornerRadius="15" Background="#26E8590C">
-                        <FontIcon Glyph="&#xE7BF;" FontSize="14" Foreground="#E8590C" />
+                    <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource OrangeSoftBrush}">
+                        <FontIcon Glyph="&#xE7BF;" FontSize="14" Foreground="{StaticResource OrangeBrush}" />
                     </Border>
                     <TextBlock Text="Khách hàng và món" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
@@ -145,7 +145,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button x:Name="AddLineButton" Command="{x:Bind ViewModel.AddLineCommand}" Click="AddLine_Click" AutomationProperties.Name="Thêm món">
+                        <Button x:Name="AddLineButton" AccessKey="M" Command="{x:Bind ViewModel.AddLineCommand}" Click="AddLine_Click" AutomationProperties.Name="Thêm món">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <SymbolIcon Symbol="Add" />
                                 <TextBlock Text="Thêm món" />
@@ -168,8 +168,8 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Border Width="30" Height="30" CornerRadius="15" Background="#262F9E44">
-                        <FontIcon Glyph="&#xE8C7;" FontSize="14" Foreground="#2F9E44" />
+                    <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource GreenSoftBrush}">
+                        <FontIcon Glyph="&#xE8C7;" FontSize="14" Foreground="{StaticResource GreenBrush}" />
                     </Border>
                     <TextBlock Text="Tiền, ngày giao, ghi chú" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
@@ -213,7 +213,7 @@
         <!-- Nút cố định cuối trang -->
         <Border Grid.Row="1" Padding="24,10" BorderThickness="0,1,0,0" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
             <StackPanel Orientation="Horizontal" Spacing="8">
-                <Button x:Name="SaveButton" Style="{StaticResource AccentButtonStyle}" Click="Save_Click" AutomationProperties.Name="Lưu đơn" ToolTipService.ToolTip="Lưu (Ctrl+S)">
+                <Button x:Name="SaveButton" Style="{StaticResource AccentButtonStyle}" Click="Save_Click" AccessKey="L" AutomationProperties.Name="Lưu đơn" ToolTipService.ToolTip="Lưu (Ctrl+S)">
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <SymbolIcon Symbol="Save" />
                         <TextBlock Text="Lưu" />
@@ -238,7 +238,7 @@
                         <TextBlock Text="Lưu và chép cho khách khác" />
                     </StackPanel>
                 </Button>
-                <Button Content="Quay lại" Click="Back_Click" />
+                <Button Content="Quay lại" Click="Back_Click" AccessKey="Q" />
                 <Button Click="CopyOrder_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsEdit), Mode=OneWay}" Margin="24,0,0,0"
                         AutomationProperties.Name="Sao chép đơn" ToolTipService.ToolTip="Tạo đơn mới giống đơn này (cùng ngày giao, giá hiện tại) - không lưu đơn đang sửa">
                     <StackPanel Orientation="Horizontal" Spacing="6">

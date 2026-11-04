@@ -12,6 +12,17 @@
                 <ResourceDictionary Source="ms-appx:///SharedUI/Themes/CompactStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- Màu riêng của MeRon cho thẻ thống kê, chấm nhóm...: đổi màu sửa 1 chỗ này -->
+            <SolidColorBrush x:Key="BlueBrush" Color="#1C7ED6" />
+            <SolidColorBrush x:Key="BlueSoftBrush" Color="#261C7ED6" />
+            <SolidColorBrush x:Key="GreenBrush" Color="#2F9E44" />
+            <SolidColorBrush x:Key="GreenSoftBrush" Color="#262F9E44" />
+            <SolidColorBrush x:Key="OnColorOverlayBrush" Color="#33FFFFFF" />
+            <SolidColorBrush x:Key="OrangeBrush" Color="#E8590C" />
+            <SolidColorBrush x:Key="OrangeSoftBrush" Color="#26E8590C" />
+            <SolidColorBrush x:Key="RedBrush" Color="#E03131" />
+            <SolidColorBrush x:Key="RedSoftBrush" Color="#26E03131" />
+
             <!-- Giao diện 2026-10-15: màu chủ đạo cam của MeRon thay màu nhấn Windows (nút Thêm, tab, số tiền...). -->
             <Color x:Key="SystemAccentColor">#E8590C</Color>
             <Color x:Key="SystemAccentColorLight1">#F76707</Color>

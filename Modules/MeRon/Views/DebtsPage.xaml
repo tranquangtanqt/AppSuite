@@ -25,7 +25,7 @@
             </Grid.ColumnDefinitions>
             <TextBlock Text="Công nợ" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
             <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,4,0,0" CornerRadius="14" Padding="12,3,12,4"
-                    Background="#26E8590C">
+                    Background="{StaticResource OrangeSoftBrush}">
                 <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
                            TextWrapping="Wrap" AutomationProperties.AutomationId="DebtSummary" />
             </Border>
@@ -35,7 +35,8 @@
         </Grid>
 
         <!-- Không hiện: chữ trên nút trong thẻ khách bind theo Visibility của phần tử này (DebtsPage_SizeChanged). -->
-        <Border x:Name="ButtonLabelSwitch" Width="0" Height="0" />
+        <Border x:Name="DetailLabelSwitch" Width="0" Height="0" />
+        <Border x:Name="PayLabelSwitch" Width="0" Height="0" />
 
         <!-- Bộ lọc: tính cả đơn giao sau hôm nay, sắp xếp -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16">
@@ -109,14 +110,14 @@
                                                 ToolTipService.ToolTip="Các đơn đang nợ của khách - ở đó Chụp ảnh để gửi Zalo, Thanh toán toàn bộ, sửa từng đơn">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <SymbolIcon Symbol="View" />
-                                                <TextBlock Text="Chi tiết" Visibility="{Binding Visibility, ElementName=ButtonLabelSwitch}" />
+                                                <TextBlock Text="Chi tiết" Visibility="{Binding Visibility, ElementName=DetailLabelSwitch}" />
                                             </StackPanel>
                                         </Button>
-                                        <Button Tag="{x:Bind}" Click="PayAll_Click" Style="{StaticResource AccentButtonStyle}" AutomationProperties.Name="Thanh toán hết"
+                                        <Button Tag="{x:Bind}" Click="PayAll_Click" AutomationProperties.Name="Thanh toán hết"
                                                 ToolTipService.ToolTip="Chuyển mọi đơn đang nợ của khách sang Đã thanh toán (có hỏi lại)">
                                             <StackPanel Orientation="Horizontal" Spacing="6">
                                                 <FontIcon Glyph="&#xE8C7;" FontSize="16" />
-                                                <TextBlock Text="Thanh toán hết" Visibility="{Binding Visibility, ElementName=ButtonLabelSwitch}" />
+                                                <TextBlock Text="Thanh toán hết" Visibility="{Binding Visibility, ElementName=PayLabelSwitch}" />
                                             </StackPanel>
                                         </Button>
                                         <Button Tag="{x:Bind}" Click="CopyMessage_Click" AutomationProperties.Name="Chép tin nhắn nhắc nợ"

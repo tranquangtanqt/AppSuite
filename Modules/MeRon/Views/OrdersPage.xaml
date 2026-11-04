@@ -30,14 +30,14 @@
                 <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" AutomationProperties.AutomationId="OrdersSummary" FontWeight="SemiBold"
                            Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
             </Border>
-            <Button Grid.Column="2" Click="Detail_Click" AutomationProperties.Name="Chi tiết"
+            <Button Grid.Column="2" Click="Detail_Click" AccessKey="C" AutomationProperties.Name="Chi tiết"
                     ToolTipService.ToolTip="Toàn bộ đơn khớp bộ lọc, gộp theo khách - có Thanh toán toàn bộ, Chụp ảnh">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="View" />
                     <TextBlock Text="Chi tiết" />
                 </StackPanel>
             </Button>
-            <Button Grid.Column="3" Style="{StaticResource AccentButtonStyle}" Click="Add_Click" AutomationProperties.Name="Thêm đơn">
+            <Button Grid.Column="3" Style="{StaticResource AccentButtonStyle}" Click="Add_Click" AccessKey="T" AutomationProperties.Name="Thêm đơn">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="Add" />
                     <TextBlock Text="Thêm" />

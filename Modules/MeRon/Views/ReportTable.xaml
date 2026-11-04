@@ -19,6 +19,8 @@
                 <TextBlock Grid.Column="1" Text="{x:Bind QuantityHeader, Mode=OneWay}" FontWeight="SemiBold" HorizontalAlignment="Right" />
                 <TextBlock Grid.Column="2" Text="Thành tiền" FontWeight="SemiBold" HorizontalAlignment="Right" />
             </Grid>
+            <TextBlock x:Name="EmptyText" Text="Chưa có dữ liệu trong khoảng ngày này." Margin="12,10" Visibility="Collapsed"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             <ItemsControl ItemsSource="{x:Bind Lines, Mode=OneWay}" IsTabStop="False">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="vm:ReportLine">

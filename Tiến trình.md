@@ -208,15 +208,17 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Công nợ, Khách lâu không đặt: ô tìm không giãn cao, hàng tiêu đề chia lại, trước đây cửa sổ hẹp làm mất cả danh sách (2026-11-04)
 - [x] Cửa sổ hẹp: menu trái tự thu về icon dưới 900 logical (`PaneDisplayMode="Auto"`), đủ tab và ô ngày (2026-11-04)
 - [x] Công nợ: tên khách, khoảng ngày rút gọn "..." kèm tooltip; dưới 760 logical nút Chi tiết, Thanh toán hết chỉ còn icon (2026-11-04)
-- [ ] Công nợ: nút cam Thanh toán hết lặp ở mọi thẻ (đợt 2)
+- [x] Công nợ: nút cam Thanh toán hết lặp ở mọi thẻ → nút viền, giữ chữ; Chi tiết chỉ icon ở cửa sổ nhỏ (2026-11-04)
 - [ ] Tương phản: chữ trắng trên cam ~3,6:1, xanh lá ~3,4:1, xanh dương ~4,2:1, cam chế độ tối ~2,6:1 (chữ nhỏ cần 4,5:1); nhãn Đã lên đơn cam trên nền cam nhạt
-- [ ] Menu trái 17 mục, cửa sổ 808 px chỉ thấy 7 mục, không có dấu hiệu còn mục bên dưới
-- [ ] Đặt hàng: thẻ đơn cao, chỉ thấy khoảng 2,5 đơn; đơn 1 món vẫn có dòng Tổng lặp lại; nền xanh cả thẻ đơn đã thanh toán + chữ cam
+- [x] Menu trái 17 mục → Thống kê, Danh mục, Dữ liệu thành nhóm mở / đóng; nhóm ẩn khi ẩn hết mục con (2026-11-04)
+- [x] Đặt hàng: thẻ đơn gọn, đơn 1 món không giảm giá bỏ dòng Tổng (Chi tiết + ảnh Zalo giữ nguyên); giữ nền xanh đậm theo ý người dùng, đổi màu nhãn và số tổng cho dễ đọc (2026-11-04)
 - [x] Biểu đồ: 4 thẻ số chia đều 1 hàng, biểu đồ lên trong màn hình; Đặt hàng không có đơn chỉ báo 1 lần (2026-11-04)
-- [ ] Bảng trống ở Tổng hợp không có lời nhắc
+- [x] Bảng trống ở Tổng hợp có lời nhắc (dùng chung ReportTable nên cả Theo đơn hàng, Theo món ăn) (2026-11-04)
 - [x] Nhãn: Tổng sau giảm giá (Theo đơn hàng) / Tổng trước giảm giá (Theo món ăn), đã đối chiếu dữ liệu tháng 10: chênh đúng bằng tổng giảm giá (2026-11-04)
 - [x] Thanh tiêu đề tối theo app (2026-11-04)
-- [ ] 127 chỗ mã màu viết cứng, 10 cỡ chữ khác nhau; chưa có AccessKey
+- [x] Gom 69 chỗ mã màu trong XAML về `App.xaml` (giữ nguyên màu), màu trong `Views/Ui.cs` vẫn riêng; AccessKey ở Đặt hàng, form đơn. Đợt 2: unit test 192/192, GUI Sandbox 19/19 (2026-11-04)
+- [ ] Gom 10 cỡ chữ khác nhau (để sau)
+- [ ] Màu cam đậm hơn #C2410C: chờ người dùng chọn (mục Tương phản ở trên chưa xong)
 
 Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), import TSV = thay toàn bộ, làm 4 đợt.
 

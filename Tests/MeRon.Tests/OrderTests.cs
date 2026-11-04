@@ -6,6 +6,21 @@ using MeRon.Core.Orders;
 
 namespace MeRon.Tests;
 
+public class OrderTotalRowTests
+{
+    private static Order Make(int items, long discount) => new(1, null, null, OrderStatus.Shipping, null, null, discount, 0, 0, null,
+        Enumerable.Range(1, items).Select(i => new OrderItem(i, 1, null, "Món", 5000, 1, 5000)).ToList());
+
+    [Theory]
+    [InlineData(1, 0, false)]
+    [InlineData(1, 1000, true)]
+    [InlineData(2, 0, true)]
+    [InlineData(3, 1000, true)]
+    [InlineData(0, 0, true)]
+    public void Only_a_single_item_order_without_discount_drops_the_total_row(int items, long discount, bool expected) =>
+        Assert.Equal(expected, Make(items, discount).NeedsTotalRow);
+}
+
 public class OrderCalculatorTests
 {
     private static readonly Dictionary<long, Product> Products = new()

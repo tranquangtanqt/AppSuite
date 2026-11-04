@@ -29,8 +29,8 @@
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
             <StackPanel Spacing="10">
             <StackPanel Orientation="Horizontal" Spacing="10">
-                <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
-                    <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="#E8590C" />
+                <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                    <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
                 </Border>
                 <TextBlock Text="Từ thư mục trên máy hoặc link folder Google Drive" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
             </StackPanel>
@@ -68,7 +68,7 @@
                                         </Grid.ColumnDefinitions>
                                         <FontIcon Glyph="&#xE787;" FontSize="13" Opacity="0.7" VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="1" Text="{x:Bind Title}" VerticalAlignment="Center" />
-                                        <Border Grid.Column="2" CornerRadius="10" Padding="8,1,8,2" Background="#26E8590C" VerticalAlignment="Center"
+                                        <Border Grid.Column="2" CornerRadius="10" Padding="8,1,8,2" Background="{StaticResource OrangeSoftBrush}" VerticalAlignment="Center"
                                                 Visibility="{x:Bind local:Ui.VisibleIf(IsCurrent), Mode=OneWay}">
                                             <TextBlock Text="Đang xem" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                         </Border>
@@ -92,8 +92,8 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#261C7ED6" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE753;" FontSize="15" Foreground="#1C7ED6" />
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource BlueSoftBrush}" VerticalAlignment="Center">
+                            <FontIcon Glyph="&#xE753;" FontSize="15" Foreground="{StaticResource BlueBrush}" />
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
                             <TextBlock Text="Hoặc lấy từ Google Drive (đăng nhập)" Style="{StaticResource BodyStrongTextBlockStyle}" />

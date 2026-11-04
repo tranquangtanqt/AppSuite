@@ -26,8 +26,8 @@
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
-                    <Border Width="30" Height="30" CornerRadius="15" Background="#261C7ED6">
-                        <FontIcon Glyph="&#xE719;" FontSize="14" Foreground="#1C7ED6" />
+                    <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource BlueSoftBrush}">
+                        <FontIcon Glyph="&#xE719;" FontSize="14" Foreground="{StaticResource BlueBrush}" />
                     </Border>
                     <TextBlock Text="Ngày nhập và các khoản hàng" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
@@ -74,7 +74,7 @@
                                 <TextBlock Text="Thêm hàng" />
                             </StackPanel>
                         </Button>
-                        <Border HorizontalAlignment="Right" Padding="14,6" CornerRadius="16" Background="#1C7ED6">
+                        <Border HorizontalAlignment="Right" Padding="14,6" CornerRadius="16" Background="{StaticResource BlueBrush}">
                             <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="16"
                                        Foreground="White" AutomationProperties.AutomationId="PurchaseTotal" />
                         </Border>

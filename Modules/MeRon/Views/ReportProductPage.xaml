@@ -42,8 +42,8 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                         <StackPanel Spacing="8">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
-                                    <FontIcon Glyph="&#xED56;" FontSize="15" Foreground="#E8590C" />
+                                <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                                    <FontIcon Glyph="&#xED56;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
                                 </Border>
                                 <TextBlock Text="Tổng số món" Opacity="0.75" VerticalAlignment="Center" />
                             </StackPanel>
@@ -54,7 +54,7 @@
                     <Border Grid.Column="1" Padding="16,14" CornerRadius="10" Background="{ThemeResource AccentFillColorDefaultBrush}">
                         <StackPanel Spacing="8">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <Border Width="32" Height="32" CornerRadius="16" Background="#33FFFFFF">
+                                <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OnColorOverlayBrush}">
                                     <FontIcon Glyph="&#xE8C7;" FontSize="15" Foreground="White" />
                                 </Border>
                                 <TextBlock Text="Tổng trước giảm giá" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
@@ -66,8 +66,8 @@
                             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
                         <StackPanel Spacing="8">
                             <StackPanel Orientation="Horizontal" Spacing="10">
-                                <Border Width="32" Height="32" CornerRadius="16" Background="#261C7ED6">
-                                    <FontIcon Glyph="&#xE8FD;" FontSize="15" Foreground="#1C7ED6" />
+                                <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource BlueSoftBrush}">
+                                    <FontIcon Glyph="&#xE8FD;" FontSize="15" Foreground="{StaticResource BlueBrush}" />
                                 </Border>
                                 <TextBlock Text="Số món khác nhau" Opacity="0.75" VerticalAlignment="Center" />
                             </StackPanel>

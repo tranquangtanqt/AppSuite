@@ -31,22 +31,23 @@ public sealed partial class MainWindow : Window
 
     private static string MenuSettingsPath => System.IO.Path.Combine(AppServices.Database.Folder, Core.MenuSettings.FileName);
 
-    /// <summary>1 mục menu ẩn được: nhóm (tiêu đề phía trên nó), tên, tag trang.</summary>
+    /// <summary>1 mục menu ẩn được: nhóm, tên, tag trang.</summary>
     public sealed record MenuEntry(string Group, string Name, string Page);
 
     public IReadOnlyList<MenuEntry> MenuEntries()
     {
         var entries = new List<MenuEntry>();
-        var group = string.Empty;
-        foreach (var item in Nav.MenuItems)
+        foreach (var item in Nav.MenuItems.OfType<NavigationViewItem>())
         {
-            if (item is NavigationViewItemHeader header)
+            if (item.MenuItems.Count > 0)
             {
-                group = header.Content as string ?? string.Empty;
+                var group = item.Content as string ?? string.Empty;
+                entries.AddRange(item.MenuItems.OfType<NavigationViewItem>()
+                    .Select(child => new MenuEntry(group, child.Content as string ?? string.Empty, child.Tag as string ?? string.Empty)));
             }
-            else if (item is NavigationViewItem { Tag: string tag, Content: string name })
+            else if (item is { Tag: string tag, Content: string name })
             {
-                entries.Add(new MenuEntry(group, name, tag));
+                entries.Add(new MenuEntry("Bán hàng", name, tag));
             }
         }
         return entries;
@@ -111,34 +112,21 @@ public sealed partial class MainWindow : Window
         ApplyMenuSettings();
     }
 
-    /// <summary>Ẩn mục bị bỏ tích; tiêu đề nhóm ẩn khi cả nhóm không còn mục nào hiện.</summary>
+    /// <summary>Ẩn mục bị bỏ tích; nhóm ẩn khi không còn mục con nào hiện.</summary>
     private void ApplyMenuSettings()
     {
-        NavigationViewItemHeader? header = null;
-        var groupVisible = false;
-        void CloseGroup()
+        foreach (var item in AllItems())
         {
-            if (header is not null)
+            if (item.Tag is string tag)
             {
-                header.Visibility = groupVisible ? Visibility.Visible : Visibility.Collapsed;
+                item.Visibility = MenuSettings.IsVisible(tag) ? Visibility.Visible : Visibility.Collapsed;
             }
         }
-        foreach (var item in Nav.MenuItems)
+        foreach (var group in Nav.MenuItems.OfType<NavigationViewItem>().Where(i => i.MenuItems.Count > 0))
         {
-            if (item is NavigationViewItemHeader next)
-            {
-                CloseGroup();
-                header = next;
-                groupVisible = false;
-            }
-            else if (item is NavigationViewItem { Tag: string tag } menuItem)
-            {
-                var visible = MenuSettings.IsVisible(tag);
-                menuItem.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-                groupVisible |= visible;
-            }
+            group.Visibility = group.MenuItems.OfType<NavigationViewItem>().Any(i => i.Visibility == Visibility.Visible)
+                ? Visibility.Visible : Visibility.Collapsed;
         }
-        CloseGroup();
     }
 
     /// <summary>Chưa có dữ liệu (lần đầu mở) → vào thẳng trang Nhập dữ liệu; có rồi → Đặt hàng.</summary>
@@ -157,8 +145,11 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private NavigationViewItem? FindItem(string tag) =>
-        Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => i.Tag as string == tag);
+    /// <summary>Các mục mở trang: mục lẻ và mục con của nhóm (nhóm không có Tag, bấm chỉ mở / đóng).</summary>
+    private IEnumerable<NavigationViewItem> AllItems() =>
+        Nav.MenuItems.OfType<NavigationViewItem>().SelectMany(i => i.MenuItems.Count > 0 ? i.MenuItems.OfType<NavigationViewItem>() : [i]);
+
+    private NavigationViewItem? FindItem(string tag) => AllItems().FirstOrDefault(i => i.Tag as string == tag);
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {

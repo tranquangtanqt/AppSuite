@@ -23,7 +23,7 @@
             <TextBlock Text="Khách hàng tiềm năng" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
             <!-- Số khách + tổng tiền thành nhãn tròn cam nhạt -->
             <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,4,0,0" CornerRadius="14" Padding="12,3,12,4"
-                    Background="#26E8590C">
+                    Background="{StaticResource OrangeSoftBrush}">
                 <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
                            TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="CustomerReportSummary" />
             </Border>

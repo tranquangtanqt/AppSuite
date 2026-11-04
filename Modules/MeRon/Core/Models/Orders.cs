@@ -47,6 +47,9 @@ public sealed record Order(
     public DateTime? Delivery => DbDate.Parse(DeliveryDatetime);
 
     public DateTime? Payment => DbDate.Parse(PaymentDatetime);
+
+    /// <summary>Đơn đúng 1 món, không giảm giá: tổng trùng số trên dòng món nên thẻ danh sách bỏ dòng Tổng cho gọn.</summary>
+    public bool NeedsTotalRow => Items.Count != 1 || DiscountValue > 0;
 }
 
 /// <summary>Cách sắp xếp danh sách đơn (như OrderSortOption của điện thoại); <see cref="Default"/> = ngày giao mới nhất trước.</summary>

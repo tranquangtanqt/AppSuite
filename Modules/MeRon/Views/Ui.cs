@@ -60,6 +60,23 @@ internal static class Ui
         _ => NoTint,
     };
 
+    // Theme chỉ đặt lúc khởi động nên chọn màu 1 lần là đủ.
+    private static readonly bool IsDark = Application.Current.RequestedTheme == ApplicationTheme.Dark;
+    private static readonly Brush PaidLabel = new SolidColorBrush(IsDark ? ColorHelper.FromArgb(0xFF, 0x8C, 0xE9, 0x9A) : ColorHelper.FromArgb(0xFF, 0x1B, 0x5E, 0x2C));
+    private static readonly Brush ShippingLabel = new SolidColorBrush(IsDark ? ColorHelper.FromArgb(0xFF, 0xFF, 0xA9, 0x4D) : ColorHelper.FromArgb(0xFF, 0xB8, 0x3D, 0x0A));
+
+    /// <summary>Chữ nhãn trạng thái: đậm hơn vạch màu để đọc được trên nền xanh của đơn Đã thanh toán.</summary>
+    public static Brush StatusLabel(OrderStatus status) => status switch
+    {
+        OrderStatus.Completed => PaidLabel,
+        OrderStatus.Cancelled => CancelledSolid,
+        _ => ShippingLabel,
+    };
+
+    /// <summary>Số tổng trên thẻ: cam khó đọc trên nền xanh nên đơn Đã thanh toán dùng màu chữ thường.</summary>
+    public static Brush TotalForeground(OrderStatus status) => (Brush)Application.Current.Resources[
+        status == OrderStatus.Completed ? "TextFillColorPrimaryBrush" : "AccentTextFillColorPrimaryBrush"];
+
     public static Brush StatusSolid(OrderStatus status) => status switch
     {
         OrderStatus.Completed => PaidSolid,

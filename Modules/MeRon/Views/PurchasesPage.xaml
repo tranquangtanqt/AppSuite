@@ -61,7 +61,7 @@
                                         <ColumnDefinition Width="5" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
-                                    <Rectangle Fill="#1C7ED6" />
+                                    <Rectangle Fill="{StaticResource BlueBrush}" />
                                     <StackPanel Grid.Column="1" Spacing="6" Padding="16,12">
                                         <Grid ColumnSpacing="10">
                                             <Grid.ColumnDefinitions>
@@ -72,8 +72,8 @@
                                                 <FontIcon Glyph="&#xE787;" FontSize="15" Opacity="0.75" />
                                                 <TextBlock Text="{x:Bind DateText}" FontWeight="SemiBold" FontSize="16" />
                                             </StackPanel>
-                                            <Border Grid.Column="1" CornerRadius="11" Padding="10,2,10,3" Background="#261C7ED6" VerticalAlignment="Center">
-                                                <TextBlock Text="{x:Bind CountText}" FontSize="12" FontWeight="SemiBold" Foreground="#1C7ED6" />
+                                            <Border Grid.Column="1" CornerRadius="11" Padding="10,2,10,3" Background="{StaticResource BlueSoftBrush}" VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind CountText}" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource BlueBrush}" />
                                             </Border>
                                         </Grid>
                                         <ItemsControl ItemsSource="{x:Bind Lines}" IsTabStop="False">
@@ -92,7 +92,7 @@
                                         </ItemsControl>
                                         <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,2,0,0" />
                                         <TextBlock HorizontalAlignment="Right">
-                                            <Run Text="Tổng  " FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind TotalText}" FontSize="17" FontWeight="Bold" Foreground="#1C7ED6" />
+                                            <Run Text="Tổng  " FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind TotalText}" FontSize="17" FontWeight="Bold" Foreground="{StaticResource BlueBrush}" />
                                         </TextBlock>
                                     </StackPanel>
                                 </Grid>

@@ -24,7 +24,7 @@
             </Grid.ColumnDefinitions>
             <TextBlock Text="Khách lâu không đặt" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
             <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,4,0,0" CornerRadius="14" Padding="12,3,12,4"
-                    Background="#26E8590C">
+                    Background="{StaticResource OrangeSoftBrush}">
                 <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
                            TextWrapping="Wrap" AutomationProperties.AutomationId="LapsedSummary" />
             </Border>

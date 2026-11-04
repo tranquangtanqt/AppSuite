@@ -24,7 +24,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Text="Địa chỉ" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
-            <Border Grid.Column="1" VerticalAlignment="Center" Margin="16,4,0,0" CornerRadius="14" Padding="12,3,12,4" Background="#26E8590C"><TextBlock Text="{x:Bind ViewModel.CountText, Mode=OneWay}" AutomationProperties.AutomationId="CountText" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" /></Border>
+            <Border Grid.Column="1" VerticalAlignment="Center" Margin="16,4,0,0" CornerRadius="14" Padding="12,3,12,4" Background="{StaticResource OrangeSoftBrush}"><TextBlock Text="{x:Bind ViewModel.CountText, Mode=OneWay}" AutomationProperties.AutomationId="CountText" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" /></Border>
             <TextBox x:Name="SearchBox" Grid.Column="3" PlaceholderText="Tìm theo mã hoặc tên" AutomationProperties.Name="Tìm địa chỉ"
                      Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
             <Button Grid.Column="4" Style="{StaticResource AccentButtonStyle}" Click="Add_Click" AutomationProperties.Name="Thêm địa chỉ">
@@ -72,7 +72,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Bind Index}" Opacity="0.6" VerticalAlignment="Center" />
-                            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="11" Padding="10,2,10,3" Background="#26E8590C"><TextBlock Text="{x:Bind Item.Code}" FontWeight="SemiBold" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" /></Border>
+                            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="11" Padding="10,2,10,3" Background="{StaticResource OrangeSoftBrush}"><TextBlock Text="{x:Bind Item.Code}" FontWeight="SemiBold" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" /></Border>
                             <TextBlock Grid.Column="2" Text="{x:Bind Item.Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                         </Grid>
                     </DataTemplate>

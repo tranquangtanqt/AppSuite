@@ -16,6 +16,13 @@ public sealed partial class OrderCard : UserControl
     public static readonly DependencyProperty ShowCustomerProperty = DependencyProperty.Register(
         nameof(ShowCustomer), typeof(bool), typeof(OrderCard), new PropertyMetadata(true, (d, _) => ((OrderCard)d).ApplyShowCustomer()));
 
+    /// <summary>
+    /// True (mặc định, danh sách): thẻ thấp, đơn 1 món không giảm giá bỏ dòng Tổng vì trùng số trên dòng món.
+    /// False (Chi tiết, ảnh gửi Zalo): cỡ thoáng, luôn có dòng Tổng để khách đọc.
+    /// </summary>
+    public static readonly DependencyProperty CompactProperty = DependencyProperty.Register(
+        nameof(Compact), typeof(bool), typeof(OrderCard), new PropertyMetadata(true, (d, _) => ((OrderCard)d).ApplyCompact()));
+
     public OrderCard()
     {
         InitializeComponent();
@@ -33,6 +40,21 @@ public sealed partial class OrderCard : UserControl
         get => (bool)GetValue(ShowCustomerProperty);
         set => SetValue(ShowCustomerProperty, value);
     }
+
+    public bool Compact
+    {
+        get => (bool)GetValue(CompactProperty);
+        set => SetValue(CompactProperty, value);
+    }
+
+    private void ApplyCompact()
+    {
+        CardBody.Spacing = Compact ? 3 : 6;
+        CardBody.Padding = Compact ? new Thickness(14, 7, 14, 7) : new Thickness(16, 12, 16, 12);
+    }
+
+    private Visibility TotalVisibility(OrderCardViewModel? card, bool compact) =>
+        !compact || card?.Order.NeedsTotalRow == true ? Visibility.Visible : Visibility.Collapsed;
 
     private void ApplyShowCustomer()
     {

@@ -17,14 +17,14 @@
         </Grid.ColumnDefinitions>
         <Rectangle Grid.ColumnSpan="2" Fill="{x:Bind local:Ui.StatusTint(Card.Status), Mode=OneWay}" />
         <Rectangle Fill="{x:Bind local:Ui.StatusSolid(Card.Status), Mode=OneWay}" />
-        <StackPanel Grid.Column="1" Spacing="6" Padding="16,12,16,12" Opacity="{x:Bind local:Ui.DimIfCancelled(Card.Status), Mode=OneWay}">
+        <StackPanel x:Name="CardBody" Grid.Column="1" Spacing="3" Padding="14,7,14,7" Opacity="{x:Bind local:Ui.DimIfCancelled(Card.Status), Mode=OneWay}">
             <Grid ColumnSpacing="10">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="CustomerText" Text="{x:Bind Card.CustomerName, Mode=OneWay}" FontWeight="SemiBold" FontSize="16" TextTrimming="CharacterEllipsis"
+                <TextBlock x:Name="CustomerText" Text="{x:Bind Card.CustomerName, Mode=OneWay}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center" />
                 <!-- ShowCustomer=False (Chi tiết): ẩn tên, khối ngày giao chuyển sang cột đầu -->
                 <StackPanel x:Name="DeliveryPanel" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Opacity="0.75">
@@ -34,7 +34,7 @@
                 <Border Grid.Column="2" CornerRadius="11" Padding="10,2,10,3" VerticalAlignment="Center"
                         Background="{x:Bind local:Ui.StatusSoft(Card.Status), Mode=OneWay}">
                     <TextBlock Text="{x:Bind Card.StatusText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
-                               Foreground="{x:Bind local:Ui.StatusSolid(Card.Status), Mode=OneWay}" />
+                               Foreground="{x:Bind local:Ui.StatusLabel(Card.Status), Mode=OneWay}" />
                 </Border>
             </Grid>
             <ItemsControl ItemsSource="{x:Bind Card.Lines, Mode=OneWay}" IsTabStop="False">
@@ -64,8 +64,9 @@
                     <TextBlock Text="{x:Bind Card.Note, Mode=OneWay}" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
-            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,2,0,0" />
-            <Grid ColumnSpacing="16">
+            <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,2,0,0"
+                       Visibility="{x:Bind TotalVisibility(Card, Compact), Mode=OneWay}" />
+            <Grid ColumnSpacing="16" Visibility="{x:Bind TotalVisibility(Card, Compact), Mode=OneWay}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -77,7 +78,7 @@
                 </StackPanel>
                 <TextBlock Grid.Column="1" VerticalAlignment="Center">
                     <Run Text="Tổng  " FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind Card.TotalText, Mode=OneWay}" FontSize="14" FontWeight="Bold"
-                                                                         Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                                                         Foreground="{x:Bind local:Ui.TotalForeground(Card.Status), Mode=OneWay}" />
                 </TextBlock>
             </Grid>
         </StackPanel>

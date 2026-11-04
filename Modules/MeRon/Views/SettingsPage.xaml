@@ -13,8 +13,8 @@
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
-                            <FontIcon Glyph="&#xE790;" FontSize="15" Foreground="#E8590C" />
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                            <FontIcon Glyph="&#xE790;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
                         <TextBlock Text="Giao diện" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
@@ -36,8 +36,8 @@
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
-                            <FontIcon Glyph="&#xE700;" FontSize="15" Foreground="#E8590C" />
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                            <FontIcon Glyph="&#xE700;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
                         <TextBlock Text="Menu bên trái" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
@@ -57,8 +57,8 @@
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
-                        <Border Width="32" Height="32" CornerRadius="16" Background="#26E8590C">
-                            <FontIcon Glyph="&#xE722;" FontSize="15" Foreground="#E8590C" />
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                            <FontIcon Glyph="&#xE722;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
                         <TextBlock Text="Ảnh chụp" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
