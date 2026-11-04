@@ -36,6 +36,7 @@ internal static class HelpContent
 
         new("Sửa dữ liệu", "", "Sửa ô, thêm / xoá dòng và cột, điền nhanh, copy - dán với Excel.",
         [
+            new("Xuống dòng trong ô", "Khi sửa ô (F2 hoặc bấm đúp), Shift+Enter xuống dòng ở mọi ô. Ô nhiều dòng tự cao lên cho đủ chữ. Enter = ghi, Esc = bỏ. Ô đã có xuống dòng giữ nguyên kiểu xuống dòng của file."),
             new("Sửa ô", "Bấm đúp vào ô, hoặc chọn ô rồi gõ / F2. Enter để xong, Esc để huỷ sửa.", "F2", "Enter", "Esc"),
             new("Dòng ▾", "Thêm dòng / Nhân bản dòng đang chọn: chèn ngay sau dòng đang chọn (không chọn gì thì thêm ở cuối bảng). Xoá dòng đang chọn: xoá mọi dòng đang chọn (giữ Ctrl / Shift khi bấm để chọn nhiều dòng)."),
             new("Cột ▾", "Thêm cột ở cuối; đổi tên hoặc xoá cột của ô đang chọn (chưa chọn ô nào thì thanh trạng thái nhắc). Chuột phải tiêu đề cột cũng có các việc này."),

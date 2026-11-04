@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using CsvEditor.Services;
 
 namespace CsvEditor.Models;
 
@@ -23,7 +24,9 @@ public sealed class CsvRow : INotifyPropertyChanged
     public string this[int columnIndex]
     {
         get => GetCell(columnIndex);
-        set => SetCell(columnIndex, value);
+        // Chỉ binding của DataGrid gán vào đây: lúc sửa ô DataGrid tự đổi binding thành 2 chiều, ghi chữ thô của ô nhập (xuống dòng
+        // là \r) đè lên giá trị đã ghi qua SetCell của ViewModel, làm hỏng xuống dòng trong file và không về được bằng Hoàn tác.
+        set => SetCell(columnIndex, CellText.RestoreNewlines(value, GetCell(columnIndex)));
     }
 
     public string GetCell(int columnIndex)

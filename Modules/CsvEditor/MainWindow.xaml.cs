@@ -484,7 +484,7 @@ public sealed partial class MainWindow : Window
     private static void Row_Loaded(object sender, RoutedEventArgs e) => RemoveCellsMinHeight((DependencyObject)sender);
 
     /// <summary>Template của DataGridRow đặt cứng MinHeight="32" cho phần chứa các ô, Style không tới được; còn nguyên
-    /// thì RowHeight 26 không có tác dụng.</summary>
+    /// thì dòng không thấp hơn 32 được.</summary>
     private static void RemoveCellsMinHeight(DependencyObject row)
     {
         if (FindDescendants<DataGridCellsPresenter>(row).FirstOrDefault() is { } presenter)
@@ -516,6 +516,54 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    /// <summary>Sửa ô: Shift+Enter xuống dòng ở mọi ô (như Excel Alt+Enter). Ô nhập mặc định chỉ 1 dòng: để nguyên thì Enter do
+    /// DataGrid xử lý (ghi, sang dòng dưới); ô có xuống dòng thì đổi sang ô nhập nhiều dòng, nếu không các dòng sau bị cắt mất
+    /// rồi Enter ghi đè làm mất dữ liệu.</summary>
+    private void Grid_PreparingCellForEdit(object? sender, DataGridPreparingCellForEditEventArgs e)
+    {
+        if (e.EditingElement is not TextBox box || e.Row.DataContext is not CsvRow row)
+        {
+            return;
+        }
+
+        box.IsSpellCheckEnabled = false; // dữ liệu bảng, tiếng Việt bị gạch đỏ
+        box.PreviewKeyDown -= CellEditor_PreviewKeyDown;
+        box.PreviewKeyDown += CellEditor_PreviewKeyDown;
+        var value = row.GetCell(Grid.Columns.IndexOf(e.Column));
+        if (CellText.IsMultiLine(value))
+        {
+            box.AcceptsReturn = true;
+            box.Text = value;
+        }
+    }
+
+    private void CellEditor_PreviewKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key != Windows.System.VirtualKey.Enter || sender is not TextBox box)
+        {
+            return;
+        }
+
+        var shift = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Shift)
+            .HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
+        if (shift)
+        {
+            e.Handled = true;
+            box.AcceptsReturn = true;
+            // F2 chọn sẵn cả ô: xuống dòng ở cuối chữ, không xoá nội dung đang chọn.
+            var allSelected = box.SelectionLength == box.Text.Length;
+            var start = allSelected ? box.Text.Length : box.SelectionStart;
+            var length = allSelected ? 0 : box.SelectionLength;
+            box.Text = box.Text.Remove(start, length).Insert(start, "\r");
+            box.SelectionStart = start + 1;
+        }
+        else if (box.AcceptsReturn)
+        {
+            e.Handled = true;
+            Grid.CommitEdit(DataGridEditingUnit.Row, true);
+        }
+    }
+
     private void Grid_CellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
     {
         if (e.EditAction != DataGridEditAction.Commit)
@@ -530,7 +578,8 @@ public sealed partial class MainWindow : Window
 
         var viewRowIndex = e.Row.GetIndex();
         var columnIndex = Grid.Columns.IndexOf(e.Column);
-        ViewModel.SetCell(viewRowIndex, columnIndex, textBox.Text);
+        var original = ViewModel.ViewRows[viewRowIndex].GetCell(columnIndex);
+        ViewModel.SetCell(viewRowIndex, columnIndex, CellText.RestoreNewlines(textBox.Text, original));
     }
 
     // ----- Fill handle (Excel-style drag-to-fill) -----
@@ -1825,7 +1874,8 @@ public sealed partial class MainWindow : Window
     /// giá trị cũ và báo ở thanh trạng thái.</summary>
     private void CommitRecordField(FrameworkElement box)
     {
-        if (box.DataContext is not RecordField field || _recordRow is null || field.EditText == field.Value)
+        if (box.DataContext is not RecordField field || _recordRow is null
+            || CellText.RestoreNewlines(field.EditText, field.Value) == field.Value)
         {
             return;
         }
@@ -1838,8 +1888,8 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        field.Value = field.EditText; // trước SetCell: UpdateRecordPane (qua CanUndo) thấy giá trị đã khớp, không ghi đè ô
-        ViewModel.SetCell(viewIndex, field.ColumnIndex, field.EditText);
+        field.Value = CellText.RestoreNewlines(field.EditText, field.Value); // trước SetCell: UpdateRecordPane (qua CanUndo) thấy giá trị đã khớp, không ghi đè ô
+        ViewModel.SetCell(viewIndex, field.ColumnIndex, field.Value);
     }
 
     /// <summary>Enter = ghi + sang ô dưới; Shift+Enter = xuống dòng trong ô; Esc = trả lại giá trị đang có trong bảng.</summary>

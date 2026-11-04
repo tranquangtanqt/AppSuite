@@ -325,22 +325,23 @@
             HeadersVisibility="All"
             SelectionMode="Extended"
             RowHeaderWidth="48"
-            RowHeight="26"
             GridLinesVisibility="All"
             HorizontalGridLinesBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
             VerticalGridLinesBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
             CanUserReorderColumns="False"
             CanUserSortColumns="False"
             LoadingRow="Grid_LoadingRow"
+            PreparingCellForEdit="Grid_PreparingCellForEdit"
             CellEditEnding="Grid_CellEditEnding"
             Loaded="Grid_Loaded"
             CurrentCellChanged="Grid_CurrentCellChanged"
             SelectionChanged="Grid_SelectionChanged"
             ContextRequested="Grid_ContextRequested">
-            <!-- Dòng gọn: mặc định ô, dòng, tiêu đề dòng đều có MinHeight ~32 nên RowHeight nhỏ hơn không có tác dụng (còn
+            <!-- Dòng gọn: mặc định ô, dòng, tiêu đề dòng đều có MinHeight ~32. Đặt thấp nhất 26 ở ô, không đặt RowHeight cố định:
+                 ô có xuống dòng phải tự cao lên, cố định thì mất dòng đầu và cuối (còn
                  MinHeight của DataGridCellsPresenter trong template: xem Grid_LoadingRow). -->
             <controls:DataGrid.CellStyle>
-                <Style TargetType="controls:DataGridCell"><Setter Property="MinHeight" Value="0" /></Style>
+                <Style TargetType="controls:DataGridCell"><Setter Property="MinHeight" Value="26" /></Style>
             </controls:DataGrid.CellStyle>
             <controls:DataGrid.RowStyle>
                 <Style TargetType="controls:DataGridRow"><Setter Property="MinHeight" Value="0" /></Style>
