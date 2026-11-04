@@ -65,7 +65,7 @@
                                     </Border>
                                     <TextBlock Text="Tổng số đơn" Opacity="0.75" VerticalAlignment="Center" />
                                 </StackPanel>
-                                <TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" FontSize="30" FontWeight="Bold" AutomationProperties.AutomationId="ReportOrderCount" />
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" FontSize="30" FontWeight="Bold" AutomationProperties.AutomationId="ReportOrderCount" /></Viewbox>
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="1" Padding="16,14" CornerRadius="10" Background="{ThemeResource AccentFillColorDefaultBrush}">
@@ -74,10 +74,10 @@
                                     <Border Width="32" Height="32" CornerRadius="16" Background="#33FFFFFF">
                                         <FontIcon Glyph="&#xE8C7;" FontSize="15" Foreground="White" />
                                     </Border>
-                                    <TextBlock Text="Tổng thành tiền" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
+                                    <TextBlock Text="Tổng sau giảm giá" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                                 </StackPanel>
-                                <TextBlock Text="{x:Bind ViewModel.Amount, Mode=OneWay}" FontSize="30" FontWeight="Bold" Foreground="White"
-                                           AutomationProperties.AutomationId="ReportAmount" />
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.Amount, Mode=OneWay}" FontSize="30" FontWeight="Bold" Foreground="White"
+                                           AutomationProperties.AutomationId="ReportAmount" /></Viewbox>
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="2" Padding="16,14" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -89,7 +89,7 @@
                                     </Border>
                                     <TextBlock Text="TB mỗi đơn" Opacity="0.75" VerticalAlignment="Center" />
                                 </StackPanel>
-                                <TextBlock Text="{x:Bind ViewModel.AverageAmount, Mode=OneWay}" FontSize="30" FontWeight="Bold" />
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.AverageAmount, Mode=OneWay}" FontSize="30" FontWeight="Bold" /></Viewbox>
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="3" Padding="16,14" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -101,19 +101,17 @@
                                     </Border>
                                     <TextBlock Text="Tổng số món" Opacity="0.75" VerticalAlignment="Center" />
                                 </StackPanel>
-                                <TextBlock Text="{x:Bind ViewModel.QuantityValue, Mode=OneWay}" FontSize="30" FontWeight="Bold" />
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.QuantityValue, Mode=OneWay}" FontSize="30" FontWeight="Bold" /></Viewbox>
                             </StackPanel>
                         </Border>
                     </Grid>
-                    <ItemsControl x:Name="TilesList" ItemsSource="{x:Bind ViewModel.StatusTiles}" IsTabStop="False">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="12" />
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
+                    <ItemsRepeater x:Name="TilesList" ItemsSource="{x:Bind ViewModel.StatusTiles}">
+                        <ItemsRepeater.Layout>
+                            <UniformGridLayout MinItemWidth="190" MinColumnSpacing="12" MinRowSpacing="12" ItemsStretch="Fill" />
+                        </ItemsRepeater.Layout>
+                        <ItemsRepeater.ItemTemplate>
                             <DataTemplate x:DataType="vm:StatusTile">
-                                <Border Padding="16,12" CornerRadius="10" Width="226" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                <Border Padding="16,12" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1"
                                         AutomationProperties.Name="{x:Bind Label}">
                                     <StackPanel Spacing="6">
@@ -133,8 +131,8 @@
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
+                        </ItemsRepeater.ItemTemplate>
+                    </ItemsRepeater>
                 </StackPanel>
 
                 <!-- Theo món -->

@@ -121,7 +121,7 @@ public static class HelpContent
         new("Thống kê theo đơn hàng", "", "Tổng đơn / tiền, theo trạng thái, theo món, theo khách.", "ReportOrderPage",
         [
             new("Bộ lọc", "Trạng thái (mặc định Đã lên đơn), khách hàng (tuỳ chọn), khoảng ngày giao."),
-            new("Tổng cộng", "4 ô: Tổng số đơn, Tổng thành tiền, TB mỗi đơn (tổng tiền ÷ số đơn), Tổng số món - không tính đơn Huỷ. Bên dưới: từng trạng thái có số đơn, tiền và thanh % số đơn trong kỳ (Huỷ vẫn hiện riêng để biết)."),
+            new("Tổng cộng", "4 ô: Tổng số đơn, Tổng sau giảm giá, TB mỗi đơn (tổng tiền ÷ số đơn), Tổng số món - không tính đơn Huỷ. Bên dưới: từng trạng thái có số đơn, tiền và thanh % số đơn trong kỳ (Huỷ vẫn hiện riêng để biết)."),
             new("Tổng cộng theo món", "Số lượng + thành tiền từng món (không tính đơn Huỷ), nhiều nhất trước, thanh màu dưới tên so với món bán nhiều nhất; món tự do gộp theo tên. Tổng số món ở trên bảng."),
             new("Chi tiết đơn hàng", "Mỗi khách 1 dòng: số đơn, tổng tiền. Sắp xếp: tiền giảm / tăng dần, ngày giao tăng dần (theo đơn sớm nhất của khách) / giảm dần (theo đơn mới nhất). Bấm 1 khách → màn Chi tiết chỉ đơn của khách đó trong đúng bộ lọc này (không đổi bộ lọc trang Đặt hàng).", "Click"),
         ]),
@@ -129,7 +129,7 @@ public static class HelpContent
         new("Thống kê theo món ăn", "", "Món nào bán bao nhiêu.", "ReportProductPage",
         [
             new("Bộ lọc", "Món ăn (mặc định tất cả) + khoảng ngày giao. Không tính đơn Huỷ."),
-            new("Kết quả", "3 ô: Tổng số món, Tổng thành tiền, Số món khác nhau; bảng từng món (số lượng, thành tiền, thanh so với món bán nhiều nhất) nhiều nhất trước - món tự do mỗi tên 1 dòng (chọn 1 món cụ thể thì không lọc được món tự do)."),
+            new("Kết quả", "3 ô: Tổng số món, Tổng trước giảm giá (tiền các món, chưa trừ giảm giá trên đơn nên có thể lớn hơn Tổng sau giảm giá ở Thống kê theo đơn hàng), Số món khác nhau; bảng từng món (số lượng, thành tiền, thanh so với món bán nhiều nhất) nhiều nhất trước - món tự do mỗi tên 1 dòng (chọn 1 món cụ thể thì không lọc được món tự do)."),
             new("Đơn hàng liên quan", "Các đơn trong khoảng ngày; chọn 1 món thì chỉ hiện đơn có món đó và chỉ dòng của món đó. Bấm đơn để mở form sửa.", "Click"),
         ]),
 

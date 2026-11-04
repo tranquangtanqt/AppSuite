@@ -202,16 +202,19 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 ## MeRon (module mới — bản máy tính của app điện thoại me-ron, `Modules/MeRon/PLAN.md`)
 
 Đánh giá giao diện theo ui-ux-pro-max (ảnh Sandbox nền xám, 1422×808 và 1000×700, sáng / tối, 2026-11-04):
-- [ ] Số tiền bị cắt ở thẻ số liệu Theo đơn hàng ("31.950.000 đ", "55.086 đ"), cột Thành tiền ở form đơn; thẻ Huỷ tràn mép phải
-- [ ] Công nợ, Khách lâu không đặt: ô tìm giãn cao theo hàng tiêu đề; cửa sổ ~667 logical ô tìm chiếm gần hết trang, danh sách biến mất
-- [ ] Cửa sổ hẹp: menu trái luôn mở (`PaneDisplayMode="Left"`) nên trang chính bị ép, tab Huỷ và ô ngày bị che
-- [ ] Công nợ: tên khách, khoảng ngày bị cắt không có "..."; nút cam Thanh toán hết lặp ở mọi thẻ
+- [x] Số tiền trong thẻ tự thu nhỏ khi thiếu chỗ (Viewbox), thẻ trạng thái chia đều + tự xuống hàng, form đơn thấy đủ cột Thành tiền (2026-11-04)
+- [x] Công nợ, Khách lâu không đặt: ô tìm không giãn cao, hàng tiêu đề chia lại, trước đây cửa sổ hẹp làm mất cả danh sách (2026-11-04)
+- [x] Cửa sổ hẹp: menu trái tự thu về icon dưới 900 logical (`PaneDisplayMode="Auto"`), đủ tab và ô ngày (2026-11-04)
+- [x] Công nợ: tên khách, khoảng ngày rút gọn "..." kèm tooltip; dưới 760 logical nút Chi tiết, Thanh toán hết chỉ còn icon (2026-11-04)
+- [ ] Công nợ: nút cam Thanh toán hết lặp ở mọi thẻ (đợt 2)
 - [ ] Tương phản: chữ trắng trên cam ~3,6:1, xanh lá ~3,4:1, xanh dương ~4,2:1, cam chế độ tối ~2,6:1 (chữ nhỏ cần 4,5:1); nhãn Đã lên đơn cam trên nền cam nhạt
 - [ ] Menu trái 17 mục, cửa sổ 808 px chỉ thấy 7 mục, không có dấu hiệu còn mục bên dưới
 - [ ] Đặt hàng: thẻ đơn cao, chỉ thấy khoảng 2,5 đơn; đơn 1 món vẫn có dòng Tổng lặp lại; nền xanh cả thẻ đơn đã thanh toán + chữ cam
-- [ ] Thẻ số liệu Biểu đồ rớt 1 thẻ xuống hàng riêng; Không có đơn hiện 2 lần; bảng trống Tổng hợp không có lời nhắc
-- [ ] Hai trang cùng nhãn Tổng thành tiền ra 2 số khác nhau (Theo đơn hàng / Theo món ăn): làm rõ khác nhau ở đâu
-- [ ] Thanh tiêu đề chế độ tối vẫn sáng; 127 chỗ mã màu viết cứng, 10 cỡ chữ khác nhau; chưa có AccessKey
+- [x] Biểu đồ: 4 thẻ số chia đều 1 hàng, biểu đồ lên trong màn hình; Đặt hàng không có đơn chỉ báo 1 lần (2026-11-04)
+- [ ] Bảng trống ở Tổng hợp không có lời nhắc
+- [x] Nhãn: Tổng sau giảm giá (Theo đơn hàng) / Tổng trước giảm giá (Theo món ăn), đã đối chiếu dữ liệu tháng 10: chênh đúng bằng tổng giảm giá (2026-11-04)
+- [x] Thanh tiêu đề tối theo app (2026-11-04)
+- [ ] 127 chỗ mã màu viết cứng, 10 cỡ chữ khác nhau; chưa có AccessKey
 
 Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), import TSV = thay toàn bộ, làm 4 đợt.
 

@@ -148,3 +148,7 @@ Chạy thêm với 1 bộ backup thật (không đưa vào repo): đặt `MERON_
 nhập, tải toàn bộ đơn, đối chiếu 4 báo cáo với tự cộng từng đơn, và **xuất lại phải giống từng byte file điện thoại**.
 
 GUI: kiểm thử bằng UI Automation trong Windows Sandbox (không chạy trên máy thật) — xem `PLAN.md` mục Kiểm chứng.
+
+## Bố cục theo cỡ cửa sổ (2026-11-04)
+
+Menu trái `PaneDisplayMode="Auto"`: dưới 900 logical thu về icon, dưới 560 ẩn hẳn. Số to trong thẻ bọc `Viewbox StretchDirection="DownOnly"`: thiếu chỗ thì thu nhỏ, không bị cắt. Thẻ trạng thái (Theo đơn hàng), thẻ số (Biểu đồ) dùng `ItemsRepeater` + `UniformGridLayout`: chia đều, tự xuống hàng. Kiểm tra giao diện ở cửa sổ thường trên nền xám, không chỉ phóng to.

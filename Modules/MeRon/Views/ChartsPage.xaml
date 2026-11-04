@@ -41,25 +41,23 @@
                        Visibility="{x:Bind local:Ui.VisibleIfNot(ViewModel.HasData), Mode=OneWay}" AutomationProperties.AutomationId="ChartEmpty" />
 
             <!-- 4 ô số chính -->
-            <ItemsControl x:Name="KpiList" IsTabStop="False">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="215" />
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate>
+            <ItemsRepeater x:Name="KpiList">
+                <ItemsRepeater.Layout>
+                    <UniformGridLayout MinItemWidth="150" MinColumnSpacing="10" MinRowSpacing="10" ItemsStretch="Fill" />
+                </ItemsRepeater.Layout>
+                <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:KpiTile">
-                        <Border Margin="0,0,10,10" Padding="16,12" CornerRadius="10" BorderThickness="1"
+                        <Border Padding="16,12" CornerRadius="10" BorderThickness="1"
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                             <StackPanel Spacing="2">
                                 <TextBlock Text="{x:Bind Label}" FontSize="12" Opacity="0.75" />
-                                <TextBlock Text="{x:Bind Value}" FontSize="22" FontWeight="SemiBold" AutomationProperties.Name="{x:Bind Label}" />
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind Value}" FontSize="22" FontWeight="SemiBold" AutomationProperties.Name="{x:Bind Label}" /></Viewbox>
                                 <TextBlock Text="{x:Bind Delta}" FontSize="12" Opacity="0.75" />
                             </StackPanel>
                         </Border>
                     </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
+                </ItemsRepeater.ItemTemplate>
+            </ItemsRepeater>
 
             <!-- Doanh thu theo thời gian -->
             <Border Style="{StaticResource ChartCardStyle}">

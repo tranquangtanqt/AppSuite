@@ -10,7 +10,7 @@
     </Window.SystemBackdrop>
 
     <!-- Mỗi mục 1 trang; Tag = tên class trang trong MeRon.Views. -->
-    <NavigationView x:Name="Nav" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" PaneDisplayMode="Left"
+    <NavigationView x:Name="Nav" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" PaneDisplayMode="Auto" ExpandedModeThresholdWidth="900" CompactModeThresholdWidth="560"
                     OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked"
                     KeyboardAcceleratorPlacementMode="Hidden">
         <NavigationView.MenuItems>

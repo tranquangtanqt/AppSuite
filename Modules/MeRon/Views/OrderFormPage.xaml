@@ -71,7 +71,7 @@
                 <StackPanel Spacing="4">
                     <Grid Padding="0,0,0,2" ColumnSpacing="8" Opacity="0.75">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" MinWidth="220" />
+                            <ColumnDefinition Width="*" MinWidth="140" />
                             <ColumnDefinition Width="130" />
                             <ColumnDefinition Width="150" />
                             <ColumnDefinition Width="110" />
@@ -91,7 +91,7 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" MinWidth="220" />
+                                        <ColumnDefinition Width="*" MinWidth="140" />
                                         <ColumnDefinition Width="130" />
                                         <ColumnDefinition Width="150" />
                                         <ColumnDefinition Width="110" />

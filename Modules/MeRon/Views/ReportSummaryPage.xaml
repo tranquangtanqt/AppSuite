@@ -36,8 +36,8 @@
                                 </Border>
                                 <TextBlock Text="Bán (không tính Huỷ)" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                             </StackPanel>
-                            <TextBlock Text="{x:Bind ViewModel.OrderAmount, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
-                                       AutomationProperties.AutomationId="SummaryOrderAmount" />
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.OrderAmount, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                                       AutomationProperties.AutomationId="SummaryOrderAmount" /></Viewbox>
                             <StackPanel Orientation="Horizontal" Spacing="4" Opacity="0.9">
                                 <TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" Foreground="White" AutomationProperties.AutomationId="SummaryOrderCount" />
                                 <TextBlock Text="đơn" Foreground="White" />
@@ -52,8 +52,8 @@
                                 </Border>
                                 <TextBlock Text="Mua" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                             </StackPanel>
-                            <TextBlock Text="{x:Bind ViewModel.PurchaseAmount, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
-                                       AutomationProperties.AutomationId="SummaryPurchaseAmount" />
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.PurchaseAmount, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                                       AutomationProperties.AutomationId="SummaryPurchaseAmount" /></Viewbox>
                             <StackPanel Orientation="Horizontal" Spacing="4" Opacity="0.9">
                                 <TextBlock Text="{x:Bind ViewModel.PurchaseCount, Mode=OneWay}" Foreground="White" AutomationProperties.AutomationId="SummaryPurchaseCount" />
                                 <TextBlock Text="phiếu nhập" Foreground="White" />
@@ -68,8 +68,8 @@
                                 </Border>
                                 <TextBlock Text="Chênh lệch (bán − mua)" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                             </StackPanel>
-                            <TextBlock Text="{x:Bind ViewModel.DifferenceValue, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
-                                       AutomationProperties.Name="{x:Bind ViewModel.Difference, Mode=OneWay}" AutomationProperties.AutomationId="SummaryDifference" />
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.DifferenceValue, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                                       AutomationProperties.Name="{x:Bind ViewModel.Difference, Mode=OneWay}" AutomationProperties.AutomationId="SummaryDifference" /></Viewbox>
                         </StackPanel>
                     </Border>
                 </Grid>

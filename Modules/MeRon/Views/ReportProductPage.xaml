@@ -47,8 +47,8 @@
                                 </Border>
                                 <TextBlock Text="Tổng số món" Opacity="0.75" VerticalAlignment="Center" />
                             </StackPanel>
-                            <TextBlock Text="{x:Bind ViewModel.TotalQuantity, Mode=OneWay}" FontSize="30" FontWeight="Bold"
-                                       AutomationProperties.AutomationId="ProductTotalQuantity" />
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.TotalQuantity, Mode=OneWay}" FontSize="30" FontWeight="Bold"
+                                       AutomationProperties.AutomationId="ProductTotalQuantity" /></Viewbox>
                         </StackPanel>
                     </Border>
                     <Border Grid.Column="1" Padding="16,14" CornerRadius="10" Background="{ThemeResource AccentFillColorDefaultBrush}">
@@ -57,9 +57,9 @@
                                 <Border Width="32" Height="32" CornerRadius="16" Background="#33FFFFFF">
                                     <FontIcon Glyph="&#xE8C7;" FontSize="15" Foreground="White" />
                                 </Border>
-                                <TextBlock Text="Tổng thành tiền" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
+                                <TextBlock Text="Tổng trước giảm giá" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                             </StackPanel>
-                            <TextBlock Text="{x:Bind ViewModel.TotalAmount, Mode=OneWay}" FontSize="30" FontWeight="Bold" Foreground="White" />
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.TotalAmount, Mode=OneWay}" FontSize="30" FontWeight="Bold" Foreground="White" /></Viewbox>
                         </StackPanel>
                     </Border>
                     <Border Grid.Column="2" Padding="16,14" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -71,7 +71,7 @@
                                 </Border>
                                 <TextBlock Text="Số món khác nhau" Opacity="0.75" VerticalAlignment="Center" />
                             </StackPanel>
-                            <TextBlock Text="{x:Bind ViewModel.ProductCount, Mode=OneWay}" FontSize="30" FontWeight="Bold" />
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.ProductCount, Mode=OneWay}" FontSize="30" FontWeight="Bold" /></Viewbox>
                         </StackPanel>
                     </Border>
                 </Grid>

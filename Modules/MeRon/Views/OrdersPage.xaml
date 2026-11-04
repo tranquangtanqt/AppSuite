@@ -26,7 +26,7 @@
             <TextBlock Text="Đặt hàng" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
             <!-- Giao diện 2026-10-15: số đơn + tổng tiền thành nhãn tròn màu chủ đạo -->
             <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="16,4,0,0" CornerRadius="14" Padding="12,4,12,5"
-                    Background="{ThemeResource AccentFillColorDefaultBrush}">
+                    Background="{ThemeResource AccentFillColorDefaultBrush}" Visibility="{x:Bind local:Ui.VisibleIfNot(ViewModel.IsEmpty), Mode=OneWay}">
                 <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" AutomationProperties.AutomationId="OrdersSummary" FontWeight="SemiBold"
                            Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" TextTrimming="CharacterEllipsis" />
             </Border>

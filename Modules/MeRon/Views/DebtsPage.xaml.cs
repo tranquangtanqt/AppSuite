@@ -11,6 +11,14 @@ namespace MeRon.Views;
 /// <summary>Công nợ - xem <see cref="DebtsViewModel"/>. Trang cache: giữ bộ lọc khi chuyển trang.</summary>
 public sealed partial class DebtsPage : Page
 {
+    /// <summary>Hẹp hơn mức này thì chữ trên nút Chi tiết, Thanh toán hết chiếm hết chỗ của tên khách.</summary>
+    private const double ButtonLabelsMinWidth = 760;
+
+    private void DebtsPage_SizeChanged(object sender, Microsoft.UI.Xaml.SizeChangedEventArgs e) =>
+        ButtonLabelSwitch.Visibility = e.NewSize.Width < ButtonLabelsMinWidth
+            ? Microsoft.UI.Xaml.Visibility.Collapsed
+            : Microsoft.UI.Xaml.Visibility.Visible;
+
     public DebtsViewModel ViewModel { get; } = new();
 
     public DebtsPage()
