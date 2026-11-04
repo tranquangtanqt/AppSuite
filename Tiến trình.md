@@ -1073,11 +1073,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 
 Đánh giá giao diện theo ui-ux-pro-max (quy tắc WinUI / UX + ảnh Sandbox ~1010×600 logical, 2026-11-04):
 - [x] Thẻ lọc tràn: 5 thẻ cùng lúc thì thẻ cuối bị cắt → `Views/WrapPanel` tự xuống hàng (vị trí tính ở `Services/WrapLayout`, có unit test) (2026-11-04)
-- [ ] Tìm / Thay thế là hộp thoại che bảng: đổi thành thanh tìm không chặn thao tác; ô trống đang báo "Không tìm thấy kết quả."
+- [x] Tìm / Thay thế: hộp thoại che bảng → thanh tìm `Views/FindBar` (Ctrl+F / Ctrl+H, Enter / Shift+Enter, Esc), kết quả tự tính lại khi sửa / lọc / sắp xếp để Thay thế tất cả không ghi nhầm ô; ô trống không báo gì; tìm chỉ ở cột đang hiện. Sửa 2 lỗi sập app có từ trước: gõ regex dở ("("), nhảy tới ô ở cột đang ẩn. Cập nhật F1, README. Unit test 146/146; GUI Sandbox 31/31 (2026-11-04)
+- [x] Thay thế tất cả chỉ thay phần chữ khớp như Excel (`SearchService.CreateReplacer`; Khớp toàn bộ ô thì thay cả ô, Regex dùng được $1) - người dùng chọn. Unit test 155/155 (2026-11-04)
 - [x] Thanh trạng thái: tên file và thông báo tự rút gọn "..." kèm tooltip, không tràn khi tên file dài; thông báo đậm hơn (Opacity 0.6 → 0.8, đã đo 8.6:1 trên nhãn cùng độ đậm); chiều cao cố định, nút Huỷ hiện ra không làm bảng nhảy (2026-11-04)
 - [x] Nhãn bảng mã / dấu phân cách → gộp thành 1 nút thật có ▾, Tab + Enter được, khoá khi chưa có file (2026-11-04)
-- [ ] Bảng ít dòng: cỡ dòng + ô lọc luôn hiện (~10 dòng ở 600 logical); thêm cỡ gọn và ẩn / hiện hàng ô lọc
-- [ ] Bảng khó đọc: không kẻ ô, không sọc dòng, cột cố định không có vạch ngăn (số giữ canh trái - người dùng chọn 2026-11-04)
+- [x] Bảng gọn: dòng ~27 logical (12 dòng thay vì 10 ở cửa sổ 600 logical, ẩn ô lọc thì 13); Cột ▾ → Hiện ô lọc dưới tên cột. Duyệt ảnh trước / sau: chọn phương án B, gọn luôn luôn (2026-11-04)
+- [x] Bảng dễ đọc: kẻ ô, vạch ngăn cột cố định (`FrozenDivider`); số giữ canh trái theo lựa chọn của người dùng. Cập nhật F1, README. GUI Sandbox 46/47 + sửa ô bằng F2 3/3 (mục không đạt: bấm đúp giả lập không vào chế độ sửa) (2026-11-04)
+- [ ] Thử tay: bấm đúp sửa ô bằng chuột thật ở dòng gọn; ô có xuống dòng (nhiều dòng chữ) ở dòng cao cố định 26 logical
 - [x] Lọc ra 0 dòng: giữa bảng hiện lời nhắc + nút Bỏ lọc. Chưa có cột: khoá Xuất, Dòng, Cột, Tìm, Đi tới dòng, Lọc, Sắp xếp, Thống kê, Xem dọc; Bảng trống rồi huỷ thì về màn hình bắt đầu (2026-11-04)
 - [ ] Trợ năng: 12/24 nút không có tên (nút chữ trong StackPanel), mọi ô lọc cùng tên "Lọc...", chưa có AccessKey
 - [x] Việt hoá: hộp thoại Lọc (Thoả mãn tất cả / 1 trong các điều kiện, Phủ định), Tìm, Thống kê (Nhỏ nhất / Lớn nhất), Chọn bảng mã / dấu phân cách; thống nhất "Huỷ"; "Dòng: 60"; Trước / Sau dùng icon. Cập nhật F1, README. Unit test 137/137; GUI Sandbox 44/46 (2 lỗi do cách kiểm tra, ảnh cho thấy đúng) (2026-11-04)

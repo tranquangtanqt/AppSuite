@@ -42,6 +42,7 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
   (lọc nâng cao), `Ô lọc: Tên chứa "an" ✕` (các ô lọc ở tiêu đề cột), `Sắp xếp: Thành tiền ↓ ✕`. Bấm chữ = mở lại hộp
   thoại, ✕ = bỏ. Nhiều thẻ tự xuống hàng (`Views/WrapPanel`, vị trí tính ở `Services/WrapLayout`). Lọc ra 0 dòng: giữa bảng hiện `NoRowsPanel` kèm nút *Bỏ lọc*
   (bỏ cả lọc nâng cao lẫn ô lọc). Thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc trên-trái bảng (bỏ).
+- **Bảng** (2026-11-04): dòng gọn 26 logical (`RowHeight`, bỏ `MinHeight` của ô / dòng / `DataGridCellsPresenter`), kẻ ô, vạch ngăn cột cố định (`FrozenDivider`), số giữ canh trái; `Cột ▾` → *Hiện ô lọc dưới tên cột* ẩn / hiện hàng ô lọc (không nhớ qua lần mở app sau).
 - **Hướng dẫn** (nút `?` cuối thanh công cụ, `F1`): mọi tính năng theo danh mục + tìm không dấu. Nội dung ở
   `Views/HelpContent.cs` (cửa sổ dùng chung `SharedUI.Help.HelpWindow`) — thêm / đổi tính năng thì cập nhật cả ở đó.
 
@@ -94,9 +95,9 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
 - **Fill handle**: chọn 1 ô, bấm-giữ-kéo ô vuông nhỏ ở góc dưới-phải xuống các dòng dưới để điền
   y nguyên giá trị; giữ `Ctrl` khi thả chuột để tự tăng dần (+1 mỗi dòng) nếu giá trị là số nguyên.
   Chỉ hỗ trợ kéo xuống, không tự cuộn khi kéo ra ngoài vùng đang hiển thị.
-- **Find**: 5 kiểu so khớp (Chứa / Khớp toàn bộ ô / Bắt đầu bằng / Kết thúc bằng / Regex), có debounce 300ms khi gõ,
-  điều hướng Trước/Sau giữa các kết quả (tự cuộn dọc+ngang tới đúng ô khớp). Hotkey: `Ctrl+F`.
-- **Replace**: cùng dialog với Find, "Thay thế tất cả kết quả" ghi đè toàn bộ kết quả đang tìm được,
+- **Find** (`Views/FindBar`, thanh trên bảng, không chặn bảng): 5 kiểu so khớp (Chứa / Khớp toàn bộ ô / Bắt đầu bằng / Kết thúc bằng / Regex), có debounce 300ms khi gõ,
+  Enter / Shift+Enter đi giữa các kết quả (tự cuộn dọc+ngang tới đúng ô khớp), Esc đóng. ViewModel nhớ điều kiện tìm và tính lại mỗi khi bảng đổi; bỏ qua cột đang ẩn (`SetHiddenColumns`); regex dở báo "Regex không hợp lệ.". Hotkey: `Ctrl+F`.
+- **Replace**: ô Thay bằng trên thanh tìm, "Thay thế tất cả" chỉ thay phần chữ khớp (`SearchService.CreateReplacer`; Khớp toàn bộ ô thì thay cả ô, Regex dùng được `$1`),
   gộp thành 1 bước Undo. Hotkey: `Ctrl+H`.
 - **Đi tới cột** (`Cột ▾` / `Ctrl+Shift+G`, 2026-11-03): hộp thoại AutoSuggestBox - gõ 1 phần tên cột, gợi ý `số. tên`
   (tối đa 30) theo `Services/ColumnFinder`: trùng hẳn tên → vị trí cột nếu gõ toàn số → tên bắt đầu bằng → tên chứa (không

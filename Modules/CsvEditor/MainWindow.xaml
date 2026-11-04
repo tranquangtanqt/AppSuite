@@ -25,6 +25,7 @@
              KeyboardAcceleratorPlacementMode=Hidden: không thì rê chuột ở đâu trong cửa sổ cũng nổi tooltip "Ctrl+Shift+G". -->
         <Grid.KeyboardAccelerators>
             <KeyboardAccelerator Key="G" Modifiers="Control,Shift" Invoked="GoToColumnAccelerator_Invoked" />
+            <KeyboardAccelerator Key="H" Modifiers="Control" Invoked="ReplaceAccelerator_Invoked" />
         </Grid.KeyboardAccelerators>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -168,6 +169,7 @@
                                 <MenuFlyoutItem x:Name="ShowHideColumnsMenuItem" Text="Ẩn / hiện cột..." Click="ShowHideColumns_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7B3;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                                 <MenuFlyoutItem Text="Cố định đến cột đang chọn" Click="FreezeToCurrentColumn_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE718;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                                 <MenuFlyoutItem Text="Bỏ cố định cột" Click="UnfreezeColumns_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77A;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <ToggleMenuFlyoutItem x:Name="ShowFilterBoxesItem" Text="Hiện ô lọc dưới tên cột" IsChecked="True" Click="ShowFilterBoxesItem_Click"><ToggleMenuFlyoutItem.Icon><FontIcon Glyph="&#xE71C;" /></ToggleMenuFlyoutItem.Icon></ToggleMenuFlyoutItem>
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem Text="Thêm cột..." Click="AddColumnButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                                 <MenuFlyoutItem Text="Đổi tên cột đang chọn..." Click="RenameColumnButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
@@ -182,7 +184,6 @@
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE721;" FontSize="14" /><TextBlock Text="Tìm" /></StackPanel>
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="F" Modifiers="Control" />
-                            <KeyboardAccelerator Key="H" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
                     <Button x:Name="GoToButton" Click="GoToButton_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Đi tới dòng (Ctrl+G)" AutomationProperties.Name="Đi tới dòng">
@@ -220,7 +221,9 @@
 
         <!-- Thẻ lọc / sắp xếp đang áp dụng (RefreshChips) - thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc bảng.
              Tự xuống hàng: 5 thẻ cùng lúc ở cửa sổ hẹp không bị cắt mất. -->
-        <views:WrapPanel x:Name="ChipsBar" Grid.Row="1" Spacing="8" Visibility="Collapsed">
+        <StackPanel Grid.Row="1" Spacing="8">
+        <views:FindBar x:Name="FindPanel" Visibility="Collapsed" />
+        <views:WrapPanel x:Name="ChipsBar" Spacing="8" Visibility="Collapsed">
             <TextBlock x:Name="ShownRowsText" VerticalAlignment="Center" Opacity="0.8" />
             <Border x:Name="FilterChip" Style="{StaticResource ChipBorderStyle}">
                 <StackPanel Orientation="Horizontal">
@@ -289,6 +292,7 @@
                 </StackPanel>
             </Border>
         </views:WrapPanel>
+        </StackPanel>
 
         <!-- Validation issues -->
         <Expander Grid.Row="2" Header="{x:Bind IssuesHeaderText(ViewModel.Issues.Count), Mode=OneWay}" IsExpanded="False"
@@ -321,6 +325,10 @@
             HeadersVisibility="All"
             SelectionMode="Extended"
             RowHeaderWidth="48"
+            RowHeight="26"
+            GridLinesVisibility="All"
+            HorizontalGridLinesBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+            VerticalGridLinesBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
             CanUserReorderColumns="False"
             CanUserSortColumns="False"
             LoadingRow="Grid_LoadingRow"
@@ -329,6 +337,17 @@
             CurrentCellChanged="Grid_CurrentCellChanged"
             SelectionChanged="Grid_SelectionChanged"
             ContextRequested="Grid_ContextRequested">
+            <!-- Dòng gọn: mặc định ô, dòng, tiêu đề dòng đều có MinHeight ~32 nên RowHeight nhỏ hơn không có tác dụng (còn
+                 MinHeight của DataGridCellsPresenter trong template: xem Grid_LoadingRow). -->
+            <controls:DataGrid.CellStyle>
+                <Style TargetType="controls:DataGridCell"><Setter Property="MinHeight" Value="0" /></Style>
+            </controls:DataGrid.CellStyle>
+            <controls:DataGrid.RowStyle>
+                <Style TargetType="controls:DataGridRow"><Setter Property="MinHeight" Value="0" /></Style>
+            </controls:DataGrid.RowStyle>
+            <controls:DataGrid.RowHeaderStyle>
+                <Style TargetType="primitives:DataGridRowHeader"><Setter Property="MinHeight" Value="0" /></Style>
+            </controls:DataGrid.RowHeaderStyle>
             <controls:DataGrid.Resources>
                 <local:EmptyStringToVisibilityConverter x:Key="EmptyStringToVisibilityConverter" />
                 <DataTemplate x:Key="FilterHeaderTemplate">
@@ -337,7 +356,7 @@
                         <!-- Lấp đầy phần nội dung của tiêu đề; phần này chỉ rộng hết cột sau khi FilterTextBox_Loaded bỏ
                              chỗ chừa cho mũi tên sắp xếp. (Cách cũ đặt Width theo độ rộng tiêu đề: vẫn bị cắt theo phần
                              nội dung hẹp, mất luôn nút ✕.) Nút ✕ đè lên mép phải của ô. -->
-                        <Grid HorizontalAlignment="Stretch">
+                        <Grid HorizontalAlignment="Stretch" Visibility="{Binding FilterBoxVisibility}">
                             <TextBox Text="{Binding FilterText, Mode=TwoWay}" PlaceholderText="Lọc..."
                                      HorizontalAlignment="Stretch" Loaded="FilterTextBox_Loaded" />
                             <Button Padding="4" Margin="0,0,4,0" Background="Transparent" BorderThickness="0"
@@ -356,6 +375,10 @@
                 </Style>
             </controls:DataGrid.Resources>
         </controls:DataGrid>
+
+        <!-- Vạch ngăn cột cố định (UpdateFrozenDivider): DataGrid không có sẵn. -->
+        <Border x:Name="FrozenDivider" Grid.Row="3" Width="2" HorizontalAlignment="Left" Visibility="Collapsed" IsHitTestVisible="False"
+                Background="{ThemeResource ControlStrongStrokeColorDefaultBrush}" />
 
         <!-- Lọc ra 0 dòng (RefreshChips): bảng không có dòng nào thì báo rõ và cho bỏ lọc ngay. -->
         <StackPanel x:Name="NoRowsPanel" Grid.Row="3" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">

@@ -45,6 +45,8 @@ public sealed partial class MainWindow : Window
     /// <summary>File đang mở (đổi theo Save As) - "mở lại" (đổi tiêu đề / encoding) đọc lại đúng file này.</summary>
     private string? CurrentFilePath => ViewModel.CurrentFilePath;
 
+    private bool _showFilterBoxes = true;
+
     // ----- Fill handle drag state (see FillHandleLayer in MainWindow.xaml) -----
     private ScrollViewer? _gridScrollViewer;
     private bool _isFillDragging;
@@ -61,6 +63,12 @@ public sealed partial class MainWindow : Window
 
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
+
+        Grid.LayoutUpdated += (_, _) => UpdateFrozenDivider();
+
+        FindPanel.ViewModel = ViewModel;
+        FindPanel.MatchNavigated += (_, match) => NavigateToCell(match);
+        FindPanel.CloseRequested += (_, _) => Grid.Focus(FocusState.Programmatic);
 
         ViewModel.ColumnsChanged += (_, _) => RebuildColumns();
         ViewModel.PropertyChanged += (_, args) =>
@@ -230,6 +238,7 @@ public sealed partial class MainWindow : Window
         SetChipText(SortChipText, "Sắp xếp: " + string.Join(", ", sort.Select(s => $"{ColumnName(s.ColumnIndex)} {(s.Descending ? "↓" : "↑")}")));
 
         var hidden = Grid.Columns.Where(column => column.Visibility == Visibility.Collapsed).ToList();
+        ViewModel.SetHiddenColumns(hidden.Select(column => Grid.Columns.IndexOf(column)));
         HiddenColumnsChip.Visibility = hidden.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
         SetChipText(HiddenColumnsChipText, $"Đang ẩn {hidden.Count} cột: "
             + string.Join(", ", hidden.Take(5).Select(column => ((FilterHeaderItem)column.Header).ColumnName))
@@ -292,14 +301,26 @@ public sealed partial class MainWindow : Window
     {
         private readonly Action<string> _onFilterChanged;
         private string _filterText = string.Empty;
+        private Visibility _filterBoxVisibility;
 
-        public FilterHeaderItem(string columnName, Action<string> onFilterChanged)
+        public FilterHeaderItem(string columnName, bool showFilterBox, Action<string> onFilterChanged)
         {
             ColumnName = columnName;
+            _filterBoxVisibility = showFilterBox ? Visibility.Visible : Visibility.Collapsed;
             _onFilterChanged = onFilterChanged;
         }
 
         public string ColumnName { get; }
+
+        public Visibility FilterBoxVisibility
+        {
+            get => _filterBoxVisibility;
+            set
+            {
+                _filterBoxVisibility = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FilterBoxVisibility)));
+            }
+        }
 
         public string FilterText
         {
@@ -345,7 +366,7 @@ public sealed partial class MainWindow : Window
 
             Grid.Columns.Add(new DataGridTextColumn
             {
-                Header = new FilterHeaderItem(columns[i].Name, text =>
+                Header = new FilterHeaderItem(columns[i].Name, _showFilterBoxes, text =>
                 {
                     ViewModel.SetQuickFilter(columnIndex, text);
                     RefreshChips();
@@ -454,6 +475,45 @@ public sealed partial class MainWindow : Window
     private void Grid_LoadingRow(object? sender, DataGridRowEventArgs e)
     {
         e.Row.Header = (e.Row.GetIndex() + 1).ToString();
+        // Dòng dùng lại không chạy Loaded lần nữa, dòng mới thì chưa dựng template: cần cả 2 chỗ.
+        RemoveCellsMinHeight(e.Row);
+        e.Row.Loaded -= Row_Loaded;
+        e.Row.Loaded += Row_Loaded;
+    }
+
+    private static void Row_Loaded(object sender, RoutedEventArgs e) => RemoveCellsMinHeight((DependencyObject)sender);
+
+    /// <summary>Template của DataGridRow đặt cứng MinHeight="32" cho phần chứa các ô, Style không tới được; còn nguyên
+    /// thì RowHeight 26 không có tác dụng.</summary>
+    private static void RemoveCellsMinHeight(DependencyObject row)
+    {
+        if (FindDescendants<DataGridCellsPresenter>(row).FirstOrDefault() is { } presenter)
+        {
+            presenter.MinHeight = 0;
+        }
+    }
+
+    /// <summary>Cột ▾ → Hiện ô lọc dưới tên cột: tắt để bảng có thêm chỗ. Chữ lọc đang gõ vẫn có tác dụng, thẻ "Ô lọc" ✕ vẫn bỏ được.</summary>
+    private void ShowFilterBoxesItem_Click(object sender, RoutedEventArgs e)
+    {
+        _showFilterBoxes = ShowFilterBoxesItem.IsChecked;
+        foreach (var header in Grid.Columns.Select(column => column.Header).OfType<FilterHeaderItem>())
+        {
+            header.FilterBoxVisibility = _showFilterBoxes ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void UpdateFrozenDivider()
+    {
+        FrozenDivider.Visibility = Grid.FrozenColumnCount > 0 ? Visibility.Visible : Visibility.Collapsed;
+        var frozenWidth = Grid.Columns.Take(Grid.FrozenColumnCount)
+            .Where(column => column.Visibility == Visibility.Visible)
+            .Sum(column => column.ActualWidth);
+        var margin = new Thickness(Grid.RowHeaderWidth + frozenWidth - 1, 0, 0, 0);
+        if (FrozenDivider.Margin != margin) // đặt Margin lại gây LayoutUpdated: chỉ đặt khi đổi
+        {
+            FrozenDivider.Margin = margin;
+        }
     }
 
     private void Grid_CellEditEnding(object? sender, DataGridCellEditEndingEventArgs e)
@@ -1181,7 +1241,16 @@ public sealed partial class MainWindow : Window
 
     // ----- Toolbar: find/filter/sort/statistics -----
 
-    private async void FindButton_Click(object sender, RoutedEventArgs e) => await ShowFindReplaceDialogAsync();
+    private void FindButton_Click(object sender, RoutedEventArgs e) => FindPanel.Open(replace: false);
+
+    private void ReplaceAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        args.Handled = true;
+        if (ViewModel.ColumnCount > 0)
+        {
+            FindPanel.Open(replace: true);
+        }
+    }
 
     /// <summary>Ctrl+G: đi tới dòng số N theo số ở đầu dòng của bảng (tức là theo lọc / sắp xếp đang hiện), giữ cột
     /// đang chọn. Enter = Đi tới; số ngoài phạm vi thì báo ngay trong hộp thoại, không đóng.</summary>
@@ -1364,15 +1433,6 @@ public sealed partial class MainWindow : Window
             + (otherMatches > 0 ? $" (còn {otherMatches} cột khác khớp - chọn trong gợi ý để tới cột khác)." : ".");
     }
 
-    private async void ReplaceButton_Click(object sender, RoutedEventArgs e) => await ShowFindReplaceDialogAsync();
-
-    private async Task ShowFindReplaceDialogAsync()
-    {
-        var dialog = new FindReplaceDialog(ViewModel) { XamlRoot = Content.XamlRoot };
-        dialog.MatchNavigated += (_, match) => NavigateToCell(match);
-        await dialog.ShowAsync();
-    }
-
     private void NavigateToCell(CellRef cell)
     {
         if (cell.RowIndex < 0 || cell.RowIndex >= ViewModel.ViewRows.Count)
@@ -1384,6 +1444,11 @@ public sealed partial class MainWindow : Window
         Grid.SelectedItem = row;
 
         var column = cell.ColumnIndex >= 0 && cell.ColumnIndex < Grid.Columns.Count ? Grid.Columns[cell.ColumnIndex] : null;
+        if (column?.Visibility == Visibility.Collapsed)
+        {
+            column = null; // đặt CurrentColumn vào cột đang ẩn thì DataGrid ném lỗi, sập app
+        }
+
         if (column is not null)
         {
             Grid.CurrentColumn = column;

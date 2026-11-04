@@ -28,6 +28,11 @@ public sealed partial class CsvEditorViewModel : ObservableObject
     private List<(int ColumnIndex, bool Descending)> _activeSort = new();
     private List<CellRef> _currentMatches = new();
     private int _currentMatchIndex = -1;
+    private string _findQuery = string.Empty;
+    private SearchMode _findMode;
+    private bool _findCaseSensitive;
+    private bool _findInvalidRegex;
+    private HashSet<int> _hiddenColumns = new();
 
     public CsvEditorViewModel(ICsvFileService fileService, ICsvEditService editService)
     {
@@ -45,6 +50,7 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             UndoCommand.NotifyCanExecuteChanged();
             RedoCommand.NotifyCanExecuteChanged();
             IsDirty = _editService.UndoRedo.IsDirty;
+            RefreshMatches();
         };
     }
 
@@ -447,10 +453,60 @@ public sealed partial class CsvEditorViewModel : ObservableObject
         OnPropertyChanged(nameof(IsSortActive));
     }
 
+    /// <summary>Tìm trên các dòng đang hiện. Thanh tìm không chặn bảng nên điều kiện tìm được nhớ lại: mỗi lần bảng đổi
+    /// (sửa ô, lọc, sắp xếp, mở file...) <see cref="RefreshMatches"/> tính lại - kết quả cũ trỏ theo vị trí dòng, để nguyên
+    /// thì Thay thế tất cả sẽ ghi vào nhầm ô.</summary>
     public void Find(string query, SearchMode mode, bool caseSensitive)
     {
-        _currentMatches = _searchService.Find(ViewRows, query, mode, caseSensitive);
+        _findQuery = query;
+        _findMode = mode;
+        _findCaseSensitive = caseSensitive;
+        ComputeMatches();
         _currentMatchIndex = _currentMatches.Count > 0 ? 0 : -1;
+        UpdateMatchStatus();
+    }
+
+    /// <summary>Ẩn / hiện cột là việc của giao diện (DataGrid), báo vào đây để Tìm bỏ qua cột đang ẩn.</summary>
+    public void SetHiddenColumns(IEnumerable<int> columnIndexes)
+    {
+        var hidden = columnIndexes.ToHashSet();
+        if (!hidden.SetEquals(_hiddenColumns))
+        {
+            _hiddenColumns = hidden;
+            RefreshMatches();
+        }
+    }
+
+    /// <summary>Đóng thanh tìm: bỏ kết quả, thôi tính lại khi bảng đổi.</summary>
+    public void ClearFind() => Find(string.Empty, _findMode, _findCaseSensitive);
+
+    private void ComputeMatches()
+    {
+        _findInvalidRegex = false;
+        try
+        {
+            _currentMatches = _searchService.Find(ViewRows, _findQuery, _findMode, _findCaseSensitive, _hiddenColumns);
+        }
+        catch (ArgumentException)
+        {
+            // Regex đang gõ dở, vd "(".
+            _findInvalidRegex = true;
+            _currentMatches = new List<CellRef>();
+        }
+    }
+
+    /// <summary>Tính lại sau khi bảng đổi, giữ kết quả đang đứng nếu ô đó vẫn khớp (không đổi dòng đang chọn).</summary>
+    private void RefreshMatches()
+    {
+        if (_findQuery.Length == 0)
+        {
+            return;
+        }
+
+        var current = CurrentMatch;
+        ComputeMatches();
+        var sameCell = current is { } cell ? _currentMatches.IndexOf(cell) : -1;
+        _currentMatchIndex = sameCell >= 0 ? sameCell : Math.Min(Math.Max(_currentMatchIndex, 0), _currentMatches.Count - 1);
         UpdateMatchStatus();
     }
 
@@ -492,16 +548,12 @@ public sealed partial class CsvEditorViewModel : ObservableObject
             return 0;
         }
 
+        var replace = SearchService.CreateReplacer(_findQuery, _findMode, _findCaseSensitive, replacement);
         var replacements = _currentMatches
-            .Select(match => (ViewRows[match.RowIndex], match.ColumnIndex, replacement))
+            .Select(match => (ViewRows[match.RowIndex], match.ColumnIndex, replace(ViewRows[match.RowIndex].GetCell(match.ColumnIndex))))
             .ToList();
-        _editService.ReplaceCells(replacements);
-
-        var count = _currentMatches.Count;
-        _currentMatches.Clear();
-        _currentMatchIndex = -1;
-        UpdateMatchStatus();
-        return count;
+        _editService.ReplaceCells(replacements); // lịch sử Hoàn tác đổi → RefreshMatches tìm lại trên nội dung mới
+        return replacements.Count;
     }
 
     public async Task<TableStatistics> ComputeStatisticsAsync(IProgress<int> progress, CancellationToken cancellationToken)
@@ -532,6 +584,8 @@ public sealed partial class CsvEditorViewModel : ObservableObject
         {
             ViewRows.Add(row);
         }
+
+        RefreshMatches();
     }
 
     /// <summary>Re-runs the checks that can be re-derived from the current in-memory document - "column
@@ -576,8 +630,9 @@ public sealed partial class CsvEditorViewModel : ObservableObject
 
     private void UpdateMatchStatus()
     {
-        MatchStatusMessage = _currentMatches.Count == 0
-            ? "Không tìm thấy kết quả."
+        MatchStatusMessage = _findQuery.Length == 0 ? string.Empty
+            : _findInvalidRegex ? "Regex không hợp lệ."
+            : _currentMatches.Count == 0 ? "Không tìm thấy kết quả."
             : $"Kết quả {_currentMatchIndex + 1}/{_currentMatches.Count}";
     }
 

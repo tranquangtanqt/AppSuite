@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="CsvEditor.Views.FindBar"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    KeyDown="Root_KeyDown">
+
+    <!-- Thanh tìm phía trên bảng, không chặn bảng: vừa tìm vừa thấy kết quả, sửa ô được. Enter = kết quả sau,
+         Shift+Enter = kết quả trước, Esc = đóng. -->
+    <Border Padding="8" CornerRadius="8" BorderThickness="1"
+            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+        <Grid RowSpacing="6" ColumnSpacing="6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="280" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ToggleButton x:Name="ReplaceToggle" Click="ReplaceToggle_Click" ToolTipService.ToolTip="Hiện / ẩn ô Thay thế (Ctrl+H)" AutomationProperties.Name="Hiện ô Thay thế">
+                <FontIcon x:Name="ReplaceToggleIcon" Glyph="&#xE76C;" FontSize="12" />
+            </ToggleButton>
+            <TextBox x:Name="FindTextBox" Grid.Column="1" PlaceholderText="Tìm trong bảng..." IsSpellCheckEnabled="False" AutomationProperties.Name="Tìm"
+                     TextChanged="FindTextBox_TextChanged" KeyDown="FindTextBox_KeyDown" />
+            <ComboBox x:Name="ModeComboBox" Grid.Column="2" MinWidth="150" AutomationProperties.Name="Kiểu tìm" SelectionChanged="ModeComboBox_SelectionChanged">
+                <ComboBoxItem Content="Chứa" />
+                <ComboBoxItem Content="Khớp toàn bộ ô" />
+                <ComboBoxItem Content="Bắt đầu bằng" />
+                <ComboBoxItem Content="Kết thúc bằng" />
+                <ComboBoxItem Content="Regex" />
+            </ComboBox>
+            <ToggleButton x:Name="CaseSensitiveToggle" Grid.Column="3" Content="Aa" Click="CaseSensitiveToggle_Click"
+                          ToolTipService.ToolTip="Phân biệt hoa / thường" AutomationProperties.Name="Phân biệt hoa / thường" />
+            <TextBlock x:Name="MatchStatusText" Grid.Column="4" VerticalAlignment="Center" Margin="4,0" TextTrimming="CharacterEllipsis"
+                       Text="{x:Bind ViewModel.MatchStatusMessage, Mode=OneWay}" />
+            <Button Grid.Column="5" Click="PreviousButton_Click" ToolTipService.ToolTip="Kết quả trước (Shift+Enter)" AutomationProperties.Name="Kết quả trước">
+                <FontIcon Glyph="&#xE70E;" FontSize="12" />
+            </Button>
+            <Button Grid.Column="6" Click="NextButton_Click" ToolTipService.ToolTip="Kết quả sau (Enter)" AutomationProperties.Name="Kết quả sau">
+                <FontIcon Glyph="&#xE70D;" FontSize="12" />
+            </Button>
+            <Button Grid.Column="7" Click="CloseButton_Click" ToolTipService.ToolTip="Đóng thanh tìm (Esc)" AutomationProperties.Name="Đóng thanh tìm">
+                <FontIcon Glyph="&#xE711;" FontSize="12" />
+            </Button>
+
+            <TextBox x:Name="ReplaceTextBox" Grid.Row="1" Grid.Column="1" PlaceholderText="Thay bằng..." IsSpellCheckEnabled="False" AutomationProperties.Name="Thay bằng" Visibility="Collapsed" />
+            <Button x:Name="ReplaceAllButton" Grid.Row="1" Grid.Column="2" Content="Thay thế tất cả" HorizontalAlignment="Stretch" Visibility="Collapsed"
+                    Click="ReplaceAllButton_Click" ToolTipService.ToolTip="Thay phần chữ khớp trong mọi ô đang tìm thấy (Regex: dùng $1, $2... cho nhóm) - 1 bước Hoàn tác" />
+            <TextBlock x:Name="ReplaceStatusText" Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="5" VerticalAlignment="Center" Margin="4,0"
+                       TextTrimming="CharacterEllipsis" Visibility="Collapsed" />
+        </Grid>
+    </Border>
+</UserControl>
