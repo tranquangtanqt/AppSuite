@@ -110,6 +110,13 @@ public sealed partial class MainWindow : Window
 
     public string SaveStateText(bool isDirty) => isDirty ? "● Chưa lưu" : "Đã lưu";
 
+    /// <summary>Nút cần có bảng (Dòng, Cột, Tìm, Lọc...): khoá khi chưa mở file / chưa có cột nào.</summary>
+    public bool HasColumns(int columnCount) => columnCount > 0;
+
+    /// <summary>Đổi bảng mã là mở lại file nên cần có file thật. <paramref name="fileName"/> chỉ để x:Bind chạy lại khi đổi
+    /// file: <see cref="CsvEditorViewModel.CurrentFilePath"/> không báo PropertyChanged.</summary>
+    public bool HasFile(string fileName) => CurrentFilePath is not null;
+
     public string UndoToolTip(string? description) => description is null ? "Hoàn tác (Ctrl+Z)" : $"Hoàn tác: {description} (Ctrl+Z)";
 
     public string RedoToolTip(string? description) => description is null ? "Làm lại (Ctrl+Y)" : $"Làm lại: {description} (Ctrl+Y)";
@@ -182,11 +189,17 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private void NewTableButton_Click(object sender, RoutedEventArgs e)
+    private async void NewTableButton_Click(object sender, RoutedEventArgs e)
     {
         _startDismissed = true;
         UpdateStartScreen();
-        AddColumnButton_Click(sender, e);
+        await AddColumnAsync(ViewModel.Columns.Count);
+        if (ViewModel.Columns.Count == 0)
+        {
+            // Huỷ đặt tên cột: chưa có cột thì các nút trên thanh công cụ đang khoá → về lại màn hình bắt đầu, không kẹt ở bảng trơn.
+            _startDismissed = false;
+            UpdateStartScreen();
+        }
     }
 
     // ----- Thẻ lọc / sắp xếp đang áp dụng -----
@@ -231,6 +244,13 @@ public sealed partial class MainWindow : Window
         ShownRowsText.Text = filtered ? $"Hiện {ViewModel.ViewRows.Count:N0} / {ViewModel.RowCount:N0} dòng" : string.Empty;
         ShownRowsText.Visibility = filtered ? Visibility.Visible : Visibility.Collapsed;
         ChipsBar.Visibility = filtered || sort.Count > 0 || hidden.Count > 0 || frozen > 0 ? Visibility.Visible : Visibility.Collapsed;
+        NoRowsPanel.Visibility = filtered && ViewModel.ViewRows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void ClearEveryFilterButton_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.ApplyFilter(null);
+        ClearAllFiltersButton_Click(sender, e);
     }
 
     private static void SetChipText(TextBlock textBlock, string text)
@@ -879,7 +899,7 @@ public sealed partial class MainWindow : Window
 
     /// <summary>Status bar "Encoding"/"Delimiter" labels are tappable - re-opens the same file with a
     /// manually chosen encoding/delimiter when auto-detection guessed wrong.</summary>
-    private async void EncodingLabel_Tapped(object sender, TappedRoutedEventArgs e)
+    private async void EncodingButton_Click(object sender, RoutedEventArgs e)
     {
         if (CurrentFilePath is not { } filePath)
         {
@@ -908,7 +928,7 @@ public sealed partial class MainWindow : Window
             Title = "File rất lớn",
             Content = $"Ước tính khoảng {estimatedRows:N0} dòng - có thể vượt RAM khả dụng khi nạp toàn bộ. Vẫn mở?",
             PrimaryButtonText = "Vẫn mở",
-            CloseButtonText = "Hủy",
+            CloseButtonText = "Huỷ",
             DefaultButton = ContentDialogButton.Close,
         };
 
@@ -988,7 +1008,7 @@ public sealed partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
-            ViewModel.StatusMessage = "Đã hủy lưu.";
+            ViewModel.StatusMessage = "Đã huỷ lưu.";
             return false;
         }
         catch (Exception ex)
@@ -1031,7 +1051,7 @@ public sealed partial class MainWindow : Window
                 Content = $"{ViewModel.FileName} có thay đổi chưa lưu. Lưu trước khi {action}?",
                 PrimaryButtonText = "Lưu",
                 SecondaryButtonText = "Không lưu",
-                CloseButtonText = "Hủy",
+                CloseButtonText = "Huỷ",
                 DefaultButton = ContentDialogButton.Primary,
             };
             return await dialog.ShowAsync() switch
@@ -1135,7 +1155,7 @@ public sealed partial class MainWindow : Window
             Title = "Xóa cột",
             Content = $"Xóa cột '{ViewModel.Columns[columnIndex].Name}'?",
             PrimaryButtonText = "Xóa",
-            CloseButtonText = "Hủy",
+            CloseButtonText = "Huỷ",
             DefaultButton = ContentDialogButton.Close,
         };
 
@@ -1187,7 +1207,7 @@ public sealed partial class MainWindow : Window
             Title = "Đi tới dòng",
             Content = new StackPanel { Spacing = 8, MinWidth = 280, Children = { input, error } },
             PrimaryButtonText = "Đi tới",
-            CloseButtonText = "Hủy",
+            CloseButtonText = "Huỷ",
             DefaultButton = ContentDialogButton.Primary,
         };
 
@@ -1271,7 +1291,7 @@ public sealed partial class MainWindow : Window
             Title = "Đi tới cột",
             Content = new StackPanel { Spacing = 8, Children = { box, error } },
             PrimaryButtonText = "Đi tới",
-            CloseButtonText = "Hủy",
+            CloseButtonText = "Huỷ",
             DefaultButton = ContentDialogButton.Primary,
         };
 
@@ -1430,7 +1450,7 @@ public sealed partial class MainWindow : Window
         }
         catch (OperationCanceledException)
         {
-            ViewModel.StatusMessage = "Đã hủy tính thống kê.";
+            ViewModel.StatusMessage = "Đã huỷ tính thống kê.";
         }
         finally
         {
@@ -1676,6 +1696,7 @@ public sealed partial class MainWindow : Window
         RecordViewToggle.IsChecked = open;
         RecordPane.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
         Grid.Margin = new Thickness(0, 0, open ? RecordPane.Width + RecordPaneGap : 0, 0);
+        NoRowsPanel.Margin = Grid.Margin; // giữa phần bảng còn lại, không nằm dưới khung Xem dọc
         UpdateFillHandlePosition();
         UpdateRecordPane(rebuild: true);
     }
@@ -1885,7 +1906,7 @@ public sealed partial class MainWindow : Window
                 },
             },
             PrimaryButtonText = "Áp dụng",
-            CloseButtonText = "Hủy",
+            CloseButtonText = "Huỷ",
             DefaultButton = ContentDialogButton.Primary,
         };
         dialog.PrimaryButtonClick += (_, args) =>

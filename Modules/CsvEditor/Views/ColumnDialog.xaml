@@ -7,7 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     PrimaryButtonText="OK"
-    CloseButtonText="Hủy"
+    CloseButtonText="Huỷ"
     DefaultButton="Primary">
 
     <StackPanel Spacing="8" MinWidth="280">

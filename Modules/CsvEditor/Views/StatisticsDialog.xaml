@@ -41,8 +41,8 @@
             <TextBlock Grid.Column="0" Text="Cột" FontWeight="SemiBold" />
             <TextBlock Grid.Column="1" Text="Rỗng" FontWeight="SemiBold" />
             <TextBlock Grid.Column="2" Text="Duy nhất" FontWeight="SemiBold" />
-            <TextBlock Grid.Column="3" Text="Min" FontWeight="SemiBold" />
-            <TextBlock Grid.Column="4" Text="Max" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="3" Text="Nhỏ nhất" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="4" Text="Lớn nhất" FontWeight="SemiBold" />
             <TextBlock Grid.Column="5" Text="Trung bình" FontWeight="SemiBold" />
             <TextBlock Grid.Column="6" Text="Tổng" FontWeight="SemiBold" />
         </Grid>

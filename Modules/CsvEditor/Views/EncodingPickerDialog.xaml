@@ -6,9 +6,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="Chọn Encoding / Delimiter"
+    Title="Chọn bảng mã / dấu phân cách"
     PrimaryButtonText="Mở lại"
-    CloseButtonText="Hủy"
+    CloseButtonText="Huỷ"
     DefaultButton="Primary">
 
     <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->
@@ -17,7 +17,7 @@
         <TextBlock TextWrapping="Wrap" Opacity="0.8"
                    Text="Dùng khi nhận diện tự động sai (văn bản hiển thị lỗi hoặc bảng bị lệch cột)." />
 
-        <ComboBox x:Name="EncodingComboBox" Header="Encoding" HorizontalAlignment="Stretch" SelectedIndex="0">
+        <ComboBox x:Name="EncodingComboBox" Header="Bảng mã" HorizontalAlignment="Stretch" SelectedIndex="0">
             <ComboBoxItem Content="UTF-8" Tag="utf8" />
             <ComboBoxItem Content="UTF-8 BOM" Tag="utf8bom" />
             <ComboBoxItem Content="UTF-16 LE" Tag="utf16le" />
@@ -25,7 +25,7 @@
             <ComboBoxItem Content="Shift-JIS" Tag="shiftjis" />
         </ComboBox>
 
-        <ComboBox x:Name="DelimiterComboBox" Header="Delimiter" HorizontalAlignment="Stretch" SelectedIndex="0">
+        <ComboBox x:Name="DelimiterComboBox" Header="Dấu phân cách" HorizontalAlignment="Stretch" SelectedIndex="0">
             <ComboBoxItem Content="Dấu phẩy (,)" Tag="," />
             <ComboBoxItem Content="Tab" Tag="&#9;" />
             <ComboBoxItem Content="Dấu chấm phẩy (;)" Tag=";" />

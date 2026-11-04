@@ -8,6 +8,7 @@
     xmlns:primitives="using:CommunityToolkit.WinUI.UI.Controls.Primitives"
     xmlns:models="using:CsvEditor.Models"
     xmlns:vm="using:CsvEditor.ViewModels"
+    xmlns:views="using:CsvEditor.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -53,6 +54,13 @@
                 <Setter Property="CornerRadius" Value="0,14,14,0" />
                 <Setter Property="Padding" Value="6,4,10,4" />
                 <Setter Property="VerticalAlignment" Value="Stretch" />
+            </Style>
+            <!-- Nút dạng chữ ở thanh trạng thái: chỉ rõ là nút khi rê chuột / Tab tới. -->
+            <Style x:Key="StatusButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="6,2" />
+                <Setter Property="VerticalAlignment" Value="Center" />
             </Style>
 
             <!-- Menu chuột phải trên ô (Grid_ContextRequested chọn menu theo chỗ bấm: ô hay tiêu đề cột). -->
@@ -113,7 +121,7 @@
                             <KeyboardAccelerator Key="S" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
-                    <DropDownButton x:Name="ExportButton" ToolTipService.ToolTip="Lưu thành file khác / xuất Excel">
+                    <DropDownButton x:Name="ExportButton" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Lưu thành file khác / xuất Excel">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xEDE1;" FontSize="14" /><TextBlock Text="Xuất" /></StackPanel>
                         <DropDownButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -142,7 +150,7 @@
 
                     <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                    <DropDownButton x:Name="RowMenuButton" ToolTipService.ToolTip="Thêm / nhân bản / xoá dòng">
+                    <DropDownButton x:Name="RowMenuButton" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Thêm / nhân bản / xoá dòng">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8FD;" FontSize="14" /><TextBlock Text="Dòng" /></StackPanel>
                         <DropDownButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -152,7 +160,7 @@
                             </MenuFlyout>
                         </DropDownButton.Flyout>
                     </DropDownButton>
-                    <DropDownButton x:Name="ColumnMenuButton" ToolTipService.ToolTip="Đi tới cột theo tên (Ctrl+Shift+G); thêm / đổi tên / xoá cột (cột của ô đang chọn) - chuột phải tiêu đề cột cũng có">
+                    <DropDownButton x:Name="ColumnMenuButton" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Đi tới cột theo tên (Ctrl+Shift+G); thêm / đổi tên / xoá cột (cột của ô đang chọn) - chuột phải tiêu đề cột cũng có">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8A9;" FontSize="14" /><TextBlock Text="Cột" /></StackPanel>
                         <DropDownButton.Flyout>
                             <MenuFlyout Placement="BottomEdgeAlignedLeft">
@@ -170,29 +178,29 @@
 
                     <Border Width="1" Margin="4,2" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 
-                    <Button Click="FindButton_Click" ToolTipService.ToolTip="Tìm (Ctrl+F) / thay thế (Ctrl+H)">
+                    <Button Click="FindButton_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Tìm (Ctrl+F) / thay thế (Ctrl+H)">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE721;" FontSize="14" /><TextBlock Text="Tìm" /></StackPanel>
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="F" Modifiers="Control" />
                             <KeyboardAccelerator Key="H" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
-                    <Button x:Name="GoToButton" Click="GoToButton_Click" ToolTipService.ToolTip="Đi tới dòng (Ctrl+G)" AutomationProperties.Name="Đi tới dòng">
+                    <Button x:Name="GoToButton" Click="GoToButton_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Đi tới dòng (Ctrl+G)" AutomationProperties.Name="Đi tới dòng">
                         <FontIcon Glyph="&#xE72A;" FontSize="14" />
                         <Button.KeyboardAccelerators>
                             <KeyboardAccelerator Key="G" Modifiers="Control" />
                         </Button.KeyboardAccelerators>
                     </Button>
-                    <Button Click="FilterButton_Click" ToolTipService.ToolTip="Lọc nâng cao (nhiều điều kiện, và / hoặc)">
+                    <Button Click="FilterButton_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Lọc nâng cao (nhiều điều kiện, và / hoặc)">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE71C;" FontSize="14" /><TextBlock Text="Lọc" /></StackPanel>
                     </Button>
-                    <Button Click="SortButton_Click" ToolTipService.ToolTip="Sắp xếp theo nhiều cột">
+                    <Button Click="SortButton_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Sắp xếp theo nhiều cột">
                         <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE8CB;" FontSize="14" /><TextBlock Text="Sắp xếp" /></StackPanel>
                     </Button>
-                    <Button Click="StatisticsButton_Click" ToolTipService.ToolTip="Thống kê từng cột (đếm, trống, tổng, nhỏ nhất / lớn nhất...)" AutomationProperties.Name="Thống kê">
+                    <Button Click="StatisticsButton_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Thống kê từng cột (đếm, trống, tổng, nhỏ nhất / lớn nhất...)" AutomationProperties.Name="Thống kê">
                         <FontIcon Glyph="&#xE9D9;" FontSize="14" />
                     </Button>
-                    <ToggleButton x:Name="RecordViewToggle" Click="RecordViewToggle_Click"
+                    <ToggleButton x:Name="RecordViewToggle" Click="RecordViewToggle_Click" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}"
                                   ToolTipService.ToolTip="Xem dọc dòng đang chọn: tên cột - giá trị, sửa được, tìm cột (Ctrl+R)" AutomationProperties.Name="Xem dọc">
                         <FontIcon Glyph="&#xE8A0;" FontSize="14" />
                         <ToggleButton.KeyboardAccelerators>
@@ -210,8 +218,9 @@
             </Button>
         </Grid>
 
-        <!-- Thẻ lọc / sắp xếp đang áp dụng (RefreshChips) - thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc bảng. -->
-        <StackPanel x:Name="ChipsBar" Grid.Row="1" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+        <!-- Thẻ lọc / sắp xếp đang áp dụng (RefreshChips) - thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc bảng.
+             Tự xuống hàng: 5 thẻ cùng lúc ở cửa sổ hẹp không bị cắt mất. -->
+        <views:WrapPanel x:Name="ChipsBar" Grid.Row="1" Spacing="8" Visibility="Collapsed">
             <TextBlock x:Name="ShownRowsText" VerticalAlignment="Center" Opacity="0.8" />
             <Border x:Name="FilterChip" Style="{StaticResource ChipBorderStyle}">
                 <StackPanel Orientation="Horizontal">
@@ -279,7 +288,7 @@
                     </Button>
                 </StackPanel>
             </Border>
-        </StackPanel>
+        </views:WrapPanel>
 
         <!-- Validation issues -->
         <Expander Grid.Row="2" Header="{x:Bind IssuesHeaderText(ViewModel.Issues.Count), Mode=OneWay}" IsExpanded="False"
@@ -347,6 +356,13 @@
                 </Style>
             </controls:DataGrid.Resources>
         </controls:DataGrid>
+
+        <!-- Lọc ra 0 dòng (RefreshChips): bảng không có dòng nào thì báo rõ và cho bỏ lọc ngay. -->
+        <StackPanel x:Name="NoRowsPanel" Grid.Row="3" Spacing="8" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+            <FontIcon Glyph="&#xE71C;" FontSize="28" Opacity="0.7" />
+            <TextBlock Text="Không có dòng nào khớp bộ lọc" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center" />
+            <Button Content="Bỏ lọc" Click="ClearEveryFilterButton_Click" HorizontalAlignment="Center" />
+        </StackPanel>
 
         <!-- Excel-like "fill handle": a small square glued to the bottom-right corner of the current
              cell (see UpdateFillHandlePosition) - dragging it down copies the cell's value into the
@@ -450,7 +466,7 @@
                             <StackPanel Orientation="Horizontal" Spacing="6"><FontIcon Glyph="&#xE710;" FontSize="14" /><TextBlock Text="Bảng trống" /></StackPanel>
                         </Button>
                     </StackPanel>
-                    <TextBlock Text="Tự nhận dấu phân cách (phẩy, chấm phẩy, Tab, |) và bảng mã (UTF-8, UTF-16, Shift-JIS). Nhận sai thì bấm nhãn bảng mã ở thanh dưới cùng để chọn lại."
+                    <TextBlock Text="Tự nhận dấu phân cách (phẩy, chấm phẩy, Tab, |) và bảng mã (UTF-8, UTF-16, Shift-JIS). Nhận sai thì bấm nút bảng mã ở thanh dưới cùng để chọn lại."
                                Opacity="0.7" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" />
 
                     <StackPanel x:Name="StartRecentPanel" Spacing="2" Margin="0,8,0,0">
@@ -462,35 +478,47 @@
         </ScrollViewer>
 
         <!-- Status bar -->
-        <Grid Grid.Row="4" ColumnSpacing="16">
+        <!-- MinHeight bằng nút Huỷ: nút hiện ra lúc đang chạy không làm bảng nhảy. Tên file và thông báo tự rút gọn có "...",
+             cột * cho thông báo lấy phần còn lại nên tên file dài không đẩy gì ra ngoài cửa sổ. -->
+        <Grid Grid.Row="4" ColumnSpacing="16" MinHeight="32">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="16">
-                <TextBlock Text="{x:Bind ViewModel.FileName, Mode=OneWay}" />
-                <TextBlock Text="{x:Bind ViewModel.EncodingLabel, Mode=OneWay}" Opacity="0.8"
-                           IsTapEnabled="True" Tapped="EncodingLabel_Tapped" ToolTipService.ToolTip="Bấm để đổi encoding/delimiter" />
-                <TextBlock Text="{x:Bind ViewModel.DelimiterLabel, Mode=OneWay}" Opacity="0.8"
-                           IsTapEnabled="True" Tapped="EncodingLabel_Tapped" ToolTipService.ToolTip="Bấm để đổi encoding/delimiter" />
-                <!-- Cùng nhóm với encoding / dấu phân cách: cách đọc file. Người dùng tự chọn (không tự đoán); đổi khi đang mở
-                     file → mở lại file đó. -->
-                <CheckBox x:Name="HasHeaderBox" Content="Dòng đầu là tiêu đề" IsChecked="True" MinWidth="0" MinHeight="0" Padding="6,0,0,0"
-                          VerticalAlignment="Center" Click="HasHeaderBox_Click"
-                          ToolTipService.ToolTip="Bỏ tick nếu file không có dòng tên cột: mọi dòng là dữ liệu, cột tự đặt tên Cột 1, Cột 2… (chỉ để hiển thị, lưu file không ghi dòng tên cột)" />
-                <TextBlock Opacity="0.8"><Run Text="Dòng:" /><Run Text="{x:Bind ViewModel.RowCount, Mode=OneWay}" /></TextBlock>
-                <TextBlock Opacity="0.8"><Run Text="Cột:" /><Run Text="{x:Bind ViewModel.ColumnCount, Mode=OneWay}" /></TextBlock>
-                <TextBlock Text="{x:Bind SaveStateText(ViewModel.IsDirty), Mode=OneWay}" Opacity="0.8" />
-                <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Opacity="0.6" />
-            </StackPanel>
+            <TextBlock Text="{x:Bind ViewModel.FileName, Mode=OneWay}" MaxWidth="280" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                       ToolTipService.ToolTip="{x:Bind ViewModel.FileName, Mode=OneWay}" />
+            <Button x:Name="EncodingButton" Grid.Column="1" Style="{StaticResource StatusButtonStyle}" Click="EncodingButton_Click"
+                    IsEnabled="{x:Bind HasFile(ViewModel.FileName), Mode=OneWay}"
+                    ToolTipService.ToolTip="Đổi bảng mã / dấu phân cách rồi mở lại file" AutomationProperties.Name="Đổi bảng mã / dấu phân cách">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock><Run Text="{x:Bind ViewModel.EncodingLabel, Mode=OneWay}" /><Run Text="  ·  " /><Run Text="{x:Bind ViewModel.DelimiterLabel, Mode=OneWay}" /></TextBlock>
+                    <FontIcon Glyph="&#xE70D;" FontSize="10" />
+                </StackPanel>
+            </Button>
+            <!-- Cùng nhóm với bảng mã / dấu phân cách: cách đọc file. Người dùng tự chọn (không tự đoán); đổi khi đang mở
+                 file → mở lại file đó. -->
+            <CheckBox x:Name="HasHeaderBox" Grid.Column="2" Content="Dòng đầu là tiêu đề" IsChecked="True" MinWidth="0" MinHeight="0" Padding="6,0,0,0"
+                      VerticalAlignment="Center" Click="HasHeaderBox_Click"
+                      ToolTipService.ToolTip="Bỏ tick nếu file không có dòng tên cột: mọi dòng là dữ liệu, cột tự đặt tên Cột 1, Cột 2… (chỉ để hiển thị, lưu file không ghi dòng tên cột)" />
+            <TextBlock Grid.Column="3" Opacity="0.8" VerticalAlignment="Center"><Run Text="Dòng: " /><Run Text="{x:Bind ViewModel.RowCount, Mode=OneWay}" /></TextBlock>
+            <TextBlock Grid.Column="4" Opacity="0.8" VerticalAlignment="Center"><Run Text="Cột: " /><Run Text="{x:Bind ViewModel.ColumnCount, Mode=OneWay}" /></TextBlock>
+            <TextBlock Grid.Column="5" Text="{x:Bind SaveStateText(ViewModel.IsDirty), Mode=OneWay}" Opacity="0.8" VerticalAlignment="Center" />
+            <TextBlock Grid.Column="6" Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Opacity="0.8" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                       ToolTipService.ToolTip="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" />
 
-            <ProgressBar Grid.Column="1" Width="140" VerticalAlignment="Center"
+            <ProgressBar Grid.Column="7" Width="140" VerticalAlignment="Center"
                          Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}"
                          Value="{x:Bind ViewModel.ProgressPercent, Mode=OneWay}" Maximum="100" />
 
-            <Button Grid.Column="2" Content="Hủy" Click="CancelButton_Click" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
+            <Button Grid.Column="8" Content="Huỷ" Click="CancelButton_Click" Visibility="{x:Bind ViewModel.IsBusy, Mode=OneWay}" />
         </Grid>
     </Grid>
 </Window>

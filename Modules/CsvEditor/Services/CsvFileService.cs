@@ -55,7 +55,7 @@ public sealed class CsvFileService : ICsvFileService
             var proceed = await confirmLargeFile(estimatedRows);
             if (!proceed)
             {
-                throw new OperationCanceledException("Người dùng hủy mở file lớn.");
+                throw new OperationCanceledException("Người dùng huỷ mở file lớn.");
             }
         }
 

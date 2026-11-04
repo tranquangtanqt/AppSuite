@@ -40,14 +40,15 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
   *Bảng trống* (ẩn màn hình rồi mở hộp thoại Thêm cột) và danh sách file gần đây (bấm 1 dòng để mở).
 - **Thẻ đang lọc / sắp xếp** (`ChipsBar`, `RefreshChips`) phía trên bảng: `Hiện x / y dòng`, `Lọc: Trạng thái = "Đã giao" ✕`
   (lọc nâng cao), `Ô lọc: Tên chứa "an" ✕` (các ô lọc ở tiêu đề cột), `Sắp xếp: Thành tiền ↓ ✕`. Bấm chữ = mở lại hộp
-  thoại, ✕ = bỏ. Thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc trên-trái bảng (bỏ).
+  thoại, ✕ = bỏ. Nhiều thẻ tự xuống hàng (`Views/WrapPanel`, vị trí tính ở `Services/WrapLayout`). Lọc ra 0 dòng: giữa bảng hiện `NoRowsPanel` kèm nút *Bỏ lọc*
+  (bỏ cả lọc nâng cao lẫn ô lọc). Thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc trên-trái bảng (bỏ).
 - **Hướng dẫn** (nút `?` cuối thanh công cụ, `F1`): mọi tính năng theo danh mục + tìm không dấu. Nội dung ở
   `Views/HelpContent.cs` (cửa sổ dùng chung `SharedUI.Help.HelpWindow`) — thêm / đổi tính năng thì cập nhật cả ở đó.
 
 - **Mở** (`Ctrl+O`): chọn `.csv`/`.tsv`/`.txt`, tự nhận diện delimiter (`,` `Tab` `;` `|`) và encoding
   (UTF-8, UTF-8 BOM, UTF-16 LE/BE, **Shift-JIS** - file không phải UTF-8 hợp lệ mà đọc trọn vẹn được theo Shift-JIS /
   CP932; có kana hoặc 2 kanji liền nhau thì không cảnh báo, không thì kèm 1 cảnh báo "đoán là Shift-JIS"; lưu lại giữ
-  nguyên Shift-JIS). Nếu nhận diện sai, bấm vào nhãn "Encoding"/"Delimiter" ở thanh
+  nguyên Shift-JIS). Nếu nhận diện sai, bấm nút bảng mã · dấu phân cách ở thanh
   trạng thái để mở lại file với lựa chọn thủ công. Mở lỗi (file bị khoá, không có quyền…) hiện hộp thoại báo lỗi.
 - **Kéo-thả**: thả file `.csv`/`.tsv`/`.txt` vào bất kỳ chỗ nào trong cửa sổ để mở (thả nhiều file → mở file đầu
   tiên). Còn thay đổi chưa lưu thì hỏi như Open.
@@ -93,7 +94,7 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
 - **Fill handle**: chọn 1 ô, bấm-giữ-kéo ô vuông nhỏ ở góc dưới-phải xuống các dòng dưới để điền
   y nguyên giá trị; giữ `Ctrl` khi thả chuột để tự tăng dần (+1 mỗi dòng) nếu giá trị là số nguyên.
   Chỉ hỗ trợ kéo xuống, không tự cuộn khi kéo ra ngoài vùng đang hiển thị.
-- **Find**: 5 kiểu so khớp (Contains/Equals/StartsWith/EndsWith/Regex), có debounce 300ms khi gõ,
+- **Find**: 5 kiểu so khớp (Chứa / Khớp toàn bộ ô / Bắt đầu bằng / Kết thúc bằng / Regex), có debounce 300ms khi gõ,
   điều hướng Trước/Sau giữa các kết quả (tự cuộn dọc+ngang tới đúng ô khớp). Hotkey: `Ctrl+F`.
 - **Replace**: cùng dialog với Find, "Thay thế tất cả kết quả" ghi đè toàn bộ kết quả đang tìm được,
   gộp thành 1 bước Undo. Hotkey: `Ctrl+H`.
@@ -105,8 +106,8 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
   tooltip "Ctrl+Shift+G" khi rê chuột.
 - **Go To** (`Ctrl+G`): đi tới dòng số N — theo số ở đầu dòng của bảng (tức là theo lọc / sắp xếp đang hiện), giữ cột
   đang chọn. Nhập số rồi `Enter`; số ngoài phạm vi thì báo ngay trong hộp thoại.
-- **Filter**: nhiều điều kiện `== != > < >= <= Contains Regex`, mỗi điều kiện có thể `NOT`, kết hợp
-  toàn bộ danh sách bằng 1 phép `AND` hoặc `OR` chung (không phải cây biểu thức lồng nhau). Mở lại
+- **Filter**: nhiều điều kiện `= != > < >= <= Chứa Regex`, mỗi điều kiện có thể tick *Phủ định*, kết hợp
+  toàn bộ danh sách theo *thoả mãn tất cả* hoặc *thoả mãn 1 trong các điều kiện* (không phải cây biểu thức lồng nhau). Mở lại
   dialog sẽ hiện đúng điều kiện đang áp dụng; ✕ trên thẻ *Lọc* bỏ lọc ngay không cần mở dialog. Chuột phải 1 ô →
   *Lọc: cột = "giá trị"* / *Lọc bỏ: cột ≠ "giá trị"* thêm 1 điều kiện `Equal` / `NotEqual` vào lọc đang có (nối `AND`; lọc
   đang có là `OR` nhiều điều kiện thì thay hẳn và báo ở thanh trạng thái).

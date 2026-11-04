@@ -13,25 +13,25 @@ internal static class HelpContent
     [
         new("Bắt đầu nhanh", "", "Mở file CSV / TSV → sửa như bảng tính → lưu lại đúng định dạng cũ.",
         [
-            new("1. Mở file", "Lúc chưa mở file, cửa sổ hiện màn hình bắt đầu: kéo-thả file vào, bấm Mở file..., hoặc bấm 1 file trong danh sách File gần đây. Delimiter và encoding tự nhận diện.", "Ctrl+O"),
+            new("1. Mở file", "Lúc chưa mở file, cửa sổ hiện màn hình bắt đầu: kéo-thả file vào, bấm Mở file..., hoặc bấm 1 file trong danh sách File gần đây. Dấu phân cách và bảng mã tự nhận diện.", "Ctrl+O"),
             new("2. Sửa", "Bấm đúp vào ô (hoặc chọn ô rồi gõ / F2) để sửa, Enter để xong. Thêm / xoá dòng, cột bằng nút Dòng ▾ / Cột ▾ trên thanh công cụ hoặc chuột phải."),
-            new("3. Lưu", "Lưu ghi lại đúng delimiter / encoding đang dùng. Xuất ▾ có Lưu thành file khác và Xuất Excel (.xlsx).", "Ctrl+S"),
+            new("3. Lưu", "Lưu ghi lại đúng dấu phân cách / bảng mã đang dùng. Xuất ▾ có Lưu thành file khác và Xuất Excel (.xlsx).", "Ctrl+S"),
             new("Mở lại hướng dẫn này", "Nút ? ở cuối thanh công cụ, hoặc phím F1.", "F1"),
         ]),
 
         new("Mở & lưu file", "", "Mở CSV / TSV / TXT, file không có dòng tiêu đề, file lớn; lưu và xuất Excel.",
         [
-            new("Mở", "Chọn file .csv / .tsv / .txt. Tự nhận diện delimiter (dấu phẩy, Tab, chấm phẩy, gạch đứng) và encoding (UTF-8, UTF-8 BOM, UTF-16, Shift-JIS của file tiếng Nhật - không cần chọn tay).", "Ctrl+O"),
+            new("Mở", "Chọn file .csv / .tsv / .txt. Tự nhận diện dấu phân cách (dấu phẩy, Tab, chấm phẩy, gạch đứng) và bảng mã (UTF-8, UTF-8 BOM, UTF-16, Shift-JIS của file tiếng Nhật - không cần chọn tay).", "Ctrl+O"),
             new("Màn hình bắt đầu", "Hiện khi chưa mở file: vùng kéo-thả, nút Mở file..., nút Bảng trống (đặt tên cột đầu tiên rồi nhập dữ liệu, Lưu để chọn chỗ lưu) và danh sách file gần đây (bấm 1 dòng để mở)."),
             new("Kéo-thả file", "Thả file .csv / .tsv / .txt vào bất kỳ chỗ nào trong cửa sổ để mở. Thả nhiều file thì mở file đầu tiên."),
             new("File gần đây", "Nút 🕘 cạnh Mở (và danh sách ở màn hình bắt đầu): 10 file mở / lưu thành file khác gần nhất, mới nhất trước; di chuột lên để xem đường dẫn đầy đủ. File đã bị xoá / chuyển chỗ thì báo và tự bỏ khỏi danh sách. Xoá danh sách ở cuối menu 🕘."),
-            new("Nhận diện sai encoding / delimiter", "Bấm vào nhãn encoding hoặc delimiter ở thanh trạng thái (dưới cùng) để mở lại file với lựa chọn thủ công."),
-            new("Dòng đầu là tiêu đề", "Ô tick ở thanh trạng thái, cạnh encoding / delimiter (mặc định có tick). Bỏ tick cho file không có dòng tên cột: mọi dòng là dữ liệu, cột tự đặt tên Cột 1, Cột 2… (chỉ để hiển thị - Lưu không ghi dòng tên cột). Đổi khi đang mở file thì file được mở lại."),
+            new("Nhận diện sai bảng mã / dấu phân cách (encoding / delimiter)", "Bấm nút bảng mã · dấu phân cách ở thanh trạng thái (dưới cùng) để chọn lại rồi mở lại file. Tab tới nút rồi Enter cũng được."),
+            new("Dòng đầu là tiêu đề", "Ô tick ở thanh trạng thái, cạnh nút bảng mã (mặc định có tick). Bỏ tick cho file không có dòng tên cột: mọi dòng là dữ liệu, cột tự đặt tên Cột 1, Cột 2… (chỉ để hiển thị - Lưu không ghi dòng tên cột). Đổi khi đang mở file thì file được mở lại."),
             new("Dòng dài hơn tiêu đề", "Dòng có nhiều field hơn dòng tiêu đề: tự thêm cột Cột N cho phần dư (kèm 1 cảnh báo) để không mất dữ liệu khi lưu."),
-            new("Lưu / Lưu thành file khác", "Lưu ghi đè file đang mở, giữ nguyên delimiter / encoding / BOM. Chỉ bọc ngoặc kép những ô cần (có delimiter, ngoặc kép, xuống dòng). Lưu thành file khác nằm trong Xuất ▾. Tiêu đề cửa sổ là tên file, có ● khi còn thay đổi chưa lưu.", "Ctrl+S"),
-            new("Hỏi lưu thay đổi", "Còn thay đổi chưa lưu mà đóng cửa sổ, mở file khác hoặc mở lại file → hỏi Lưu / Không lưu / Hủy. Lưu lỗi (file đang bị app khác khoá…) thì báo, không mất thay đổi."),
+            new("Lưu / Lưu thành file khác", "Lưu ghi đè file đang mở, giữ nguyên dấu phân cách / bảng mã / BOM. Chỉ bọc ngoặc kép những ô cần (có dấu phân cách, ngoặc kép, xuống dòng). Lưu thành file khác nằm trong Xuất ▾. Tiêu đề cửa sổ là tên file, có ● khi còn thay đổi chưa lưu.", "Ctrl+S"),
+            new("Hỏi lưu thay đổi", "Còn thay đổi chưa lưu mà đóng cửa sổ, mở file khác hoặc mở lại file → hỏi Lưu / Không lưu / Huỷ. Lưu lỗi (file đang bị app khác khoá…) thì báo, không mất thay đổi."),
             new("Xuất Excel (.xlsx)", "Trong Xuất ▾. Xuất các dòng đang hiện (theo lọc / sắp xếp hiện tại) ra file Excel; file CSV đang mở không đổi. Số thật ghi thành số; mã có số 0 ở đầu (00123), số dài hơn 15 chữ số, ô bắt đầu bằng = giữ nguyên dạng chữ. Dòng tiêu đề in đậm, cố định khi cuộn, có nút lọc."),
-            new("File rất lớn", "File được đọc ở nền, có thanh tiến độ và nút Hủy. Ước tính trên ~3 triệu dòng thì hỏi trước khi mở (toàn bộ file nằm trong RAM)."),
+            new("File rất lớn", "File được đọc ở nền, có thanh tiến độ và nút Huỷ. Ước tính trên ~3 triệu dòng thì hỏi trước khi mở (toàn bộ file nằm trong RAM)."),
         ]),
 
         new("Sửa dữ liệu", "", "Sửa ô, thêm / xoá dòng và cột, điền nhanh, copy - dán với Excel.",
@@ -51,21 +51,21 @@ internal static class HelpContent
 
         new("Tìm, lọc & sắp xếp", "", "Tìm / thay thế, đi tới dòng, lọc nhanh theo cột, lọc nâng cao, sắp xếp nhiều cột.",
         [
-            new("Tìm", "Tìm với 5 kiểu: Contains, Equals, StartsWith, EndsWith, Regex; có phân biệt hoa thường. Trước / Sau để nhảy giữa các kết quả (tự cuộn tới đúng ô).", "Ctrl+F"),
+            new("Tìm", "Tìm với 5 kiểu: Chứa, Khớp toàn bộ ô, Bắt đầu bằng, Kết thúc bằng, Regex; có phân biệt hoa thường. Trước / Sau để nhảy giữa các kết quả (tự cuộn tới đúng ô).", "Ctrl+F"),
             new("Thay thế", "Cùng hộp thoại với Tìm: thay thế tất cả kết quả đang tìm được - 1 bước Hoàn tác.", "Ctrl+H"),
             new("Đi tới dòng", "Nút → cạnh Tìm: đi tới dòng số N (theo số ở đầu dòng của bảng đang hiện), giữ cột đang chọn. Gõ số rồi Enter.", "Ctrl+G"),
             new("Đi tới cột", "Cột ▾ → Đi tới cột..., hoặc Ctrl+Shift+G: gõ 1 phần tên cột (vd EXT_DATA) - danh sách gợi ý các cột khớp (số thứ tự. tên), chọn bằng chuột hoặc ↓ rồi Enter; Enter ngay thì tới cột khớp nhất (trùng tên → bắt đầu bằng → chứa). Gõ số (vd 77) = cột thứ 77. Bảng cuộn ngang tới cột đó, giữ dòng đang chọn.", "Ctrl+Shift+G"),
             new("Lọc nhanh theo cột", "Gõ vào ô Lọc... dưới tên cột: chỉ hiện dòng có chứa chữ đó (không phân biệt hoa thường). Gõ nhiều cột = phải khớp tất cả. Thẻ \"Ô lọc: ...\" phía trên bảng ✕ xoá mọi ô lọc."),
-            new("Lọc (nâng cao)", "Nhiều điều kiện == != > < >= <= Contains Regex, mỗi điều kiện có thể NOT, kết hợp bằng AND hoặc OR. Chuột phải 1 ô → Lọc theo giá trị này thêm điều kiện cột = giá trị (nối bằng AND vào lọc đang có)."),
-            new("Thẻ đang lọc / sắp xếp", "Phía trên bảng: \"Hiện x / y dòng\" và 1 thẻ cho mỗi thứ đang áp dụng (Lọc, Ô lọc, Sắp xếp, Đang ẩn cột, Cố định cột). Bấm chữ trên thẻ để sửa, bấm ✕ để bỏ ngay."),
+            new("Lọc (nâng cao)", "Nhiều điều kiện = != > < >= <= Chứa Regex, mỗi điều kiện có thể tick Phủ định (lấy dòng không thoả), kết hợp theo thoả mãn tất cả hoặc thoả mãn 1 trong các điều kiện. Chuột phải 1 ô → Lọc theo giá trị này thêm điều kiện cột = giá trị (thêm vào lọc đang có theo kiểu thoả mãn tất cả)."),
+            new("Thẻ đang lọc / sắp xếp", "Phía trên bảng: \"Hiện x / y dòng\" và 1 thẻ cho mỗi thứ đang áp dụng (Lọc, Ô lọc, Sắp xếp, Đang ẩn cột, Cố định cột). Bấm chữ trên thẻ để sửa, bấm ✕ để bỏ ngay. Nhiều thẻ thì tự xuống hàng. Lọc ra 0 dòng thì giữa bảng hiện lời nhắc kèm nút Bỏ lọc (bỏ cả lọc nâng cao lẫn ô lọc)."),
             new("Sắp xếp", "Sắp xếp nhiều cột theo thứ tự ưu tiên; nhanh hơn: chuột phải tiêu đề cột → tăng / giảm dần. Ô là số (2.5 hoặc 2,5) thì so theo số, còn lại so chữ. ✕ trên thẻ Sắp xếp trả về thứ tự gốc. Sắp xếp chỉ là cách hiển thị - Lưu vẫn giữ thứ tự gốc của file."),
         ]),
 
         new("Thống kê & cảnh báo", "", "Số liệu từng cột và các vấn đề phát hiện trong file.",
         [
-            new("Thống kê", "Nút 📊 cạnh Sắp xếp. Số dòng, số cột, dòng trùng; theo từng cột: số ô rỗng, giá trị khác nhau, Min / Max / Trung bình / Tổng (với cột số)."),
-            new("Cảnh báo", "Khung Cảnh báo (N) dưới thanh công cụ: dòng lệch số cột, ngoặc kép không đóng, cột nhiều ô rỗng, độ tin cậy thấp khi nhận diện delimiter / encoding. Bấm đúp 1 cảnh báo để nhảy tới dòng đó. Lệch cột / cột rỗng được tính lại sau khi sửa và khi lưu."),
-            new("Thanh trạng thái", "Tên file, encoding, delimiter (bấm để đổi), ô tick Dòng đầu là tiêu đề, số dòng / cột, trạng thái đã lưu / chưa lưu."),
+            new("Thống kê", "Nút 📊 cạnh Sắp xếp. Số dòng, số cột, dòng trùng; theo từng cột: số ô rỗng, giá trị khác nhau, Nhỏ nhất / Lớn nhất / Trung bình / Tổng (với cột số)."),
+            new("Cảnh báo", "Khung Cảnh báo (N) dưới thanh công cụ: dòng lệch số cột, ngoặc kép không đóng, cột nhiều ô rỗng, độ tin cậy thấp khi nhận diện dấu phân cách / bảng mã. Bấm đúp 1 cảnh báo để nhảy tới dòng đó. Lệch cột / cột rỗng được tính lại sau khi sửa và khi lưu."),
+            new("Thanh trạng thái", "Tên file, nút bảng mã · dấu phân cách (bấm để đổi, chỉ bấm được khi đã mở file), ô tick Dòng đầu là tiêu đề, số dòng / cột, trạng thái đã lưu / chưa lưu, thông báo. Tên file và thông báo dài tự rút gọn \"...\" - rê chuột để xem đủ."),
         ]),
 
         new("Phím tắt", "", "Tổng hợp phím tắt của CsvEditor.",

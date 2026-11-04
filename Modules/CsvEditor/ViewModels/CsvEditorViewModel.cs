@@ -153,7 +153,7 @@ public sealed partial class CsvEditorViewModel : ObservableObject
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Đã hủy mở file.";
+            StatusMessage = "Đã huỷ mở file.";
             return false;
         }
         finally
