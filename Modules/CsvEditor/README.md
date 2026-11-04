@@ -29,6 +29,8 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 ## Toolbar
 
+Cửa sổ hẹp hơn 1040 logical (`RootGrid_SizeChanged`): Xuất, Dòng, Cột, Tìm, Lọc, Sắp xếp chỉ còn icon + tooltip.
+
 `Mở` `🕘` `Lưu` `Xuất ▾` | `↶` `↷` | `Dòng ▾` `Cột ▾` | `Tìm` `→` `Lọc` `Sắp xếp` `📊` `▤` … `?` (giao diện làm lại
 2026-11-03: tiếng Việt, việc ít dùng gom vào menu thả xuống - vừa 1 hàng ở cửa sổ ~1000 px). Nút có phím tắt đều nằm ngoài
 menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đang mở). Tiêu đề cửa sổ = tên file (`● ` khi chưa lưu).

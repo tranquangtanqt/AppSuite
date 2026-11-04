@@ -46,6 +46,7 @@ public sealed partial class MainWindow : Window
     private string? CurrentFilePath => ViewModel.CurrentFilePath;
 
     private bool _showFilterBoxes = true;
+    private bool _toolbarCompact;
 
     // ----- Fill handle drag state (see FillHandleLayer in MainWindow.xaml) -----
     private ScrollViewer? _gridScrollViewer;
@@ -500,6 +501,24 @@ public sealed partial class MainWindow : Window
         foreach (var header in Grid.Columns.Select(column => column.Header).OfType<FilterHeaderItem>())
         {
             header.FilterBoxVisibility = _showFilterBoxes ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    /// <summary>Cửa sổ hẹp hơn mức này thì thanh công cụ không đủ chỗ cho cả chữ: bỏ chữ, giữ icon + tooltip để mọi nút vẫn thấy.</summary>
+    private const double ToolbarLabelsMinWidth = 1040;
+
+    private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var compact = e.NewSize.Width < ToolbarLabelsMinWidth;
+        if (compact == _toolbarCompact)
+        {
+            return;
+        }
+
+        _toolbarCompact = compact;
+        foreach (var label in FindDescendants<TextBlock>(ToolbarPanel).Where(text => text.Tag as string == "ToolbarLabel"))
+        {
+            label.Visibility = compact ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 
