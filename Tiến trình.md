@@ -1097,6 +1097,8 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 
 - [x] Chọn vùng ô (kéo chuột, Shift+bấm, Shift+mũi tên, Ctrl+Shift+mũi tên), Ctrl+C / Ctrl+V theo vùng dạng Tab (dán qua lại Excel, bỏ cột ẩn và dòng bị lọc, 1 bước Hoàn tác, chép 1 ô dán lên vùng thì điền cả vùng), Đếm / Tổng / TB ở thanh trạng thái, chuột phải thêm Sao chép cả dòng. Cập nhật F1, README. Unit test 180/180; GUI Sandbox 22/22, lặp Shift+mũi tên 20/20, toàn bộ 46/47 (bấm đúp giả lập) (2026-11-04)
 - [ ] Thử tay: kéo chọn vùng bằng chuột thật, dán qua lại với Excel thật, bấm đúp sửa ô sau khi có chọn vùng
+- [x] Sửa lỗi: kéo chọn vùng khi đang sửa ô làm con trỏ nhảy lên ô Lọc đầu tiên (`Grid.Focus` chạy cả sau cú bấm thường, lúc đang sửa DataGrid chuyển tiêu điểm cho ô con). Nay chỉ gọi sau khi thật sự kéo, ghi ô đang sửa trước. Unit test 180/180; GUI Sandbox chọn vùng 22/22, kịch bản sửa + kéo 4/4 (2026-11-05)
+- [ ] Người dùng báo (bản Release 2026-11-05, file 123 cột, sau khi dán): dòng tô xanh đứng yên, bấm dòng khác không đổi. Chưa tái hiện: thử ngẫu nhiên 110 thao tác (bấm, bấm đúp, kéo chọn, kéo điền, chép, dán, hoàn tác, F2, Tab, Esc) trên đúng bản đó không kẹt lần nào. Chưa biết có liên quan tới lỗi con trỏ nhảy ở trên không. Gặp lại thì ghi: thao tác ngay trước đó, Esc có hết không, phím mũi tên có đổi dòng không
 - [ ] Kéo chuột chọn vùng chưa tự cuộn bảng khi ra mép (hiện dùng Shift+bấm cho vùng dài)
 
 Đánh giá giao diện theo ui-ux-pro-max (quy tắc WinUI / UX + ảnh Sandbox ~1010×600 logical, 2026-11-04):

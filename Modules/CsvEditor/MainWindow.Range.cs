@@ -22,6 +22,7 @@ public sealed partial class MainWindow
 
     private CellRange? _range;
     private bool _rangeDragging;
+    private bool _rangeDragMoved;
     private bool _changingRange;
     private CellRef? _shiftClickCell;
 
@@ -210,6 +211,7 @@ public sealed partial class MainWindow
 
         _range = new CellRange(cell, cell);
         _rangeDragging = true;
+        _rangeDragMoved = false;
         RefreshRange();
     }
 
@@ -229,6 +231,7 @@ public sealed partial class MainWindow
 
         if (CellAt(point.Position) is { } cell && cell != range.Active)
         {
+            _rangeDragMoved = true;
             Grid.CapturePointer(e.Pointer);
             SetRange(range with { Active = cell });
         }
@@ -240,7 +243,14 @@ public sealed partial class MainWindow
         {
             _rangeDragging = false;
             Grid.ReleasePointerCapture(e.Pointer);
-            Grid.Focus(FocusState.Programmatic); // DataGrid chỉ nhận con trỏ khi bấm gọn, kéo chuột thì Ctrl+C / Esc không tới bảng
+
+            // DataGrid chỉ nhận con trỏ khi bấm gọn, kéo chuột thì Ctrl+C / Esc không tới bảng. Bấm gọn phải để DataGrid tự lo: đang sửa ô
+            // nó chờ ô sửa mất tiêu điểm rồi mới đổi dòng, gọi Focus lúc đó làm cú bấm mất tác dụng và tiêu điểm nhảy sang ô Lọc đầu tiên.
+            if (_rangeDragMoved)
+            {
+                Grid.CommitEdit(DataGridEditingUnit.Row, true);
+                Grid.Focus(FocusState.Programmatic);
+            }
         }
     }
 
