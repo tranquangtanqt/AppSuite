@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.System;
 
 namespace MeRon.Views;
 
@@ -131,7 +132,7 @@ public sealed partial class BatchOrdersPage : Page
         }
     }
 
-    /// <summary>Chữ không khớp khách nào (đọc sai, viết tắt...): tìm trong toàn bộ khách rồi thay vào dòng. Dùng ô tìm như form
+    /// <summary>Chữ không khớp khách nào (đọc sai, viết tắt...) hoặc ghép nhầm khách: tìm trong toàn bộ khách rồi thay vào dòng. Dùng ô tìm như form
     /// đơn thay cho ComboBox vì danh sách khách dài. Viết lại dòng sau khi khung đóng: dòng cũ (có nút đang mở khung) sẽ bị thay.</summary>
     private void ChooseCustomer_Click(object sender, RoutedEventArgs e)
     {
@@ -151,6 +152,15 @@ public sealed partial class BatchOrdersPage : Page
                 flyout.Hide();
             }
         });
+        // Ô tìm trống tự mở danh sách gợi ý, Esc mặc định không đóng được khung.
+        box.PreviewKeyDown += (_, args) =>
+        {
+            if (args.Key == VirtualKey.Escape)
+            {
+                args.Handled = true;
+                flyout.Hide();
+            }
+        };
         flyout.Opened += (_, _) => box.Focus(FocusState.Programmatic);
         flyout.Closed += (_, _) =>
         {
@@ -190,31 +200,36 @@ public sealed partial class BatchOrdersPage : Page
         ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, itemIndex: row.ItemChoiceIndex, itemName: name));
     }
 
-    private static Button? HoverEdit(object row) => (row as Grid)?.Children.OfType<Button>().FirstOrDefault();
+    private static StackPanel? HoverActions(object row) =>
+        (row as Grid)?.Children.OfType<StackPanel>().FirstOrDefault(p => p.Name == nameof(HoverActions));
+
+    private static bool InUse(StackPanel actions) =>
+        actions.Children.OfType<Button>().Any(b => b.IsPointerOver || b.FocusState != FocusState.Unfocused);
 
     private void Row_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
-        if (HoverEdit(sender) is { } button)
+        if (HoverActions(sender) is { } actions)
         {
-            button.Opacity = 1;
+            actions.Opacity = 1;
         }
     }
 
     private void Row_PointerExited(object sender, PointerRoutedEventArgs e)
     {
-        if (HoverEdit(sender) is { FocusState: FocusState.Unfocused } button)
+        if (HoverActions(sender) is { } actions && !InUse(actions))
         {
-            button.Opacity = 0;
+            actions.Opacity = 0;
         }
     }
 
-    private void HoverEdit_GotFocus(object sender, RoutedEventArgs e) => ((Button)sender).Opacity = 1;
+    private void HoverActions_GotFocus(object sender, RoutedEventArgs e) => ((StackPanel)sender).Opacity = 1;
 
-    private void HoverEdit_LostFocus(object sender, RoutedEventArgs e)
+    private void HoverActions_LostFocus(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { IsPointerOver: false } button)
+        var actions = (StackPanel)sender;
+        if (!InUse(actions))
         {
-            button.Opacity = 0;
+            actions.Opacity = 0;
         }
     }
 

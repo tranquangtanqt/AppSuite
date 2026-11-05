@@ -138,6 +138,22 @@ public class BatchOrderTests
 
     /// <summary>Nút Chọn khách: chữ không khớp ai, thay bằng khách đã có; món, giá, CK trên dòng giữ nguyên.</summary>
     [Fact]
+    public void Replacing_a_wrongly_matched_customer_keeps_the_rest_of_the_line()
+    {
+        var matched = MatchLine("706? | 2 giò; 1 sc uống | 45k | CK");
+        Assert.Equal(1, matched.Customer?.Id);
+
+        var rewritten = BatchOrderParser.Format(matched.Line, customer: "Thu Hà");
+        Assert.Equal("Thu Hà | 2 giò; 1 sc uống | 45k | CK", rewritten);
+
+        var fixedLine = MatchLine(rewritten);
+        Assert.Equal(3, fixedLine.Customer?.Id);
+        Assert.False(fixedLine.Line.CustomerUnsure);
+        Assert.True(fixedLine.Line.Paid);
+        Assert.Equal(matched.Line.Items.Count, fixedLine.Line.Items.Count);
+    }
+
+    [Fact]
     public void Replacing_an_unknown_customer_keeps_the_rest_of_the_line()
     {
         var unknown = MatchLine("w3 Ngc? | 2 giò; 1 sc uống | 45k | CK");

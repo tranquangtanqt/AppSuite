@@ -23,8 +23,11 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
 
     public bool NeedsReview => !Match.CanSave || Match.Warnings.Count > 0 || Reconcile?.Kind == ReconcileKind.Different;
 
-    /// <summary>Dòng ổn không có hàng nút sửa: nút Sửa dòng hiện khi rê chuột.</summary>
+    /// <summary>Dòng ổn không có hàng nút sửa: các nút hiện khi rê chuột.</summary>
     public bool EditOnHover => !NeedsReview;
+
+    /// <summary>Nút Chọn khách: dòng chưa khớp khách nào, hoặc đã khớp mà có thể ghép nhầm. Dòng khớp nhiều khách đã có ô chọn riêng.</summary>
+    public bool CanChooseCustomer => NeedsNewCustomer || Match.Customer is not null;
 
     /// <summary>Nhãn so khớp: ✔ đã có / ≠ khác / chưa có trong MeRon (ngày giao đang chọn).</summary>
     public string ReconcileText => Reconcile?.Kind switch
