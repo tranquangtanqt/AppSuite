@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using MeRon.Core.Models;
 using MeRon.Core.Orders;
 using MeRon.ViewModels;
@@ -15,10 +16,42 @@ public sealed partial class BatchOrdersPage : Page
 {
     public BatchOrdersViewModel ViewModel { get; } = new();
 
+    /// <summary>Ngừng gõ chừng này thì đọc lại: mỗi phím tính lại từ đầu, nên đang gõ liên tục không dựng lại danh sách.</summary>
+    private readonly DispatcherTimer _autoRefresh = new() { Interval = TimeSpan.FromMilliseconds(600) };
+
+    private bool _pasting;
+
     public BatchOrdersPage()
     {
         InitializeComponent();
+        _autoRefresh.Tick += (_, _) =>
+        {
+            _autoRefresh.Stop();
+            ViewModel.RefreshIfChanged();
+        };
+        ViewModel.PropertyChanged += ViewModel_PropertyChanged;
     }
+
+    private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is not (nameof(BatchOrdersViewModel.Text) or nameof(BatchOrdersViewModel.AbbreviationsText)))
+        {
+            return;
+        }
+        _autoRefresh.Stop();
+        if (_pasting)
+        {
+            _pasting = false;
+            ViewModel.RefreshIfChanged();
+        }
+        else
+        {
+            _autoRefresh.Start();
+        }
+    }
+
+    /// <summary>Sự kiện Paste chạy trước khi chữ vào ô: đánh dấu, đọc lại ngay ở lần chữ đổi kế tiếp.</summary>
+    private void PasteBox_Paste(object sender, TextControlPasteEventArgs e) => _pasting = true;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -57,6 +90,7 @@ public sealed partial class BatchOrdersPage : Page
 
     private async void Save_Click(object sender, RoutedEventArgs e)
     {
+        ViewModel.RefreshIfChanged(); // Ctrl+S ngay sau khi gõ: lưu theo chữ mới nhất, không theo danh sách cũ
         var count = ViewModel.CheckedCount;
         if (count == 0)
         {
@@ -257,6 +291,6 @@ public sealed partial class BatchOrdersPage : Page
         var package = new DataPackage();
         package.SetText(ClaudeProjectUrl);
         Clipboard.SetContent(package);
-        ViewModel.Message = "Đã chép link Claude - mở trình duyệt, dán link (Ctrl+V), gửi ảnh trang sổ, rồi chép kết quả dán vào ô chữ ở đây và bấm Làm mới (F5).";
+        ViewModel.Message = "Đã chép link Claude - mở trình duyệt, dán link (Ctrl+V), gửi ảnh trang sổ, rồi chép kết quả dán vào ô chữ ở đây.";
     }
 }

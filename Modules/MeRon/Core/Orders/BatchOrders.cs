@@ -175,6 +175,27 @@ public static partial class BatchOrderParser
         return string.Join("\n", lines);
     }
 
+    /// <summary>Cùng nội dung, không tính kiểu xuống dòng (ô nhập của WinUI đổi \n thành \r).</summary>
+    public static bool SameText(string? first, string? second) => SplitLines(first).SequenceEqual(SplitLines(second));
+
+    /// <summary>Dòng số <paramref name="number"/> (từ 1) có còn đúng chữ <paramref name="raw"/> không: ô chữ có thể vừa đổi
+    /// mà bảng nháp chưa kịp đọc lại, ghi đè theo số dòng lúc đó sẽ trúng dòng khác.</summary>
+    public static bool HasLine(string? text, int number, string raw)
+    {
+        var lines = SplitLines(text);
+        return number >= 1 && number <= lines.Length && lines[number - 1].Trim() == raw;
+    }
+
+    /// <summary>Các dòng bị sửa ngay tại chỗ giữa 2 lần đọc: cùng số dòng, chữ cũ đã biến mất, chữ mới chưa từng có. Dòng chỉ bị
+    /// đẩy lên / xuống (thêm, xoá dòng khác) không tính.</summary>
+    public static IEnumerable<(string OldRaw, string NewRaw)> EditedLines(IReadOnlyList<BatchLine> before, IReadOnlyList<BatchLine> after)
+    {
+        var beforeRaws = before.Select(l => l.Raw).ToHashSet(StringComparer.Ordinal);
+        var afterRaws = after.Select(l => l.Raw).ToHashSet(StringComparer.Ordinal);
+        return before.Join(after, l => l.Number, l => l.Number, (oldLine, newLine) => (OldRaw: oldLine.Raw, NewRaw: newLine.Raw))
+            .Where(pair => !afterRaws.Contains(pair.OldRaw) && !beforeRaws.Contains(pair.NewRaw));
+    }
+
     /// <summary>Bỏ các dòng đã lưu thành đơn khỏi ô chữ (giữ dòng Ngày và dòng chưa lưu).</summary>
     public static string RemoveLines(string text, IEnumerable<int> numbers)
     {

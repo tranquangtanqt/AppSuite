@@ -49,7 +49,7 @@
                     </MenuFlyout>
                 </SplitButton.Flyout>
             </SplitButton>
-            <Button Grid.Column="3" Click="Refresh_Click" ToolTipService.ToolTip="Đọc lại ô chữ + khách / món / chữ viết tắt mới nhất (F5)">
+            <Button Grid.Column="3" Click="Refresh_Click" ToolTipService.ToolTip="Đọc lại ngay ô chữ + khách / món mới nhất (F5). Ô chữ tự đọc lại khi ngừng gõ">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <SymbolIcon Symbol="Refresh" />
                     <TextBlock Text="Làm mới" />
@@ -70,7 +70,7 @@
                      Text="{x:Bind ViewModel.Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
                      Height="150" ScrollViewer.VerticalScrollBarVisibility="Auto" FontFamily="Consolas"
                      PlaceholderText="Ngày | 29/10&#x0a;706 Mỹ Ly | 3 sc uống&#x0a;W1 Tuấn Chung | 1 bún; 10 nấm; 1 giò&#x0a;1201 | 1 phần cá | 45k | CK"
-                     AutomationProperties.Name="Dán chữ đơn hàng" />
+                     Paste="PasteBox_Paste" AutomationProperties.Name="Dán chữ đơn hàng" />
             <TextBox Grid.Column="1" Header="Chữ viết tắt (mỗi dòng: sc = sữa chua)"
                      Text="{x:Bind ViewModel.AbbreviationsText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True"
                      Height="150" ScrollViewer.VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Chữ viết tắt" />
@@ -156,7 +156,7 @@
                                            Visibility="{x:Bind local:Ui.VisibleIfText(ProblemText)}" />
                                 <TextBlock Text="{x:Bind WarningText}" TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCautionBrush}"
                                            Visibility="{x:Bind local:Ui.VisibleIfText(WarningText)}" />
-                                <!-- Cách sửa ngay trên dòng; sửa chữ thì bấm Sửa dòng (nhảy tới dòng trong ô chữ) rồi Làm mới -->
+                                <!-- Cách sửa ngay trên dòng; sửa chữ thì bấm Sửa dòng (nhảy tới dòng trong ô chữ), ngừng gõ là tự đọc lại -->
                                 <StackPanel Orientation="Horizontal" Spacing="6" Visibility="{x:Bind NeedsReview}">
                                     <Button Content="＋ Thêm khách" Click="AddCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind NeedsNewCustomer}" />
                                     <Button Content="Chọn khách" Click="ChooseCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind NeedsNewCustomer}"
@@ -179,14 +179,14 @@
                                             </DataTemplate>
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
-                                    <Button Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, xong bấm Làm mới (F5)" />
+                                    <Button Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, ngừng gõ là danh sách tự cập nhật" />
                                 </StackPanel>
                             </StackPanel>
                             <!-- Dòng ổn: hiện khi rê chuột hoặc Tab tới. Mờ hẳn thay vì ẩn để thẻ không đổi cao, phím vẫn tới được -->
                             <Button Grid.Column="2" Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}" Visibility="{x:Bind EditOnHover}" Opacity="0"
                                     HorizontalAlignment="Right" VerticalAlignment="Center"
                                     GotFocus="HoverEdit_GotFocus" LostFocus="HoverEdit_LostFocus"
-                                    ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, xong bấm Làm mới (F5)" />
+                                    ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, ngừng gõ là danh sách tự cập nhật" />
                             <StackPanel Grid.Column="3" Spacing="2" MinWidth="90">
                                 <TextBlock Text="{x:Bind TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
                                 <Border HorizontalAlignment="Right" CornerRadius="8" Padding="6,1" Visibility="{x:Bind Paid}"

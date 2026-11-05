@@ -217,6 +217,43 @@ public class BatchOrderTests
     }
 
     [Fact]
+    public void Same_text_ignores_the_line_break_style()
+    {
+        Assert.True(BatchOrderParser.SameText("a\nb", "a\rb"));
+        Assert.True(BatchOrderParser.SameText("a\r\nb", "a\nb"));
+        Assert.False(BatchOrderParser.SameText("a\nb", "a\nc"));
+    }
+
+    [Fact]
+    public void Has_line_tells_when_the_text_moved_on_from_the_row()
+    {
+        var text = "706 | 1 bún\r  1101 | 2 sc  ";
+
+        Assert.True(BatchOrderParser.HasLine(text, 2, "1101 | 2 sc"));
+        Assert.False(BatchOrderParser.HasLine("Thêm dòng đầu\r" + text, 2, "1101 | 2 sc"));
+        Assert.False(BatchOrderParser.HasLine(text, 3, "1101 | 2 sc"));
+    }
+
+    private static IReadOnlyList<BatchLine> Lines(string text) => BatchOrderParser.Parse(text, Today).Lines;
+
+    [Fact]
+    public void Edited_lines_pairs_a_line_changed_in_place()
+    {
+        var edited = BatchOrderParser.EditedLines(Lines("706 | 1 bún\n1101 | 2 sc"), Lines("706 | 1 bún\n1101 | 3 sc")).ToList();
+
+        Assert.Equal([("1101 | 2 sc", "1101 | 3 sc")], edited);
+    }
+
+    [Theory]
+    [InlineData("205 | 1 giò\n706 | 1 bún\n1101 | 2 sc")] // thêm dòng phía trên: các dòng cũ bị đẩy xuống
+    [InlineData("1101 | 2 sc")] // xoá dòng phía trên
+    [InlineData("706 | 1 bún\n1101 | 2 sc\n205 | 1 giò")] // thêm dòng cuối
+    public void Edited_lines_ignores_lines_that_only_moved(string after)
+    {
+        Assert.Empty(BatchOrderParser.EditedLines(Lines("706 | 1 bún\n1101 | 2 sc"), Lines(after)));
+    }
+
+    [Fact]
     public void Abbreviations_replace_whole_words_only()
     {
         var abbr = new Abbreviations("SC = sữa chua\n bad line \nbb=bánh bao");

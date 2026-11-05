@@ -85,7 +85,7 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
 /// <summary>
 /// Nhập đơn hàng loạt: ô chữ (chép từ sổ ghi tay qua Claude, tin nhắn Zalo, gõ tay) là nguồn gốc - tự lưu vào file cạnh
 /// database, còn sau khi tắt app; bảng nháp là kết quả đọc + ghép với khách / món hiện có (<see cref="BatchOrderMatcher"/>),
-/// bấm Làm mới để đọc lại. Lưu = tạo các đơn đã tick, bỏ các dòng đó khỏi ô chữ, nhớ lô để Hoàn tác.
+/// tự đọc lại khi ngừng gõ (trang gọi <see cref="RefreshIfChanged"/>), Làm mới đọc lại ngay. Lưu = tạo các đơn đã tick, bỏ các dòng đó khỏi ô chữ, nhớ lô để Hoàn tác.
 /// </summary>
 public sealed partial class BatchOrdersViewModel : ObservableObject
 {
@@ -176,6 +176,11 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
 
     private bool _refreshing;
 
+    /// <summary>Chữ ở lần đọc gần nhất - xem <see cref="RefreshIfChanged"/>.</summary>
+    private string _readText = string.Empty;
+
+    private string _readAbbreviations = string.Empty;
+
     /// <summary>Đổi Ngày giao → kiểm tra trùng đơn lại theo ngày mới.</summary>
     partial void OnDayChanged(DateTimeOffset? value)
     {
@@ -195,9 +200,21 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
     {
         Error = string.Empty;
         _refreshing = true;
+        _readText = Text;
+        _readAbbreviations = AbbreviationsText;
         try
         {
             var parsed = BatchOrderParser.Parse(Text, DateOnly.FromDateTime(DateTime.Today));
+
+            // Dòng đã tự bỏ tick mà sửa chữ thì vẫn bỏ tick: đừng để dòng người dùng không muốn lưu tự tick lại.
+            foreach (var (oldRaw, newRaw) in BatchOrderParser.EditedLines(_all.Select(r => r.Match.Line).ToList(), parsed.Lines))
+            {
+                if (_checkOverrides.TryGetValue(oldRaw, out var kept) && !kept)
+                {
+                    _checkOverrides[newRaw] = false;
+                }
+            }
+
             if (parsed.Day is { } textDay && textDay != _lastTextDay)
             {
                 Day = textDay.ToDateTime(TimeOnly.MinValue);
@@ -248,6 +265,16 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         ShowRows();
     }
 
+    /// <summary>Ô chữ / chữ viết tắt khác lần đọc trước thì mới đọc lại: gõ rồi xoá về như cũ, hay chữ do chính trang này viết
+    /// lại, thì không dựng lại danh sách.</summary>
+    public void RefreshIfChanged()
+    {
+        if (!BatchOrderParser.SameText(Text, _readText) || !BatchOrderParser.SameText(AbbreviationsText, _readAbbreviations))
+        {
+            Refresh();
+        }
+    }
+
     private void ShowRows()
     {
         Rows.Clear();
@@ -265,7 +292,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         var warnings = _all.Count(r => r.CanSave && r.Match.Warnings.Count > 0);
         var inApp = _all.Count(r => r.IsMatched || r.IsDifferent);
         Summary = _all.Count == 0
-            ? "Chưa có dòng nào - dán chữ vào ô trên rồi bấm Làm mới"
+            ? "Chưa có dòng nào - dán chữ vào ô trên"
             : $"{_all.Count} dòng  ·  {_all.Count(r => r.CanSave && r.Match.Warnings.Count == 0 && !r.IsMatched && !r.IsDifferent)} sẵn sàng"
               + (inApp > 0 ? $"  ·  {inApp} đã có trong MeRon" : string.Empty)
               + (warnings > 0 ? $"  ·  {warnings} nên xem lại" : string.Empty)
@@ -343,6 +370,12 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
     /// <summary>Viết lại dòng của <paramref name="row"/> (chọn khách / món trên bảng nháp) rồi đọc lại.</summary>
     public void RewriteLine(BatchRowViewModel row, string newLine)
     {
+        if (!BatchOrderParser.HasLine(Text, row.Match.Line.Number, row.Match.Line.Raw))
+        {
+            Refresh();
+            Error = "Ô chữ vừa đổi nên chưa thay được dòng này - xem lại danh sách rồi chọn lại.";
+            return;
+        }
         Text = BatchOrderParser.ReplaceLine(Text, row.Match.Line.Number, newLine);
         Refresh();
     }
