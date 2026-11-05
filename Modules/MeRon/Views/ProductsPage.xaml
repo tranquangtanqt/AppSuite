@@ -80,7 +80,7 @@
                             <TextBlock Text="{x:Bind Index}" Opacity="0.6" VerticalAlignment="Center" />
                             <TextBlock Grid.Column="1" Text="{x:Bind Item.Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                             <TextBlock Grid.Column="2" Text="{x:Bind local:Format.Money(Item.Price)}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Right" VerticalAlignment="Center" />
-                            <Border Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="11" Padding="10,2,10,3" Background="{StaticResource BlueSoftBrush}" Visibility="{x:Bind local:Ui.VisibleIfText(CategoryName)}"><TextBlock Text="{x:Bind CategoryName}" FontSize="13" Foreground="{StaticResource BlueBrush}" TextTrimming="CharacterEllipsis" /></Border>
+                            <Border Grid.Column="3" HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="11" Padding="10,2,10,3" Background="{StaticResource BlueSoftBrush}" Visibility="{x:Bind local:Ui.VisibleIfText(CategoryName)}"><TextBlock Text="{x:Bind CategoryName}" FontSize="{StaticResource FontSizeCaption}" Foreground="{StaticResource BlueBrush}" TextTrimming="CharacterEllipsis" /></Border>
                             <TextBlock Grid.Column="4" Text="{x:Bind Item.Description}" TextTrimming="CharacterEllipsis" Opacity="0.8" VerticalAlignment="Center" />
                         </Grid>
                     </DataTemplate>

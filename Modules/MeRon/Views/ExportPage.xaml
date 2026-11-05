@@ -19,9 +19,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
-                            <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
+                            <FontIcon Glyph="&#xE8B7;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
-                        <TextBlock Text="Xuất bộ backup TSV" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Xuất bộ backup TSV" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Tạo thư mục yyyyMMdd_HHmmss chứa 8 file .tsv đúng định dạng app điện thoại (address_…, users_…, orders_…). Dùng để: chép sang điện thoại rồi nhập (Cài đặt → Sao lưu → Nhập dữ liệu từ tệp sao lưu, từng bảng), chuyển sang máy tính khác (trang Nhập dữ liệu), hoặc cất làm bản lưu." />
@@ -55,9 +55,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource BlueSoftBrush}">
-                            <FontIcon Glyph="&#xE753;" FontSize="15" Foreground="{StaticResource BlueBrush}" />
+                            <FontIcon Glyph="&#xE753;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource BlueBrush}" />
                         </Border>
-                        <TextBlock Text="Tải bộ backup lên Google Drive" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Tải bộ backup lên Google Drive" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Xuất bộ TSV như nút Xuất TSV (vào thư mục bên trên) rồi tải lên Google Drive thành 1 thư mục yyyyMMdd_HHmmss, giống app điện thoại. Đăng nhập 1 lần, lần sau app tự nhớ (cất trong Thông tin xác thực Windows). App chỉ được thấy file do chính nó / app điện thoại tạo trên Drive." />
@@ -72,7 +72,7 @@
                     </StackPanel>
                     <StackPanel Spacing="10" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsSignedIn), Mode=OneWay}">
                         <StackPanel Orientation="Horizontal" Spacing="8">
-                            <FontIcon Glyph="&#xE73E;" FontSize="14" Foreground="{ThemeResource SystemFillColorSuccessBrush}" VerticalAlignment="Center" />
+                            <FontIcon Glyph="&#xE73E;" FontSize="{StaticResource FontSizeBody}" Foreground="{ThemeResource SystemFillColorSuccessBrush}" VerticalAlignment="Center" />
                             <TextBlock VerticalAlignment="Center" AutomationProperties.AutomationId="GoogleEmail">
                                 <Run Text="Đã đăng nhập:" /> <Run Text="{x:Bind ViewModel.GoogleEmail, Mode=OneWay}" FontWeight="SemiBold" />
                             </TextBlock>
@@ -86,7 +86,7 @@
                             <Button Style="{StaticResource AccentButtonStyle}" Click="Upload_Click" IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}"
                                     AutomationProperties.Name="Xuất lên Google Drive">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
-                                    <FontIcon Glyph="&#xE753;" FontSize="16" />
+                                    <FontIcon Glyph="&#xE753;" FontSize="{StaticResource FontSizeEmphasis}" />
                                     <TextBlock Text="Xuất lên Google Drive" />
                                 </StackPanel>
                             </Button>
@@ -104,9 +104,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource RedSoftBrush}">
-                            <FontIcon Glyph="&#xE74D;" FontSize="15" Foreground="{StaticResource RedBrush}" />
+                            <FontIcon Glyph="&#xE74D;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource RedBrush}" />
                         </Border>
-                        <TextBlock Text="Xoá toàn bộ dữ liệu ở máy" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Xoá toàn bộ dữ liệu ở máy" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.85"
                                Text="Xoá sạch đơn hàng, khách hàng, món ăn, danh mục, địa chỉ, phiếu nhập trên máy này (không đụng gì tới điện thoại hay Google Drive). Hỏi xác nhận 2 lần. Bản trước khi xoá luôn được lưu trong thư mục Backups - lấy lại: đóng app, chép bản đó đè lên me_ron.db." />

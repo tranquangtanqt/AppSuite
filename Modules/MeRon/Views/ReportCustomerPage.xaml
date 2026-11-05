@@ -55,7 +55,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <Border Width="30" Height="30" CornerRadius="15" Background="{x:Bind local:Ui.RankBackground(Rank)}" VerticalAlignment="Center">
-                                        <TextBlock Text="{x:Bind RankText}" FontWeight="Bold" FontSize="13" Foreground="{x:Bind local:Ui.RankForeground(Rank)}"
+                                        <TextBlock Text="{x:Bind RankText}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeBody}" Foreground="{x:Bind local:Ui.RankForeground(Rank)}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
                                     <Border Grid.Column="1" Width="32" Height="32" CornerRadius="16" Background="{x:Bind local:Ui.AvatarBrush(Name)}" VerticalAlignment="Center">
@@ -68,9 +68,9 @@
                                                      Visibility="{x:Bind HasShare}" IsTabStop="False" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="3" Text="{x:Bind Orders}" HorizontalAlignment="Right" VerticalAlignment="Center" Opacity="0.75" />
-                                    <TextBlock Grid.Column="4" Text="{x:Bind Amount}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="Bold"
-                                               FontSize="15" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                                    <FontIcon Grid.Column="5" Glyph="&#xE76C;" FontSize="12" Opacity="0.6" VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="4" Text="{x:Bind Amount}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold"
+                                               FontSize="{StaticResource FontSizeEmphasis}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    <FontIcon Grid.Column="5" Glyph="&#xE76C;" FontSize="{StaticResource FontSizeCaption}" Opacity="0.6" VerticalAlignment="Center" />
                                 </Grid>
                             </Button>
                         </DataTemplate>

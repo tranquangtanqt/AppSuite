@@ -12,6 +12,16 @@
                 <ResourceDictionary Source="ms-appx:///SharedUI/Themes/CompactStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- Cỡ chữ của MeRon: chỉ dùng 5 cỡ này, đổi cỡ sửa 1 chỗ này. Icon dùng chung các cỡ 12 / 14 / 16 -->
+            <x:Double x:Key="FontSizeCaption">12</x:Double>   <!-- chú thích, nhãn phụ, trục biểu đồ -->
+            <x:Double x:Key="FontSizeBody">14</x:Double>      <!-- nội dung, nút, dòng trong bảng -->
+            <x:Double x:Key="FontSizeEmphasis">16</x:Double>  <!-- tên khách, tổng tiền trên thẻ, tiêu đề nhóm -->
+            <x:Double x:Key="FontSizeNumber">20</x:Double>    <!-- số trong thẻ nhỏ -->
+            <x:Double x:Key="FontSizeDisplay">28</x:Double>   <!-- số lớn báo cáo; tiêu đề trang là TitleTextBlockStyle, cũng 28 -->
+            <Style x:Key="GroupTitleTextBlockStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="FontSize" Value="{StaticResource FontSizeEmphasis}" />
+            </Style>
+
             <!-- Màu riêng của MeRon cho thẻ thống kê, chấm nhóm...: đổi màu sửa 1 chỗ này -->
             <SolidColorBrush x:Key="BlueBrush" Color="#1C7ED6" />
             <SolidColorBrush x:Key="BlueSoftBrush" Color="#261C7ED6" />

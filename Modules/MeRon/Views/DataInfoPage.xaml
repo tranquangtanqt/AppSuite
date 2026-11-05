@@ -25,9 +25,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
-                            <FontIcon Glyph="&#xE9D9;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
+                            <FontIcon Glyph="&#xE9D9;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
-                        <TextBlock Text="Tổng quan" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Tổng quan" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock Text="{x:Bind ViewModel.FileText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.8" IsTextSelectionEnabled="True"
                                AutomationProperties.AutomationId="FileText" />
@@ -44,8 +44,8 @@
                                 <Border Margin="0,0,8,8" Padding="12,8" CornerRadius="8" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                                         AutomationProperties.Name="{x:Bind Title}">
                                     <StackPanel>
-                                        <TextBlock Text="{x:Bind Title}" FontSize="12" Opacity="0.75" />
-                                        <TextBlock Text="{x:Bind Rows}" FontSize="18" FontWeight="SemiBold" />
+                                        <TextBlock Text="{x:Bind Title}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.75" />
+                                        <TextBlock Text="{x:Bind Rows}" FontSize="{StaticResource FontSizeNumber}" FontWeight="SemiBold" />
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -63,9 +63,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource GreenSoftBrush}">
-                            <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="{StaticResource GreenBrush}" />
+                            <FontIcon Glyph="&#xE8B7;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource GreenBrush}" />
                         </Border>
-                        <TextBlock Text="Đường dẫn liên quan" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Đường dẫn liên quan" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <ItemsControl ItemsSource="{x:Bind ViewModel.Paths}" IsTabStop="False">
                         <ItemsControl.ItemTemplate>
@@ -78,9 +78,9 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="{x:Bind Label}" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     <StackPanel Grid.Column="1" Spacing="2">
-                                        <TextBlock Text="{x:Bind Path}" TextWrapping="Wrap" IsTextSelectionEnabled="True" FontFamily="Consolas" FontSize="12"
+                                        <TextBlock Text="{x:Bind Path}" TextWrapping="Wrap" IsTextSelectionEnabled="True" FontFamily="Consolas" FontSize="{StaticResource FontSizeCaption}"
                                                    Visibility="{x:Bind local:Ui.VisibleIfText(Path)}" />
-                                        <TextBlock Text="{x:Bind Detail}" TextWrapping="Wrap" FontSize="12" Opacity="0.7" />
+                                        <TextBlock Text="{x:Bind Detail}" TextWrapping="Wrap" FontSize="{StaticResource FontSizeCaption}" Opacity="0.7" />
                                     </StackPanel>
                                     <Button Grid.Column="2" Content="Mở" Click="OpenPath_Click" Tag="{x:Bind Path}" VerticalAlignment="Top"
                                             Visibility="{x:Bind local:Ui.VisibleIf(CanOpen)}" AutomationProperties.Name="{x:Bind AccessibleName}" />
@@ -97,9 +97,9 @@
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource BlueSoftBrush}">
-                            <FontIcon Glyph="&#xE787;" FontSize="15" Foreground="{StaticResource BlueBrush}" />
+                            <FontIcon Glyph="&#xE787;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource BlueBrush}" />
                         </Border>
-                        <TextBlock Text="Theo năm" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Theo năm" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                         <TextBlock Text="(bấm vào 1 năm để xem từng tháng)" Opacity="0.65" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock Text="Chưa có đơn hàng / phiếu nhập nào." Opacity="0.7" Visibility="{x:Bind local:Ui.VisibleIfNot(ViewModel.HasPeriods), Mode=OneWay}" />
@@ -134,7 +134,7 @@
                                             <ColumnDefinition Width="1.2*" />
                                         </Grid.ColumnDefinitions>
                                         <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon Glyph="{x:Bind ExpandGlyph, Mode=OneWay}" FontSize="10" Visibility="{x:Bind local:Ui.VisibleIf(IsYear)}" />
+                                            <FontIcon Glyph="{x:Bind ExpandGlyph, Mode=OneWay}" FontSize="{StaticResource FontSizeCaption}" Visibility="{x:Bind local:Ui.VisibleIf(IsYear)}" />
                                             <TextBlock Text="{x:Bind Label}" Margin="{x:Bind local:DataInfoPage.RowIndent(IsYear)}"
                                                        FontWeight="{x:Bind local:DataInfoPage.RowWeight(IsYear)}" />
                                         </StackPanel>
@@ -148,7 +148,7 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <TextBlock Text="Ngày của đơn = ngày giao (đơn không có ngày giao thì lấy ngày tạo); tiền bán không tính đơn Huỷ."
-                               FontSize="12" Opacity="0.65" TextWrapping="Wrap" />
+                               FontSize="{StaticResource FontSizeCaption}" Opacity="0.65" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 
@@ -158,9 +158,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource RedSoftBrush}">
-                            <FontIcon Glyph="&#xE74D;" FontSize="15" Foreground="{StaticResource RedBrush}" />
+                            <FontIcon Glyph="&#xE74D;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource RedBrush}" />
                         </Border>
-                        <TextBlock Text="Dọn dữ liệu cũ" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Dọn dữ liệu cũ" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.85"
                                Text="Xoá đơn hàng và phiếu nhập có ngày trước mốc (kèm các dòng món / khoản hàng của chúng). Đơn chưa thanh toán (Đã lên đơn) luôn được giữ lại. Trước khi xoá, app tự xuất 1 bộ backup TSV (thư mục &quot;Truoc khi don&quot; trong thư mục Xuất) và chép bản sao vào thư mục Backups - xuất lỗi thì không xoá gì. Báo cáo, Khách lâu không đặt... sẽ không còn tính phần đã xoá." />
@@ -184,7 +184,7 @@
                                AutomationProperties.AutomationId="PlanText" />
                     <!-- Đơn chưa thanh toán trước mốc: luôn giữ lại -->
                     <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasKeptUnpaid), Mode=OneWay}">
-                        <FontIcon Glyph="&#xE72E;" FontSize="14" Foreground="{StaticResource OrangeBrush}" VerticalAlignment="Top" Margin="0,3,0,0" />
+                        <FontIcon Glyph="&#xE72E;" FontSize="{StaticResource FontSizeBody}" Foreground="{StaticResource OrangeBrush}" VerticalAlignment="Top" Margin="0,3,0,0" />
                         <TextBlock Text="{x:Bind ViewModel.KeptUnpaidText, Mode=OneWay}" TextWrapping="Wrap" MaxWidth="760"
                                    AutomationProperties.AutomationId="KeptUnpaidText" />
                     </StackPanel>
@@ -221,9 +221,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource BlueSoftBrush}">
-                            <FontIcon Glyph="&#xE777;" FontSize="15" Foreground="{StaticResource BlueBrush}" />
+                            <FontIcon Glyph="&#xE777;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource BlueBrush}" />
                         </Border>
-                        <TextBlock Text="Khôi phục phần đã dọn" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Khôi phục phần đã dọn" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.85"
                                Text="Thêm lại đúng các dòng đã xoá ở 1 lần dọn (lấy từ bộ backup trước khi dọn). Dữ liệu đang có - kể cả đơn, khách, món thêm / sửa sau lúc dọn - giữ nguyên. Khách / món đã tạo lại trùng tên thì đơn cũ nối vào cái đang có. Chép bản sao an toàn trước khi khôi phục." />
@@ -240,13 +240,13 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Spacing="2">
                                         <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                        <TextBlock Text="{x:Bind Detail}" FontSize="12" Opacity="0.75" TextWrapping="Wrap" />
+                                        <TextBlock Text="{x:Bind Detail}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.75" TextWrapping="Wrap" />
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="Mở thư mục" Click="OpenPath_Click" Tag="{x:Bind Folder}" VerticalAlignment="Center" />
                                     <Button Grid.Column="2" Click="Restore_Click" Tag="{x:Bind}" VerticalAlignment="Center" IsEnabled="{x:Bind CanRestore}"
                                             AutomationProperties.Name="{x:Bind AccessibleName}">
                                         <StackPanel Orientation="Horizontal" Spacing="6">
-                                            <FontIcon Glyph="&#xE777;" FontSize="14" />
+                                            <FontIcon Glyph="&#xE777;" FontSize="{StaticResource FontSizeBody}" />
                                             <TextBlock Text="Khôi phục..." />
                                         </StackPanel>
                                     </Button>

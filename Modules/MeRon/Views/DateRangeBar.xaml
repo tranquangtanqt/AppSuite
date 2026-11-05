@@ -12,7 +12,7 @@
         <local:DateBox Date="{x:Bind Filter.ToDate, Mode=TwoWay}" PlaceholderText="Đến ngày" Width="136"
                        AutomationProperties.Name="Đến ngày" />
         <DropDownButton x:Name="RangeButton" AutomationProperties.Name="Khoảng ngày nhanh" ToolTipService.ToolTip="Chọn nhanh khoảng ngày">
-            <FontIcon Glyph="&#xE787;" FontSize="16" />
+            <FontIcon Glyph="&#xE787;" FontSize="{StaticResource FontSizeEmphasis}" />
             <DropDownButton.Flyout>
                 <MenuFlyout x:Name="RangeMenu" Placement="BottomEdgeAlignedLeft" />
             </DropDownButton.Flyout>

@@ -31,7 +31,7 @@
             <SplitButton Grid.Column="2" Click="CopyClaudeLinkSplit_Click" AutomationProperties.Name="Chép link Claude"
                          ToolTipService.ToolTip="Chép link Project &quot;MeRon – đọc sổ đơn&quot; trên claude.ai: tự mở trình duyệt, dán link, gửi ảnh trang sổ, Claude chép lại theo mẫu - copy kết quả dán vào ô chữ. ▾: chép câu lệnh mẫu (app điện thoại / chat khác)">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <FontIcon Glyph="&#xE71B;" FontSize="14" />
+                    <FontIcon Glyph="&#xE71B;" FontSize="{StaticResource FontSizeBody}" />
                     <TextBlock Text="Chép link Claude" />
                 </StackPanel>
                 <SplitButton.Flyout>
@@ -95,7 +95,7 @@
             <Button Grid.Row="1" Grid.Column="2" Click="Reconcile_Click" AutomationProperties.Name="So khớp"
                     ToolTipService.ToolTip="Đối chiếu bảng nháp với các đơn đã có trong MeRon cùng ngày giao: khớp / khác / chỉ có trong sổ / chỉ có trong MeRon">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <FontIcon Glyph="&#xE9D5;" FontSize="14" />
+                    <FontIcon Glyph="&#xE9D5;" FontSize="{StaticResource FontSizeBody}" />
                     <TextBlock Text="{x:Bind ViewModel.ReconcileButtonText, Mode=OneWay}" />
                 </StackPanel>
             </Button>
@@ -144,11 +144,11 @@
                                       AutomationProperties.Name="{x:Bind AccessibleName}" />
                             <StackPanel Grid.Column="1" Spacing="2">
                                 <TextBlock Text="{x:Bind CustomerText}" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                <TextBlock Text="{x:Bind LineText}" Opacity="0.6" FontSize="12" />
+                                <TextBlock Text="{x:Bind LineText}" Opacity="0.6" FontSize="{StaticResource FontSizeCaption}" />
                             </StackPanel>
                             <StackPanel Grid.Column="2" Spacing="4">
                                 <TextBlock Text="{x:Bind ItemsText}" TextWrapping="Wrap" />
-                                <TextBlock Text="{x:Bind ReconcileText}" TextWrapping="Wrap" FontSize="12"
+                                <TextBlock Text="{x:Bind ReconcileText}" TextWrapping="Wrap" FontSize="{StaticResource FontSizeCaption}"
                                            Foreground="{x:Bind local:BatchOrdersPage.ReconcileBrush(IsMatched, IsDifferent)}"
                                            Visibility="{x:Bind local:Ui.VisibleIfText(ReconcileText)}" />
                                 <TextBlock Text="{x:Bind ProblemText}" TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
@@ -183,7 +183,7 @@
                                 <TextBlock Text="{x:Bind TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
                                 <Border HorizontalAlignment="Right" CornerRadius="8" Padding="6,1" Visibility="{x:Bind Paid}"
                                         Background="{x:Bind local:BatchOrdersPage.PaidSoft(Paid)}">
-                                    <TextBlock Text="Đã thanh toán" FontSize="11" Foreground="{x:Bind local:BatchOrdersPage.PaidSolid(Paid)}" />
+                                    <TextBlock Text="Đã thanh toán" FontSize="{StaticResource FontSizeCaption}" Foreground="{x:Bind local:BatchOrdersPage.PaidSolid(Paid)}" />
                                 </Border>
                             </StackPanel>
                         </Grid>

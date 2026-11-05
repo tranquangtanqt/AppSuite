@@ -72,7 +72,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{x:Bind Index}" Opacity="0.6" VerticalAlignment="Center" />
-                            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="11" Padding="10,2,10,3" Background="{StaticResource OrangeSoftBrush}"><TextBlock Text="{x:Bind Item.Code}" FontWeight="SemiBold" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" /></Border>
+                            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="11" Padding="10,2,10,3" Background="{StaticResource OrangeSoftBrush}"><TextBlock Text="{x:Bind Item.Code}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeCaption}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" /></Border>
                             <TextBlock Grid.Column="2" Text="{x:Bind Item.Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                         </Grid>
                     </DataTemplate>

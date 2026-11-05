@@ -61,22 +61,22 @@
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
-                                        <FontIcon Glyph="&#xE7BF;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
+                                        <FontIcon Glyph="&#xE7BF;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
                                     </Border>
                                     <TextBlock Text="Tổng số đơn" Opacity="0.75" VerticalAlignment="Center" />
                                 </StackPanel>
-                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" FontSize="30" FontWeight="Bold" AutomationProperties.AutomationId="ReportOrderCount" /></Viewbox>
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" FontSize="{StaticResource FontSizeDisplay}" FontWeight="SemiBold" AutomationProperties.AutomationId="ReportOrderCount" /></Viewbox>
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="1" Padding="16,14" CornerRadius="10" Background="{ThemeResource AccentFillColorDefaultBrush}">
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OnColorOverlayBrush}">
-                                        <FontIcon Glyph="&#xE8C7;" FontSize="15" Foreground="White" />
+                                        <FontIcon Glyph="&#xE8C7;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="White" />
                                     </Border>
                                     <TextBlock Text="Tổng sau giảm giá" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                                 </StackPanel>
-                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.Amount, Mode=OneWay}" FontSize="30" FontWeight="Bold" Foreground="White"
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.Amount, Mode=OneWay}" FontSize="{StaticResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="White"
                                            AutomationProperties.AutomationId="ReportAmount" /></Viewbox>
                             </StackPanel>
                         </Border>
@@ -85,11 +85,11 @@
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource GreenSoftBrush}">
-                                        <FontIcon Glyph="&#xE9D2;" FontSize="15" Foreground="{StaticResource GreenBrush}" />
+                                        <FontIcon Glyph="&#xE9D2;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource GreenBrush}" />
                                     </Border>
                                     <TextBlock Text="TB mỗi đơn" Opacity="0.75" VerticalAlignment="Center" />
                                 </StackPanel>
-                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.AverageAmount, Mode=OneWay}" FontSize="30" FontWeight="Bold" /></Viewbox>
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.AverageAmount, Mode=OneWay}" FontSize="{StaticResource FontSizeDisplay}" FontWeight="SemiBold" /></Viewbox>
                             </StackPanel>
                         </Border>
                         <Border Grid.Column="3" Padding="16,14" CornerRadius="10" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
@@ -97,11 +97,11 @@
                             <StackPanel Spacing="8">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource BlueSoftBrush}">
-                                        <FontIcon Glyph="&#xED56;" FontSize="15" Foreground="{StaticResource BlueBrush}" />
+                                        <FontIcon Glyph="&#xED56;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource BlueBrush}" />
                                     </Border>
                                     <TextBlock Text="Tổng số món" Opacity="0.75" VerticalAlignment="Center" />
                                 </StackPanel>
-                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.QuantityValue, Mode=OneWay}" FontSize="30" FontWeight="Bold" /></Viewbox>
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.QuantityValue, Mode=OneWay}" FontSize="{StaticResource FontSizeDisplay}" FontWeight="SemiBold" /></Viewbox>
                             </StackPanel>
                         </Border>
                     </Grid>
@@ -120,14 +120,14 @@
                                             <TextBlock Text="{x:Bind Label}" FontWeight="SemiBold" />
                                         </StackPanel>
                                         <TextBlock>
-                                            <Run Text="{x:Bind CountValue}" FontSize="22" FontWeight="Bold" /><Run Text=" đơn" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <Run Text="{x:Bind CountValue}" FontSize="{StaticResource FontSizeNumber}" FontWeight="SemiBold" /><Run Text=" đơn" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         </TextBlock>
                                         <TextBlock Text="{x:Bind AmountValue}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         <Grid Height="6" CornerRadius="3" Background="{ThemeResource ControlStrongFillColorDisabledBrush}">
                                             <ProgressBar Value="{x:Bind Share}" Maximum="100" MinHeight="6" CornerRadius="3" Background="Transparent"
                                                          Foreground="{x:Bind local:Ui.StatusSolid(Status)}" IsTabStop="False" />
                                         </Grid>
-                                        <TextBlock Text="{x:Bind ShareText}" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        <TextBlock Text="{x:Bind ShareText}" FontSize="{StaticResource FontSizeCaption}" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -150,7 +150,7 @@
                         <TextBlock Text="Chi tiết đơn hàng (theo khách - bấm để xem đơn)" FontWeight="SemiBold" VerticalAlignment="Center" />
                         <DropDownButton AutomationProperties.Name="Sắp xếp khách">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE8CB;" FontSize="14" />
+                                <FontIcon Glyph="&#xE8CB;" FontSize="{StaticResource FontSizeBody}" />
                                 <TextBlock x:Name="SortText" />
                             </StackPanel>
                             <DropDownButton.Flyout>
@@ -176,7 +176,7 @@
                                         <TextBlock Grid.Column="2" Text="{x:Bind Orders}" HorizontalAlignment="Right" />
                                         <TextBlock Grid.Column="3" Text="{x:Bind Amount}" HorizontalAlignment="Right" FontWeight="SemiBold"
                                                    Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                                        <FontIcon Grid.Column="4" Glyph="&#xE76C;" FontSize="12" Opacity="0.6" />
+                                        <FontIcon Grid.Column="4" Glyph="&#xE76C;" FontSize="{StaticResource FontSizeCaption}" Opacity="0.6" />
                                     </Grid>
                                 </Button>
                             </DataTemplate>

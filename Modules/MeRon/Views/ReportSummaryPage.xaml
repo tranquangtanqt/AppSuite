@@ -32,11 +32,11 @@
                         <StackPanel Spacing="6">
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OnColorOverlayBrush}">
-                                    <FontIcon Glyph="&#xE7BF;" FontSize="15" Foreground="White" />
+                                    <FontIcon Glyph="&#xE7BF;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="White" />
                                 </Border>
                                 <TextBlock Text="Bán (không tính Huỷ)" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                             </StackPanel>
-                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.OrderAmount, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.OrderAmount, Mode=OneWay}" FontSize="{StaticResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="White"
                                        AutomationProperties.AutomationId="SummaryOrderAmount" /></Viewbox>
                             <StackPanel Orientation="Horizontal" Spacing="4" Opacity="0.9">
                                 <TextBlock Text="{x:Bind ViewModel.OrderCount, Mode=OneWay}" Foreground="White" AutomationProperties.AutomationId="SummaryOrderCount" />
@@ -48,11 +48,11 @@
                         <StackPanel Spacing="6">
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OnColorOverlayBrush}">
-                                    <FontIcon Glyph="&#xE719;" FontSize="15" Foreground="White" />
+                                    <FontIcon Glyph="&#xE719;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="White" />
                                 </Border>
                                 <TextBlock Text="Mua" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                             </StackPanel>
-                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.PurchaseAmount, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.PurchaseAmount, Mode=OneWay}" FontSize="{StaticResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="White"
                                        AutomationProperties.AutomationId="SummaryPurchaseAmount" /></Viewbox>
                             <StackPanel Orientation="Horizontal" Spacing="4" Opacity="0.9">
                                 <TextBlock Text="{x:Bind ViewModel.PurchaseCount, Mode=OneWay}" Foreground="White" AutomationProperties.AutomationId="SummaryPurchaseCount" />
@@ -64,11 +64,11 @@
                         <StackPanel Spacing="6">
                             <StackPanel Orientation="Horizontal" Spacing="10">
                                 <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OnColorOverlayBrush}">
-                                    <FontIcon Glyph="&#xE9D2;" FontSize="15" Foreground="White" />
+                                    <FontIcon Glyph="&#xE9D2;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="White" />
                                 </Border>
                                 <TextBlock Text="Chênh lệch (bán − mua)" Foreground="White" Opacity="0.9" VerticalAlignment="Center" />
                             </StackPanel>
-                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.DifferenceValue, Mode=OneWay}" FontSize="28" FontWeight="Bold" Foreground="White"
+                            <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind ViewModel.DifferenceValue, Mode=OneWay}" FontSize="{StaticResource FontSizeDisplay}" FontWeight="SemiBold" Foreground="White"
                                        AutomationProperties.Name="{x:Bind ViewModel.Difference, Mode=OneWay}" AutomationProperties.AutomationId="SummaryDifference" /></Viewbox>
                         </StackPanel>
                     </Border>
@@ -78,7 +78,7 @@
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Ellipse Width="10" Height="10" Fill="{StaticResource OrangeBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="Bán theo món" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="Bán theo món" Style="{StaticResource GroupTitleTextBlockStyle}" />
                     </StackPanel>
                     <local:ReportTable Lines="{x:Bind ViewModel.Products}" />
                 </StackPanel>
@@ -87,7 +87,7 @@
                 <StackPanel Spacing="8">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Ellipse Width="10" Height="10" Fill="{StaticResource BlueBrush}" VerticalAlignment="Center" />
-                        <TextBlock Text="Mua theo khoản hàng" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock Text="Mua theo khoản hàng" Style="{StaticResource GroupTitleTextBlockStyle}" />
                     </StackPanel>
                     <local:ReportTable Lines="{x:Bind ViewModel.PurchaseItems}" NameHeader="Khoản hàng" QuantityHeader="Số lần" />
                 </StackPanel>

@@ -30,9 +30,9 @@
             <StackPanel Spacing="10">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
-                    <FontIcon Glyph="&#xE8B7;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
+                    <FontIcon Glyph="&#xE8B7;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
                 </Border>
-                <TextBlock Text="Từ thư mục trên máy hoặc link folder Google Drive" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                <TextBlock Text="Từ thư mục trên máy hoặc link folder Google Drive" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
             </StackPanel>
             <Grid ColumnSpacing="8">
                 <Grid.ColumnDefinitions>
@@ -66,11 +66,11 @@
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <FontIcon Glyph="&#xE787;" FontSize="13" Opacity="0.7" VerticalAlignment="Center" />
+                                        <FontIcon Glyph="&#xE787;" FontSize="{StaticResource FontSizeBody}" Opacity="0.7" VerticalAlignment="Center" />
                                         <TextBlock Grid.Column="1" Text="{x:Bind Title}" VerticalAlignment="Center" />
                                         <Border Grid.Column="2" CornerRadius="10" Padding="8,1,8,2" Background="{StaticResource OrangeSoftBrush}" VerticalAlignment="Center"
                                                 Visibility="{x:Bind local:Ui.VisibleIf(IsCurrent), Mode=OneWay}">
-                                            <TextBlock Text="Đang xem" FontSize="11" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                            <TextBlock Text="Đang xem" FontSize="{StaticResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
                                         </Border>
                                     </Grid>
                                 </Button>
@@ -93,11 +93,11 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource BlueSoftBrush}" VerticalAlignment="Center">
-                            <FontIcon Glyph="&#xE753;" FontSize="15" Foreground="{StaticResource BlueBrush}" />
+                            <FontIcon Glyph="&#xE753;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource BlueBrush}" />
                         </Border>
                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                            <TextBlock Text="Hoặc lấy từ Google Drive (đăng nhập)" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                            <TextBlock TextWrapping="Wrap" Opacity="0.75" FontSize="12"
+                            <TextBlock Text="Hoặc lấy từ Google Drive (đăng nhập)" Style="{StaticResource GroupTitleTextBlockStyle}" />
+                            <TextBlock TextWrapping="Wrap" Opacity="0.75" FontSize="{StaticResource FontSizeCaption}"
                                        Text="Liệt kê các bản backup app điện thoại / MeRon đã tải lên - folder không cần chia sẻ công khai. Bấm 1 bản để kiểm tra rồi nhập." />
                         </StackPanel>
                         <!-- Chưa đăng nhập -->
@@ -105,7 +105,7 @@
                                 IsEnabled="{x:Bind local:Ui.Not(ViewModel.IsBusy), Mode=OneWay}" AutomationProperties.Name="Đăng nhập Google để nhập"
                                 Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsSignedOut), Mode=OneWay}">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE77B;" FontSize="14" />
+                                <FontIcon Glyph="&#xE77B;" FontSize="{StaticResource FontSizeBody}" />
                                 <TextBlock Text="Đăng nhập Google..." />
                             </StackPanel>
                         </Button>
@@ -149,17 +149,17 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <FontIcon Glyph="&#xE787;" FontSize="14" Opacity="0.7" />
+                                            <FontIcon Glyph="&#xE787;" FontSize="{StaticResource FontSizeBody}" Opacity="0.7" />
                                             <StackPanel Grid.Column="1">
                                                 <TextBlock Text="{x:Bind Title}" FontWeight="SemiBold" />
-                                                <TextBlock Text="{x:Bind Place}" FontSize="12" Opacity="0.7" />
+                                                <TextBlock Text="{x:Bind Place}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.7" />
                                             </StackPanel>
                                             <Border Grid.Column="2" CornerRadius="11" Padding="10,2,10,3" VerticalAlignment="Center"
                                                     Background="{x:Bind local:Ui.FilesPillBackground(IsIncomplete)}">
-                                                <TextBlock Text="{x:Bind FilesText}" FontSize="12" FontWeight="SemiBold"
+                                                <TextBlock Text="{x:Bind FilesText}" FontSize="{StaticResource FontSizeCaption}" FontWeight="SemiBold"
                                                            Foreground="{x:Bind local:Ui.FilesPillForeground(IsIncomplete)}" />
                                             </Border>
-                                            <FontIcon Grid.Column="3" Glyph="&#xE76C;" FontSize="12" Opacity="0.6" />
+                                            <FontIcon Grid.Column="3" Glyph="&#xE76C;" FontSize="{StaticResource FontSizeCaption}" Opacity="0.6" />
                                         </Grid>
                                     </Button>
                                 </DataTemplate>

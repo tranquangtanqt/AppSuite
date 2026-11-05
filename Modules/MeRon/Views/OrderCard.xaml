@@ -24,16 +24,16 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="CustomerText" Text="{x:Bind Card.CustomerName, Mode=OneWay}" FontWeight="SemiBold" FontSize="15" TextTrimming="CharacterEllipsis"
+                <TextBlock x:Name="CustomerText" Text="{x:Bind Card.CustomerName, Mode=OneWay}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeEmphasis}" TextTrimming="CharacterEllipsis"
                            VerticalAlignment="Center" />
                 <!-- ShowCustomer=False (Chi tiết): ẩn tên, khối ngày giao chuyển sang cột đầu -->
                 <StackPanel x:Name="DeliveryPanel" Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Opacity="0.75">
-                    <FontIcon Glyph="&#xE787;" FontSize="13" />
-                    <TextBlock Text="{x:Bind Card.DeliveryText, Mode=OneWay}" FontSize="13" />
+                    <FontIcon Glyph="&#xE787;" FontSize="{StaticResource FontSizeBody}" />
+                    <TextBlock Text="{x:Bind Card.DeliveryText, Mode=OneWay}" FontSize="{StaticResource FontSizeBody}" />
                 </StackPanel>
                 <Border Grid.Column="2" CornerRadius="11" Padding="10,2,10,3" VerticalAlignment="Center"
                         Background="{x:Bind local:Ui.StatusSoft(Card.Status), Mode=OneWay}">
-                    <TextBlock Text="{x:Bind Card.StatusText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold"
+                    <TextBlock Text="{x:Bind Card.StatusText, Mode=OneWay}" FontSize="{StaticResource FontSizeCaption}" FontWeight="SemiBold"
                                Foreground="{x:Bind local:Ui.StatusLabel(Card.Status), Mode=OneWay}" />
                 </Border>
             </Grid>
@@ -47,12 +47,12 @@
                                 <ColumnDefinition Width="44" />
                                 <ColumnDefinition Width="100" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{x:Bind Name}" FontSize="14" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind Price}" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            <TextBlock Text="{x:Bind Name}" FontSize="{StaticResource FontSizeBody}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind Price}" FontSize="{StaticResource FontSizeBody}" HorizontalAlignment="Right" VerticalAlignment="Center"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <TextBlock Grid.Column="2" Text="{x:Bind Quantity}" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            <TextBlock Grid.Column="2" Text="{x:Bind Quantity}" FontSize="{StaticResource FontSizeBody}" HorizontalAlignment="Right" VerticalAlignment="Center"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <TextBlock Grid.Column="3" Text="{x:Bind LineTotal}" FontSize="14" HorizontalAlignment="Right" />
+                            <TextBlock Grid.Column="3" Text="{x:Bind LineTotal}" FontSize="{StaticResource FontSizeBody}" HorizontalAlignment="Right" />
                         </Grid>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
@@ -60,8 +60,8 @@
             <Border CornerRadius="4" Padding="8,4" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                     Visibility="{x:Bind local:Ui.VisibleIf(Card.HasNote), Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <FontIcon Glyph="&#xE70B;" FontSize="12" Opacity="0.7" />
-                    <TextBlock Text="{x:Bind Card.Note, Mode=OneWay}" FontSize="12" Opacity="0.85" TextWrapping="Wrap" />
+                    <FontIcon Glyph="&#xE70B;" FontSize="{StaticResource FontSizeCaption}" Opacity="0.7" />
+                    <TextBlock Text="{x:Bind Card.Note, Mode=OneWay}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.85" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
             <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,2,0,0"
@@ -73,11 +73,11 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"
                             Visibility="{x:Bind local:Ui.VisibleIf(Card.HasDiscount), Mode=OneWay}">
-                    <TextBlock Text="{x:Bind Card.SubTotalText, Mode=OneWay}" FontSize="12" Opacity="0.7" />
-                    <TextBlock Text="{x:Bind Card.DiscountText, Mode=OneWay}" FontSize="12" Opacity="0.7" />
+                    <TextBlock Text="{x:Bind Card.SubTotalText, Mode=OneWay}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.7" />
+                    <TextBlock Text="{x:Bind Card.DiscountText, Mode=OneWay}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.7" />
                 </StackPanel>
                 <TextBlock Grid.Column="1" VerticalAlignment="Center">
-                    <Run Text="Tổng  " FontSize="13" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind Card.TotalText, Mode=OneWay}" FontSize="14" FontWeight="Bold"
+                    <Run Text="Tổng  " FontSize="{StaticResource FontSizeBody}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" /><Run Text="{x:Bind Card.TotalText, Mode=OneWay}" FontSize="{StaticResource FontSizeEmphasis}" FontWeight="SemiBold"
                                                                          Foreground="{x:Bind local:Ui.TotalForeground(Card.Status), Mode=OneWay}" />
                 </TextBlock>
             </Grid>

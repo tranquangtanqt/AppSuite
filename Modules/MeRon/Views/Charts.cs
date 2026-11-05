@@ -109,7 +109,7 @@ public sealed class ColumnChart : Grid
         {
             var y = Math.Round(Y(v)) + 0.5;
             _canvas.Children.Add(new Line { X1 = plotLeft, X2 = width, Y1 = y, Y2 = y, Stroke = grid, StrokeThickness = 1 });
-            var tick = new TextBlock { Text = Format(v), FontSize = 11, Foreground = muted, Width = TickWidth - 8, TextAlignment = TextAlignment.Right };
+            var tick = new TextBlock { Text = Format(v), FontSize = 12, Foreground = muted, Width = TickWidth - 8, TextAlignment = TextAlignment.Right };
             Canvas.SetLeft(tick, 0);
             Canvas.SetTop(tick, y - 8);
             _canvas.Children.Add(tick);
@@ -162,14 +162,14 @@ public sealed class ColumnChart : Grid
 
             if (i % labelEvery == 0)
             {
-                var label = new TextBlock { Text = column.AxisLabel, FontSize = 11, Foreground = muted, Width = slot * labelEvery, TextAlignment = TextAlignment.Center, IsHitTestVisible = false };
+                var label = new TextBlock { Text = column.AxisLabel, FontSize = 12, Foreground = muted, Width = slot * labelEvery, TextAlignment = TextAlignment.Center, IsHitTestVisible = false };
                 Canvas.SetLeft(label, x + slot / 2 - slot * labelEvery / 2);
                 Canvas.SetTop(label, baseline + 4);
                 _canvas.Children.Add(label);
             }
             if (i == maxIndex && column.Values.Sum() > 0)
             {
-                var value = new TextBlock { Text = Format(column.Values.Sum()), FontSize = 11, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, IsHitTestVisible = false };
+                var value = new TextBlock { Text = Format(column.Values.Sum()), FontSize = 12, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, IsHitTestVisible = false };
                 value.Measure(new Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
                 Canvas.SetLeft(value, Math.Clamp(x + slot / 2 - value.DesiredSize.Width / 2, plotLeft, width - value.DesiredSize.Width));
                 Canvas.SetTop(value, Y(column.Values.Sum()) - 17);

@@ -45,7 +45,7 @@
             <Button Grid.Column="5" Style="{StaticResource AccentButtonStyle}" Click="PayAll_Click" AutomationProperties.Name="Thanh toán toàn bộ"
                     Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.CanPayAll), Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <FontIcon Glyph="&#xE8C7;" FontSize="16" />
+                    <FontIcon Glyph="&#xE8C7;" FontSize="{StaticResource FontSizeEmphasis}" />
                     <TextBlock Text="Thanh toán toàn bộ" />
                 </StackPanel>
             </Button>
@@ -60,7 +60,7 @@
                         Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
                         Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasGroups), Mode=OneWay}">
                 <!-- Tiêu đề ảnh (vd mở từ trang Công nợ: "Đơn chưa thanh toán - tên khách · tính đến ... · Tổng ...") -->
-                <TextBlock Text="{x:Bind ViewModel.CaptureTitle, Mode=OneWay}" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"
+                <TextBlock Text="{x:Bind ViewModel.CaptureTitle, Mode=OneWay}" FontSize="{StaticResource FontSizeEmphasis}" FontWeight="SemiBold" TextWrapping="Wrap"
                            Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.CaptureTitle), Mode=OneWay}"
                            AutomationProperties.AutomationId="CaptureTitle" />
                 <ItemsControl ItemsSource="{x:Bind ViewModel.Groups}" IsTabStop="False">
@@ -69,7 +69,7 @@
                             <Border Padding="14,12" Margin="0,0,0,14" CornerRadius="8" BorderThickness="1"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource LayerFillColorDefaultBrush}">
                                 <StackPanel Spacing="8">
-                                    <TextBlock Text="{x:Bind CustomerName}" FontSize="18" FontWeight="SemiBold" />
+                                    <TextBlock Text="{x:Bind CustomerName}" FontSize="{StaticResource FontSizeEmphasis}" FontWeight="SemiBold" />
                                     <ItemsControl ItemsSource="{x:Bind Orders}" IsTabStop="False">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="vm:OrderCardViewModel">

@@ -14,9 +14,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
-                            <FontIcon Glyph="&#xE790;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
+                            <FontIcon Glyph="&#xE790;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
-                        <TextBlock Text="Giao diện" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Giao diện" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <RadioButtons x:Name="ThemeChoice" MaxColumns="3" AutomationProperties.Name="Giao diện" SelectionChanged="Theme_SelectionChanged">
                         <x:String>Theo Windows</x:String>
@@ -37,9 +37,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
-                            <FontIcon Glyph="&#xE700;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
+                            <FontIcon Glyph="&#xE700;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
-                        <TextBlock Text="Menu bên trái" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Menu bên trái" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Bỏ tích các mục ít dùng để ẩn khỏi menu - áp dụng ngay, tắt app mở lại vẫn giữ. Nhóm ẩn hết mục thì tiêu đề nhóm cũng ẩn. Đặt hàng luôn hiện; Cài đặt và Hướng dẫn ở cuối menu cũng luôn hiện." />
@@ -58,9 +58,9 @@
                 <StackPanel Spacing="10">
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
-                            <FontIcon Glyph="&#xE722;" FontSize="15" Foreground="{StaticResource OrangeBrush}" />
+                            <FontIcon Glyph="&#xE722;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
                         </Border>
-                        <TextBlock Text="Ảnh chụp" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                        <TextBlock Text="Ảnh chụp" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock TextWrapping="Wrap" Opacity="0.8"
                                Text="Mỗi lần bấm Chụp ảnh (màn Chi tiết), ảnh được chép vào clipboard và lưu thêm 1 file PNG vào Pictures\MeRon. Ảnh cũ hơn số ngày dưới đây tự đưa vào Thùng rác mỗi lần mở app (lấy lại được từ Thùng rác). Chỉ xoá ảnh do MeRon tự đặt tên (chi_tiet_don_hang_…, hoa_don_cong_no_…), file khác trong thư mục giữ nguyên." />

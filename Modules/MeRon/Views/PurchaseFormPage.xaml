@@ -27,9 +27,9 @@
                 <StackPanel Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource BlueSoftBrush}">
-                        <FontIcon Glyph="&#xE719;" FontSize="14" Foreground="{StaticResource BlueBrush}" />
+                        <FontIcon Glyph="&#xE719;" FontSize="{StaticResource FontSizeBody}" Foreground="{StaticResource BlueBrush}" />
                     </Border>
-                    <TextBlock Text="Ngày nhập và các khoản hàng" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    <TextBlock Text="Ngày nhập và các khoản hàng" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <local:DateBox Header="Ngày nhập" AllowEmpty="False" Date="{x:Bind ViewModel.Date, Mode=TwoWay}" Width="170" HorizontalAlignment="Left"
@@ -75,7 +75,7 @@
                             </StackPanel>
                         </Button>
                         <Border HorizontalAlignment="Right" Padding="14,6" CornerRadius="16" Background="{StaticResource BlueBrush}">
-                            <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="16"
+                            <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeEmphasis}"
                                        Foreground="White" AutomationProperties.AutomationId="PurchaseTotal" />
                         </Border>
                     </Grid>
@@ -106,7 +106,7 @@
                 </Button>
                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="16,0,0,0" VerticalAlignment="Center"
                             Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.Error), Mode=OneWay}">
-                    <FontIcon Glyph="&#xEA39;" FontSize="16" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                    <FontIcon Glyph="&#xEA39;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
                     <TextBlock Text="{x:Bind ViewModel.Error, Mode=OneWay}" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                                TextWrapping="Wrap" MaxWidth="460" VerticalAlignment="Center" AutomationProperties.AutomationId="FormError" />
                 </StackPanel>

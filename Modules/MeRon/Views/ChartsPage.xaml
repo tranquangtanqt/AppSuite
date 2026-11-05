@@ -50,9 +50,9 @@
                         <Border Padding="16,12" CornerRadius="10" BorderThickness="1"
                                 BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                             <StackPanel Spacing="2">
-                                <TextBlock Text="{x:Bind Label}" FontSize="12" Opacity="0.75" />
-                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind Value}" FontSize="22" FontWeight="SemiBold" AutomationProperties.Name="{x:Bind Label}" /></Viewbox>
-                                <TextBlock Text="{x:Bind Delta}" FontSize="12" Opacity="0.75" />
+                                <TextBlock Text="{x:Bind Label}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.75" />
+                                <Viewbox StretchDirection="DownOnly" HorizontalAlignment="Left"><TextBlock Text="{x:Bind Value}" FontSize="{StaticResource FontSizeNumber}" FontWeight="SemiBold" AutomationProperties.Name="{x:Bind Label}" /></Viewbox>
+                                <TextBlock Text="{x:Bind Delta}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.75" />
                             </StackPanel>
                         </Border>
                     </DataTemplate>
@@ -62,7 +62,7 @@
             <!-- Doanh thu theo thời gian -->
             <Border Style="{StaticResource ChartCardStyle}">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="{x:Bind ViewModel.SalesTitle, Mode=OneWay}" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="{x:Bind ViewModel.SalesTitle, Mode=OneWay}" Style="{StaticResource GroupTitleTextBlockStyle}" />
                     <local:ColumnChart x:Name="SalesChart" AutomationProperties.Name="Biểu đồ doanh thu" />
                     <local:ChartTable x:Name="SalesTable" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.ShowTables), Mode=OneWay}" />
                 </StackPanel>
@@ -71,7 +71,7 @@
             <!-- Thứ trong tuần -->
             <Border Style="{StaticResource ChartCardStyle}">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="Số đơn theo thứ trong tuần" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="Số đơn theo thứ trong tuần" Style="{StaticResource GroupTitleTextBlockStyle}" />
                     <local:ColumnChart x:Name="WeekdayChart" Height="220" AutomationProperties.Name="Biểu đồ số đơn theo thứ" />
                     <local:ChartTable x:Name="WeekdayTable" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.ShowTables), Mode=OneWay}" />
                 </StackPanel>
@@ -80,8 +80,8 @@
             <!-- Khách mới / quay lại -->
             <Border Style="{StaticResource ChartCardStyle}">
                 <StackPanel Spacing="8">
-                    <TextBlock Text="{x:Bind ViewModel.MixTitle, Mode=OneWay}" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <TextBlock Text="Khách mới = lần đầu tiên đặt (tính trên mọi đơn từ trước tới nay) rơi vào kỳ đó." FontSize="12" Opacity="0.7" />
+                    <TextBlock Text="{x:Bind ViewModel.MixTitle, Mode=OneWay}" Style="{StaticResource GroupTitleTextBlockStyle}" />
+                    <TextBlock Text="Khách mới = lần đầu tiên đặt (tính trên mọi đơn từ trước tới nay) rơi vào kỳ đó." FontSize="{StaticResource FontSizeCaption}" Opacity="0.7" />
                     <local:ColumnChart x:Name="MixChart" AutomationProperties.Name="Biểu đồ khách mới và khách quay lại" />
                     <local:ChartTable x:Name="MixTable" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.ShowTables), Mode=OneWay}" />
                 </StackPanel>
@@ -90,7 +90,7 @@
             <!-- Món bán chạy -->
             <Border Style="{StaticResource ChartCardStyle}">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="10 món bán chạy (theo doanh thu)" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="10 món bán chạy (theo doanh thu)" Style="{StaticResource GroupTitleTextBlockStyle}" />
                     <local:BarList x:Name="TopList" AutomationProperties.Name="Món bán chạy" />
                     <local:ChartTable x:Name="TopTable" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.ShowTables), Mode=OneWay}" />
                 </StackPanel>

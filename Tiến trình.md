@@ -217,7 +217,7 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Nhãn: Tổng sau giảm giá (Theo đơn hàng) / Tổng trước giảm giá (Theo món ăn), đã đối chiếu dữ liệu tháng 10: chênh đúng bằng tổng giảm giá (2026-11-04)
 - [x] Thanh tiêu đề tối theo app (2026-11-04)
 - [x] Gom 69 chỗ mã màu trong XAML về `App.xaml` (giữ nguyên màu), màu trong `Views/Ui.cs` vẫn riêng; AccessKey ở Đặt hàng, form đơn. Đợt 2: unit test 192/192, GUI Sandbox 19/19 (2026-11-04)
-- [ ] Để sau .NET 10: gom cỡ chữ. Đếm 2026-11-04: 13 cỡ, 134 chỗ ghi trực tiếp trong 23/27 file XAML (gồm cả icon; 12, 13, 14, 15, 16 quá sát nhau). Hướng làm: 5–6 cỡ theo vai trò, đặt tên chung ở `App.xaml`, chụp ảnh kiểm tra chữ tràn; không gấp, có thể gom dần khi sửa từng trang
+- [x] Gom cỡ chữ: từ 13 cỡ còn 5 cỡ theo vai trò (12 chú thích, 14 nội dung, 16 tên khách / tổng tiền trên thẻ / tiêu đề nhóm, 20 số trong thẻ nhỏ, 28 số lớn báo cáo), đặt tên `FontSize...` + `GroupTitleTextBlockStyle` ở `App.xaml`; bỏ Bold, dùng SemiBold; tiêu đề Chi tiết giữ 20 cho đủ chỗ dòng tóm tắt; người dùng duyệt ảnh trước / sau. Làm trước .NET 10 vì máy chưa có .NET 10. Unit test 192/192; GUI Sandbox 22/22 (2026-11-05)
 - [ ] Tạm giữ cam #E8590C theo ý người dùng (2026-11-04). Nếu sau cần đổi sang #C2410C cho chữ trắng dễ đọc hơn: đổi toàn bộ gồm `App.xaml` (SystemAccentColor, nhóm Dark, `OrangeBrush`), màu cam trong `Views/Ui.cs`, chữ trên nền accent theo TextOnAccent; thẻ Chênh lệch ở Tổng hợp giữ chữ trắng ở chế độ tối
 
 Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), import TSV = thay toàn bộ, làm 4 đợt.

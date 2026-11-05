@@ -23,7 +23,7 @@
                     <Border Padding="10,2,10,3" CornerRadius="11" VerticalAlignment="Center" Margin="0,4,0,0"
                             Background="{x:Bind local:Ui.StatusSoft(ViewModel.OriginalStatus), Mode=OneWay}"
                             Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsEdit), Mode=OneWay}">
-                        <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" FontSize="12" FontWeight="SemiBold" Foreground="{x:Bind local:Ui.StatusSolid(ViewModel.OriginalStatus), Mode=OneWay}" />
+                        <TextBlock Text="{x:Bind ViewModel.StatusText, Mode=OneWay}" FontSize="{StaticResource FontSizeCaption}" FontWeight="SemiBold" Foreground="{x:Bind local:Ui.StatusSolid(ViewModel.OriginalStatus), Mode=OneWay}" />
                     </Border>
                 </StackPanel>
 
@@ -38,9 +38,9 @@
                 <StackPanel Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource OrangeSoftBrush}">
-                        <FontIcon Glyph="&#xE7BF;" FontSize="14" Foreground="{StaticResource OrangeBrush}" />
+                        <FontIcon Glyph="&#xE7BF;" FontSize="{StaticResource FontSizeBody}" Foreground="{StaticResource OrangeBrush}" />
                     </Border>
-                    <TextBlock Text="Khách hàng và món" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    <TextBlock Text="Khách hàng và món" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
                 <!-- Khách hàng -->
                 <AutoSuggestBox x:Name="CustomerBox" Header="Khách hàng" PlaceholderText="Gõ tên hoặc số điện thoại rồi chọn" QueryIcon="Find"
@@ -58,7 +58,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <FontIcon Glyph="&#xE81C;" FontSize="14" Opacity="0.7" VerticalAlignment="Center" />
+                    <FontIcon Glyph="&#xE81C;" FontSize="{StaticResource FontSizeBody}" Opacity="0.7" VerticalAlignment="Center" />
                     <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.LastOrderText, Mode=OneWay}" TextWrapping="Wrap" Opacity="0.85"
                                VerticalAlignment="Center" AutomationProperties.AutomationId="LastOrderText" />
                     <HyperlinkButton x:Name="CopyLastButton" Grid.Column="2" Click="CopyLast_Click" Padding="6,2"
@@ -104,7 +104,7 @@
                                             <ColumnDefinition Width="*" />
                                         </Grid.ColumnDefinitions>
                                         <!-- Khoảng cách nằm ở Margin của biểu tượng (không dùng ColumnSpacing): dòng không khoá thì ô món thẳng hàng với ô món tự do. -->
-                                        <FontIcon Glyph="&#xE72E;" FontSize="14" Margin="0,0,6,0" Visibility="{x:Bind local:Ui.VisibleIf(IsLocked)}"
+                                        <FontIcon Glyph="&#xE72E;" FontSize="{StaticResource FontSizeBody}" Margin="0,0,6,0" Visibility="{x:Bind local:Ui.VisibleIf(IsLocked)}"
                                                   AutomationProperties.Name="Dòng bị khoá" />
                                         <!-- Gõ lọc rồi chọn (ProductSuggest) - bắt buộc là 1 món trong danh sách. -->
                                         <AutoSuggestBox x:Name="ProductBox" Grid.Column="1" PlaceholderText="Gõ tên món rồi chọn" QueryIcon="Find"
@@ -112,7 +112,7 @@
                                                         Loaded="ProductBox_Loaded" AutomationProperties.Name="Món ăn" />
                                     </Grid>
                                     <!-- Lỗi ô món ở hàng riêng: không kéo cao các ô Số lượng / Đơn giá của dòng. -->
-                                    <TextBlock Grid.Row="1" Grid.ColumnSpan="4" Text="{x:Bind ProductError, Mode=OneWay}" TextWrapping="Wrap" FontSize="12"
+                                    <TextBlock Grid.Row="1" Grid.ColumnSpan="4" Text="{x:Bind ProductError, Mode=OneWay}" TextWrapping="Wrap" FontSize="{StaticResource FontSizeCaption}"
                                                Margin="0,2,0,0" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                                                Visibility="{x:Bind local:Ui.VisibleIf(HasProductError), Mode=OneWay}"
                                                AutomationProperties.AutomationId="ProductError" />
@@ -127,12 +127,12 @@
                                                Visibility="{x:Bind local:Ui.VisibleIf(IsFree)}" Loaded="FreePriceBox_Loaded" AutomationProperties.Name="Đơn giá món tự do" />
                                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
                                         <Button Command="{x:Bind DecreaseCommand}" IsEnabled="{x:Bind IsEditable}" Padding="8,4" AutomationProperties.Name="Bớt 1">
-                                            <FontIcon Glyph="&#xE738;" FontSize="12" />
+                                            <FontIcon Glyph="&#xE738;" FontSize="{StaticResource FontSizeCaption}" />
                                         </Button>
                                         <NumberBox x:Name="QuantityBox" Value="{x:Bind Quantity, Mode=TwoWay}" Minimum="1" Width="64" IsEnabled="{x:Bind IsEditable}" Loaded="QuantityBox_Loaded"
                                                    AutomationProperties.Name="Số lượng" />
                                         <Button Command="{x:Bind IncreaseCommand}" IsEnabled="{x:Bind IsEditable}" Padding="8,4" AutomationProperties.Name="Thêm 1">
-                                            <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                            <FontIcon Glyph="&#xE710;" FontSize="{StaticResource FontSizeCaption}" />
                                         </Button>
                                     </StackPanel>
                                     <TextBlock Grid.Column="3" Text="{x:Bind LineTotalText, Mode=OneWay}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold" />
@@ -154,7 +154,7 @@
                         <Button Command="{x:Bind ViewModel.AddFreeLineCommand}" Click="AddFreeLine_Click" AutomationProperties.Name="Thêm món tự do"
                                 ToolTipService.ToolTip="Món không có trong danh sách Món ăn: tự nhập tên + đơn giá">
                             <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE710;" FontSize="14" />
+                                <FontIcon Glyph="&#xE710;" FontSize="{StaticResource FontSizeBody}" />
                                 <TextBlock Text="Thêm món tự do" />
                             </StackPanel>
                         </Button>
@@ -169,9 +169,9 @@
                 <StackPanel Spacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                     <Border Width="30" Height="30" CornerRadius="15" Background="{StaticResource GreenSoftBrush}">
-                        <FontIcon Glyph="&#xE8C7;" FontSize="14" Foreground="{StaticResource GreenBrush}" />
+                        <FontIcon Glyph="&#xE8C7;" FontSize="{StaticResource FontSizeBody}" Foreground="{StaticResource GreenBrush}" />
                     </Border>
-                    <TextBlock Text="Tiền, ngày giao, ghi chú" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
+                    <TextBlock Text="Tiền, ngày giao, ghi chú" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
                 <!-- Tiền -->
                 <Grid ColumnSpacing="16">
@@ -186,7 +186,7 @@
                                    AutomationProperties.AutomationId="QuantityText" />
                         <TextBlock Text="{x:Bind ViewModel.SubTotalText, Mode=OneWay}" HorizontalAlignment="Right" Opacity="0.75" />
                         <Border Padding="12,6" CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}">
-                            <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="16"
+                            <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeEmphasis}"
                                        Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" AutomationProperties.AutomationId="TotalText" />
                         </Border>
                     </StackPanel>
@@ -262,7 +262,7 @@
                 <!-- Lỗi cạnh nút Lưu: luôn thấy dù form đang cuộn tới đâu. -->
                 <StackPanel Orientation="Horizontal" Spacing="6" Margin="16,0,0,0" VerticalAlignment="Center"
                             Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.Error), Mode=OneWay}">
-                    <FontIcon Glyph="&#xEA39;" FontSize="16" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                    <FontIcon Glyph="&#xEA39;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
                     <TextBlock Text="{x:Bind ViewModel.Error, Mode=OneWay}" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                                TextWrapping="Wrap" MaxWidth="520" VerticalAlignment="Center" AutomationProperties.AutomationId="FormError" />
                 </StackPanel>
