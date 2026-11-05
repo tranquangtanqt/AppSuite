@@ -132,6 +132,7 @@
                 <ItemsRepeater.ItemTemplate>
                     <DataTemplate x:DataType="vm:BatchRowViewModel">
                         <Grid CornerRadius="8" BorderThickness="1" Padding="10,8" ColumnSpacing="12"
+                              PointerEntered="Row_PointerEntered" PointerExited="Row_PointerExited"
                               BorderBrush="{x:Bind local:BatchOrdersPage.RowBorder(CanSave, NeedsReview)}"
                               Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                             <Grid.ColumnDefinitions>
@@ -181,6 +182,11 @@
                                     <Button Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, xong bấm Làm mới (F5)" />
                                 </StackPanel>
                             </StackPanel>
+                            <!-- Dòng ổn: hiện khi rê chuột hoặc Tab tới. Mờ hẳn thay vì ẩn để thẻ không đổi cao, phím vẫn tới được -->
+                            <Button Grid.Column="2" Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}" Visibility="{x:Bind EditOnHover}" Opacity="0"
+                                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                                    GotFocus="HoverEdit_GotFocus" LostFocus="HoverEdit_LostFocus"
+                                    ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, xong bấm Làm mới (F5)" />
                             <StackPanel Grid.Column="3" Spacing="2" MinWidth="90">
                                 <TextBlock Text="{x:Bind TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
                                 <Border HorizontalAlignment="Right" CornerRadius="8" Padding="6,1" Visibility="{x:Bind Paid}"

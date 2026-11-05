@@ -23,6 +23,9 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
 
     public bool NeedsReview => !Match.CanSave || Match.Warnings.Count > 0 || Reconcile?.Kind == ReconcileKind.Different;
 
+    /// <summary>Dòng ổn không có hàng nút sửa: nút Sửa dòng hiện khi rê chuột.</summary>
+    public bool EditOnHover => !NeedsReview;
+
     /// <summary>Nhãn so khớp: ✔ đã có / ≠ khác / chưa có trong MeRon (ngày giao đang chọn).</summary>
     public string ReconcileText => Reconcile?.Kind switch
     {

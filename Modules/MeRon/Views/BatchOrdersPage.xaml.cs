@@ -3,6 +3,7 @@ using MeRon.Core.Orders;
 using MeRon.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Windows.ApplicationModel.DataTransfer;
@@ -153,6 +154,34 @@ public sealed partial class BatchOrdersPage : Page
             ViewModel.AddAbbreviation(word, name);
         }
         ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, itemIndex: row.ItemChoiceIndex, itemName: name));
+    }
+
+    private static Button? HoverEdit(object row) => (row as Grid)?.Children.OfType<Button>().FirstOrDefault();
+
+    private void Row_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        if (HoverEdit(sender) is { } button)
+        {
+            button.Opacity = 1;
+        }
+    }
+
+    private void Row_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (HoverEdit(sender) is { FocusState: FocusState.Unfocused } button)
+        {
+            button.Opacity = 0;
+        }
+    }
+
+    private void HoverEdit_GotFocus(object sender, RoutedEventArgs e) => ((Button)sender).Opacity = 1;
+
+    private void HoverEdit_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { IsPointerOver: false } button)
+        {
+            button.Opacity = 0;
+        }
     }
 
     /// <summary>Chọn đúng dòng đó trong ô chữ để sửa tay.</summary>
