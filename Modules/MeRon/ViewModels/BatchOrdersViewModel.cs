@@ -184,6 +184,9 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
 
     public DateOnly DeliveryDay => DateOnly.FromDateTime((Day ?? DateTimeOffset.Now).DateTime);
 
+    /// <summary>Toàn bộ khách, cho nút Chọn khách trên dòng không khớp khách nào.</summary>
+    public IReadOnlyList<CustomerOption> Customers { get; private set; } = [];
+
     /// <summary>Đọc lại ô chữ + khách / món / chữ viết tắt mới nhất (sau khi thêm khách, sửa chữ, thêm món...).</summary>
     public void Refresh()
     {
@@ -199,6 +202,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
             _lastTextDay = parsed.Day;
 
             var customers = AppServices.MasterData.GetCustomers();
+            Customers = CustomerOption.From(customers);
             var products = AppServices.MasterData.GetProducts();
             var sortedProducts = products.OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
             var abbreviations = new Abbreviations(AbbreviationsText);

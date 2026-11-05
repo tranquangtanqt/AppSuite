@@ -136,6 +136,24 @@ public class BatchOrderTests
         Assert.Equal(4, Match("Ngọc | 1 giò", shortName).Customer?.Id);
     }
 
+    /// <summary>Nút Chọn khách: chữ không khớp ai, thay bằng khách đã có; món, giá, CK trên dòng giữ nguyên.</summary>
+    [Fact]
+    public void Replacing_an_unknown_customer_keeps_the_rest_of_the_line()
+    {
+        var unknown = MatchLine("w3 Ngc? | 2 giò; 1 sc uống | 45k | CK");
+        Assert.Empty(unknown.CustomerCandidates);
+        Assert.Contains("Chưa có khách", unknown.Problems.Single());
+
+        var rewritten = BatchOrderParser.Format(unknown.Line, customer: "Mỹ Ly");
+        Assert.Equal("Mỹ Ly | 2 giò; 1 sc uống | 45k | CK", rewritten);
+
+        var fixedLine = MatchLine(rewritten);
+        Assert.Equal(1, fixedLine.Customer?.Id);
+        Assert.False(fixedLine.Line.CustomerUnsure);
+        Assert.True(fixedLine.Line.Paid);
+        Assert.Equal(45000, fixedLine.Line.Price);
+    }
+
     [Fact]
     public void Product_name_ignores_spaces_and_accents_but_must_be_unique()
     {

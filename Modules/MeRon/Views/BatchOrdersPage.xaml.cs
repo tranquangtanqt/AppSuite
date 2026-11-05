@@ -96,6 +96,37 @@ public sealed partial class BatchOrdersPage : Page
         }
     }
 
+    /// <summary>Chữ không khớp khách nào (đọc sai, viết tắt...): tìm trong toàn bộ khách rồi thay vào dòng. Dùng ô tìm như form
+    /// đơn thay cho ComboBox vì danh sách khách dài. Viết lại dòng sau khi khung đóng: dòng cũ (có nút đang mở khung) sẽ bị thay.</summary>
+    private void ChooseCustomer_Click(object sender, RoutedEventArgs e)
+    {
+        if (RowOf(sender) is not { } row)
+        {
+            return;
+        }
+        var box = new AutoSuggestBox { Width = 300, PlaceholderText = "Gõ tên hoặc số điện thoại rồi chọn", QueryIcon = new SymbolIcon(Symbol.Find) };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, "Tìm khách");
+        var flyout = new Flyout { Content = box };
+        CustomerOption? picked = null;
+        CustomerSuggest.Attach(box, () => ViewModel.Customers, () => picked, customer =>
+        {
+            if (customer is not null)
+            {
+                picked = customer;
+                flyout.Hide();
+            }
+        });
+        flyout.Opened += (_, _) => box.Focus(FocusState.Programmatic);
+        flyout.Closed += (_, _) =>
+        {
+            if (picked is not null)
+            {
+                ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: picked.Name));
+            }
+        };
+        flyout.ShowAt((FrameworkElement)sender);
+    }
+
     private void CustomerChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (RowOf(sender) is { } row && (sender as ComboBox)?.SelectedItem is Customer customer)

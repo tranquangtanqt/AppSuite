@@ -158,6 +158,8 @@
                                 <!-- Cách sửa ngay trên dòng; sửa chữ thì bấm Sửa dòng (nhảy tới dòng trong ô chữ) rồi Làm mới -->
                                 <StackPanel Orientation="Horizontal" Spacing="6" Visibility="{x:Bind NeedsReview}">
                                     <Button Content="＋ Thêm khách" Click="AddCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind NeedsNewCustomer}" />
+                                    <Button Content="Chọn khách" Click="ChooseCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind NeedsNewCustomer}"
+                                            ToolTipService.ToolTip="Thay chữ trên dòng bằng 1 khách đã có trong danh sách" />
                                     <ComboBox ItemsSource="{x:Bind CustomerChoices}" PlaceholderText="Chọn khách..." Tag="{x:Bind}" MinWidth="180"
                                               SelectionChanged="CustomerChoice_SelectionChanged" AutomationProperties.Name="Chọn khách"
                                               Visibility="{x:Bind local:BatchOrdersPage.VisibleIfAny(CustomerChoices.Count)}">

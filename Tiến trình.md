@@ -472,6 +472,7 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   trong ▾) chỉ chép link Project vào clipboard, người dùng tự mở trình duyệt và dán link. Cập nhật F1, README. GUI Sandbox
   14/14 (không mở trình duyệt, clipboard đúng link, Chép câu lệnh mẫu vẫn chạy, ô Ngày giao đủ rộng) (2026-11-04)
 - [x] Sửa lỗi Nhập đơn hàng loạt: ô Chọn khách xổ ra, chọn "w3 Ngọc" nhưng dòng vẫn báo nhiều khách khớp, ô chọn trở về trống. Nguyên nhân: so khớp bỏ từ có số rồi mới so tên, mà 228/285 khách có tên kèm số phòng / toà. Nay trùng nguyên tên được nhận trước, chọn khách ghi đúng tên khách (tên là duy nhất). Gõ đúng nguyên tên thì khỏi phải chọn. Unit test 193/193; GUI Sandbox 4/4 (bản chưa sửa rớt 2/4) (2026-11-05)
+- [x] Nhập đơn hàng loạt: nút **Chọn khách** cạnh ＋ Thêm khách trên dòng không khớp khách nào (đọc sai, viết tắt): khung tìm trong toàn bộ khách, gõ tên / số điện thoại rồi chọn (Enter, Tab, bấm chuột), dòng được thay bằng khách đó, giữ món, giá, CK; Esc thì không đổi gì. Cập nhật F1, README. Unit test 194/194; GUI Sandbox 9/9 (2026-11-05)
 - [ ] Người dùng xác nhận: "lá" là món gì (chữ viết tắt)
 - [ ] Nhập đơn hàng loạt từ Excel / CSV (đề xuất cũ 2026-11-02) - làm khi có file mẫu
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị
