@@ -332,6 +332,12 @@ public static class BatchOrderMatcher
         {
             return (candidates[0], candidates);
         }
+        // Trùng nguyên tên trước: tên khách thường kèm số phòng / toà ("w3 Ngọc"), bỏ số đi thì không so được.
+        var sameName = candidates.Where(c => Words(c.Name ?? string.Empty).SequenceEqual(tokens)).ToList();
+        if (sameName.Count == 1)
+        {
+            return (sameName[0], candidates);
+        }
         var nameOnly = string.Join(" ", tokens.Where(t => !t.Any(char.IsAsciiDigit)));
         var exact = candidates.Where(c => string.Join(" ", Words(c.Name ?? string.Empty)) == (nameOnly.Length > 0 ? nameOnly : string.Join(" ", tokens))).ToList();
         return exact.Count == 1 ? (exact[0], candidates) : (null, candidates);

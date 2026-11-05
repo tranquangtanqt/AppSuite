@@ -105,6 +105,37 @@ public class BatchOrderTests
         Assert.Equal(5, MatchLine("W1 Hà | 1 giò").Customer!.Id);
     }
 
+    /// <summary>Tên khách thường kèm số phòng / toà ("w3 Ngọc"): chọn trong ô Chọn khách phải ghép được đúng khách đó.</summary>
+    [Fact]
+    public void Choosing_a_customer_whose_name_contains_digits_resolves_the_line()
+    {
+        Customer[] customers =
+        [
+            new(1, "w3 Ngọc", "w3", null, null),
+            new(2, "w3 C Ngọc Thủy", "w3", null, null),
+            new(3, "Ngọc Nam w3", "w3", null, null),
+        ];
+        BatchLineMatch Match(string text, params Customer[] extra) =>
+            BatchOrderMatcher.Match(BatchOrderParser.Parse(text, Today).Lines.Single(), [.. customers, .. extra], Products, Abbr);
+
+        var ambiguous = Match("Ngọc w3 | 1 giò");
+        Assert.Null(ambiguous.Customer);
+        Assert.True(ambiguous.CustomerCandidates.Count > 1);
+
+        foreach (var chosen in customers.Where(c => ambiguous.CustomerCandidates.Contains(c)))
+        {
+            var rewritten = BatchOrderParser.Format(ambiguous.Line, customer: chosen.Name);
+            Assert.Equal(chosen.Id, Match(rewritten).Customer?.Id);
+        }
+
+        Assert.Equal(1, Match("w3 Ngọc | 1 giò").Customer?.Id); // gõ đúng nguyên tên: khỏi phải chọn
+
+        // Khách cùng toà tên ngắn hơn: không nhận nhầm sang nhau
+        Customer shortName = new(4, "Ngọc", "w3", null, null);
+        Assert.Equal(1, Match("w3 Ngọc | 1 giò", shortName).Customer?.Id);
+        Assert.Equal(4, Match("Ngọc | 1 giò", shortName).Customer?.Id);
+    }
+
     [Fact]
     public void Product_name_ignores_spaces_and_accents_but_must_be_unique()
     {

@@ -100,7 +100,7 @@ public sealed partial class BatchOrdersPage : Page
     {
         if (RowOf(sender) is { } row && (sender as ComboBox)?.SelectedItem is Customer customer)
         {
-            ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: $"{customer.Address} {customer.Name}".Trim()));
+            ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: customer.Name));
         }
     }
 
