@@ -6,7 +6,7 @@ namespace ScreenCapture.Models;
 /// mờ lên vùng Bounds.</summary>
 public sealed class HighlightAnnotation : AnnotationShape
 {
-    public override string DisplayName => "Highlight";
+    public override string DisplayName => "Tô sáng";
 
     public HighlightAnnotation()
     {

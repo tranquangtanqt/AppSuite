@@ -296,7 +296,7 @@ public sealed partial class EditorWindow
     private void UpdateHighlightButton()
     {
         int count = _textMatches.Count;
-        foreach (var (button, label) in new[] { (HighlightMatchesButton, "Tô Highlight"), (MosaicMatchesButton, "Che Mosaic"), (BlurMatchesButton, "Làm mờ") })
+        foreach (var (button, label) in new[] { (HighlightMatchesButton, "Tô sáng"), (MosaicMatchesButton, "Che Mosaic"), (BlurMatchesButton, "Làm mờ") })
         {
             button.IsEnabled = count > 0;
             ((TextBlock)((StackPanel)button.Content).Children[1]).Text = count > 0 ? $"{label} ({count})" : label;
@@ -421,7 +421,7 @@ public sealed partial class EditorWindow
         }
         // Nới 2 px quanh khung chữ OCR (khung sát nét chữ - tô đúng khít trông hụt).
         var areas = _textMatches.Select(m => SKRect.Inflate(ToRect(m.Bounds), 2, 2)).ToList();
-        _viewModel.AddHighlights(areas, $"Tô Highlight {areas.Count} chỗ khớp \"{TextSearchBox.Text.Trim()}\"");
+        _viewModel.AddHighlights(areas, $"Tô sáng {areas.Count} chỗ khớp \"{TextSearchBox.Text.Trim()}\"");
         Canvas.Invalidate();
     }
 

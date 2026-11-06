@@ -17,7 +17,7 @@ public sealed class ChangeStampNumberCommand : IEditCommand
         _newValue = newValue;
     }
 
-    public string Description => "Đổi số stamp";
+    public string Description => "Đổi số của dấu";
     public bool ChangesStructure => false;
 
     public void Execute() => _shape.NumberValue = _newValue;

@@ -555,6 +555,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Bản đang dùng ở `Application\` là bản cũ - publish lại MainLauncher (`build\Publish-AppSuite.ps1 -Targets MainLauncher`)
 
 ## ScreenCapture
+- [x] Editor: ribbon cửa sổ hẹp có nút Thêm, góc phải hàng tab luôn có Lưu, Copy, Hoàn tác, Làm lại, Hướng dẫn; ribbon cao cố định nên đổi tab không làm ảnh nhảy; nhóm Màu & Cỡ nét lên sau Vẽ hình; chữ giao diện sang tiếng Việt (Mosaic, Copy giữ nguyên); màu chủ đạo cam thay màu nhấn Windows. Cập nhật F1, README. Unit test 64/64; GUI Sandbox 24/24 (2026-11-06)
+- [ ] Review giao diện còn lại (2026-11-06): Tìm chữ mất danh sách kết quả khi cửa sổ thấp; Launcher vỡ khi thấp, Cài đặt không có cỡ tối thiểu; thanh tiêu đề sáng ở chế độ tối; chữ cỡ 10-11 (50 + 6 chỗ); `Hủy` / `Huỷ`, tên ảnh `09 15 22` / `09:15:22`; icon Con dấu, Lên trên / Xuống dưới, Elip; 8 công cụ thiếu tooltip; nền quanh ảnh chưa trung tính; ghi chú Cài đặt dài; tab Định dạng hiện mục không áp dụng
+- [ ] Người dùng thử tay ribbon mới trên màn hình thật
 
 - [x] Popup **Danh sách ảnh** khi nhiều ảnh bị đẩy lên trên (che nút / tab) hoặc bị cắt mất nút "Mở lại tab vừa đóng"; ít ảnh
   (lọc) thì đúng chỗ (người dùng báo 2026-10-22). Nguyên nhân: danh sách `MaxHeight="520"` cố định + ô lọc + nút ≈ 640 px,

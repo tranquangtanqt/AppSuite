@@ -1222,7 +1222,7 @@ public sealed partial class EditorWindow : Window
         Add("Copy chữ (đọc chữ trong vùng)", "", "Ctrl+Shift+C", () => _ = CopyRegionTextAsync());
         menu.Items.Add(new MenuFlyoutSeparator());
         Add("Copy ảnh vùng chọn", "", "Ctrl+C", CopyRegion);
-        Add("Cut", "", "Ctrl+X", CutRegion);
+        Add("Cắt vùng", "", "Ctrl+X", CutRegion);
         Add("Cắt ảnh theo vùng", "", "Enter", CropToRegion);
         Add("Xoá nội dung vùng", "", "Delete", EraseRegion);
         menu.Items.Add(new MenuFlyoutSeparator());
@@ -2295,6 +2295,7 @@ public sealed partial class EditorWindow : Window
 
     private void SelectRibbonTab(RibbonTab tab)
     {
+        RestoreRibbonGroups();
         HomeTabHeader.IsChecked = tab == RibbonTab.Home;
         FileTabHeader.IsChecked = tab == RibbonTab.File;
         NumberStampTabHeader.IsChecked = tab == RibbonTab.NumberStamp;
@@ -2306,7 +2307,7 @@ public sealed partial class EditorWindow : Window
         NumberStampRibbonPanel.Visibility = tab == RibbonTab.NumberStamp ? Visibility.Visible : Visibility.Collapsed;
         FormatRibbonPanel.Visibility = tab == RibbonTab.Format ? Visibility.Visible : Visibility.Collapsed;
 
-        // Nhóm Màu & Cỡ nét dùng chung: ở cuối tab Trang chủ, ở đầu tab Định dạng (đổi màu chữ / nét không phải quay về
+        // Nhóm Màu & Cỡ nét dùng chung: sau nhóm Vẽ hình ở tab Trang chủ, ở đầu tab Định dạng (đổi màu chữ / nét không phải quay về
         // Trang chủ). Chỉ 1 bộ control nên không phải đồng bộ 2 ColorPicker.
         if (tab is RibbonTab.Home or RibbonTab.Format)
         {
@@ -2320,10 +2321,11 @@ public sealed partial class EditorWindow : Window
                 }
                 else
                 {
-                    host.Children.Add(ColorSizeGroup);
+                    host.Children.Insert(ColorSizeHomeIndex, ColorSizeGroup);
                 }
             }
         }
+        UpdateRibbonOverflow();
     }
 
     /// <summary>Hiện/ẩn tab contextual "Number Stamp" theo SelectedAnnotation (giống PicPick: chọn 1

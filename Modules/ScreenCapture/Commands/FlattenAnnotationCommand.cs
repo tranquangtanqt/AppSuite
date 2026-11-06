@@ -32,7 +32,7 @@ public sealed class FlattenAnnotationCommand : IEditCommand
         shape.Draw(canvas, oldBitmap);
     }
 
-    public string Description => "Flatten stamp";
+    public string Description => "Gộp dấu vào ảnh";
     public bool ChangesStructure => true;
 
     public void Execute()

@@ -23,7 +23,7 @@ public enum StampKind
 public sealed class StampAnnotation : AnnotationShape
 {
     public StampKind Kind { get; init; }
-    public override string DisplayName => "Stamp";
+    public override string DisplayName => "Con dấu";
 
     /// <summary>Chỉ dùng khi Kind == Number - giá trị số hiển thị, gán từ bộ đếm tự tăng lúc đặt
     /// stamp (xem EditorWindow._numberStampCounter), không phải cố định theo Kind. Sửa được sau khi

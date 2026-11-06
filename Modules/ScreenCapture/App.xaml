@@ -11,6 +11,15 @@
                 <!-- Compact sizing (Button/TextBox/ComboBox/TextBlock/...) applied suite-wide -->
                 <ResourceDictionary Source="ms-appx:///SharedUI/Themes/CompactStyles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Màu chủ đạo cam (cùng màu Launcher, Number Stamp) thay màu nhấn Windows: nút, tab, công cụ đang chọn. -->
+            <Color x:Key="SystemAccentColor">#D86445</Color>
+            <Color x:Key="SystemAccentColorLight1">#E27A5E</Color>
+            <Color x:Key="SystemAccentColorLight2">#EB9279</Color>
+            <Color x:Key="SystemAccentColorLight3">#F3B09C</Color>
+            <Color x:Key="SystemAccentColorDark1">#C4502F</Color>
+            <Color x:Key="SystemAccentColorDark2">#A83F22</Color>
+            <Color x:Key="SystemAccentColorDark3">#86301A</Color>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

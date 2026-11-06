@@ -175,6 +175,10 @@ public sealed partial class EditorWindow
         {
             SelectRibbonTab(RibbonTab.Format);
         }
+        else
+        {
+            UpdateRibbonOverflow();
+        }
     }
 
     private static Visibility VisibleIf(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;

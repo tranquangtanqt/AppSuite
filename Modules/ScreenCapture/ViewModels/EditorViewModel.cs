@@ -385,10 +385,10 @@ public sealed partial class EditorViewModel : ObservableObject
         UndoRedo.Do(new FloodFillCommand(newBitmap => Bitmap = newBitmap, Bitmap, seed, StrokeColor));
 
     [RelayCommand(CanExecute = nameof(CanUndo))]
-    private void Undo() => UndoRedoStep("Undo", UndoRedo.Undo);
+    private void Undo() => UndoRedoStep("Hoàn tác", UndoRedo.Undo);
 
     [RelayCommand(CanExecute = nameof(CanRedo))]
-    private void Redo() => UndoRedoStep("Redo", UndoRedo.Redo);
+    private void Redo() => UndoRedoStep("Làm lại", UndoRedo.Redo);
 
     /// <summary>Undo / Redo 1 bước rồi ghi thanh trạng thái theo bước đó - không thì vẫn hiện thông báo của thao tác cũ (vd
     /// "Đổi cỡ ảnh: ảnh giờ là 500 × 260 px" dù Undo đã đưa ảnh về 1000 × 520).</summary>

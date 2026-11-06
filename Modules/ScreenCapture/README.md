@@ -108,6 +108,16 @@ vd `{date}\{date}_{time}_{app}.png` → `2026-10-07\2026-10-07_10-31-10_EXCEL.pn
 
 ### Trình chỉnh sửa (`EditorWindow`)
 
+**Ribbon (2026-11-06).** Cao cố định 91 px: đổi tab ribbon thì ảnh không nhảy. Góc phải hàng tab luôn có Lưu, Copy, Hoàn tác, Làm lại,
+Hướng dẫn. Ribbon không đủ chỗ thì nhóm bên phải chuyển vào nút **Thêm** (`Views\EditorWindow.Ribbon.cs`, tính bằng
+`Models\RibbonOverflow.cs`): chuyển đúng control thật, nên thứ tự nhóm trong XAML là thứ tự ưu tiên (Chọn, Vẽ hình, Màu & Cỡ nét trước).
+Chữ trên giao diện đã đổi sang tiếng Việt; phần mô tả cũ bên dưới có thể còn tên cũ: Move = Di chuyển, Select = Chọn vùng, Text = Chữ,
+Highlight = Tô sáng, Stamps = Con dấu, Number Stamp = Dấu số, General Stamps = Dấu hình, Undo / Redo = Hoàn tác / Làm lại,
+Color1 / Color2 / Size = Màu nét / Màu nền / Cỡ nét, Flatten = Gộp vào ảnh, Cut = Cắt vùng, Current / Next = Số này / Số tiếp,
+Outline / Fill = Viền / Nền, Arrange = Thứ tự, phím None = Không dùng (trong `settings.json` vẫn lưu `None`). Mosaic, Copy giữ nguyên.
+Màu chủ đạo cam `#D86445` khai ở `App.xaml`, thay màu nhấn Windows.
+
+
 Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh sửa (tự maximize).
 
 **Nhiều ảnh chụp dạng tab** (giống PicPick): chỉ có 1 cửa sổ Editor. Mỗi lần chụp thêm 1 tab mới

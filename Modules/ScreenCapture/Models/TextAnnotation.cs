@@ -25,7 +25,7 @@ public sealed class TextAnnotation : AnnotationShape, ITextShape
 {
     public const string DefaultFontFamily = "Segoe UI";
 
-    public override string DisplayName => "Text";
+    public override string DisplayName => "Chữ";
     public string Text { get; set; } = string.Empty;
     public string FontFamily { get; set; } = DefaultFontFamily;
     public float FontSize { get; set; } = 20f;

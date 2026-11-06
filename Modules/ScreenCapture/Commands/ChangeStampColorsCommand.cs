@@ -24,7 +24,7 @@ public sealed class ChangeStampColorsCommand : IEditCommand
         _newOutline = newOutline;
     }
 
-    public string Description => "Đổi màu stamp";
+    public string Description => "Đổi màu dấu";
     public bool ChangesStructure => false;
 
     public void Execute()

@@ -43,7 +43,7 @@ public sealed partial class SettingsWindow : Window
         SetRange(ClosedTabsMaxBox, AppSettings.ClosedTabsMaxCountRange, 1);
         SetRange(ClosedTabsMbBox, AppSettings.ClosedTabsMaxMegabytesRange, 50);
         var defaults = new AppSettings();
-        ClosedTabsHint.Text = $"Tab vừa đóng (cả ảnh, hình vẽ, Undo) được giữ trong bộ nhớ để mở lại bằng Ctrl+Shift+T, menu tab, Danh sách ảnh hoặc menu khay; quá giới hạn thì bỏ tab đóng lâu nhất, tắt app là mất. 0 tab = tắt. Ảnh lớn tốn nhiều RAM (ảnh 4K ≈ 33 MB). Mặc định {defaults.ClosedTabsMaxCount} tab / {defaults.ClosedTabsMaxMegabytes} MB, tối đa {AppSettings.ClosedTabsMaxCountRange.Max} tab / {AppSettings.ClosedTabsMaxMegabytesRange.Max} MB.";
+        ClosedTabsHint.Text = $"Tab vừa đóng (cả ảnh, hình vẽ, lịch sử Hoàn tác) được giữ trong bộ nhớ để mở lại bằng Ctrl+Shift+T, menu tab, Danh sách ảnh hoặc menu khay; quá giới hạn thì bỏ tab đóng lâu nhất, tắt app là mất. 0 tab = tắt. Ảnh lớn tốn nhiều RAM (ảnh 4K ≈ 33 MB). Mặc định {defaults.ClosedTabsMaxCount} tab / {defaults.ClosedTabsMaxMegabytes} MB, tối đa {AppSettings.ClosedTabsMaxCountRange.Max} tab / {AppSettings.ClosedTabsMaxMegabytesRange.Max} MB.";
         ScrollMaxStepsHint.Text = $"Mỗi lần lăn khoảng 1/3 vùng chọn. Vùng chọn thấp/hẹp mà trang rất dài thì cần nhiều lần hơn. Mặc định {defaults.ScrollMaxSteps}, từ {AppSettings.ScrollMaxStepsRange.Min} tới {AppSettings.ScrollMaxStepsRange.Max}.";
         ScrollMaxLengthHint.Text = string.Create(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), $"Chiều cao ảnh ghép khi cuộn dọc, chiều rộng khi cuộn ngang. Ảnh càng dài càng tốn RAM (rộng 2000px × dài 60.000px ≈ 480 MB). Mặc định {defaults.ScrollMaxLength:N0}, từ {AppSettings.ScrollMaxLengthRange.Min:N0} tới {AppSettings.ScrollMaxLengthRange.Max:N0}.");
         ScrollSettleHint.Text = $"Thời gian chờ trang cuộn xong và vẽ lại trước khi chụp khung tiếp. Tăng lên nếu trang tải chậm, cuộn mượt lâu, ảnh bị thiếu hoặc lặp/lệch; dưới 300 ms chỉ nên dùng cho app không cuộn mượt. Mặc định {defaults.ScrollSettleMs}, từ {AppSettings.ScrollSettleMsRange.Min} tới {AppSettings.ScrollSettleMsRange.Max}.";
@@ -58,6 +58,10 @@ public sealed partial class SettingsWindow : Window
         SessionFolderText.Text = $"{SessionService.Folder}  (đang dùng {SessionService.CurrentSizeBytes() / 1024.0 / 1024.0:0.#} MB)";
         CategoryList.SelectedIndex = 0;
     }
+
+    private const string NoKeyLabel = "Không dùng";
+
+    private static string KeyLabel(string key) => key == HotkeyBinding.NoKey ? NoKeyLabel : key;
 
     private void BuildHotkeyGrid()
     {
@@ -78,7 +82,7 @@ public sealed partial class SettingsWindow : Window
             var shift = new CheckBox { Content = "Shift", MinWidth = 0 };
             var ctrl = new CheckBox { Content = "Ctrl", MinWidth = 0 };
             var alt = new CheckBox { Content = "Alt", MinWidth = 0 };
-            var key = new ComboBox { ItemsSource = HotkeyBinding.AvailableKeys, HorizontalAlignment = HorizontalAlignment.Stretch };
+            var key = new ComboBox { ItemsSource = HotkeyBinding.AvailableKeys.Select(KeyLabel).ToList(), HorizontalAlignment = HorizontalAlignment.Stretch };
             var status = new TextBlock { VerticalAlignment = VerticalAlignment.Center, Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SystemFillColorCautionBrush"] };
 
             UIElement[] cells = [text, shift, ctrl, alt, key, status];
@@ -121,7 +125,7 @@ public sealed partial class SettingsWindow : Window
             row.Shift.IsChecked = binding.Shift;
             row.Ctrl.IsChecked = binding.Ctrl;
             row.Alt.IsChecked = binding.Alt;
-            row.Key.SelectedItem = HotkeyBinding.AvailableKeys.Contains(binding.Key) ? binding.Key : HotkeyBinding.NoKey;
+            row.Key.SelectedItem = KeyLabel(HotkeyBinding.AvailableKeys.Contains(binding.Key) ? binding.Key : HotkeyBinding.NoKey);
         }
     }
 
@@ -162,7 +166,7 @@ public sealed partial class SettingsWindow : Window
                 Shift = row.Shift.IsChecked == true,
                 Ctrl = row.Ctrl.IsChecked == true,
                 Alt = row.Alt.IsChecked == true,
-                Key = row.Key.SelectedItem as string ?? HotkeyBinding.NoKey,
+                Key = row.Key.SelectedItem is string key && key != NoKeyLabel ? key : HotkeyBinding.NoKey,
             });
         }
         return s;
