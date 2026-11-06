@@ -332,4 +332,117 @@ public class BatchOrderTests
         var otherPrice = Reconcile("706 | 1 phần cá 45k", DbOrder(1, 1, OrderStatus.Shipping, (null, "1 phần cá", 50000, 1)));
         Assert.Equal(ReconcileKind.Different, otherPrice.Single().Kind);
     }
+
+    /// <summary>Đọc lại dòng popup Sửa đơn viết ra, với bộ món riêng.</summary>
+    private static BatchLineMatch Reread(string line, params Product[] products)
+    {
+        var parsed = BatchOrderParser.Parse(line, Today).Lines.Single();
+        return BatchOrderMatcher.Match(parsed, Customers, products, new Abbreviations(Abbreviations.DefaultText));
+    }
+
+    [Fact]
+    public void Compose_writes_customer_items_and_paid_then_reads_back_the_same_order()
+    {
+        var map = Products.ToDictionary(p => p.Id);
+        var line = BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(10, 3), new OrderLineDraft(15, 1)], map, paid: true);
+
+        Assert.Equal("Mỹ Ly | 3 Sữa chua uống; 1 Giò |  | CK", line);
+        var match = Reread(line, Products);
+        Assert.True(match.CanSave);
+        Assert.Empty(match.Warnings);
+        Assert.Equal(1, match.Customer!.Id);
+        Assert.True(match.Line.Paid);
+        Assert.Equal(75000, match.Total);
+    }
+
+    [Fact]
+    public void Compose_without_paid_leaves_no_trailing_separators()
+    {
+        var line = BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(10, 3)], Products.ToDictionary(p => p.Id), paid: false);
+
+        Assert.Equal("Mỹ Ly | 3 Sữa chua uống", line);
+    }
+
+    [Theory]
+    [InlineData(1, 45000, "phần cá 45k", "phần cá", 45000)]
+    [InlineData(2, 45000, "2 phần cá 90k", "2 phần cá", 90000)]
+    [InlineData(1, 12500, "phần cá 12500", "phần cá", 12500)]
+    [InlineData(1, 500, "phần cá 0.5k", "phần cá", 500)]
+    public void Compose_free_item_keeps_the_line_total_shown_on_the_popup(long quantity, long unitPrice, string written, string name, long total)
+    {
+        var line = BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(null, quantity, true, "phần cá", unitPrice)], new Dictionary<long, Product>(), paid: false);
+
+        Assert.Equal($"Mỹ Ly | {written}", line);
+        var match = Reread(line, Products);
+        var item = Assert.Single(match.Items);
+        Assert.True(item.IsFree);
+        Assert.Equal(name, item.FreeName);
+        Assert.Equal(1, item.Quantity);
+        Assert.Equal(total, match.Total);
+    }
+
+    [Fact]
+    public void Compose_removes_separators_from_names()
+    {
+        var line = BatchOrderParser.Compose("Mỹ Ly?", [new OrderLineDraft(null, 1, true, "tôm, cá + mực | to?", 100000)], new Dictionary<long, Product>(), paid: false);
+
+        Assert.Equal("Mỹ Ly | tôm cá mực to 100k", line);
+        var match = Reread(line, Products);
+        Assert.Empty(match.Warnings);
+        Assert.Equal(100000, Assert.Single(match.Items).UnitPrice);
+    }
+
+    [Fact]
+    public void Compose_product_name_that_ends_with_a_price_reads_back_as_that_product()
+    {
+        Product[] products = [new(20, 1, "Yến chưng 40k", null, 45000, null), new(21, 1, "Yến chưng 50k", null, 50000, null)];
+
+        var line = BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(20, 2)], products.ToDictionary(p => p.Id), paid: false);
+
+        Assert.Equal("Mỹ Ly | 2 Yến chưng 40k", line);
+        var match = Reread(line, products);
+        Assert.True(match.CanSave);
+        Assert.Empty(match.Warnings);
+        var item = Assert.Single(match.Items);
+        Assert.Equal(20, item.Product!.Id);
+        Assert.Equal(2, item.Quantity);
+        Assert.Equal(90000, match.Total);
+    }
+
+    [Theory]
+    [InlineData("3 xôi gấc", 3, "xôi gấc")]
+    [InlineData("3 x sc", 3, "sc")]
+    [InlineData("3x sc", 3, "sc")]
+    [InlineData("3 × sc", 3, "sc")]
+    [InlineData("3*sc", 3, "sc")]
+    [InlineData("3sc", 3, "sc")]
+    public void Name_starting_with_x_is_not_a_multiply_sign(string item, long quantity, string name)
+    {
+        var parsed = Assert.Single(BatchOrderParser.Parse($"706 | {item}", Today).Lines.Single().Items);
+
+        Assert.Equal(quantity, parsed.Quantity);
+        Assert.Equal(name, parsed.Name);
+    }
+
+    [Fact]
+    public void Compose_product_name_starting_with_x_reads_back()
+    {
+        Product[] products = [new(30, 1, "Xôi gấc", null, 20000, null)];
+
+        var line = BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(30, 3)], products.ToDictionary(p => p.Id), paid: false);
+
+        var item = Assert.Single(Reread(line, products).Items);
+        Assert.Equal(30, item.Product!.Id);
+        Assert.Equal(3, item.Quantity);
+    }
+
+    [Fact]
+    public void Compose_large_quantity_reads_back()
+    {
+        var line = BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(16, 1000)], Products.ToDictionary(p => p.Id), paid: false);
+
+        var item = Assert.Single(Reread(line, Products).Items);
+        Assert.Equal(16, item.Product!.Id);
+        Assert.Equal(1000, item.Quantity);
+    }
 }

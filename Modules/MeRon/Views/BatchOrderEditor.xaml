@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl
+    x:Class="MeRon.Views.BatchOrderEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MeRon.ViewModels"
+    xmlns:local="using:MeRon.Views">
+
+    <StackPanel Spacing="10">
+        <TextBlock Text="Chỉ sửa dòng này trên bảng nháp, chưa lưu đơn." Opacity="0.75" />
+        <AutoSuggestBox x:Name="CustomerBox" Header="Khách hàng" QueryIcon="Find" AutomationProperties.Name="Khách hàng"
+                        AutomationProperties.AutomationId="BatchEditCustomer" />
+
+        <StackPanel Spacing="4">
+            <Grid ColumnSpacing="8" Opacity="0.75">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="140" />
+                    <ColumnDefinition Width="120" />
+                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="40" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Món" FontWeight="SemiBold" />
+                <TextBlock Grid.Column="1" Text="Đơn giá" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                <TextBlock Grid.Column="2" Text="Số lượng" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                <TextBlock Grid.Column="3" Text="Thành tiền" FontWeight="SemiBold" HorizontalAlignment="Right" />
+            </Grid>
+            <ItemsControl x:Name="LinesList" ItemsSource="{x:Bind ViewModel.Lines}" IsTabStop="False">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:OrderLineViewModel">
+                        <Grid ColumnSpacing="8" Margin="0,0,0,6">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" MinWidth="140" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="40" />
+                            </Grid.ColumnDefinitions>
+                            <AutoSuggestBox x:Name="ProductBox" PlaceholderText="Gõ tên món rồi chọn" QueryIcon="Find"
+                                            Visibility="{x:Bind local:Ui.VisibleIf(IsProduct)}" Loaded="ProductBox_Loaded" AutomationProperties.Name="Món ăn" />
+                            <TextBox x:Name="FreeNameBox" Style="{StaticResource DefaultTextBoxStyle}" Text="{x:Bind FreeName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     PlaceholderText="Tên món tự do" Visibility="{x:Bind local:Ui.VisibleIf(IsFree)}" AutomationProperties.Name="Tên món tự do" />
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="4" Text="{x:Bind ProductError, Mode=OneWay}" TextWrapping="Wrap" FontSize="{StaticResource FontSizeCaption}"
+                                       Margin="0,2,0,0" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                       Visibility="{x:Bind local:Ui.VisibleIf(HasProductError), Mode=OneWay}"
+                                       AutomationProperties.AutomationId="ProductError" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind UnitPriceText, Mode=OneWay}" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                       Visibility="{x:Bind local:Ui.VisibleIf(IsProduct)}" />
+                            <NumberBox x:Name="FreePriceBox" Grid.Column="1" Value="{x:Bind FreePrice, Mode=TwoWay}" Minimum="0" PlaceholderText="Đơn giá"
+                                       Visibility="{x:Bind local:Ui.VisibleIf(IsFree)}" Loaded="FreePriceBox_Loaded" AutomationProperties.Name="Đơn giá món tự do" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" HorizontalAlignment="Center">
+                                <Button Command="{x:Bind DecreaseCommand}" Padding="8,4" AutomationProperties.Name="Bớt 1">
+                                    <FontIcon Glyph="&#xE738;" FontSize="{StaticResource FontSizeCaption}" />
+                                </Button>
+                                <NumberBox x:Name="QuantityBox" Value="{x:Bind Quantity, Mode=TwoWay}" Minimum="1" Width="64" Loaded="QuantityBox_Loaded"
+                                           AutomationProperties.Name="Số lượng" />
+                                <Button Command="{x:Bind IncreaseCommand}" Padding="8,4" AutomationProperties.Name="Thêm 1">
+                                    <FontIcon Glyph="&#xE710;" FontSize="{StaticResource FontSizeCaption}" />
+                                </Button>
+                            </StackPanel>
+                            <TextBlock Grid.Column="3" Text="{x:Bind LineTotalText, Mode=OneWay}" HorizontalAlignment="Right" VerticalAlignment="Center" FontWeight="SemiBold" />
+                            <Button Grid.Column="4" Command="{x:Bind RemoveCommand}" Padding="6" Background="Transparent" BorderThickness="0"
+                                    AutomationProperties.Name="Xoá dòng" ToolTipService.ToolTip="Xoá dòng">
+                                <SymbolIcon Symbol="Cancel" />
+                            </Button>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="AddLineButton" Command="{x:Bind ViewModel.AddLineCommand}" Click="AddLine_Click" AutomationProperties.Name="Thêm món">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <SymbolIcon Symbol="Add" />
+                        <TextBlock Text="Thêm món" />
+                    </StackPanel>
+                </Button>
+                <Button Command="{x:Bind ViewModel.AddFreeLineCommand}" Click="AddFreeLine_Click" AutomationProperties.Name="Thêm món tự do"
+                        ToolTipService.ToolTip="Món không có trong danh sách Món ăn: tự nhập tên + đơn giá">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE710;" FontSize="{StaticResource FontSizeBody}" />
+                        <TextBlock Text="Thêm món tự do" />
+                    </StackPanel>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+
+        <Grid ColumnSpacing="16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ToggleSwitch Header="Đã thanh toán (CK)" IsOn="{x:Bind ViewModel.IsPrepaid, Mode=TwoWay}" OnContent="Có" OffContent="Không"
+                          AutomationProperties.Name="Đã thanh toán" />
+            <Border Grid.Column="1" Padding="12,6" CornerRadius="8" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                    Background="{ThemeResource AccentFillColorDefaultBrush}">
+                <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeEmphasis}"
+                           Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" AutomationProperties.AutomationId="BatchEditTotal" />
+            </Border>
+        </Grid>
+
+        <InfoBar Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
+                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" AutomationProperties.AutomationId="BatchEditError" />
+    </StackPanel>
+</UserControl>

@@ -476,6 +476,8 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [x] Nhập đơn hàng loạt: nút Sửa dòng trên dòng đã sẵn sàng, hiện khi rê chuột hoặc Tab tới, thẻ không đổi cao (trước đây chỉ dòng cần xem mới có). Cập nhật F1, README. Unit test 194/194; GUI Sandbox 8/8 (2026-11-05)
 - [x] Nhập đơn hàng loạt: bảng nháp tự cập nhật, hết phải bấm F5 sau khi sửa ô chữ / chữ viết tắt: dán (Ctrl+V) thì đọc ngay, gõ thì đọc sau khi ngừng gõ 0,6 giây, gõ rồi xoá về như cũ thì không đọc lại; nút Làm mới (F5) giữ nguyên. 100 dòng đọc + vẽ khoảng 25-75 ms, giữ vị trí cuộn. Ctrl+S ngay sau khi gõ thì đọc chữ mới nhất trước khi hỏi. Sửa kèm: dòng đã tự bỏ tick sửa chữ không tự tick lại; ô chữ vừa đổi mà chọn khách / món trên dòng cũ thì không ghi nhầm dòng, báo chọn lại. Cập nhật F1, README. Unit test 200/200; GUI Sandbox 15/15 (2026-11-05)
 - [x] Nhập đơn hàng loạt: nút **Chọn khách** trên dòng đã khớp 1 khách, để đổi khách khi app ghép nhầm: dòng ổn hiện cùng Sửa dòng khi rê chuột hoặc Tab tới (nền đặc, ở cửa sổ hẹp nút đè lên chữ không bị lộ chữ), dòng viền cam nằm sẵn trên thẻ; giữ món, giá, CK và dòng đã bỏ tick vẫn bỏ tick. Sửa kèm: Esc đóng được khung tìm khách (trước đây khung không đóng vì ô tìm tự mở lại danh sách gợi ý). Cập nhật F1, README. Unit test 201/201; GUI Sandbox 18/18 (2026-11-05)
+- [x] Nhập đơn hàng loạt: nút **Sửa đơn** trên mỗi dòng (dòng ổn hiện khi rê chuột, dòng cần sửa nằm sẵn trên thẻ): popup giống form đơn (khách, món, món tự do, số lượng, đã thanh toán, tổng tiền), Áp dụng chỉ viết lại dòng chữ, không ghi database. Sửa kèm khi đọc dòng: tên món bắt đầu bằng x (xôi, xoài) không còn bị mất chữ x, tên món có giá ở cuối ("Yến chưng 40k") không bị hiểu nhầm là giá, số lượng 4 chữ số. Cập nhật F1, README. Unit test 217/217; GUI Sandbox 48/48 (2026-11-06)
+- [ ] Người dùng thử tay popup Sửa đơn với dữ liệu thật
 - [ ] Người dùng xác nhận: "lá" là món gì (chữ viết tắt)
 - [ ] Nhập đơn hàng loạt từ Excel / CSV (đề xuất cũ 2026-11-02) - làm khi có file mẫu
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị
@@ -1096,7 +1098,8 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 ## CsvEditor (ModuleF — `Note/ModuleF.txt`)
 
 - [x] Chọn vùng ô (kéo chuột, Shift+bấm, Shift+mũi tên, Ctrl+Shift+mũi tên), Ctrl+C / Ctrl+V theo vùng dạng Tab (dán qua lại Excel, bỏ cột ẩn và dòng bị lọc, 1 bước Hoàn tác, chép 1 ô dán lên vùng thì điền cả vùng), Đếm / Tổng / TB ở thanh trạng thái, chuột phải thêm Sao chép cả dòng. Cập nhật F1, README. Unit test 180/180; GUI Sandbox 22/22, lặp Shift+mũi tên 20/20, toàn bộ 46/47 (bấm đúp giả lập) (2026-11-04)
-- [ ] Thử tay: kéo chọn vùng bằng chuột thật, dán qua lại với Excel thật, bấm đúp sửa ô sau khi có chọn vùng
+- [x] Thử tay: dán qua lại với Excel thật - người dùng báo OK (2026-11-06)
+- [ ] Thử tay: kéo chọn vùng bằng chuột thật, bấm đúp sửa ô sau khi có chọn vùng
 - [x] Sửa lỗi: kéo chọn vùng khi đang sửa ô làm con trỏ nhảy lên ô Lọc đầu tiên (`Grid.Focus` chạy cả sau cú bấm thường, lúc đang sửa DataGrid chuyển tiêu điểm cho ô con). Nay chỉ gọi sau khi thật sự kéo, ghi ô đang sửa trước. Unit test 180/180; GUI Sandbox chọn vùng 22/22, kịch bản sửa + kéo 4/4 (2026-11-05)
 - [ ] Người dùng báo (bản Release 2026-11-05, file 123 cột, sau khi dán): dòng tô xanh đứng yên, bấm dòng khác không đổi. Chưa tái hiện: thử ngẫu nhiên 110 thao tác (bấm, bấm đúp, kéo chọn, kéo điền, chép, dán, hoàn tác, F2, Tab, Esc) trên đúng bản đó không kẹt lần nào. Chưa biết có liên quan tới lỗi con trỏ nhảy ở trên không. Gặp lại thì ghi: thao tác ngay trước đó, Esc có hết không, phím mũi tên có đổi dòng không
 - [ ] Kéo chuột chọn vùng chưa tự cuộn bảng khi ra mép (hiện dùng Shift+bấm cho vùng dài)

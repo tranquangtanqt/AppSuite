@@ -23,7 +23,7 @@ public sealed record BatchText(DateOnly? Day, IReadOnlyList<BatchLine> Lines);
 /// </summary>
 public static partial class BatchOrderParser
 {
-    [GeneratedRegex(@"^\s*(\d{1,3})\s*[x×*]?\s*(\D.*)$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^\s*(\d{1,4})\s*(?:x\s+|[×*]\s*)?(\D.*)$", RegexOptions.IgnoreCase)]
     private static partial Regex GluedQuantity();
 
     [GeneratedRegex(@"^(.*?)\s+(\d+(?:[.,]\d+)?k|\d{1,3}(?:[.,]\d{3})+|\d{4,})\s*$", RegexOptions.IgnoreCase)]
@@ -162,7 +162,25 @@ public static partial class BatchOrderParser
             .TrimEnd(' ', '|');
     }
 
-    private static string PriceText(long price) => price % 1000 == 0 ? $"{price / 1000}k" : price.ToString(CultureInfo.InvariantCulture);
+    /// <summary>Viết lại cả dòng từ popup Sửa đơn: mọi món đã chọn xong nên không còn dấu ? và giá ở cột riêng. Món tự do ghi giá
+    /// cả dòng, tên kèm số lượng ("2 phần cá 90k"): đọc lại sẽ là 1 × 90.000, đúng thành tiền đã thấy trên popup.</summary>
+    public static string Compose(string customer, IEnumerable<OrderLineDraft> lines, IReadOnlyDictionary<long, Product> products, bool paid)
+    {
+        var items = lines.Select(line => line.IsFree
+            ? $"{(line.Quantity > 1 ? $"{line.Quantity} " : string.Empty)}{Clean(line.FreeName)} {PriceText((line.FreePrice ?? 0) * line.Quantity)}"
+            : $"{line.Quantity} {Clean(products[line.ProductId!.Value].Name)}");
+        return $"{Clean(customer)} | {string.Join("; ", items)} |  | {(paid ? "CK" : string.Empty)}".TrimEnd(' ', '|');
+    }
+
+    /// <summary>Bỏ các dấu có nghĩa riêng trong dòng chữ, để tên có dấu phẩy không bị tách thành 2 món.</summary>
+    private static string Clean(string? text) =>
+        string.Join(" ", (text ?? string.Empty).Split(['|', ';', '+', ',', '?', ' '], StringSplitOptions.RemoveEmptyEntries));
+
+    /// <summary>Dưới 1.000 phải có "k": số 3 chữ số đứng cuối món không được đọc là giá.</summary>
+    internal static string PriceText(long price) =>
+        price % 1000 == 0 ? $"{price / 1000}k"
+        : price < 1000 ? (price / 1000m).ToString(CultureInfo.InvariantCulture) + "k"
+        : price.ToString(CultureInfo.InvariantCulture);
 
     /// <summary>Thay dòng số <paramref name="number"/> (từ 1) trong ô chữ.</summary>
     public static string ReplaceLine(string text, int number, string newLine)
@@ -304,6 +322,11 @@ public static class BatchOrderMatcher
         var items = line.Items.Select(item =>
         {
             var name = abbreviations.Expand(item.Name);
+            // Tên món có giá ở cuối ("Yến chưng 40k"): số đó là tên, không phải giá ghi kèm.
+            if (item.Price is { } written && products.FirstOrDefault(p => Key(p.Name) == Key($"{name} {BatchOrderParser.PriceText(written)}")) is { } priced)
+            {
+                return new BatchItemMatch(item with { Price = null }, name, priced, [priced], null);
+            }
             var (product, productCandidates) = MatchProduct(name, products);
             return new BatchItemMatch(item, name, product, productCandidates, product is null ? item.Price : null);
         }).ToList();

@@ -30,7 +30,7 @@ internal static class ProductSuggest
         box.Tag = "attached";
         box.DisplayMemberPath = nameof(ProductOption.Display);
         box.TextMemberPath = nameof(ProductOption.Name);
-        box.Text = line.SelectedProduct?.Name ?? string.Empty;
+        box.Text = line.SelectedProduct?.Name ?? line.UnmatchedText ?? string.Empty;
 
         List<ProductOption> Matches(string text) => TextSearch.Filter(line.Products, p => p.Name, text, MaxSuggestions);
 

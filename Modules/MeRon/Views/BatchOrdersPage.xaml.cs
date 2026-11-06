@@ -250,6 +250,15 @@ public sealed partial class BatchOrdersPage : Page
         }
     }
 
+    /// <summary>Sửa cả dòng bằng popup giống form đơn. Áp dụng chỉ viết lại dòng chữ, đơn chỉ vào dữ liệu khi bấm Lưu.</summary>
+    private async void EditOrder_Click(object sender, RoutedEventArgs e)
+    {
+        if (RowOf(sender) is { } row && await BatchOrderEditor.ShowAsync(XamlRoot, row.Match) is { } line)
+        {
+            ViewModel.RewriteLine(row, line);
+        }
+    }
+
     /// <summary>Bảng tổng hợp so khớp (đọc lại trước để theo đúng ô chữ + dữ liệu mới nhất): các nhóm khác / chỉ có trong sổ /
     /// chỉ có trong MeRon / chưa so được / khớp; nút Chép kết quả.</summary>
     private async void Reconcile_Click(object sender, RoutedEventArgs e)

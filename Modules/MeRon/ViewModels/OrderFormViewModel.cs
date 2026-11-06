@@ -78,6 +78,9 @@ public sealed partial class OrderLineViewModel : ObservableObject
 
     public bool HasProductError => ProductError.Length > 0;
 
+    /// <summary>Chữ chưa ghép được món khi mở dòng từ Nhập đơn hàng loạt: hiện sẵn trong ô món để biết đang chọn cho chữ nào.</summary>
+    public string? UnmatchedText { get; init; }
+
     /// <summary>Chọn 1 món trong danh sách (hoặc bỏ chọn khi ô trống) - xoá lỗi chữ gõ sai.</summary>
     public void ChooseProduct(ProductOption? product)
     {
@@ -453,6 +456,30 @@ public sealed partial class OrderFormViewModel : ObservableObject
         }
     }
 
+    /// <summary>Nạp 1 dòng của Nhập đơn hàng loạt vào popup Sửa đơn. Món chưa ghép được thành dòng thường chưa chọn món, báo đỏ để chọn.</summary>
+    public void LoadBatchLine(BatchLineMatch match)
+    {
+        Load(new OrderFormArgs(null, InitialUserId: match.Customer?.Id));
+        IsPrepaid = match.Line.Paid;
+        foreach (var item in match.Items)
+        {
+            Lines.Add(item.Product is { } product ? new OrderLineViewModel(this, new OrderLineDraft(product.Id, item.Quantity))
+                : item.IsFree ? new OrderLineViewModel(this, new OrderLineDraft(null, 1, true, item.FreeName, item.FreePrice))
+                : new OrderLineViewModel(this, new OrderLineDraft(null, item.Quantity))
+                {
+                    UnmatchedText = item.Name,
+                    ProductError = item.Candidates.Count > 1
+                        ? $"\"{item.Name}\" khớp {item.Candidates.Count} món - chọn 1 món trong danh sách."
+                        : $"Không có món \"{item.Name}\" trong danh sách - chọn 1 món, hoặc xoá dòng này rồi thêm món tự do.",
+                });
+        }
+        Recalculate();
+    }
+
+    /// <summary>Dòng chữ thay cho dòng đang sửa. Chưa chọn khách thì giữ chữ khách cũ (khách mới thêm bằng nút trên thẻ).</summary>
+    public string BatchLineText(string writtenCustomer) =>
+        BatchOrderParser.Compose(Customer?.Name ?? writtenCustomer, Lines.Select(l => l.ToDraft()), ProductMap, IsPrepaid);
+
     /// <summary>Thêm món: dòng trống, View đưa con trỏ vào ô món để gõ lọc (điện thoại mặc định món đầu tiên - với ô
     /// autocomplete thì chọn sẵn 1 món dễ lưu nhầm).</summary>
     [RelayCommand]
@@ -504,7 +531,8 @@ public sealed partial class OrderFormViewModel : ObservableObject
     }
 
     /// <summary>Kiểm tra form; trả về lỗi (kèm dòng / ô cần đưa con trỏ tới) hoặc null.</summary>
-    public OrderValidationException? Validate()
+    /// <param name="customerRequired">false = popup Sửa đơn của Nhập đơn hàng loạt: chữ khách trên dòng được giữ nguyên nếu không chọn.</param>
+    public OrderValidationException? Validate(bool customerRequired = true)
     {
         try
         {
@@ -516,7 +544,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
                     throw new OrderValidationException(Lines[i].ProductError, i, OrderLineField.Product);
                 }
             }
-            OrderCalculator.Validate(BuildDraft());
+            OrderCalculator.Validate(customerRequired ? BuildDraft() : BuildDraft() with { UserId = 0 });
             Error = string.Empty;
             return null;
         }

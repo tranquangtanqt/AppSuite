@@ -158,6 +158,7 @@
                                            Visibility="{x:Bind local:Ui.VisibleIfText(WarningText)}" />
                                 <!-- Cách sửa ngay trên dòng; sửa chữ thì bấm Sửa dòng (nhảy tới dòng trong ô chữ), ngừng gõ là tự đọc lại -->
                                 <StackPanel Orientation="Horizontal" Spacing="6" Visibility="{x:Bind NeedsReview}">
+                                    <Button Content="Sửa đơn" Click="EditOrder_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Sửa khách, món, số lượng, thanh toán trong popup giống form đơn. Chỉ sửa dòng này, chưa lưu đơn" />
                                     <Button Content="＋ Thêm khách" Click="AddCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind NeedsNewCustomer}" />
                                     <Button Content="Chọn khách" Click="ChooseCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind CanChooseCustomer}"
                                             ToolTipService.ToolTip="Thay chữ trên dòng bằng 1 khách đã có trong danh sách" />
@@ -187,6 +188,7 @@
                                         Background="{ThemeResource SolidBackgroundFillColorTertiaryBrush}" CornerRadius="4"
                                         HorizontalAlignment="Right" VerticalAlignment="Center"
                                         GotFocus="HoverActions_GotFocus" LostFocus="HoverActions_LostFocus">
+                                <Button Content="Sửa đơn" Click="EditOrder_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Sửa khách, món, số lượng, thanh toán trong popup giống form đơn. Chỉ sửa dòng này, chưa lưu đơn" />
                                 <Button Content="Chọn khách" Click="ChooseCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind CanChooseCustomer}"
                                         ToolTipService.ToolTip="Đổi khách của dòng này bằng 1 khách đã có trong danh sách, giữ món, giá, CK" />
                                 <Button Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}"
