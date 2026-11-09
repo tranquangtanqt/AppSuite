@@ -129,6 +129,7 @@ public sealed partial class EditorWindow
         CornerRadiusRow.Visibility = VisibleIf(target is RectangleAnnotation or CalloutAnnotation);
         DashBox.Visibility = VisibleIf(target is not TextAnnotation);
         ArrowHeadGroup.Visibility = VisibleIf(target is LineArrowAnnotation);
+        UpdateColorSizeColumns();
 
         _syncingFormat = true;
         try
@@ -182,6 +183,16 @@ public sealed partial class EditorWindow
     }
 
     private static Visibility VisibleIf(bool visible) => visible ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>Ở tab Định dạng, ẩn mục không có tác dụng với hình đang sửa: Màu nền với đường / mũi tên / bút, Cỡ nét với chữ
+    /// (viền chữ theo cỡ chữ). Tab Trang chủ luôn hiện đủ (dùng cho mọi công cụ).</summary>
+    private void UpdateColorSizeColumns()
+    {
+        bool inFormat = ReferenceEquals(ColorSizeGroup.Parent, FormatRibbonPanel);
+        var target = inFormat ? FormatTarget : null;
+        Color2Column.Visibility = VisibleIf(target is not (LineArrowAnnotation or FreehandAnnotation));
+        SizeColumn.Visibility = VisibleIf(target is not TextAnnotation);
+    }
 
     /// <summary>Áp 1 thay đổi định dạng lên bộ định dạng của công cụ đang dùng (shape vẽ tiếp theo) và lên shape đang chọn
     /// (1 bước Undo). <paramref name="change"/> trả false nếu không áp được cho loại shape đó / giá trị không đổi.</summary>

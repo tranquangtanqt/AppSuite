@@ -563,8 +563,19 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 
 ## ScreenCapture
 - [x] Editor: ribbon cửa sổ hẹp có nút Thêm, góc phải hàng tab luôn có Lưu, Copy, Hoàn tác, Làm lại, Hướng dẫn; ribbon cao cố định nên đổi tab không làm ảnh nhảy; nhóm Màu & Cỡ nét lên sau Vẽ hình; chữ giao diện sang tiếng Việt (Mosaic, Copy giữ nguyên); màu chủ đạo cam thay màu nhấn Windows. Cập nhật F1, README. Unit test 64/64; GUI Sandbox 24/24 (2026-11-06)
-- [ ] Review giao diện còn lại (2026-11-06): Tìm chữ mất danh sách kết quả khi cửa sổ thấp; Launcher vỡ khi thấp, Cài đặt không có cỡ tối thiểu; thanh tiêu đề sáng ở chế độ tối; chữ cỡ 10-11 (50 + 6 chỗ); `Hủy` / `Huỷ`, tên ảnh `09 15 22` / `09:15:22`; icon Con dấu, Lên trên / Xuống dưới, Elip; 8 công cụ thiếu tooltip; nền quanh ảnh chưa trung tính; ghi chú Cài đặt dài; tab Định dạng hiện mục không áp dụng
+- [x] Giao diện đợt 2 (review 2026-11-06): Tìm chữ ở cửa sổ thấp còn chỗ cho danh sách (trạng thái tối đa 2 dòng, 4 nút 1 hàng,
+  Phân biệt dấu / hoa thường thành nút Ấ / Aa cạnh ô tìm: 0 → 3 dòng ở cửa sổ ~600 px); cửa sổ chính lưới thẻ cuộn được + cỡ
+  tối thiểu; Cài đặt / Editor có cỡ tối thiểu, mở không cao quá màn hình; thanh tiêu đề tối theo Windows; chữ nhỏ nhất cỡ 12
+  (nút ribbon bớt lề để nhóm Màu & Cỡ nét vẫn trên ribbon ở 1010 px); `Huỷ`; tên ảnh `09:15:22` ở thanh tiêu đề / Danh sách ảnh /
+  hộp thoại; icon Con dấu (số 1), Lên trên / Xuống dưới (2 ô chồng), Elip rỗng; tooltip mọi công cụ; nền quanh ảnh xám trung
+  tính; ghi chú Cài đặt 1 dòng (chi tiết sang F1); tab Định dạng ẩn Màu nền với đường / mũi tên / bút, Cỡ nét với chữ. Unit test
+  68/68; GUI Sandbox 18/18 × sáng / tối (2026-11-09)
 - [ ] Người dùng thử tay ribbon mới trên màn hình thật
+- [ ] Đợt 3b / 3c (gợi ý 2026-11-09, so với PicPick): hút màu + bảng màu gần đây; in, lưu PDF; chọn vùng tự do (lasso);
+  chụp cửa sổ con (nút, khung nội dung); kính lúp + toạ độ / kích thước px khi kéo chọn vùng
+- [ ] Ý mới (gợi ý 2026-11-09): ghim ảnh nổi trên màn hình (luôn ở trên, kéo được, chỉnh độ mờ); tự che thông tin nhạy cảm
+  (OCR tìm email / số điện thoại / số tài khoản → đề xuất Mosaic, tick chọn); Copy ảnh dạng file (dán vào Explorer / Teams /
+  Outlook); thêm unit test (ghép ảnh cuộn, mẫu tên file, đọc / ghi phiên)
 
 - [x] Popup **Danh sách ảnh** khi nhiều ảnh bị đẩy lên trên (che nút / tab) hoặc bị cắt mất nút "Mở lại tab vừa đóng"; ít ảnh
   (lọc) thì đúng chỗ (người dùng báo 2026-10-22). Nguyên nhân: danh sách `MaxHeight="520"` cố định + ô lọc + nút ≈ 640 px,

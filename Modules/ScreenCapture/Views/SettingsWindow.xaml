@@ -58,30 +58,28 @@
                                 <NumberBox x:Name="DelayBox" Width="90" SpinButtonPlacementMode="Compact" />
                                 <TextBlock Text="giây" VerticalAlignment="Center" />
                             </StackPanel>
-                            <TextBlock Text="Chờ thêm vài giây trước khi chụp để kịp mở menu, rê chuột lên tooltip... (0 = chụp ngay)."
+                            <TextBlock Text="Để kịp mở menu / tooltip cần chụp (0 = chụp ngay)."
                                        Style="{StaticResource HintStyle}" />
                         </StackPanel>
                         <StackPanel Spacing="2">
                             <TextBlock Text="Sau khi chụp" FontWeight="SemiBold" />
                             <TextBlock Style="{StaticResource HintStyle}"
-                                       Text="Chọn những việc tự làm ngay khi chụp xong - chọn được nhiều việc cùng lúc." />
+                                       Text="Chọn được nhiều việc, ít nhất 1. Tắt Editor để chụp nhanh nhiều tấm liên tục." />
                             <CheckBox x:Name="OpenEditorAfterCaptureBox" Content="Mở trong Editor" Margin="0,4,0,0" />
                             <CheckBox x:Name="CopyAfterCaptureBox" Content="Copy vào clipboard" />
                             <CheckBox x:Name="AfterCaptureAutoSaveBox" Content="Tự lưu file (thư mục, mẫu tên: trang Lưu ảnh)"
                                       Checked="AfterCaptureAutoSaveBox_Changed" Unchecked="AfterCaptureAutoSaveBox_Changed" />
-                            <CheckBox x:Name="NotifyAfterCaptureBox" Content="Hiện thông báo nhỏ ở góc màn hình (ảnh thu nhỏ, nút Mở trong Editor / Mở thư mục)" />
-                            <TextBlock Style="{StaticResource HintStyle}"
-                                       Text="Tắt Editor để chụp nhanh nhiều tấm liên tục (vd Copy + Thông báo để dán ngay, hoặc Tự lưu + Thông báo để chụp hàng loạt). Phải chọn ít nhất 1 việc. Lưu / copy bị lỗi thì luôn hiện thông báo." />
+                            <CheckBox x:Name="NotifyAfterCaptureBox" Content="Hiện thông báo nhỏ ở góc màn hình" />
                         </StackPanel>
                         <StackPanel Spacing="4">
                             <CheckBox x:Name="IncludeCursorBox" Content="Chụp kèm con trỏ chuột" />
                             <TextBlock Style="{StaticResource HintStyle}"
-                                       Text="Vẽ con trỏ (đúng hình, đúng chỗ lúc chụp) vào ảnh khi chụp Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước - để chỉ cho người xem đang bấm vào đâu. Vùng chọn / chụp cuộn thì không." />
+                                       Text="Không áp cho vùng chọn, vùng cố định và chụp cuộn." />
                         </StackPanel>
                         <StackPanel Spacing="4">
                             <CheckBox x:Name="RunInTrayBox" Content="Chạy ngầm ở khay hệ thống" />
                             <TextBlock Style="{StaticResource HintStyle}"
-                                       Text="Hiện icon ở khay (góc phải thanh taskbar). Bấm X ở cửa sổ chính thì ẩn xuống khay thay vì thoát - phím tắt vẫn dùng được. Bấm icon để mở lại, chuột phải để chụp nhanh hoặc Thoát." />
+                                       Text="Bấm X ở cửa sổ chính thì ẩn xuống khay, phím tắt vẫn dùng được." />
                         </StackPanel>
                         <CheckBox x:Name="StartWithWindowsBox" Content="Khởi động cùng Windows (chạy ngầm ở khay)" />
                     </StackPanel>
@@ -106,8 +104,6 @@
                                       ToolTipService.ToolTip="Chọn mẫu có sẵn hoặc gõ mẫu tuỳ ý" />
                             <TextBlock x:Name="FileNameTemplatePreview" Style="{StaticResource HintStyle}" />
                             <TextBlock x:Name="FileNameTemplateHelp" Style="{StaticResource HintStyle}" />
-                            <TextBlock Style="{StaticResource HintStyle}"
-                                       Text="Trùng tên thì thêm (2). Ảnh đã tự lưu được coi là đã lưu nên đóng tab không hỏi lưu (trừ khi sửa thêm)." />
                             <TextBlock Text="Khi đóng ảnh đã tự lưu" Margin="0,6,0,0" />
                             <ComboBox x:Name="AutoSavedCloseBox" MinWidth="260" AutomationProperties.Name="Khi đóng ảnh đã tự lưu">
                                 <ComboBoxItem Content="Giữ file (như cũ)" />
@@ -115,7 +111,7 @@
                                 <ComboBoxItem Content="Luôn xoá file" />
                             </ComboBox>
                             <TextBlock Style="{StaticResource HintStyle}"
-                                       Text="Cho ảnh chụp chỉ dùng 1 lần. Xoá = chuyển vào Thùng rác (lấy lại được). Chỉ xoá file do tự lưu tạo ra - ảnh mở từ file có sẵn, file tự Lưu thành không bao giờ bị xoá; bấm Lưu khi đóng (ảnh đã sửa) thì giữ file. Tắt Editor bằng nút X (nhớ tab cho lần sau) không xoá gì. Menu chuột phải của tab có thêm Đóng và xoá file." />
+                                       Text="Xoá = chuyển vào Thùng rác. Chỉ xoá file do tự lưu tạo ra." />
                         </StackPanel>
                         <StackPanel Spacing="6" Margin="0,12,0,0">
                             <TextBlock Text="Chất lượng JPG" />
@@ -136,7 +132,7 @@
                             <TextBlock Text="MB" VerticalAlignment="Center" />
                         </StackPanel>
                         <TextBlock Style="{StaticResource HintStyle}"
-                                   Text="Ảnh lưu tạm chỉ gồm các tab đang mở; đóng tab là xoá file tạm của tab đó, không tích luỹ qua các lần chạy. Vượt giới hạn thì bỏ các tab cũ nhất khỏi bản lưu tạm. Tắt tuỳ chọn này thì thư mục tạm được dọn sạch và đóng Editor sẽ hỏi lưu như trước." />
+                                   Text="Chỉ lưu tạm các tab đang mở; vượt giới hạn thì bỏ tab cũ nhất." />
                         <!-- Mở lại tab vừa đóng (Ctrl+Shift+T): giữ trong bộ nhớ, tắt app là mất. -->
                         <StackPanel Spacing="6" Margin="0,8,0,4">
                             <TextBlock Text="Mở lại tab vừa đóng (Ctrl+Shift+T)" />
@@ -186,7 +182,7 @@
                             <TextBlock x:Name="ScrollSettleHint" Style="{StaticResource HintStyle}" />
                         </StackPanel>
                         <TextBlock Style="{StaticResource HintStyle}"
-                                   Text="Chụp cuộn dừng ở giới hạn nào tới trước (hoặc khi tới cuối trang / bấm Esc). Áp dụng cho cả cuộn dọc và cuộn ngang, từ lần chụp tiếp theo." />
+                                   Text="Dừng ở giới hạn nào tới trước, khi tới cuối trang hoặc bấm Esc. Áp cho cả cuộn dọc và ngang." />
                     </StackPanel>
 
                     <!-- Phím tắt -->
@@ -194,7 +190,7 @@
                         <TextBlock Text="Phím tắt" Style="{StaticResource PageHeaderStyle}" />
                         <Grid x:Name="HotkeyGrid" ColumnSpacing="10" RowSpacing="8" />
                         <TextBlock Style="{StaticResource HintStyle}" Margin="0,8,0,0"
-                                   Text="Phím tắt dùng được cả khi app đang thu nhỏ, ẩn ở khay hệ thống hoặc đang dùng app khác. ⚠ = phím đang bị app khác giữ (vd PicPick đang chạy). Riêng phím PrintScreen đơn lẻ: nếu Windows 11 bật &quot;Use the Print screen key to open screen capture&quot; (Settings > Accessibility > Keyboard) thì Snipping Tool bắt phím trước và app không phát hiện được - tắt tuỳ chọn đó hoặc dùng tổ hợp có Shift/Ctrl/Alt." />
+                                   Text="⚠ = phím đang bị app khác giữ (vd PicPick). PrtSc đơn lẻ không chạy: xem F1 > Phím tắt chụp." />
                     </StackPanel>
                 </Grid>
             </ScrollViewer>

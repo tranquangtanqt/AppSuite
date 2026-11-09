@@ -28,4 +28,17 @@ public static partial class TabTitle
         }
         return time.ToString(time.Year == now.Year ? "dd/MM HH:mm" : "dd/MM/yy HH:mm", CultureInfo.InvariantCulture) + rest;
     }
+
+    /// <summary>
+    /// Tên đầy đủ để hiện (thanh tiêu đề, Danh sách ảnh, tooltip, hộp thoại): giờ ghi "10:01:46" cho cùng kiểu với tên tab.
+    /// Tên gốc "yyyy-MM-dd HH mm ss" giữ nguyên trong phiên làm việc và làm tên file khi Lưu tất cả (tên file không có ":").
+    /// </summary>
+    public static string Full(string title)
+    {
+        var match = CaptureTitle().Match(title);
+        var full = $"{match.Groups[1].Value} {match.Groups[2].Value}:{match.Groups[3].Value}:{match.Groups[4].Value}";
+        return match.Success && DateTime.TryParseExact(full, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out _)
+            ? full + match.Groups[5].Value
+            : title;
+    }
 }

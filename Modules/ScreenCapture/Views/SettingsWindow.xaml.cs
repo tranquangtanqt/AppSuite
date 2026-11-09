@@ -2,8 +2,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using ScreenCapture.Models;
 using ScreenCapture.Services;
-using ScreenCapture.Services.Interop;
-using Windows.Graphics;
 using WinRT.Interop;
 
 namespace ScreenCapture.Views;
@@ -29,8 +27,8 @@ public sealed partial class SettingsWindow : Window
         _fileService = fileService;
         _apply = apply;
 
-        var scale = NativeMethods.GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
-        AppWindow.Resize(new SizeInt32((int)(860 * scale), (int)(600 * scale)));
+        WindowChrome.Apply(this, 640, 420);
+        WindowChrome.Resize(this, 860, 600);
 
         // NumberBox: Minimum/Maximum gán qua code, không qua XAML (bài học XamlParseException của Slider).
         DelayBox.Minimum = 0; DelayBox.Maximum = 10; DelayBox.SmallChange = 1;
@@ -43,11 +41,11 @@ public sealed partial class SettingsWindow : Window
         SetRange(ClosedTabsMaxBox, AppSettings.ClosedTabsMaxCountRange, 1);
         SetRange(ClosedTabsMbBox, AppSettings.ClosedTabsMaxMegabytesRange, 50);
         var defaults = new AppSettings();
-        ClosedTabsHint.Text = $"Tab vừa đóng (cả ảnh, hình vẽ, lịch sử Hoàn tác) được giữ trong bộ nhớ để mở lại bằng Ctrl+Shift+T, menu tab, Danh sách ảnh hoặc menu khay; quá giới hạn thì bỏ tab đóng lâu nhất, tắt app là mất. 0 tab = tắt. Ảnh lớn tốn nhiều RAM (ảnh 4K ≈ 33 MB). Mặc định {defaults.ClosedTabsMaxCount} tab / {defaults.ClosedTabsMaxMegabytes} MB, tối đa {AppSettings.ClosedTabsMaxCountRange.Max} tab / {AppSettings.ClosedTabsMaxMegabytesRange.Max} MB.";
-        ScrollMaxStepsHint.Text = $"Mỗi lần lăn khoảng 1/3 vùng chọn. Vùng chọn thấp/hẹp mà trang rất dài thì cần nhiều lần hơn. Mặc định {defaults.ScrollMaxSteps}, từ {AppSettings.ScrollMaxStepsRange.Min} tới {AppSettings.ScrollMaxStepsRange.Max}.";
-        ScrollMaxLengthHint.Text = string.Create(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), $"Chiều cao ảnh ghép khi cuộn dọc, chiều rộng khi cuộn ngang. Ảnh càng dài càng tốn RAM (rộng 2000px × dài 60.000px ≈ 480 MB). Mặc định {defaults.ScrollMaxLength:N0}, từ {AppSettings.ScrollMaxLengthRange.Min:N0} tới {AppSettings.ScrollMaxLengthRange.Max:N0}.");
-        ScrollSettleHint.Text = $"Thời gian chờ trang cuộn xong và vẽ lại trước khi chụp khung tiếp. Tăng lên nếu trang tải chậm, cuộn mượt lâu, ảnh bị thiếu hoặc lặp/lệch; dưới 300 ms chỉ nên dùng cho app không cuộn mượt. Mặc định {defaults.ScrollSettleMs}, từ {AppSettings.ScrollSettleMsRange.Min} tới {AppSettings.ScrollSettleMsRange.Max}.";
-        JpegQualityHint.Text = $"Dùng khi Lưu / Lưu thành ảnh JPG trong Editor. Cao = ảnh nét hơn, file lớn hơn; ảnh chụp màn hình có chữ nên để ≥ 85. Mặc định {defaults.JpegQuality}, từ {AppSettings.JpegQualityRange.Min} tới {AppSettings.JpegQualityRange.Max}.";
+        ClosedTabsHint.Text = $"0 tab = tắt. Giữ trong bộ nhớ, tắt app là mất (ảnh 4K ≈ 33 MB). Mặc định {defaults.ClosedTabsMaxCount} tab / {defaults.ClosedTabsMaxMegabytes} MB.";
+        ScrollMaxStepsHint.Text = $"Mỗi lần lăn khoảng 1/3 vùng chọn. Mặc định {defaults.ScrollMaxSteps}, từ {AppSettings.ScrollMaxStepsRange.Min} tới {AppSettings.ScrollMaxStepsRange.Max}.";
+        ScrollMaxLengthHint.Text = string.Create(System.Globalization.CultureInfo.GetCultureInfo("vi-VN"), $"Cao (cuộn dọc) hoặc rộng (cuộn ngang). Mặc định {defaults.ScrollMaxLength:N0}, từ {AppSettings.ScrollMaxLengthRange.Min:N0} tới {AppSettings.ScrollMaxLengthRange.Max:N0}.");
+        ScrollSettleHint.Text = $"Tăng lên nếu trang tải chậm, ảnh bị thiếu hoặc lặp. Mặc định {defaults.ScrollSettleMs}, từ {AppSettings.ScrollSettleMsRange.Min} tới {AppSettings.ScrollSettleMsRange.Max}.";
+        JpegQualityHint.Text = $"Ảnh có chữ nên để ≥ 85. Mặc định {defaults.JpegQuality}, từ {AppSettings.JpegQualityRange.Min} tới {AppSettings.JpegQualityRange.Max}.";
 
         FileNameTemplateBox.ItemsSource = _fileNameTemplates;
         FileNameTemplateHelp.Text = "Thẻ: " + FileNameTemplate.TokenHelp;

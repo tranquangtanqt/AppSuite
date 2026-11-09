@@ -147,8 +147,8 @@ public sealed partial class EditorWindow
         DocumentTabs.SelectedItem = tab;
         UpdateTabPosition();
         vm.StatusText = _closedTabs.Count > 0
-            ? $"Đã mở lại {vm.Title} - còn {_closedTabs.Count} tab vừa đóng (Ctrl+Shift+T)."
-            : $"Đã mở lại {vm.Title}.";
+            ? $"Đã mở lại {TabTitle.Full(vm.Title)} - còn {_closedTabs.Count} tab vừa đóng (Ctrl+Shift+T)."
+            : $"Đã mở lại {TabTitle.Full(vm.Title)}.";
         TrySaveSession();
         return true;
     }
@@ -267,8 +267,8 @@ public sealed partial class EditorWindow
             Title = "Ảnh chưa được lưu",
             // File đã lưu bị xoá ngoài app (đã sửa gì thêm thì là "chưa lưu" bình thường): nói rõ, Lưu = ghi lại đúng chỗ cũ.
             Content = vm.FileMissing && !vm.UndoRedo.IsDirty
-                ? $"File đã lưu không còn trên ổ (bị xoá hoặc đổi tên):\n{vm.FilePath}\n\nLưu lại ảnh \"{vm.Title}\" vào đó trước khi đóng?"
-                : $"Lưu ảnh \"{vm.Title}\" trước khi đóng?",
+                ? $"File đã lưu không còn trên ổ (bị xoá hoặc đổi tên):\n{vm.FilePath}\n\nLưu lại ảnh \"{TabTitle.Full(vm.Title)}\" vào đó trước khi đóng?"
+                : $"Lưu ảnh \"{TabTitle.Full(vm.Title)}\" trước khi đóng?",
             PrimaryButtonText = "Lưu",
             SecondaryButtonText = "Không lưu",
             CloseButtonText = "Huỷ",
@@ -293,7 +293,7 @@ public sealed partial class EditorWindow
         {
             XamlRoot = Content.XamlRoot,
             Title = "Bỏ phần đã sửa và xoá file?",
-            Content = $"Ảnh \"{vm.Title}\" còn phần sửa chưa lưu. Đóng và xoá file sẽ mất cả phần sửa lẫn file đã tự lưu (file vào Thùng rác).",
+            Content = $"Ảnh \"{TabTitle.Full(vm.Title)}\" còn phần sửa chưa lưu. Đóng và xoá file sẽ mất cả phần sửa lẫn file đã tự lưu (file vào Thùng rác).",
             PrimaryButtonText = "Đóng và xoá file",
             CloseButtonText = "Huỷ",
             DefaultButton = ContentDialogButton.Close,

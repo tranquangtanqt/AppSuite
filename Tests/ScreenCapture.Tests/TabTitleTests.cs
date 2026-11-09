@@ -22,6 +22,14 @@ public class TabTitleTests
     public void Other_titles_are_kept(string title) =>
         Assert.Equal(title, TabTitle.Short(title, Now));
 
+    [Theory]
+    [InlineData("2026-10-16 10 01 46", "2026-10-16 10:01:46")]          // giờ cùng kiểu với tên tab
+    [InlineData("2026-10-16 10 01 46 (2)", "2026-10-16 10:01:46 (2)")]  // giữ hậu tố
+    [InlineData("bao_cao_thang", "bao_cao_thang")]                      // tên file giữ nguyên
+    [InlineData("2026-13-40 10 01 46", "2026-13-40 10 01 46")]          // không phải ngày hợp lệ
+    public void Full_title_shows_time_with_colons(string title, string expected) =>
+        Assert.Equal(expected, TabTitle.Full(title));
+
     [Fact]
     public void Yesterday_becomes_date_after_midnight()
     {

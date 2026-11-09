@@ -117,6 +117,15 @@ Color1 / Color2 / Size = Màu nét / Màu nền / Cỡ nét, Flatten = Gộp và
 Outline / Fill = Viền / Nền, Arrange = Thứ tự, phím None = Không dùng (trong `settings.json` vẫn lưu `None`). Mosaic, Copy giữ nguyên.
 Màu chủ đạo cam `#D86445` khai ở `App.xaml`, thay màu nhấn Windows.
 
+**Giao diện đợt 2 (2026-11-09).** Chữ nhỏ nhất cỡ 12 (nhãn nút, nhãn nhóm ribbon). Mọi công cụ có tooltip. Icon: Elip nét rỗng như
+Chữ nhật; Con dấu = số 1 trong vòng tròn; Lên trên / Xuống dưới vẽ 2 ô chồng nhau (`PathIcon`, mờ đúng khi nút bị khoá). Nền
+quanh ảnh xám trung tính cố định (`CanvasAreaBackgroundBrush` trong `App.xaml`, sáng `#E3E3E3` / tối `#1C1C1C`) thay Mica.
+Tab Định dạng ẩn mục không có tác dụng (`UpdateColorSizeColumns`): Màu nền với đường / mũi tên / bút, Cỡ nét với chữ. Tên ảnh
+chụp hiện `2026-11-06 09:15:22` ở thanh tiêu đề, Danh sách ảnh, tooltip tab, hộp thoại (`TabTitle.Full`); tên gốc
+`2026-11-06 09 15 22` vẫn lưu trong phiên và làm tên file khi Lưu tất cả. Thanh tiêu đề theo giao diện sáng / tối của Windows;
+cửa sổ chính, Editor, Cài đặt có cỡ tối thiểu, mở không cao quá màn hình (`ViewsWindowChrome.cs`). Cửa sổ chính thấp thì lưới
+thẻ cuộn dọc. Cài đặt: ghi chú còn 1 dòng, chi tiết ở F1.
+
 
 Sau khi chụp (bất kỳ mode nào), ảnh mở ngay trong cửa sổ chỉnh sửa (tự maximize).
 
@@ -251,7 +260,7 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
     giữ bản tin cậy hơn). Nhớ qua lần mở app (`OcrLanguage` trong settings.json).
   - Mỗi ảnh đọc 1 lần (nhớ theo tab + ảnh + ngôn ngữ); ảnh đổi (cắt, xoay, hiệu ứng, Undo...) thì đọc lại. Chỉ đọc ảnh
     chụp, không đọc hình đã vẽ lên.
-  - Ô tìm trống: danh sách mọi dòng đọc được. Gõ chữ: không phân biệt dấu / hoa thường (2 ô tick để bật), bỏ qua khoảng
+  - Ô tìm trống: danh sách mọi dòng đọc được. Gõ chữ: không phân biệt dấu / hoa thường (bật bằng 2 nút `Ấ` / `Aa` cạnh ô tìm, 2026-11-09 thay 2 ô tick), bỏ qua khoảng
     trắng, không thấy thì tự tìm gần đúng (sai / thiếu 1 ký tự, dấu `≈`). Chỗ khớp tô vàng đè lên ảnh (chỉ để xem), bấm 1
     dòng trong danh sách để cuộn tới; `Enter` / `Shift+Enter` = chỗ kế tiếp / trước, `Esc` = đóng khung.
   - *Copy chữ*: toàn bộ chữ của ảnh, mỗi dòng 1 dòng (chữ Nhật không chen dấu cách).
@@ -260,10 +269,10 @@ Thanh công cụ dạng **ribbon** kiểu PicPick, mỗi nhóm nút có nhãn ph
     đường kẻ / viền chấm), đọc riêng từng dải, dải nào tin cậy hơn hẳn (≥ 25%) thì thay chữ đọc thường. Bắt được dòng đang
     chọn (nền màu + viền chấm) và chữ nhỏ trong giao diện rối mà đọc thường bỏ sót; chậm hơn 1,5–3 lần. Kết quả thay kết
     quả đọc thường của tab (`OcrEntry.Careful`) tới khi ảnh đổi; nút tắt khi ảnh đã đọc kỹ / đang đọc / Tiếng Nhật.
-  - *Tô Highlight (N)*: mọi chỗ khớp thành hình Highlight vàng thật (1 bước Undo, lưu / copy kèm ảnh).
-  - *Che Mosaic (N)* / *Làm mờ (N)* (2026-10-21): mọi chỗ khớp thành hình `RedactAnnotation` thật (Mosaic / Blur, nới 4 px,
+  - *Tô sáng*: mọi chỗ khớp thành hình Highlight vàng thật (1 bước Undo, lưu / copy kèm ảnh).
+  - *Mosaic* / *Làm mờ* (2026-10-21): mọi chỗ khớp thành hình `RedactAnnotation` thật (Mosaic / Blur, nới 4 px,
     kẹp trong ảnh, mức = thanh Size ≥ 3, tự tăng theo chiều cao chữ - `RedactAnnotation.StrengthToHide`: làm mờ sigma ≥ 1/3, Mosaic ô ≥ 1/4 chiều cao; trước đó chữ 40 px làm mờ Size 3 vẫn đọc được), 1 bước Undo (`EditorViewModel.AddRedactions`) - tìm tên khách / số điện
-    thoại / mã đơn rồi che hết trước khi gửi ảnh. 4 nút chỗ khớp xếp 2 hàng × 2 trong khung Tìm chữ.
+    thoại / mã đơn rồi che hết trước khi gửi ảnh. 4 nút (Copy chữ, Tô sáng, Mosaic, Làm mờ) xếp 1 hàng, icon trên chữ dưới, không ghi số chỗ khớp (đã có ở dòng trạng thái, tối đa 2 dòng, đủ câu ở tooltip) - 2026-11-09, để cửa sổ thấp vẫn còn chỗ cho danh sách kết quả.
 - **Cắt & Sửa** — *Cắt* (crop, shape nằm ngoài vùng cắt bị bỏ; **khôi phục được**: kéo handle khung
   ảnh ra lại là hiện lại phần đã cắt — kể cả sau khi tắt mở lại app), *Undo* / *Redo*
   từng bước, *Dán*

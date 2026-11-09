@@ -6,7 +6,6 @@ using ScreenCapture.Services;
 using ScreenCapture.Services.Interop;
 using ScreenCapture.ViewModels;
 using SkiaSharp;
-using Windows.Graphics;
 using WinRT.Interop;
 
 namespace ScreenCapture.Views;
@@ -51,10 +50,10 @@ public sealed partial class CaptureLauncherWindow : Window
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
 
-        // Kích thước vừa đủ cho lưới thẻ 2 cột × 4 hàng - AppWindow.Resize nhận pixel vật lý nên nhân theo DPI.
+        // Kích thước vừa đủ cho lưới thẻ 2 cột × 4 hàng; cửa sổ thấp hơn thì lưới thẻ cuộn được, không bẹp thẻ.
         var hwnd = WindowNative.GetWindowHandle(this);
-        var scale = NativeMethods.GetDpiForWindow(hwnd) / 96.0;
-        AppWindow.Resize(new SizeInt32((int)(720 * scale), (int)(620 * scale)));
+        WindowChrome.Apply(this, 520, 400);
+        WindowChrome.Resize(this, 720, 620);
 
         _settings = _settingsStore.Load();
         _session.ApplySettings(_settings);

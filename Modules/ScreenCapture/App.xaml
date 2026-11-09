@@ -20,6 +20,19 @@
             <Color x:Key="SystemAccentColorDark1">#C4502F</Color>
             <Color x:Key="SystemAccentColorDark2">#A83F22</Color>
             <Color x:Key="SystemAccentColorDark3">#86301A</Color>
+
+            <!-- Nền quanh ảnh trong Editor: xám trung tính cố định (Mica ăn màu hình nền desktop nên ảnh trắng khó thấy mép). -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="CanvasAreaBackgroundBrush" Color="#E3E3E3" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="CanvasAreaBackgroundBrush" Color="#1C1C1C" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="HighContrast">
+                    <SolidColorBrush x:Key="CanvasAreaBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

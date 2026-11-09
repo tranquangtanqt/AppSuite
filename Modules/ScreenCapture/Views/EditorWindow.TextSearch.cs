@@ -292,15 +292,14 @@ public sealed partial class EditorWindow
         return item;
     }
 
-    /// <summary>Bật / tắt + ghi số chỗ khớp lên các nút làm việc với chỗ khớp (Tô Highlight, Che Mosaic, Làm mờ).</summary>
+    /// <summary>Bật / tắt các nút làm việc với chỗ khớp (Tô sáng, Mosaic, Làm mờ). Số chỗ khớp ở dòng trạng thái ngay trên (nút
+    /// 4 cái 1 hàng, không đủ chỗ ghi thêm số).</summary>
     private void UpdateHighlightButton()
     {
-        int count = _textMatches.Count;
-        foreach (var (button, label) in new[] { (HighlightMatchesButton, "Tô sáng"), (MosaicMatchesButton, "Che Mosaic"), (BlurMatchesButton, "Làm mờ") })
-        {
-            button.IsEnabled = count > 0;
-            ((TextBlock)((StackPanel)button.Content).Children[1]).Text = count > 0 ? $"{label} ({count})" : label;
-        }
+        bool any = _textMatches.Count > 0;
+        HighlightMatchesButton.IsEnabled = any;
+        MosaicMatchesButton.IsEnabled = any;
+        BlurMatchesButton.IsEnabled = any;
     }
 
     // ---- Điều khiển trong khung ----

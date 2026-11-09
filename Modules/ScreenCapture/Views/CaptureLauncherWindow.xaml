@@ -113,8 +113,9 @@
         </Grid>
         </Grid>
 
-        <!-- Lưới thẻ chế độ chụp -->
-        <Grid Grid.Row="1" ColumnSpacing="12" RowSpacing="12">
+        <!-- Lưới thẻ chế độ chụp. Cửa sổ thấp: lưới giữ cao tối thiểu (4 hàng × 68) và cuộn dọc, không bẹp thẻ / mất tên thẻ. -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,-12,0" Padding="0,0,12,0">
+        <Grid MinHeight="308" ColumnSpacing="12" RowSpacing="12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
@@ -268,6 +269,7 @@
                 </Grid>
             </Button>
         </Grid>
+        </ScrollViewer>
 
         <!-- Status: chỉ hiện khi có thông báo (huỷ chọn vùng, không tìm thấy cửa sổ...). -->
         <InfoBar x:Name="StatusInfoBar" Grid.Row="2" Severity="Informational" IsClosable="True" IsOpen="False" />

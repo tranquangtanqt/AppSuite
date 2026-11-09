@@ -7,7 +7,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="Ảnh mới"
     PrimaryButtonText="Tạo"
-    CloseButtonText="Hủy"
+    CloseButtonText="Huỷ"
     DefaultButton="Primary">
 
     <!-- ContentDialog tắt cuộn dọc của chính nó: nội dung dài hơn cửa sổ bị cắt mất phần dưới → tự cuộn khi cần -->

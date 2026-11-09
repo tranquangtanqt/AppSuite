@@ -20,8 +20,8 @@
             <!-- Icon-on-top + small label toolbar button, dùng chung cho mọi nút trong toolbar
                  (ButtonBase để áp được cho cả Button lẫn ToggleButton). -->
             <Style x:Key="ToolButtonStyle" TargetType="ButtonBase">
-                <Setter Property="Padding" Value="6,4" />
-                <Setter Property="MinWidth" Value="46" />
+                <Setter Property="Padding" Value="3,4" />
+                <Setter Property="MinWidth" Value="40" />
                 <Setter Property="VerticalAlignment" Value="Stretch" />
             </Style>
             <!-- Nút cố định góc phải hàng tab (Lưu, Copy, Hoàn tác, Làm lại, Hướng dẫn): luôn thấy ở mọi tab ribbon. -->
@@ -72,7 +72,7 @@
                 <Setter Property="Margin" Value="0,0,4,0" />
             </Style>
             <Style x:Key="RibbonGroupLabelStyle" TargetType="TextBlock">
-                <Setter Property="FontSize" Value="10" />
+                <Setter Property="FontSize" Value="12" />
                 <Setter Property="Opacity" Value="0.65" />
                 <Setter Property="HorizontalAlignment" Value="Center" />
                 <Setter Property="Margin" Value="0,2,0,0" />
@@ -149,21 +149,21 @@
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <ToggleButton x:Name="MoveToolButton" Style="{StaticResource ToolButtonStyle}" Click="MoveToolButton_Click">
+                                <ToggleButton x:Name="MoveToolButton" Style="{StaticResource ToolButtonStyle}" Click="MoveToolButton_Click" ToolTipService.ToolTip="Di chuyển: chọn và kéo hình đã vẽ (kéo góc để đổi cỡ). Bấm vùng trống / Esc = bỏ chọn">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <!-- Icon con trỏ chuột (như PicPick) - Segoe Fluent Icons không có glyph
                                              mũi tên con trỏ phù hợp nên vẽ bằng PathIcon. -->
                                         <Viewbox Width="16" Height="16" HorizontalAlignment="Center">
                                             <PathIcon Data="M0,0 L0,17 L4.2,13 L7.2,20 L10,18.8 L7,12 L12.5,12 Z" />
                                         </Viewbox>
-                                        <TextBlock Text="Di chuyển" FontSize="10" />
+                                        <TextBlock Text="Di chuyển" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ToggleButton x:Name="SelectToolButton" Style="{StaticResource ToolButtonStyle}" Click="SelectToolButton_Click"
                                               ToolTipService.ToolTip="Kéo chọn 1 vùng để Cắt ảnh / Copy / Cắt vùng / Xoá">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8B3;" />
-                                        <TextBlock Text="Chọn vùng" FontSize="10" />
+                                        <TextBlock Text="Chọn vùng" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <StackPanel Spacing="1" VerticalAlignment="Center">
@@ -171,19 +171,19 @@
                                             ToolTipService.ToolTip="Xoá hình đang chọn (Delete)">
                                         <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
                                             <FontIcon Glyph="&#xE74D;" FontSize="12" />
-                                            <TextBlock Text="Xoá" FontSize="11" />
+                                            <TextBlock Text="Xoá" FontSize="12" />
                                         </StackPanel>
                                     </Button>
-                                    <Button x:Name="BringToFrontButton" Style="{StaticResource SmallToolButtonStyle}" Click="BringToFrontButton_Click" IsEnabled="False">
+                                    <Button x:Name="BringToFrontButton" Style="{StaticResource SmallToolButtonStyle}" Click="BringToFrontButton_Click" IsEnabled="False" ToolTipService.ToolTip="Đưa hình đang chọn lên trên các hình khác">
                                         <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
-                                            <FontIcon Glyph="&#xE8A7;" FontSize="12" />
-                                            <TextBlock Text="Lên trên" FontSize="11" />
+                                            <Viewbox Width="12" Height="12"><PathIcon Data="F1 M0,0 H10 V10 H0 Z M1.5,1.5 V8.5 H8.5 V1.5 Z M6,6 H16 V16 H6 Z" /></Viewbox>
+                                            <TextBlock Text="Lên trên" FontSize="12" />
                                         </StackPanel>
                                     </Button>
-                                    <Button x:Name="SendToBackButton" Style="{StaticResource SmallToolButtonStyle}" Click="SendToBackButton_Click" IsEnabled="False">
+                                    <Button x:Name="SendToBackButton" Style="{StaticResource SmallToolButtonStyle}" Click="SendToBackButton_Click" IsEnabled="False" ToolTipService.ToolTip="Đưa hình đang chọn xuống dưới các hình khác">
                                         <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
-                                            <FontIcon Glyph="&#xE8A8;" FontSize="12" />
-                                            <TextBlock Text="Xuống dưới" FontSize="11" />
+                                            <Viewbox Width="12" Height="12"><PathIcon Data="F1 M0,0 H10 V10 H0 Z M1.5,1.5 V8.5 H8.5 V1.5 Z M11.5,6 H16 V16 H6 V11.5 H11.5 Z" /></Viewbox>
+                                            <TextBlock Text="Xuống dưới" FontSize="12" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>
@@ -196,10 +196,10 @@
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <ToggleButton x:Name="RectangleToolButton" Style="{StaticResource ToolButtonStyle}" Click="RectangleToolButton_Click">
+                                <ToggleButton x:Name="RectangleToolButton" Style="{StaticResource ToolButtonStyle}" Click="RectangleToolButton_Click" ToolTipService.ToolTip="Chữ nhật: kéo để vẽ khung (giữ Shift: hình vuông). Viền theo Màu nét và Cỡ nét">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE739;" />
-                                        <TextBlock Text="Chữ nhật" FontSize="10" />
+                                        <TextBlock Text="Chữ nhật" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ToggleButton x:Name="FilledRectangleToolButton" Style="{StaticResource ToolButtonStyle}" Click="FilledRectangleToolButton_Click"
@@ -207,53 +207,53 @@
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <Rectangle Width="20" Height="16" Margin="0,1" HorizontalAlignment="Center" Fill="#99FFC107"
                                                    Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" />
-                                        <TextBlock Text="Chữ nhật tô" FontSize="10" />
+                                        <TextBlock Text="Chữ nhật tô" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <ToggleButton x:Name="EllipseToolButton" Style="{StaticResource ToolButtonStyle}" Click="EllipseToolButton_Click">
+                                <ToggleButton x:Name="EllipseToolButton" Style="{StaticResource ToolButtonStyle}" Click="EllipseToolButton_Click" ToolTipService.ToolTip="Elip: kéo để vẽ (giữ Shift: hình tròn). Viền theo Màu nét và Cỡ nét">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xEA3B;" />
-                                        <TextBlock Text="Elip" FontSize="10" />
+                                        <FontIcon Glyph="&#xEA3A;" />
+                                        <TextBlock Text="Elip" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ToggleButton x:Name="LineToolButton" Style="{StaticResource ToolButtonStyle}" Click="LineToolButton_Click"
                                               ToolTipService.ToolTip="Đường thẳng (giữ Shift: khoá góc 45°)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <TextBlock Text="&#x2571;" FontSize="16" HorizontalAlignment="Center" />
-                                        <TextBlock Text="Đường" FontSize="10" />
+                                        <TextBlock Text="Đường" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <ToggleButton x:Name="ArrowToolButton" Style="{StaticResource ToolButtonStyle}" Click="ArrowToolButton_Click">
+                                <ToggleButton x:Name="ArrowToolButton" Style="{StaticResource ToolButtonStyle}" Click="ArrowToolButton_Click" ToolTipService.ToolTip="Mũi tên: kéo từ chỗ bắt đầu tới chỗ cần chỉ (giữ Shift: khoá góc 45°). Kiểu đầu mũi tên ở tab Định dạng">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE72A;" />
-                                        <TextBlock Text="Mũi tên" FontSize="10" />
+                                        <TextBlock Text="Mũi tên" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ToggleButton x:Name="PenToolButton" Style="{StaticResource ToolButtonStyle}" Click="PenToolButton_Click"
                                               ToolTipService.ToolTip="Bút vẽ tự do - theo Màu nét và Cỡ nét. Sửa nét đã vẽ bằng công cụ Di chuyển.">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xEE56;" />
-                                        <TextBlock Text="Bút" FontSize="10" />
+                                        <TextBlock Text="Bút" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <ToggleButton x:Name="HighlightToolButton" Style="{StaticResource ToolButtonStyle}" Click="HighlightToolButton_Click">
+                                <ToggleButton x:Name="HighlightToolButton" Style="{StaticResource ToolButtonStyle}" Click="HighlightToolButton_Click" ToolTipService.ToolTip="Tô sáng: kéo để tô 1 vùng màu trong mờ như bút dạ quang (màu theo Màu nền)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE7E6;" />
-                                        <TextBlock Text="Tô sáng" FontSize="10" />
+                                        <TextBlock Text="Tô sáng" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ToggleButton x:Name="TextToolButton" Style="{StaticResource ToolButtonStyle}" Click="TextToolButton_Click"
                                               ToolTipService.ToolTip="Bấm lên ảnh rồi gõ chữ ngay tại chỗ (Enter = xuống dòng, Esc / bấm ra ngoài = xong). Nhấp đúp chữ đã có để sửa. Phông, cỡ, đậm / nghiêng, nền, viền chữ ở tab Định dạng.">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8D2;" />
-                                        <TextBlock Text="Chữ" FontSize="10" />
+                                        <TextBlock Text="Chữ" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ToggleButton x:Name="CalloutToolButton" Style="{StaticResource ToolButtonStyle}" Click="CalloutToolButton_Click"
                                               ToolTipService.ToolTip="Khung chú thích (bong bóng lời nói): kéo khung (hoặc bấm 1 cái) rồi gõ chữ; kéo chấm tròn ở đầu đuôi để chỉ vào chỗ cần chú thích. Viền và chữ theo Màu nét, nền theo Màu nền.">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE90A;" />
-                                        <TextBlock Text="Chú thích" FontSize="10" />
+                                        <TextBlock Text="Chú thích" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                             </StackPanel>
@@ -267,7 +267,7 @@
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
-                                    <TextBlock Text="Màu nét" FontSize="10" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Màu nét" FontSize="12" HorizontalAlignment="Center" />
                                     <Button x:Name="Color1Button" Width="32" Height="32" Padding="0">
                                         <Rectangle x:Name="Color1Swatch" Width="22" Height="22" Fill="#E74C3C" Stroke="Gray" StrokeThickness="1" />
                                         <Button.Flyout>
@@ -278,8 +278,9 @@
                                         </Button.Flyout>
                                     </Button>
                                 </StackPanel>
-                                <StackPanel VerticalAlignment="Center" Spacing="2">
-                                    <TextBlock Text="Màu nền" FontSize="10" HorizontalAlignment="Center" />
+                                <!-- Tab Định dạng ẩn cột Màu nền / Cỡ nét khi không áp dụng (UpdateColorSizeColumns). -->
+                                <StackPanel x:Name="Color2Column" VerticalAlignment="Center" Spacing="2">
+                                    <TextBlock Text="Màu nền" FontSize="12" HorizontalAlignment="Center" />
                                     <Button x:Name="Color2Button" Width="32" Height="32" Padding="0">
                                         <Rectangle x:Name="Color2Swatch" Width="22" Height="22" Fill="White" Stroke="Gray" StrokeThickness="1" />
                                         <Button.Flyout>
@@ -290,8 +291,8 @@
                                         </Button.Flyout>
                                     </Button>
                                 </StackPanel>
-                                <StackPanel VerticalAlignment="Center" Width="84">
-                                    <TextBlock Text="Cỡ nét" FontSize="10" />
+                                <StackPanel x:Name="SizeColumn" VerticalAlignment="Center" Width="84">
+                                    <TextBlock Text="Cỡ nét" FontSize="12" />
                                     <Slider x:Name="SizeSlider" ValueChanged="SizeSlider_ValueChanged" />
                                 </StackPanel>
                             </StackPanel>
@@ -303,16 +304,20 @@
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <ToggleButton x:Name="FillToolButton" Style="{StaticResource ToolButtonStyle}" Click="FillToolButton_Click">
+                                <ToggleButton x:Name="FillToolButton" Style="{StaticResource ToolButtonStyle}" Click="FillToolButton_Click" ToolTipService.ToolTip="Tô màu: bấm lên ảnh để đổ Màu nét vào vùng cùng màu quanh chỗ bấm">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8D3;" />
-                                        <TextBlock Text="Tô màu" FontSize="10" />
+                                        <TextBlock Text="Tô màu" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
-                                <Button x:Name="StampsToolButton" Style="{StaticResource ToolButtonStyle}">
+                                <Button x:Name="StampsToolButton" Style="{StaticResource ToolButtonStyle}" ToolTipService.ToolTip="Con dấu: chọn dấu số 1, 2, 3… hoặc dấu hình (mũi tên, cờ, cảnh báo…), rồi bấm lên ảnh để đặt">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE73E;" />
-                                        <TextBlock Text="Con dấu" FontSize="10" />
+                                        <!-- Dấu số "1" trong vòng tròn: dấu hay dùng nhất (icon dấu tick cũ dễ hiểu nhầm là "xong"). -->
+                                        <Grid Width="20" Height="20" HorizontalAlignment="Center">
+                                            <Ellipse Fill="{ThemeResource AccentFillColorDefaultBrush}" />
+                                            <TextBlock Text="1" FontSize="12" FontWeight="Bold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Grid>
+                                        <TextBlock Text="Con dấu" FontSize="12" />
                                     </StackPanel>
                                     <Button.Flyout>
                                         <Flyout x:Name="StampsFlyout" Placement="Bottom" ShouldConstrainToRootBounds="False">
@@ -376,14 +381,14 @@
                                               ToolTipService.ToolTip="Che bằng ô vuông pixel - kéo khung lên vùng cần che (mật khẩu, email...). Cỡ nét = cỡ ô.">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE80A;" />
-                                        <TextBlock Text="Mosaic" FontSize="10" />
+                                        <TextBlock Text="Mosaic" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <ToggleButton x:Name="BlurToolButton" Style="{StaticResource ToolButtonStyle}" Click="BlurToolButton_Click"
                                               ToolTipService.ToolTip="Che bằng cách làm mờ - kéo khung lên vùng cần che. Cỡ nét = độ mờ (chữ nhỏ nên để Cỡ nét cao hoặc dùng Mosaic).">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xED1A;" />
-                                        <TextBlock Text="Làm mờ" FontSize="10" />
+                                        <TextBlock Text="Làm mờ" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                             </StackPanel>
@@ -399,7 +404,7 @@
                                           ToolTipService.ToolTip="Tìm chữ trong ảnh (Ctrl+F): đọc chữ (tiếng Nhật / Việt / Anh), tô các chỗ khớp, copy toàn bộ chữ, biến chỗ khớp thành hình Tô sáng">
                                 <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                     <FontIcon Glyph="&#xE721;" />
-                                    <TextBlock Text="Tìm chữ" FontSize="10" />
+                                    <TextBlock Text="Tìm chữ" FontSize="12" />
                                 </StackPanel>
                             </ToggleButton>
                             <TextBlock Grid.Row="1" Text="Chữ" Style="{StaticResource RibbonGroupLabelStyle}" />
@@ -410,10 +415,10 @@
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <ToggleButton x:Name="CropToolButton" Style="{StaticResource ToolButtonStyle}" Click="CropToolButton_Click">
+                                <ToggleButton x:Name="CropToolButton" Style="{StaticResource ToolButtonStyle}" Click="CropToolButton_Click" ToolTipService.ToolTip="Cắt: kéo khung phần cần giữ, thả chuột là cắt. Kéo cạnh khung ảnh ra để lấy lại phần đã cắt">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE7A8;" />
-                                        <TextBlock Text="Cắt" FontSize="10" />
+                                        <TextBlock Text="Cắt" FontSize="12" />
                                     </StackPanel>
                                 </ToggleButton>
                                 <!-- Xoay / lật / co giãn cả ảnh (cùng các shape) - khác kéo khung ảnh (chỉ nới / cắt khung). -->
@@ -421,7 +426,7 @@
                                         ToolTipService.ToolTip="Xoay, lật, đổi cỡ ảnh">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE7AD;" />
-                                        <TextBlock Text="Xoay" FontSize="10" />
+                                        <TextBlock Text="Xoay" FontSize="12" />
                                     </StackPanel>
                                     <Button.Flyout>
                                         <MenuFlyout Placement="Bottom" ShouldConstrainToRootBounds="False" Opening="TransformFlyout_Opening">
@@ -478,7 +483,7 @@
                                         ToolTipService.ToolTip="Hiệu ứng ảnh: viền, đổ bóng, mép rách, độ sáng / tương phản, làm xám, sepia, đảo màu, làm nét, watermark">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE790;" />
-                                        <TextBlock Text="Hiệu ứng" FontSize="10" />
+                                        <TextBlock Text="Hiệu ứng" FontSize="12" />
                                     </StackPanel>
                                     <Button.Flyout>
                                         <MenuFlyout Placement="Bottom" ShouldConstrainToRootBounds="False">
@@ -519,7 +524,7 @@
                                 <Button x:Name="PasteButton" Style="{StaticResource ToolButtonStyle}" Click="PasteButton_Click" ToolTipService.ToolTip="Dán ảnh từ clipboard (Ctrl+V)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE77F;" />
-                                        <TextBlock Text="Dán" FontSize="10" />
+                                        <TextBlock Text="Dán" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -539,14 +544,14 @@
                                         ToolTipService.ToolTip="Mở ảnh có sẵn (PNG, JPG, BMP, GIF, WEBP) thành tab mới để ghi chú - chọn được nhiều file, hoặc kéo-thả file vào Editor (Ctrl+O)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8E5;" />
-                                        <TextBlock Text="Mở" FontSize="10" />
+                                        <TextBlock Text="Mở" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="NewImageButton" Style="{StaticResource ToolButtonStyle}" Click="NewImageButton_Click"
                                         ToolTipService.ToolTip="Tạo ảnh trống thành tab mới - chọn cỡ (ảnh trong clipboard, ảnh đang mở, màn hình…) và màu nền (Ctrl+N)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8A5;" />
-                                        <TextBlock Text="Ảnh mới" FontSize="10" />
+                                        <TextBlock Text="Ảnh mới" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -562,14 +567,14 @@
                                         ToolTipService.ToolTip="Lưu (Ctrl+S): ảnh đã gắn với 1 file (đã lưu trước đó, hoặc mở từ PNG / JPG / BMP) thì ghi đè file đó, chưa có thì hỏi nơi lưu như Lưu thành">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE74E;" />
-                                        <TextBlock Text="Lưu" FontSize="10" />
+                                        <TextBlock Text="Lưu" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="SaveAsButton" Style="{StaticResource ToolButtonStyle}" Click="SaveAsButton_Click"
                                         ToolTipService.ToolTip="Lưu thành file mới: chọn nơi lưu và định dạng PNG / JPG / BMP (Ctrl+Shift+S). Chất lượng JPG chỉnh trong Cài đặt">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE792;" />
-                                        <TextBlock Text="Lưu thành…" FontSize="10" />
+                                        <TextBlock Text="Lưu thành…" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <!-- Mở thư mục chứa ảnh đang mở (Explorer chọn sẵn file); tooltip = đường dẫn (UpdateOpenFolderButton). -->
@@ -577,13 +582,13 @@
                                         AutomationProperties.Name="Mở thư mục">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE838;" />
-                                        <TextBlock Text="Mở thư mục" FontSize="10" />
+                                        <TextBlock Text="Mở thư mục" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="CopyButton_Click" ToolTipService.ToolTip="Copy ảnh (Ctrl+C)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8C8;" />
-                                        <TextBlock Text="Copy" FontSize="10" />
+                                        <TextBlock Text="Copy" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -598,19 +603,19 @@
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="SettingsButton_Click" ToolTipService.ToolTip="Phím tắt, hẹn giờ, tự động lưu, phiên làm việc...">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE713;" />
-                                        <TextBlock Text="Cài đặt" FontSize="10" />
+                                        <TextBlock Text="Cài đặt" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="HelpButton_Click" ToolTipService.ToolTip="Tất cả tính năng và phím tắt (F1)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE897;" />
-                                        <TextBlock Text="Hướng dẫn" FontSize="10" />
+                                        <TextBlock Text="Hướng dẫn" FontSize="12" />
                                     </StackPanel>
                                 </Button>
-                                <Button Style="{StaticResource ToolButtonStyle}" Click="CloseButton_Click">
+                                <Button Style="{StaticResource ToolButtonStyle}" Click="CloseButton_Click" ToolTipService.ToolTip="Đóng cửa sổ Editor">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE711;" />
-                                        <TextBlock Text="Đóng" FontSize="10" />
+                                        <TextBlock Text="Đóng" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -750,35 +755,35 @@
                                         ToolTipService.ToolTip="Cắt ảnh theo vùng chọn (Enter)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE7A8;" />
-                                        <TextBlock Text="Cắt ảnh" FontSize="10" />
+                                        <TextBlock Text="Cắt ảnh" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="RegionCopyButton_Click"
                                         ToolTipService.ToolTip="Copy vùng chọn (Ctrl+C)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8C8;" />
-                                        <TextBlock Text="Copy" FontSize="10" />
+                                        <TextBlock Text="Copy" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button x:Name="RegionCopyTextButton" Style="{StaticResource ToolButtonStyle}" Click="RegionCopyTextButton_Click"
                                         ToolTipService.ToolTip="Đọc chữ trong vùng chọn và copy vào clipboard (ngôn ngữ theo khung Tìm chữ)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8E9;" />
-                                        <TextBlock Text="Copy chữ" FontSize="10" />
+                                        <TextBlock Text="Copy chữ" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="RegionCutButton_Click"
                                         ToolTipService.ToolTip="Copy rồi xoá trắng vùng chọn (Ctrl+X)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE8C6;" />
-                                        <TextBlock Text="Cắt vùng" FontSize="10" />
+                                        <TextBlock Text="Cắt vùng" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="RegionEraseButton_Click"
                                         ToolTipService.ToolTip="Xoá trắng vùng chọn (Delete)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE75C;" />
-                                        <TextBlock Text="Xoá vùng" FontSize="10" />
+                                        <TextBlock Text="Xoá vùng" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -792,7 +797,7 @@
                                     ToolTipService.ToolTip="Bỏ chọn vùng (Esc)">
                                 <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                     <FontIcon Glyph="&#xE711;" />
-                                    <TextBlock Text="Bỏ chọn" FontSize="10" />
+                                    <TextBlock Text="Bỏ chọn" FontSize="12" />
                                 </StackPanel>
                             </Button>
                             <TextBlock Grid.Row="1" Text="Đóng" Style="{StaticResource RibbonGroupLabelStyle}" />
@@ -806,16 +811,16 @@
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="2">
-                                <Button x:Name="FlattenButton" Style="{StaticResource ToolButtonStyle}" Click="FlattenButton_Click">
+                                <Button x:Name="FlattenButton" Style="{StaticResource ToolButtonStyle}" Click="FlattenButton_Click" ToolTipService.ToolTip="Gộp dấu số vào ảnh (không sửa được nữa)">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE73D;" />
-                                        <TextBlock Text="Gộp vào ảnh" FontSize="10" />
+                                        <TextBlock Text="Gộp vào ảnh" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="DeleteButton_Click">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xE74D;" />
-                                        <TextBlock Text="Xoá" FontSize="10" />
+                                        <TextBlock Text="Xoá" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -850,7 +855,7 @@
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
-                                    <TextBlock Text="Số này" FontSize="10" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Số này" FontSize="12" HorizontalAlignment="Center" />
                                     <!-- Nút +/- tự dựng thay cho spin button Inline của NumberBox: bản gốc xếp
                                          Up trước Down (ngược thói quen trái=giảm, phải=tăng) và chèn lên chữ số khi
                                          box hẹp. -->
@@ -870,7 +875,7 @@
                                     </StackPanel>
                                 </StackPanel>
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
-                                    <TextBlock Text="Số tiếp" FontSize="10" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Số tiếp" FontSize="12" HorizontalAlignment="Center" />
                                     <StackPanel Orientation="Horizontal" Spacing="2">
                                         <Button Style="{StaticResource StepperButtonStyle}" Click="NextDecrement_Click">
                                             <FontIcon Glyph="&#xE738;" FontSize="10" />
@@ -896,7 +901,7 @@
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
-                                    <TextBlock Text="Viền" FontSize="10" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Viền" FontSize="12" HorizontalAlignment="Center" />
                                     <Button x:Name="StampOutlineButton" Width="32" Height="32" Padding="0">
                                         <Rectangle x:Name="StampOutlineSwatch" Width="22" Height="22" Fill="White" Stroke="Gray" StrokeThickness="1" />
                                         <Button.Flyout>
@@ -908,7 +913,7 @@
                                     </Button>
                                 </StackPanel>
                                 <StackPanel VerticalAlignment="Center" Spacing="2">
-                                    <TextBlock Text="Nền" FontSize="10" HorizontalAlignment="Center" />
+                                    <TextBlock Text="Nền" FontSize="12" HorizontalAlignment="Center" />
                                     <Button x:Name="StampFillButton" Width="32" Height="32" Padding="0">
                                         <Rectangle x:Name="StampFillSwatch" Width="22" Height="22" Fill="#D86445" Stroke="Gray" StrokeThickness="1" />
                                         <Button.Flyout>
@@ -930,14 +935,14 @@
                             <StackPanel Orientation="Horizontal" Spacing="2">
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="BringToFrontButton_Click">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE8A7;" />
-                                        <TextBlock Text="Lên trên" FontSize="10" />
+                                        <Viewbox Width="16" Height="16" HorizontalAlignment="Center"><PathIcon Data="F1 M0,0 H10 V10 H0 Z M1.5,1.5 V8.5 H8.5 V1.5 Z M6,6 H16 V16 H6 Z" /></Viewbox>
+                                        <TextBlock Text="Lên trên" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                                 <Button Style="{StaticResource ToolButtonStyle}" Click="SendToBackButton_Click">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
-                                        <FontIcon Glyph="&#xE8A8;" />
-                                        <TextBlock Text="Xuống dưới" FontSize="10" />
+                                        <Viewbox Width="16" Height="16" HorizontalAlignment="Center"><PathIcon Data="F1 M0,0 H10 V10 H0 Z M1.5,1.5 V8.5 H8.5 V1.5 Z M11.5,6 H16 V16 H6 V11.5 H11.5 Z" /></Viewbox>
+                                        <TextBlock Text="Xuống dưới" FontSize="12" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>
@@ -952,7 +957,7 @@
                     AutomationProperties.Name="Thêm công cụ" ToolTipService.ToolTip="Các nhóm không đủ chỗ trên ribbon">
                 <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                     <FontIcon Glyph="&#xE712;" />
-                    <TextBlock Text="Thêm" FontSize="10" />
+                    <TextBlock Text="Thêm" FontSize="12" />
                 </StackPanel>
                 <Button.Flyout>
                     <Flyout x:Name="RibbonMoreFlyout" Placement="BottomEdgeAlignedRight" ShouldConstrainToRootBounds="False">
@@ -1033,6 +1038,7 @@
             </Grid.ColumnDefinitions>
         <!-- IsTabStop: nhận lại focus khi đóng ô gõ chữ trên ảnh, để phím tắt của Editor vẫn chạy. -->
         <ScrollViewer x:Name="CanvasScroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                      Background="{ThemeResource CanvasAreaBackgroundBrush}" CornerRadius="4"
                       IsTabStop="True" UseSystemFocusVisuals="False"
                       HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Margin="0,0,0,8">
             <!-- Viền ảnh + 8 handle khung ảnh vẽ trong Skia (có lề CanvasPad), không dùng viền Border. -->
@@ -1056,7 +1062,6 @@
                 BorderThickness="1" CornerRadius="6">
             <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -1096,57 +1101,77 @@
                         </StackPanel>
                     </Button>
                 </Grid>
-                <TextBox x:Name="TextSearchBox" Grid.Row="2" PlaceholderText="Chữ cần tìm (trống: xem mọi dòng)"
-                         AutomationProperties.Name="Chữ cần tìm" TextChanged="TextSearchBox_TextChanged" KeyDown="TextSearchBox_KeyDown"
-                         ToolTipService.ToolTip="Enter: chỗ khớp kế tiếp · Shift+Enter: chỗ trước · Esc: đóng" />
-                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="12">
-                    <CheckBox x:Name="TextMatchDiacriticsBox" Content="Phân biệt dấu" MinWidth="0" Click="TextSearchOption_Click" />
-                    <CheckBox x:Name="TextMatchCaseBox" Content="Hoa / thường" MinWidth="0" Click="TextSearchOption_Click" />
-                </StackPanel>
-                <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8">
+                <!-- Phân biệt dấu / hoa thường: 2 nút bật tắt nhỏ cạnh ô tìm (như ô tìm của VS Code) thay 2 ô tick 1 hàng riêng -
+                     cửa sổ thấp còn thêm chỗ cho danh sách kết quả. -->
+                <Grid Grid.Row="2" ColumnSpacing="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="TextSearchBox" PlaceholderText="Chữ cần tìm (trống: xem mọi dòng)"
+                             AutomationProperties.Name="Chữ cần tìm" TextChanged="TextSearchBox_TextChanged" KeyDown="TextSearchBox_KeyDown"
+                             ToolTipService.ToolTip="Enter: chỗ khớp kế tiếp · Shift+Enter: chỗ trước · Esc: đóng" />
+                    <ToggleButton x:Name="TextMatchDiacriticsBox" Grid.Column="1" Width="34" Padding="0" VerticalAlignment="Stretch" Click="TextSearchOption_Click"
+                                  AutomationProperties.Name="Phân biệt dấu" ToolTipService.ToolTip="Phân biệt dấu (bật: &quot;khach&quot; không khớp &quot;khách&quot;)">
+                        <TextBlock Text="Ấ" FontSize="14" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="TextMatchCaseBox" Grid.Column="2" Width="34" Padding="0" VerticalAlignment="Stretch" Click="TextSearchOption_Click"
+                                  AutomationProperties.Name="Phân biệt hoa / thường" ToolTipService.ToolTip="Phân biệt hoa / thường">
+                        <TextBlock Text="Aa" FontSize="14" />
+                    </ToggleButton>
+                </Grid>
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8">
                     <ProgressRing x:Name="TextSearchProgress" Width="16" Height="16" IsActive="False" Visibility="Collapsed" />
-                    <TextBlock x:Name="TextSearchStatus" TextWrapping="Wrap" Opacity="0.75" FontSize="12" MaxWidth="290" />
+                    <!-- Tối đa 2 dòng (đủ câu đầy đủ ở tooltip): cửa sổ thấp vẫn còn chỗ cho danh sách kết quả. -->
+                    <TextBlock x:Name="TextSearchStatus" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" Opacity="0.75" FontSize="12" MaxWidth="290"
+                               ToolTipService.ToolTip="{x:Bind TextSearchStatus.Text, Mode=OneWay}" />
                 </StackPanel>
-                <Grid Grid.Row="5" ColumnSpacing="6" RowSpacing="6">
+                <!-- 1 hàng 4 nút (icon trên, chữ dưới) thay 2 hàng: tiết kiệm chỗ cho danh sách kết quả khi cửa sổ thấp. -->
+                <Grid Grid.Row="4" ColumnSpacing="4">
+                    <Grid.Resources>
+                        <Style x:Key="SearchActionButtonStyle" TargetType="Button" BasedOn="{StaticResource CompactButtonStyle}">
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="2,4" />
+                        </Style>
+                    </Grid.Resources>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Button x:Name="CopyAllTextButton" HorizontalAlignment="Stretch" Click="CopyAllTextButton_Click" IsEnabled="False"
+                    <Button x:Name="CopyAllTextButton" Style="{StaticResource SearchActionButtonStyle}" Click="CopyAllTextButton_Click" IsEnabled="False"
                             ToolTipService.ToolTip="Copy toàn bộ chữ đọc được của ảnh, mỗi dòng 1 dòng">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
-                            <TextBlock Text="Copy chữ" />
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="16" />
+                            <TextBlock Text="Copy chữ" FontSize="12" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="HighlightMatchesButton" Grid.Column="1" HorizontalAlignment="Stretch" Click="HighlightMatchesButton_Click" IsEnabled="False"
+                    <Button x:Name="HighlightMatchesButton" Grid.Column="1" Style="{StaticResource SearchActionButtonStyle}" Click="HighlightMatchesButton_Click" IsEnabled="False"
                             ToolTipService.ToolTip="Tô sáng vàng lên mọi chỗ khớp (thành hình Tô sáng thật trên ảnh, 1 bước Hoàn tác)">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE7E6;" FontSize="14" />
-                            <TextBlock Text="Tô sáng" />
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE7E6;" FontSize="16" />
+                            <TextBlock Text="Tô sáng" FontSize="12" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
                     <!-- Che mọi chỗ khớp (số điện thoại, tên khách, mã đơn...) trước khi gửi ảnh: thành hình Mosaic / Làm mờ thật -->
-                    <Button x:Name="MosaicMatchesButton" Grid.Row="1" HorizontalAlignment="Stretch" Click="MosaicMatchesButton_Click" IsEnabled="False"
+                    <Button x:Name="MosaicMatchesButton" Grid.Column="2" Style="{StaticResource SearchActionButtonStyle}" Click="MosaicMatchesButton_Click" IsEnabled="False"
                             ToolTipService.ToolTip="Che Mosaic lên mọi chỗ khớp - vd tìm tên khách / số điện thoại rồi che hết trước khi gửi ảnh (thành hình Mosaic thật, 1 bước Hoàn tác)">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xE80A;" FontSize="14" />
-                            <TextBlock Text="Che Mosaic" />
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE80A;" FontSize="16" />
+                            <TextBlock Text="Mosaic" FontSize="12" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <Button x:Name="BlurMatchesButton" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Stretch" Click="BlurMatchesButton_Click" IsEnabled="False"
+                    <Button x:Name="BlurMatchesButton" Grid.Column="3" Style="{StaticResource SearchActionButtonStyle}" Click="BlurMatchesButton_Click" IsEnabled="False"
                             ToolTipService.ToolTip="Làm mờ mọi chỗ khớp (thành hình Làm mờ thật, 1 bước Hoàn tác)">
-                        <StackPanel Orientation="Horizontal" Spacing="6">
-                            <FontIcon Glyph="&#xED1A;" FontSize="14" />
-                            <TextBlock Text="Làm mờ" />
+                        <StackPanel Spacing="2" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xED1A;" FontSize="16" />
+                            <TextBlock Text="Làm mờ" FontSize="12" HorizontalAlignment="Center" />
                         </StackPanel>
                     </Button>
                 </Grid>
-                <ListView x:Name="TextResultList" Grid.Row="6" SelectionMode="Single" SelectionChanged="TextResultList_SelectionChanged"
+                <ListView x:Name="TextResultList" Grid.Row="5" SelectionMode="Single" SelectionChanged="TextResultList_SelectionChanged"
                           AutomationProperties.Name="Kết quả tìm chữ" Margin="-12,0" />
             </Grid>
         </Border>

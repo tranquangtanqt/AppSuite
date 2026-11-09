@@ -90,6 +90,7 @@ public sealed partial class EditorWindow : Window
     {
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
+        WindowChrome.Apply(this, 640, 440);
         _fileService = fileService;
         _clipboardService = clipboardService;
         _session = session;
@@ -306,8 +307,8 @@ public sealed partial class EditorWindow : Window
             Tag = vm,
             IconSource = new FontIconSource { Glyph = "" },
         };
-        ToolTipService.SetToolTip(tab, vm.Title);
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(tab, vm.Title);
+        ToolTipService.SetToolTip(tab, TabTitle.Full(vm.Title));
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(tab, TabTitle.Full(vm.Title));
         AttachTabMenu(tab);
         if (index is { } at && at < DocumentTabs.TabItems.Count)
         {
@@ -406,7 +407,7 @@ public sealed partial class EditorWindow : Window
         _regionHandle = -1;
         SetRegion(null);
 
-        Title = $"ScreenCapture - {vm.Title}";
+        Title = $"ScreenCapture - {TabTitle.Full(vm.Title)}";
         StatusText.Text = vm.StatusText;
         UpdateSelectionButtons();
         UpdateNumberStampTab();
@@ -569,7 +570,7 @@ public sealed partial class EditorWindow : Window
                 continue;
             }
             var shortTitle = TabTitle.Short(vm.Title, now);
-            if (filter.Length > 0 && !vm.Title.Contains(filter, StringComparison.CurrentCultureIgnoreCase)
+            if (filter.Length > 0 && !TabTitle.Full(vm.Title).Contains(filter, StringComparison.CurrentCultureIgnoreCase)
                 && !shortTitle.Contains(filter, StringComparison.CurrentCultureIgnoreCase))
             {
                 continue;
@@ -585,11 +586,11 @@ public sealed partial class EditorWindow : Window
                 Child = new Image { Source = Thumbnail(vm), Stretch = Stretch.Uniform },
             });
             var text = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 2 };
-            text.Children.Add(new TextBlock { Text = vm.Title, TextTrimming = TextTrimming.CharacterEllipsis, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            text.Children.Add(new TextBlock { Text = TabTitle.Full(vm.Title), TextTrimming = TextTrimming.CharacterEllipsis, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
             text.Children.Add(new TextBlock { Text = $"Ảnh {i + 1}" + (vm.NeedsSave ? "  ·  ● chưa lưu" : string.Empty), FontSize = 12, Opacity = 0.7 });
             Grid.SetColumn(text, 1);
             row.Children.Add(text);
-            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(row, vm.Title);
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(row, TabTitle.Full(vm.Title));
             TabList.Items.Add(row);
             if (ReferenceEquals(vm, _viewModel))
             {
@@ -2324,6 +2325,7 @@ public sealed partial class EditorWindow : Window
                     host.Children.Insert(ColorSizeHomeIndex, ColorSizeGroup);
                 }
             }
+            UpdateColorSizeColumns();
         }
         UpdateRibbonOverflow();
     }
