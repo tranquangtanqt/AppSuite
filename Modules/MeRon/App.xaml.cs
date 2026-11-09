@@ -1,6 +1,7 @@
 using MeRon.Core;
 using MeRon.Core.Data;
 using MeRon.Services;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 
@@ -26,6 +27,10 @@ public partial class App : Application
         }
 
         InitializeComponent();
+        // Không bắt thì 1 exception chưa xử lý làm app tắt hẳn không rõ lý do - ghi vào log (kèm stack) để còn xem lại.
+        UnhandledException += (_, e) => AppLog.For("App").LogCritical(e.Exception, "Lỗi không xử lý được - app sẽ tắt: {Message}", e.Message);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            AppLog.For("App").LogCritical(e.ExceptionObject as Exception, "Lỗi không xử lý được (luồng nền) - app sẽ tắt");
     }
 
     /// <summary>Giao diện đang dùng trong lần chạy này (đổi trong Cài đặt có tác dụng từ lần mở sau).</summary>

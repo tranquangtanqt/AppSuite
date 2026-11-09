@@ -100,6 +100,9 @@ nhiều tài khoản thì vẫn cần link công khai để thấy hết.
 - Bản sao an toàn trong `…\MeRon\Backups\`: `me_ron_truoc-import_<thời gian>.db` (trước mỗi lần Nhập) và
   `me_ron_truoc-xoa_<thời gian>.db` (trước Xoá toàn bộ), giữ 10 bản gần nhất mỗi loại. Lấy lại = đóng app, chép bản
   sao đè lên `me_ron.db`.
+- Log: `Logs\meron-yyyy-MM-dd.log` cạnh `MeRon.exe` (`Services\AppLog.cs`, giữ 14 ngày). Exception chưa xử lý
+  (`Application.UnhandledException` + `AppDomain.UnhandledException` trong `App.xaml.cs`) ghi mức Critical kèm stack
+  "Lỗi không xử lý được - app sẽ tắt" trước khi app tắt.
 - Schema giống hệt điện thoại (`lib/core/services/database/database_config.dart`, version 2): 8 bảng `Address`,
   `Users`, `Categories`, `Products`, `Orders`, `OrderItems`, `Purchases`, `PurchaseItems`, cùng tên cột. Thêm riêng:
   bảng `MeRonMeta` (lần nhập gần nhất, thư mục nhập / xuất đã chọn) và vài index cho truy vấn.

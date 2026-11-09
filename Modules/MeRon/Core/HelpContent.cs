@@ -259,6 +259,7 @@ public static class HelpContent
             new("Luôn hiện", "Đặt hàng (trang mở đầu), Cài đặt và Hướng dẫn không ẩn được. Ẩn trang Xuất thì nút Mở trang Xuất (cảnh báo ở trang Nhập) vẫn mở được trang đó."),
             new("Ảnh chụp", "Khung Ảnh chụp: Tự xoá ảnh cũ hơn … ngày (mặc định 30, 0 = giữ hết) - mỗi lần mở app, ảnh do nút Chụp ảnh lưu trong Pictures\\MeRon (chi_tiet_don_hang_…, hoa_don_cong_no_…) cũ hơn số ngày đó được đưa vào Thùng rác (lấy lại được); file khác trong thư mục giữ nguyên. Dọn ngay: dọn luôn không cần mở lại app. Mở thư mục ảnh: mở Pictures\\MeRon. Dòng bên cạnh cho biết đang có bao nhiêu ảnh."),
             new("Lưu ở đâu", "Lưu ngay khi đổi, trong file settings.json cạnh database (%LOCALAPPDATA%\\AppSuite\\MeRon) - tắt app mở lại vẫn giữ; nhập backup hay Xoá toàn bộ dữ liệu không ảnh hưởng."),
+            new("App tự tắt", "Nếu app đơ rồi tự tắt, lỗi được ghi (kèm vị trí trong code) vào file Logs\\meron-<ngày>.log trong thư mục cài MeRon (cạnh MeRon.exe), dòng có chữ \"Lỗi không xử lý được\". Gửi file đó kèm các bước vừa làm để sửa lỗi. Log giữ 14 ngày."),
         ]),
     ];
 

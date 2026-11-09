@@ -482,6 +482,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Nhập đơn hàng loạt từ Excel / CSV (đề xuất cũ 2026-11-02) - làm khi có file mẫu
 - [x] Công nợ → Chi tiết: dòng tiêu đề trong ảnh chụp bỏ chữ "Đơn chưa thanh toán" và "tính đến ngày", chỉ còn "tên khách ·
   Tổng ..." (người dùng: ảnh trông hơi kỳ, công nợ thì chắc chắn là chưa thanh toán). Cập nhật F1, README. Unit test 217/217 (2026-11-09)
+- [ ] Lỗi người dùng báo 2026-11-09: Nhập đơn hàng loạt, chọn lại món ("205 Thu Hà | 1 bánh ướt; 10 nếp cẩm" → Sữa chua hũ;
+  "806 | 1 bánh ướt; 1 trứng? thịt; 1 Sữa chua dẻo?" → sữa chua đác) thì app đơ rồi tắt. Chưa tái hiện được trong Sandbox
+  (chọn bằng UIA trên ô Chọn món: 13/13 đạt, app không tắt); chờ log crash + chi tiết chọn ở đâu / bằng chuột hay phím
+- [x] Ghi lỗi crash vào log (giống các module khác): exception chưa xử lý (luồng giao diện + luồng nền) ghi mức Critical kèm
+  stack vào Logs\meron-<ngày>.log cạnh MeRon.exe trước khi app tắt. Cập nhật F1 (Cài đặt → App tự tắt), README. Unit test 217/217 (2026-11-09)
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị
   2026-10-27). Cập nhật F1, README
 - [x] Form đơn: **gõ số lượng cùng tên món** - "2 chao" / "chao 2" (cả "2x chao", "chao x2") rồi Enter / Tab → món + số
