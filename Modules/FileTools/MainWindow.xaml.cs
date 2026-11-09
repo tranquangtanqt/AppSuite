@@ -50,7 +50,9 @@ public sealed partial class MainWindow : Window
     {
         if (args.InvokedItemContainer is NavigationViewItem { Tag: "Help" })
         {
-            OpenHelp();
+            // Mở sau khi cú bấm chuột xong: mở ngay trong ItemInvoked thì lúc thả chuột cửa sổ chính được kéo lại lên trên,
+            // Hướng dẫn nằm phía sau (F1 không bị vì không có cú bấm).
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => OpenHelp());
         }
     }
 

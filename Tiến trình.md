@@ -204,7 +204,8 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [x] Bấm "Hướng dẫn (F1)" ở menu thì cửa sổ Hướng dẫn nằm sau cửa sổ chính (người dùng báo 2026-11-09; phím F1 thì đúng):
   mở trong ItemInvoked lúc cú bấm chưa xong, thả chuột thì cửa sổ chính lên lại → mở ở lượt sau của DispatcherQueue (Low).
   GUI Sandbox chuột thật: trước 0/3, sau 3/3 + F1. Unit test 217/217 (2026-11-09)
-- [ ] Cùng kiểu mở Hướng dẫn từ menu ở FileTools, MainLauncher - chưa kiểm, có thể cùng lỗi
+- [x] FileTools, MainLauncher cùng lỗi Hướng dẫn nằm sau cửa sổ chính khi bấm menu - sửa giống MeRon. GUI Sandbox chuột thật:
+  trước 0/3 mỗi app, sau 3/3 + F1 (2026-11-09)
 - [x] Cài đặt → Giao diện: Theo Windows / Sáng / Tối, lưu `settings.json`, áp dụng lúc khởi động (`Application.RequestedTheme`) + nút Mở lại ngay; cả hộp thoại, cửa sổ Hướng dẫn, thanh tiêu đề. Cập nhật F1, README. Unit test 187/187; GUI Sandbox 17/17 (2026-11-04)
 
 Đánh giá giao diện theo ui-ux-pro-max (ảnh Sandbox nền xám, 1422×808 và 1000×700, sáng / tối, 2026-11-04):

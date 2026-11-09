@@ -228,8 +228,10 @@ public sealed partial class MainWindow : Window
 
     private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
+        // Mở sau khi cú bấm chuột xong: mở ngay trong ItemInvoked thì lúc thả chuột cửa sổ chính được kéo lại lên trên,
+        // Hướng dẫn nằm phía sau (F1 không bị vì không có cú bấm).
         if ((args.InvokedItemContainer as NavigationViewItem)?.Tag as string == "Help")
-            ShowHelp();
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => ShowHelp());
     }
 
     private void HelpAccelerator_Invoked(Microsoft.UI.Xaml.Input.KeyboardAccelerator sender, Microsoft.UI.Xaml.Input.KeyboardAcceleratorInvokedEventArgs args)
