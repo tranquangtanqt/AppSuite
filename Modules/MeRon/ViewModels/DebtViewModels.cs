@@ -100,9 +100,9 @@ public sealed partial class DebtsViewModel : ObservableObject
     public OrderFilter DetailFilter(CustomerDebt debt) =>
         new(OrderStatus.Shipping, null, IncludeFuture ? null : Today, debt.UserId);
 
-    /// <summary>Tiêu đề trên ảnh hoá đơn.</summary>
+    /// <summary>Tiêu đề trên ảnh hoá đơn (mở từ Công nợ nên không cần ghi "Đơn chưa thanh toán" / ngày).</summary>
     public static string CaptureTitle(CustomerDebt debt) =>
-        $"Đơn chưa thanh toán - {debt.Name}  ·  tính đến {DateTime.Today:dd/MM/yyyy}  ·  Tổng {VnFormat.Money(debt.Amount)}";
+        $"{debt.Name}  ·  Tổng {VnFormat.Money(debt.Amount)}";
 
     /// <summary>Thanh toán hết các đơn đang nợ của 1 khách; trả lỗi hoặc null.</summary>
     public string? PayAll(CustomerDebt debt)

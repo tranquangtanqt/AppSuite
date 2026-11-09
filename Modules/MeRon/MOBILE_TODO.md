@@ -190,8 +190,8 @@ hơn mỗi ngày, 29–32 là màn mới / tiện ích.
     `Core\Reports\ChartReport.cs`, `Views\Charts.cs`; màu theo bảng màu đã kiểm tra cả nền sáng / tối)
 33. **Công nợ** (màn mới, nhóm Bán hàng): đơn Đã lên đơn (chưa thanh toán) đã tới ngày giao gom theo khách - tổng nợ, số
     đơn, đơn cũ nhất bao nhiêu ngày (cam khi ≥ 30 ngày); sắp xếp nợ nhiều nhất / nợ lâu nhất; tuỳ chọn tính cả đơn giao sau
-    hôm nay. Chạm 1 khách → **Chi tiết**: chỉ các đơn đang nợ của khách, có dòng tiêu đề "Đơn chưa thanh toán -
-    tên · tính đến ngày · Tổng" nằm trong ảnh Chụp ảnh để gửi Zalo; **Thanh toán hết** 1 lần (hỏi lại); chép tin nhắn nhắc
+    hôm nay. Chạm 1 khách → **Chi tiết**: chỉ các đơn đang nợ của khách, có dòng tiêu đề "tên khách ·
+    Tổng" nằm trong ảnh Chụp ảnh để gửi Zalo; **Thanh toán hết** 1 lần (hỏi lại); chép tin nhắn nhắc
     thanh toán soạn sẵn. Hiện điện thoại phải lọc Đã lên đơn + từng khách mới biết ai nợ bao nhiêu.
     → SQL `WHERE status = 1 AND substr(deliveryDatetime, 1, 10) <= today GROUP BY userId`; ảnh dùng lại chức năng Chụp ảnh
     của màn Chi tiết. (bản máy tính: `Core\Reports\CustomerDebts.cs`, `Views\DebtsPage.xaml`)
