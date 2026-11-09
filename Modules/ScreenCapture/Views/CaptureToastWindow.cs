@@ -26,7 +26,8 @@ public sealed class CaptureToastWindow : Window
     /// <param name="lines">Các dòng trạng thái (đã copy, đã lưu..., lỗi).</param>
     /// <param name="openEditor">Null = không hiện nút Mở trong Editor (Editor đã tự mở).</param>
     /// <param name="savedPath">File đã tự lưu - hiện nút Mở thư mục (chọn sẵn file).</param>
-    public CaptureToastWindow(SKBitmap bitmap, string title, IReadOnlyList<string> lines, Action? openEditor, string? savedPath)
+    public CaptureToastWindow(SKBitmap bitmap, string title, IReadOnlyList<string> lines, Action? openEditor, string? savedPath,
+        string openLabel = "Mở trong Editor")
     {
         Title = "ScreenCapture - đã chụp";
         SharedUI.Helpers.WindowIcon.Apply(this);
@@ -58,7 +59,7 @@ public sealed class CaptureToastWindow : Window
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6, Margin = new Thickness(0, 6, 0, 0) };
         if (openEditor is not null)
         {
-            buttons.Children.Add(MakeButton("Mở trong Editor", "OpenEditorButton", () => openEditor()));
+            buttons.Children.Add(MakeButton(openLabel, "OpenEditorButton", () => openEditor()));
         }
         if (savedPath is not null)
         {

@@ -42,6 +42,24 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   nút *Mở trong Editor* mở ảnh vùng thành tab. `CaptureLauncherWindow.CaptureRegionTextAsync`, `HotkeyAction.RegionText`
   (thêm cuối enum; settings.json cũ được bổ sung mặc định khi đọc).
 
+### Bảng màu & Hút màu (2026-11-09)
+
+- **Hút màu** (phím tắt mặc định `Ctrl+Alt+C` - `HotkeyAction.PickColor`, thêm cuối enum; menu khay *Hút màu trên màn hình*;
+  nút *Hút màu* của Bảng màu): `ViewsColorPickOverlayWindow.cs` - ảnh màn hình đứng yên phủ màn hình ảo như Vùng chọn,
+  kính lúp 11 × 11 pixel × 12 px cạnh con trỏ (lật khi sát mép) + ô màu, mã HTML, RGB. Bấm chuột = lấy màu, Esc (cả
+  `GetAsyncKeyState` dự phòng khi overlay không lên foreground) / chuột phải = huỷ. Không áp hẹn giờ chụp. Từ phím tắt /
+  khay: copy mã theo định dạng đang chọn, thêm vào Màu tự chọn, thông báo nhỏ (ô màu + 2 dạng mã) có nút *Mở Bảng màu*.
+- **Bảng màu** (`ViewsColorPaletteWindow.xaml`, 1 cửa sổ do launcher giữ; nút *Bảng màu* ở cửa sổ chính, menu khay, nút
+  *Bảng màu / Hút màu…* trong bảng Màu nét / Màu nền của Editor): Màu chủ đề 10 màu (như Paint / PicPick) × 5 sắc độ kiểu
+  Office (`ColorTools.Shades`: đen → sáng 50 / 35 / 25 / 15 / 5%, trắng → tối 5…50%, màu khác → sáng 80 / 60 / 40%, tối 25
+  / 50%), Màu chuẩn 10 màu Office, Màu tự chọn 20 ô (`AppSettings.CustomColors`, mới nhất trước, trùng thì lên đầu, đầy thì
+  bỏ màu cũ nhất - `ColorTools.AddCustomColor`). Bên phải: `ColorSpectrum` (Primitives, `SaturationValue` + `Box`), thanh sắc
+  màu tự vẽ (giữ sắc màu riêng `_hue` vì màu xám không có), ô H / S / L thang 0–255 như PicPick (`#757369` = 35 / 14 / 111),
+  R / G / B, `#`. Dưới: *Hút màu*, *Dùng làm Màu nét / Màu nền* (chỉ khi mở từ Editor - `EditorWindow.ApplyStrokeColor /
+  ApplyFillColor` đặt ColorPicker như chọn tay, Editor đóng thì ẩn), định dạng HTML / RGB (`AppSettings.ColorCopyFormat`,
+  dùng chung với phím tắt), mã, *Copy* (chữ đổi "Đã copy" 1,5 giây). Launcher ghi settings.json khi Màu tự chọn / định
+  dạng đổi, và giữ 2 giá trị này khi bấm OK ở Cài đặt.
+
 ### Hướng dẫn (cửa sổ dùng chung `SharedUI.Help.HelpWindow`)
 
 Liệt kê mọi tính năng cho người dùng cuối, chia 16 danh mục (chế độ chụp, phím tắt, khay, Editor,
@@ -62,10 +80,10 @@ tuỳ chọn về ban đầu.
 | Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lưu. **Khi đóng ảnh đã tự lưu**: *Giữ file* (mặc định) / *Hỏi có xoá file không* / *Luôn xoá file* (vào Thùng rác) — `AutoSavedCloseAction` |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm. **Mở lại tab vừa đóng** (Ctrl+Shift+T): giữ tối đa N tab (0–50, mặc định 10, 0 = tắt) / M MB (50–4000, mặc định 300) trong bộ nhớ |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |
-| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất / Chụp lấy chữ — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
+| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất / Chụp lấy chữ / Hút màu — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
 
 - Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`,
-  `Ctrl+Alt+PrtSc` (chụp cuộn dọc), `Ctrl+Alt+T` (chụp lấy chữ). Màn hình hiện tại, Chụp cuộn ngang và Chụp lại lần gần nhất mặc định không có phím.
+  `Ctrl+Alt+PrtSc` (chụp cuộn dọc), `Ctrl+Alt+T` (chụp lấy chữ), `Ctrl+Alt+C` (hút màu). Màn hình hiện tại, Chụp cuộn ngang và Chụp lại lần gần nhất mặc định không có phím.
 - Dùng được cả khi app đang thu nhỏ, ẩn ở khay hệ thống hoặc đang ở app khác. Chụp bằng phím tắt
   khi cửa sổ chính đang thu nhỏ / ẩn thì chụp xong nó vẫn giữ nguyên, không bật lên.
 - Phím đã bị app khác giữ (vd PicPick đang chạy) → đánh dấu ⚠ trong trang Phím tắt + thông báo ở

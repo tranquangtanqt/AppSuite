@@ -65,6 +65,13 @@ public sealed class AppSettings
     /// <summary>Ngôn ngữ đọc chữ (Tìm chữ, Copy chữ trong vùng chọn).</summary>
     public Common.Ocr.FormLanguage OcrLanguage { get; set; } = Common.Ocr.FormLanguage.Japanese;
 
+    // ---- Bảng màu / Hút màu (không có trên cửa sổ Cài đặt - app tự ghi) ----
+    /// <summary>Màu tự chọn của Bảng màu (#RRGGBB, mới nhất trước, tối đa <see cref="ColorTools.MaxCustomColors"/>): màu đã hút
+    /// và màu bấm "Thêm vào màu tự chọn".</summary>
+    public List<string> CustomColors { get; set; } = [];
+    /// <summary>Định dạng mã màu khi copy (Bảng màu, Hút màu).</summary>
+    public ColorCopyFormat ColorCopyFormat { get; set; } = ColorCopyFormat.Html;
+
     // ---- Lưu ảnh ----
     /// <summary>Chất lượng khi lưu JPG (30–100; cao = đẹp hơn, file lớn hơn).</summary>
     public int JpegQuality { get; set; } = 90;
@@ -105,6 +112,7 @@ public sealed class AppSettings
         new() { Action = HotkeyAction.ScrollCaptureHorizontal, Key = HotkeyBinding.NoKey },
         new() { Action = HotkeyAction.RepeatLast, Key = HotkeyBinding.NoKey },
         new() { Action = HotkeyAction.RegionText, Ctrl = true, Alt = true, Key = "T" },
+        new() { Action = HotkeyAction.PickColor, Ctrl = true, Alt = true, Key = "C" },
     ];
 
     /// <summary>Luôn có đủ 1 binding cho mỗi HotkeyAction (file cũ thiếu action mới thì bổ sung mặc định).</summary>
@@ -123,6 +131,7 @@ public sealed class AppSettings
     {
         var copy = (AppSettings)MemberwiseClone();
         copy.Hotkeys = Hotkeys.Select(h => h.Clone()).ToList();
+        copy.CustomColors = [.. CustomColors];
         return copy;
     }
 }
@@ -140,6 +149,8 @@ public enum HotkeyAction
     CurrentMonitor,
     /// <summary>Chụp lấy chữ: chọn vùng → đọc chữ (OCR) → copy chữ vào clipboard, không mở Editor (thêm 2026-10-21).</summary>
     RegionText,
+    /// <summary>Hút màu trên màn hình: chọn 1 điểm → copy mã màu, thêm vào Màu tự chọn của Bảng màu (thêm 2026-11-09).</summary>
+    PickColor,
 }
 
 public sealed class HotkeyBinding

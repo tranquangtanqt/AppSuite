@@ -136,7 +136,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab, RegionText }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab, RegionText, PickColor, ColorPalette }
 
     private void ShowTrayMenu()
     {
@@ -151,6 +151,8 @@ public sealed partial class CaptureLauncherWindow : Window
             ((int)TrayCommand.Scroll, "Chụp cuộn dọc", true),
             ((int)TrayCommand.ScrollHorizontal, "Chụp cuộn ngang", true),
             ((int)TrayCommand.RegionText, "Chụp lấy chữ (copy chữ trong vùng)", true),
+            ((int)TrayCommand.PickColor, "Hút màu trên màn hình", true),
+            ((int)TrayCommand.ColorPalette, "Bảng màu...", true),
             (0, null, true),
             ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
             ((int)TrayCommand.OpenEditor, "Mở Editor", canOpenEditor),
@@ -171,6 +173,8 @@ public sealed partial class CaptureLauncherWindow : Window
             case TrayCommand.Scroll: RunInBackground(() => CaptureScrollAsync(ScrollDirection.Vertical)); break;
             case TrayCommand.ScrollHorizontal: RunInBackground(() => CaptureScrollAsync(ScrollDirection.Horizontal)); break;
             case TrayCommand.RegionText: RunInBackground(CaptureRegionTextAsync); break;
+            case TrayCommand.PickColor: RunInBackground(PickColorFromHotkeyAsync); break;
+            case TrayCommand.ColorPalette: OpenPalette(); break;
             case TrayCommand.OpenLauncher: ShowLauncher(); break;
             case TrayCommand.OpenEditor: OpenExistingEditor(); break;
             case TrayCommand.ReopenClosedTab: ReopenClosedTab(); break;
@@ -243,6 +247,7 @@ public sealed partial class CaptureLauncherWindow : Window
         }
         _settingsWindow?.Close();
         _helpWindow?.Close();
+        _palette?.Close();
         _exiting = true;
         Close();
         Application.Current.Exit();
@@ -440,6 +445,8 @@ public sealed partial class CaptureLauncherWindow : Window
         settings.LastFixedRegion = _settings.LastFixedRegion;
         settings.NewImageBackColor = _settings.NewImageBackColor;
         settings.OcrLanguage = _settings.OcrLanguage;
+        settings.CustomColors = _settings.CustomColors; // Bảng màu có thể đã thêm màu khi cửa sổ Cài đặt đang mở
+        settings.ColorCopyFormat = _settings.ColorCopyFormat;
         _settings = settings;
         _fileService.JpegQuality = settings.JpegQuality;
         try
@@ -484,6 +491,7 @@ public sealed partial class CaptureLauncherWindow : Window
         HotkeyAction.ScrollCapture => () => CaptureScrollAsync(ScrollDirection.Vertical),
         HotkeyAction.ScrollCaptureHorizontal => () => CaptureScrollAsync(ScrollDirection.Horizontal),
         HotkeyAction.RegionText => CaptureRegionTextAsync,
+        HotkeyAction.PickColor => PickColorFromHotkeyAsync,
         _ => () => Task.CompletedTask,
     });
 
@@ -782,6 +790,134 @@ public sealed partial class CaptureLauncherWindow : Window
         }
     }
 
+    // ---- Bảng màu / Hút màu (2026-11-09) ----
+
+    private ColorPaletteWindow? _palette;
+    /// <summary>Editor đã mở Bảng màu (Dùng làm Màu nét / Màu nền áp vào đó); null = mở từ cửa sổ chính / khay.</summary>
+    private EditorWindow? _paletteEditor;
+
+    private void ColorPaletteButton_Click(object sender, RoutedEventArgs e) => OpenPalette();
+
+    /// <summary>Mở (hoặc đưa lên) Bảng màu. <paramref name="editor"/>: mở từ Editor → có nút Dùng làm Màu nét / Màu nền.</summary>
+    private void OpenPalette(SKColor? initial = null, EditorWindow? editor = null)
+    {
+        if (_palette is null)
+        {
+            var palette = new ColorPaletteWindow(_settings.CustomColors, _settings.ColorCopyFormat, initial, _clipboardService, PickScreenColorAsync);
+            palette.CustomColorsChanged += (_, colors) =>
+            {
+                _settings.CustomColors = [.. colors];
+                SaveSettings();
+            };
+            palette.FormatChanged += (_, format) =>
+            {
+                _settings.ColorCopyFormat = format;
+                SaveSettings();
+            };
+            palette.Closed += (_, _) =>
+            {
+                if (ReferenceEquals(_palette, palette))
+                {
+                    _palette = null;
+                }
+            };
+            _palette = palette;
+        }
+        else if (initial is { } color)
+        {
+            _palette.ShowPickedColor(color, _settings.CustomColors);
+        }
+        _paletteEditor = editor;
+        _palette.SetEditorTarget(editor is null ? null : editor.ApplyStrokeColor, editor is null ? null : editor.ApplyFillColor);
+        var hwnd = WindowNative.GetWindowHandle(_palette);
+        if (NativeMethods.IsIconic(hwnd))
+        {
+            NativeMethods.ShowWindow(hwnd, NativeMethods.SW_RESTORE);
+        }
+        _palette.Activate();
+    }
+
+    /// <summary>Hút màu trên màn hình: ẩn cửa sổ chính / Editor / Bảng màu, hiện ảnh màn hình đứng yên + kính lúp, trả màu đã bấm
+    /// (null = huỷ hoặc đang chụp dở). Không áp hẹn giờ chụp của Cài đặt.</summary>
+    private async Task<SKColor?> PickScreenColorAsync()
+    {
+        if (_isCapturing)
+        {
+            return null;
+        }
+        _isCapturing = true;
+        bool paletteShown = _palette is not null && _palette.AppWindow.IsVisible;
+        try
+        {
+            CloseCaptureToast();
+            if (paletteShown)
+            {
+                _palette!.AppWindow.Hide();
+            }
+            MinimizeForCapture(WindowNative.GetWindowHandle(this));
+            await Task.Delay(200); // chờ Windows vẽ lại phần bị các cửa sổ vừa ẩn che
+            var virtualRect = _captureService.GetVirtualScreenRect();
+            using var frozenScreen = _captureService.CaptureRect(virtualRect);
+            var color = await new ColorPickOverlayWindow(frozenScreen, virtualRect).PickAsync();
+            Log.LogInformation("Hút màu: {Color}", color is { } c ? ColorTools.ToHtml(c) : "huỷ");
+            return color;
+        }
+        finally
+        {
+            _isCapturing = false;
+            RestoreLauncherAfterCapture();
+            RestoreEditorAfterCancel();
+            if (paletteShown && _palette is not null)
+            {
+                _palette.AppWindow.Show();
+                _palette.Activate();
+            }
+        }
+    }
+
+    /// <summary>Hút màu bằng phím tắt / menu khay: copy mã màu (định dạng của Bảng màu), thêm vào Màu tự chọn, hiện thông báo nhỏ
+    /// (ô màu + mã) kèm nút Mở Bảng màu.</summary>
+    private async Task PickColorFromHotkeyAsync()
+    {
+        if (await PickScreenColorAsync() is not { } color)
+        {
+            return;
+        }
+        _settings.CustomColors = ColorTools.AddCustomColor(_settings.CustomColors, color);
+        SaveSettings();
+        string code = ColorTools.Format(color, _settings.ColorCopyFormat);
+        _clipboardService.CopyText(code);
+        _palette?.ShowPickedColor(color, _settings.CustomColors);
+
+        using var swatch = new SKBitmap(96, 96);
+        swatch.Erase(color);
+        string other = _settings.ColorCopyFormat == ColorCopyFormat.Rgb ? ColorTools.ToHtml(color) : ColorTools.ToRgb(color);
+        CloseCaptureToast();
+        var toast = new CaptureToastWindow(swatch, $"Đã copy {code}", [other, "Đã thêm vào Màu tự chọn của Bảng màu."],
+            () => OpenPalette(color), savedPath: null, openLabel: "Mở Bảng màu");
+        toast.Closed += (_, _) =>
+        {
+            if (ReferenceEquals(_toast, toast))
+            {
+                _toast = null;
+            }
+        };
+        _toast = toast;
+        toast.ShowWithoutFocus();
+    }
+
+    private void SaveSettings()
+    {
+        try
+        {
+            _settingsStore.Save(_settings);
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Không lưu được cài đặt");
+        }
+    }
+
     /// <summary>Thông báo của Chụp lấy chữ: ảnh vùng + kết quả; nút Mở trong Editor mở ảnh vùng (tìm / copy lại chữ ở đó).</summary>
     private void ShowTextToast(SKBitmap cropped, string title, IReadOnlyList<string> lines)
     {
@@ -1059,7 +1195,16 @@ public sealed partial class CaptureLauncherWindow : Window
         bool reopenClosed = false)
     {
         var editor = new EditorWindow(_fileService, _clipboardService, _session, _closedTabs, restored, activeId, capture, captureTitle, captureFilePath, reopenClosed);
-        editor.Closed += (_, _) => _editor = null;
+        editor.Closed += (_, _) =>
+        {
+            _editor = null;
+            if (ReferenceEquals(_paletteEditor, editor))
+            {
+                _paletteEditor = null;
+                _palette?.SetEditorTarget(null, null); // Editor đã đóng: ẩn Dùng làm Màu nét / Màu nền
+            }
+        };
+        editor.ColorPaletteRequested += (_, _) => OpenPalette(null, editor);
         editor.SettingsRequested += (_, _) => OpenSettings();
         editor.HelpRequested += (_, _) => OpenHelp();
         editor.NewImageRequested += (_, size) => _ = NewImageAsync(editor.Content.XamlRoot, size);

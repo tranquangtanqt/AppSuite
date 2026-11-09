@@ -271,9 +271,19 @@
                                     <Button x:Name="Color1Button" Width="32" Height="32" Padding="0">
                                         <Rectangle x:Name="Color1Swatch" Width="22" Height="22" Fill="#E74C3C" Stroke="Gray" StrokeThickness="1" />
                                         <Button.Flyout>
-                                            <Flyout ShouldConstrainToRootBounds="False">
-                                                <ColorPicker x:Name="Color1ColorPicker" ColorChanged="Color1ColorPicker_ColorChanged"
-                                                             IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                            <Flyout ShouldConstrainToRootBounds="False" x:Name="Color1Flyout">
+                                                <StackPanel Spacing="8">
+                                                    <ColorPicker x:Name="Color1ColorPicker" ColorChanged="Color1ColorPicker_ColorChanged"
+                                                                 IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                                    <!-- Bảng màu (cửa sổ riêng của launcher): hút màu trên màn hình, mã màu, màu tự chọn. -->
+                                                    <Button HorizontalAlignment="Stretch" Click="ColorPaletteButton_Click"
+                                                            ToolTipService.ToolTip="Mở Bảng màu: hút màu trên màn hình, copy mã màu, màu tự chọn; Dùng làm Màu nét / Màu nền">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <FontIcon Glyph="&#xE790;" FontSize="14" />
+                                                            <TextBlock Text="Bảng màu / Hút màu…" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
                                             </Flyout>
                                         </Button.Flyout>
                                     </Button>
@@ -284,9 +294,19 @@
                                     <Button x:Name="Color2Button" Width="32" Height="32" Padding="0">
                                         <Rectangle x:Name="Color2Swatch" Width="22" Height="22" Fill="White" Stroke="Gray" StrokeThickness="1" />
                                         <Button.Flyout>
-                                            <Flyout ShouldConstrainToRootBounds="False">
-                                                <ColorPicker x:Name="Color2ColorPicker" ColorChanged="Color2ColorPicker_ColorChanged"
-                                                             IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                            <Flyout ShouldConstrainToRootBounds="False" x:Name="Color2Flyout">
+                                                <StackPanel Spacing="8">
+                                                    <ColorPicker x:Name="Color2ColorPicker" ColorChanged="Color2ColorPicker_ColorChanged"
+                                                                 IsMoreButtonVisible="False" IsAlphaEnabled="False" />
+                                                    <!-- Bảng màu (cửa sổ riêng của launcher): hút màu trên màn hình, mã màu, màu tự chọn. -->
+                                                    <Button HorizontalAlignment="Stretch" Click="ColorPaletteButton_Click"
+                                                            ToolTipService.ToolTip="Mở Bảng màu: hút màu trên màn hình, copy mã màu, màu tự chọn; Dùng làm Màu nét / Màu nền">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <FontIcon Glyph="&#xE790;" FontSize="14" />
+                                                            <TextBlock Text="Bảng màu / Hút màu…" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
                                             </Flyout>
                                         </Button.Flyout>
                                     </Button>

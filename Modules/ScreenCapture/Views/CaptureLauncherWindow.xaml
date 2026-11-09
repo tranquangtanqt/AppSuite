@@ -81,6 +81,13 @@
                     <TextBlock Text="Ảnh mới" />
                 </StackPanel>
             </Button>
+            <Button x:Name="ColorPaletteButton" Click="ColorPaletteButton_Click"
+                    ToolTipService.ToolTip="Bảng màu: hút màu trên màn hình, copy mã màu HTML / RGB, màu tự chọn. Phím tắt mặc định Ctrl+Alt+C: hút màu ngay">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE790;" FontSize="14" />
+                    <TextBlock Text="Bảng màu" />
+                </StackPanel>
+            </Button>
             <Button x:Name="HelpButton" Click="HelpButton_Click"
                     ToolTipService.ToolTip="Hướng dẫn: tất cả tính năng và phím tắt của ScreenCapture (F1)">
                 <StackPanel Orientation="Horizontal" Spacing="6">

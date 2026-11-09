@@ -232,6 +232,22 @@ public sealed partial class EditorWindow : Window
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
 
+    /// <summary>Launcher mở Bảng màu (nút "Bảng màu / Hút màu…" trong bảng Màu nét / Màu nền), kèm Dùng làm Màu nét / Màu nền.</summary>
+    public event EventHandler? ColorPaletteRequested;
+
+    private void ColorPaletteButton_Click(object sender, RoutedEventArgs e)
+    {
+        Color1Flyout.Hide();
+        Color2Flyout.Hide();
+        ColorPaletteRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Bảng màu → Dùng làm Màu nét: như chọn trong ô Màu nét (áp cả cho hình đang chọn, 1 bước Hoàn tác).</summary>
+    public void ApplyStrokeColor(SKColor color) => Color1ColorPicker.Color = ToWindowsColor(color.WithAlpha(255));
+
+    /// <summary>Bảng màu → Dùng làm Màu nền.</summary>
+    public void ApplyFillColor(SKColor color) => Color2ColorPicker.Color = ToWindowsColor(color.WithAlpha(255));
+
     /// <summary>Nút Hướng dẫn / F1 - launcher mở cửa sổ Hướng dẫn dùng chung (cần AppSettings để hiện phím tắt).</summary>
     public event EventHandler? HelpRequested;
 

@@ -571,7 +571,7 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   tính; ghi chú Cài đặt 1 dòng (chi tiết sang F1); tab Định dạng ẩn Màu nền với đường / mũi tên / bút, Cỡ nét với chữ. Unit test
   68/68; GUI Sandbox 18/18 × sáng / tối (2026-11-09)
 - [ ] Người dùng thử tay ribbon mới trên màn hình thật
-- [ ] Đợt 3b / 3c (gợi ý 2026-11-09, so với PicPick): hút màu + bảng màu gần đây; in, lưu PDF; chọn vùng tự do (lasso);
+- [ ] Đợt 3b / 3c (gợi ý 2026-11-09, so với PicPick): ~~hút màu + bảng màu~~ (xong 2026-11-09, xem Lượt 3b); in, lưu PDF; chọn vùng tự do (lasso);
   chụp cửa sổ con (nút, khung nội dung); kính lúp + toạ độ / kích thước px khi kéo chọn vùng
 - [ ] Ý mới (gợi ý 2026-11-09): ghim ảnh nổi trên màn hình (luôn ở trên, kéo được, chỉnh độ mờ); tự che thông tin nhạy cảm
   (OCR tìm email / số điện thoại / số tài khoản → đề xuất Mosaic, tick chọn); Copy ảnh dạng file (dán vào Explorer / Teams /
@@ -800,7 +800,12 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] Sau khi chụp: *Mở bằng app khác* / *In* (In đi cùng ★★ In ảnh)
 
 *Lượt 3b — trung bình:*
-- [ ] ★★ Hút màu trên màn hình (mã #RRGGBB) + bảng màu nhớ các màu đã hút
+- [x] ★★ Hút màu trên màn hình + **Bảng màu** kiểu PicPick (2026-11-09): phím tắt mặc định `Ctrl+Alt+C` / menu khay / nút Hút màu
+  - kính lúp 11 × 11 pixel + mã màu, bấm = lấy, Esc / chuột phải = huỷ; tự copy mã (HTML `#757369` hoặc RGB
+  `rgb(117, 115, 105)`, nhớ lựa chọn), thêm vào Màu tự chọn, thông báo nhỏ có nút Mở Bảng màu. Bảng màu (nút ở cửa sổ
+  chính, menu khay, trong bảng Màu nét / Màu nền của Editor): Màu chủ đề 10 × 5 sắc độ, Màu chuẩn, Màu tự chọn 20 ô (đầy
+  thì bỏ màu cũ nhất, nhớ qua lần mở), vùng màu + thanh sắc màu, H / S / L 0–255 như PicPick, R / G / B, #; mở từ Editor có
+  Dùng làm Màu nét / Màu nền. Unit test 91/91 (thêm 23 `ColorToolsTests`); GUI Sandbox 25/25 × sáng / tối
 - [ ] ★★ In ảnh
 - [ ] ★ Lưu PDF (GIF tuỳ nhu cầu); gửi email / Office / mở bằng chương trình khác
 

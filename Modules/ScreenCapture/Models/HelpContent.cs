@@ -21,6 +21,7 @@ public static class HelpContent
         (HotkeyAction.ScrollCaptureHorizontal, "Chụp cuộn ngang"),
         (HotkeyAction.RepeatLast, "Chụp lại lần gần nhất"),
         (HotkeyAction.RegionText, "Chụp lấy chữ (OCR)"),
+        (HotkeyAction.PickColor, "Hút màu trên màn hình"),
     ];
 
     public static IReadOnlyList<HelpSection> Build(AppSettings settings) =>
@@ -234,6 +235,17 @@ public static class HelpContent
             new("Nhảy tới tab", "Ctrl+1…8 = tab thứ 1…8, Ctrl+9 = tab cuối.", "Ctrl+1…8", "Ctrl+9"),
             new("Danh sách ảnh", "Mở danh sách mọi ảnh đang mở để chọn nhanh.", "Ctrl+Shift+A"),
             new("Hướng dẫn", "Mở cửa sổ này.", "F1"),
+        ]),
+
+        new("Bảng màu & Hút màu", "", "Lấy mã màu của bất kỳ điểm nào trên màn hình, chọn màu, copy mã HTML / RGB.",
+        [
+            new("Hút màu ngay", $"Phím tắt ({settings.GetHotkey(HotkeyAction.PickColor).Describe()}) hoặc menu khay > Hút màu trên màn hình: màn hình đứng yên, kính lúp cạnh con trỏ phóng to từng pixel kèm mã màu. Bấm chuột = lấy màu, Esc / chuột phải = huỷ. Mã màu tự copy (theo định dạng đang chọn ở Bảng màu), màu tự vào Màu tự chọn, thông báo nhỏ góc màn hình có nút Mở Bảng màu."),
+            new("Mở Bảng màu", "Nút Bảng màu ở cửa sổ chính, menu khay > Bảng màu..., hoặc trong Editor: bấm ô Màu nét / Màu nền > Bảng màu / Hút màu…"),
+            new("Chọn màu", "Bấm 1 ô Màu chủ đề (10 màu, mỗi màu 5 sắc độ sáng → tối), Màu chuẩn hoặc Màu tự chọn; hoặc kéo trong vùng màu (ngang = độ bão hoà, dọc = độ sáng) và thanh sắc màu bên cạnh; hoặc gõ H / S / L (0–255, như PicPick), R / G / B (0–255), mã # (vd 757369 rồi Enter)."),
+            new("Nút Hút màu", "Ẩn Bảng màu, hút 1 điểm trên màn hình rồi hiện lại với màu vừa hút - mã màu tự copy, màu vào Màu tự chọn."),
+            new("Copy mã màu", "Chọn định dạng HTML (#757369) hoặc RGB (rgb(117, 115, 105)) rồi bấm Copy. Định dạng được nhớ cho lần sau, dùng cả cho phím tắt hút màu."),
+            new("Màu tự chọn", "20 ô (2 hàng): màu đã hút và màu bấm Thêm vào màu tự chọn, mới nhất đứng đầu; đầy thì màu cũ nhất bị đẩy ra. Nhớ qua lần mở app sau."),
+            new("Dùng cho hình vẽ", "Mở Bảng màu từ Editor thì có thêm Dùng làm Màu nét / Dùng làm Màu nền: đặt màu cho hình vẽ tiếp theo và cả hình đang chọn."),
         ]),
 
         new("Cài đặt", "\uE713", "Nút Cài đặt ở cửa sổ chính, tab Tệp của Editor hoặc menu khay. Bấm OK mới lưu; Mặc định đưa mọi tuỳ chọn về ban đầu.",
