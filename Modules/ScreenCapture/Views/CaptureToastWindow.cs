@@ -19,6 +19,9 @@ namespace ScreenCapture.Views;
 public sealed class CaptureToastWindow : Window
 {
     private const int WidthDip = 440, HeightDip = 128, MarginDip = 16; // đủ 2 nút ở màn 150% (380 thì cắt "Mở thư mục")
+    private const int WideWidthDip = 540; // 3 nút: Mở trong Editor + Mở thư mục + Ghim
+
+    private int _widthDip = WidthDip;
     private static readonly TimeSpan Lifetime = TimeSpan.FromSeconds(6);
 
     private readonly DispatcherQueueTimer _timer;
@@ -26,8 +29,9 @@ public sealed class CaptureToastWindow : Window
     /// <param name="lines">Các dòng trạng thái (đã copy, đã lưu..., lỗi).</param>
     /// <param name="openEditor">Null = không hiện nút Mở trong Editor (Editor đã tự mở).</param>
     /// <param name="savedPath">File đã tự lưu - hiện nút Mở thư mục (chọn sẵn file).</param>
+    /// <param name="pin">Null = không hiện nút Ghim (đã tự ghim / không ghim được).</param>
     public CaptureToastWindow(SKBitmap bitmap, string title, IReadOnlyList<string> lines, Action? openEditor, string? savedPath,
-        string openLabel = "Mở trong Editor")
+        string openLabel = "Mở trong Editor", Action? pin = null)
     {
         Title = "ScreenCapture - đã chụp";
         SharedUI.Helpers.WindowIcon.Apply(this);
@@ -66,7 +70,15 @@ public sealed class CaptureToastWindow : Window
             buttons.Children.Add(MakeButton("Mở thư mục", "OpenFolderButton",
                 () => System.Diagnostics.Process.Start("explorer.exe", $"/select,\"{savedPath}\"")));
         }
+        if (pin is not null)
+        {
+            buttons.Children.Add(MakeButton("Ghim", "PinButton", pin));
+        }
         text.Children.Add(buttons);
+        if (buttons.Children.Count >= 3)
+        {
+            _widthDip = WideWidthDip;
+        }
 
         var close = new Button
         {
@@ -155,7 +167,7 @@ public sealed class CaptureToastWindow : Window
         {
             scale = dpiX / 96.0;
         }
-        int width = (int)(WidthDip * scale), height = (int)(HeightDip * scale), margin = (int)(MarginDip * scale);
+        int width = (int)(_widthDip * scale), height = (int)(HeightDip * scale), margin = (int)(MarginDip * scale);
         AppWindow.MoveAndResize(new RectInt32(area.X + area.Width - width - margin, area.Y + area.Height - height - margin, width, height));
     }
 

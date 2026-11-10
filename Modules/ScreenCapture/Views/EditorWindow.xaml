@@ -115,6 +115,13 @@
                     <TextBlock Text="Copy" />
                 </StackPanel>
             </Button>
+            <Button x:Name="QuickPinButton" Style="{StaticResource QuickButtonStyle}" Click="PinButton_Click"
+                    AutomationProperties.Name="Ghim" ToolTipService.ToolTip="Ghim ảnh nổi trên màn hình: luôn ở trên, kéo được; lăn chuột = phóng to / thu nhỏ, Ctrl + lăn = độ mờ, chuột phải = menu">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE718;" FontSize="16" />
+                    <TextBlock Text="Ghim" />
+                </StackPanel>
+            </Button>
             <Button x:Name="UndoButton" Style="{StaticResource QuickButtonStyle}" Click="UndoButton_Click"
                     AutomationProperties.Name="Hoàn tác" ToolTipService.ToolTip="Hoàn tác (Ctrl+Z)">
                 <FontIcon Glyph="&#xE7A7;" FontSize="16" />

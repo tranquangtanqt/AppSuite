@@ -232,6 +232,21 @@ public sealed partial class EditorWindow : Window
 
     private void SettingsButton_Click(object sender, RoutedEventArgs e) => SettingsRequested?.Invoke(this, EventArgs.Empty);
 
+    /// <summary>Nút Ghim: launcher ghim ảnh đang mở (kèm các hình đã vẽ) nổi trên màn hình.</summary>
+    public event EventHandler<SKBitmap>? PinRequested;
+
+    private void PinButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            PinRequested?.Invoke(this, _viewModel.RenderComposited());
+        }
+        catch (Exception ex)
+        {
+            _viewModel.StatusText = $"Không ghim được: {ex.Message}";
+        }
+    }
+
     /// <summary>Launcher mở Bảng màu (nút "Bảng màu / Hút màu…" trong bảng Màu nét / Màu nền), kèm Dùng làm Màu nét / Màu nền.</summary>
     public event EventHandler? ColorPaletteRequested;
 

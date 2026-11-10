@@ -64,7 +64,7 @@ public static class HelpContent
         new("Khay hệ thống", "\uE7F4", "ScreenCapture chạy ngầm ở khay (góc phải taskbar, có thể nằm trong nhóm icon ẩn ^).",
         [
             new("Click trái icon", "Mở cửa sổ chính."),
-            new("Click phải icon", "Menu: các kiểu chụp, Mở cửa sổ chính, Mở Editor, Hướng dẫn, Cài đặt, Thoát."),
+            new("Click phải icon", "Menu: các kiểu chụp, Mở cửa sổ chính, Mở Editor, Đóng tất cả ảnh ghim, Hướng dẫn, Cài đặt, Thoát."),
             new("Bấm X ở cửa sổ chính", "Chỉ ẩn xuống khay - phím tắt vẫn dùng được. Thoát hẳn bằng Thoát ở menu khay."),
             new("Khởi động cùng Windows", "Bật trong Cài đặt > Chung: app chạy ngầm ở khay khi đăng nhập Windows, không bật cửa sổ chính."),
             new("Tắt chạy ngầm", "Tắt \"Chạy ngầm ở khay hệ thống\" trong Cài đặt > Chung: không có icon ở khay, bấm X là thoát hẳn app."),
@@ -237,6 +237,16 @@ public static class HelpContent
             new("Hướng dẫn", "Mở cửa sổ này.", "F1"),
         ]),
 
+        new("Ghim ảnh lên màn hình", "\uE718", "Ảnh nổi trên mọi cửa sổ - vừa nhìn ảnh vừa gõ, hoặc đặt cạnh màn hình thật để so sánh.",
+        [
+            new("Ghim", "Nút Ghim ở góc phải trên Editor (cạnh Lưu, Copy): ghim ảnh đang mở kèm hình đã vẽ. Nút Ghim trên thông báo nhỏ sau khi chụp. Tự ghim mọi ảnh chụp: Cài đặt > Chung > Sau khi chụp > Ghim ảnh lên màn hình (mặc định tắt) - bật cùng tắt Mở trong Editor là chụp vùng nào ảnh nổi ngay đúng chỗ đó."),
+            new("Chỗ hiện", "Chụp vùng chọn / cửa sổ / vùng cố định: ảnh nằm đè đúng chỗ vừa chụp, cỡ thật. Ảnh lớn (toàn màn hình) hoặc ghim từ Editor: giữa màn hình, thu nhỏ cho vừa nửa màn hình nếu cần. Viền mỏng màu cam để phân biệt với màn hình thật."),
+            new("Di chuyển, phóng to", "Kéo bằng chuột trái để di chuyển. Lăn chuột = phóng to / thu nhỏ quanh con trỏ (10% mỗi nấc, dừng ở 100% khi đi qua)."),
+            new("Độ mờ", "Ctrl + lăn chuột = mờ / rõ hơn 10% (20-100%), hoặc chuột phải > Độ mờ 100 / 80 / 60 / 40% - nhìn xuyên xuống cửa sổ bên dưới để so sánh."),
+            new("Menu chuột phải", "Độ mờ, Kích thước gốc, Copy ảnh (Ctrl+C), Mở trong Editor, Đóng (Esc), Đóng tất cả ảnh ghim. Menu khay cũng có Đóng tất cả ảnh ghim."),
+            new("Đóng", "Bấm đúp lên ảnh, Esc (sau khi bấm vào ảnh), hoặc chuột phải > Đóng. Ghim được nhiều ảnh cùng lúc. Ảnh ghim tự ẩn lúc chụp (không lọt vào ảnh mới) rồi hiện lại; tắt app là mất (không nhớ qua lần mở sau).", "Esc"),
+        ]),
+
         new("Bảng màu & Hút màu", "", "Lấy mã màu của bất kỳ điểm nào trên màn hình, chọn màu, copy mã HTML / RGB.",
         [
             new("Hút màu ngay", $"Phím tắt ({settings.GetHotkey(HotkeyAction.PickColor).Describe()}) hoặc menu khay > Hút màu trên màn hình: màn hình đứng yên, kính lúp cạnh con trỏ phóng to từng pixel kèm mã màu. Bấm chuột = lấy màu, Esc / chuột phải = huỷ. Mã màu tự copy (theo định dạng đang chọn ở Bảng màu), màu tự vào Màu tự chọn, thông báo nhỏ góc màn hình có nút Mở Bảng màu."),
@@ -250,8 +260,8 @@ public static class HelpContent
 
         new("Cài đặt", "\uE713", "Nút Cài đặt ở cửa sổ chính, tab Tệp của Editor hoặc menu khay. Bấm OK mới lưu; Mặc định đưa mọi tuỳ chọn về ban đầu.",
         [
-            new("Chung", "Hẹn giờ trước khi chụp; Sau khi chụp (chọn nhiều việc): Mở trong Editor, Copy vào clipboard, Tự lưu file, Hiện thông báo nhỏ ở góc màn hình - tắt Editor để chụp nhanh liên tục, phải chọn ít nhất 1 việc; chụp kèm con trỏ chuột (Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước - không áp cho vùng chọn / chụp cuộn); chạy ngầm ở khay hệ thống; khởi động cùng Windows."),
-            new("Thông báo sau khi chụp", "Cửa sổ nhỏ góc dưới-phải (màn có con trỏ): ảnh thu nhỏ, đã lưu / đã copy, nút Mở trong Editor (khi Editor không tự mở) và Mở thư mục (khi đã tự lưu). Không giành focus, tự ẩn sau 6 giây (rê chuột vào thì giữ), tự đóng trước lần chụp sau. Lưu / copy lỗi mà Editor không mở thì luôn hiện để báo lỗi."),
+            new("Chung", "Hẹn giờ trước khi chụp; Sau khi chụp (chọn nhiều việc): Mở trong Editor, Copy vào clipboard, Tự lưu file, Hiện thông báo nhỏ ở góc màn hình, Ghim ảnh lên màn hình - tắt Editor để chụp nhanh liên tục, phải chọn ít nhất 1 việc; chụp kèm con trỏ chuột (Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước - không áp cho vùng chọn / chụp cuộn); chạy ngầm ở khay hệ thống; khởi động cùng Windows."),
+            new("Thông báo sau khi chụp", "Cửa sổ nhỏ góc dưới-phải (màn có con trỏ): ảnh thu nhỏ, đã lưu / đã copy, nút Mở trong Editor (khi Editor không tự mở), Mở thư mục (khi đã tự lưu) và Ghim (khi không tự ghim). Không giành focus, tự ẩn sau 6 giây (rê chuột vào thì giữ), tự đóng trước lần chụp sau. Lưu / copy lỗi mà Editor không mở thì luôn hiện để báo lỗi."),
             new("Tự động lưu", "Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục. Ảnh đã tự lưu được coi là đã lưu nên đóng tab không hỏi lưu (trừ khi sửa thêm). Chất lượng JPG (khi Lưu / Lưu thành JPG): cao = nét hơn, file lớn hơn; ảnh có chữ nên để ≥ 85."),
             new("Chụp kèm con trỏ chuột", "Vẽ con trỏ (đúng hình, đúng chỗ lúc chụp) vào ảnh khi chụp Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước - để chỉ cho người xem đang bấm vào đâu. Vùng chọn, vùng cố định, chụp cuộn thì không (con trỏ đang ở góc vùng kéo / đang lăn trang)."),
             new("Mẫu tên file", "Tên file khi tự lưu, chọn mẫu có sẵn hoặc gõ tuỳ ý (có dòng xem trước). Thẻ: {date} ngày 2026-10-07, {time} giờ 10-31-10, {app} chương trình bị chụp (EXCEL, msedge - mọi trang web cùng 1 trình duyệt ra cùng tên, phân biệt bằng {window}), {window} tiêu đề cửa sổ (≤ 50 ký tự), {mode} kiểu chụp, {size} rộng x cao, {n} số thứ tự 001, 002… trong thư mục. Dấu \\ = thư mục con, vd {date}\\{time}. Ký tự cấm thành _; trùng tên thêm (2). Gõ kèm .png ở cuối cũng được (tự bỏ) - vd {date}\\{date}_{time}_{app}.png → thư mục 2026-10-07, file 2026-10-07_10-31-10_EXCEL.png."),

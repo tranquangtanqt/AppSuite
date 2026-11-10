@@ -100,6 +100,7 @@ public sealed partial class SettingsWindow : Window
         OpenEditorAfterCaptureBox.IsChecked = s.OpenEditorAfterCapture;
         CopyAfterCaptureBox.IsChecked = s.CopyToClipboardAfterCapture;
         NotifyAfterCaptureBox.IsChecked = s.NotifyAfterCapture;
+        PinAfterCaptureBox.IsChecked = s.PinAfterCapture;
         IncludeCursorBox.IsChecked = s.IncludeCursor;
         RunInTrayBox.IsChecked = s.RunInTray;
         StartWithWindowsBox.IsChecked = s.StartWithWindows;
@@ -138,6 +139,7 @@ public sealed partial class SettingsWindow : Window
             OpenEditorAfterCapture = OpenEditorAfterCaptureBox.IsChecked == true,
             CopyToClipboardAfterCapture = CopyAfterCaptureBox.IsChecked == true,
             NotifyAfterCapture = NotifyAfterCaptureBox.IsChecked == true,
+            PinAfterCapture = PinAfterCaptureBox.IsChecked == true,
             IncludeCursor = IncludeCursorBox.IsChecked == true,
             RunInTray = RunInTrayBox.IsChecked == true,
             StartWithWindows = StartWithWindowsBox.IsChecked == true,
@@ -283,7 +285,7 @@ public sealed partial class SettingsWindow : Window
 
         if (!settings.HasAfterCaptureAction)
         {
-            ValidationText.Text = "Sau khi chụp: chọn ít nhất 1 việc (Mở trong Editor, Copy, Tự lưu hoặc Thông báo) - không thì ảnh chụp không đi đâu cả.";
+            ValidationText.Text = "Sau khi chụp: chọn ít nhất 1 việc (Mở trong Editor, Copy, Tự lưu, Thông báo hoặc Ghim) - không thì ảnh chụp không đi đâu cả.";
             SelectCategory("General");
             return;
         }

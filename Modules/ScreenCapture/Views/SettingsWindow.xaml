@@ -70,6 +70,7 @@
                             <CheckBox x:Name="AfterCaptureAutoSaveBox" Content="Tự lưu file (thư mục, mẫu tên: trang Lưu ảnh)"
                                       Checked="AfterCaptureAutoSaveBox_Changed" Unchecked="AfterCaptureAutoSaveBox_Changed" />
                             <CheckBox x:Name="NotifyAfterCaptureBox" Content="Hiện thông báo nhỏ ở góc màn hình" />
+                            <CheckBox x:Name="PinAfterCaptureBox" Content="Ghim ảnh lên màn hình (luôn ở trên, kéo được, chỉnh độ mờ)" />
                         </StackPanel>
                         <StackPanel Spacing="4">
                             <CheckBox x:Name="IncludeCursorBox" Content="Chụp kèm con trỏ chuột" />

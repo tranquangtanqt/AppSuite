@@ -28,8 +28,22 @@ public sealed partial class CaptureLauncherWindow : Window
     private SettingsWindow? _settingsWindow;
     private SharedUI.Help.HelpWindow? _helpWindow;
 
-    /// <summary>Đang trong 1 lần chụp (chờ hẹn giờ / overlay chọn vùng) - bỏ qua phím tắt bấm chồng.</summary>
-    private bool _isCapturing;
+    private bool _isCapturingFlag;
+
+    /// <summary>Đang trong 1 lần chụp (chờ hẹn giờ / overlay chọn vùng) - bỏ qua phím tắt bấm chồng. Ảnh ghim ẩn lúc bắt đầu chụp
+    /// (<see cref="MinimizeForCapture"/>); mọi đường thoát đều gán false → hiện lại ảnh ghim ở đây.</summary>
+    private bool _isCapturing
+    {
+        get => _isCapturingFlag;
+        set
+        {
+            _isCapturingFlag = value;
+            if (!value)
+            {
+                SetPinsHidden(false);
+            }
+        }
+    }
 
     // "Chụp lại lần gần nhất": nhớ kiểu chụp + vùng (toạ độ màn hình) của lần chụp thành công gần nhất.
     private enum LastCaptureKind { None, FullScreen, Monitor, ActiveWindow, Rect }
@@ -91,6 +105,7 @@ public sealed partial class CaptureLauncherWindow : Window
         {
             _hotkeys.Dispose();
             _tray.Dispose();
+            CloseAllPins();
         };
 
         // F1 = Hướng dẫn (Editor cũng có F1 riêng, gọi về đây qua HelpRequested).
@@ -136,7 +151,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab, RegionText, PickColor, ColorPalette }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab, RegionText, PickColor, ColorPalette, CloseAllPins }
 
     private void ShowTrayMenu()
     {
@@ -157,6 +172,7 @@ public sealed partial class CaptureLauncherWindow : Window
             ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
             ((int)TrayCommand.OpenEditor, "Mở Editor", canOpenEditor),
             ((int)TrayCommand.ReopenClosedTab, _closedTabs.Count > 0 ? $"Mở lại ảnh vừa đóng ({_closedTabs.Count})" : "Mở lại ảnh vừa đóng", _closedTabs.Count > 0),
+            ((int)TrayCommand.CloseAllPins, _pins.Count > 0 ? $"Đóng tất cả ảnh ghim ({_pins.Count})" : "Đóng tất cả ảnh ghim", _pins.Count > 0),
             ((int)TrayCommand.Settings, "Cài đặt...", true),
             ((int)TrayCommand.Help, "Hướng dẫn", true),
             (0, null, true),
@@ -178,6 +194,7 @@ public sealed partial class CaptureLauncherWindow : Window
             case TrayCommand.OpenLauncher: ShowLauncher(); break;
             case TrayCommand.OpenEditor: OpenExistingEditor(); break;
             case TrayCommand.ReopenClosedTab: ReopenClosedTab(); break;
+            case TrayCommand.CloseAllPins: CloseAllPins(); break;
             case TrayCommand.Settings: OpenSettings(); break;
             case TrayCommand.Help: OpenHelp(); break;
             case TrayCommand.Exit: _ = ExitAsync(); break;
@@ -585,7 +602,7 @@ public sealed partial class CaptureLauncherWindow : Window
         {
             var bitmap = _captureService.CaptureRect(_captureService.GetVirtualScreenRect(), _settings.IncludeCursor);
             _lastKind = LastCaptureKind.FullScreen;
-            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(CaptureTarget.ActiveOrUnderCursor(), CaptureMode.FullScreen));
+            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(CaptureTarget.ActiveOrUnderCursor(), CaptureMode.FullScreen), _captureService.GetVirtualScreenRect());
         }
         finally
         {
@@ -610,7 +627,7 @@ public sealed partial class CaptureLauncherWindow : Window
             var bitmap = _captureService.CaptureRect(monitor, _settings.IncludeCursor);
             _lastKind = LastCaptureKind.Monitor;
             Log.LogInformation("Chụp màn hình hiện tại: ({Left}, {Top}) {Width}x{Height}", monitor.Left, monitor.Top, monitor.Width, monitor.Height);
-            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(CaptureTarget.ActiveOrUnderCursor(monitor), CaptureMode.Monitor));
+            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(CaptureTarget.ActiveOrUnderCursor(monitor), CaptureMode.Monitor), monitor);
         }
         finally
         {
@@ -635,7 +652,7 @@ public sealed partial class CaptureLauncherWindow : Window
             }
             var bitmap = _captureService.CaptureRect(rect.Value, _settings.IncludeCursor);
             _lastKind = LastCaptureKind.ActiveWindow;
-            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(hwnd, CaptureMode.Window));
+            await FinishCaptureAsync(bitmap, CaptureTarget.Describe(hwnd, CaptureMode.Window), rect.Value);
         }
         finally
         {
@@ -690,7 +707,7 @@ public sealed partial class CaptureLauncherWindow : Window
             {
                 canvas.DrawBitmap(frozenScreen, cropRect, new SKRect(0, 0, cropRect.Width, cropRect.Height));
             }
-            await FinishCaptureAsync(cropped, info);
+            await FinishCaptureAsync(cropped, info, selection.Value);
         }
         finally
         {
@@ -988,7 +1005,7 @@ public sealed partial class CaptureLauncherWindow : Window
                 try
                 {
                     var target = CaptureTarget.WindowAtCenter(WindowEnumerator.GetVisibleWindows(), _lastRect);
-                    await FinishCaptureAsync(_captureService.CaptureRect(_lastRect, _settings.IncludeCursor), CaptureTarget.Describe(target, _lastRectMode));
+                    await FinishCaptureAsync(_captureService.CaptureRect(_lastRect, _settings.IncludeCursor), CaptureTarget.Describe(target, _lastRectMode), _lastRect);
                 }
                 finally
                 {
@@ -1023,9 +1040,10 @@ public sealed partial class CaptureLauncherWindow : Window
         ShowStatus(message, severity);
     }
 
-    /// <summary>Chạy các việc "Sau khi chụp" (Cài đặt > Chung): mở Editor, tự lưu theo mẫu tên file, copy, thông báo nhỏ.
+    /// <summary>Chạy các việc "Sau khi chụp" (Cài đặt > Chung): mở Editor, tự lưu theo mẫu tên file, copy, thông báo nhỏ, ghim.
     /// Trả tab Editor của ảnh này, null nếu không mở Editor.</summary>
-    private async Task<EditorViewModel?> FinishCaptureAsync(SKBitmap bitmap, CaptureInfo info)
+    /// <param name="capturedRect">Vùng vừa chụp trên màn hình (ghim đè đúng chỗ đó); null = không rõ (chụp cuộn).</param>
+    private async Task<EditorViewModel?> FinishCaptureAsync(SKBitmap bitmap, CaptureInfo info, RECT? capturedRect = null)
     {
         Log.LogInformation("Chụp xong: {Width}x{Height}, {Mode}, app {App}", bitmap.Width, bitmap.Height, info.Mode, info.App);
         RestoreLauncherAfterCapture();
@@ -1094,10 +1112,16 @@ public sealed partial class CaptureLauncherWindow : Window
             }
         }
 
+        if (_settings.PinAfterCapture)
+        {
+            PinImage(bitmap, capturedRect);
+        }
+
         // Thông báo: khi bật, hoặc khi lỗi mà Editor không mở (không thì lỗi bị bỏ qua không ai thấy).
         if (_settings.NotifyAfterCapture || (failed && document is null))
         {
-            ShowCaptureToast(bitmap, info, lines, openEditor ? null : savedPath, savedPath, editorOpened: openEditor);
+            ShowCaptureToast(bitmap, info, lines, openEditor ? null : savedPath, savedPath, editorOpened: openEditor,
+                pin: _settings.PinAfterCapture ? null : () => PinImage(bitmap, capturedRect));
         }
         return document;
     }
@@ -1105,12 +1129,12 @@ public sealed partial class CaptureLauncherWindow : Window
     private CaptureToastWindow? _toast;
 
     private void ShowCaptureToast(SKBitmap bitmap, CaptureInfo info, IReadOnlyList<string> lines, string? editorFilePath, string? savedPath,
-        bool editorOpened)
+        bool editorOpened, Action? pin = null)
     {
         CloseCaptureToast();
         string title = $"Đã chụp {bitmap.Width} × {bitmap.Height}" + (info.App.Length > 0 ? $" · {info.App}" : string.Empty);
         Action? openEditor = editorOpened ? null : () => OpenEditor(bitmap, filePath: editorFilePath);
-        var toast = new CaptureToastWindow(bitmap, title, lines.Count > 0 ? lines : [editorOpened ? "Đã mở trong Editor" : "Bấm Mở trong Editor để ghi chú / lưu."], openEditor, savedPath);
+        var toast = new CaptureToastWindow(bitmap, title, lines.Count > 0 ? lines : [editorOpened ? "Đã mở trong Editor" : "Bấm Mở trong Editor để ghi chú / lưu."], openEditor, savedPath, pin: pin);
         toast.Closed += (_, _) =>
         {
             if (ReferenceEquals(_toast, toast))
@@ -1120,6 +1144,64 @@ public sealed partial class CaptureLauncherWindow : Window
         };
         _toast = toast;
         toast.ShowWithoutFocus();
+    }
+
+    // ---- Ảnh ghim (Views/PinnedImageWindow.cs, 2026-11-10) ----
+
+    private readonly List<PinnedImageWindow> _pins = [];
+
+    /// <summary>Ghim ảnh nổi trên màn hình: đè đúng vùng vừa chụp (<paramref name="at"/>), không rõ thì giữa màn hình có con trỏ.</summary>
+    private void PinImage(SKBitmap bitmap, RECT? at)
+    {
+        try
+        {
+            PinnedImageWindow? pin = null;
+            pin = new PinnedImageWindow(bitmap, at is { } r ? new PinRect(r.Left, r.Top, r.Width, r.Height) : null, DispatcherQueue)
+            {
+                CopyRequested = image => _ = CopyPinnedAsync(image),
+                OpenEditorRequested = image => OpenEditor(image),
+                CloseAllRequested = CloseAllPins,
+                CountProvider = () => _pins.Count,
+            };
+            pin.Closed += (_, _) => _pins.Remove(pin);
+            _pins.Add(pin);
+            Log.LogInformation("Ghim ảnh {Width}x{Height} ({Count} ảnh ghim)", bitmap.Width, bitmap.Height, _pins.Count);
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Không ghim được ảnh");
+            ShowStatus($"Không ghim được ảnh: {ex.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private async Task CopyPinnedAsync(SKBitmap image)
+    {
+        try
+        {
+            await _clipboardService.CopyBitmapAsync(image);
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Không copy được ảnh ghim");
+            ShowStatus($"Không copy được ảnh ghim: {ex.Message}", InfoBarSeverity.Error);
+        }
+    }
+
+    private void CloseAllPins()
+    {
+        foreach (var pin in _pins.ToList())
+        {
+            pin.Close();
+        }
+    }
+
+    /// <summary>Ẩn ảnh ghim lúc chụp (không lọt vào ảnh mới), hiện lại khi chụp xong / huỷ.</summary>
+    private void SetPinsHidden(bool hidden)
+    {
+        foreach (var pin in _pins)
+        {
+            pin.SetHidden(hidden);
+        }
     }
 
     /// <summary>Đóng thông báo đang hiện - trước mỗi lần chụp (không lọt vào ảnh).</summary>
@@ -1141,6 +1223,7 @@ public sealed partial class CaptureLauncherWindow : Window
     /// đi sẽ dính luôn cửa sổ Editor vào ảnh.</summary>
     private void MinimizeForCapture(IntPtr launcherHwnd)
     {
+        SetPinsHidden(true);
         // Chụp bằng phím tắt / menu khay khi launcher đang thu nhỏ hoặc ẩn ở khay → chụp xong giữ nguyên,
         // không bật lên. Cửa sổ đang ẩn thì không gọi SW_MINIMIZE (sẽ làm nó hiện ra ở taskbar).
         bool visible = AppWindow.IsVisible;
@@ -1207,6 +1290,11 @@ public sealed partial class CaptureLauncherWindow : Window
         editor.ColorPaletteRequested += (_, _) => OpenPalette(null, editor);
         editor.SettingsRequested += (_, _) => OpenSettings();
         editor.HelpRequested += (_, _) => OpenHelp();
+        editor.PinRequested += (_, image) =>
+        {
+            PinImage(image, null);
+            image.Dispose(); // cửa sổ ghim giữ bản riêng
+        };
         editor.NewImageRequested += (_, size) => _ = NewImageAsync(editor.Content.XamlRoot, size);
         // Tìm chữ: nhớ ngôn ngữ đọc chữ lần trước.
         editor.OcrLanguage = _settings.OcrLanguage;

@@ -592,9 +592,19 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Người dùng thử tay ribbon mới trên màn hình thật
 - [ ] Đợt 3b / 3c (gợi ý 2026-11-09, so với PicPick): ~~hút màu + bảng màu~~ (xong 2026-11-09, xem Lượt 3b); in, lưu PDF; chọn vùng tự do (lasso);
   chụp cửa sổ con (nút, khung nội dung); kính lúp + toạ độ / kích thước px khi kéo chọn vùng
-- [ ] Ý mới (gợi ý 2026-11-09): ghim ảnh nổi trên màn hình (luôn ở trên, kéo được, chỉnh độ mờ); tự che thông tin nhạy cảm
+- [ ] Ý mới (gợi ý 2026-11-09): ~~ghim ảnh nổi trên màn hình~~ (xong 2026-11-10, xem dưới); tự che thông tin nhạy cảm
   (OCR tìm email / số điện thoại / số tài khoản → đề xuất Mosaic, tick chọn); Copy ảnh dạng file (dán vào Explorer / Teams /
   Outlook); thêm unit test (ghép ảnh cuộn, mẫu tên file, đọc / ghi phiên)
+- [x] **Ghim ảnh lên màn hình** (người dùng chọn 2026-11-10): ảnh nổi luôn ở trên, viền cam, không ở taskbar; kéo chuột trái =
+  di chuyển, lăn chuột = phóng to / thu nhỏ quanh con trỏ, Ctrl + lăn = độ mờ 20–100%, chuột phải = menu (Độ mờ 100 / 80 / 60 /
+  40, Kích thước gốc, Copy, Mở trong Editor, Đóng, Đóng tất cả), bấm đúp / Esc = đóng; ghim nhiều ảnh. Ghim từ: Cài đặt >
+  Chung > Sau khi chụp > Ghim ảnh lên màn hình (mặc định tắt; đè đúng chỗ vừa chụp, ảnh lớn thì giữa màn hình nửa cỡ), nút
+  Ghim ở thanh nhanh Editor, nút Ghim trên thông báo nhỏ (3 nút thì thông báo rộng hơn); menu khay Đóng tất cả ảnh ghim. Ảnh
+  ghim tự ẩn lúc chụp. Cửa sổ Win32 layered (`Views/PinnedImageWindow.cs`, `Models/PinGeometry.cs`). Cập nhật F1, README.
+  Unit test 99/99; GUI Sandbox 27/27 (2026-11-10)
+- [ ] Thử tay ảnh ghim trên máy thật: kéo bằng chuột thật, lăn chuột thật (Sandbox gửi message thẳng vào cửa sổ), Ctrl+C sau
+  khi bấm vào ảnh, kéo sang màn hình thứ 2 khác DPI
+- [ ] Để sau (ảnh ghim): chế độ bấm xuyên qua ảnh ghim; nhớ các ảnh đang ghim khi tắt mở lại app
 
 - [x] Popup **Danh sách ảnh** khi nhiều ảnh bị đẩy lên trên (che nút / tab) hoặc bị cắt mất nút "Mở lại tab vừa đóng"; ít ảnh
   (lọc) thì đúng chỗ (người dùng báo 2026-10-22). Nguyên nhân: danh sách `MaxHeight="520"` cố định + ô lọc + nút ≈ 640 px,

@@ -42,6 +42,23 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   nút *Mở trong Editor* mở ảnh vùng thành tab. `CaptureLauncherWindow.CaptureRegionTextAsync`, `HotkeyAction.RegionText`
   (thêm cuối enum; settings.json cũ được bổ sung mặc định khi đọc).
 
+### Ghim ảnh lên màn hình (2026-11-10)
+
+- `Views/PinnedImageWindow.cs`: cửa sổ Win32 thuần (`WS_POPUP`, `WS_EX_LAYERED | TOPMOST | TOOLWINDOW` - không ở taskbar /
+  Alt+Tab), tự vẽ bằng `UpdateLayeredWindow` (`ULW_ALPHA`, `SourceConstantAlpha` = độ mờ) - độ mờ cả cửa sổ thật sự, ảnh
+  đúng từng pixel ở 100%, viền 1 px màu chủ đạo. WinUI không có độ mờ cửa sổ nên không dùng `Window`. `WM_NCHITTEST` →
+  `HTCAPTION` (Windows tự kéo), `WM_MOUSEWHEEL` = zoom quanh con trỏ / Ctrl = độ mờ, `WM_NCRBUTTONUP` = menu Win32 (Độ mờ
+  100 / 80 / 60 / 40, Kích thước gốc, Copy, Mở trong Editor, Đóng, Đóng tất cả), `WM_NCLBUTTONDBLCLK` / Esc = đóng,
+  `WM_DPICHANGED` bỏ qua (giữ cỡ px). Hiện bằng `SW_SHOWNOACTIVATE` (không giành focus). Tính toán ở `Models/PinGeometry.cs`
+  (unit test `PinGeometryTests`): zoom ×1,1 mỗi nấc, kẹp 10–400%, đi qua 100% thì dừng ở 100%; độ mờ 20–100%; chỗ đặt:
+  biết vùng vừa chụp và ảnh ≤ 80% vùng làm việc → đè đúng chỗ đó; không thì giữa màn hình có con trỏ, thu nhỏ vừa nửa
+  vùng làm việc.
+- Nguồn ghim: Cài đặt > Chung > Sau khi chụp > *Ghim ảnh lên màn hình* (`AppSettings.PinAfterCapture`, mặc định tắt, tính
+  vào `HasAfterCaptureAction`); nút *Ghim* (`QuickPinButton`) ở thanh nhanh góc phải Editor (ảnh + hình đã vẽ,
+  `RenderComposited`); nút *Ghim* trên thông báo nhỏ (khi không tự ghim; 3 nút thì thông báo rộng 540). Launcher giữ danh
+  sách, ẩn hết trong `MinimizeForCapture` và hiện lại khi `_isCapturing` về false (mọi đường thoát) - ảnh ghim không lọt vào
+  ảnh chụp mới. Menu khay *Đóng tất cả ảnh ghim (n)*. Không nhớ qua lần mở app sau; chưa có chế độ bấm xuyên qua.
+
 ### Bảng màu & Hút màu (2026-11-09)
 
 - **Hút màu** (phím tắt mặc định `Ctrl+Alt+C` - `HotkeyAction.PickColor`, thêm cuối enum; menu khay *Hút màu trên màn hình*;
@@ -76,7 +93,7 @@ tuỳ chọn về ban đầu.
 
 | Trang | Tuỳ chọn |
 |---|---|
-| Chung | Hẹn giờ trước khi chụp (0–10 giây); **Sau khi chụp** — các ô tick độc lập: *Mở trong Editor* (mặc định bật; tắt = chụp nhanh liên tục), *Copy vào clipboard*, *Tự lưu file* (= ô Tự động lưu ở trang Lưu ảnh), *Hiện thông báo nhỏ* (góc dưới-phải màn có con trỏ: ảnh thu nhỏ, đã lưu / đã copy, nút *Mở trong Editor* / *Mở thư mục*; không giành focus, tự ẩn sau 6 giây, rê chuột vào thì giữ, đóng trước lần chụp sau); phải chọn ít nhất 1 việc; lưu / copy lỗi mà không mở Editor thì luôn hiện thông báo; **chụp kèm con trỏ chuột** (vẽ con trỏ đúng hình / vị trí lúc chụp — Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước; không áp cho vùng chọn / vùng cố định / chụp cuộn vì con trỏ đang ở góc vùng kéo hoặc đang lăn trang); chạy ngầm ở khay hệ thống; khởi động cùng Windows |
+| Chung | Hẹn giờ trước khi chụp (0–10 giây); **Sau khi chụp** — các ô tick độc lập: *Mở trong Editor* (mặc định bật; tắt = chụp nhanh liên tục), *Copy vào clipboard*, *Tự lưu file* (= ô Tự động lưu ở trang Lưu ảnh), *Hiện thông báo nhỏ* (góc dưới-phải màn có con trỏ: ảnh thu nhỏ, đã lưu / đã copy, nút *Mở trong Editor* / *Mở thư mục* / *Ghim*; không giành focus, tự ẩn sau 6 giây, rê chuột vào thì giữ, đóng trước lần chụp sau), *Ghim ảnh lên màn hình* (mặc định tắt); phải chọn ít nhất 1 việc; lưu / copy lỗi mà không mở Editor thì luôn hiện thông báo; **chụp kèm con trỏ chuột** (vẽ con trỏ đúng hình / vị trí lúc chụp — Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước; không áp cho vùng chọn / vùng cố định / chụp cuộn vì con trỏ đang ở góc vùng kéo hoặc đang lăn trang); chạy ngầm ở khay hệ thống; khởi động cùng Windows |
 | Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lưu. **Khi đóng ảnh đã tự lưu**: *Giữ file* (mặc định) / *Hỏi có xoá file không* / *Luôn xoá file* (vào Thùng rác) — `AutoSavedCloseAction` |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm. **Mở lại tab vừa đóng** (Ctrl+Shift+T): giữ tối đa N tab (0–50, mặc định 10, 0 = tắt) / M MB (50–4000, mặc định 300) trong bộ nhớ |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |

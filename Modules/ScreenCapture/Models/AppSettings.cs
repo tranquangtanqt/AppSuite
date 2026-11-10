@@ -19,9 +19,12 @@ public sealed class AppSettings
     /// <summary>Hiện thông báo nhỏ ở góc màn hình (ảnh thu nhỏ, Mở trong Editor / Mở thư mục), tự ẩn sau vài giây.</summary>
     public bool NotifyAfterCapture { get; set; }
 
+    /// <summary>Ghim ảnh chụp nổi trên màn hình (luôn ở trên, kéo được, chỉnh độ mờ - Views/PinnedImageWindow.cs), 2026-11-10.</summary>
+    public bool PinAfterCapture { get; set; }
+
     /// <summary>Còn ít nhất 1 việc sau khi chụp - không thì ảnh chụp biến mất không dấu vết.</summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public bool HasAfterCaptureAction => OpenEditorAfterCapture || CopyToClipboardAfterCapture || AutoSave || NotifyAfterCapture;
+    public bool HasAfterCaptureAction => OpenEditorAfterCapture || CopyToClipboardAfterCapture || AutoSave || NotifyAfterCapture || PinAfterCapture;
 
     /// <summary>Vẽ cả con trỏ chuột vào ảnh - Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Chụp lại lần trước.
     /// Vùng chọn, vùng cố định, chụp cuộn thì không (con trỏ đang ở góc vùng kéo / đang lăn trang).</summary>
