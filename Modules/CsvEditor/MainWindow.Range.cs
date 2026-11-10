@@ -25,6 +25,10 @@ public sealed partial class MainWindow
     private bool _rangeDragMoved;
     private bool _changingRange;
     private CellRef? _shiftClickCell;
+    private Point _rangePressPoint;
+
+    /// <summary>Chuột di quá chừng này (px) kể từ lúc nhấn mới tính là kéo.</summary>
+    private const double DragThreshold = 4;
 
     private bool HasBlockRange => _range is { IsSingleCell: false };
 
@@ -212,6 +216,7 @@ public sealed partial class MainWindow
         _range = new CellRange(cell, cell);
         _rangeDragging = true;
         _rangeDragMoved = false;
+        _rangePressPoint = point.Position;
         RefreshRange();
     }
 
@@ -226,6 +231,7 @@ public sealed partial class MainWindow
         if (!point.Properties.IsLeftButtonPressed)
         {
             _rangeDragging = false;
+            StopEdgeScroll();
             return;
         }
 
@@ -235,6 +241,15 @@ public sealed partial class MainWindow
             Grid.CapturePointer(e.Pointer);
             SetRange(range with { Active = cell });
         }
+
+        // Kéo quá ngưỡng là giữ con trỏ ngay, kể cả còn trong ô vừa nhấn: kéo nhanh vọt thẳng ra ngoài bảng thì vẫn nhận được di
+        // chuột bên ngoài để tự cuộn. Rung tay khi bấm gọn (dưới ngưỡng) không giữ - bấm gọn để DataGrid tự lo (xem PointerReleased).
+        if (Math.Abs(point.Position.X - _rangePressPoint.X) > DragThreshold || Math.Abs(point.Position.Y - _rangePressPoint.Y) > DragThreshold)
+        {
+            Grid.CapturePointer(e.Pointer);
+        }
+
+        UpdateEdgeScroll(point.Position);
     }
 
     private void Grid_RangePointerReleased(object sender, PointerRoutedEventArgs e)
@@ -242,6 +257,7 @@ public sealed partial class MainWindow
         if (_rangeDragging)
         {
             _rangeDragging = false;
+            StopEdgeScroll();
             Grid.ReleasePointerCapture(e.Pointer);
 
             // DataGrid chỉ nhận con trỏ khi bấm gọn, kéo chuột thì Ctrl+C / Esc không tới bảng. Bấm gọn phải để DataGrid tự lo: đang sửa ô

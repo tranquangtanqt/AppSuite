@@ -73,6 +73,7 @@ public sealed partial class MainWindow : Window
         };
 
         InitRangeSelection();
+        InitColumnFit();
         FindPanel.ViewModel = ViewModel;
         FindPanel.MatchNavigated += (_, match) => NavigateToCell(match);
         FindPanel.CloseRequested += (_, _) => Grid.Focus(FocusState.Programmatic);
@@ -692,8 +693,8 @@ public sealed partial class MainWindow : Window
     /// space - null if the row isn't currently realized (scrolled out of view). Height comes from the
     /// row container, not the cell's content element (a TextBlock/TextBox that's normally vertically
     /// centered and shorter than the row) - using the content element's own height would put the
-    /// corner mid-cell instead of on the actual gridline. Width/X still come from the content element:
-    /// unlike <see cref="DataGridColumn.ActualWidth"/>, that matches what's actually rendered.</summary>
+    /// corner mid-cell instead of on the actual gridline. Width/X come from the DataGridCell around the
+    /// content element: unlike <see cref="DataGridColumn.ActualWidth"/>, that matches what's actually rendered.</summary>
     private Rect? GetCellRect(int viewRowIndex, DataGridColumn column)
     {
         if (viewRowIndex < 0 || viewRowIndex >= ViewModel.ViewRows.Count)
@@ -706,9 +707,12 @@ public sealed partial class MainWindow : Window
             return null;
         }
 
+        // Ngang lấy theo DataGridCell: chữ trong ô chỉ rộng bằng nội dung (núm điền nằm ngay sau chữ, ô trống thì khung xem trước
+        // rộng 0) - đo trong Sandbox 2026-11-10.
+        var horizontal = (FrameworkElement?)FindAncestor<DataGridCell>(cellContent) ?? cellContent;
         var rowTop = container.TransformToVisual(FillHandleLayer).TransformPoint(new Point(0, 0)).Y;
-        var cellTopLeft = cellContent.TransformToVisual(FillHandleLayer).TransformPoint(new Point(0, 0));
-        return new Rect(cellTopLeft.X, rowTop, cellContent.ActualWidth, container.ActualHeight);
+        var cellTopLeft = horizontal.TransformToVisual(FillHandleLayer).TransformPoint(new Point(0, 0));
+        return new Rect(cellTopLeft.X, rowTop, horizontal.ActualWidth, container.ActualHeight);
     }
 
     /// <summary>Finds the realized <see cref="DataGridRow"/> for a view-row index by walking the visual
@@ -753,6 +757,7 @@ public sealed partial class MainWindow : Window
             UpdateFillPreview();
         }
 
+        UpdateEdgeScroll(e.GetCurrentPoint(FillHandleLayer).Position); // ra mép trên / dưới thì tự cuộn
         e.Handled = true;
     }
 
@@ -799,16 +804,19 @@ public sealed partial class MainWindow : Window
     private void UpdateFillPreview()
     {
         var column = Grid.Columns[_fillSourceColumnIndex];
-        if (GetCellRect(_fillSourceRowIndex, column) is not { } start || GetCellRect(_fillTargetRowIndex, column) is not { } end)
+        if (GetCellRect(_fillTargetRowIndex, column) is not { } end)
         {
             FillPreviewBorder.Visibility = Visibility.Collapsed;
             return;
         }
 
-        Canvas.SetLeft(FillPreviewBorder, start.X);
-        Canvas.SetTop(FillPreviewBorder, start.Y);
-        FillPreviewBorder.Width = start.Width;
-        FillPreviewBorder.Height = Math.Max(0, end.Bottom - start.Top);
+        // Tự cuộn khi kéo ra mép dưới: ô nguồn có thể đã cuộn khuất phía trên → khung bắt đầu từ mép trên vùng ô.
+        var areaTop = CellArea().Top;
+        var top = GetCellRect(_fillSourceRowIndex, column) is { } start ? Math.Max(start.Y, areaTop) : areaTop;
+        Canvas.SetLeft(FillPreviewBorder, end.X);
+        Canvas.SetTop(FillPreviewBorder, top);
+        FillPreviewBorder.Width = end.Width;
+        FillPreviewBorder.Height = Math.Max(0, end.Bottom - top);
         FillPreviewBorder.Visibility = Visibility.Visible;
     }
 
@@ -844,6 +852,7 @@ public sealed partial class MainWindow : Window
 
     private void ResetFillDragState()
     {
+        StopEdgeScroll();
         _isFillDragging = false;
         _fillSourceRowIndex = -1;
         _fillSourceColumnIndex = -1;

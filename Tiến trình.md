@@ -41,7 +41,7 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
   vẽ**~~ · ~~**2. hiệu ứng ảnh**~~ — cả 2 xong + test GUI Sandbox 2026-10-06, còn người dùng thử tay ·
   **3. chụp & công cụ** — đề xuất làm 3 lượt (2026-10-06): ~~(a) 1 màn hình, mẫu tên file, kèm con trỏ, việc tự làm sau
   khi chụp~~ (xong 2026-10-07) · (b) hút màu + bảng màu, in, lưu PDF · (c) lasso, cửa sổ con, kính lúp / thước…
-- CsvEditor: ~~freeze cột đầu, ẩn / hiện cột~~ (2026-11-03), tự giãn độ rộng cột
+- CsvEditor: ~~freeze cột đầu, ẩn / hiện cột~~ (2026-11-03), ~~tự giãn độ rộng cột~~ (2026-11-10)
 - Chung: nhớ kích thước / vị trí cửa sổ + file gần đây cho mọi module (helper chung trong `Common`); nhớ thư mục nguồn
   ModuleB / ModuleC / Mcf.DbDef; ~~chuyển Hướng dẫn của ScreenCapture / FileTools sang bản dùng chung~~ (2026-10-08)
 - Kỹ thuật: giảm tiếp dung lượng publish (runtime chung), unit test còn thiếu (Rdbms.HtmlGenerator, ModuleB/C, ScreenCapture),
@@ -1157,7 +1157,9 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] Thử tay: kéo chọn vùng bằng chuột thật, bấm đúp sửa ô sau khi có chọn vùng
 - [x] Sửa lỗi: kéo chọn vùng khi đang sửa ô làm con trỏ nhảy lên ô Lọc đầu tiên (`Grid.Focus` chạy cả sau cú bấm thường, lúc đang sửa DataGrid chuyển tiêu điểm cho ô con). Nay chỉ gọi sau khi thật sự kéo, ghi ô đang sửa trước. Unit test 180/180; GUI Sandbox chọn vùng 22/22, kịch bản sửa + kéo 4/4 (2026-11-05)
 - [ ] Người dùng báo (bản Release 2026-11-05, file 123 cột, sau khi dán): dòng tô xanh đứng yên, bấm dòng khác không đổi. Chưa tái hiện: thử ngẫu nhiên 110 thao tác (bấm, bấm đúp, kéo chọn, kéo điền, chép, dán, hoàn tác, F2, Tab, Esc) trên đúng bản đó không kẹt lần nào. Chưa biết có liên quan tới lỗi con trỏ nhảy ở trên không. Gặp lại thì ghi: thao tác ngay trước đó, Esc có hết không, phím mũi tên có đổi dòng không
-- [ ] Kéo chuột chọn vùng chưa tự cuộn bảng khi ra mép (hiện dùng Shift+bấm cho vùng dài)
+- [x] Kéo chọn vùng / kéo điền ra ngoài mép bảng thì tự cuộn (trên, dưới, trái, phải; càng xa mép càng nhanh, cột chậm hơn dòng; kéo vào lại hoặc thả chuột thì dừng; vùng bắt đầu ở cột cố định không cuộn ngang). Kéo quá 4 px là giữ con trỏ để kéo vọt thẳng ra ngoài cửa sổ vẫn nhận. Sửa kèm lỗi có từ trước: núm kéo điền nằm ngay sau chữ thay vì góc ô, khung xem trước kéo điền rộng 0 ở ô trống. Unit test 197/197; GUI Sandbox 20/20 (2026-11-10)
+- [x] Giãn cột vừa nội dung như Excel: bấm đúp vạch ngăn bên phải tên cột, chuột phải tiêu đề → Giãn vừa nội dung / Giãn vừa tất cả cột, Cột ▾, Ctrl+Shift+W. Đo cả cột (dòng đang hiện), 100–800 px; sửa ô không tự giãn (người dùng chọn). Cập nhật F1, README. Unit test 197/197; GUI Sandbox (chung đợt trên) (2026-11-10)
+- [ ] Thử tay: kéo ra mép bằng chuột thật (tốc độ cuộn có vừa không), bấm đúp mép cột bằng chuột thật
 
 Đánh giá giao diện theo ui-ux-pro-max (quy tắc WinUI / UX + ảnh Sandbox ~1010×600 logical, 2026-11-04):
 - [x] Thẻ lọc tràn: 5 thẻ cùng lúc thì thẻ cuối bị cắt → `Views/WrapPanel` tự xuống hàng (vị trí tính ở `Services/WrapLayout`, có unit test) (2026-11-04)
@@ -1213,7 +1215,7 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   1 ô). Unit test 120/120 (2026-10-02)
 - [x] Thử tay trên máy thật: kéo-thả file từ Explorer vào CsvEditor (Sandbox không tự động hoá được: UIPI chặn thả từ
   Explorer vào app chạy quyền cao); mở file .xlsx vừa xuất bằng Excel thật (Sandbox không có Excel) — OK (2026-10-05)
-- [ ] **[Đề xuất · Có thể]** ~~Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột~~ (xong 2026-11-03, xem dưới); tự giãn độ rộng cột
+- [x] **[Đề xuất · Có thể]** ~~Cố định (freeze) cột đầu khi cuộn ngang; ẩn / hiện cột~~ (xong 2026-11-03, xem dưới); ~~tự giãn độ rộng cột~~ (xong 2026-11-10)
 - [x] **Thiết kế lại giao diện - đợt 1 (mục 1–4 của đề xuất 2026-11-02)** (2026-11-03, duyệt qua bản nháp + ảnh trước /
   sau trong Sandbox, ảnh ở `Pictures\AppSuite_CsvEditor_giao_dien_moi_2026-11-03`): (1) thanh công cụ tiếng Việt
   `Mở 🕘 Lưu Xuất▾ | ↶ ↷ | Dòng▾ Cột▾ | Tìm → Lọc Sắp xếp 📊 … ?` vừa 1 hàng ở ~1000 px (trước ~20 nút, tràn), giữ mọi phím

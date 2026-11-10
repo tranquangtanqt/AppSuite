@@ -26,6 +26,7 @@
         <Grid.KeyboardAccelerators>
             <KeyboardAccelerator Key="G" Modifiers="Control,Shift" Invoked="GoToColumnAccelerator_Invoked" />
             <KeyboardAccelerator Key="H" Modifiers="Control" Invoked="ReplaceAccelerator_Invoked" />
+            <KeyboardAccelerator Key="W" Modifiers="Control,Shift" Invoked="AutoFitAllAccelerator_Invoked" />
         </Grid.KeyboardAccelerators>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -88,6 +89,8 @@
                 <MenuFlyoutItem Text="Ẩn cột này" Click="HideColumnItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xED1A;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Tag="FreezeTo" Text="Cố định đến cột này" Click="FreezeToColumnItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE718;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Tag="Unfreeze" Text="Bỏ cố định cột" Click="UnfreezeColumns_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77A;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Giãn vừa nội dung" Click="AutoFitColumnItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9A6;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                <MenuFlyoutItem Text="Giãn vừa tất cả cột" KeyboardAcceleratorTextOverride="Ctrl+Shift+W" Click="AutoFitAllColumns_Click" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem Text="Đổi tên cột..." Click="HeaderRenameItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                 <MenuFlyoutItem Text="Chèn cột bên phải..." Click="InsertColumnRightItem_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
@@ -170,6 +173,8 @@
                                 <MenuFlyoutItem x:Name="ShowHideColumnsMenuItem" Text="Ẩn / hiện cột..." Click="ShowHideColumns_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE7B3;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                                 <MenuFlyoutItem Text="Cố định đến cột đang chọn" Click="FreezeToCurrentColumn_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE718;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
                                 <MenuFlyoutItem Text="Bỏ cố định cột" Click="UnfreezeColumns_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77A;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Giãn cột đang chọn vừa nội dung" Click="AutoFitCurrentColumn_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9A6;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
+                                <MenuFlyoutItem Text="Giãn vừa tất cả cột" KeyboardAcceleratorTextOverride="Ctrl+Shift+W" Click="AutoFitAllColumns_Click" />
                                 <ToggleMenuFlyoutItem x:Name="ShowFilterBoxesItem" Text="Hiện ô lọc dưới tên cột" IsChecked="True" Click="ShowFilterBoxesItem_Click"><ToggleMenuFlyoutItem.Icon><FontIcon Glyph="&#xE71C;" /></ToggleMenuFlyoutItem.Icon></ToggleMenuFlyoutItem>
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem Text="Thêm cột..." Click="AddColumnButton_Click"><MenuFlyoutItem.Icon><FontIcon Glyph="&#xE710;" /></MenuFlyoutItem.Icon></MenuFlyoutItem>
