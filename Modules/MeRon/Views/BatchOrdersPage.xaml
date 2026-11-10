@@ -25,7 +25,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBlock Text="Nhập đơn hàng loạt" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
-            <local:DateBox Grid.Column="1" Date="{x:Bind ViewModel.Day, Mode=TwoWay}" AllowEmpty="False" Width="150" Margin="16,0,0,0"
+            <local:DateBox Grid.Column="1" Date="{x:Bind ViewModel.Day, Mode=TwoWay}" AllowEmpty="False" NearToday="True" Width="150" Margin="16,0,0,0"
                            HorizontalAlignment="Left" VerticalAlignment="Center" AutomationProperties.Name="Ngày giao" PlaceholderText="Ngày giao" />
             <!-- 1 nút tách (gọn cho cửa sổ hẹp): thân nút = chép link Project Claude, ▾ = chép câu lệnh mẫu -->
             <SplitButton Grid.Column="2" Click="CopyClaudeLinkSplit_Click" AutomationProperties.Name="Chép link Claude"

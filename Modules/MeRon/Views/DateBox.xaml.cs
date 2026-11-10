@@ -27,6 +27,9 @@ public sealed partial class DateBox : UserControl
     public static readonly DependencyProperty AllowEmptyProperty = DependencyProperty.Register(
         nameof(AllowEmpty), typeof(bool), typeof(DateBox), new PropertyMetadata(true, (d, e) => ((DateBox)d).ClearButton.Visibility = (bool)e.NewValue ? Visibility.Visible : Visibility.Collapsed));
 
+    public static readonly DependencyProperty NearTodayProperty = DependencyProperty.Register(
+        nameof(NearToday), typeof(bool), typeof(DateBox), new PropertyMetadata(false));
+
     private bool _syncingCalendar;
 
     public DateBox()
@@ -73,6 +76,14 @@ public sealed partial class DateBox : UserControl
         set => SetValue(AllowEmptyProperty, value);
     }
 
+    /// <summary>true: gõ ngày + tháng không có năm thì lấy năm cho ngày gần hôm nay nhất (ô ngày giao, ngày thanh toán, ngày
+    /// nhập hàng) - xem <see cref="DateInput.Parse(string?, DateOnly, bool)"/>. false (ô lọc Từ / Đến ngày): luôn năm nay.</summary>
+    public bool NearToday
+    {
+        get => (bool)GetValue(NearTodayProperty);
+        set => SetValue(NearTodayProperty, value);
+    }
+
     private static DateOnly Today => DateOnly.FromDateTime(DateTime.Today);
 
     private DateOnly? Day => Date is { } d ? DateOnly.FromDateTime(d.Date) : null;
@@ -102,7 +113,7 @@ public sealed partial class DateBox : UserControl
             SetDay(AllowEmpty ? null : Day);
             return;
         }
-        SetDay(DateInput.Parse(Input.Text, Today) ?? Day);
+        SetDay(DateInput.Parse(Input.Text, Today, NearToday) ?? Day);
     }
 
     private void Input_LostFocus(object sender, RoutedEventArgs e) => Commit();

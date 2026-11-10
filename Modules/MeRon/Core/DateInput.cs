@@ -11,6 +11,35 @@ public static partial class DateInput
 {
     public static string Format(DateOnly day) => day.ToString("dd/MM/yyyy", CultureInfo.InvariantCulture);
 
+    /// <summary>Quanh giao thừa: ngày năm trước / năm sau cách hôm nay tối đa bấy nhiêu ngày thì lấy năm đó.</summary>
+    public const int NearYearDays = 60;
+
+    /// <param name="nearToday">true: ngày + tháng không ghi năm mà ngày đó của năm trước / năm sau cách hôm nay không quá
+    /// <see cref="NearYearDays"/> ngày thì lấy năm đó - ngày giao, ngày của trang sổ: 02/01 gõ "30/12" là 30/12 năm trước,
+    /// 30/12 gõ "02/01" là năm sau; ngoài khoảng đó vẫn năm nay như cũ. false: luôn năm nay (ô lọc "Từ ngày 1/1" của báo cáo
+    /// gõ trong tháng 12 vẫn là đầu năm nay).</param>
+    public static DateOnly? Parse(string? text, DateOnly today, bool nearToday)
+    {
+        var parsed = Parse(text, today);
+        if (!nearToday || parsed is not { } day || !HasDayAndMonthOnly(text))
+        {
+            return parsed;
+        }
+        var near = new[] { day.Year - 1, day.Year + 1 }
+            .Where(y => y is >= 1900 and <= 2999 && (day.Month != 2 || day.Day != 29 || DateTime.IsLeapYear(y)))
+            .Select(y => new DateOnly(y, day.Month, day.Day))
+            .Where(d => Math.Abs(d.DayNumber - today.DayNumber) <= NearYearDays)
+            .ToList();
+        return near.Count > 0 ? near[0] : day;
+    }
+
+    /// <summary>Chữ chỉ có ngày + tháng ("30/12", "3012").</summary>
+    private static bool HasDayAndMonthOnly(string? text)
+    {
+        var value = text?.Trim() ?? string.Empty;
+        return value.All(char.IsAsciiDigit) ? value.Length == 4 : Separators().Split(value).Length == 2;
+    }
+
     public static DateOnly? Parse(string? text, DateOnly today)
     {
         var value = text?.Trim() ?? string.Empty;

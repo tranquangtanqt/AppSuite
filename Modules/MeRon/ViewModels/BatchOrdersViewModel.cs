@@ -21,7 +21,13 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
 
     public bool CanSave => Match.CanSave;
 
-    public bool NeedsReview => !Match.CanSave || Match.Warnings.Count > 0 || Reconcile?.Kind == ReconcileKind.Different;
+    /// <summary>Số dòng phía trên giống hệt dòng này (<see cref="BatchReconciler.DuplicateLines"/>), null = không trùng.</summary>
+    public int? DuplicateOf { get; init; }
+
+    /// <summary>Lưu được nhưng nên xem lại: cảnh báo khi đọc dòng hoặc trùng dòng phía trên - mặc định không tick.</summary>
+    public bool HasWarnings => Match.Warnings.Count > 0 || DuplicateOf is not null;
+
+    public bool NeedsReview => !Match.CanSave || HasWarnings || Reconcile?.Kind == ReconcileKind.Different;
 
     /// <summary>Dòng ổn không có hàng nút sửa: các nút hiện khi rê chuột.</summary>
     public bool EditOnHover => !NeedsReview;
@@ -59,7 +65,9 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
 
     public string ProblemText => string.Join("  ·  ", Match.Problems);
 
-    public string WarningText => string.Join("  ·  ", Match.Warnings);
+    public string WarningText => string.Join("  ·  ", DuplicateOf is { } line
+        ? Match.Warnings.Prepend($"Trùng dòng {line} (dán 2 lần?) - khách đặt 2 đơn giống nhau thật thì tự tick")
+        : Match.Warnings);
 
     /// <summary>Không khách nào khớp → nút "Thêm khách" (popup, điền sẵn tên + số căn hộ).</summary>
     public bool NeedsNewCustomer => Match.Customer is null && Match.CustomerCandidates.Count == 0 && Match.Line.Error is null;
@@ -127,8 +135,8 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
     [ObservableProperty]
     private int _checkedCount;
 
-    /// <summary>Lô vừa lưu (mã đơn + dòng chữ gốc) - Hoàn tác xoá các đơn đó và trả dòng về ô chữ.</summary>
-    private List<(long OrderId, string Raw)> _lastBatch = [];
+    /// <summary>Lô vừa lưu (đơn như lúc lưu + dòng chữ gốc) - Hoàn tác xoá các đơn còn nguyên và trả dòng về ô chữ.</summary>
+    private List<BatchSavedOrder> _lastBatch = [];
 
     [ObservableProperty]
     private string _undoText = string.Empty;
@@ -236,18 +244,22 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
                 .Where(o => o.Status != OrderStatus.Cancelled).ToList();
             var entries = BatchReconciler.Compare(matches, orders);
             _reconcile = entries;
+            var duplicates = BatchReconciler.DuplicateLines(matches);
             _all = matches.Select(match =>
             {
                 var line = match.Line;
                 var entry = entries.FirstOrDefault(e => ReferenceEquals(e.Draft, match));
-                var fresh = match.Warnings.Count == 0 && entry?.Kind is not (ReconcileKind.Matched or ReconcileKind.Different);
-                var isChecked = match.CanSave && (_checkOverrides.TryGetValue(line.Raw, out var forced) ? forced : fresh);
-                var row = new BatchRowViewModel(match, isChecked, entry) { AllProducts = sortedProducts };
+                int? duplicateOf = duplicates.TryGetValue(match, out var first) ? first : null;
+                var fresh = match.Warnings.Count == 0 && duplicateOf is null && entry?.Kind is not (ReconcileKind.Matched or ReconcileKind.Different);
+                // Dòng trùng: tick tay theo số dòng (2 dòng cùng chữ dùng chung khoá chữ nên tick dòng này sẽ tick cả dòng kia).
+                var overrideKey = duplicateOf is null ? line.Raw : $"{line.Number}\u0001{line.Raw}";
+                var isChecked = match.CanSave && (_checkOverrides.TryGetValue(overrideKey, out var forced) ? forced : fresh);
+                var row = new BatchRowViewModel(match, isChecked, entry) { AllProducts = sortedProducts, DuplicateOf = duplicateOf };
                 row.PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName == nameof(BatchRowViewModel.IsChecked))
                     {
-                        _checkOverrides[line.Raw] = row.IsChecked;
+                        _checkOverrides[overrideKey] = row.IsChecked;
                         UpdateCounts();
                     }
                 };
@@ -292,11 +304,11 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
     {
         CheckedCount = _all.Count(r => r.IsChecked && r.CanSave);
         var problems = _all.Count(r => !r.CanSave);
-        var warnings = _all.Count(r => r.CanSave && r.Match.Warnings.Count > 0);
+        var warnings = _all.Count(r => r.CanSave && r.HasWarnings);
         var inApp = _all.Count(r => r.IsMatched || r.IsDifferent);
         Summary = _all.Count == 0
             ? "Chưa có dòng nào - dán chữ vào ô trên"
-            : $"{_all.Count} dòng  ·  {_all.Count(r => r.CanSave && r.Match.Warnings.Count == 0 && !r.IsMatched && !r.IsDifferent)} sẵn sàng"
+            : $"{_all.Count} dòng  ·  {_all.Count(r => r.CanSave && !r.HasWarnings && !r.IsMatched && !r.IsDifferent)} sẵn sàng"
               + (inApp > 0 ? $"  ·  {inApp} đã có trong MeRon" : string.Empty)
               + (warnings > 0 ? $"  ·  {warnings} nên xem lại" : string.Empty)
               + (problems > 0 ? $"  ·  {problems} cần sửa" : string.Empty)
@@ -313,18 +325,22 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
             return 0;
         }
         var products = AppServices.MasterData.GetProducts().ToDictionary(p => p.Id);
-        var saved = new List<(long, string)>();
+        var saved = new List<BatchSavedOrder>();
         var savedLines = new List<int>();
         foreach (var row in rows)
         {
-            long id = 0;
-            var error = AppServices.Try("Lưu đơn", () => id = AppServices.Orders.Save(row.Match.ToDraft(DeliveryDay), products));
-            if (error is not null)
+            Order? order = null;
+            var error = AppServices.Try("Lưu đơn", () =>
             {
-                Error = $"Dòng {row.Match.Line.Number} ({row.CustomerText}): {error}";
+                var id = AppServices.Orders.Save(row.Match.ToDraft(DeliveryDay), products);
+                order = AppServices.Orders.Get(id);
+            });
+            if (error is not null || order is null)
+            {
+                Error = $"Dòng {row.Match.Line.Number} ({row.CustomerText}): {error ?? "không đọc lại được đơn vừa lưu"}";
                 break;
             }
-            saved.Add((id, row.Match.Line.Raw));
+            saved.Add(new BatchSavedOrder(order, row.Match.Line.Raw));
             savedLines.Add(row.Match.Line.Number);
         }
 
@@ -342,16 +358,18 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         return saved.Count;
     }
 
-    public int LastBatchCount => _lastBatch.Count;
+    /// <summary>Xét lô vừa lưu với dữ liệu hiện tại (gọi trước hộp thoại Hoàn tác): đơn nào còn nguyên, đơn nào đã đổi.</summary>
+    public BatchUndoPlan PlanUndo() => BatchUndo.Plan(_lastBatch, AppServices.Orders.Get);
 
-    /// <summary>Xoá các đơn của lô vừa lưu, trả các dòng về cuối ô chữ.</summary>
-    public void UndoLastBatch()
+    /// <summary>Xoá các đơn còn nguyên như lúc lưu (<paramref name="plan"/>), trả các dòng đó về cuối ô chữ; đơn đã sửa /
+    /// thanh toán / huỷ / không còn thì giữ, dòng không trả về (tránh lưu lại thành trùng).</summary>
+    public void UndoLastBatch(BatchUndoPlan plan)
     {
         var error = AppServices.Try("Hoàn tác lô", () =>
         {
-            foreach (var (orderId, _) in _lastBatch)
+            foreach (var item in plan.Delete)
             {
-                AppServices.Orders.Delete(orderId);
+                AppServices.Orders.Delete(item.Saved.Id);
             }
         });
         if (error is not null)
@@ -359,8 +377,13 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
             Error = error;
             return;
         }
-        Text = (Text.TrimEnd() + "\n" + string.Join("\n", _lastBatch.Select(b => b.Raw))).TrimStart('\n');
-        Message = $"Đã xoá {_lastBatch.Count} đơn vừa lưu, các dòng đã trả về ô chữ.";
+        if (plan.Delete.Count > 0)
+        {
+            Text = (Text.TrimEnd() + "\n" + string.Join("\n", plan.Delete.Select(b => b.Raw))).TrimStart('\n');
+        }
+        Message = (plan.Delete.Count > 0 ? $"Đã xoá {plan.Delete.Count} đơn vừa lưu, các dòng đã trả về ô chữ." : "Không xoá đơn nào.")
+                  + (plan.Keep.Count > 0 ? $" Giữ lại {plan.Keep.Count} đơn đã đổi sau khi lưu." : string.Empty);
+        AppLog.For("BatchOrders").LogInformation("Hoàn tác lô: xoá {Deleted} đơn, giữ {Kept} đơn đã đổi", plan.Delete.Count, plan.Keep.Count);
         _lastBatch = [];
         UndoText = string.Empty;
         Refresh();

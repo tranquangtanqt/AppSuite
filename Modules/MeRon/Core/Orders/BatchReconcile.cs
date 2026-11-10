@@ -82,11 +82,38 @@ public static class BatchReconciler
         return entries;
     }
 
+    /// <summary>Dòng giống hệt 1 dòng phía trên trong ô chữ (cùng khách, cùng món + số lượng, cùng CK) → số dòng phía trên đó.
+    /// Thường do dán 2 lần; khách đặt 2 đơn giống nhau thật thì người dùng tự tick.</summary>
+    public static IReadOnlyDictionary<BatchLineMatch, int> DuplicateLines(IReadOnlyList<BatchLineMatch> drafts)
+    {
+        var first = new Dictionary<string, int>(StringComparer.Ordinal);
+        var duplicates = new Dictionary<BatchLineMatch, int>(ReferenceEqualityComparer.Instance);
+        foreach (var draft in drafts.Where(d => d.CanSave && d.Customer is not null))
+        {
+            var key = $"{draft.Customer!.Id}|{draft.Line.Paid}|" + string.Join(";", draft.Items
+                .GroupBy(ItemKey)
+                .Select(g => $"{g.Key}x{g.Sum(i => i.Quantity)}")
+                .Order(StringComparer.Ordinal));
+            if (first.TryGetValue(key, out var line))
+            {
+                duplicates[draft] = line;
+            }
+            else
+            {
+                first[key] = draft.Line.Number;
+            }
+        }
+        return duplicates;
+    }
+
+    private static string ItemKey(BatchItemMatch item) =>
+        item.Product is { } p ? $"p{p.Id}" : $"f{TextSearch.Fold(item.FreeName).Trim()}|{item.FreePrice}";
+
     /// <summary>Lệch giữa dòng sổ và đơn: từng món (số lượng sổ / MeRon) + trạng thái thanh toán. Rỗng = khớp.</summary>
     public static IReadOnlyList<string> Differences(BatchLineMatch draft, Order order)
     {
         var book = draft.Items
-            .GroupBy(i => i.Product is { } p ? $"p{p.Id}" : $"f{TextSearch.Fold(i.FreeName).Trim()}|{i.FreePrice}")
+            .GroupBy(ItemKey)
             .ToDictionary(g => g.Key, g => (Name: g.First().Product?.Name ?? g.First().FreeName, Quantity: g.Sum(i => i.Quantity)));
         var app = order.Items
             .GroupBy(i => i.ProductId is { } id ? $"p{id}" : $"f{TextSearch.Fold(i.SnapshotName).Trim()}|{i.SnapshotPrice}")

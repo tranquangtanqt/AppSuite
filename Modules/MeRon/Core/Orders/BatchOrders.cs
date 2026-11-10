@@ -50,7 +50,7 @@ public static partial class BatchOrderParser
             {
                 continue;
             }
-            if (DayLine().Match(raw) is { Success: true } dayMatch && DateInput.Parse(dayMatch.Groups[1].Value.Trim(), today) is { } parsed)
+            if (DayLine().Match(raw) is { Success: true } dayMatch && DateInput.Parse(dayMatch.Groups[1].Value.Trim(), today, nearToday: true) is { } parsed)
             {
                 day = parsed;
                 continue;

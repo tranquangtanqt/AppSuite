@@ -32,7 +32,7 @@
                     <TextBlock Text="Ngày nhập và các khoản hàng" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
                 </StackPanel>
 
-                <local:DateBox Header="Ngày nhập" AllowEmpty="False" Date="{x:Bind ViewModel.Date, Mode=TwoWay}" Width="170" HorizontalAlignment="Left"
+                <local:DateBox Header="Ngày nhập" AllowEmpty="False" NearToday="True" Date="{x:Bind ViewModel.Date, Mode=TwoWay}" Width="170" HorizontalAlignment="Left"
                                AutomationProperties.Name="Ngày nhập" />
 
                 <StackPanel Spacing="4">

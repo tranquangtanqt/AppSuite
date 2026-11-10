@@ -194,11 +194,11 @@
 
                 <!-- Ngày + thanh toán -->
                 <StackPanel Orientation="Horizontal" Spacing="16">
-                    <local:DateBox Header="Ngày giao hàng" AllowEmpty="False" Date="{x:Bind ViewModel.DeliveryDate, Mode=TwoWay}" Width="170"
+                    <local:DateBox Header="Ngày giao hàng" AllowEmpty="False" NearToday="True" Date="{x:Bind ViewModel.DeliveryDate, Mode=TwoWay}" Width="170"
                                    AutomationProperties.Name="Ngày giao hàng" />
                     <ToggleSwitch Header="Đã thanh toán trước" IsOn="{x:Bind ViewModel.IsPrepaid, Mode=TwoWay}" OnContent="Có" OffContent="Không"
                                   AutomationProperties.Name="Đã thanh toán trước" />
-                    <local:DateBox Header="Ngày thanh toán" AllowEmpty="False" Date="{x:Bind ViewModel.PaymentDate, Mode=TwoWay}" Width="170"
+                    <local:DateBox Header="Ngày thanh toán" AllowEmpty="False" NearToday="True" Date="{x:Bind ViewModel.PaymentDate, Mode=TwoWay}" Width="170"
                                    AutomationProperties.Name="Ngày thanh toán"
                                    Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.PaymentVisible), Mode=OneWay}" />
                 </StackPanel>

@@ -107,10 +107,29 @@ public sealed partial class BatchOrdersPage : Page
 
     private async void Undo_Click(object sender, RoutedEventArgs e)
     {
-        if (await Dialogs.ConfirmAsync(XamlRoot, "Hoàn tác lô vừa lưu",
-                $"Xoá {ViewModel.LastBatchCount} đơn vừa lưu và trả các dòng về ô chữ?", "Xoá các đơn vừa lưu"))
+        BatchUndoPlan plan;
+        try
         {
-            ViewModel.UndoLastBatch();
+            plan = ViewModel.PlanUndo();
+        }
+        catch (Exception ex)
+        {
+            await Dialogs.ShowMessageAsync(XamlRoot, "Hoàn tác lô vừa lưu", $"Không đọc được các đơn vừa lưu: {ex.Message}");
+            return;
+        }
+        var kept = plan.Keep.Count == 0 ? string.Empty
+            : $"\n\nGiữ lại {plan.Keep.Count} đơn đã đổi sau khi lưu (không xoá, dòng không trả về ô chữ):\n"
+              + string.Join("\n", plan.Keep.Select(k => $"- Đơn #{k.Order.Saved.Id} {k.Order.Saved.UserName}: {k.Reason}"));
+        if (plan.Delete.Count == 0)
+        {
+            await Dialogs.ShowMessageAsync(XamlRoot, "Hoàn tác lô vừa lưu", "Không còn đơn nào xoá được." + kept);
+            ViewModel.UndoLastBatch(plan);
+            return;
+        }
+        if (await Dialogs.ConfirmAsync(XamlRoot, "Hoàn tác lô vừa lưu",
+                $"Xoá {plan.Delete.Count} đơn vừa lưu và trả các dòng về ô chữ?" + kept, $"Xoá {plan.Delete.Count} đơn"))
+        {
+            ViewModel.UndoLastBatch(plan);
         }
     }
 

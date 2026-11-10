@@ -490,6 +490,16 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Lỗi người dùng báo 2026-11-09: Nhập đơn hàng loạt, chọn lại món ("205 Thu Hà | 1 bánh ướt; 10 nếp cẩm" → Sữa chua hũ;
   "806 | 1 bánh ướt; 1 trứng? thịt; 1 Sữa chua dẻo?" → sữa chua đác) thì app đơ rồi tắt. Chưa tái hiện được trong Sandbox
   (chọn bằng UIA trên ô Chọn món: 13/13 đạt, app không tắt); chờ log crash + chi tiết chọn ở đâu / bằng chuột hay phím
+- [x] Lỗi dữ liệu (đọc từ code, tái hiện trong GUI Sandbox 3/3 trên bản cũ, đã sửa 2026-11-10):
+  - Ngày không ghi năm luôn lấy năm hiện tại: ngày 02/01/2027 dán "Ngày | 30/12" → app hỏi "Tạo 1 đơn giao ngày 30/12/2027".
+    Sửa: `DateInput.Parse(..., nearToday)` - ngày + tháng của năm trước / sau cách hôm nay ≤ 60 ngày thì lấy năm đó; dùng cho
+    dòng "Ngày |" và ô ngày giao / thanh toán / nhập hàng (`DateBox.NearToday`); ô lọc Từ / Đến ngày giữ năm nay như cũ
+  - Hoàn tác lô xoá theo mã đơn đã nhớ, không kiểm tra (sửa đơn sau khi lưu vẫn bị xoá; sau Nhập dữ liệu có thể xoá nhầm đơn
+    khác). Sửa: `Core/Orders/BatchUndo.cs` nhớ đơn như lúc lưu, chỉ xoá đơn còn y nguyên; đơn đã sửa / thanh toán / huỷ / không
+    còn thì giữ, hộp thoại liệt kê, dòng không trả về ô chữ
+  - Dán 2 dòng giống hệt → cả 2 tự tick, Lưu tạo 2 đơn trùng. Sửa: `BatchReconciler.DuplicateLines` - dòng trùng hệt 1 dòng
+    phía trên viền cam "Trùng dòng N (dán 2 lần?)", không tự tick (khách đặt 2 đơn thật thì tick tay)
+  Cập nhật F1, README. Unit test 235/235; GUI Sandbox 17/17 (2026-11-10)
 - [x] Ghi lỗi crash vào log (giống các module khác): exception chưa xử lý (luồng giao diện + luồng nền) ghi mức Critical kèm
   stack vào Logs\meron-<ngày>.log cạnh MeRon.exe trước khi app tắt. Cập nhật F1 (Cài đặt → App tự tắt), README. Unit test 217/217 (2026-11-09)
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị

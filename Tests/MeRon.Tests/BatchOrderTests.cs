@@ -445,4 +445,44 @@ public class BatchOrderTests
         Assert.Equal(16, item.Product!.Id);
         Assert.Equal(1000, item.Quantity);
     }
+
+    // ---------- Dòng trùng trong ô chữ, ngày trang sổ qua năm (2026-11-10) ----------
+
+    private static IReadOnlyDictionary<BatchLineMatch, int> Duplicates(string text, out IReadOnlyList<BatchLineMatch> matches)
+    {
+        matches = BatchOrderParser.Parse(text, Today).Lines.Select(l => BatchOrderMatcher.Match(l, Customers, Products, Abbr)).ToList();
+        return BatchReconciler.DuplicateLines(matches);
+    }
+
+    [Fact]
+    public void Duplicate_lines_point_to_the_first_identical_line()
+    {
+        var duplicates = Duplicates(
+            "706 Mỹ Ly | 3 sc uống\n" +
+            "W1 Tuấn Chung | 1 giò\n" +
+            "706 Mỹ Ly | 3 Sữa chua uống\n" +   // cùng món, viết khác
+            "706 Mỹ Ly | 1 sc uống; 2 sc uống\n" + // cộng dồn = 3
+            "706 Mỹ Ly | 3 sc uống | | CK\n" +    // khác thanh toán
+            "706 Mỹ Ly | 2 sc uống\n" +           // khác số lượng
+            "205 Thu Hà | 3 sc uống", out var matches);
+
+        Assert.Equal([3, 4], duplicates.Keys.Select(m => m.Line.Number).Order());
+        Assert.All(duplicates.Values, first => Assert.Equal(1, first));
+        Assert.Equal(7, matches.Count);
+    }
+
+    [Fact]
+    public void Duplicate_lines_ignore_lines_that_cannot_be_saved_yet()
+    {
+        Assert.Empty(Duplicates("999 | 1 giò\n999 | 1 giò\n706 | 1 xyz\n706 | 1 xyz", out _));
+    }
+
+    [Fact]
+    public void Day_line_without_year_takes_the_year_nearest_today()
+    {
+        Assert.Equal(new DateOnly(2026, 12, 30), BatchOrderParser.Parse("Ngày | 30/12\n706 | 1 giò", new DateOnly(2027, 1, 2)).Day);
+        Assert.Equal(new DateOnly(2027, 1, 2), BatchOrderParser.Parse("Ngày | 2/1\n706 | 1 giò", new DateOnly(2026, 12, 30)).Day);
+        Assert.Equal(new DateOnly(2026, 10, 29), BatchOrderParser.Parse("Ngày | 29/10", Today).Day);
+        Assert.Equal(new DateOnly(2027, 12, 30), BatchOrderParser.Parse("Ngày | 30/12/2027", new DateOnly(2027, 1, 2)).Day);
+    }
 }
