@@ -32,6 +32,8 @@ internal static class HelpContent
             new("Hỏi lưu thay đổi", "Còn thay đổi chưa lưu mà đóng cửa sổ, mở file khác hoặc mở lại file → hỏi Lưu / Không lưu / Huỷ. Lưu lỗi (file đang bị app khác khoá…) thì báo, không mất thay đổi."),
             new("Xuất Excel (.xlsx)", "Trong Xuất ▾. Xuất các dòng đang hiện (theo lọc / sắp xếp hiện tại) ra file Excel; file CSV đang mở không đổi. Số thật ghi thành số; mã có số 0 ở đầu (00123), số dài hơn 15 chữ số, ô bắt đầu bằng = giữ nguyên dạng chữ. Dòng tiêu đề in đậm, cố định khi cuộn, có nút lọc."),
             new("File rất lớn", "File được đọc ở nền, có thanh tiến độ và nút Huỷ. Ước tính trên ~3 triệu dòng thì hỏi trước khi mở (toàn bộ file nằm trong RAM)."),
+            new("App gặp lỗi - bản khôi phục", "Nếu CsvEditor bị tắt do lỗi khi còn thay đổi chưa lưu, bảng đang sửa được chép ra bản khôi phục (thư mục Data\\Recovery cạnh CsvEditor.exe); file gốc không bị đụng tới. Lần mở sau hiện hộp thoại: Mở bản khôi phục (bảng hiện lại đúng như lúc lỗi, tiêu đề có ● chưa lưu - kiểm tra rồi Lưu để ghi vào file gốc, hoặc Lưu thành file khác để giữ file gốc), Xoá bản khôi phục, hoặc Để sau (lần mở sau hỏi lại). Bản đã mở được giữ thêm 30 ngày rồi tự xoá."),
+            new("Nhật ký (log)", "Mỗi ngày 1 file Logs\\csveditor-yyyy-MM-dd.log cạnh CsvEditor.exe, giữ 14 ngày: lúc mở app, mở / lưu / xuất file (tên file, số dòng, cột, bảng mã, thời gian) và mọi lỗi kèm chi tiết. Không ghi nội dung ô. Gặp lỗi lạ thì gửi file log của ngày đó để tìm nguyên nhân. Mọi lỗi khi mở file (kể cả file hỏng) đều báo hộp thoại, không làm tắt app."),
         ]),
 
         new("Sửa dữ liệu", "", "Sửa ô, thêm / xoá dòng và cột, điền nhanh, copy - dán với Excel.",

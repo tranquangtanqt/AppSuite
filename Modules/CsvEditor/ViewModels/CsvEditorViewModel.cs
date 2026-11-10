@@ -73,6 +73,9 @@ public sealed partial class CsvEditorViewModel : ObservableObject
     /// <summary>Đường dẫn file đang mở (cập nhật khi Save As), null nếu chưa mở / chưa lưu file nào.</summary>
     public string? CurrentFilePath => string.IsNullOrEmpty(_editService.Document.FilePath) ? null : _editService.Document.FilePath;
 
+    /// <summary>Toàn bộ dữ liệu đang mở (không theo lọc / sắp xếp) - để ghi bản khôi phục khi app gặp lỗi.</summary>
+    public CsvDocument Document => _editService.Document;
+
     [ObservableProperty]
     private string _fileName = "(chưa mở file)";
 
@@ -181,6 +184,15 @@ public sealed partial class CsvEditorViewModel : ObservableObject
         {
             _editService.Document.HasHeader = value;
         }
+    }
+
+    /// <summary>Vừa mở bản khôi phục: bảng thuộc về file gốc (Lưu = ghi vào file gốc; bảng mới chưa lưu lần nào thì Lưu hỏi chỗ
+    /// lưu) và coi như chưa lưu - không để Ctrl+S ghi vào chính bản khôi phục trong Data\Recovery.</summary>
+    public void AdoptRecoveredDocument(string? originalPath)
+    {
+        _editService.Document.FilePath = originalPath ?? string.Empty;
+        FileName = _editService.Document.FileName;
+        _editService.UndoRedo.MarkDirty();
     }
 
     public Task<bool> ReopenAsync(string filePath, Func<long, Task<bool>> confirmLargeFile, CancellationToken cancellationToken) =>

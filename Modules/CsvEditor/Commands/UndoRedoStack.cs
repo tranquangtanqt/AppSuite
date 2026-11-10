@@ -83,4 +83,13 @@ public sealed class UndoRedoStack
         _cleanMarkerIsEmptyStack = _undo.Count == 0;
         _cleanMarker = _cleanMarkerIsEmptyStack ? null : _undo.Peek();
     }
+
+    /// <summary>Nội dung khác file trên đĩa dù chưa có bước sửa nào (vd vừa mở bản khôi phục): <see cref="IsDirty"/> luôn true
+    /// - kể cả sửa rồi hoàn tác - tới lần <see cref="MarkClean"/> sau (lưu xong).</summary>
+    public void MarkDirty()
+    {
+        _cleanMarkerIsEmptyStack = false;
+        _cleanMarker = null;
+        StateChanged?.Invoke(this, EventArgs.Empty);
+    }
 }

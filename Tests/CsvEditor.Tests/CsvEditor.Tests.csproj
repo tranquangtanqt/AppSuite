@@ -18,7 +18,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\Modules\CsvEditor\Services\**\*.cs" Link="CsvEditor\Services\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- AppLog ghi file qua Common.Logging - không phải logic cần test, bỏ để project test khỏi reference Common. -->
+    <Compile Include="..\..\Modules\CsvEditor\Services\**\*.cs" Exclude="..\..\Modules\CsvEditor\Services\AppLog.cs" Link="CsvEditor\Services\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\Modules\CsvEditor\Models\**\*.cs" Link="CsvEditor\Models\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\Modules\CsvEditor\Commands\**\*.cs" Link="CsvEditor\Commands\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\Modules\CsvEditor\ViewModels\**\*.cs" Link="CsvEditor\ViewModels\%(RecursiveDir)%(Filename)%(Extension)" />

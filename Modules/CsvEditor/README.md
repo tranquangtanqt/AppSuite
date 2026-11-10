@@ -143,6 +143,28 @@ File được đọc bất đồng bộ (không chặn UI) kèm progress bar và
 ước tính file có trên khoảng 3 triệu dòng, sẽ hỏi xác nhận trước khi đọc thật. Xem `PLAN.md` để biết
 chi tiết đánh đổi.
 
+## Log và bản khôi phục khi gặp lỗi (2026-11-10)
+
+- **Log** (`Services/AppLog`, chép từ MeRon): `Logs\csveditor-yyyy-MM-dd.log` cạnh exe qua `Common.Logging.RollingFileLoggerProvider`,
+  giữ 14 ngày, ghi lỗi không bao giờ làm hỏng thao tác. Ghi: khởi động (phiên bản), mở file (đường dẫn, số dòng / cột, bảng
+  mã, dấu phân cách, số cảnh báo, ms), huỷ mở, lưu / xuất Excel xong (đường dẫn, số dòng, ms), mọi lỗi mở / lưu / xuất kèm stack.
+  **Không ghi nội dung ô.** `App` bắt `UnhandledException` (giao diện) + `AppDomain.UnhandledException` (luồng nền) → `Critical`
+  kèm stack, chỉ xử lý 1 lần; `TaskScheduler.UnobservedTaskException` chỉ ghi log.
+- **Mở file**: `RunOpenAsync` bắt mọi lỗi (trước chỉ `IOException` / `UnauthorizedAccessException`, lỗi khác làm tắt app) →
+  hộp thoại "Không mở được file", bảng cũ giữ nguyên.
+- **Bản khôi phục** (`Services/RecoveryStore`, `MainWindow.Recovery.cs`): lỗi không xử lý được mà còn thay đổi chưa lưu
+  (`IsDirty`) → chép cả bảng (không theo lọc / sắp xếp) ra `Data\Recovery\<tên>.khoi-phuc-yyyyMMdd-HHmmss<đuôi gốc>` cạnh exe
+  (bảng mới chưa lưu: `bang-moi…csv`), cùng bảng mã / BOM / dấu phân cách, kèm `.json` (đường dẫn gốc, code page, BOM, dấu
+  phân cách, có tiêu đề, thời gian, số dòng / cột). Ghi trên luồng nền rồi chờ (chờ thẳng trên luồng giao diện có thể treo).
+  File gốc không bị đụng tới. Lần mở sau (`RootGrid.Loaded`) hỏi từng bản còn `.json`, mới nhất trước: *Mở bản khôi phục* →
+  mở với đúng bảng mã / dấu phân cách, không vào danh sách gần đây, rồi `AdoptRecoveredDocument` gắn bảng vào đường dẫn gốc +
+  `UndoRedoStack.MarkDirty()` (● chưa lưu cả khi sửa rồi hoàn tác) → `Ctrl+S` ghi vào file gốc, không ghi vào bản khôi phục;
+  *Xoá bản khôi phục* xoá `.csv` + `.json`; *Để sau* hỏi lại lần sau. Đã mở thì bỏ `.json`, `.csv` giữ thêm 30 ngày rồi tự
+  dọn; bản chưa hỏi người dùng không bao giờ tự xoá.
+- **Test lỗi thật**: biến môi trường `CSVEDITOR_CRASH_TEST=1` + `Ctrl+Shift+F12` khi tiêu điểm ở bảng ném
+  `InvalidOperationException` (dùng cho GUI test Sandbox; `KeyboardAccelerator` không nhận khi tiêu điểm ở DataGrid nên gắn ở
+  `PreviewKeyDown`).
+
 ## Validation
 
 Sau khi mở file, khu vực "Cảnh báo (N)" (thu gọn mặc định, chỉ hiện khi có cảnh báo) liệt kê: dòng
@@ -181,5 +203,5 @@ Lỗi tìm ra nhờ test (đã sửa 2026-09-29): tooltip Undo sau **Xóa cột*
 - Không `ProjectReference` tới `MainLauncher.csproj`.
 - Không đọc `modules.json` hay bất kỳ cấu hình nào của launcher.
 - Cấu hình duy nhất cạnh exe là danh sách file gần đây (`Data\Config\recent-files.json`, thiếu / hỏng thì coi như
-  rỗng) - file CSV/TSV người dùng tự chọn qua `FileOpenPicker`/`FileSavePicker` hoặc kéo-thả, không phụ thuộc ai khởi
+  rỗng); cạnh exe còn `Logs\` và `Data\Recovery\` (xem *Log và bản khôi phục*) - file CSV/TSV người dùng tự chọn qua `FileOpenPicker`/`FileSavePicker` hoặc kéo-thả, không phụ thuộc ai khởi
   động tiến trình (VS, `dotnet run`, hay `Process.Start` từ MainLauncher).

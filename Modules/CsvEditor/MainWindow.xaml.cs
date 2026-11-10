@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Numerics;
 using CommunityToolkit.WinUI.UI.Controls;
 using CommunityToolkit.WinUI.UI.Controls.Primitives;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
@@ -74,6 +75,7 @@ public sealed partial class MainWindow : Window
 
         InitRangeSelection();
         InitColumnFit();
+        InitRecovery();
         FindPanel.ViewModel = ViewModel;
         FindPanel.MatchNavigated += (_, match) => NavigateToCell(match);
         FindPanel.CloseRequested += (_, _) => Grid.Focus(FocusState.Programmatic);
@@ -910,26 +912,39 @@ public sealed partial class MainWindow : Window
     private static readonly string[] OpenableExtensions = [".csv", ".tsv", ".txt"];
 
     private readonly RecentFilesStore _recentFiles = new();
+    private static readonly ILogger FileLog = AppLog.For("File");
 
     /// <summary>Mở <paramref name="filePath"/> (bên gọi đã hỏi lưu thay đổi), ghi vào danh sách gần đây. Lỗi đọc file
     /// (không tồn tại, bị khoá, không có quyền...) báo hộp thoại thay vì văng app.</summary>
     private Task<bool> OpenPathAsync(string filePath) =>
         RunOpenAsync(filePath, ct => ViewModel.OpenAsync(filePath, ConfirmLargeFileAsync, ct));
 
-    private async Task<bool> RunOpenAsync(string filePath, Func<CancellationToken, Task<bool>> open)
+    /// <remarks><paramref name="remember"/> false: không ghi vào danh sách gần đây (bản khôi phục).</remarks>
+    private async Task<bool> RunOpenAsync(string filePath, Func<CancellationToken, Task<bool>> open, bool remember = true)
     {
         _currentOperationCts = new CancellationTokenSource();
+        var watch = System.Diagnostics.Stopwatch.StartNew();
         try
         {
             if (!await open(_currentOperationCts.Token))
             {
+                FileLog.LogInformation("Huỷ mở {Path}", filePath);
                 return false;
             }
-            _recentFiles.Add(filePath);
+            if (remember)
+            {
+                _recentFiles.Add(filePath);
+            }
+            FileLog.LogInformation("Mở {Path}: {Rows} dòng, {Columns} cột, {Encoding}, phân cách {Delimiter}, {Issues} cảnh báo, {Ms} ms",
+                filePath, ViewModel.Document.Rows.Count, ViewModel.Document.Columns.Count, ViewModel.EncodingLabel, ViewModel.DelimiterLabel,
+                ViewModel.Issues.Count, watch.ElapsedMilliseconds);
             return true;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        // Mọi lỗi khi mở (không chỉ lỗi đọc file: file hỏng, thiếu bộ nhớ...) đều báo hộp thoại thay vì làm tắt app; bảng đang
+        // mở trước đó giữ nguyên vì chỉ thay khi đọc xong.
+        catch (Exception ex)
         {
+            FileLog.LogError(ex, "Không mở được {Path}", filePath);
             ViewModel.StatusMessage = $"Không mở được {Path.GetFileName(filePath)}: {ex.Message}";
             await new ContentDialog
             {
@@ -1170,16 +1185,25 @@ public sealed partial class MainWindow : Window
         {
             await ViewModel.ExportXlsxAsync(file.Path, _currentOperationCts!.Token);
             return true;
-        });
+        }, file.Path);
     }
 
     /// <summary>Chạy 1 lần lưu, báo lỗi (file đang bị app khác khoá, hết chỗ...) thay vì văng app. True nếu đã lưu.</summary>
-    private async Task<bool> RunSaveAsync(Func<Task<bool>> save)
+    /// <remarks><paramref name="exportPath"/>: xuất Excel ghi ra file khác file đang mở - để ghi đúng tên file vào log.</remarks>
+    private async Task<bool> RunSaveAsync(Func<Task<bool>> save, string? exportPath = null)
     {
         _currentOperationCts = new CancellationTokenSource();
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var action = exportPath is null ? "Lưu" : "Xuất Excel";
         try
         {
-            return await save();
+            var saved = await save();
+            if (saved)
+            {
+                FileLog.LogInformation("{Action} xong: {Path}, {Rows} dòng, {Ms} ms", action, exportPath ?? CurrentFilePath,
+                    exportPath is null ? ViewModel.Document.Rows.Count : ViewModel.ViewRows.Count, watch.ElapsedMilliseconds);
+            }
+            return saved;
         }
         catch (OperationCanceledException)
         {
@@ -1188,6 +1212,7 @@ public sealed partial class MainWindow : Window
         }
         catch (Exception ex)
         {
+            FileLog.LogError(ex, "{Action} lỗi: {Path}", action, exportPath ?? CurrentFilePath);
             ViewModel.StatusMessage = $"Không lưu được: {ex.Message}";
             await new ContentDialog
             {
