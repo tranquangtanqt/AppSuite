@@ -78,14 +78,36 @@ public sealed class MeRonDatabase
     /// (SQLite Online Backup - an toàn kể cả khi đang mở). Bỏ qua (null) nếu chưa có dữ liệu gì. Giữ
     /// <see cref="KeepSafetyCopies"/> bản gần nhất của mỗi loại. Lấy lại = đóng app, chép bản sao đè lên me_ron.db.
     /// </summary>
-    public string? MakeSafetyCopy(string reason)
+    public string? MakeSafetyCopy(string reason) => MakeSafetyCopy(reason, KeepSafetyCopies, DateTime.Now);
+
+    /// <summary>Loại bản sao tự chép mỗi ngày khi mở app (Backups\me_ron_hang-ngay_yyyyMMdd_HHmmss.db).</summary>
+    public const string DailyCopyReason = "hang-ngay";
+
+    /// <summary>Số bản sao hằng ngày giữ lại (khoảng 2 tuần mở app).</summary>
+    public const int KeepDailyCopies = 14;
+
+    /// <summary>
+    /// Sao lưu hằng ngày (gọi khi mở app): hôm nay chưa có bản <see cref="DailyCopyReason"/> nào thì chép 1 bản, giữ
+    /// <see cref="KeepDailyCopies"/> bản gần nhất. Đã có bản hôm nay / database trống → null.
+    /// </summary>
+    public string? MakeDailyCopy(DateTime now)
+    {
+        if (Directory.Exists(BackupsFolder)
+            && Directory.EnumerateFiles(BackupsFolder, $"me_ron_{DailyCopyReason}_{now:yyyyMMdd}_*.db").Any())
+        {
+            return null;
+        }
+        return MakeSafetyCopy(DailyCopyReason, KeepDailyCopies, now);
+    }
+
+    private string? MakeSafetyCopy(string reason, int keep, DateTime now)
     {
         if (Schema.BackupTables.Sum(t => Count(t.Name)) == 0)
         {
             return null;
         }
         Directory.CreateDirectory(BackupsFolder);
-        var target = System.IO.Path.Combine(BackupsFolder, $"me_ron_{reason}_{DateTime.Now:yyyyMMdd_HHmmss}.db");
+        var target = System.IO.Path.Combine(BackupsFolder, $"me_ron_{reason}_{now:yyyyMMdd_HHmmss}.db");
         using (var source = Open())
         using (var destination = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = target, Pooling = false }.ToString()))
         {
@@ -94,7 +116,7 @@ public sealed class MeRonDatabase
         }
 
         foreach (var old in new DirectoryInfo(BackupsFolder).GetFiles($"me_ron_{reason}_*.db")
-                     .OrderByDescending(f => f.Name, StringComparer.Ordinal).Skip(KeepSafetyCopies))
+                     .OrderByDescending(f => f.Name, StringComparer.Ordinal).Skip(keep))
         {
             try
             {

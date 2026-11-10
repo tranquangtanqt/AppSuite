@@ -100,6 +100,9 @@ nhiều tài khoản thì vẫn cần link công khai để thấy hết.
 - Bản sao an toàn trong `…\MeRon\Backups\`: `me_ron_truoc-import_<thời gian>.db` (trước mỗi lần Nhập) và
   `me_ron_truoc-xoa_<thời gian>.db` (trước Xoá toàn bộ), giữ 10 bản gần nhất mỗi loại. Lấy lại = đóng app, chép bản
   sao đè lên `me_ron.db`.
+- **Sao lưu hằng ngày** (2026-11-10): mở app lần đầu trong ngày tự chép `me_ron_hang-ngay_<thời gian>.db` (luồng nền
+  sau khi hiện cửa sổ, lỗi chỉ ghi log; database trống thì bỏ qua), giữ 14 bản gần nhất -
+  `MeRonDatabase.MakeDailyCopy`, gọi ở `App.OnLaunched`. App mở liền nhiều ngày không tắt thì chỉ có bản của ngày mở.
 - Log: `Logs\meron-yyyy-MM-dd.log` cạnh `MeRon.exe` (`Services\AppLog.cs`, giữ 14 ngày). Exception chưa xử lý
   (`Application.UnhandledException` + `AppDomain.UnhandledException` trong `App.xaml.cs`) ghi mức Critical kèm stack
   "Lỗi không xử lý được - app sẽ tắt" trước khi app tắt.

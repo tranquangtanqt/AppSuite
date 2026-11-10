@@ -500,6 +500,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   - Dán 2 dòng giống hệt → cả 2 tự tick, Lưu tạo 2 đơn trùng. Sửa: `BatchReconciler.DuplicateLines` - dòng trùng hệt 1 dòng
     phía trên viền cam "Trùng dòng N (dán 2 lần?)", không tự tick (khách đặt 2 đơn thật thì tick tay)
   Cập nhật F1, README. Unit test 235/235; GUI Sandbox 17/17 (2026-11-10)
+- [x] **Sao lưu hằng ngày**: mở app lần đầu trong ngày tự chép database ra `Backups\me_ron_hang-ngay_<thời gian>.db` (luồng
+  nền sau khi hiện cửa sổ, lỗi chỉ ghi log, database trống bỏ qua), giữ 14 bản gần nhất, không đụng các bản trước Nhập / Xoá
+  / Dọn / Khôi phục (`MeRonDatabase.MakeDailyCopy`). App mở liền nhiều ngày không tắt thì chỉ có bản của ngày mở.
+  Cập nhật F1, README. Unit test 237/237; GUI Sandbox 7/7 (2026-11-10)
 - [x] Ghi lỗi crash vào log (giống các module khác): exception chưa xử lý (luồng giao diện + luồng nền) ghi mức Critical kèm
   stack vào Logs\meron-<ngày>.log cạnh MeRon.exe trước khi app tắt. Cập nhật F1 (Cài đặt → App tự tắt), README. Unit test 217/217 (2026-11-09)
 - [x] Chi tiết: nút **Thư mục ảnh** cạnh Chụp ảnh - mở Pictures\MeRon, vừa chụp thì chọn sẵn ảnh đó (người dùng đề nghị

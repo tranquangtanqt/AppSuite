@@ -63,5 +63,20 @@ public partial class App : Application
         MainWindow = new MainWindow();
         _window = MainWindow;
         _window.Activate();
+        // Sao lưu hằng ngày ở luồng nền: database lớn cũng không làm chậm lúc mở; lỗi chỉ ghi log, không chặn app.
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                if (AppServices.Database.MakeDailyCopy(DateTime.Now) is { } copy)
+                {
+                    AppLog.For("App").LogInformation("Sao lưu hằng ngày: {Path}", copy);
+                }
+            }
+            catch (Exception ex)
+            {
+                AppLog.For("App").LogError(ex, "Sao lưu hằng ngày lỗi");
+            }
+        });
     }
 }
