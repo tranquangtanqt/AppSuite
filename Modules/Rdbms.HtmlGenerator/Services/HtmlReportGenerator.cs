@@ -216,7 +216,10 @@ public sealed class HtmlReportGenerator
             font-family: Consolas, "MS Gothic", monospace; }
           .batchBar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0 12px; font-size: 13px; }
           .batchBar label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
-          .batchBar label.disabled { opacity: .55; cursor: default; }
+          .batch textarea#batchTables { min-height: 52px; }
+          #batchTableBox { margin: -4px 0 12px; }
+          #batchTableInfo { font-size: 13px; margin-top: 2px; }
+          #batchTableInfo .missing { color: #d9534f; }
           .batchBar button { padding: 4px 12px; cursor: pointer; }
           table.cols tr.multi { background: rgba(255, 193, 7, .25); }
           table.cols tr.notfound { background: rgba(220, 53, 69, .22); }
@@ -754,9 +757,10 @@ public sealed class HtmlReportGenerator
 
           // ----- Tra cột hàng loạt: mỗi dòng 1 tên (tiếng Nhật hoặc tên cột) → tên tương ứng, giữ đúng thứ tự để dán lại Excel -----
 
-          var currentTable = null; // bảng đang xem (bấm ở menu trái / link) - cho ô "Chỉ tra trong bảng đang chọn"
+          var currentTable = null; // bảng đang xem (bấm ở menu trái / link) - cho phạm vi "Bảng đang chọn"
           var batchText = '';      // giữ chữ đã dán khi đi xem bảng rồi quay lại
-          var batchOnlyCurrent = false;
+          var batchScope = 'all';  // Phạm vi tra: all (theo lọc Tất cả / Bảng / View) / current (bảng đang chọn) / list (danh sách bảng nhập vào)
+          var batchTableText = ''; // danh sách bảng đã nhập (phạm vi list)
           var batchRows = [];
           var batchRun = 0; // lượt tra đang chạy (renderBatchResult) - lượt mới làm lượt cũ dừng
 
@@ -873,15 +877,51 @@ public sealed class HtmlReportGenerator
             return names.length <= 3 ? links : '<details><summary>' + names.length + ' bảng</summary>' + links + '</details>';
           }
 
+          // Danh sách bảng nhập vào: cách nhau bằng xuống dòng / dấu phẩy / khoảng trắng; mỗi tên khớp nguyên tên bảng (có hay
+          // không tiền tố schema "dbo.") hoặc tên tiếng Nhật của bảng; không theo bộ lọc Tất cả / Bảng / View.
+          function parseTableList(text) {
+            var byKey = Object.create(null);
+            tables.forEach(function (t) {
+              var keys = [t.name, t.name.split('.').pop(), t.japaneseName, firstLine(t.description)];
+              keys.forEach(function (k) { k = normalizeName(k); if (k) (byKey[k] || (byKey[k] = [])).push(t); });
+            });
+            var picked = [], seen = Object.create(null), missing = [];
+            text.split(/[\s,;、，]+/).forEach(function (word) {
+              if (!word) return;
+              var hits = byKey[normalizeName(word)];
+              if (!hits) { if (missing.indexOf(word) < 0) missing.push(word); return; }
+              hits.forEach(function (t) { if (!seen[t.name]) { seen[t.name] = true; picked.push(t); } });
+            });
+            return { tables: picked, missing: missing };
+          }
+
+          function batchScopeTables() {
+            if (batchScope === 'current' && currentTable) return { key: 'table:' + currentTable.name, tables: [currentTable] };
+            if (batchScope === 'list') {
+              var list = parseTableList(batchTableText);
+              return { key: 'list:' + list.tables.map(function (t) { return t.name; }).join('\u0001'), tables: list.tables, missing: list.missing };
+            }
+            return { key: 'kind:' + kindFilter, tables: null };
+          }
+
+          // Dòng báo dưới ô danh sách bảng: đã nhận bao nhiêu bảng, tên nào không có.
+          function drawBatchTableInfo(scope) {
+            var info = document.getElementById('batchTableInfo');
+            if (!info) return;
+            if (batchScope !== 'list') { info.innerHTML = ''; return; }
+            info.innerHTML = (scope.tables.length ? 'Tra trong ' + scope.tables.length + ' bảng.' : 'Chưa có bảng nào - nhập tên bảng ở trên.') +
+              (scope.missing.length ? ' <span class="missing">Không có bảng: ' + scope.missing.map(escapeHtml).join(', ') + '</span>' : '');
+          }
+
           function renderBatchResult() {
             var resultEl = document.getElementById('batchResult');
             var statusEl = document.getElementById('batchStatus');
             if (!resultEl) return; // khung tra hàng loạt đang không mở
             var lines = batchText.split(/\r?\n/);
             while (lines.length && !lines[lines.length - 1].trim()) lines.pop(); // dòng trống cuối (copy từ Excel) - bỏ
-            var single = batchOnlyCurrent && currentTable;
-            var index = batchIndexFor(single ? 'table:' + currentTable.name : 'kind:' + kindFilter,
-              function () { return single ? [currentTable] : tables.filter(kindMatches); });
+            var scope = batchScopeTables();
+            drawBatchTableInfo(scope);
+            var index = batchIndexFor(scope.key, function () { return scope.tables || tables.filter(kindMatches); });
             // Khớp 1 phần trên schema lớn toàn tên khác nhau có thể mất vài giây: tra từng đợt ~60 ms, giữa các đợt trả lại trình
             // duyệt (trang không đứng, báo "Đang tra x / n"); sửa chữ / đổi cách khớp giữa chừng thì bỏ lượt cũ. Khớp nguyên tên
             // xong ngay trong đợt đầu.
@@ -970,26 +1010,29 @@ public sealed class HtmlReportGenerator
               '<div class="meta">Dán danh sách, mỗi dòng 1 tên: tên tiếng Nhật ra tên cột, tên cột ra tên tiếng Nhật (dán lẫn cả hai cũng được). ' +
               'Tên tiếng Nhật = mô tả (comment) cột. Khớp nguyên tên: so với dòng đầu mô tả; comment có thêm chữ (vd "データＮＯ // #MA.IF_DATA_NO") ' +
               'thì chọn Bắt đầu bằng / Kết thúc bằng / Chứa. Chữ toàn khổ / nửa khổ (ＮＯ = NO), hoa / thường, khoảng trắng không tính. ' +
-              'Kết quả giữ đúng thứ tự dòng đã dán; theo bộ lọc Tất cả / Bảng / View.</div>' +
+              'Kết quả giữ đúng thứ tự dòng đã dán. Phạm vi: tất cả bảng (theo bộ lọc Tất cả / Bảng / View), bảng đang chọn ' +
+              'hoặc danh sách bảng nhập vào.</div>' +
               '<textarea id="batchInput" spellcheck="false" placeholder="データＮＯ&#10;ＰＧ実行状況区分&#10;data_crud_typ"></textarea>' +
               '<div class="batchBar"><label>Cách khớp <select id="batchMode">' +
               BATCH_MODES.map(function (m) { return '<option value="' + m[0] + '">' + m[1] + '</option>'; }).join('') + '</select></label>' +
-              '<label id="batchScope"><input id="batchOnlyCurrent" type="checkbox" /><span></span></label>' +
+              '<label>Phạm vi <select id="batchScope">' +
+              '<option value="all">Tất cả bảng (theo lọc Tất cả / Bảng / View)</option>' +
+              '<option value="current"' + (currentTable ? '>Bảng đang chọn: ' + escapeHtml(currentTable.name) : ' disabled>Bảng đang chọn (chọn 1 bảng ở menu trái trước)') + '</option>' +
+              '<option value="list">Danh sách bảng nhập vào</option></select></label>' +
               '<button id="batchCopy" type="button">Copy cột Kết quả</button><span id="batchStatus"></span></div>' +
+              '<div id="batchTableBox"><textarea id="batchTables" spellcheck="false" ' +
+              'placeholder="Tên bảng (hoặc tên tiếng Nhật của bảng), cách nhau bằng xuống dòng / dấu phẩy / khoảng trắng&#10;t_ma, t_tr"></textarea>' +
+              '<div id="batchTableInfo"></div></div>' +
               '<div id="batchResult"></div></div>';
             var input = document.getElementById('batchInput');
-            var only = document.getElementById('batchOnlyCurrent');
-            var scopeLabel = document.getElementById('batchScope');
+            var scopeBox = document.getElementById('batchScope');
+            var tableBox = document.getElementById('batchTables');
             input.value = batchText;
-            if (currentTable) {
-              only.checked = batchOnlyCurrent;
-              scopeLabel.querySelector('span').textContent = 'Chỉ tra trong bảng đang chọn: ' + currentTable.name;
-            } else {
-              only.checked = false;
-              only.disabled = true;
-              scopeLabel.classList.add('disabled');
-              scopeLabel.querySelector('span').textContent = 'Chỉ tra trong bảng đang chọn (chọn 1 bảng ở menu trái trước)';
-            }
+            tableBox.value = batchTableText;
+            if (batchScope === 'current' && !currentTable) batchScope = 'all'; // bảng đã bỏ chọn (vd đi tìm cột ở nhiều bảng)
+            scopeBox.value = batchScope;
+            function showTableBox() { document.getElementById('batchTableBox').hidden = batchScope !== 'list'; }
+            showTableBox();
             var modeBox = document.getElementById('batchMode');
             modeBox.value = batchMode;
             // Khớp 1 phần phải dò cả danh sách cột: chờ ngừng gõ 1 nhịp rồi mới tra (dán cả danh sách thì tra ngay).
@@ -1005,7 +1048,18 @@ public sealed class HtmlReportGenerator
               try { localStorage.setItem('rdbms.batchMode', batchMode); } catch (e) { }
               renderBatchResult();
             });
-            only.addEventListener('change', function () { batchOnlyCurrent = only.checked; renderBatchResult(); });
+            scopeBox.addEventListener('change', function () {
+              batchScope = scopeBox.value;
+              showTableBox();
+              if (batchScope === 'list') tableBox.focus();
+              renderBatchResult();
+            });
+            var tableTimer = null;
+            tableBox.addEventListener('input', function () {
+              batchTableText = tableBox.value;
+              clearTimeout(tableTimer);
+              tableTimer = setTimeout(renderBatchResult, 200); // đang gõ dở tên bảng thì chưa tra
+            });
             document.getElementById('batchCopy').addEventListener('click', copyBatchResult);
             renderBatchResult();
             input.focus();

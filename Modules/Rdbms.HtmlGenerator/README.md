@@ -105,12 +105,16 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    từng đoạn). Link `#table=` tới bảng đang bị lọc ẩn thì về "Tất cả". Lựa chọn nhớ bằng `localStorage` (bọc try/catch - có
    trình duyệt chặn với file://). Thử bằng Edge headless `--dump-dom` + script chèn vào trang (Sandbox, 20/20).
    **Tra cột hàng loạt (2026-11-11)**: nút `#batchButton` → `#batch` → `showBatchLookup()` ở khung phải: ô nhiều dòng, mỗi dòng 1
-   tên. `buildBatchIndex` dựng bảng tra 1 lần cho mỗi phạm vi (`kind:<lọc>` hoặc `table:<bảng đang chọn>`, cache
+   tên. `buildBatchIndex` dựng bảng tra 1 lần cho mỗi phạm vi (`kind:<lọc>`, `table:<bảng đang chọn>` hoặc `list:<các bảng>`, cache
    `batchIndexCache`): tên cột → tên tiếng Nhật (`japaneseName` từ Excel, không có thì dòng đầu `description` = comment DB),
    `japaneseName` và dòng đầu `description` → tên cột. Khoá so sánh `normalizeName`: NFKC (toàn khổ = nửa khổ), bỏ mọi
    khoảng trắng, chữ thường. Khớp nguyên tên. Mỗi dòng ra 0..n kết quả, dùng nhiều nhất trước, mỗi kết quả kèm danh sách
    bảng (link `#table=`, trên 3 bảng gom vào `<details>`); n > 1 tô vàng `tr.multi`, 0 tô đỏ `tr.notfound`, dòng trống giữ
-   nguyên, dòng trống cuối bỏ. Ô *Chỉ tra trong bảng đang chọn* dùng `currentTable` (bảng xem gần nhất, khoá khi chưa chọn).
+   nguyên, dòng trống cuối bỏ. Ô *Phạm vi* `#batchScope` (`batchScopeTables()`): Tất cả bảng (theo lọc), Bảng đang chọn
+   (`currentTable` = bảng xem gần nhất, khoá khi chưa chọn), Danh sách bảng nhập vào (ô `#batchTables`, `parseTableList`:
+   tách theo xuống dòng / dấu phẩy / khoảng trắng, mỗi tên khớp nguyên tên bảng, tên bỏ tiền tố schema, `japaneseName` hoặc
+   dòng đầu mô tả bảng qua `normalizeName`; không theo lọc Bảng / View; `#batchTableInfo` báo số bảng + tên không có, gõ thì
+   chờ 200 ms). Phạm vi và danh sách bảng giữ khi đi xem bảng rồi quay lại.
    *Copy cột Kết quả*: mỗi dòng 1 kết quả (nhiều thì ` / `, không thấy = dòng trống) qua `navigator.clipboard`, không được
    thì `execCommand('copy')`. Chữ đã dán giữ khi đi xem bảng rồi Back.
    **Cách khớp** `#batchMode` (nhớ ở `localStorage` `rdbms.batchMode`): Khớp nguyên tên dùng `exactName` / `exactJapanese`

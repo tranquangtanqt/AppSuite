@@ -1158,6 +1158,10 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [x] Tra cột hàng loạt - cột **Mô tả khớp**: tra từ tiếng Nhật ra tên cột thì hiện đúng mô tả đã khớp (vd 貸借区分 → dc_type,
   "貸借区分 // #MA.DC_TYP // Dr/Cr type"; khớp 1 phần hiện cả mô tả nhiều dòng; nhiều kết quả ghi theo từng tên cột); chiều tên
   cột → tiếng Nhật để trống; Copy vẫn chỉ cột Kết quả. Cập nhật F1, README. Unit test 77/77; Edge headless 56/56 (2026-11-11)
+- [x] Tra cột hàng loạt - ô **Phạm vi** thay ô tick "Chỉ tra trong bảng đang chọn": Tất cả bảng (theo lọc) / Bảng đang chọn /
+  Danh sách bảng nhập vào (tên bảng hoặc tên tiếng Nhật của bảng, cách nhau xuống dòng / dấu phẩy / khoảng trắng, không
+  theo lọc Bảng / View, báo "Tra trong n bảng" + tên không có bảng). Cập nhật F1, README. Unit test 77/77; Edge headless
+  68/68 (2026-11-11)
 - [ ] Thử tay: xuất lại HTML của DB thật → Tra cột hàng loạt với danh sách tên tiếng Nhật thật, thử 4 cách khớp
 
 ## ModuleC
