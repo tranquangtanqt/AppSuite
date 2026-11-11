@@ -210,6 +210,22 @@ public sealed class HtmlReportGenerator
           .er-link:hover { stroke-width: 3; opacity: 1; }
           .er-dot { fill: #4a90d9; }
           svg.er text.er-note { font-family: "Segoe UI", system-ui, sans-serif; opacity: .65; }
+          /* Tra cột hàng loạt (showBatchLookup) */
+          #batchButton { padding: 6px 12px; cursor: pointer; }
+          .batch textarea { width: 100%; max-width: 640px; min-height: 160px; padding: 6px 8px; font-size: 13px;
+            font-family: Consolas, "MS Gothic", monospace; }
+          .batchBar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; margin: 8px 0 12px; font-size: 13px; }
+          .batchBar label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+          .batchBar label.disabled { opacity: .55; cursor: default; }
+          .batchBar button { padding: 4px 12px; cursor: pointer; }
+          table.cols tr.multi { background: rgba(255, 193, 7, .25); }
+          table.cols tr.notfound { background: rgba(220, 53, 69, .22); }
+          .legend .swatch.multi { background: rgba(255, 193, 7, .5); }
+          .legend .swatch.notfound { background: rgba(220, 53, 69, .45); }
+          .batchResult { font-family: Consolas, monospace; }
+          td.batchMatch { white-space: pre-wrap; }
+          .batchTables summary { cursor: pointer; }
+          .batchTables a { margin-right: 10px; }
         </style>
         </head>
         <body>
@@ -224,6 +240,7 @@ public sealed class HtmlReportGenerator
             </div>
             <label title="Tên bảng / Tên cột khớp cả với mô tả (comment) của bảng / cột"><input id="searchDescription" type="checkbox" />Tìm cả trong mô tả</label>
             <button id="searchButton">Tìm kiếm</button>
+            <button id="batchButton" type="button" title="Dán nhiều tên cột (mỗi dòng 1 tên, tiếng Nhật hoặc tên cột) để tra ra tên tương ứng hàng loạt">Tra cột hàng loạt</button>
           </div>
           <div id="summary"></div>
           <ul id="tableList"></ul>
@@ -231,7 +248,8 @@ public sealed class HtmlReportGenerator
         <div id="content">
           <p>Chọn 1 bảng ở menu bên trái, hoặc nhập Tên bảng và / hoặc Tên cột rồi bấm Tìm kiếm.<br>
           Chỉ Tên bảng: hiện toàn bộ cấu trúc bảng. Cả hai: hiện dòng cột đó trong bảng. Chỉ Tên cột:
-          tìm tất cả các bảng có cột đó, kết quả nhóm theo từng bảng.</p>
+          tìm tất cả các bảng có cột đó, kết quả nhóm theo từng bảng.<br>
+          Có sẵn danh sách nhiều tên cột (tiếng Nhật hoặc tên cột)? Bấm Tra cột hàng loạt.</p>
         </div>
         <script id="app-data" type="application/json">%%DATA_JSON%%</script>
         <script>
@@ -624,6 +642,7 @@ public sealed class HtmlReportGenerator
           }
 
           function applyHash() {
+            if (location.hash === '#batch') { showBatchLookup(); return; } // bấm link bảng trong kết quả rồi Back thì về lại đây
             var match = /^#table=(.+)$/.exec(location.hash);
             if (match) {
               var name = decodeURIComponent(match[1]);
@@ -672,6 +691,7 @@ public sealed class HtmlReportGenerator
           // Dieu kien 1: chi Ten bang (Ten cot de trong) -> hien toan bo cau truc bang.
           function showFullTable(t, li) {
             if (!t) return;
+            currentTable = t;
             setActiveListItem(li);
             renderColumnsTable(t);
             document.title = 'CSDL - ' + t.name;
@@ -679,6 +699,7 @@ public sealed class HtmlReportGenerator
 
           // Dieu kien 2: ca Ten bang va Ten cot -> chi hien dong cot do trong bang nay.
           function showTableColumnMatches(t, li, columnQuery) {
+            currentTable = t;
             setActiveListItem(li);
             var matchedCols = t.columns.filter(function (c) { return columnMatches(c, columnQuery); });
             var heading = '<h1>' + escapeHtml(t.name) + (t.alias ? ' (' + escapeHtml(t.alias) + ')' : '') + '</h1>' +
@@ -689,6 +710,7 @@ public sealed class HtmlReportGenerator
 
           // Dieu kien 3: chi Ten cot (Ten bang de trong) -> tim tat ca bang co cot do, nhom theo bang.
           function showColumnSearchAcrossTables(candidateTables, columnQuery) {
+            currentTable = null;
             setActiveListItem(null);
             var groups = [];
             candidateTables.forEach(function (t) {
@@ -730,6 +752,266 @@ public sealed class HtmlReportGenerator
             }
           }
 
+          // ----- Tra cột hàng loạt: mỗi dòng 1 tên (tiếng Nhật hoặc tên cột) → tên tương ứng, giữ đúng thứ tự để dán lại Excel -----
+
+          var currentTable = null; // bảng đang xem (bấm ở menu trái / link) - cho ô "Chỉ tra trong bảng đang chọn"
+          var batchText = '';      // giữ chữ đã dán khi đi xem bảng rồi quay lại
+          var batchOnlyCurrent = false;
+          var batchRows = [];
+          var batchRun = 0; // lượt tra đang chạy (renderBatchResult) - lượt mới làm lượt cũ dừng
+
+          // Toàn khổ / nửa khổ coi như nhau (ＮＯ = NO), không phân biệt hoa thường, bỏ mọi khoảng trắng (cả toàn khổ: mô tả
+          // hay viết "データ ＮＯ" lẫn "データＮＯ"; tên cột không có khoảng trắng).
+          function normalizeName(s) { return (s || '').normalize('NFKC').replace(/\s+/g, '').toLowerCase(); }
+
+          // Tên tiếng Nhật của cột: đọc từ DB thì nằm ở mô tả (comment, lấy dòng đầu), đọc từ Excel thì ở japaneseName.
+          function firstLine(s) { return (s || '').split(/\r?\n/)[0].trim(); }
+          function japaneseLabel(c) { return c.japaneseName || firstLine(c.description); }
+
+          // Cách khớp: comment mỗi DB 1 kiểu (vd "データＮＯ // #MA.IF_DATA_NO // Data No.") nên không cắt cứng theo dấu nào -
+          // người dùng chọn Bắt đầu bằng / Kết thúc bằng / Chứa. Khớp nguyên tên so với dòng đầu mô tả; 3 kiểu còn lại so với cả mô tả.
+          var BATCH_MODES = [['exact', 'Khớp nguyên tên'], ['start', 'Bắt đầu bằng'], ['end', 'Kết thúc bằng'], ['contains', 'Chứa']];
+          var batchMode = 'exact';
+          try {
+            var savedMode = localStorage.getItem('rdbms.batchMode');
+            if (BATCH_MODES.some(function (m) { return m[0] === savedMode; })) batchMode = savedMode;
+          } catch (e) { }
+          var BATCH_SHOW = 20; // kết quả hiện mỗi dòng (Chứa 1 chữ ngắn có thể ra hàng trăm) - Copy vẫn lấy đủ
+
+          // 1 tên ra nhiều kết quả (đặt tên không thống nhất giữa các bảng / khớp 1 phần) thì giữ hết, dùng nhiều nhất trước,
+          // mỗi kết quả kèm các bảng có nó. Bảng tra dựng 1 lần cho mỗi phạm vi (schema lớn 200k+ cột: dựng lại mỗi phím gõ thì
+          // giật); kết quả từng dòng nhớ lại theo cách khớp (sửa 1 dòng không tra lại cả danh sách).
+          var batchIndexCache = { key: null, index: null };
+          function batchIndexFor(key, getTables) {
+            if (batchIndexCache.key !== key) batchIndexCache = { key: key, index: buildBatchIndex(getTables()) };
+            return batchIndexCache.index;
+          }
+
+          // Dòng khớp được tên cột → chỉ trả tên tiếng Nhật; không khớp tên cột nào mới tra theo tên Nhật / mô tả ra tên cột.
+          // (Chứa "if_data" khớp cả cột if_data_no lẫn comment "... #MA.IF_DATA_NO ..." - không trộn 2 chiều trong 1 ô.)
+          function lookupOne(query, index, mode) {
+            if (!query) return [];
+            var memo = index.memo[mode] || (index.memo[mode] = Object.create(null));
+            if (memo[query]) return memo[query];
+            var byName = Object.create(null), byJapanese = Object.create(null);
+            // found = { tables, texts } của 1 khoá; texts = chữ gốc đã khớp (tên Nhật / mô tả) - cột "Mô tả khớp".
+            function merge(target, value, found) {
+              var entry = target[value] || (target[value] = { list: [], seen: Object.create(null), texts: [] });
+              found.tables.forEach(function (n) { if (!entry.seen[n]) { entry.seen[n] = true; entry.list.push(n); } });
+              found.texts.forEach(function (s) { if (entry.texts.indexOf(s) < 0) entry.texts.push(s); });
+            }
+            function mergeAll(target, byValue) { if (byValue) Object.keys(byValue).forEach(function (v) { merge(target, v, byValue[v]); }); }
+            if (mode === 'exact') {
+              mergeAll(byName, index.exactName[query]);
+              mergeAll(byJapanese, index.exactJapanese[query]);
+            } else {
+              findPairs(index, query, mode, function (p) { merge(p.byName ? byName : byJapanese, p.value, p.found); });
+            }
+            var byValue = Object.keys(byName).length ? byName : byJapanese;
+            return memo[query] = Object.keys(byValue).map(function (v) { return { value: v, tables: byValue[v].list, texts: byValue[v].texts }; })
+              .sort(function (a, b) { return b.tables.length - a.tables.length || a.value.localeCompare(b.value); });
+          }
+
+          // exactName: tên cột → { tên Nhật → [bảng] }; exactJapanese: tên Nhật / dòng đầu mô tả → { tên cột → [bảng] }.
+          // pairs: tên cột + tên Nhật + cả mô tả, dạng danh sách (khoá, kết quả, bảng) không trùng để dò Bắt đầu bằng / Kết thúc
+          // bằng / Chứa.
+          function buildBatchIndex(candidateTables) {
+            var exactName = Object.create(null), exactJapanese = Object.create(null);
+            var looseName = Object.create(null), looseJapanese = Object.create(null), pairs = [];
+            // text: chữ gốc của khoá (chưa chuẩn hoá) để hiện ở cột "Mô tả khớp" - chỉ chiều tên Nhật / mô tả → tên cột.
+            function add(map, key, value, t, text) {
+              if (!key) return;
+              var byValue = map[key] || (map[key] = Object.create(null));
+              var found = byValue[value] || (byValue[value] = { tables: [], texts: [] });
+              if (found.tables[found.tables.length - 1] !== t.name) found.tables.push(t.name); // duyệt từng bảng: trùng chỉ có thể là phần tử cuối
+              if (text && found.texts.indexOf(text) < 0) found.texts.push(text);
+            }
+            candidateTables.forEach(function (t) {
+              t.columns.forEach(function (c) {
+                var name = normalizeName(c.name), jp = normalizeName(c.japaneseName), comment = normalizeName(firstLine(c.description));
+                var label = japaneseLabel(c);
+                add(exactName, name, label, t);
+                add(exactJapanese, jp, c.name, t, c.japaneseName);
+                if (comment !== jp) add(exactJapanese, comment, c.name, t, firstLine(c.description));
+                add(looseName, name, label, t);
+                add(looseJapanese, jp, c.name, t, c.japaneseName);
+                var description = normalizeName(c.description);
+                if (description !== jp) add(looseJapanese, description, c.name, t, c.description.trim());
+              });
+            });
+            [[looseName, true], [looseJapanese, false]].forEach(function (source) {
+              Object.keys(source[0]).forEach(function (key) {
+                Object.keys(source[0][key]).forEach(function (value) {
+                  pairs.push({ key: key, value: value, found: source[0][key][value], byName: source[1] });
+                });
+              });
+            });
+            // Mọi khoá nối thành 1 chuỗi "\u0001khoá1\u0001khoá2\u0001..." (khoá đã bỏ khoảng trắng, không chứa \u0001):
+            // dò bằng 1 lần indexOf trên chuỗi dài nhanh hơn nhiều so với so từng khoá (200k+ cột, mọi tên khác nhau).
+            var starts = new Array(pairs.length), joined = '\u0001', pos = 1;
+            pairs.forEach(function (p, k) { starts[k] = pos; joined += p.key + '\u0001'; pos += p.key.length + 1; });
+            return { exactName: exactName, exactJapanese: exactJapanese, pairs: pairs, starts: starts, joined: joined, memo: Object.create(null) };
+          }
+
+          // Gọi onPair cho mỗi cặp có khoá Bắt đầu bằng / Kết thúc bằng / Chứa query (mỗi khoá 1 lần dù khớp nhiều chỗ).
+          function findPairs(index, query, mode, onPair) {
+            var starts = index.starts, joined = index.joined, pairs = index.pairs;
+            var needle = mode === 'start' ? '\u0001' + query : mode === 'end' ? query + '\u0001' : query;
+            var from = 0, hit;
+            while ((hit = joined.indexOf(needle, from)) >= 0) {
+              var at = mode === 'start' ? hit + 1 : hit, lo = 0, hi = starts.length - 1;
+              while (lo < hi) { var mid = (lo + hi + 1) >> 1; if (starts[mid] <= at) lo = mid; else hi = mid - 1; } // khoá chứa vị trí at
+              onPair(pairs[lo]);
+              from = starts[lo] + pairs[lo].key.length; // dấu \u0001 sau khoá này - dò tiếp từ khoá sau
+            }
+          }
+
+          function batchTablesHtml(names) {
+            var links = names.map(function (n) {
+              return '<a class="fk-link" href="#table=' + encodeURIComponent(n) + '">' + escapeHtml(n) + '</a>';
+            }).join('');
+            return names.length <= 3 ? links : '<details><summary>' + names.length + ' bảng</summary>' + links + '</details>';
+          }
+
+          function renderBatchResult() {
+            var resultEl = document.getElementById('batchResult');
+            var statusEl = document.getElementById('batchStatus');
+            if (!resultEl) return; // khung tra hàng loạt đang không mở
+            var lines = batchText.split(/\r?\n/);
+            while (lines.length && !lines[lines.length - 1].trim()) lines.pop(); // dòng trống cuối (copy từ Excel) - bỏ
+            var single = batchOnlyCurrent && currentTable;
+            var index = batchIndexFor(single ? 'table:' + currentTable.name : 'kind:' + kindFilter,
+              function () { return single ? [currentTable] : tables.filter(kindMatches); });
+            // Khớp 1 phần trên schema lớn toàn tên khác nhau có thể mất vài giây: tra từng đợt ~60 ms, giữa các đợt trả lại trình
+            // duyệt (trang không đứng, báo "Đang tra x / n"); sửa chữ / đổi cách khớp giữa chừng thì bỏ lượt cũ. Khớp nguyên tên
+            // xong ngay trong đợt đầu.
+            var run = ++batchRun, mode = batchMode, done = 0, rows = [];
+            (function work() {
+              if (run !== batchRun) return;
+              var start = performance.now();
+              while (done < lines.length && performance.now() - start < 60) {
+                rows.push({ input: lines[done], results: lookupOne(normalizeName(lines[done]), index, mode) });
+                done++;
+              }
+              if (done < lines.length) {
+                statusEl.textContent = 'Đang tra ' + done + ' / ' + lines.length + '...';
+                setTimeout(work, 0);
+                return;
+              }
+              batchRows = rows;
+              drawBatchRows(resultEl, statusEl);
+            })();
+          }
+
+          function drawBatchRows(resultEl, statusEl) {
+            statusEl.textContent = '';
+            if (!batchRows.length) { resultEl.innerHTML = ''; return; }
+
+            var found = 0, multi = 0, missing = 0;
+            var html = '<div class="legend">' +
+              '<span><span class="swatch multi"></span>Nhiều kết quả' + (batchMode === 'exact' ? ' (tên đặt khác nhau giữa các bảng)' : '') + '</span>' +
+              '<span><span class="swatch notfound"></span>Không tìm thấy</span></div>' +
+              '<table class="cols"><thead><tr><th>STT</th><th>Nhập</th><th>Kết quả</th>' +
+              '<th title="Tên tiếng Nhật / mô tả (comment) đã khớp với chữ nhập - khi tra từ tiếng Nhật ra tên cột">Mô tả khớp</th>' +
+              '<th>Có ở bảng</th></tr></thead><tbody>';
+            batchRows.forEach(function (row, i) {
+              var blank = !row.input.trim(), n = row.results.length;
+              if (!blank) { if (!n) missing++; else { found++; if (n > 1) multi++; } }
+              var cls = blank ? '' : !n ? 'notfound' : n > 1 ? 'multi' : '';
+              var shown = row.results.slice(0, BATCH_SHOW);
+              var more = n > BATCH_SHOW ? '<div><i>… và ' + (n - BATCH_SHOW) + ' kết quả khác (Copy cột Kết quả lấy đủ)</i></div>' : '';
+              var result = shown.map(function (r) {
+                return (r.value ? escapeHtml(r.value) : '<i>(cột không có mô tả)</i>') + (n > 1 ? ' (' + r.tables.length + ' bảng)' : '');
+              }).join(' / ') + more;
+              var where = shown.map(function (r) {
+                return (n > 1 ? '<div>' + escapeHtml(r.value) + ': ' : '<div>') + batchTablesHtml(r.tables) + '</div>';
+              }).join('');
+              // Mô tả khớp: chữ gốc đã khớp (vd "貸借区分 // #MA.DC_TYP // Dr/Cr type" khi nhập 貸借区分); chiều tên cột → tên Nhật
+              // thì Kết quả đã là mô tả nên để trống.
+              var matched = shown.filter(function (r) { return r.texts.length; }).map(function (r) {
+                return '<div>' + (n > 1 ? escapeHtml(r.value) + ': ' : '') + r.texts.map(escapeHtml).join(' / ') + '</div>';
+              }).join('');
+              html += '<tr class="' + cls + '"><td>' + (i + 1) + '</td><td>' + escapeHtml(row.input) + '</td>' +
+                '<td class="batchResult">' + result + '</td><td class="batchMatch">' + matched + '</td>' +
+                '<td class="batchTables">' + where + '</td></tr>';
+            });
+            resultEl.innerHTML = html + '</tbody></table>';
+            statusEl.textContent = found + ' tìm thấy' + (multi ? ' (' + multi + ' có nhiều kết quả)' : '') +
+              (missing ? ', ' + missing + ' không tìm thấy' : '') + '.';
+          }
+
+          // Cột Kết quả đúng thứ tự dòng nhập, nhiều kết quả cách nhau " / ", không thấy = dòng trống (dán Excel không lệch dòng).
+          function copyBatchResult() {
+            var statusEl = document.getElementById('batchStatus');
+            var text = batchRows.map(function (row) {
+              return row.results.map(function (r) { return r.value; }).join(' / ');
+            }).join('\n');
+            function done() { statusEl.textContent = 'Đã copy ' + batchRows.length + ' dòng kết quả.'; }
+            function fallback() {
+              var area = document.createElement('textarea');
+              area.value = text;
+              document.body.appendChild(area);
+              area.select();
+              var ok = false;
+              try { ok = document.execCommand('copy'); } catch (e) { }
+              document.body.removeChild(area);
+              if (ok) done(); else statusEl.textContent = 'Không copy được - chọn cột Kết quả rồi Ctrl+C.';
+            }
+            if (navigator.clipboard && window.isSecureContext) {
+              navigator.clipboard.writeText(text).then(done, fallback);
+            } else {
+              fallback();
+            }
+          }
+
+          function showBatchLookup() {
+            document.title = 'CSDL - Tra cột hàng loạt';
+            contentEl.innerHTML = '<div class="batch"><h1>Tra cột hàng loạt</h1>' +
+              '<div class="meta">Dán danh sách, mỗi dòng 1 tên: tên tiếng Nhật ra tên cột, tên cột ra tên tiếng Nhật (dán lẫn cả hai cũng được). ' +
+              'Tên tiếng Nhật = mô tả (comment) cột. Khớp nguyên tên: so với dòng đầu mô tả; comment có thêm chữ (vd "データＮＯ // #MA.IF_DATA_NO") ' +
+              'thì chọn Bắt đầu bằng / Kết thúc bằng / Chứa. Chữ toàn khổ / nửa khổ (ＮＯ = NO), hoa / thường, khoảng trắng không tính. ' +
+              'Kết quả giữ đúng thứ tự dòng đã dán; theo bộ lọc Tất cả / Bảng / View.</div>' +
+              '<textarea id="batchInput" spellcheck="false" placeholder="データＮＯ&#10;ＰＧ実行状況区分&#10;data_crud_typ"></textarea>' +
+              '<div class="batchBar"><label>Cách khớp <select id="batchMode">' +
+              BATCH_MODES.map(function (m) { return '<option value="' + m[0] + '">' + m[1] + '</option>'; }).join('') + '</select></label>' +
+              '<label id="batchScope"><input id="batchOnlyCurrent" type="checkbox" /><span></span></label>' +
+              '<button id="batchCopy" type="button">Copy cột Kết quả</button><span id="batchStatus"></span></div>' +
+              '<div id="batchResult"></div></div>';
+            var input = document.getElementById('batchInput');
+            var only = document.getElementById('batchOnlyCurrent');
+            var scopeLabel = document.getElementById('batchScope');
+            input.value = batchText;
+            if (currentTable) {
+              only.checked = batchOnlyCurrent;
+              scopeLabel.querySelector('span').textContent = 'Chỉ tra trong bảng đang chọn: ' + currentTable.name;
+            } else {
+              only.checked = false;
+              only.disabled = true;
+              scopeLabel.classList.add('disabled');
+              scopeLabel.querySelector('span').textContent = 'Chỉ tra trong bảng đang chọn (chọn 1 bảng ở menu trái trước)';
+            }
+            var modeBox = document.getElementById('batchMode');
+            modeBox.value = batchMode;
+            // Khớp 1 phần phải dò cả danh sách cột: chờ ngừng gõ 1 nhịp rồi mới tra (dán cả danh sách thì tra ngay).
+            var timer = null;
+            input.addEventListener('input', function () {
+              batchText = input.value;
+              clearTimeout(timer);
+              if (batchMode === 'exact') renderBatchResult(); else timer = setTimeout(renderBatchResult, 200);
+            });
+            input.addEventListener('paste', function () { setTimeout(function () { clearTimeout(timer); batchText = input.value; renderBatchResult(); }, 0); });
+            modeBox.addEventListener('change', function () {
+              batchMode = modeBox.value;
+              try { localStorage.setItem('rdbms.batchMode', batchMode); } catch (e) { }
+              renderBatchResult();
+            });
+            only.addEventListener('change', function () { batchOnlyCurrent = only.checked; renderBatchResult(); });
+            document.getElementById('batchCopy').addEventListener('click', copyBatchResult);
+            renderBatchResult();
+            input.focus();
+            contentEl.scrollTop = 0;
+          }
+
           function escapeHtml(s) {
             return (s || '').replace(/[&<>"]/g, function (ch) {
               return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
@@ -744,7 +1026,10 @@ public sealed class HtmlReportGenerator
           columnBox.addEventListener('keyup', function (e) { if (e.key === 'Enter') performSearch(); });
           columnBox.addEventListener('input', performSearch);
           kindButtons.forEach(function (b) {
-            b.addEventListener('click', function () { setKindFilter(b.dataset.kind); saveFilters(); performSearch(); });
+            b.addEventListener('click', function () { setKindFilter(b.dataset.kind); saveFilters(); performSearch(); renderBatchResult(); });
+          });
+          document.getElementById('batchButton').addEventListener('click', function () {
+            if (location.hash === '#batch') showBatchLookup(); else location.hash = '#batch';
           });
           searchDescriptionBox.addEventListener('change', function () { saveFilters(); performSearch(); });
 

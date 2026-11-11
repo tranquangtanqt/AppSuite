@@ -104,6 +104,27 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    cả `description` của cột; bảng khớp nhờ mô tả hiện mô tả dưới tên ở menu trái. Chỗ khớp tô `<mark>` (`highlight()` escape
    từng đoạn). Link `#table=` tới bảng đang bị lọc ẩn thì về "Tất cả". Lựa chọn nhớ bằng `localStorage` (bọc try/catch - có
    trình duyệt chặn với file://). Thử bằng Edge headless `--dump-dom` + script chèn vào trang (Sandbox, 20/20).
+   **Tra cột hàng loạt (2026-11-11)**: nút `#batchButton` → `#batch` → `showBatchLookup()` ở khung phải: ô nhiều dòng, mỗi dòng 1
+   tên. `buildBatchIndex` dựng bảng tra 1 lần cho mỗi phạm vi (`kind:<lọc>` hoặc `table:<bảng đang chọn>`, cache
+   `batchIndexCache`): tên cột → tên tiếng Nhật (`japaneseName` từ Excel, không có thì dòng đầu `description` = comment DB),
+   `japaneseName` và dòng đầu `description` → tên cột. Khoá so sánh `normalizeName`: NFKC (toàn khổ = nửa khổ), bỏ mọi
+   khoảng trắng, chữ thường. Khớp nguyên tên. Mỗi dòng ra 0..n kết quả, dùng nhiều nhất trước, mỗi kết quả kèm danh sách
+   bảng (link `#table=`, trên 3 bảng gom vào `<details>`); n > 1 tô vàng `tr.multi`, 0 tô đỏ `tr.notfound`, dòng trống giữ
+   nguyên, dòng trống cuối bỏ. Ô *Chỉ tra trong bảng đang chọn* dùng `currentTable` (bảng xem gần nhất, khoá khi chưa chọn).
+   *Copy cột Kết quả*: mỗi dòng 1 kết quả (nhiều thì ` / `, không thấy = dòng trống) qua `navigator.clipboard`, không được
+   thì `execCommand('copy')`. Chữ đã dán giữ khi đi xem bảng rồi Back.
+   **Cách khớp** `#batchMode` (nhớ ở `localStorage` `rdbms.batchMode`): Khớp nguyên tên dùng `exactName` / `exactJapanese`
+   (dòng đầu mô tả); Bắt đầu bằng / Kết thúc bằng / Chứa so với cả mô tả - comment mỗi DB 1 kiểu (vd
+   `データＮＯ // #MA.IF_DATA_NO // Data No.`) nên không cắt cứng theo dấu nào. Dòng khớp được tên cột thì chỉ lấy kết quả
+   tên cột → tên Nhật, không thì tên Nhật / mô tả → tên cột (không trộn 2 chiều). Dò 1 phần: mọi khoá (không trùng) nối
+   thành 1 chuỗi `\u0001k1\u0001k2...`, `findPairs` dò bằng `indexOf` (Bắt đầu bằng = `\u0001`+chữ, Kết thúc bằng =
+   chữ+`\u0001`) rồi tìm nhị phân trong `starts` ra khoá. Kết quả từng dòng nhớ theo cách khớp (`memo`); `renderBatchResult`
+   tra từng đợt ~60 ms (`batchRun` bỏ lượt cũ, báo "Đang tra x / n"); gõ tay ở kiểu khớp 1 phần chờ 200 ms, dán thì tra
+   ngay. Hiện tối đa `BATCH_SHOW` = 20 kết quả mỗi dòng. Cột **Mô tả khớp**: mỗi khoá tên Nhật / mô tả giữ kèm chữ gốc
+   (`found.texts`, chưa chuẩn hoá - Khớp nguyên tên: dòng đầu mô tả, khớp 1 phần: cả mô tả, hiện `pre-wrap`); chiều tên cột →
+   tên Nhật để trống. Copy vẫn chỉ cột Kết quả. Thử: Edge headless + script chèn 46/46; 4000 bảng × 50 cột
+   (200k cột) tra 500 dòng: tên lặp như DB thật ~0,1 s mọi kiểu khớp, mọi tên khác nhau (xấu nhất) khớp 1 phần ~2 s, trang
+   không đứng quá ~70 ms (đo qua DevTools Protocol, tắt hãm timer của trang ẩn).
 5. **"3. Mở file HTML"** - mở file HTML vừa xuất bằng trình duyệt mặc định. Đóng rồi mở lại module vẫn
    nhận đúng file `.db`/`.html` đã có sẵn cho database/nguồn đang chọn (`RdbmsHtmlGeneratorViewModel.RefreshDatabaseTarget`
    kiểm tra lại mỗi khi đổi nguồn hoặc lưu settings), không cần import lại nếu đã có cache từ trước.

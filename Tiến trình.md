@@ -1144,6 +1144,21 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   View và tìm theo mô tả tiếng Việt / tiếng Nhật
 - [x] ~~Bảng cùng tên ở 2 schema khác nhau (vd dbo.X và sales.X)~~ — thực tế không phải bị gộp mà làm cả lần đọc lỗi;
   đã sửa 2026-10-09 (xem mục bên trên)
+- [x] Trang HTML: **Tra cột hàng loạt** - dán danh sách (mỗi dòng 1 tên): tên tiếng Nhật (dòng đầu mô tả / comment, hoặc tên
+  Nhật từ Excel) → tên cột, tên cột → tên tiếng Nhật, dán lẫn được; khớp nguyên tên, toàn khổ / nửa khổ, hoa / thường, khoảng
+  trắng không tính. Kết quả giữ thứ tự dòng: 1 tên ra nhiều kết quả ghi hết "data_no (3 bảng) / dt_no (1 bảng)" tô vàng,
+  không thấy để trống tô đỏ; cột Có ở bảng link sang bảng (Back quay lại khung tra). Tuỳ chọn chỉ tra trong bảng đang chọn,
+  theo lọc Tất cả / Bảng / View; Copy cột Kết quả để dán Excel. Cập nhật F1, README. Unit test 77/77; thử trang bằng Edge
+  headless 31/31, 200k cột tra 500 dòng ~60 ms, ảnh sáng / tối (2026-11-11)
+- [x] Tra cột hàng loạt - ô **Cách khớp**: Khớp nguyên tên / Bắt đầu bằng / Kết thúc bằng / Chứa (comment mỗi DB 1 kiểu, vd
+  "データＮＯ // #MA.IF_DATA_NO // Data No." - không cắt cứng theo dấu, người dùng chọn); khớp 1 phần so với cả mô tả, dòng
+  khớp tên cột thì chỉ ra tên Nhật (không trộn 2 chiều), tối đa 20 kết quả mỗi dòng (Copy lấy đủ), trình duyệt nhớ lựa chọn.
+  Schema lớn: dò bằng 1 chuỗi nối mọi khoá + indexOf, tra từng đợt có báo "Đang tra x / n". Cập nhật F1, README. Unit test
+  77/77; Edge headless 46/46; 200k cột 500 dòng: DB thường ~0,1 s, xấu nhất ~2 s không đứng trang (2026-11-11)
+- [x] Tra cột hàng loạt - cột **Mô tả khớp**: tra từ tiếng Nhật ra tên cột thì hiện đúng mô tả đã khớp (vd 貸借区分 → dc_type,
+  "貸借区分 // #MA.DC_TYP // Dr/Cr type"; khớp 1 phần hiện cả mô tả nhiều dòng; nhiều kết quả ghi theo từng tên cột); chiều tên
+  cột → tiếng Nhật để trống; Copy vẫn chỉ cột Kết quả. Cập nhật F1, README. Unit test 77/77; Edge headless 56/56 (2026-11-11)
+- [ ] Thử tay: xuất lại HTML của DB thật → Tra cột hàng loạt với danh sách tên tiếng Nhật thật, thử 4 cách khớp
 
 ## ModuleC
 
