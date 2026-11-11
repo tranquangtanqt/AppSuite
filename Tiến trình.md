@@ -1162,6 +1162,9 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   Danh sách bảng nhập vào (tên bảng hoặc tên tiếng Nhật của bảng, cách nhau xuống dòng / dấu phẩy / khoảng trắng, không
   theo lọc Bảng / View, báo "Tra trong n bảng" + tên không có bảng). Cập nhật F1, README. Unit test 77/77; Edge headless
   68/68 (2026-11-11)
+- [x] Tra cột hàng loạt - ô tick **Hiện nhiều dòng** (góc phải trên bảng kết quả): cột Mô tả khớp và Có ở bảng mỗi mô tả /
+  mỗi bảng 1 dòng (nhiều kết quả thì thụt dưới tên cột), bỏ tick về nối " / " trên 1 dòng; trình duyệt nhớ lựa chọn; Copy
+  không đổi. Cập nhật F1, README. Unit test 77/77; Edge headless 76/76 (2026-11-11)
 - [ ] Thử tay: xuất lại HTML của DB thật → Tra cột hàng loạt với danh sách tên tiếng Nhật thật, thử 4 cách khớp
 
 ## ModuleC

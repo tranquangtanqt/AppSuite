@@ -114,7 +114,9 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    (`currentTable` = bảng xem gần nhất, khoá khi chưa chọn), Danh sách bảng nhập vào (ô `#batchTables`, `parseTableList`:
    tách theo xuống dòng / dấu phẩy / khoảng trắng, mỗi tên khớp nguyên tên bảng, tên bỏ tiền tố schema, `japaneseName` hoặc
    dòng đầu mô tả bảng qua `normalizeName`; không theo lọc Bảng / View; `#batchTableInfo` báo số bảng + tên không có, gõ thì
-   chờ 200 ms). Phạm vi và danh sách bảng giữ khi đi xem bảng rồi quay lại.
+   chờ 200 ms). Phạm vi và danh sách bảng giữ khi đi xem bảng rồi quay lại. Ô tick *Hiện nhiều dòng* `#batchLines` (cạnh
+   chú thích, nhớ ở `localStorage` `rdbms.batchLines`) chỉ bật / tắt class `lines` của `#batchTable`: CSS ẩn `.sep` (" / ")
+   và cho mỗi mô tả `.t` / link bảng `display: block` - không tra lại.
    *Copy cột Kết quả*: mỗi dòng 1 kết quả (nhiều thì ` / `, không thấy = dòng trống) qua `navigator.clipboard`, không được
    thì `execCommand('copy')`. Chữ đã dán giữ khi đi xem bảng rồi Back.
    **Cách khớp** `#batchMode` (nhớ ở `localStorage` `rdbms.batchMode`): Khớp nguyên tên dùng `exactName` / `exactJapanese`

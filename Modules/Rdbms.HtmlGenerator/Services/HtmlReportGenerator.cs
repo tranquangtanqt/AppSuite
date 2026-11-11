@@ -229,6 +229,11 @@ public sealed class HtmlReportGenerator
           td.batchMatch { white-space: pre-wrap; }
           .batchTables summary { cursor: pointer; }
           .batchTables a { margin-right: 10px; }
+          .batchLinesBox { margin-left: auto; display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 13px; }
+          table.lines td.batchMatch .sep { display: none; }
+          table.lines td.batchMatch .t, table.lines .batchTables a { display: block; margin-right: 0; }
+          table.lines .pfx .t, table.lines .pfx > a, table.lines .pfx details { padding-left: 12px; }
+          table.lines td.batchMatch .t + .t { margin-top: 2px; }
         </style>
         </head>
         <body>
@@ -870,6 +875,10 @@ public sealed class HtmlReportGenerator
             }
           }
 
+          // Hiện nhiều dòng (ô tick cạnh chú thích): mỗi mô tả khớp / mỗi bảng 1 dòng - chỉ đổi class của bảng kết quả, không tra lại.
+          var batchLines = false;
+          try { batchLines = localStorage.getItem('rdbms.batchLines') === '1'; } catch (e) { }
+
           function batchTablesHtml(names) {
             var links = names.map(function (n) {
               return '<a class="fk-link" href="#table=' + encodeURIComponent(n) + '">' + escapeHtml(n) + '</a>';
@@ -950,8 +959,10 @@ public sealed class HtmlReportGenerator
             var found = 0, multi = 0, missing = 0;
             var html = '<div class="legend">' +
               '<span><span class="swatch multi"></span>Nhiều kết quả' + (batchMode === 'exact' ? ' (tên đặt khác nhau giữa các bảng)' : '') + '</span>' +
-              '<span><span class="swatch notfound"></span>Không tìm thấy</span></div>' +
-              '<table class="cols"><thead><tr><th>STT</th><th>Nhập</th><th>Kết quả</th>' +
+              '<span><span class="swatch notfound"></span>Không tìm thấy</span>' +
+              '<label class="batchLinesBox" title="Cột Mô tả khớp và Có ở bảng: mỗi mô tả / mỗi bảng 1 dòng">' +
+              '<input id="batchLines" type="checkbox"' + (batchLines ? ' checked' : '') + ' />Hiện nhiều dòng</label></div>' +
+              '<table id="batchTable" class="cols' + (batchLines ? ' lines' : '') + '"><thead><tr><th>STT</th><th>Nhập</th><th>Kết quả</th>' +
               '<th title="Tên tiếng Nhật / mô tả (comment) đã khớp với chữ nhập - khi tra từ tiếng Nhật ra tên cột">Mô tả khớp</th>' +
               '<th>Có ở bảng</th></tr></thead><tbody>';
             batchRows.forEach(function (row, i) {
@@ -964,18 +975,26 @@ public sealed class HtmlReportGenerator
                 return (r.value ? escapeHtml(r.value) : '<i>(cột không có mô tả)</i>') + (n > 1 ? ' (' + r.tables.length + ' bảng)' : '');
               }).join(' / ') + more;
               var where = shown.map(function (r) {
-                return (n > 1 ? '<div>' + escapeHtml(r.value) + ': ' : '<div>') + batchTablesHtml(r.tables) + '</div>';
+                return (n > 1 ? '<div class="pfx">' + escapeHtml(r.value) + ': ' : '<div>') + batchTablesHtml(r.tables) + '</div>';
               }).join('');
               // Mô tả khớp: chữ gốc đã khớp (vd "貸借区分 // #MA.DC_TYP // Dr/Cr type" khi nhập 貸借区分); chiều tên cột → tên Nhật
               // thì Kết quả đã là mô tả nên để trống.
               var matched = shown.filter(function (r) { return r.texts.length; }).map(function (r) {
-                return '<div>' + (n > 1 ? escapeHtml(r.value) + ': ' : '') + r.texts.map(escapeHtml).join(' / ') + '</div>';
+                return '<div' + (n > 1 ? ' class="pfx">' + escapeHtml(r.value) + ': ' : '>') + r.texts.map(function (s) {
+                  return '<span class="t">' + escapeHtml(s) + '</span>';
+                }).join('<span class="sep"> / </span>') + '</div>';
               }).join('');
               html += '<tr class="' + cls + '"><td>' + (i + 1) + '</td><td>' + escapeHtml(row.input) + '</td>' +
                 '<td class="batchResult">' + result + '</td><td class="batchMatch">' + matched + '</td>' +
                 '<td class="batchTables">' + where + '</td></tr>';
             });
             resultEl.innerHTML = html + '</tbody></table>';
+            var linesBox = document.getElementById('batchLines');
+            linesBox.addEventListener('change', function () {
+              batchLines = linesBox.checked;
+              try { localStorage.setItem('rdbms.batchLines', batchLines ? '1' : '0'); } catch (e) { }
+              document.getElementById('batchTable').classList.toggle('lines', batchLines);
+            });
             statusEl.textContent = found + ' tìm thấy' + (multi ? ' (' + multi + ' có nhiều kết quả)' : '') +
               (missing ? ', ' + missing + ' không tìm thấy' : '') + '.';
           }
