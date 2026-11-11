@@ -1165,6 +1165,15 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [x] Tra cột hàng loạt - ô tick **Hiện nhiều dòng** (góc phải trên bảng kết quả): cột Mô tả khớp và Có ở bảng mỗi mô tả /
   mỗi bảng 1 dòng (nhiều kết quả thì thụt dưới tên cột), bỏ tick về nối " / " trên 1 dòng; trình duyệt nhớ lựa chọn; Copy
   không đổi. Cập nhật F1, README. Unit test 77/77; Edge headless 76/76 (2026-11-11)
+- [x] Trang HTML - tìm nâng cao (đợt 1): **nhiều từ** ở ô Tên bảng / Tên cột (phải chứa đủ mọi từ, ô Tách từ: Khoảng trắng /
+  , / ; / | / Không tách / Khác + ký tự tự nhập); **Bộ lọc nâng cao**: Kiểu dữ liệu (từ DB, bỏ độ dài, kèm số cột), Mô tả cột
+  có / chưa có (lọc bật là tìm cả khi ô Tên cột trống); kết quả tìm cột **phân trang 200 dòng**, nút **Nhóm theo bảng /
+  Danh sách phẳng** (phẳng: cột Bảng, bấm tiêu đề sắp xếp tăng / giảm / gốc), tiêu đề nhóm link sang bảng, Back về đúng
+  trang kết quả; bấm **tên cột → hộp thoại chi tiết** (đủ thuộc tính, khoá ngoại 2 chiều, index, cột cùng tên ở bảng khác -
+  khác kiểu tô đỏ). Cập nhật F1, README. Unit test 77/77; Edge headless 47/47 (mới) + 76/76 (cũ); 300k cột mọi thao tác
+  < 150 ms (2026-11-11)
+- [ ] Trang HTML - đợt 2: đưa từ khoá vào địa chỉ trang (Back / bookmark / gửi link) + lịch sử tìm kiếm; trang thống kê cột
+  dùng chung / cùng tên khác kiểu, khác comment
 - [ ] Thử tay: xuất lại HTML của DB thật → Tra cột hàng loạt với danh sách tên tiếng Nhật thật, thử 4 cách khớp
 
 ## ModuleC

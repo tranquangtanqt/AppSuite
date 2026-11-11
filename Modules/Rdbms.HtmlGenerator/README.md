@@ -104,6 +104,21 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    cả `description` của cột; bảng khớp nhờ mô tả hiện mô tả dưới tên ở menu trái. Chỗ khớp tô `<mark>` (`highlight()` escape
    từng đoạn). Link `#table=` tới bảng đang bị lọc ẩn thì về "Tất cả". Lựa chọn nhớ bằng `localStorage` (bọc try/catch - có
    trình duyệt chặn với file://). Thử bằng Edge headless `--dump-dom` + script chèn vào trang (Sandbox, 20/20).
+   **Tìm nâng cao (2026-11-11)**: `searchTerms()` tách chữ ô Tên bảng / Tên cột thành nhiều từ theo `#splitMode`
+   (Khoảng trắng / , / ; / | / Không tách / Khác + `#splitCustom`, nhớ `rdbms.splitMode` / `rdbms.splitCustom`);
+   `termsMatch()` = mọi từ phải có trong 1 trong các chữ (tên, tên Nhật, mô tả nếu tick) - VÀ giữa các từ, HOẶC giữa các
+   chữ. `highlight(text, terms)` tô mọi từ. *Bộ lọc nâng cao* `#advFilter`: `#typeFilter` (kiểu gốc `baseType()` = bỏ từ
+   "(" trở đi, danh sách + số cột dựng từ dữ liệu) và `#descFilter` (có / chưa có `description` hoặc `japaneseName`) - lọc
+   bật thì vào chế độ tìm cột kể cả ô Tên cột trống (`columnFilterActive()`); `#advState` báo lọc đang bật. Kết quả tìm
+   cột: `showColumnResults()` giữ `colResult` (danh sách phẳng `{t, c}`), `drawColumnResults()` vẽ 1 trang `PAGE_SIZE` =
+   200, kiểu xem Nhóm theo bảng / Danh sách phẳng (`rdbms.columnView`), sắp xếp `columnSort` (tăng → giảm → gốc, sort ổn
+   định trên khoá chữ thường, cache theo khoá) chỉ ở xem phẳng; nút / ô trang bắt chung ở `contentEl`. Hiện kết quả thì
+   `history.replaceState` thành `#search`, bấm sang bảng rồi Back thì `applyHash` vẽ lại `colResult` (đúng trang, chữ đã
+   gõ) không tìm lại. *Chi tiết cột*: tên cột là `a.colLink` (`data-t` / `data-c` = `t._i` / `c._i` gắn lúc normalize) →
+   `showColumnDetail()` mở `<dialog id="colDialog">`: mọi trường khác rỗng, khoá ngoại 2 chiều (`incomingByTable`), index
+   có cột, cột cùng tên ở bảng khác (`columnsByName` dựng lần đầu, khác kiểu `tr.diff` tô đỏ, tối đa 100). Đo trang 300k
+   cột (6000 bảng): tìm "c" khớp cả 300k ~60 ms, lọc kiểu ~60 ms, sắp xếp 300k ~130 ms, đổi trang ~15 ms, mở chi tiết
+   lần đầu ~45 ms.
    **Tra cột hàng loạt (2026-11-11)**: nút `#batchButton` → `#batch` → `showBatchLookup()` ở khung phải: ô nhiều dòng, mỗi dòng 1
    tên. `buildBatchIndex` dựng bảng tra 1 lần cho mỗi phạm vi (`kind:<lọc>`, `table:<bảng đang chọn>` hoặc `list:<các bảng>`, cache
    `batchIndexCache`): tên cột → tên tiếng Nhật (`japaneseName` từ Excel, không có thì dòng đầu `description` = comment DB),

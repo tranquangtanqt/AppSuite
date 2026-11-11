@@ -234,6 +234,42 @@ public sealed class HtmlReportGenerator
           table.lines td.batchMatch .t, table.lines .batchTables a { display: block; margin-right: 0; }
           table.lines .pfx .t, table.lines .pfx > a, table.lines .pfx details { padding-left: 12px; }
           table.lines td.batchMatch .t + .t { margin-top: 2px; }
+          /* Bộ lọc nâng cao + kết quả tìm cột (phân trang, xem phẳng, chi tiết cột) */
+          #advFilter { font-size: 12px; border: 1px solid #8884; border-radius: 4px; padding: 4px 8px; }
+          #advFilter summary { cursor: pointer; }
+          #advFilter summary .on { color: #4a90d9; font-weight: 600; }
+          #advFilter .row { display: flex; align-items: center; gap: 6px; margin-top: 6px; }
+          #advFilter .row > span { width: 78px; flex: none; }
+          #advFilter select { flex: 1; min-width: 0; font-size: 12px; padding: 2px; }
+          #searchArea #splitCustom { width: 60px; flex: none; padding: 2px 4px; font-size: 12px; }
+          #advFilter button { font-size: 12px; padding: 2px 8px; cursor: pointer; margin-top: 6px; }
+          .resultBar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: 13px; margin: 8px 0; }
+          .viewSwitch { display: inline-flex; border: 1px solid #8886; border-radius: 4px; overflow: hidden; }
+          .viewSwitch button { border: 0; border-right: 1px solid #8886; background: transparent; color: inherit; padding: 3px 10px;
+            font-size: 12px; cursor: pointer; }
+          .viewSwitch button:last-child { border-right: 0; }
+          .viewSwitch button.on { background: #4a90d9; color: #fff; }
+          .pager { display: inline-flex; align-items: center; gap: 4px; }
+          .pager button { padding: 2px 8px; cursor: pointer; }
+          .pager input { width: 56px; padding: 2px 4px; font-size: 12px; text-align: right; }
+          table.cols th.sortable { cursor: pointer; user-select: none; }
+          table.cols th.sortable:hover { background: #c3e8cc; }
+          .groupBlock h2 a { color: inherit; text-decoration: none; }
+          .groupBlock h2 a:hover { text-decoration: underline; color: #4a90d9; }
+          a.colLink { color: inherit; text-decoration: none; border-bottom: 1px dotted #4a90d9; cursor: pointer; }
+          a.colLink:hover { color: #4a90d9; }
+          dialog#colDialog { max-width: min(860px, 94vw); width: 860px; max-height: 88vh; padding: 0; border: 1px solid #8888;
+            border-radius: 8px; }
+          dialog#colDialog::backdrop { background: #0006; }
+          #colDialog .head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #8884;
+            position: sticky; top: 0; background: Canvas; }
+          #colDialog .head h1 { flex: 1; margin: 0; word-break: break-all; }
+          #colDialog .head button { font-size: 16px; padding: 0 10px; cursor: pointer; }
+          #colDialog .body { padding: 10px 14px 14px; font-size: 13px; }
+          #colDialog table.kv { border-collapse: collapse; width: 100%; margin-bottom: 12px; }
+          #colDialog table.kv th { text-align: left; width: 170px; font-weight: 600; padding: 3px 8px 3px 0; vertical-align: top; opacity: .85; }
+          #colDialog table.kv td { padding: 3px 0; white-space: pre-wrap; word-break: break-word; }
+          #colDialog tr.diff td.dt { color: #d9534f; font-weight: 600; }
         </style>
         </head>
         <body>
@@ -247,6 +283,33 @@ public sealed class HtmlReportGenerator
               <button type="button" data-kind="view">View</button>
             </div>
             <label title="Tên bảng / Tên cột khớp cả với mô tả (comment) của bảng / cột"><input id="searchDescription" type="checkbox" />Tìm cả trong mô tả</label>
+            <details id="advFilter">
+              <summary>Bộ lọc nâng cao <span id="advState"></span></summary>
+              <div class="row" title="Ô Tên bảng / Tên cột có nhiều từ: tách theo ký tự này, kết quả phải chứa đủ mọi từ (thứ tự bất kỳ)">
+                <span>Tách từ</span>
+                <select id="splitMode">
+                  <option value="space">Khoảng trắng</option>
+                  <option value=",">Dấu phẩy ( , )</option>
+                  <option value=";">Chấm phẩy ( ; )</option>
+                  <option value="|">Gạch đứng ( | )</option>
+                  <option value="none">Không tách (nguyên cụm)</option>
+                  <option value="custom">Khác...</option>
+                </select>
+                <input id="splitCustom" type="text" maxlength="10" placeholder="Ký tự" hidden />
+              </div>
+              <div class="row" title="Chỉ cột có kiểu dữ liệu này (bỏ phần độ dài, vd varchar(20) = varchar)">
+                <span>Kiểu dữ liệu</span><select id="typeFilter"><option value="">Tất cả</option></select>
+              </div>
+              <div class="row" title="Cột có / chưa có mô tả (comment) hoặc tên tiếng Nhật">
+                <span>Mô tả cột</span>
+                <select id="descFilter">
+                  <option value="">Tất cả</option>
+                  <option value="has">Có mô tả</option>
+                  <option value="none">Chưa có mô tả</option>
+                </select>
+              </div>
+              <button id="advClear" type="button">Bỏ lọc kiểu / mô tả</button>
+            </details>
             <button id="searchButton">Tìm kiếm</button>
             <button id="batchButton" type="button" title="Dán nhiều tên cột (mỗi dòng 1 tên, tiếng Nhật hoặc tên cột) để tra ra tên tương ứng hàng loạt">Tra cột hàng loạt</button>
           </div>
@@ -257,8 +320,11 @@ public sealed class HtmlReportGenerator
           <p>Chọn 1 bảng ở menu bên trái, hoặc nhập Tên bảng và / hoặc Tên cột rồi bấm Tìm kiếm.<br>
           Chỉ Tên bảng: hiện toàn bộ cấu trúc bảng. Cả hai: hiện dòng cột đó trong bảng. Chỉ Tên cột:
           tìm tất cả các bảng có cột đó, kết quả nhóm theo từng bảng.<br>
+          Nhiều từ (vd "会計 cd") thì kết quả phải chứa đủ mọi từ; Bộ lọc nâng cao: cách tách từ, kiểu dữ liệu, cột có / chưa có mô tả.
+          Bấm tên cột để xem đủ thông tin cột.<br>
           Có sẵn danh sách nhiều tên cột (tiếng Nhật hoặc tên cột)? Bấm Tra cột hàng loạt.</p>
         </div>
+        <dialog id="colDialog"></dialog>
         <script id="app-data" type="application/json">%%DATA_JSON%%</script>
         <script>
         (function () {
@@ -271,11 +337,13 @@ public sealed class HtmlReportGenerator
             'cautionItems', 'revisionHistory', 'sourceFile', 'sourceSheet'];
           var columnTextFields = ['dataType', 'length', 'nullable', 'defaultValue', 'japaneseName', 'description',
             'fullName', 'valueRestriction', 'meta'];
-          tables.forEach(function (t) {
+          tables.forEach(function (t, ti) {
             tableTextFields.forEach(function (k) { if (t[k] == null) t[k] = ''; });
+            t._i = ti; // vị trí bảng / cột - link tên cột trỏ về đúng cột (data-t / data-c)
             t.columns = t.columns || [];
-            t.columns.forEach(function (c) {
+            t.columns.forEach(function (c, ci) {
               columnTextFields.forEach(function (k) { if (c[k] == null) c[k] = ''; });
+              c._i = ci;
             });
             t.foreignKeys = t.foreignKeys || [];
             t.indexes = (t.indexes || []).map(function (i) {
@@ -329,28 +397,101 @@ public sealed class HtmlReportGenerator
           var tablesByName = {};
           tables.forEach(function (t) { tablesByName[t.name] = t; });
 
-          function tableNameMatches(t, query) {
-            if (!kindMatches(t)) return false;
-            if (!query) return true;
-            return t.name.toLowerCase().indexOf(query) >= 0 || t.japaneseName.toLowerCase().indexOf(query) >= 0
-              || (searchDescriptionBox.checked && t.description.toLowerCase().indexOf(query) >= 0);
-          }
+          // ----- Bộ lọc nâng cao: tách từ (nhiều từ = phải chứa đủ mọi từ), kiểu dữ liệu, cột có / chưa có mô tả -----
+          var splitModeBox = document.getElementById('splitMode');
+          var splitCustomBox = document.getElementById('splitCustom');
+          var typeFilterBox = document.getElementById('typeFilter');
+          var descFilterBox = document.getElementById('descFilter');
+          try {
+            var savedSplit = localStorage.getItem('rdbms.splitMode');
+            if (savedSplit && splitModeBox.querySelector('option[value="' + savedSplit + '"]')) splitModeBox.value = savedSplit;
+            splitCustomBox.value = localStorage.getItem('rdbms.splitCustom') || '';
+          } catch (e) { }
+          splitCustomBox.hidden = splitModeBox.value !== 'custom';
 
-          function columnMatches(c, query) {
-            return c.name.toLowerCase().indexOf(query) >= 0 || c.japaneseName.toLowerCase().indexOf(query) >= 0
-              || (searchDescriptionBox.checked && c.description.toLowerCase().indexOf(query) >= 0);
-          }
-
-          // Tô chỗ khớp (không phân biệt hoa thường) - escape từng đoạn, chỉ <mark> là HTML.
-          function highlight(text, query) {
-            text = text || '';
-            if (!query) return escapeHtml(text);
-            var lower = text.toLowerCase(), html = '', pos = 0, i;
-            while ((i = lower.indexOf(query, pos)) >= 0) {
-              html += escapeHtml(text.slice(pos, i)) + '<mark>' + escapeHtml(text.slice(i, i + query.length)) + '</mark>';
-              pos = i + query.length;
+          // Chữ ô tìm → danh sách từ (chữ thường, bỏ rỗng). Không tách / Khác mà để trống = cả cụm là 1 từ.
+          function searchTerms(text) {
+            text = text.trim().toLowerCase();
+            if (!text) return [];
+            var mode = splitModeBox.value, parts;
+            if (mode === 'space') parts = text.split(/\s+/);
+            else if (mode === 'none') parts = [text];
+            else {
+              var sep = mode === 'custom' ? splitCustomBox.value : mode;
+              parts = sep ? text.split(sep.toLowerCase()) : [text];
             }
-            return html + escapeHtml(text.slice(pos));
+            var terms = [];
+            parts.forEach(function (p) { p = p.trim(); if (p && terms.indexOf(p) < 0) terms.push(p); });
+            return terms;
+          }
+
+          // Mỗi từ phải có trong 1 trong các chữ (tên, tên Nhật, mô tả nếu tick) - từ khác nhau có thể khớp ở chỗ khác nhau.
+          function termsMatch(texts, terms) {
+            return terms.every(function (q) {
+              return texts.some(function (s) { return s.toLowerCase().indexOf(q) >= 0; });
+            });
+          }
+
+          // Kiểu gốc: bỏ độ dài / phần sau dấu "(" (varchar(20) = varchar), chữ thường.
+          function baseType(c) { return c.dataType.toLowerCase().replace(/\(.*$/, '').trim(); }
+          (function fillTypeFilter() {
+            var counts = Object.create(null);
+            tables.forEach(function (t) { t.columns.forEach(function (c) { var k = baseType(c); counts[k] = (counts[k] || 0) + 1; }); });
+            Object.keys(counts).sort().forEach(function (k) {
+              var o = document.createElement('option');
+              o.value = k || '\u0000';
+              o.textContent = (k || '(không rõ kiểu)') + ' (' + counts[k].toLocaleString('vi-VN') + ')';
+              typeFilterBox.appendChild(o);
+            });
+          })();
+
+          function columnFilterActive() { return !!(typeFilterBox.value || descFilterBox.value); }
+          function columnPassesFilters(c) {
+            var type = typeFilterBox.value;
+            if (type && baseType(c) !== (type === '\u0000' ? '' : type)) return false;
+            var desc = descFilterBox.value;
+            if (desc) { var has = !!(c.description.trim() || c.japaneseName.trim()); if ((desc === 'has') !== has) return false; }
+            return true;
+          }
+          function updateAdvState() {
+            var on = [];
+            if (splitModeBox.value !== 'space') on.push('tách: ' + splitModeBox.options[splitModeBox.selectedIndex].text.replace(/\s*\(.*$/, ''));
+            if (typeFilterBox.value) on.push('kiểu');
+            if (descFilterBox.value) on.push(descFilterBox.value === 'has' ? 'có mô tả' : 'chưa có mô tả');
+            document.getElementById('advState').innerHTML = on.length ? '<span class="on">(' + escapeHtml(on.join(', ')) + ')</span>' : '';
+          }
+
+          function tableNameMatches(t, terms) {
+            if (!kindMatches(t)) return false;
+            if (!terms.length) return true;
+            return termsMatch(searchDescriptionBox.checked ? [t.name, t.japaneseName, t.description] : [t.name, t.japaneseName], terms);
+          }
+
+          function columnMatches(c, terms) {
+            if (!columnPassesFilters(c)) return false;
+            if (!terms.length) return true;
+            return termsMatch(searchDescriptionBox.checked ? [c.name, c.japaneseName, c.description] : [c.name, c.japaneseName], terms);
+          }
+
+          // Tô chỗ khớp mọi từ (không phân biệt hoa thường) - escape từng đoạn, chỉ <mark> là HTML.
+          function highlight(text, terms) {
+            text = text || '';
+            if (!terms || !terms.length) return escapeHtml(text);
+            var lower = text.toLowerCase(), marks = new Array(text.length + 1), any = false;
+            terms.forEach(function (q) {
+              var pos = 0, i;
+              while ((i = lower.indexOf(q, pos)) >= 0) { for (var k = i; k < i + q.length; k++) marks[k] = true; any = true; pos = i + q.length; }
+            });
+            if (!any) return escapeHtml(text);
+            var html = '', start = 0;
+            for (var k = 1; k <= text.length; k++) {
+              if (k === text.length || !!marks[k] !== !!marks[start]) {
+                var piece = escapeHtml(text.slice(start, k));
+                html += marks[start] ? '<mark>' + piece + '</mark>' : piece;
+                start = k;
+              }
+            }
+            return html;
           }
 
           function findListItem(name) {
@@ -360,7 +501,7 @@ public sealed class HtmlReportGenerator
           }
 
           function renderList() {
-            var query = searchBox.value.trim().toLowerCase();
+            var query = searchTerms(searchBox.value);
             listEl.innerHTML = '';
             tables.filter(function (t) { return tableNameMatches(t, query); }).forEach(function (t) {
               var li = document.createElement('li');
@@ -368,15 +509,15 @@ public sealed class HtmlReportGenerator
               li.innerHTML = '<div><span class="tname"></span>' + (isView(t) ? '<span class="badge">' + escapeHtml(t.kind) + '</span>' : '') +
                 '</div><div class="jname"></div>';
               li.querySelector('.tname').textContent = t.name;
-              var byDescription = query && t.name.toLowerCase().indexOf(query) < 0 && t.japaneseName.toLowerCase().indexOf(query) < 0;
+              var byDescription = query.length && !termsMatch([t.name, t.japaneseName], query);
               if (byDescription) {
                 li.querySelector('.jname').innerHTML = highlight(t.description, query); // khớp nhờ mô tả - cho thấy chỗ khớp
               } else {
                 li.querySelector('.jname').textContent = t.japaneseName || t.alias || rowsText(t);
               }
               li.addEventListener('click', function () {
-                var columnQuery = columnBox.value.trim().toLowerCase();
-                if (columnQuery) {
+                var columnQuery = searchTerms(columnBox.value);
+                if (columnQuery.length || columnFilterActive()) {
                   showTableColumnMatches(t, li, columnQuery);
                 } else {
                   showFullTable(t, li);
@@ -432,36 +573,134 @@ public sealed class HtmlReportGenerator
               '</div>';
           }
 
-          // query: kết quả tìm cột - tô chỗ khớp ở tên cột / mô tả.
-          function buildColumnsTableHtml(columns, query) {
-            var html = '<table class="cols"><thead><tr>' +
-              '<th>STT</th><th>Tên cột</th><th>Kiểu</th><th>Null</th>' +
-              '<th>Mô tả</th></tr></thead><tbody>';
-            columns.forEach(function (c, i) {
-              var rowClasses = [];
-              if (c.level === 0) rowClasses.push('pk');
-              html += '<tr class="' + rowClasses.join(' ') + '">' +
-                '<td>' + (i + 1) + '</td>' +
-                '<td>' + highlight(c.name, query) + '</td>' +
-                '<td>' + escapeHtml(c.dataType) + '</td>' +
-                '<td>' + escapeHtml(c.nullable) + '</td>' +
-                '<td>' + (query && searchDescriptionBox.checked ? highlight(c.description, query) : escapeHtml(c.description)) + '</td>' +
-                '</tr>';
-            });
-            html += '</tbody></table>';
-            return html;
+          // Tên cột bấm được → khung chi tiết cột (showColumnDetail, bắt sự kiện chung ở contentEl).
+          function columnLinkHtml(t, c, terms) {
+            return '<a class="colLink" data-t="' + t._i + '" data-c="' + c._i + '" title="Xem đủ thông tin cột">' + highlight(c.name, terms) + '</a>';
           }
 
-          function renderColumnGroups(headingHtml, groups, query) {
-            var html = headingHtml + legendHtml();
-            groups.forEach(function (g) {
-              html += '<div class="groupBlock"><h2>' + escapeHtml(g.table.name) +
-                (isView(g.table) ? '<span class="badge">' + escapeHtml(g.table.kind) + '</span>' : '') +
-                (g.table.japaneseName ? ' - ' + escapeHtml(g.table.japaneseName) : '') + '</h2>' +
-                buildColumnsTableHtml(g.columns, query) + '</div>';
-            });
-            contentEl.innerHTML = html;
+          function columnRowHtml(t, c, no, terms, withTable) {
+            var desc = terms && terms.length && searchDescriptionBox.checked ? highlight(c.description, terms) : escapeHtml(c.description);
+            return '<tr class="' + (c.level === 0 ? 'pk' : '') + '"><td>' + no + '</td>' +
+              (withTable ? '<td><a class="fk-link" href="#table=' + encodeURIComponent(t.name) + '">' + escapeHtml(t.name) + '</a></td>' : '') +
+              '<td>' + columnLinkHtml(t, c, terms) + '</td>' +
+              '<td>' + escapeHtml(c.dataType) + '</td>' +
+              '<td>' + escapeHtml(c.nullable) + '</td>' +
+              '<td>' + desc + '</td></tr>';
           }
+
+          // Toàn bộ cột của 1 bảng (xem bảng): STT = thứ tự cột trong bảng.
+          function buildColumnsTableHtml(t, columns) {
+            return '<table class="cols"><thead><tr><th>STT</th><th>Tên cột</th><th>Kiểu</th><th>Null</th><th>Mô tả</th></tr></thead><tbody>' +
+              columns.map(function (c, i) { return columnRowHtml(t, c, i + 1, null, false); }).join('') + '</tbody></table>';
+          }
+
+          // ----- Kết quả tìm cột: phân trang 200 dòng, Nhóm theo bảng / Danh sách phẳng (bấm tiêu đề cột để sắp xếp) -----
+          var PAGE_SIZE = 200;
+          var colResult = null; // { heading, items: [{ t, c }], terms, page, tableCount, sorted }
+          var columnView = 'group';
+          try { if (localStorage.getItem('rdbms.columnView') === 'flat') columnView = 'flat'; } catch (e) { }
+          var columnSort = { key: null, dir: 1 }; // chỉ ở Danh sách phẳng; bấm lại: tăng → giảm → thứ tự gốc
+          var SORT_KEYS = {
+            table: function (x) { return x.t.name.toLowerCase(); },
+            name: function (x) { return x.c.name.toLowerCase(); },
+            type: function (x) { return x.c.dataType.toLowerCase(); },
+            nullable: function (x) { return x.c.nullable.toLowerCase(); },
+            desc: function (x) { return x.c.description.toLowerCase(); },
+          };
+
+          function showColumnResults(headingHtml, items, terms) {
+            var seen = Object.create(null), tableCount = 0;
+            items.forEach(function (x) { if (!seen[x.t._i]) { seen[x.t._i] = true; tableCount++; } });
+            colResult = { heading: headingHtml, items: items, terms: terms, page: 0, tableCount: tableCount, sorted: null,
+              table: currentTable, boxes: { table: searchBox.value, column: columnBox.value } };
+            // Địa chỉ #search (không thêm bước lịch sử): bấm sang bảng rồi Back thì về lại đúng trang kết quả này.
+            if (location.hash !== '#search') try { history.replaceState(null, '', '#search'); } catch (e) { }
+            drawColumnResults();
+          }
+
+          function resultItems() {
+            var r = colResult;
+            if (columnView !== 'flat' || !columnSort.key) return r.items;
+            var sig = columnSort.key + ':' + columnSort.dir;
+            if (!r.sorted || r.sorted.sig !== sig) {
+              var get = SORT_KEYS[columnSort.key], dir = columnSort.dir;
+              var keyed = r.items.map(function (x, i) { return { k: get(x), i: i, x: x }; });
+              keyed.sort(function (a, b) { return a.k < b.k ? -dir : a.k > b.k ? dir : a.i - b.i; });
+              r.sorted = { sig: sig, list: keyed.map(function (e) { return e.x; }) };
+            }
+            return r.sorted.list;
+          }
+
+          function pagerHtml(pages, page) {
+            if (pages <= 1) return '';
+            return '<span class="pager"><button type="button" data-page="0"' + (page === 0 ? ' disabled' : '') + ' title="Trang đầu">«</button>' +
+              '<button type="button" data-page="' + (page - 1) + '"' + (page === 0 ? ' disabled' : '') + ' title="Trang trước">‹</button>' +
+              'Trang <input class="pageBox" type="number" min="1" max="' + pages + '" value="' + (page + 1) + '" /> / ' + pages +
+              '<button type="button" data-page="' + (page + 1) + '"' + (page >= pages - 1 ? ' disabled' : '') + ' title="Trang sau">›</button>' +
+              '<button type="button" data-page="' + (pages - 1) + '"' + (page >= pages - 1 ? ' disabled' : '') + ' title="Trang cuối">»</button></span>';
+          }
+
+          function drawColumnResults() {
+            var r = colResult, items = resultItems(), total = items.length;
+            var pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            r.page = Math.min(Math.max(0, r.page), pages - 1);
+            var from = r.page * PAGE_SIZE, slice = items.slice(from, from + PAGE_SIZE);
+            var pager = pagerHtml(pages, r.page);
+            var bar = '<div class="resultBar"><span class="viewSwitch">' +
+              '<button type="button" data-view="group"' + (columnView === 'group' ? ' class="on"' : '') + '>Nhóm theo bảng</button>' +
+              '<button type="button" data-view="flat"' + (columnView === 'flat' ? ' class="on"' : '') + '>Danh sách phẳng</button></span>' +
+              '<span>' + (total ? 'Cột ' + (from + 1).toLocaleString('vi-VN') + '–' + (from + slice.length).toLocaleString('vi-VN') + ' / ' : '') +
+              total.toLocaleString('vi-VN') + ' cột ở ' + r.tableCount.toLocaleString('vi-VN') + ' bảng</span>' + pager + '</div>';
+            var body = '';
+            if (columnView === 'flat') {
+              var th = function (key, label) {
+                var arrow = columnSort.key === key ? (columnSort.dir > 0 ? ' ▲' : ' ▼') : '';
+                return '<th class="sortable" data-sort="' + key + '" title="Bấm để sắp xếp (bấm lại: giảm dần → thứ tự gốc)">' + label + arrow + '</th>';
+              };
+              body = '<table class="cols"><thead><tr><th>STT</th>' + th('table', 'Bảng') + th('name', 'Tên cột') + th('type', 'Kiểu') +
+                th('nullable', 'Null') + th('desc', 'Mô tả') + '</tr></thead><tbody>' +
+                slice.map(function (x, i) { return columnRowHtml(x.t, x.c, from + i + 1, r.terms, true); }).join('') + '</tbody></table>';
+            } else {
+              var i = 0;
+              while (i < slice.length) {
+                var t = slice[i].t, rows = '';
+                for (; i < slice.length && slice[i].t === t; i++) rows += columnRowHtml(t, slice[i].c, from + i + 1, r.terms, false);
+                body += '<div class="groupBlock"><h2><a href="#table=' + encodeURIComponent(t.name) + '" title="Xem cả bảng">' + escapeHtml(t.name) + '</a>' +
+                  (isView(t) ? '<span class="badge">' + escapeHtml(t.kind) + '</span>' : '') +
+                  (t.japaneseName ? ' - ' + escapeHtml(t.japaneseName) : '') + '</h2>' +
+                  '<table class="cols"><thead><tr><th>STT</th><th>Tên cột</th><th>Kiểu</th><th>Null</th><th>Mô tả</th></tr></thead><tbody>' +
+                  rows + '</tbody></table></div>';
+              }
+            }
+            contentEl.innerHTML = r.heading + bar + legendHtml() + body + (pager ? '<div class="resultBar">' + pager + '</div>' : '');
+          }
+
+          // Nút trong kết quả tìm cột (1 lần, bắt chung ở contentEl): kiểu xem, trang, sắp xếp.
+          contentEl.addEventListener('click', function (e) {
+            if (!colResult || !e.target.closest) return;
+            var view = e.target.closest('.viewSwitch button'), pageBtn = e.target.closest('.pager button'), sortTh = e.target.closest('th.sortable');
+            if (view) {
+              columnView = view.getAttribute('data-view');
+              try { localStorage.setItem('rdbms.columnView', columnView); } catch (err) { }
+              colResult.page = 0;
+            } else if (pageBtn) {
+              colResult.page = +pageBtn.getAttribute('data-page');
+            } else if (sortTh) {
+              var key = sortTh.getAttribute('data-sort');
+              if (columnSort.key !== key) columnSort = { key: key, dir: 1 };
+              else if (columnSort.dir > 0) columnSort.dir = -1;
+              else columnSort = { key: null, dir: 1 };
+              colResult.page = 0;
+            } else return;
+            drawColumnResults();
+            contentEl.scrollTop = 0;
+          });
+          contentEl.addEventListener('change', function (e) {
+            if (!colResult || !e.target.classList.contains('pageBox')) return;
+            colResult.page = (parseInt(e.target.value, 10) || 1) - 1;
+            drawColumnResults();
+            contentEl.scrollTop = 0;
+          });
 
           function renderForeignKeys(fks) {
             if (!fks || !fks.length) return '';
@@ -651,6 +890,17 @@ public sealed class HtmlReportGenerator
 
           function applyHash() {
             if (location.hash === '#batch') { showBatchLookup(); return; } // bấm link bảng trong kết quả rồi Back thì về lại đây
+            if (location.hash === '#search') {
+              // Back từ bảng mở ở kết quả tìm cột: trả lại chữ đã gõ, đúng trang / kiểu xem đang xem (không tìm lại).
+              if (!colResult) return;
+              searchBox.value = colResult.boxes.table;
+              columnBox.value = colResult.boxes.column;
+              renderList();
+              currentTable = colResult.table || null;
+              setActiveListItem(currentTable ? findListItem(currentTable.name) : null);
+              drawColumnResults();
+              return;
+            }
             var match = /^#table=(.+)$/.exec(location.hash);
             if (match) {
               var name = decodeURIComponent(match[1]);
@@ -682,7 +932,7 @@ public sealed class HtmlReportGenerator
             html += renderRelationDiagram(t);
             html += renderForeignKeys(t.foreignKeys);
             html += legendHtml();
-            html += buildColumnsTableHtml(t.columns);
+            html += buildColumnsTableHtml(t, t.columns);
             html += renderIndexes(t.indexes);
             html += renderConstraints(t.constraints);
             contentEl.innerHTML = html;
@@ -706,46 +956,58 @@ public sealed class HtmlReportGenerator
           }
 
           // Dieu kien 2: ca Ten bang va Ten cot -> chi hien dong cot do trong bang nay.
+          // Mô tả điều kiện tìm cột cho tiêu đề: "a" + "b" (đủ mọi từ), kèm bộ lọc kiểu / mô tả đang bật.
+          function columnQueryText(terms) {
+            var parts = [];
+            if (terms.length) parts.push(terms.map(function (q) { return '"' + q + '"'; }).join(' + '));
+            if (typeFilterBox.value) parts.push('kiểu ' + (typeFilterBox.value === '\u0000' ? '(không rõ)' : typeFilterBox.value));
+            if (descFilterBox.value) parts.push(descFilterBox.value === 'has' ? 'có mô tả' : 'chưa có mô tả');
+            return parts.join(', ');
+          }
+
           function showTableColumnMatches(t, li, columnQuery) {
             currentTable = t;
             setActiveListItem(li);
-            var matchedCols = t.columns.filter(function (c) { return columnMatches(c, columnQuery); });
+            var items = t.columns.filter(function (c) { return columnMatches(c, columnQuery); }).map(function (c) { return { t: t, c: c }; });
+            var text = columnQueryText(columnQuery);
             var heading = '<h1>' + escapeHtml(t.name) + (t.alias ? ' (' + escapeHtml(t.alias) + ')' : '') + '</h1>' +
-              '<div class="meta">Cột khớp "' + escapeHtml(columnQuery) + '": ' + matchedCols.length + ' / ' + t.columns.length + '</div>';
-            renderColumnGroups(heading, [{ table: t, columns: matchedCols }], columnQuery);
-            document.title = 'CSDL - ' + t.name + ' (cột: ' + columnQuery + ')';
+              '<div class="meta">Cột khớp ' + escapeHtml(text) + ': ' + items.length + ' / ' + t.columns.length + '</div>';
+            showColumnResults(heading, items, columnQuery);
+            document.title = 'CSDL - ' + t.name + ' (cột: ' + text + ')';
           }
 
           // Dieu kien 3: chi Ten cot (Ten bang de trong) -> tim tat ca bang co cot do, nhom theo bang.
           function showColumnSearchAcrossTables(candidateTables, columnQuery) {
             currentTable = null;
             setActiveListItem(null);
-            var groups = [];
+            var items = [];
             candidateTables.forEach(function (t) {
-              var matchedCols = t.columns.filter(function (c) { return columnMatches(c, columnQuery); });
-              if (matchedCols.length) groups.push({ table: t, columns: matchedCols });
+              t.columns.forEach(function (c) { if (columnMatches(c, columnQuery)) items.push({ t: t, c: c }); });
             });
-            if (!groups.length) {
-              contentEl.innerHTML = '<p>Không tìm thấy cột nào khớp "' + escapeHtml(columnQuery) + '".</p>';
+            var text = columnQueryText(columnQuery);
+            if (!items.length) {
+              colResult = null;
+              contentEl.innerHTML = '<p>Không tìm thấy cột nào khớp ' + escapeHtml(text) + '.</p>';
               document.title = 'CSDL';
               return;
             }
-            var heading = '<h1>Kết quả tìm cột "' + escapeHtml(columnQuery) + '"</h1>' +
-              '<div class="meta">' + groups.length + ' bảng có cột khớp.</div>';
-            renderColumnGroups(heading, groups, columnQuery);
-            document.title = 'CSDL - cột ' + columnQuery + ' (' + groups.length + ' bảng)';
+            var heading = '<h1>Kết quả tìm cột ' + escapeHtml(text) + '</h1>';
+            showColumnResults(heading, items, columnQuery);
+            document.title = 'CSDL - cột ' + text + ' (' + colResult.tableCount + ' bảng)';
           }
 
           function performSearch() {
             renderList();
+            updateAdvState();
 
-            var tableQuery = searchBox.value.trim().toLowerCase();
-            var columnQuery = columnBox.value.trim().toLowerCase();
+            var tableQuery = searchTerms(searchBox.value);
+            var columnQuery = searchTerms(columnBox.value);
 
-            if (!columnQuery) {
-              if (!tableQuery) return;
+            if (!columnQuery.length && !columnFilterActive()) {
+              if (!tableQuery.length) return;
               var candidates = tables.filter(function (t) { return tableNameMatches(t, tableQuery); });
-              var exact = candidates.find(function (t) { return t.name.toLowerCase() === tableQuery; });
+              var whole = searchBox.value.trim().toLowerCase();
+              var exact = candidates.find(function (t) { return t.name.toLowerCase() === whole; });
               var target = exact || (candidates.length === 1 ? candidates[0] : null);
               if (target) showFullTable(target, findListItem(target.name));
               return;
@@ -1090,6 +1352,99 @@ public sealed class HtmlReportGenerator
               return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch];
             });
           }
+
+          // ----- Chi tiết 1 cột: bấm tên cột (xem bảng / kết quả tìm cột) → hộp thoại đủ thông tin + cột cùng tên ở bảng khác -----
+          var colDialog = document.getElementById('colDialog');
+          var columnsByName = null; // tên cột (chữ thường) → [{ t, c }], dựng lần đầu mở
+          function splitList(s) { return (s || '').split(',').map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean); }
+
+          function showColumnDetail(t, c) {
+            if (!columnsByName) {
+              columnsByName = Object.create(null);
+              tables.forEach(function (tt) {
+                tt.columns.forEach(function (cc) { var k = cc.name.toLowerCase(); (columnsByName[k] || (columnsByName[k] = [])).push({ t: tt, c: cc }); });
+              });
+            }
+            var name = c.name.toLowerCase();
+            function tableLink(tt) { return '<a class="fk-link" href="#table=' + encodeURIComponent(tt.name) + '">' + escapeHtml(tt.name) + '</a>'; }
+            var rows = [
+              ['Bảng', tableLink(t) + (t.japaneseName ? ' - ' + escapeHtml(t.japaneseName) : ''), true],
+              ['Thứ tự cột', (c._i + 1) + ' / ' + t.columns.length],
+              ['Khoá chính', c.level === 0 ? 'Có (level 0)' : ''],
+              ['Kiểu dữ liệu', c.dataType], ['Độ dài', c.length], ['Null', c.nullable], ['Mặc định', c.defaultValue],
+              ['Tên tiếng Nhật', c.japaneseName], ['Mô tả (comment)', c.description], ['Tên đầy đủ', c.fullName],
+              ['Giới hạn giá trị', c.valueRestriction], ['Thông tin thêm', c.meta],
+            ];
+            // Khoá ngoại: cột này trỏ tới bảng nào / bảng nào trỏ tới cột này; index có cột này.
+            t.foreignKeys.forEach(function (f) {
+              var local = splitList(f.localColumns), at = local.indexOf(name);
+              if (at < 0) return;
+              var ref = splitList(f.referencedColumns || f.localColumns)[at] || '';
+              rows.push(['Tham chiếu tới', (tablesByName[f.referencedTable] ? tableLink(tablesByName[f.referencedTable]) : escapeHtml(f.referencedTable)) +
+                (ref ? ' . ' + escapeHtml(ref) : ''), true]);
+            });
+            (incomingByTable[t.name] || []).forEach(function (e) {
+              var refs = splitList(e.fk.referencedColumns || e.fk.localColumns), at = refs.indexOf(name);
+              if (at < 0) return;
+              rows.push(['Được tham chiếu bởi', tableLink(e.table) + ' . ' + escapeHtml(splitList(e.fk.localColumns)[at] || ''), true]);
+            });
+            t.indexes.forEach(function (i) {
+              if (splitList(i.columns).indexOf(name) >= 0) {
+                rows.push(['Index', escapeHtml(i.name) + ' (' + escapeHtml(i.columns) + ')' + (i.isPrimaryKey ? ' - khoá chính' : i.isUnique ? ' - UNIQUE' : ''), true]);
+              }
+            });
+            var kv = rows.filter(function (r) { return r[1] !== '' && r[1] != null; }).map(function (r) {
+              return '<tr><th>' + escapeHtml(r[0]) + '</th><td>' + (r[2] ? r[1] : escapeHtml(String(r[1]))) + '</td></tr>';
+            }).join('');
+
+            // Cột cùng tên ở bảng khác: khác kiểu tô đỏ (dễ thấy đặt kiểu không thống nhất).
+            var others = columnsByName[name].filter(function (x) { return x.t !== t; });
+            var SHOW = 100, myType = c.dataType.toLowerCase();
+            var diffCount = others.filter(function (x) { return x.c.dataType.toLowerCase() !== myType; }).length;
+            var same = '<div class="metaLabel">Cột cùng tên ở bảng khác (' + others.length + (diffCount ? ', <span style="color:#d9534f">' + diffCount + ' khác kiểu</span>' : '') + ')</div>';
+            if (others.length) {
+              same += '<table class="cols"><thead><tr><th>Bảng</th><th>Kiểu</th><th>Null</th><th>Mô tả</th></tr></thead><tbody>' +
+                others.slice(0, SHOW).map(function (x) {
+                  return '<tr' + (x.c.dataType.toLowerCase() !== myType ? ' class="diff"' : '') + '><td>' + tableLink(x.t) + '</td>' +
+                    '<td class="dt">' + escapeHtml(x.c.dataType) + '</td><td>' + escapeHtml(x.c.nullable) + '</td>' +
+                    '<td>' + escapeHtml(firstLine(x.c.description) || x.c.japaneseName) + '</td></tr>';
+                }).join('') + '</tbody></table>' +
+                (others.length > SHOW ? '<div class="meta">… và ' + (others.length - SHOW) + ' bảng khác.</div>' : '');
+            }
+            colDialog.innerHTML = '<div class="head"><h1>' + escapeHtml(t.name + '.' + c.name) + '</h1>' +
+              '<button type="button" class="close" title="Đóng (Esc)">×</button></div>' +
+              '<div class="body"><table class="kv">' + kv + '</table>' + same + '</div>';
+            if (!colDialog.open) colDialog.showModal();
+            colDialog.scrollTop = 0;
+          }
+
+          contentEl.addEventListener('click', function (e) {
+            var link = e.target.closest && e.target.closest('a.colLink');
+            if (!link) return;
+            e.preventDefault();
+            var t = tables[+link.getAttribute('data-t')];
+            showColumnDetail(t, t.columns[+link.getAttribute('data-c')]);
+          });
+          colDialog.addEventListener('click', function (e) {
+            // Bấm nền tối / nút × / link bảng → đóng (link bảng vẫn mở bảng qua #table=).
+            if (e.target === colDialog || (e.target.closest && e.target.closest('.close, a.fk-link'))) colDialog.close();
+          });
+
+          function onAdvancedChange() {
+            splitCustomBox.hidden = splitModeBox.value !== 'custom';
+            try {
+              localStorage.setItem('rdbms.splitMode', splitModeBox.value);
+              localStorage.setItem('rdbms.splitCustom', splitCustomBox.value);
+            } catch (e) { }
+            performSearch();
+          }
+          splitModeBox.addEventListener('change', function () { onAdvancedChange(); if (!splitCustomBox.hidden) splitCustomBox.focus(); });
+          splitCustomBox.addEventListener('input', onAdvancedChange);
+          typeFilterBox.addEventListener('change', onAdvancedChange);
+          descFilterBox.addEventListener('change', onAdvancedChange);
+          document.getElementById('advClear').addEventListener('click', function () {
+            typeFilterBox.value = ''; descFilterBox.value = ''; onAdvancedChange();
+          });
 
           window.addEventListener('hashchange', applyHash);
 
