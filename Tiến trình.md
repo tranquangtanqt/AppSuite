@@ -1182,6 +1182,8 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [x] File gần đây: tên file và thư mục tự rút gọn "..." (Grid thay StackPanel ngang), rê chuột xem đủ đường dẫn (2026-11-04)
 - [x] Chế độ tối: thanh tiêu đề tối theo app (`AppWindow.TitleBar.PreferredTheme`), Sandbox đạt, chưa xem trên máy thật (2026-11-04)
 - [ ] Thanh tiêu đề chế độ tối ở các module khác: mới sửa CsvEditor, có thể đưa vào `SharedUI`
+- [x] Chọn giao diện ngay trong app (Theo Windows / Sáng / Tối) như MeRon: nút bảng màu cạnh `?`, lưu `Data\Config\settings.json` (hỏng → Theo Windows), áp dụng lúc mở app cho cả hộp thoại, thanh tiêu đề, cửa sổ Hướng dẫn; đổi xong hỏi Mở lại ngay (còn thay đổi thì hỏi Lưu / Không lưu / Huỷ trước, mở lại đúng file đang mở) / Để lần sau. Cập nhật F1, README. Unit test 213/213; GUI Sandbox 33/33 (2026-11-11)
+- [ ] Thử tay trên máy thật: đổi giao diện CsvEditor, Mở lại ngay khi đang mở file
 
 - [x] Các tính năng theo spec: mở/lưu CSV/TSV (tự nhận delimiter/encoding), sửa ô, thêm/xoá dòng/cột,
   đổi tên cột, Find/Replace, Filter, Sort nhiều cột, Statistics, Undo/Redo, context menu, validation

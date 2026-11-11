@@ -29,7 +29,7 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 ## Toolbar
 
-Alt hiện chữ tắt (`AccessKey`): M Mở, G File gần đây, L Lưu, X Xuất, H Hoàn tác, A Làm lại, D Dòng, C Cột, T Tìm, I Đi tới dòng, O Lọc, S Sắp xếp, K Thống kê, V Xem dọc, N Hướng dẫn. Mọi nút và ô lọc có `AutomationProperties.Name`.
+Alt hiện chữ tắt (`AccessKey`): M Mở, G File gần đây, L Lưu, X Xuất, H Hoàn tác, A Làm lại, D Dòng, C Cột, T Tìm, I Đi tới dòng, O Lọc, S Sắp xếp, K Thống kê, V Xem dọc, E Giao diện, N Hướng dẫn. Mọi nút và ô lọc có `AutomationProperties.Name`.
 
 Cửa sổ hẹp hơn 1040 logical (`RootGrid_SizeChanged`): Xuất, Dòng, Cột, Tìm, Lọc, Sắp xếp chỉ còn icon + tooltip.
 
@@ -51,6 +51,13 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
 - **Kéo ra mép tự cuộn** (2026-11-10, `MainWindow.EdgeScroll.cs`, `Services/EdgeScroll`): kéo chọn vùng hoặc kéo núm điền ra ngoài vùng ô (trên tiêu đề, số dòng, cột cố định, thanh cuộn, ngoài cửa sổ) → `DispatcherTimer` 60 ms cuộn bảng (`ScrollIntoView`) và nới vùng / phần điền. Dòng: 1 + mỗi 24 px ra ngoài thêm 1 dòng mỗi nhịp, tối đa 20; cột chậm hơn (0,25 cột / nhịp sát mép, tối đa 3, phần lẻ cộng dồn). Kéo quá 4 px kể từ lúc nhấn là giữ con trỏ (`CapturePointer`) để kéo vọt thẳng ra ngoài bảng vẫn nhận được; bấm gọn rung tay dưới 4 px vẫn để DataGrid tự lo. Vùng bắt đầu từ cột cố định thì kéo trong cột cố định không cuộn ngang. Núm điền: ra mép trên thì rút lại, không lên quá ô nguồn; khung xem trước bắt đầu từ mép trên vùng ô khi ô nguồn đã cuộn khuất.
 - **Giãn cột vừa nội dung** (2026-11-10, `MainWindow.ColumnFit.cs`, `Services/ColumnAutoFit`): bấm đúp vạch ngăn bên phải tên cột (trong 6 px quanh mép tiêu đề; mép trái = cột hiện trước nó), chuột phải tiêu đề → *Giãn vừa nội dung* / *Giãn vừa tất cả cột*, `Cột ▾` → *Giãn cột đang chọn vừa nội dung* / *Giãn vừa tất cả cột*, `Ctrl+Shift+W`. Đo cả cột theo dòng đang hiện (lọc): xếp hạng mọi ô bằng độ dài ước lượng (dòng dài nhất trong ô, chữ Hán / kana / full-width tính 2), chỉ đo TextBlock cho 50 chữ dài nhất + tên cột, cộng lề 24 px, kẹp 100–800 px. Độ rộng lúc mở file vẫn là ước lượng 100 dòng đầu (100–400 px); sửa ô không tự giãn. Thanh trạng thái báo `Cột X: rộng N px (vừa nội dung).` / `Đã giãn N cột vừa nội dung.`
 - **Bảng** (2026-11-04): dòng gọn thấp nhất 26 logical (`MinHeight` của ô, bỏ `MinHeight` của dòng / `DataGridCellsPresenter`; không đặt `RowHeight` cố định để ô có xuống dòng tự cao lên), kẻ ô, vạch ngăn cột cố định (`FrozenDivider`), số giữ canh trái; `Cột ▾` → *Hiện ô lọc dưới tên cột* ẩn / hiện hàng ô lọc (không nhớ qua lần mở app sau).
+- **Giao diện** (2026-11-11, nút bảng màu cạnh `?`, `MainWindow.Theme.cs`, `Services/AppSettingsStore`): Theo Windows / Sáng /
+  Tối, lưu ở `Data\Config\settings.json` cạnh exe (thiếu / hỏng / giá trị lạ → Theo Windows). Như MeRon, giao diện chỉ đặt lúc
+  khởi động (`Application.RequestedTheme` trong `App()`), không đổi lúc đang chạy: hộp thoại, chữ báo lỗi
+  (`Application.Current.Resources`) và cửa sổ Hướng dẫn theo màu của Application - đổi riêng trên cửa sổ thì lệch màu. Thanh
+  tiêu đề cửa sổ chính và Hướng dẫn theo lựa chọn (`App.ApplyTitleBarTheme`). Đổi xong hỏi *Mở lại ngay* (hỏi lưu thay đổi như
+  lúc đóng, rồi `App.Restart` chạy lại exe với tham số là file đang mở) / *Để lần sau*. Lúc khởi động, tham số dòng lệnh là
+  đường dẫn file có thật thì mở file đó (sau bước hỏi bản khôi phục; đã mở bản khôi phục thì bỏ qua).
 - **Hướng dẫn** (nút `?` cuối thanh công cụ, `F1`): mọi tính năng theo danh mục + tìm không dấu. Nội dung ở
   `Views/HelpContent.cs` (cửa sổ dùng chung `SharedUI.Help.HelpWindow`) — thêm / đổi tính năng thì cập nhật cả ở đó.
 
@@ -202,6 +209,6 @@ Lỗi tìm ra nhờ test (đã sửa 2026-09-29): tooltip Undo sau **Xóa cột*
 
 - Không `ProjectReference` tới `MainLauncher.csproj`.
 - Không đọc `modules.json` hay bất kỳ cấu hình nào của launcher.
-- Cấu hình duy nhất cạnh exe là danh sách file gần đây (`Data\Config\recent-files.json`, thiếu / hỏng thì coi như
-  rỗng); cạnh exe còn `Logs\` và `Data\Recovery\` (xem *Log và bản khôi phục*) - file CSV/TSV người dùng tự chọn qua `FileOpenPicker`/`FileSavePicker` hoặc kéo-thả, không phụ thuộc ai khởi
+- Cấu hình cạnh exe: danh sách file gần đây (`Data\Config\recent-files.json`) và giao diện (`Data\Config\settings.json`),
+  thiếu / hỏng thì dùng mặc định; cạnh exe còn `Logs\` và `Data\Recovery\` (xem *Log và bản khôi phục*) - file CSV/TSV người dùng tự chọn qua `FileOpenPicker`/`FileSavePicker` hoặc kéo-thả, không phụ thuộc ai khởi
   động tiến trình (VS, `dotnet run`, hay `Process.Start` từ MainLauncher).

@@ -217,12 +217,25 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <Button x:Name="HelpButton" Grid.Column="1" AccessKey="N" VerticalAlignment="Top" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)" AutomationProperties.Name="Hướng dẫn">
-                <FontIcon Glyph="&#xE897;" FontSize="14" />
-                <Button.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="F1" />
-                </Button.KeyboardAccelerators>
-            </Button>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+                <!-- Giao diện: áp dụng lúc app khởi động (App.xaml.cs) nên đổi xong hỏi mở lại - MainWindow.Theme.cs -->
+                <DropDownButton x:Name="ThemeButton" AccessKey="E" ToolTipService.ToolTip="Giao diện: Theo Windows / Sáng / Tối" AutomationProperties.Name="Giao diện">
+                    <FontIcon Glyph="&#xE790;" FontSize="14" />
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="BottomEdgeAlignedRight">
+                            <RadioMenuFlyoutItem x:Name="ThemeSystemItem" Text="Theo Windows" GroupName="Theme" Tag="System" Click="ThemeItem_Click" />
+                            <RadioMenuFlyoutItem x:Name="ThemeLightItem" Text="Sáng" GroupName="Theme" Tag="Light" Click="ThemeItem_Click" />
+                            <RadioMenuFlyoutItem x:Name="ThemeDarkItem" Text="Tối" GroupName="Theme" Tag="Dark" Click="ThemeItem_Click" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
+                <Button x:Name="HelpButton" AccessKey="N" Click="HelpButton_Click" ToolTipService.ToolTip="Hướng dẫn sử dụng (F1)" AutomationProperties.Name="Hướng dẫn">
+                    <FontIcon Glyph="&#xE897;" FontSize="14" />
+                    <Button.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F1" />
+                    </Button.KeyboardAccelerators>
+                </Button>
+            </StackPanel>
         </Grid>
 
         <!-- Thẻ lọc / sắp xếp đang áp dụng (RefreshChips) - thay cho nút Clear Filter / Clear Sort và nút ✕ ở góc bảng.

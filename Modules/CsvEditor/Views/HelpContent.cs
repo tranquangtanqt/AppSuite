@@ -73,6 +73,7 @@ internal static class HelpContent
             new("Cảnh báo", "Khung Cảnh báo (N) dưới thanh công cụ: dòng lệch số cột, ngoặc kép không đóng, cột nhiều ô rỗng, độ tin cậy thấp khi nhận diện dấu phân cách / bảng mã. Bấm đúp 1 cảnh báo để nhảy tới dòng đó. Lệch cột / cột rỗng được tính lại sau khi sửa và khi lưu."),
             new("Phím Alt", "Nhấn Alt: mỗi nút trên thanh công cụ hiện 1 chữ tắt, nhấn chữ đó để bấm nút (vd Alt rồi T = Tìm, Alt rồi O = Lọc). Trình đọc màn hình đọc được tên mọi nút và ô lọc theo tên cột."),
             new("Cửa sổ hẹp", "Cửa sổ hẹp thì các nút Xuất, Dòng, Cột, Tìm, Lọc, Sắp xếp chỉ còn icon để mọi nút vẫn thấy; rê chuột để xem tên. Mở rộng cửa sổ thì chữ hiện lại."),
+            new("Giao diện sáng / tối", "Nút bảng màu cạnh nút ? (góc phải thanh công cụ): Theo Windows (mặc định), Sáng hoặc Tối. Đổi xong hỏi Mở lại ngay: còn thay đổi chưa lưu thì hỏi Lưu / Không lưu / Huỷ trước, rồi CsvEditor mở lại đúng file đang mở (lọc, sắp xếp, vị trí cuộn không giữ). Chọn Để lần sau thì áp dụng từ lần mở CsvEditor sau. Áp dụng cho cả hộp thoại, thanh tiêu đề và cửa sổ Hướng dẫn."),
             new("Thanh trạng thái", "Tên file, nút bảng mã · dấu phân cách (bấm để đổi, chỉ bấm được khi đã mở file), ô tick Dòng đầu là tiêu đề, số dòng / cột, trạng thái đã lưu / chưa lưu, thông báo. Tên file và thông báo dài tự rút gọn \"...\" - rê chuột để xem đủ."),
         ]),
 

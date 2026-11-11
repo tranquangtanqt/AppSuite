@@ -37,6 +37,7 @@ public sealed partial class MainWindow
             {
                 offered = true;
                 await OfferRecoveryAsync();
+                await OpenStartupFileAsync();
             }
         };
 

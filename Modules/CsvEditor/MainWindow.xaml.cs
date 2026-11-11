@@ -65,7 +65,8 @@ public sealed partial class MainWindow : Window
 
         InitializeComponent();
         SharedUI.Helpers.WindowIcon.Apply(this);
-        AppWindow.TitleBar.PreferredTheme = Microsoft.UI.Windowing.TitleBarTheme.UseDefaultAppMode; // mặc định thanh tiêu đề luôn sáng, kể cả chế độ tối
+        App.ApplyTitleBarTheme(AppWindow);
+        InitTheme();
 
         Grid.LayoutUpdated += (_, _) =>
         {
@@ -1675,6 +1676,7 @@ public sealed partial class MainWindow : Window
             _helpWindow = new SharedUI.Help.HelpWindow("CsvEditor", "Mở, sửa, lọc, sắp xếp file CSV / TSV và xuất sang Excel.",
                 HelpContent.Sections, searchPlaceholder: "Tìm tính năng, vd: lọc, encoding, Ctrl+G...");
             _helpWindow.Closed += (_, _) => _helpWindow = null;
+            App.ApplyTitleBarTheme(_helpWindow.AppWindow);
         }
         _helpWindow.Activate();
     }
