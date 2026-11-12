@@ -112,13 +112,36 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    bật thì vào chế độ tìm cột kể cả ô Tên cột trống (`columnFilterActive()`); `#advState` báo lọc đang bật. Kết quả tìm
    cột: `showColumnResults()` giữ `colResult` (danh sách phẳng `{t, c}`), `drawColumnResults()` vẽ 1 trang `PAGE_SIZE` =
    200, kiểu xem Nhóm theo bảng / Danh sách phẳng (`rdbms.columnView`), sắp xếp `columnSort` (tăng → giảm → gốc, sort ổn
-   định trên khoá chữ thường, cache theo khoá) chỉ ở xem phẳng; nút / ô trang bắt chung ở `contentEl`. Hiện kết quả thì
-   `history.replaceState` thành `#search`, bấm sang bảng rồi Back thì `applyHash` vẽ lại `colResult` (đúng trang, chữ đã
-   gõ) không tìm lại. *Chi tiết cột*: tên cột là `a.colLink` (`data-t` / `data-c` = `t._i` / `c._i` gắn lúc normalize) →
+   định trên khoá chữ thường, cache theo khoá) chỉ ở xem phẳng; nút / ô trang bắt chung ở `contentEl`. Bấm sang bảng
+   rồi Back: tìm lại theo địa chỉ `#search?...` (xem *Địa chỉ trang* bên dưới). *Chi tiết cột*: tên cột là `a.colLink` (`data-t` / `data-c` = `t._i` / `c._i` gắn lúc normalize) →
    `showColumnDetail()` mở `<dialog id="colDialog">`: mọi trường khác rỗng, khoá ngoại 2 chiều (`incomingByTable`), index
    có cột, cột cùng tên ở bảng khác (`columnsByName` dựng lần đầu, khác kiểu `tr.diff` tô đỏ, tối đa 100). Đo trang 300k
    cột (6000 bảng): tìm "c" khớp cả 300k ~60 ms, lọc kiểu ~60 ms, sắp xếp 300k ~130 ms, đổi trang ~15 ms, mở chi tiết
    lần đầu ~45 ms.
+   **Địa chỉ trang + lịch sử tìm (2026-11-12)**: điều kiện tìm ghi vào `#search?t=&c=&kind=&desc=1&split=&type=&has=`
+   (`searchParams()`, giá trị mặc định bỏ) + `tbl=` (bảng bấm ở menu trái, `selectedTable`), `view=`, `sort=[-]khoá`,
+   `page=` (`currentSearchHash()`). Mọi thay đổi do người dùng qua `onSearchInput()` → `writeSearchHash('auto')`: lần tìm
+   đã *chốt* (`searchCommitted`: ngừng gõ `COMMIT_DELAY` 1,5 giây / Enter / nút Tìm kiếm / bấm bảng ở menu trái / bấm
+   link trong khung phải / Copy link → `commitSearch()`) thì `pushState` (1 bước Back mới), chưa thì `replaceState`; đổi
+   trang / kiểu xem / sắp xếp luôn `replace`; xoá trắng ô tìm không đổi địa chỉ. `applyHash` → `applySearchHash(query)` dựng
+   lại ô tìm, bộ lọc, kiểu xem, sắp xếp, bảng chọn, trang rồi tìm lại (`applyingHash` chặn ghi ngược; không ghi
+   `localStorage`); không có `#` = trang đầu (`welcomeHtml`, giữ lựa chọn đã nhớ). `hashReady` chỉ bật sau `applyHash()` lúc
+   mở trang để không đè link vừa mở. *Lịch sử* `rdbms.history`: 20 `{ q }` (= `searchParams()`, không gồm trang / kiểu xem),
+   `commitSearch` → `addHistory()` đưa lên đầu, bỏ trùng. `#historyBox` hiện dưới ô Tên bảng / Tên cột khi ô trống (focus /
+   click / xoá hết chữ), ↑ ↓ Enter, × xoá dòng, Xoá hết; `mousedown` chặn mất focus. Nút `#copyLinkButton` chép
+   `location.href` (`copyText()` dùng chung với Copy của Tra hàng loạt; không được thì `prompt`). Lưu ý test: Chromium coi
+   đổi `location.hash` bằng script ngay sau khi tải (chưa có thao tác người dùng) là chuyển hướng → thay thế, không thêm bước.
+   **Thống kê cột (2026-11-12)**: nút `#statsButton` → `#stats?tab=type|desc|common` → `showStats()`. `statsGroups()` gom
+   cột theo tên chữ thường trong bảng đạt lọc Bảng / View, giữ nhóm có ≥ 2 bảng, tính sẵn `types` (`typeText()` = kiểu +
+   độ dài từ Excel nếu dataType chưa có "("), `baseTypes` (bỏ độ dài), `descs` (`japaneseLabel` qua `normalizeName`, rỗng
+   bỏ qua) và `noDescTables`; cache theo `kindFilter` (lần đầu hiện "Đang tính..." rồi `setTimeout`). `drawStats()` vẽ 1
+   trang 200 dòng (`pagerHtml` dùng chung), sắp: số kiểu / mô tả giảm → số bảng giảm → tên. Ô Lọc (chờ 150 ms) so
+   `normalizeName` với tên cột và khoá mô tả; *Bỏ qua độ dài* nhớ `rdbms.statsNoLength`. Bấm dòng `tr.statsRow` → `stats.open`
+   → `tr.statsDetail` liệt kê bảng theo từng kiểu / mô tả (tối đa `STATS_LINKS` 300 link mỗi loại). Trạng thái (tab, lọc,
+   trang, dòng mở) giữ trong `stats` nên Back từ bảng về đúng chỗ. Đổi lọc Bảng / View khi đang ở `#batch` / `#stats` chỉ lọc
+   lại menu + trang đó (không nhảy sang tìm). *Copy bảng*: TSV mọi dòng đang lọc. Đo 300k cột (7500 bảng, ~20k tên cột dùng
+   chung): mở lần đầu ~480 ms, đổi tab / lọc / trang 12–40 ms, đổi lọc Bảng / View tính lại ~370 ms; gõ tìm + ghi địa
+   chỉ ~45–60 ms.
    **Tra cột hàng loạt (2026-11-11)**: nút `#batchButton` → `#batch` → `showBatchLookup()` ở khung phải: ô nhiều dòng, mỗi dòng 1
    tên. `buildBatchIndex` dựng bảng tra 1 lần cho mỗi phạm vi (`kind:<lọc>`, `table:<bảng đang chọn>` hoặc `list:<các bảng>`, cache
    `batchIndexCache`): tên cột → tên tiếng Nhật (`japaneseName` từ Excel, không có thì dòng đầu `description` = comment DB),

@@ -1172,8 +1172,15 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
   trang kết quả; bấm **tên cột → hộp thoại chi tiết** (đủ thuộc tính, khoá ngoại 2 chiều, index, cột cùng tên ở bảng khác -
   khác kiểu tô đỏ). Cập nhật F1, README. Unit test 77/77; Edge headless 47/47 (mới) + 76/76 (cũ); 300k cột mọi thao tác
   < 150 ms (2026-11-11)
-- [ ] Trang HTML - đợt 2: đưa từ khoá vào địa chỉ trang (Back / bookmark / gửi link) + lịch sử tìm kiếm; trang thống kê cột
-  dùng chung / cùng tên khác kiểu, khác comment
+- [x] Trang HTML - đợt 2: **từ khoá vào địa chỉ trang** `#search?t=..&c=..` (Tên bảng / Tên cột, lọc Bảng / View, Tìm cả
+  mô tả, Tách từ, Kiểu, Mô tả, bảng chọn, trang, kiểu xem, sắp xếp): Back / Forward đi qua từng lần tìm (chốt khi ngừng gõ
+  1,5 giây / Enter / bấm kết quả; đổi trang / kiểu xem không thêm bước), bookmark / gửi link mở đúng kết quả, nút **Copy
+  link**; **lịch sử tìm**: bấm vào ô Tên bảng / Tên cột trống hiện 20 lần gần nhất (↑ ↓ Enter, × xoá, Xoá hết); trang
+  **Thống kê cột** 3 tab: Cùng tên khác kiểu (ô Bỏ qua độ dài), Cùng tên khác mô tả, Cột dùng chung nhiều nhất - bấm dòng
+  xem bảng theo từng kiểu / mô tả, ô Lọc, Copy bảng, theo lọc Bảng / View. Cập nhật F1, README. Unit test 77/77; Edge
+  headless 79/79; 300k cột: thống kê mở lần đầu ~0,5 s, mọi thao tác khác < 100 ms (2026-11-12)
+- [ ] Thử tay: xuất lại HTML của DB thật → thử Back / Copy link / lịch sử, Thống kê cột với schema thật (xem tên cột khác
+  kiểu / khác mô tả có hợp lý không)
 - [ ] Thử tay: xuất lại HTML của DB thật → Tra cột hàng loạt với danh sách tên tiếng Nhật thật, thử 4 cách khớp
 
 ## ModuleC

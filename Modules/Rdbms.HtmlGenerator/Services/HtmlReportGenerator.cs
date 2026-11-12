@@ -270,6 +270,35 @@ public sealed class HtmlReportGenerator
           #colDialog table.kv th { text-align: left; width: 170px; font-weight: 600; padding: 3px 8px 3px 0; vertical-align: top; opacity: .85; }
           #colDialog table.kv td { padding: 3px 0; white-space: pre-wrap; word-break: break-word; }
           #colDialog tr.diff td.dt { color: #d9534f; font-weight: 600; }
+          /* Nút menu trái 2 nút / dòng, lịch sử tìm kiếm (showHistory) */
+          #searchArea { position: relative; }
+          .btnRow { display: flex; gap: 6px; }
+          .btnRow button { flex: 1; padding: 6px 8px; cursor: pointer; }
+          #historyBox { position: absolute; left: 10px; right: 10px; z-index: 5; background: Canvas; border: 1px solid #8888;
+            border-radius: 4px; box-shadow: 0 4px 12px #0003; max-height: 60vh; overflow-y: auto; font-size: 13px; }
+          #historyBox .hhead { padding: 4px 8px; font-size: 11px; opacity: .7; }
+          #historyBox .hitem { display: flex; align-items: center; gap: 6px; padding: 4px 8px; cursor: pointer; }
+          #historyBox .hitem:hover, #historyBox .hitem.sel { background: #4a90d933; }
+          #historyBox .htext { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: Consolas, monospace; }
+          #historyBox .htag { font-size: 11px; opacity: .7; white-space: nowrap; }
+          #historyBox .hdel { border: 0; background: transparent; color: inherit; cursor: pointer; opacity: .6; font-size: 14px; padding: 0 4px; }
+          #historyBox .hdel:hover { opacity: 1; color: #d9534f; }
+          #historyBox .hfoot { padding: 4px 8px; border-top: 1px solid #8884; text-align: right; }
+          #historyBox .hfoot button { font-size: 12px; cursor: pointer; }
+          /* Thống kê cột (showStats) */
+          .statsTabs { margin: 4px 0 8px; }
+          .statsTabs button { padding: 5px 12px; font-size: 13px; }
+          #statsFilter { width: 220px; padding: 3px 6px; }
+          .batchBar label[hidden] { display: none; }
+          table.cols tr.statsRow { cursor: pointer; }
+          table.cols tr.statsRow:hover { background: #8882; }
+          table.cols tr.statsRow.open { background: #4a90d933; }
+          table.cols tr.statsDetail > td { background: #8881; padding: 8px 12px; }
+          .statsVar { margin: 2px 0 8px; }
+          .statsVar .vhead { font-weight: 600; margin-bottom: 2px; }
+          .statsVar a { margin-right: 10px; }
+          td.vars { font-family: Consolas, "MS Gothic", monospace; }
+          td.vars .n { opacity: .65; }
         </style>
         </head>
         <body>
@@ -310,8 +339,15 @@ public sealed class HtmlReportGenerator
               </div>
               <button id="advClear" type="button">Bỏ lọc kiểu / mô tả</button>
             </details>
-            <button id="searchButton">Tìm kiếm</button>
-            <button id="batchButton" type="button" title="Dán nhiều tên cột (mỗi dòng 1 tên, tiếng Nhật hoặc tên cột) để tra ra tên tương ứng hàng loạt">Tra cột hàng loạt</button>
+            <div class="btnRow">
+              <button id="searchButton">Tìm kiếm</button>
+              <button id="copyLinkButton" type="button" title="Copy địa chỉ trang đang xem (kèm từ khoá tìm) để mở lại / gửi người khác - người nhận phải mở cùng file HTML này (vd trên ổ mạng chung)">Copy link</button>
+            </div>
+            <div class="btnRow">
+              <button id="batchButton" type="button" title="Dán nhiều tên cột (mỗi dòng 1 tên, tiếng Nhật hoặc tên cột) để tra ra tên tương ứng hàng loạt">Tra cột hàng loạt</button>
+              <button id="statsButton" type="button" title="Cột cùng tên khác kiểu / khác mô tả giữa các bảng, cột dùng chung nhiều nhất">Thống kê cột</button>
+            </div>
+            <div id="historyBox" hidden></div>
           </div>
           <div id="summary"></div>
           <ul id="tableList"></ul>
@@ -322,7 +358,10 @@ public sealed class HtmlReportGenerator
           tìm tất cả các bảng có cột đó, kết quả nhóm theo từng bảng.<br>
           Nhiều từ (vd "会計 cd") thì kết quả phải chứa đủ mọi từ; Bộ lọc nâng cao: cách tách từ, kiểu dữ liệu, cột có / chưa có mô tả.
           Bấm tên cột để xem đủ thông tin cột.<br>
-          Có sẵn danh sách nhiều tên cột (tiếng Nhật hoặc tên cột)? Bấm Tra cột hàng loạt.</p>
+          Bấm vào ô Tên bảng / Tên cột đang trống để chọn lại lần tìm gần đây; Back của trình duyệt quay về lần tìm trước;
+          Copy link để lưu / gửi đúng kết quả đang xem.<br>
+          Có sẵn danh sách nhiều tên cột (tiếng Nhật hoặc tên cột)? Bấm Tra cột hàng loạt.
+          Cột cùng tên mà khác kiểu / khác mô tả giữa các bảng: bấm Thống kê cột.</p>
         </div>
         <dialog id="colDialog"></dialog>
         <script id="app-data" type="application/json">%%DATA_JSON%%</script>
@@ -353,6 +392,7 @@ public sealed class HtmlReportGenerator
           });
           var listEl = document.getElementById('tableList');
           var contentEl = document.getElementById('content');
+          var welcomeHtml = contentEl.innerHTML; // hướng dẫn ban đầu - Back về trang đầu thì hiện lại
           var searchBox = document.getElementById('searchBox');
           var columnBox = document.getElementById('columnBox');
           var searchButton = document.getElementById('searchButton');
@@ -494,6 +534,16 @@ public sealed class HtmlReportGenerator
             return html;
           }
 
+          // Bảng chọn ở menu trái: có điều kiện cột thì chỉ hiện cột khớp, không thì cả bảng.
+          function showListedTable(t, li) {
+            var columnQuery = searchTerms(columnBox.value);
+            if (columnQuery.length || columnFilterActive()) {
+              showTableColumnMatches(t, li, columnQuery);
+            } else {
+              showFullTable(t, li);
+            }
+          }
+
           function findListItem(name) {
             return Array.prototype.find.call(listEl.children, function (item) {
               return item.querySelector('.tname').textContent === name;
@@ -516,12 +566,11 @@ public sealed class HtmlReportGenerator
                 li.querySelector('.jname').textContent = t.japaneseName || t.alias || rowsText(t);
               }
               li.addEventListener('click', function () {
-                var columnQuery = searchTerms(columnBox.value);
-                if (columnQuery.length || columnFilterActive()) {
-                  showTableColumnMatches(t, li, columnQuery);
-                } else {
-                  showFullTable(t, li);
-                }
+                commitSearch(); // bấm 1 kết quả = chốt lần tìm (lưu lịch sử), bảng chọn thành 1 bước Back mới
+                selectedTable = t;
+                showListedTable(t, li);
+                writeSearchHash('push');
+                searchCommitted = true;
               });
               listEl.appendChild(li);
             });
@@ -611,10 +660,7 @@ public sealed class HtmlReportGenerator
           function showColumnResults(headingHtml, items, terms) {
             var seen = Object.create(null), tableCount = 0;
             items.forEach(function (x) { if (!seen[x.t._i]) { seen[x.t._i] = true; tableCount++; } });
-            colResult = { heading: headingHtml, items: items, terms: terms, page: 0, tableCount: tableCount, sorted: null,
-              table: currentTable, boxes: { table: searchBox.value, column: columnBox.value } };
-            // Địa chỉ #search (không thêm bước lịch sử): bấm sang bảng rồi Back thì về lại đúng trang kết quả này.
-            if (location.hash !== '#search') try { history.replaceState(null, '', '#search'); } catch (e) { }
+            colResult = { heading: headingHtml, items: items, terms: terms, page: 0, tableCount: tableCount, sorted: null };
             drawColumnResults();
           }
 
@@ -693,12 +739,14 @@ public sealed class HtmlReportGenerator
               colResult.page = 0;
             } else return;
             drawColumnResults();
+            writeSearchHash('replace'); // đổi trang / kiểu xem / sắp xếp: ghi vào địa chỉ nhưng không thêm bước Back
             contentEl.scrollTop = 0;
           });
           contentEl.addEventListener('change', function (e) {
             if (!colResult || !e.target.classList.contains('pageBox')) return;
             colResult.page = (parseInt(e.target.value, 10) || 1) - 1;
             drawColumnResults();
+            writeSearchHash('replace');
             contentEl.scrollTop = 0;
           });
 
@@ -889,18 +937,17 @@ public sealed class HtmlReportGenerator
           }
 
           function applyHash() {
+            hideHistory();
             if (location.hash === '#batch') { showBatchLookup(); return; } // bấm link bảng trong kết quả rồi Back thì về lại đây
-            if (location.hash === '#search') {
-              // Back từ bảng mở ở kết quả tìm cột: trả lại chữ đã gõ, đúng trang / kiểu xem đang xem (không tìm lại).
-              if (!colResult) return;
-              searchBox.value = colResult.boxes.table;
-              columnBox.value = colResult.boxes.column;
-              renderList();
-              currentTable = colResult.table || null;
-              setActiveListItem(currentTable ? findListItem(currentTable.name) : null);
-              drawColumnResults();
+            var statsMatch = /^#stats(?:\?tab=(\w+))?$/.exec(location.hash);
+            if (statsMatch) {
+              if (STATS_TABS.some(function (x) { return x[0] === statsMatch[1]; })) stats.tab = statsMatch[1];
+              showStats();
               return;
             }
+            // #search?t=..&c=.. (Back / bookmark / link được gửi) hoặc không có # (trang đầu): tìm lại theo địa chỉ.
+            var searchMatch = /^#search(?:\?(.*))?$/.exec(location.hash);
+            if (searchMatch || !location.hash) { applySearchHash(searchMatch ? searchMatch[1] || '' : ''); return; }
             var match = /^#table=(.+)$/.exec(location.hash);
             if (match) {
               var name = decodeURIComponent(match[1]);
@@ -950,6 +997,7 @@ public sealed class HtmlReportGenerator
           function showFullTable(t, li) {
             if (!t) return;
             currentTable = t;
+            colResult = null; // đang xem bảng, không còn kết quả tìm cột (địa chỉ không ghi trang / kiểu xem)
             setActiveListItem(li);
             renderColumnsTable(t);
             document.title = 'CSDL - ' + t.name;
@@ -1020,6 +1068,229 @@ public sealed class HtmlReportGenerator
             } else {
               showColumnSearchAcrossTables(candidateTables, columnQuery);
             }
+          }
+
+          // ----- Địa chỉ trang #search?t=..&c=.. (Back / bookmark / gửi link) + lịch sử tìm kiếm -----
+          // Gõ chỉ sửa địa chỉ hiện tại (replaceState); lần tìm được "chốt" (ngừng gõ 1,5 giây / Enter / bấm 1 kết quả) thì lần gõ
+          // sau mới thêm 1 bước Back (pushState) → Back quay về lần tìm trước, không đi lùi từng chữ.
+          var hashReady = false;      // lúc mở trang: đọc địa chỉ xong mới được ghi (không ghi đè link vừa mở)
+          var applyingHash = false;   // đang dựng lại theo địa chỉ (Back / link) - không ghi ngược lại
+          var searchCommitted = true; // lần tìm hiện tại đã chốt: thay đổi tiếp theo thành bước Back mới
+          var selectedTable = null;   // bảng bấm ở menu trái (tham số tbl)
+          var commitTimer = null;
+          var COMMIT_DELAY = 1500;
+
+          function hasSearch() { return !!(searchBox.value.trim() || columnBox.value.trim() || columnFilterActive()); }
+
+          // Điều kiện tìm (không gồm trang / kiểu xem): dùng cho địa chỉ và lịch sử. Giá trị mặc định thì bỏ.
+          function searchParams() {
+            var p = [];
+            function add(k, v) { p.push(k + '=' + encodeURIComponent(v)); }
+            if (searchBox.value.trim()) add('t', searchBox.value.trim());
+            if (columnBox.value.trim()) add('c', columnBox.value.trim());
+            if (kindFilter !== 'all') add('kind', kindFilter);
+            if (searchDescriptionBox.checked) add('desc', '1');
+            if (splitModeBox.value !== 'space') add('split', splitModeBox.value === 'custom' ? 'custom:' + splitCustomBox.value : splitModeBox.value);
+            if (typeFilterBox.value) add('type', typeFilterBox.value);
+            if (descFilterBox.value) add('has', descFilterBox.value);
+            return p;
+          }
+
+          function currentSearchHash() {
+            if (!hasSearch()) return '';
+            var p = searchParams();
+            if (selectedTable) p.push('tbl=' + encodeURIComponent(selectedTable.name));
+            if (colResult) {
+              p.push('view=' + columnView);
+              if (columnView === 'flat' && columnSort.key) p.push('sort=' + (columnSort.dir < 0 ? '-' : '') + columnSort.key);
+              if (colResult.page) p.push('page=' + (colResult.page + 1));
+            }
+            return '#search?' + p.join('&');
+          }
+
+          // mode: 'auto' (gõ / đổi lọc: chốt rồi thì thêm bước, chưa thì sửa tại chỗ), 'push', 'replace'.
+          function writeSearchHash(mode) {
+            if (!hashReady || applyingHash) return;
+            var h = currentSearchHash(), onSearch = /^#search(\?|$)/.test(location.hash);
+            // Xoá trắng ô tìm: khung phải vẫn hiện kết quả cũ → giữ địa chỉ (không xoá mất lần tìm đã chốt).
+            if (!h || h === location.hash) return;
+            var url = location.href.replace(/#.*$/, '') + h;
+            var push = mode === 'push' || (mode === 'auto' && (searchCommitted || !onSearch));
+            try {
+              if (push) { history.pushState(null, '', url); searchCommitted = false; } else history.replaceState(null, '', url);
+            } catch (e) { }
+          }
+
+          // Người dùng gõ / đổi bộ lọc.
+          function onSearchInput() {
+            selectedTable = null;
+            performSearch();
+            writeSearchHash('auto');
+            clearTimeout(commitTimer);
+            if (hasSearch()) commitTimer = setTimeout(commitSearch, COMMIT_DELAY);
+          }
+
+          function commitSearch() {
+            clearTimeout(commitTimer);
+            if (!hasSearch()) return;
+            addHistory();
+            searchCommitted = true;
+          }
+
+          function parseParams(query) {
+            var p = Object.create(null);
+            (query || '').split('&').forEach(function (kv) {
+              if (!kv) return;
+              var i = kv.indexOf('='), k = i < 0 ? kv : kv.slice(0, i), v = i < 0 ? '' : kv.slice(i + 1);
+              try { p[k] = decodeURIComponent(v); } catch (e) { p[k] = v; }
+            });
+            return p;
+          }
+
+          function setSelect(box, value) {
+            var ok = Array.prototype.some.call(box.options, function (o) { return o.value === value; });
+            box.value = ok ? value : box.options[0].value;
+            return ok;
+          }
+
+          // Dựng lại ô tìm / bộ lọc / trang theo địa chỉ rồi tìm (không ghi lại địa chỉ, không lưu lựa chọn vào trình duyệt).
+          // Địa chỉ trống (trang đầu): xoá ô tìm nhưng giữ lọc Bảng / View, Tìm cả mô tả, Tách từ đã nhớ.
+          function applySearchHash(query) {
+            var p = parseParams(query), empty = !query;
+            searchBox.value = p.t || '';
+            columnBox.value = p.c || '';
+            if (!empty) {
+              setKindFilter(p.kind === 'table' || p.kind === 'view' ? p.kind : 'all');
+              searchDescriptionBox.checked = p.desc === '1';
+              var split = p.split || 'space';
+              if (split.indexOf('custom:') === 0) { splitModeBox.value = 'custom'; splitCustomBox.value = split.slice(7); }
+              else setSelect(splitModeBox, split);
+              splitCustomBox.hidden = splitModeBox.value !== 'custom';
+            }
+            setSelect(typeFilterBox, p.type || '');
+            setSelect(descFilterBox, p.has || '');
+            if (p.view === 'flat' || p.view === 'group') columnView = p.view;
+            var sort = /^(-?)(\w+)$/.exec(p.sort || '');
+            columnSort = sort && SORT_KEYS[sort[2]] ? { key: sort[2], dir: sort[1] ? -1 : 1 } : { key: null, dir: 1 };
+            applyingHash = true;
+            try {
+              selectedTable = null;
+              colResult = null;
+              performSearch();
+              if (!hasSearch()) {
+                currentTable = null;
+                setActiveListItem(null);
+                contentEl.innerHTML = welcomeHtml;
+                document.title = 'CSDL';
+              } else if (p.tbl && tablesByName[p.tbl]) {
+                selectedTable = tablesByName[p.tbl];
+                showListedTable(selectedTable, findListItem(selectedTable.name));
+              }
+              var page = parseInt(p.page, 10);
+              if (colResult && page > 1) { colResult.page = page - 1; drawColumnResults(); }
+            } finally {
+              applyingHash = false;
+            }
+            clearTimeout(commitTimer);
+            searchCommitted = true;
+          }
+
+          // Lịch sử: 20 lần tìm gần nhất (điều kiện tìm, không gồm trang / kiểu xem), mới nhất trên cùng, trùng thì đưa lên đầu.
+          var HISTORY_MAX = 20;
+          var historyBox = document.getElementById('historyBox');
+          var historyFor = null, historySel = -1;
+          function loadHistory() {
+            try { var list = JSON.parse(localStorage.getItem('rdbms.history') || '[]'); return Array.isArray(list) ? list : []; } catch (e) { return []; }
+          }
+          function saveHistory(list) { try { localStorage.setItem('rdbms.history', JSON.stringify(list)); } catch (e) { } }
+          function addHistory() {
+            var q = searchParams().join('&');
+            if (!q) return;
+            var list = loadHistory().filter(function (h) { return h && h.q !== q; });
+            list.unshift({ q: q });
+            saveHistory(list.slice(0, HISTORY_MAX));
+          }
+
+          function historyItemHtml(h, i) {
+            var p = parseParams(h.q), text = [], tags = [];
+            if (p.t) text.push(p.t);
+            if (p.c) text.push('cột: ' + p.c);
+            if (p.kind) tags.push(p.kind === 'view' ? 'View' : 'Bảng');
+            if (p.desc) tags.push('cả mô tả');
+            if (p.type) tags.push('kiểu ' + (p.type === '\u0000' ? '(không rõ)' : p.type));
+            if (p.has) tags.push(p.has === 'has' ? 'có mô tả' : 'chưa có mô tả');
+            if (p.split) tags.push('tách: ' + p.split.replace(/^custom:/, ''));
+            return '<div class="hitem" data-i="' + i + '"><span class="htext">' + escapeHtml(text.join(' · ') || '(chỉ bộ lọc)') + '</span>' +
+              (tags.length ? '<span class="htag">' + escapeHtml(tags.join(', ')) + '</span>' : '') +
+              '<button type="button" class="hdel" data-del="' + i + '" title="Xoá khỏi lịch sử">×</button></div>';
+          }
+
+          // Hiện khi bấm vào ô Tên bảng / Tên cột đang trống; gõ chữ thì ẩn.
+          function showHistory(input) {
+            var list = loadHistory();
+            if (input.value.trim() || !list.length) { hideHistory(); return; }
+            historyFor = input;
+            historySel = -1;
+            historyBox.innerHTML = '<div class="hhead">Tìm gần đây (bấm để tìm lại · ↑↓ Enter)</div>' + list.map(historyItemHtml).join('') +
+              '<div class="hfoot"><button type="button" class="hclear">Xoá hết lịch sử</button></div>';
+            historyBox.style.top = (input.offsetTop + input.offsetHeight + 2) + 'px';
+            historyBox.hidden = false;
+          }
+          function hideHistory() { historyBox.hidden = true; historyFor = null; historySel = -1; }
+
+          function applyHistory(h) {
+            hideHistory();
+            applySearchHash(h.q);
+            writeSearchHash('push');
+            commitSearch();
+          }
+
+          historyBox.addEventListener('mousedown', function (e) { e.preventDefault(); }); // giữ tiêu điểm ở ô tìm
+          historyBox.addEventListener('click', function (e) {
+            var list = loadHistory(), del = e.target.closest('.hdel'), item = e.target.closest('.hitem');
+            if (e.target.closest('.hclear')) { saveHistory([]); hideHistory(); return; }
+            if (del) {
+              list.splice(+del.getAttribute('data-del'), 1);
+              saveHistory(list);
+              if (historyFor) showHistory(historyFor);
+              return;
+            }
+            if (item && list[+item.getAttribute('data-i')]) applyHistory(list[+item.getAttribute('data-i')]);
+          });
+
+          function onHistoryKey(e) {
+            if (historyBox.hidden) return;
+            var items = historyBox.querySelectorAll('.hitem');
+            if (e.key === 'Escape') { hideHistory(); return; }
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              historySel += e.key === 'ArrowDown' ? 1 : -1; // -1 = không chọn dòng nào (Enter tìm như thường)
+              if (historySel >= items.length) historySel = -1;
+              if (historySel < -1) historySel = items.length - 1;
+              Array.prototype.forEach.call(items, function (el, i) { el.classList.toggle('sel', i === historySel); });
+              if (historySel >= 0) items[historySel].scrollIntoView({ block: 'nearest' });
+            } else if (e.key === 'Enter' && historySel >= 0) {
+              e.preventDefault();
+              e.stopPropagation();
+              var h = loadHistory()[historySel];
+              if (h) applyHistory(h);
+            }
+          }
+
+          // Copy chữ vào clipboard (file:// không có navigator.clipboard → cách cũ execCommand).
+          function copyText(text, done, failed) {
+            function fallback() {
+              var area = document.createElement('textarea');
+              area.value = text;
+              document.body.appendChild(area);
+              area.select();
+              var ok = false;
+              try { ok = document.execCommand('copy'); } catch (e) { }
+              document.body.removeChild(area);
+              if (ok) done(); else failed();
+            }
+            if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback);
+            else fallback();
           }
 
           // ----- Tra cột hàng loạt: mỗi dòng 1 tên (tiếng Nhật hoặc tên cột) → tên tương ứng, giữ đúng thứ tự để dán lại Excel -----
@@ -1267,26 +1538,14 @@ public sealed class HtmlReportGenerator
             var text = batchRows.map(function (row) {
               return row.results.map(function (r) { return r.value; }).join(' / ');
             }).join('\n');
-            function done() { statusEl.textContent = 'Đã copy ' + batchRows.length + ' dòng kết quả.'; }
-            function fallback() {
-              var area = document.createElement('textarea');
-              area.value = text;
-              document.body.appendChild(area);
-              area.select();
-              var ok = false;
-              try { ok = document.execCommand('copy'); } catch (e) { }
-              document.body.removeChild(area);
-              if (ok) done(); else statusEl.textContent = 'Không copy được - chọn cột Kết quả rồi Ctrl+C.';
-            }
-            if (navigator.clipboard && window.isSecureContext) {
-              navigator.clipboard.writeText(text).then(done, fallback);
-            } else {
-              fallback();
-            }
+            copyText(text,
+              function () { statusEl.textContent = 'Đã copy ' + batchRows.length + ' dòng kết quả.'; },
+              function () { statusEl.textContent = 'Không copy được - chọn cột Kết quả rồi Ctrl+C.'; });
           }
 
           function showBatchLookup() {
             document.title = 'CSDL - Tra cột hàng loạt';
+            colResult = null;
             contentEl.innerHTML = '<div class="batch"><h1>Tra cột hàng loạt</h1>' +
               '<div class="meta">Dán danh sách, mỗi dòng 1 tên: tên tiếng Nhật ra tên cột, tên cột ra tên tiếng Nhật (dán lẫn cả hai cũng được). ' +
               'Tên tiếng Nhật = mô tả (comment) cột. Khớp nguyên tên: so với dòng đầu mô tả; comment có thêm chữ (vd "データＮＯ // #MA.IF_DATA_NO") ' +
@@ -1430,13 +1689,240 @@ public sealed class HtmlReportGenerator
             if (e.target === colDialog || (e.target.closest && e.target.closest('.close, a.fk-link'))) colDialog.close();
           });
 
+          // ----- Thống kê cột: cùng tên khác kiểu / khác mô tả, cột dùng chung nhiều nhất -----
+          // Chỉ tính tên cột có ở từ 2 bảng trở lên (không phân biệt hoa / thường), theo lọc Tất cả / Bảng / View. Tính 1 lần khi
+          // mở trang thống kê (schema lớn ~300k cột: trang chính không chậm đi), đổi lọc Bảng / View mới tính lại.
+          var STATS_TABS = [['type', 'Cùng tên khác kiểu'], ['desc', 'Cùng tên khác mô tả'], ['common', 'Cột dùng chung nhiều nhất']];
+          var stats = { tab: 'type', filter: '', page: 0, open: null, noLength: false };
+          try { stats.noLength = localStorage.getItem('rdbms.statsNoLength') === '1'; } catch (e) { }
+          var statsCache = { key: null, groups: null };
+          var STATS_LINKS = 300; // bảng hiện mỗi kiểu / mô tả khi mở 1 dòng
+
+          // Kiểu kèm độ dài: đọc từ DB thì dataType đã có "(20)"; đọc từ Excel thì độ dài ở cột riêng.
+          function typeText(c) {
+            var dt = c.dataType.trim(), len = c.length.trim();
+            return len && dt.indexOf('(') < 0 ? dt + '(' + len + ')' : dt;
+          }
+
+          // Các giá trị khác nhau trong 1 nhóm cột cùng tên, mỗi giá trị kèm danh sách bảng; nhiều bảng nhất trước.
+          function variantsOf(items, keyOf) {
+            var byKey = Object.create(null), out = [];
+            items.forEach(function (x) {
+              var kv = keyOf(x.c);
+              if (!kv) return;
+              var v = byKey[kv[0]];
+              if (!v) { v = byKey[kv[0]] = { key: kv[0], label: kv[1], tables: [] }; out.push(v); }
+              if (v.tables[v.tables.length - 1] !== x.t) v.tables.push(x.t);
+            });
+            return out.sort(function (a, b) { return b.tables.length - a.tables.length || (a.label < b.label ? -1 : a.label > b.label ? 1 : 0); });
+          }
+          function typeKey(c) { var s = typeText(c); return [s.toLowerCase().replace(/\s+/g, ''), s || '(không rõ kiểu)']; }
+          function baseTypeKey(c) { var s = c.dataType.replace(/\(.*$/, '').trim(); return [s.toLowerCase(), s || '(không rõ kiểu)']; }
+          function descKey(c) { var s = japaneseLabel(c), k = normalizeName(s); return k ? [k, s] : null; } // chưa có mô tả: không tính là khác
+
+          function statsGroups() {
+            if (statsCache.key === kindFilter) return statsCache.groups;
+            var byName = Object.create(null), groups = [];
+            tables.forEach(function (t) {
+              if (!kindMatches(t)) return;
+              t.columns.forEach(function (c) {
+                var k = c.name.toLowerCase(), g = byName[k];
+                if (!g) { g = byName[k] = { key: k, name: c.name, items: [], tableCount: 0, last: null }; groups.push(g); }
+                g.items.push({ t: t, c: c });
+                if (g.last !== t) { g.last = t; g.tableCount++; }
+              });
+            });
+            groups = groups.filter(function (g) { return g.tableCount >= 2; });
+            groups.forEach(function (g) {
+              g.last = null;
+              g.types = variantsOf(g.items, typeKey);
+              g.baseTypes = variantsOf(g.items, baseTypeKey);
+              g.descs = variantsOf(g.items, descKey);
+              var noDesc = Object.create(null);
+              g.noDescTables = [];
+              g.items.forEach(function (x) { if (!japaneseLabel(x.c).trim() && !noDesc[x.t._i]) { noDesc[x.t._i] = true; g.noDescTables.push(x.t); } });
+            });
+            statsCache = { key: kindFilter, groups: groups };
+            return groups;
+          }
+
+          function statsTypes(g) { return stats.noLength ? g.baseTypes : g.types; }
+
+          // Dòng của tab đang xem (chưa lọc chữ).
+          function statsRowsOf(tab) {
+            var groups = statsGroups(), rows;
+            if (tab === 'type') rows = groups.filter(function (g) { return statsTypes(g).length > 1; });
+            else if (tab === 'desc') rows = groups.filter(function (g) { return g.descs.length > 1; });
+            else rows = groups.slice();
+            var count = tab === 'type' ? function (g) { return statsTypes(g).length; } : tab === 'desc' ? function (g) { return g.descs.length; } : function () { return 0; };
+            return rows.sort(function (a, b) { return count(b) - count(a) || b.tableCount - a.tableCount || (a.key < b.key ? -1 : a.key > b.key ? 1 : 0); });
+          }
+
+          // Ô Lọc: chứa trong tên cột hoặc 1 mô tả của nhóm (toàn khổ / nửa khổ, hoa / thường, khoảng trắng không tính).
+          function statsFiltered() {
+            var rows = statsRowsOf(stats.tab), q = normalizeName(stats.filter);
+            if (!q) return rows;
+            return rows.filter(function (g) {
+              return g.key.indexOf(q) >= 0 || g.descs.some(function (v) { return v.key.indexOf(q) >= 0; });
+            });
+          }
+
+          function variantsHtml(list, max) {
+            return list.slice(0, max).map(function (v) {
+              return '<div>' + escapeHtml(v.label) + ' <span class="n">(' + v.tables.length + ' bảng)</span></div>';
+            }).join('') + (list.length > max ? '<div class="n">… và ' + (list.length - max) + ' loại khác</div>' : '');
+          }
+
+          function statsDetailHtml(g, cols) {
+            function block(title, list) {
+              var links = list.slice(0, STATS_LINKS).map(function (t) {
+                return '<a class="fk-link" href="#table=' + encodeURIComponent(t.name) + '">' + escapeHtml(t.name) + '</a>';
+              }).join('');
+              return '<div class="statsVar"><div class="vhead">' + title + ' - ' + list.length + ' bảng</div>' + links +
+                (list.length > STATS_LINKS ? ' <i>… và ' + (list.length - STATS_LINKS) + ' bảng khác</i>' : '') + '</div>';
+            }
+            var html = '';
+            if (stats.tab === 'desc') {
+              g.descs.forEach(function (v) { html += block('Mô tả: ' + escapeHtml(v.label), v.tables); });
+              if (g.noDescTables.length) html += block('<i>Chưa có mô tả</i>', g.noDescTables);
+            } else {
+              statsTypes(g).forEach(function (v) { html += block('Kiểu: ' + escapeHtml(v.label), v.tables); });
+            }
+            return '<tr class="statsDetail"><td colspan="' + cols + '">' + html + '</td></tr>';
+          }
+
+          function drawStats() {
+            var resultEl = document.getElementById('statsResult');
+            if (!resultEl) return;
+            Array.prototype.forEach.call(contentEl.querySelectorAll('.statsTabs button'), function (b) {
+              b.classList.toggle('on', b.getAttribute('data-tab') === stats.tab);
+            });
+            document.getElementById('statsLengthBox').hidden = stats.tab !== 'type';
+            var rows = statsFiltered(), total = rows.length;
+            var pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            stats.page = Math.min(Math.max(0, stats.page), pages - 1);
+            var from = stats.page * PAGE_SIZE, slice = rows.slice(from, from + PAGE_SIZE), pager = pagerHtml(pages, stats.page);
+            var head, cols;
+            if (stats.tab === 'type') { head = '<th>Số kiểu</th><th>Các kiểu (số bảng)</th>'; cols = 5; }
+            else if (stats.tab === 'desc') { head = '<th>Số mô tả</th><th>Các mô tả (số bảng)</th><th>Chưa có mô tả</th>'; cols = 6; }
+            else { head = '<th>Kiểu dùng nhiều nhất</th><th>Mô tả dùng nhiều nhất</th>'; cols = 5; }
+            var body = slice.map(function (g, i) {
+              var cells;
+              if (stats.tab === 'type') cells = '<td>' + statsTypes(g).length + '</td><td class="vars">' + variantsHtml(statsTypes(g), 6) + '</td>';
+              else if (stats.tab === 'desc') cells = '<td>' + g.descs.length + '</td><td class="vars">' + variantsHtml(g.descs, 6) + '</td>' +
+                '<td>' + (g.noDescTables.length ? g.noDescTables.length + ' bảng' : '') + '</td>';
+              else cells = '<td class="vars">' + variantsHtml(g.types, 1) + '</td><td class="vars">' + (g.descs.length ? variantsHtml(g.descs, 1) : '') + '</td>';
+              var open = stats.open === g.key;
+              return '<tr class="statsRow' + (open ? ' open' : '') + '" data-k="' + escapeHtml(g.key) + '" title="Bấm để xem bảng theo từng ' +
+                (stats.tab === 'desc' ? 'mô tả' : 'kiểu') + '"><td>' + (from + i + 1) + '</td><td class="code">' + escapeHtml(g.name) + '</td>' +
+                '<td>' + g.tableCount + '</td>' + cells + '</tr>' + (open ? statsDetailHtml(g, cols) : '');
+            }).join('');
+            resultEl.innerHTML = '<div class="resultBar"><span>' + (total ? 'Dòng ' + (from + 1).toLocaleString('vi-VN') + '–' +
+              (from + slice.length).toLocaleString('vi-VN') + ' / ' : '') + total.toLocaleString('vi-VN') + ' tên cột</span>' + pager + '</div>' +
+              (total ? '<table class="cols"><thead><tr><th>STT</th><th>Tên cột</th><th>Số bảng</th>' + head + '</tr></thead><tbody>' + body + '</tbody></table>'
+                : '<p>Không có tên cột nào' + (stats.filter ? ' khớp ô Lọc' : '') + '.</p>') +
+              (pager ? '<div class="resultBar">' + pager + '</div>' : '');
+          }
+
+          function showStats() {
+            colResult = null;
+            document.title = 'CSDL - Thống kê cột';
+            var scope = kindFilter === 'view' ? 'chỉ View' : kindFilter === 'table' ? 'chỉ Bảng' : 'Tất cả bảng và view';
+            var html = '<div class="stats"><h1>Thống kê cột</h1>' +
+              '<div class="meta">Tên cột có ở từ 2 bảng trở lên (không phân biệt hoa / thường), trong: ' + scope + ' (theo lọc Tất cả / Bảng / View ở menu trái). ' +
+              'Mô tả = tên tiếng Nhật hoặc dòng đầu mô tả (comment); toàn khổ / nửa khổ, hoa / thường, khoảng trắng không tính; cột chưa có mô tả không tính là khác. ' +
+              'Bấm 1 dòng để xem bảng theo từng kiểu / mô tả.</div>' +
+              '<span class="viewSwitch statsTabs">' + STATS_TABS.map(function (x) { return '<button type="button" data-tab="' + x[0] + '">' + x[1] + '</button>'; }).join('') + '</span>' +
+              '<div class="batchBar"><label>Lọc <input id="statsFilter" type="text" placeholder="Tên cột hoặc mô tả..." /></label>' +
+              '<label id="statsLengthBox" title="VARCHAR2(20) và VARCHAR2(30) coi là cùng kiểu"><input id="statsNoLength" type="checkbox" />Bỏ qua độ dài</label>' +
+              '<button id="statsCopy" type="button" title="Copy mọi dòng đang lọc (cả các trang) để dán Excel">Copy bảng</button><span id="statsStatus"></span></div>' +
+              '<div id="statsResult"></div></div>';
+            var ready = statsCache.key === kindFilter;
+            contentEl.innerHTML = ready ? html : '<p>Đang tính thống kê cho ' + totalColumns.toLocaleString('vi-VN') + ' cột...</p>';
+            contentEl.scrollTop = 0;
+            function bind() {
+              contentEl.innerHTML = html;
+              var filterBox = document.getElementById('statsFilter'), lengthBox = document.getElementById('statsNoLength'), timer = null;
+              filterBox.value = stats.filter;
+              lengthBox.checked = stats.noLength;
+              filterBox.addEventListener('input', function () {
+                clearTimeout(timer);
+                timer = setTimeout(function () { stats.filter = filterBox.value; stats.page = 0; stats.open = null; drawStats(); }, 150);
+              });
+              lengthBox.addEventListener('change', function () {
+                stats.noLength = lengthBox.checked;
+                try { localStorage.setItem('rdbms.statsNoLength', stats.noLength ? '1' : '0'); } catch (e) { }
+                stats.page = 0; stats.open = null;
+                drawStats();
+              });
+              document.getElementById('statsCopy').addEventListener('click', copyStats);
+              drawStats();
+            }
+            if (ready) { bind(); return; }
+            // Lần đầu: hiện chữ "Đang tính" trước rồi mới tính (trình duyệt kịp vẽ).
+            setTimeout(function () {
+              if (!/^#stats/.test(location.hash)) return;
+              statsGroups();
+              bind();
+            }, 30);
+          }
+
+          // Bảng đang lọc (mọi trang) dạng TSV cho Excel.
+          function copyStats() {
+            var statusEl = document.getElementById('statsStatus');
+            function cell(s) { return String(s).replace(/[\t\r\n]+/g, ' '); }
+            function list(vs) { return vs.map(function (v) { return v.label + ': ' + v.tables.length + ' bảng'; }).join(' / '); }
+            var rows = statsFiltered(), lines;
+            if (stats.tab === 'type') {
+              lines = [['Tên cột', 'Số bảng', 'Số kiểu', 'Các kiểu']].concat(rows.map(function (g) { return [g.name, g.tableCount, statsTypes(g).length, list(statsTypes(g))]; }));
+            } else if (stats.tab === 'desc') {
+              lines = [['Tên cột', 'Số bảng', 'Số mô tả', 'Các mô tả', 'Chưa có mô tả (số bảng)']].concat(rows.map(function (g) {
+                return [g.name, g.tableCount, g.descs.length, list(g.descs), g.noDescTables.length || ''];
+              }));
+            } else {
+              lines = [['Tên cột', 'Số bảng', 'Kiểu dùng nhiều nhất', 'Mô tả dùng nhiều nhất']].concat(rows.map(function (g) {
+                return [g.name, g.tableCount, g.types.length ? g.types[0].label : '', g.descs.length ? g.descs[0].label : ''];
+              }));
+            }
+            copyText(lines.map(function (r) { return r.map(cell).join('\t'); }).join('\n'),
+              function () { statusEl.textContent = 'Đã copy ' + rows.length + ' dòng.'; },
+              function () { statusEl.textContent = 'Không copy được.'; });
+          }
+
+          contentEl.addEventListener('click', function (e) {
+            if (!document.getElementById('statsResult') || !e.target.closest) return;
+            var tab = e.target.closest('.statsTabs button'), pageBtn = e.target.closest('.pager button'), row = e.target.closest('tr.statsRow');
+            if (tab) {
+              stats.tab = tab.getAttribute('data-tab');
+              stats.page = 0; stats.open = null;
+              try { history.replaceState(null, '', location.href.replace(/#.*$/, '') + '#stats?tab=' + stats.tab); } catch (err) { }
+              drawStats();
+            } else if (pageBtn) {
+              stats.page = +pageBtn.getAttribute('data-page');
+              stats.open = null;
+              drawStats();
+              contentEl.scrollTop = 0;
+            } else if (row) {
+              var k = row.getAttribute('data-k');
+              stats.open = stats.open === k ? null : k;
+              drawStats();
+            }
+          });
+          contentEl.addEventListener('change', function (e) {
+            if (!document.getElementById('statsResult') || !e.target.classList.contains('pageBox')) return;
+            stats.page = (parseInt(e.target.value, 10) || 1) - 1;
+            stats.open = null;
+            drawStats();
+            contentEl.scrollTop = 0;
+          });
+
           function onAdvancedChange() {
             splitCustomBox.hidden = splitModeBox.value !== 'custom';
             try {
               localStorage.setItem('rdbms.splitMode', splitModeBox.value);
               localStorage.setItem('rdbms.splitCustom', splitCustomBox.value);
             } catch (e) { }
-            performSearch();
+            onSearchInput();
           }
           splitModeBox.addEventListener('change', function () { onAdvancedChange(); if (!splitCustomBox.hidden) splitCustomBox.focus(); });
           splitCustomBox.addEventListener('input', onAdvancedChange);
@@ -1448,21 +1934,49 @@ public sealed class HtmlReportGenerator
 
           window.addEventListener('hashchange', applyHash);
 
-          searchButton.addEventListener('click', performSearch);
-          searchBox.addEventListener('keyup', function (e) { if (e.key === 'Enter') performSearch(); });
-          searchBox.addEventListener('input', performSearch);
-          columnBox.addEventListener('keyup', function (e) { if (e.key === 'Enter') performSearch(); });
-          columnBox.addEventListener('input', performSearch);
+          searchButton.addEventListener('click', function () { onSearchInput(); commitSearch(); });
+          [searchBox, columnBox].forEach(function (box) {
+            box.addEventListener('keyup', function (e) { if (e.key === 'Enter') { onSearchInput(); commitSearch(); } });
+            box.addEventListener('input', function () { onSearchInput(); showHistory(box); });
+            box.addEventListener('focus', function () { showHistory(box); });
+            box.addEventListener('click', function () { if (historyBox.hidden) showHistory(box); });
+            box.addEventListener('blur', hideHistory);
+            box.addEventListener('keydown', onHistoryKey);
+          });
           kindButtons.forEach(function (b) {
-            b.addEventListener('click', function () { setKindFilter(b.dataset.kind); saveFilters(); performSearch(); renderBatchResult(); });
+            b.addEventListener('click', function () {
+              setKindFilter(b.dataset.kind); saveFilters();
+              // Đang ở Tra hàng loạt / Thống kê: chỉ lọc lại menu + trang đang xem, không nhảy sang kết quả tìm.
+              if (/^#(batch|stats)/.test(location.hash)) {
+                renderList();
+                renderBatchResult();
+                if (/^#stats/.test(location.hash)) showStats();
+              } else onSearchInput();
+            });
           });
           document.getElementById('batchButton').addEventListener('click', function () {
             if (location.hash === '#batch') showBatchLookup(); else location.hash = '#batch';
           });
-          searchDescriptionBox.addEventListener('change', function () { saveFilters(); performSearch(); });
+          document.getElementById('statsButton').addEventListener('click', function () {
+            if (/^#stats/.test(location.hash)) showStats(); else location.hash = '#stats?tab=' + stats.tab;
+          });
+          var copyLinkButton = document.getElementById('copyLinkButton');
+          copyLinkButton.addEventListener('click', function () {
+            commitSearch();
+            copyText(location.href, function () {
+              copyLinkButton.textContent = 'Đã copy ✓';
+              setTimeout(function () { copyLinkButton.textContent = 'Copy link'; }, 1500);
+            }, function () { window.prompt('Copy link (Ctrl+C):', location.href); });
+          });
+          // Bấm 1 kết quả trong khung bên phải (link bảng, tên cột) = chốt lần tìm đang xem (lưu lịch sử).
+          contentEl.addEventListener('click', function (e) {
+            if (e.target.closest && e.target.closest('a') && /^#search\?/.test(location.hash)) commitSearch();
+          }, true);
+          searchDescriptionBox.addEventListener('change', function () { saveFilters(); onSearchInput(); });
 
-          performSearch();
+          performSearch(); // dựng menu trái (mở thẳng #batch / #stats cũng cần)
           applyHash();
+          hashReady = true;
         })();
         </script>
         </body>
