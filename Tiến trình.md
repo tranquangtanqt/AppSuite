@@ -488,9 +488,18 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Nhập đơn hàng loạt từ Excel / CSV (đề xuất cũ 2026-11-02) - làm khi có file mẫu
 - [x] Công nợ → Chi tiết: dòng tiêu đề trong ảnh chụp bỏ chữ "Đơn chưa thanh toán" và "tính đến ngày", chỉ còn "tên khách ·
   Tổng ..." (người dùng: ảnh trông hơi kỳ, công nợ thì chắc chắn là chưa thanh toán). Cập nhật F1, README. Unit test 217/217 (2026-11-09)
-- [ ] Lỗi người dùng báo 2026-11-09: Nhập đơn hàng loạt, chọn lại món ("205 Thu Hà | 1 bánh ướt; 10 nếp cẩm" → Sữa chua hũ;
-  "806 | 1 bánh ướt; 1 trứng? thịt; 1 Sữa chua dẻo?" → sữa chua đác) thì app đơ rồi tắt. Chưa tái hiện được trong Sandbox
-  (chọn bằng UIA trên ô Chọn món: 13/13 đạt, app không tắt); chờ log crash + chi tiết chọn ở đâu / bằng chuột hay phím
+- [x] Lỗi người dùng báo 2026-11-09 + 2026-11-11: Nhập đơn hàng loạt, chọn khách / món ở ô Chọn khách / Chọn món trên thẻ
+  (vd "Nhung Lê | 1 xôi gạo lứt; 1 bún? chay": chọn Nhung Lê W3 → xôi/khoai luộc → bún; "1505 Tâm Bầu? | 5 nếp cẩm; 9 flan"
+  → Sữa chua hũ) thì app tắt: COMException 0x80070490 "Element not found" / 0x80004005 "Unspecified error". Nguyên nhân: viết
+  lại dòng ngay trong SelectionChanged → `Refresh` → `Rows.Clear()` xoá chính ô đang đóng danh sách / trả tiêu điểm. Sửa:
+  `AfterComboClosed` đợi DropDownClosed rồi viết lại ở lượt sau (DispatcherQueue Low); nút Chọn khách (khung tìm) cũng vậy.
+  Unit test 237/237; GUI Sandbox (UIA) 4 lần chọn liên tiếp viết lại đúng, app không tắt. Chưa tái hiện được cú sập bằng chuột
+  trong Sandbox (chuột giả lập không tới app khi cửa sổ Sandbox không ở trước) (2026-11-12)
+- [ ] Thử tay trên máy thật bản mới: chọn liên tiếp khách + nhiều món trên cùng 1 thẻ bằng chuột (đúng các bước lỗi ở trên)
+- [ ] Ô Chọn khách: chọn "Nhung Lê (W3)" nhưng dòng chữ chỉ ghi "Nhung Lê" → vẫn khớp 2 khách trùng tên, chọn không có tác dụng
+  (thấy khi thử 2026-11-12)
+- [ ] Cửa sổ hẹp (~1000 px): ô Chọn món trên thẻ bị cắt mất nửa phải (hàng nút Sửa đơn / Chọn khách / Chọn món / Sửa dòng không
+  xuống dòng)
 - [x] Lỗi dữ liệu (đọc từ code, tái hiện trong GUI Sandbox 3/3 trên bản cũ, đã sửa 2026-11-10):
   - Ngày không ghi năm luôn lấy năm hiện tại: ngày 02/01/2027 dán "Ngày | 30/12" → app hỏi "Tạo 1 đơn giao ngày 30/12/2027".
     Sửa: `DateInput.Parse(..., nearToday)` - ngày + tháng của năm trước / sau cách hôm nay ≤ 60 ngày thì lấy năm đó; dùng cho

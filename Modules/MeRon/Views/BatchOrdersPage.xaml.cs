@@ -183,31 +183,57 @@ public sealed partial class BatchOrdersPage : Page
         flyout.Opened += (_, _) => box.Focus(FocusState.Programmatic);
         flyout.Closed += (_, _) =>
         {
-            if (picked is not null)
+            if (picked is { } customer) // như AfterComboClosed: nút mở khung nằm trên thẻ sắp bị dựng lại
             {
-                ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: picked.Name));
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+                    () => ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: customer.Name)));
             }
         };
         flyout.ShowAt((FrameworkElement)sender);
     }
 
+    /// <summary>
+    /// Chọn trong ô Chọn khách / Chọn món trên thẻ: viết lại dòng sẽ dựng lại cả bảng nháp, xoá luôn ô đang chọn. Làm ngay trong
+    /// SelectionChanged (chọn bằng chuột: ô còn đang đóng danh sách, trả tiêu điểm về chính nó) thì WinUI ném COMException
+    /// "Element not found" / "Unspecified error" và app tắt. Đợi danh sách đóng hẳn rồi mới làm, ở lượt sau của hàng đợi giao diện.
+    /// </summary>
+    private void AfterComboClosed(ComboBox combo, Action action)
+    {
+        void Run() => DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => action());
+        if (!combo.IsDropDownOpen)
+        {
+            Run();
+            return;
+        }
+        void Closed(object? s, object e)
+        {
+            combo.DropDownClosed -= Closed;
+            Run();
+        }
+        combo.DropDownClosed += Closed;
+    }
+
     private void CustomerChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (RowOf(sender) is { } row && (sender as ComboBox)?.SelectedItem is Customer customer)
+        if (RowOf(sender) is { } row && sender is ComboBox { SelectedItem: Customer customer } combo)
         {
-            ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: customer.Name));
+            AfterComboClosed(combo, () => ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: customer.Name)));
+        }
+    }
+
+    private void ItemChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (RowOf(sender) is { } row && sender is ComboBox { SelectedItem: Product { Name: { } name } } combo)
+        {
+            AfterComboClosed(combo, () => ChooseItem(row, name));
         }
     }
 
     /// <summary>Chọn món cho chữ chưa ghép được. Chữ lạ 1 từ, không món nào khớp (vd "pana") → hỏi "Nhớ: pana = Panacota?" để
     /// lần sau tự hiểu (thêm vào bảng Chữ viết tắt). Chữ khớp nhiều món (vd "bún") thì không hỏi: thêm "bún = Bún chả cá" sẽ đổi
     /// cả "bún chả" thành sai.</summary>
-    private async void ItemChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void ChooseItem(BatchRowViewModel row, string name)
     {
-        if (RowOf(sender) is not { } row || (sender as ComboBox)?.SelectedItem is not Product { Name: { } name })
-        {
-            return;
-        }
         var item = row.Match.Items[row.ItemChoiceIndex];
         var word = item.Source.Name.Trim();
         if (item.Candidates.Count == 0 && !word.Contains(' ') && Core.TextSearch.Fold(word) != Core.TextSearch.Fold(name)
