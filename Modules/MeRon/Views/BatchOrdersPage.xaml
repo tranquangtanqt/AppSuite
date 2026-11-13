@@ -146,6 +146,12 @@
                             <StackPanel Grid.Column="1" Spacing="2">
                                 <TextBlock Text="{x:Bind CustomerText}" FontWeight="SemiBold" TextWrapping="Wrap" />
                                 <TextBlock Text="{x:Bind LineText}" Opacity="0.6" FontSize="{StaticResource FontSizeCaption}" />
+                                <!-- Ghim: khách / món theo lựa chọn ở popup Sửa đơn / ô chọn trên thẻ, không theo chữ (BatchPin) -->
+                                <StackPanel Orientation="Horizontal" Spacing="4" Visibility="{x:Bind IsPinned}" AutomationProperties.Name="Đã ghim"
+                                            ToolTipService.ToolTip="Khách / món đã chọn trong popup Sửa đơn hoặc ô chọn trên thẻ: đọc lại vẫn giữ đúng như đã chọn. Bấm Bỏ ghim để đọc lại theo chữ.">
+                                    <FontIcon Glyph="&#xE718;" FontSize="{StaticResource FontSizeCaption}" Foreground="{StaticResource OrangeBrush}" />
+                                    <TextBlock Text="Đã ghim" FontSize="{StaticResource FontSizeCaption}" Foreground="{StaticResource OrangeBrush}" />
+                                </StackPanel>
                             </StackPanel>
                             <StackPanel Grid.Column="2" Spacing="4">
                                 <TextBlock Text="{x:Bind ItemsText}" TextWrapping="Wrap" />
@@ -181,6 +187,8 @@
                                         </ComboBox.ItemTemplate>
                                     </ComboBox>
                                     <Button Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, ngừng gõ là danh sách tự cập nhật" />
+                                    <Button Content="Bỏ ghim" Click="Unpin_Click" Tag="{x:Bind}" Visibility="{x:Bind IsPinned}"
+                                            ToolTipService.ToolTip="Bỏ khách / món đã chọn trong popup / ô chọn, đọc lại dòng theo chữ" />
                                 </StackPanel>
                             </StackPanel>
                             <!-- Dòng ổn: hiện khi rê chuột hoặc Tab tới. Mờ hẳn thay vì ẩn để thẻ không đổi cao, phím vẫn tới được. Nền đặc: dòng nhiều món ở cửa sổ hẹp thì nút đè lên chữ -->
@@ -193,6 +201,8 @@
                                         ToolTipService.ToolTip="Đổi khách của dòng này bằng 1 khách đã có trong danh sách, giữ món, giá, CK" />
                                 <Button Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}"
                                         ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, ngừng gõ là danh sách tự cập nhật" />
+                                <Button Content="Bỏ ghim" Click="Unpin_Click" Tag="{x:Bind}" Visibility="{x:Bind IsPinned}"
+                                        ToolTipService.ToolTip="Bỏ khách / món đã chọn trong popup / ô chọn, đọc lại dòng theo chữ" />
                             </StackPanel>
                             <StackPanel Grid.Column="3" Spacing="2" MinWidth="90">
                                 <TextBlock Text="{x:Bind TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right" />

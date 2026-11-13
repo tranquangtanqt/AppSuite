@@ -496,8 +496,15 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Unit test 237/237; GUI Sandbox (UIA) 4 lần chọn liên tiếp viết lại đúng, app không tắt. Chưa tái hiện được cú sập bằng chuột
   trong Sandbox (chuột giả lập không tới app khi cửa sổ Sandbox không ở trước) (2026-11-12)
 - [ ] Thử tay trên máy thật bản mới: chọn liên tiếp khách + nhiều món trên cùng 1 thẻ bằng chuột (đúng các bước lỗi ở trên)
-- [ ] Ô Chọn khách: chọn "Nhung Lê (W3)" nhưng dòng chữ chỉ ghi "Nhung Lê" → vẫn khớp 2 khách trùng tên, chọn không có tác dụng
-  (thấy khi thử 2026-11-12)
+- [x] Ô Chọn khách: chọn "Nhung Lê (W3)" nhưng dòng chữ chỉ ghi "Nhung Lê" → vẫn khớp 2 khách trùng tên, chọn không có tác dụng
+  (thấy khi thử 2026-11-12). Sửa cùng mục Ghim bên dưới: khách trùng tên thì dòng ghi kèm địa chỉ ("Nhung Lê W3") + ghim theo id (2026-11-13)
+- [x] **Nhập đơn hàng loạt - Ghim lựa chọn** (người dùng chốt 2026-11-13): khách / món chọn trong popup Sửa đơn, ô Chọn khách /
+  Chọn món, nút Chọn khách được ghim vào dòng (khách theo id, món theo id hoặc món tự do) - đọc lại / áp dụng dòng khác / tắt mở
+  app không bị đè (lưu `nhap-don-hang-loat.ghim.json` cạnh ô chữ); đúng cả 2 khách trùng hẳn tên, món tự do trùng tên món có sẵn.
+  Thẻ có nhãn Đã ghim + nút Bỏ ghim. Sửa tay chữ dòng đã ghim: mặc định tự bỏ ghim; Cài đặt → Nhập đơn hàng loạt → Hỏi trước
+  khi bỏ ghim thì hỏi Bỏ ghim / Giữ ghim (giữ = chữ dòng trả về như cũ). Kèm: Sửa đơn giữ giá ở cột riêng chưa món nào dùng;
+  Hoàn tác lô trả dòng về kèm ghim. Cập nhật F1, README. Unit test 245/245; GUI Sandbox (UIA) 19/19 (2026-11-13)
+- [ ] Người dùng thử tay Ghim trên dữ liệu thật (chọn khách trùng tên, Sửa đơn rồi sửa dòng khác / tắt mở app, bật Hỏi trước khi bỏ ghim)
 - [ ] Cửa sổ hẹp (~1000 px): ô Chọn món trên thẻ bị cắt mất nửa phải (hàng nút Sửa đơn / Chọn khách / Chọn món / Sửa dòng không
   xuống dòng)
 - [x] Lỗi dữ liệu (đọc từ code, tái hiện trong GUI Sandbox 3/3 trên bản cũ, đã sửa 2026-11-10):

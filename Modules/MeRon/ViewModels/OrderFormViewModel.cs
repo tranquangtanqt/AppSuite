@@ -476,9 +476,17 @@ public sealed partial class OrderFormViewModel : ObservableObject
         Recalculate();
     }
 
-    /// <summary>Dòng chữ thay cho dòng đang sửa. Chưa chọn khách thì giữ chữ khách cũ (khách mới thêm bằng nút trên thẻ).</summary>
-    public string BatchLineText(string writtenCustomer) =>
-        BatchOrderParser.Compose(Customer?.Name ?? writtenCustomer, Lines.Select(l => l.ToDraft()), ProductMap, IsPrepaid);
+    /// <summary>Dòng chữ thay cho dòng đang sửa + ghim (khách / món như đã chọn, xem <see cref="BatchPin"/>). Chưa chọn khách thì
+    /// giữ chữ khách cũ (khách mới thêm bằng nút trên thẻ). Giá ở cột riêng chưa dùng thì giữ.</summary>
+    public (string Line, BatchPin Pin) BatchLineText(BatchLineMatch match)
+    {
+        var drafts = Lines.Select(l => l.ToDraft()).ToList();
+        var customer = Customer is { IsNew: false } c
+            ? BatchOrderParser.CustomerText(c.Id, c.Name, c.Address, Customers.Select(o => (o.Id, (string?)o.Name)))
+            : match.Line.Customer;
+        return (BatchOrderParser.Compose(customer, drafts, ProductMap, IsPrepaid, BatchOrderParser.UnusedLinePrice(match)),
+            BatchPin.FromLines(Customer is { IsNew: false } picked ? picked.Id : null, drafts));
+    }
 
     /// <summary>Thêm món: dòng trống, View đưa con trỏ vào ô món để gõ lọc (điện thoại mặc định món đầu tiên - với ô
     /// autocomplete thì chọn sẵn 1 món dễ lưu nhầm).</summary>

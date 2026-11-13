@@ -58,6 +58,22 @@ public class MenuSettingsTests : IDisposable
         Assert.Equal(AppTheme.Dark, MenuSettings.Load(FilePath).Theme);
     }
 
+    /// <summary>Nhập đơn hàng loạt: sửa tay dòng đã ghim - mặc định tự bỏ ghim (file cũ cũng vậy), bật hỏi thì nhớ.</summary>
+    [Fact]
+    public void Ask_before_unpin_defaults_off_and_survives_save_and_load()
+    {
+        Directory.CreateDirectory(_folder);
+        File.WriteAllText(FilePath, "{ \"HiddenMenu\": [\"AddressesPage\"], \"Theme\": \"Dark\" }");
+        var old = MenuSettings.Load(FilePath);
+        Assert.False(old.AskBeforeUnpin);
+
+        old.AskBeforeUnpin = true;
+        old.Save(FilePath);
+        var loaded = MenuSettings.Load(FilePath);
+        Assert.True(loaded.AskBeforeUnpin);
+        Assert.Equal((AppTheme.Dark, false), (loaded.Theme, loaded.IsVisible("AddressesPage")));
+    }
+
     [Theory]
     [InlineData("{ \"HiddenMenu\": [] }")]
     [InlineData("{ \"Theme\": \"Xanh\" }")]

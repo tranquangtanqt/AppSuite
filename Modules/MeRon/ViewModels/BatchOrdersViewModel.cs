@@ -50,6 +50,9 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
 
     public string LineText => $"dòng {Match.Line.Number}";
 
+    /// <summary>Khách / món theo lựa chọn đã ghim (popup Sửa đơn, ô chọn trên thẻ) - nhãn "Đã ghim" + nút Bỏ ghim.</summary>
+    public bool IsPinned => Match.Pinned;
+
     public string CustomerText => Match.Customer is { } c
         ? string.IsNullOrWhiteSpace(c.Address) ? c.Name ?? string.Empty : $"{c.Name} ({c.Address})"
         : Match.Line.Customer;
@@ -109,6 +112,16 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
 
     private List<BatchRowViewModel> _all = [];
 
+    /// <summary>Ghim theo chữ dòng (<see cref="BatchPin"/>), lưu cạnh ô chữ nháp.</summary>
+    private readonly BatchPins _pins = BatchPins.Load(Path.Combine(FolderPath, BatchPins.FileName));
+
+    /// <summary>Chữ cũ của các dòng đã ghim vừa bị sửa tay, đang chờ trả lời "giữ ghim / bỏ ghim" - chưa được dọn.</summary>
+    private readonly HashSet<string> _pendingPinRaws = new(StringComparer.Ordinal);
+
+    /// <summary>Dòng đã ghim vừa bị sửa tay chữ (gõ trong ô chữ): trang hỏi hoặc tự bỏ ghim theo Cài đặt rồi gọi
+    /// <see cref="ResolvePinnedEdits"/>.</summary>
+    public event Action<IReadOnlyList<BatchPinEdit>>? PinnedLinesEdited;
+
     public ObservableCollection<BatchRowViewModel> Rows { get; } = [];
 
     [ObservableProperty]
@@ -137,6 +150,9 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
 
     /// <summary>Lô vừa lưu (đơn như lúc lưu + dòng chữ gốc) - Hoàn tác xoá các đơn còn nguyên và trả dòng về ô chữ.</summary>
     private List<BatchSavedOrder> _lastBatch = [];
+
+    /// <summary>Ghim của các dòng trong lô vừa lưu - Hoàn tác trả dòng về ô chữ kèm ghim.</summary>
+    private readonly Dictionary<string, BatchPin> _lastBatchPins = new(StringComparer.Ordinal);
 
     [ObservableProperty]
     private string _undoText = string.Empty;
@@ -211,6 +227,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
     {
         Error = string.Empty;
         _refreshing = true;
+        var editedPins = new List<BatchPinEdit>();
         _readText = Text;
         _readAbbreviations = AbbreviationsText;
         try
@@ -224,6 +241,15 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
                 {
                     _checkOverrides[newRaw] = false;
                 }
+                if (_pins.Get(oldRaw) is not null && _pins.Get(newRaw) is null && parsed.Lines.FirstOrDefault(l => l.Raw == newRaw) is { } edited)
+                {
+                    _pendingPinRaws.Add(oldRaw);
+                    editedPins.Add(new BatchPinEdit(edited.Number, oldRaw, newRaw));
+                }
+            }
+            if (_pins.Prune(parsed.Lines.Select(l => l.Raw), _pendingPinRaws))
+            {
+                SavePins();
             }
 
             if (parsed.Day is { } textDay && textDay != _lastTextDay)
@@ -237,7 +263,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
             var products = AppServices.MasterData.GetProducts();
             var sortedProducts = products.OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
             var abbreviations = new Abbreviations(AbbreviationsText);
-            var matches = parsed.Lines.Select(line => BatchOrderMatcher.Match(line, customers, products, abbreviations)).ToList();
+            var matches = parsed.Lines.Select(line => BatchOrderMatcher.Match(line, customers, products, abbreviations, _pins.Get(line.Raw))).ToList();
 
             // So khớp với đơn (không tính Huỷ) cùng ngày giao: dòng đã có / khác trong MeRon thì không tự tick (tránh lưu trùng).
             var orders = AppServices.Orders.Query(new OrderFilter(null, DeliveryDay, DeliveryDay))
@@ -278,6 +304,61 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
             _refreshing = false;
         }
         ShowRows();
+        if (editedPins.Count > 0)
+        {
+            PinnedLinesEdited?.Invoke(editedPins);
+        }
+    }
+
+    /// <summary>Trả lời cho các dòng đã ghim bị sửa tay: <paramref name="keepPinned"/> = trả chữ dòng về như cũ, giữ ghim (dòng
+    /// đã bị sửa tiếp / xoá thì thôi, bỏ ghim); không thì bỏ ghim, đọc theo chữ mới.</summary>
+    public void ResolvePinnedEdits(IReadOnlyList<BatchPinEdit> edits, bool keepPinned)
+    {
+        var text = Text;
+        foreach (var edit in edits)
+        {
+            _pendingPinRaws.Remove(edit.OldRaw);
+            if (keepPinned && BatchOrderParser.HasLine(text, edit.Number, edit.NewRaw))
+            {
+                text = BatchOrderParser.ReplaceLine(text, edit.Number, edit.OldRaw);
+            }
+            else
+            {
+                _pins.Remove(edit.OldRaw);
+            }
+        }
+        SavePins();
+        Text = text;
+        Refresh();
+    }
+
+    /// <summary>Ghim hiện có của dòng (chưa ghim → rỗng) - để chọn thêm khách / món mà không mất phần đã ghim.</summary>
+    public BatchPin PinOf(BatchRowViewModel row) => _pins.Get(row.Match.Line.Raw) ?? BatchPin.Empty;
+
+    /// <summary>Nút Bỏ ghim: đọc lại dòng theo chữ.</summary>
+    public void Unpin(BatchRowViewModel row)
+    {
+        if (_pins.Remove(row.Match.Line.Raw))
+        {
+            SavePins();
+        }
+        Refresh();
+    }
+
+    /// <summary>Chữ khách ghi vào dòng khi chọn khách (<see cref="BatchOrderParser.CustomerText"/>).</summary>
+    public string CustomerLineText(long id, string? name, string? address) =>
+        BatchOrderParser.CustomerText(id, name, address, Customers.Select(c => (c.Id, (string?)c.Name)));
+
+    private void SavePins()
+    {
+        try
+        {
+            _pins.Save(Path.Combine(FolderPath, BatchPins.FileName));
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("BatchOrders").LogError(ex, "Không lưu được {File}", BatchPins.FileName);
+        }
     }
 
     /// <summary>Ô chữ / chữ viết tắt khác lần đọc trước thì mới đọc lại: gõ rồi xoá về như cũ, hay chữ do chính trang này viết
@@ -327,6 +408,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         var products = AppServices.MasterData.GetProducts().ToDictionary(p => p.Id);
         var saved = new List<BatchSavedOrder>();
         var savedLines = new List<int>();
+        _lastBatchPins.Clear();
         foreach (var row in rows)
         {
             Order? order = null;
@@ -341,6 +423,10 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
                 break;
             }
             saved.Add(new BatchSavedOrder(order, row.Match.Line.Raw));
+            if (_pins.Get(row.Match.Line.Raw) is { } pin)
+            {
+                _lastBatchPins[row.Match.Line.Raw] = pin;
+            }
             savedLines.Add(row.Match.Line.Number);
         }
 
@@ -379,12 +465,18 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         }
         if (plan.Delete.Count > 0)
         {
+            foreach (var item in plan.Delete.Where(d => _lastBatchPins.ContainsKey(d.Raw)))
+            {
+                _pins.Set(item.Raw, _lastBatchPins[item.Raw]);
+            }
+            SavePins();
             Text = (Text.TrimEnd() + "\n" + string.Join("\n", plan.Delete.Select(b => b.Raw))).TrimStart('\n');
         }
         Message = (plan.Delete.Count > 0 ? $"Đã xoá {plan.Delete.Count} đơn vừa lưu, các dòng đã trả về ô chữ." : "Không xoá đơn nào.")
                   + (plan.Keep.Count > 0 ? $" Giữ lại {plan.Keep.Count} đơn đã đổi sau khi lưu." : string.Empty);
         AppLog.For("BatchOrders").LogInformation("Hoàn tác lô: xoá {Deleted} đơn, giữ {Kept} đơn đã đổi", plan.Delete.Count, plan.Keep.Count);
         _lastBatch = [];
+        _lastBatchPins.Clear();
         UndoText = string.Empty;
         Refresh();
     }
@@ -393,14 +485,22 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
     public void AddAbbreviation(string word, string fullName) =>
         AbbreviationsText = (AbbreviationsText.TrimEnd() + $"\n{word} = {fullName}").TrimStart('\n');
 
-    /// <summary>Viết lại dòng của <paramref name="row"/> (chọn khách / món trên bảng nháp) rồi đọc lại.</summary>
-    public void RewriteLine(BatchRowViewModel row, string newLine)
+    /// <summary>Viết lại dòng của <paramref name="row"/> (chọn khách / món trên bảng nháp, popup Sửa đơn) rồi đọc lại.
+    /// <paramref name="pin"/> = ghim cho dòng mới (ghim của dòng cũ bỏ đi). Chữ mới có thể y hệt chữ cũ (vd chọn 1 trong 2 khách
+    /// trùng tên) - khi đó chỉ ghim là đổi.</summary>
+    public void RewriteLine(BatchRowViewModel row, string newLine, BatchPin? pin = null)
     {
         if (!BatchOrderParser.HasLine(Text, row.Match.Line.Number, row.Match.Line.Raw))
         {
             Refresh();
             Error = "Ô chữ vừa đổi nên chưa thay được dòng này - xem lại danh sách rồi chọn lại.";
             return;
+        }
+        if (pin is not null)
+        {
+            _pins.Remove(row.Match.Line.Raw);
+            _pins.Set(newLine, pin);
+            SavePins();
         }
         Text = BatchOrderParser.ReplaceLine(Text, row.Match.Line.Number, newLine);
         Refresh();

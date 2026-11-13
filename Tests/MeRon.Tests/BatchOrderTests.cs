@@ -477,6 +477,146 @@ public class BatchOrderTests
         Assert.Empty(Duplicates("999 | 1 giò\n999 | 1 giò\n706 | 1 xyz\n706 | 1 xyz", out _));
     }
 
+    // ---------- Ghim lựa chọn ở popup Sửa đơn / ô chọn trên thẻ (2026-11-13) ----------
+
+    /// <summary>Dữ liệu cũ (app Flutter) có thể có 2 khách trùng hẳn tên - chữ dòng chỉ ghi tên nên không phân biệt được.</summary>
+    private static readonly Customer[] TwinCustomers = [.. Customers, new(7, "Nhung Lê", "W3", null, null), new(8, "Nhung Lê", "W1", null, null)];
+
+    private static BatchLineMatch MatchPinned(string text, BatchPin? pin, IReadOnlyList<Customer>? customers = null, IReadOnlyList<Product>? products = null) =>
+        BatchOrderMatcher.Match(BatchOrderParser.Parse(text, Today).Lines.Single(), customers ?? TwinCustomers, products ?? Products, Abbr, pin);
+
+    [Fact]
+    public void Pinned_customer_picks_one_of_two_customers_with_the_same_name()
+    {
+        var unpinned = MatchPinned("Nhung Lê | 1 giò", null);
+        Assert.Null(unpinned.Customer);
+        Assert.False(unpinned.Pinned);
+
+        var pinned = MatchPinned("Nhung Lê | 1 giò", BatchPin.Empty.WithCustomer(7));
+        Assert.Equal(7, pinned.Customer?.Id);
+        Assert.True(pinned.CanSave);
+        Assert.True(pinned.Pinned);
+
+        // Khách đã ghim bị xoá: đọc theo chữ như thường.
+        var gone = MatchPinned("Nhung Lê | 1 giò", BatchPin.Empty.WithCustomer(99));
+        Assert.Null(gone.Customer);
+        Assert.False(gone.Pinned);
+    }
+
+    [Fact]
+    public void Customer_text_adds_the_address_only_when_another_customer_has_the_same_name()
+    {
+        var all = TwinCustomers.Select(c => (c.Id, c.Name)).ToList();
+        var twin = BatchOrderParser.CustomerText(7, "Nhung Lê", "W3", all);
+        Assert.Equal("Nhung Lê W3", twin);
+        Assert.Equal("Mỹ Ly", BatchOrderParser.CustomerText(1, "Mỹ Ly", "706", all));
+
+        // Bỏ ghim vẫn đọc ra đúng khách nhờ địa chỉ.
+        Assert.Equal(7, MatchPinned($"{twin} | 1 giò", null).Customer?.Id);
+        Assert.Equal("Nhung Lê W3 | 1 giò", BatchOrderParser.Format(MatchPinned("Nhung Lê | 1 giò", null).Line, customer: twin));
+    }
+
+    [Fact]
+    public void Pinned_product_replaces_an_ambiguous_match_and_deleted_product_falls_back()
+    {
+        var pinned = MatchPinned("706 | 2 bún", BatchPin.Empty.WithItem(0, 13));
+        var item = Assert.Single(pinned.Items);
+        Assert.Equal((13L, 2L), (item.Product!.Id, item.Quantity));
+        Assert.True(pinned.CanSave);
+
+        var gone = MatchPinned("706 | 2 bún", BatchPin.Empty.WithItem(0, 999));
+        Assert.False(gone.CanSave);
+        Assert.False(gone.Pinned);
+
+        // Ghim ở vị trí không còn món (chữ bớt món) thì bỏ qua.
+        Assert.False(MatchPinned("706 | 2 bún", BatchPin.Empty.WithItem(3, 13)).Pinned);
+    }
+
+    [Fact]
+    public void Pinned_free_item_is_not_matched_to_a_product_with_a_similar_name()
+    {
+        Product[] products = [.. Products, new(40, 1, "Cá kho", null, 60000, null)];
+
+        Assert.Equal(40, Assert.Single(MatchPinned("706 | 1 cá 45k", null, products: products).Items).Product?.Id);
+
+        var free = Assert.Single(MatchPinned("706 | 1 cá 45k", BatchPin.Empty.WithItem(0, null), products: products).Items);
+        Assert.True(free.IsFree);
+        Assert.Equal(45000, free.UnitPrice);
+
+        // Giá ở cột riêng vẫn là giá món tự do đã ghim.
+        var column = Assert.Single(MatchPinned("706 | 1 cá | 45k", BatchPin.Empty.WithItem(0, null), products: products).Items);
+        Assert.Equal((true, 45000L), (column.IsFree, column.UnitPrice));
+    }
+
+    /// <summary>Áp dụng popup Sửa đơn = Compose + ghim; đọc lại phải ra đúng như trên popup, kể cả khách trùng tên.</summary>
+    [Fact]
+    public void Popup_result_reads_back_the_same_with_its_pin()
+    {
+        var map = Products.ToDictionary(p => p.Id);
+        OrderLineDraft[] lines = [new(13, 2), new(null, 1, true, "Giò", 50000)]; // món tự do trùng tên món "Giò"
+        var text = BatchOrderParser.Compose("Nhung Lê", lines, map, paid: true);
+        var pin = BatchPin.FromLines(8, lines);
+
+        Assert.Equal("Nhung Lê | 2 Bún chả cá; Giò 50k |  | CK", text);
+        var match = MatchPinned(text, pin);
+        Assert.Equal(8, match.Customer?.Id);
+        Assert.Equal(13, match.Items[0].Product?.Id);
+        Assert.True(match.Items[1].IsFree);
+        Assert.Equal(2 * 45000 + 50000, match.Total);
+        Assert.True(match.Line.Paid);
+        Assert.Empty(match.Problems);
+    }
+
+    [Fact]
+    public void Compose_keeps_the_line_price_column_unless_a_free_item_used_it()
+    {
+        var map = Products.ToDictionary(p => p.Id);
+        var unused = MatchLine("706 | 1 giò | 45k");
+        Assert.Equal(45000, BatchOrderParser.UnusedLinePrice(unused));
+        Assert.Equal("Mỹ Ly | 1 Giò | 45k | CK", BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(15, 1)], map, paid: true, BatchOrderParser.UnusedLinePrice(unused)));
+        Assert.Equal("Mỹ Ly | 1 Giò | 45k", BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(15, 1)], map, paid: false, 45000));
+
+        // Giá cột riêng đã thành giá món tự do (popup ghi giá ngay sau món) → không ghi lại kẻo thành 2 lần.
+        Assert.Null(BatchOrderParser.UnusedLinePrice(MatchLine("706 | 1 giò; 2 phần cá | 45k")));
+    }
+
+    [Fact]
+    public void Pins_save_load_prune_and_ignore_a_broken_file()
+    {
+        var folder = Path.Combine(Path.GetTempPath(), "MeRonPins_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(folder);
+        try
+        {
+            var path = Path.Combine(folder, BatchPins.FileName);
+            Assert.Equal(0, BatchPins.Load(path).Count);
+
+            var pins = new BatchPins();
+            pins.Set(" Nhung Lê | 1 giò ", BatchPin.Empty.WithCustomer(7).WithItem(0, 15));
+            pins.Set("706 | 1 cá 45k", BatchPin.Empty.WithItem(0, null));
+            pins.Save(path);
+
+            var loaded = BatchPins.Load(path);
+            Assert.Equal(2, loaded.Count);
+            var pin = loaded.Get("Nhung Lê | 1 giò")!;
+            Assert.Equal(7, pin.CustomerId);
+            Assert.Equal(new BatchPinItem(0, 15), Assert.Single(pin.Items));
+            Assert.Null(Assert.Single(loaded.Get("706 | 1 cá 45k")!.Items).ProductId);
+
+            // Dòng không còn trong ô chữ thì bỏ ghim, trừ dòng đang chờ hỏi.
+            Assert.True(loaded.Prune(["Nhung Lê | 1 giò"]));
+            Assert.Equal(1, loaded.Count);
+            Assert.False(loaded.Prune([], keep: ["Nhung Lê | 1 giò"]));
+            Assert.Equal(1, loaded.Count);
+
+            File.WriteAllText(path, "{ hỏng");
+            Assert.Equal(0, BatchPins.Load(path).Count);
+        }
+        finally
+        {
+            Directory.Delete(folder, recursive: true);
+        }
+    }
+
     [Fact]
     public void Day_line_without_year_takes_the_year_nearest_today()
     {

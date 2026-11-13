@@ -71,6 +71,13 @@ public sealed partial class MainWindow : Window
         SaveMenuSettings();
     }
 
+    /// <summary>Nhập đơn hàng loạt: hỏi trước khi bỏ ghim dòng bị sửa tay (trang Cài đặt).</summary>
+    public void SetAskBeforeUnpin(bool ask)
+    {
+        MenuSettings.AskBeforeUnpin = ask;
+        SaveMenuSettings();
+    }
+
     // ---------- Ảnh chụp (Pictures\MeRon): tự dọn ảnh cũ - trang Cài đặt ----------
 
     public void SetCaptureKeepDays(int days)

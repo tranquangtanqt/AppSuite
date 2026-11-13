@@ -31,6 +31,40 @@ public sealed partial class BatchOrdersPage : Page
             ViewModel.RefreshIfChanged();
         };
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
+        ViewModel.PinnedLinesEdited += edits => DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => PinnedLinesEdited(edits));
+    }
+
+    /// <summary>Sửa tay chữ của dòng đã ghim: Cài đặt "Hỏi trước khi bỏ ghim" bật thì hỏi, không thì tự bỏ ghim. Esc = bỏ ghim
+    /// (giữ nguyên chữ vừa gõ).</summary>
+    private async void PinnedLinesEdited(IReadOnlyList<BatchPinEdit> edits)
+    {
+        if (App.MainWindow?.MenuSettings.AskBeforeUnpin != true || XamlRoot is null)
+        {
+            ViewModel.ResolvePinnedEdits(edits, keepPinned: false);
+            return;
+        }
+        var lines = string.Join("\n", edits.Select(e => $"Dòng {e.Number}:\n   trước: {e.OldRaw}\n   giờ:    {e.NewRaw}"));
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "Sửa dòng đã ghim?",
+            Content = SharedUI.Helpers.DialogContent.Scrollable(
+                $"{(edits.Count == 1 ? "Dòng này" : $"{edits.Count} dòng này")} đã chọn khách / món trong popup Sửa đơn hoặc ô chọn trên thẻ (đã ghim). Bạn vừa sửa tay chữ:\n\n{lines}\n\n"
+                + "Bỏ ghim: đọc theo chữ mới.\nGiữ ghim: trả chữ dòng về như trước, giữ khách / món đã chọn.", 520),
+            PrimaryButtonText = "Bỏ ghim, đọc chữ mới",
+            SecondaryButtonText = "Giữ ghim, trả chữ về",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        var result = await dialog.ShowAsync();
+        ViewModel.ResolvePinnedEdits(edits, keepPinned: result == ContentDialogResult.Secondary);
+    }
+
+    private void Unpin_Click(object sender, RoutedEventArgs e)
+    {
+        if (RowOf(sender) is { } row)
+        {
+            ViewModel.Unpin(row);
+        }
     }
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -186,7 +220,7 @@ public sealed partial class BatchOrdersPage : Page
             if (picked is { } customer) // như AfterComboClosed: nút mở khung nằm trên thẻ sắp bị dựng lại
             {
                 DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
-                    () => ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: customer.Name)));
+                    () => PickCustomer(row, customer.Id, customer.Name, customer.Address));
             }
         };
         flyout.ShowAt((FrameworkElement)sender);
@@ -217,24 +251,30 @@ public sealed partial class BatchOrdersPage : Page
     {
         if (RowOf(sender) is { } row && sender is ComboBox { SelectedItem: Customer customer } combo)
         {
-            AfterComboClosed(combo, () => ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: customer.Name)));
+            AfterComboClosed(combo, () => PickCustomer(row, customer.Id, customer.Name, customer.Address));
         }
     }
 
+    /// <summary>Chọn khách cho dòng: ghi tên (trùng tên thì kèm địa chỉ) + ghim khách theo id, giữ ghim món đã có.</summary>
+    private void PickCustomer(BatchRowViewModel row, long id, string? name, string? address) =>
+        ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, customer: ViewModel.CustomerLineText(id, name, address)),
+            ViewModel.PinOf(row).WithCustomer(id));
+
     private void ItemChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (RowOf(sender) is { } row && sender is ComboBox { SelectedItem: Product { Name: { } name } } combo)
+        if (RowOf(sender) is { } row && sender is ComboBox { SelectedItem: Product { Name: { } name } product } combo)
         {
-            AfterComboClosed(combo, () => ChooseItem(row, name));
+            AfterComboClosed(combo, () => ChooseItem(row, product.Id, name));
         }
     }
 
     /// <summary>Chọn món cho chữ chưa ghép được. Chữ lạ 1 từ, không món nào khớp (vd "pana") → hỏi "Nhớ: pana = Panacota?" để
     /// lần sau tự hiểu (thêm vào bảng Chữ viết tắt). Chữ khớp nhiều món (vd "bún") thì không hỏi: thêm "bún = Bún chả cá" sẽ đổi
     /// cả "bún chả" thành sai.</summary>
-    private async void ChooseItem(BatchRowViewModel row, string name)
+    private async void ChooseItem(BatchRowViewModel row, long productId, string name)
     {
-        var item = row.Match.Items[row.ItemChoiceIndex];
+        var index = row.ItemChoiceIndex;
+        var item = row.Match.Items[index];
         var word = item.Source.Name.Trim();
         if (item.Candidates.Count == 0 && !word.Contains(' ') && Core.TextSearch.Fold(word) != Core.TextSearch.Fold(name)
             && await Dialogs.ConfirmAsync(XamlRoot, "Nhớ chữ viết tắt?",
@@ -242,7 +282,7 @@ public sealed partial class BatchOrdersPage : Page
         {
             ViewModel.AddAbbreviation(word, name);
         }
-        ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, itemIndex: row.ItemChoiceIndex, itemName: name));
+        ViewModel.RewriteLine(row, BatchOrderParser.Format(row.Match.Line, itemIndex: index, itemName: name), ViewModel.PinOf(row).WithItem(index, productId));
     }
 
     private static StackPanel? HoverActions(object row) =>
@@ -295,12 +335,13 @@ public sealed partial class BatchOrdersPage : Page
         }
     }
 
-    /// <summary>Sửa cả dòng bằng popup giống form đơn. Áp dụng chỉ viết lại dòng chữ, đơn chỉ vào dữ liệu khi bấm Lưu.</summary>
+    /// <summary>Sửa cả dòng bằng popup giống form đơn. Áp dụng viết lại dòng chữ + ghim khách / món như đã chọn (đọc lại không
+    /// bị đè); đơn chỉ vào dữ liệu khi bấm Lưu.</summary>
     private async void EditOrder_Click(object sender, RoutedEventArgs e)
     {
-        if (RowOf(sender) is { } row && await BatchOrderEditor.ShowAsync(XamlRoot, row.Match) is { } line)
+        if (RowOf(sender) is { } row && await BatchOrderEditor.ShowAsync(XamlRoot, row.Match) is { } result)
         {
-            ViewModel.RewriteLine(row, line);
+            ViewModel.RewriteLine(row, result.Line, result.Pin);
         }
     }
 

@@ -52,6 +52,23 @@
                 </StackPanel>
             </Border>
 
+            <!-- Nhập đơn hàng loạt: sửa tay dòng đã ghim thì hỏi hay tự bỏ ghim (MenuSettings.AskBeforeUnpin) -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                            <FontIcon Glyph="&#xE718;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
+                        </Border>
+                        <TextBlock Text="Nhập đơn hàng loạt" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="Dòng đã sửa trong popup Sửa đơn hoặc đã chọn khách / món trên thẻ được ghim: đọc lại vẫn đúng khách, món đã chọn. Khi bạn sửa tay chữ của dòng đó trong ô chữ, mặc định ghim tự bỏ và dòng đọc theo chữ mới." />
+                    <CheckBox x:Name="AskUnpinBox" Content="Hỏi trước khi bỏ ghim (giữ ghim thì chữ dòng trả về như cũ)"
+                              AutomationProperties.Name="Hỏi trước khi bỏ ghim" Checked="AskUnpin_Changed" Unchecked="AskUnpin_Changed" />
+                </StackPanel>
+            </Border>
+
             <!-- Ảnh "Chụp ảnh" (Pictures\MeRon): tự đưa ảnh cũ vào Thùng rác khi mở app (Core\CaptureFiles) -->
             <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">

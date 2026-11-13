@@ -29,9 +29,9 @@ public sealed partial class BatchOrderEditor : UserControl
             : "Gõ tên hoặc số điện thoại rồi chọn";
     }
 
-    /// <summary>Trả về dòng chữ mới; null = bấm Huỷ. ContentDialog chỉ mở được 1 cái mỗi lúc nên ở đây không thêm khách mới
+    /// <summary>Trả về dòng chữ mới + ghim (khách / món như đã chọn); null = bấm Huỷ. ContentDialog chỉ mở được 1 cái mỗi lúc nên ở đây không thêm khách mới
     /// được: chữ khách chưa có giữ nguyên trên dòng, thêm bằng nút Thêm khách trên thẻ.</summary>
-    public static async Task<string?> ShowAsync(XamlRoot root, BatchLineMatch match)
+    public static async Task<(string Line, BatchPin Pin)?> ShowAsync(XamlRoot root, BatchLineMatch match)
     {
         var editor = new BatchOrderEditor(match) { Width = Math.Min(760, root.Size.Width - 120) };
         var dialog = new ContentDialog
@@ -55,7 +55,7 @@ public sealed partial class BatchOrderEditor : UserControl
             }
         };
 
-        string? line = null;
+        (string Line, BatchPin Pin)? line = null;
         dialog.PrimaryButtonClick += (_, args) =>
         {
             line = editor.Apply();
@@ -77,12 +77,12 @@ public sealed partial class BatchOrderEditor : UserControl
     }
 
     /// <summary>Kiểm tra như form đơn; lỗi thì hiện trong popup, đưa con trỏ về đúng ô và không đóng.</summary>
-    private string? Apply()
+    private (string Line, BatchPin Pin)? Apply()
     {
         var customerRequired = _match.Line.Customer.Length == 0;
         if (ViewModel.Validate(customerRequired) is not { } invalid)
         {
-            return ViewModel.BatchLineText(_match.Line.Customer);
+            return ViewModel.BatchLineText(_match);
         }
         if (invalid.LineIndex is { } index)
         {

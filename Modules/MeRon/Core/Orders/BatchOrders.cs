@@ -157,19 +157,35 @@ public static partial class BatchOrderParser
             var unsure = i != itemIndex && item.Unsure;
             return $"{item.Quantity} {name}{(item.Price is { } p ? " " + PriceText(p) : string.Empty)}{(unsure ? "?" : string.Empty)}";
         });
-        var customerText = customer ?? line.Customer + (line.CustomerUnsure ? "?" : string.Empty);
+        var customerText = customer is not null ? Clean(customer) : line.Customer + (line.CustomerUnsure ? "?" : string.Empty);
         return $"{customerText} | {string.Join("; ", items)} | {(line.Price is { } price ? PriceText(price) : string.Empty)} | {(line.Paid ? "CK" : string.Empty)}"
             .TrimEnd(' ', '|');
     }
 
     /// <summary>Viết lại cả dòng từ popup Sửa đơn: mọi món đã chọn xong nên không còn dấu ? và giá ở cột riêng. Món tự do ghi giá
-    /// cả dòng, tên kèm số lượng ("2 phần cá 90k"): đọc lại sẽ là 1 × 90.000, đúng thành tiền đã thấy trên popup.</summary>
-    public static string Compose(string customer, IEnumerable<OrderLineDraft> lines, IReadOnlyDictionary<long, Product> products, bool paid)
+    /// cả dòng, tên kèm số lượng ("2 phần cá 90k"): đọc lại sẽ là 1 × 90.000, đúng thành tiền đã thấy trên popup.
+    /// <paramref name="linePrice"/> = giá ghi ở cột riêng của dòng cũ mà chưa món tự do nào dùng: giữ lại, không xoá chữ người dùng ghi.</summary>
+    public static string Compose(string customer, IEnumerable<OrderLineDraft> lines, IReadOnlyDictionary<long, Product> products, bool paid,
+        long? linePrice = null)
     {
         var items = lines.Select(line => line.IsFree
             ? $"{(line.Quantity > 1 ? $"{line.Quantity} " : string.Empty)}{Clean(line.FreeName)} {PriceText((line.FreePrice ?? 0) * line.Quantity)}"
             : $"{line.Quantity} {Clean(products[line.ProductId!.Value].Name)}");
-        return $"{Clean(customer)} | {string.Join("; ", items)} |  | {(paid ? "CK" : string.Empty)}".TrimEnd(' ', '|');
+        return $"{Clean(customer)} | {string.Join("; ", items)} | {(linePrice is { } price ? PriceText(price) : string.Empty)} | {(paid ? "CK" : string.Empty)}"
+            .TrimEnd(' ', '|');
+    }
+
+    /// <summary>Giá ở cột riêng của dòng chưa món tự do nào dùng (mọi món tự do đều có giá ghi kèm) - Sửa đơn ghi lại cột này.</summary>
+    public static long? UnusedLinePrice(BatchLineMatch match) =>
+        match.Line.Price is { } price && !match.Items.Any(i => i.IsFree && i.Source.Price is null) ? price : null;
+
+    /// <summary>Chữ khách ghi vào dòng khi chọn khách: tên; có khách khác trùng tên thì thêm địa chỉ ("Nhung Lê W3") để đọc lại
+    /// vẫn ra đúng khách (cả khi bỏ ghim).</summary>
+    public static string CustomerText(long id, string? name, string? address, IEnumerable<(long Id, string? Name)> customers)
+    {
+        var folded = TextSearch.Fold(name).Trim();
+        var sameName = customers.Any(c => c.Id != id && TextSearch.Fold(c.Name).Trim() == folded);
+        return sameName && !string.IsNullOrWhiteSpace(address) ? $"{name} {address}" : name ?? string.Empty;
     }
 
     /// <summary>Bỏ các dấu có nghĩa riêng trong dòng chữ, để tên có dấu phẩy không bị tách thành 2 món.</summary>
@@ -282,6 +298,9 @@ public sealed record BatchLineMatch(
 {
     public bool CanSave => Problems.Count == 0;
 
+    /// <summary>Khách / món lấy theo ghim (<see cref="BatchPin"/>) chứ không theo chữ.</summary>
+    public bool Pinned { get; init; }
+
     public long Total => Items.Sum(i => i.UnitPrice * i.Quantity);
 
     public OrderDraft ToDraft(DateOnly day) => new(0, Customer?.Id, OrderStatus.Shipping, day.ToDateTime(TimeOnly.MinValue), Line.Paid, null, 0, null,
@@ -300,7 +319,10 @@ public sealed record BatchLineMatch(
 /// </summary>
 public static class BatchOrderMatcher
 {
-    public static BatchLineMatch Match(BatchLine line, IReadOnlyList<Customer> customers, IReadOnlyList<Product> products, Abbreviations abbreviations)
+    /// <summary><paramref name="pin"/> = ghim của dòng (<see cref="BatchPin"/>): khách / món đã ghim mà còn trong dữ liệu thì dùng
+    /// thay cho kết quả ghép theo chữ; khách / món đã bị xoá thì ghép theo chữ như thường.</summary>
+    public static BatchLineMatch Match(BatchLine line, IReadOnlyList<Customer> customers, IReadOnlyList<Product> products, Abbreviations abbreviations,
+        BatchPin? pin = null)
     {
         var problems = new List<string>();
         var warnings = new List<string>();
@@ -309,7 +331,12 @@ public static class BatchOrderMatcher
             return new BatchLineMatch(line, null, [], [], [line.Error], []);
         }
 
+        var pinned = false;
         var (customer, candidates) = line.Customer.Length == 0 ? (null, []) : MatchCustomer(line.Customer, customers);
+        if (pin?.CustomerId is { } pinnedId && customers.FirstOrDefault(c => c.Id == pinnedId) is { } pinnedCustomer)
+        {
+            (customer, candidates, pinned) = (pinnedCustomer, [pinnedCustomer], true);
+        }
         if (customer is null && line.Customer.Length > 0)
         {
             problems.Add(candidates.Count == 0 ? $"Chưa có khách \"{line.Customer}\"" : $"{candidates.Count} khách khớp \"{line.Customer}\" - chọn 1");
@@ -330,6 +357,32 @@ public static class BatchOrderMatcher
             var (product, productCandidates) = MatchProduct(name, products);
             return new BatchItemMatch(item, name, product, productCandidates, product is null ? item.Price : null);
         }).ToList();
+
+        foreach (var pinItem in pin?.Items ?? [])
+        {
+            if (pinItem.Index < 0 || pinItem.Index >= items.Count)
+            {
+                continue;
+            }
+            var current = items[pinItem.Index];
+            if (pinItem.ProductId is { } productId)
+            {
+                if (products.FirstOrDefault(p => p.Id == productId) is { } pinnedProduct)
+                {
+                    pinned = true;
+                    if (current.Product?.Id != productId)
+                    {
+                        items[pinItem.Index] = new BatchItemMatch(current.Source, current.Name, pinnedProduct, [pinnedProduct], null);
+                    }
+                }
+            }
+            else
+            {
+                // Món tự do đã chốt: không ghép vào món có sẵn tên gần giống ("cá 45k" ≠ món "Cá kho"). Chưa có giá ghi kèm thì lấy giá cột riêng bên dưới.
+                pinned = true;
+                items[pinItem.Index] = new BatchItemMatch(current.Source, current.Name, null, [], current.Source.Price);
+            }
+        }
 
         // Giá ghi ở cột riêng ("1201 | 1 phần cá | 45k | CK") → đơn giá của món tự do duy nhất chưa có giá.
         var unpriced = items.Where(i => !i.IsResolved).ToList();
@@ -359,7 +412,7 @@ public static class BatchOrderMatcher
         {
             warnings.Add($"\"{item.Name}\" ghi giá {VnFormat.Money(item.Source.Price)} - tính theo giá món {VnFormat.Money(item.Product!.Price ?? 0)}");
         }
-        return new BatchLineMatch(line, customer, candidates, items, problems, warnings);
+        return new BatchLineMatch(line, customer, candidates, items, problems, warnings) { Pinned = pinned };
     }
 
     private static (Customer? Match, IReadOnlyList<Customer> Candidates) MatchCustomer(string text, IReadOnlyList<Customer> customers)

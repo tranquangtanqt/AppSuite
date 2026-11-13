@@ -26,6 +26,21 @@ public sealed partial class SettingsPage : Page
         KeepDaysBox.Value = Window?.MenuSettings.CaptureKeepDays ?? MenuSettings.DefaultCaptureKeepDays;
         _loadingCapture = false;
         ShowCaptureStatus();
+        _loadingUnpin = true;
+        AskUnpinBox.IsChecked = Window?.MenuSettings.AskBeforeUnpin ?? false;
+        _loadingUnpin = false;
+    }
+
+    // ---------- Nhập đơn hàng loạt ----------
+
+    private bool _loadingUnpin;
+
+    private void AskUnpin_Changed(object sender, RoutedEventArgs e)
+    {
+        if (!_loadingUnpin)
+        {
+            Window?.SetAskBeforeUnpin(AskUnpinBox.IsChecked == true);
+        }
     }
 
     // ---------- Giao diện ----------
