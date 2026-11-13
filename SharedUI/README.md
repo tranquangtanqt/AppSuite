@@ -37,6 +37,7 @@ chung khác (giống cách mọi project đã reference `Common`).
 | `ColorTile` | `SharedUI.Controls.DesignGuidance` | Hiển thị 1 brush màu kèm tên, mô tả, nút copy tên brush |
 | `TypographyControl` | `SharedUI.Controls.DesignGuidance` | 1 dòng trong bảng typography ramp, kèm nút copy tên resource |
 | `ColorPageExample` | `SharedUI.Controls.DesignGuidance` | Khung thẻ tiêu đề/mô tả/nội dung ví dụ |
+| `WrapPanel` | `SharedUI.Controls` | Tự viết (WinUI không có sẵn): xếp ngang, hết chỗ thì xuống hàng, thuộc tính `Spacing`; con Collapsed không chiếm chỗ. Vị trí tính ở `Helpers/WrapLayout` (không phụ thuộc WinUI, test ở `CsvEditor.Tests/WrapLayoutTests`). Dùng: thẻ lọc CsvEditor, hàng nút trên thẻ Nhập đơn hàng loạt MeRon |
 
 `Helpers/UIHelper.AnnounceActionForAccessibility` và `Converters/BrushToColorConverter` là phần phụ
 trợ nhỏ được port kèm để các control trên hoạt động độc lập, không cần thêm gì khác.

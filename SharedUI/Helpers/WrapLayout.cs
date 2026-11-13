@@ -1,7 +1,7 @@
-namespace CsvEditor.Services;
+namespace SharedUI.Helpers;
 
-/// <summary>Tính vị trí các ô xếp từ trái sang phải, hết chỗ thì xuống hàng (dùng cho thẻ lọc phía trên bảng). Tách khỏi
-/// <c>Views.WrapPanel</c> để test được không cần WinUI. Ô rộng hơn cả hàng vẫn nằm riêng 1 hàng, không xuống hàng thừa.</summary>
+/// <summary>Tính vị trí các ô xếp từ trái sang phải, hết chỗ thì xuống hàng (dùng cho <c>Controls.WrapPanel</c>). Tách khỏi
+/// panel để test được không cần WinUI. Ô rộng hơn cả hàng vẫn nằm riêng 1 hàng, không xuống hàng thừa.</summary>
 public static class WrapLayout
 {
     public readonly record struct Slot(double X, double Y, double RowHeight);

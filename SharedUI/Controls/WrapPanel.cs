@@ -1,11 +1,12 @@
-using CsvEditor.Services;
+using SharedUI.Helpers;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Foundation;
 
-namespace CsvEditor.Views;
+namespace SharedUI.Controls;
 
-/// <summary>Panel xếp ngang, hết chỗ thì xuống hàng (WinUI không có sẵn): nhiều thẻ lọc ở cửa sổ hẹp không bị cắt mất.</summary>
+/// <summary>Panel xếp ngang, hết chỗ thì xuống hàng (WinUI không có sẵn): nhiều thẻ / nút ở cửa sổ hẹp không bị cắt mất
+/// (thẻ lọc CsvEditor, hàng nút trên thẻ Nhập đơn hàng loạt MeRon). Con bị ẩn (Collapsed) không chiếm chỗ.</summary>
 public sealed class WrapPanel : Panel
 {
     public double Spacing { get; set; } = 8;

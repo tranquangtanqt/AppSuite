@@ -521,8 +521,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [x] Đổi tên món thuộc Danh mục bằng sửa hàng loạt: mở đơn đó trong form rồi Lưu thì tên quay về tên trong Danh mục (form lấy tên món theo Danh mục) - người dùng chốt làm như phần mềm bán hàng thường làm: món trong Danh mục thì Đổi tên món = đổi luôn tên trong Danh mục + các đơn đã chọn (giữ giá, cùng 1 transaction, Hoàn tác trả cả tên Danh mục; trùng tên món khác thì không cho), món tự do vẫn chỉ đổi chữ trên đơn; form đơn giữ cách lấy tên theo Danh mục. Unit test 257/257; GUI Sandbox (UIA) 13/13 (2026-11-13)
 - [ ] Để sau (sửa hàng loạt): sao chép nhiều đơn sang ngày khác (khách đặt cố định); áp giá mới của món cho đơn chưa thanh toán
 - [ ] Người dùng thử tay Ghim trên dữ liệu thật (chọn khách trùng tên, Sửa đơn rồi sửa dòng khác / tắt mở app, bật Hỏi trước khi bỏ ghim)
-- [ ] Cửa sổ hẹp (~1000 px): ô Chọn món trên thẻ bị cắt mất nửa phải (hàng nút Sửa đơn / Chọn khách / Chọn món / Sửa dòng không
-  xuống dòng)
+- [x] Cửa sổ hẹp (~1000 px): ô Chọn món trên thẻ bị cắt mất nửa phải (hàng nút Sửa đơn / Chọn khách / Chọn món / Sửa dòng không
+  xuống dòng) → hàng nút / ô chọn dùng `WrapPanel` (chuyển từ CsvEditor sang `SharedUI.Controls`, CsvEditor dùng lại bản chung):
+  thiếu chỗ thì xuống hàng 2, hiện đủ cả Sửa dòng. Unit test MeRon 257/257, CsvEditor 213/213; GUI Sandbox (UIA, cửa sổ 1024 px
+  logical, ảnh trước / sau) 3/3 (2026-11-13)
 - [x] Lỗi dữ liệu (đọc từ code, tái hiện trong GUI Sandbox 3/3 trên bản cũ, đã sửa 2026-11-10):
   - Ngày không ghi năm luôn lấy năm hiện tại: ngày 02/01/2027 dán "Ngày | 30/12" → app hỏi "Tạo 1 đơn giao ngày 30/12/2027".
     Sửa: `DateInput.Parse(..., nearToday)` - ngày + tháng của năm trước / sau cách hôm nay ≤ 60 ngày thì lấy năm đó; dùng cho

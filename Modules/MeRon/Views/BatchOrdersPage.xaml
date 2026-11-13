@@ -6,6 +6,7 @@
     xmlns:vm="using:MeRon.ViewModels"
     xmlns:models="using:MeRon.Core.Models"
     xmlns:local="using:MeRon.Views"
+    xmlns:shared="using:SharedUI.Controls"
     NavigationCacheMode="Enabled">
 
     <Grid Padding="24,12,24,16" RowSpacing="10">
@@ -169,8 +170,9 @@
                                            Visibility="{x:Bind local:Ui.VisibleIfText(ProblemText)}" />
                                 <TextBlock Text="{x:Bind WarningText}" TextWrapping="Wrap" Foreground="{ThemeResource SystemFillColorCautionBrush}"
                                            Visibility="{x:Bind local:Ui.VisibleIfText(WarningText)}" />
-                                <!-- Cách sửa ngay trên dòng; sửa chữ thì bấm Sửa dòng (nhảy tới dòng trong ô chữ), ngừng gõ là tự đọc lại -->
-                                <StackPanel Orientation="Horizontal" Spacing="6" Visibility="{x:Bind NeedsReview}">
+                                <!-- Cách sửa ngay trên dòng; sửa chữ thì bấm Sửa dòng (nhảy tới dòng trong ô chữ), ngừng gõ là tự đọc lại.
+                                     WrapPanel: cửa sổ hẹp (~1000 px) thì nút / ô chọn xuống hàng thay vì bị cắt mất -->
+                                <shared:WrapPanel Spacing="6" Visibility="{x:Bind NeedsReview}">
                                     <Button Content="Sửa đơn" Click="EditOrder_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Sửa khách, món, số lượng, thanh toán trong popup giống form đơn. Chỉ sửa dòng này, chưa lưu đơn" />
                                     <Button Content="＋ Thêm khách" Click="AddCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind NeedsNewCustomer}" />
                                     <Button Content="Chọn khách" Click="ChooseCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind CanChooseCustomer}"
@@ -196,7 +198,7 @@
                                     <Button Content="Sửa dòng" Click="EditLine_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Chọn dòng này trong ô chữ để sửa, ngừng gõ là danh sách tự cập nhật" />
                                     <Button Content="Bỏ ghim" Click="Unpin_Click" Tag="{x:Bind}" Visibility="{x:Bind IsPinned}"
                                             ToolTipService.ToolTip="Bỏ khách / món đã chọn trong popup / ô chọn, đọc lại dòng theo chữ" />
-                                </StackPanel>
+                                </shared:WrapPanel>
                             </StackPanel>
                             <!-- Dòng ổn: hiện khi rê chuột hoặc Tab tới. Mờ hẳn thay vì ẩn để thẻ không đổi cao, phím vẫn tới được. Nền đặc: dòng nhiều món ở cửa sổ hẹp thì nút đè lên chữ -->
                             <StackPanel x:Name="HoverActions" Grid.Column="2" Orientation="Horizontal" Spacing="6" Visibility="{x:Bind EditOnHover}" Opacity="0"

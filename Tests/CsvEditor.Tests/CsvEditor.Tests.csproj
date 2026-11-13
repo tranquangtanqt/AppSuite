@@ -23,6 +23,8 @@
     <Compile Include="..\..\Modules\CsvEditor\Models\**\*.cs" Link="CsvEditor\Models\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\Modules\CsvEditor\Commands\**\*.cs" Link="CsvEditor\Commands\%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="..\..\Modules\CsvEditor\ViewModels\**\*.cs" Link="CsvEditor\ViewModels\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- Phần tính vị trí của WrapPanel (thẻ lọc) nay ở SharedUI, không phụ thuộc WinUI. -->
+    <Compile Include="..\..\SharedUI\Helpers\WrapLayout.cs" Link="SharedUI\Helpers\WrapLayout.cs" />
   </ItemGroup>
 
   <ItemGroup>

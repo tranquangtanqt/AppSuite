@@ -9,6 +9,7 @@
     xmlns:models="using:CsvEditor.Models"
     xmlns:vm="using:CsvEditor.ViewModels"
     xmlns:views="using:CsvEditor.Views"
+    xmlns:shared="using:SharedUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -242,7 +243,7 @@
              Tự xuống hàng: 5 thẻ cùng lúc ở cửa sổ hẹp không bị cắt mất. -->
         <StackPanel Grid.Row="1" Spacing="8">
         <views:FindBar x:Name="FindPanel" Visibility="Collapsed" />
-        <views:WrapPanel x:Name="ChipsBar" Spacing="8" Visibility="Collapsed">
+        <shared:WrapPanel x:Name="ChipsBar" Spacing="8" Visibility="Collapsed">
             <TextBlock x:Name="ShownRowsText" VerticalAlignment="Center" Opacity="0.8" />
             <Border x:Name="FilterChip" Style="{StaticResource ChipBorderStyle}">
                 <StackPanel Orientation="Horizontal">
@@ -310,7 +311,7 @@
                     </Button>
                 </StackPanel>
             </Border>
-        </views:WrapPanel>
+        </shared:WrapPanel>
         </StackPanel>
 
         <!-- Validation issues -->
