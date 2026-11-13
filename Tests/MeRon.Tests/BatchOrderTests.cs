@@ -617,6 +617,32 @@ public class BatchOrderTests
         }
     }
 
+    // ---------- Ô Tick hết đơn sẵn sàng (2026-11-13) ----------
+
+    [Fact]
+    public void Check_all_ticks_ready_rows_keeps_review_rows_then_unticks_everything()
+    {
+        // (sẵn sàng, đang tick): dòng 2 là dòng cần xem đã tự tick, dòng 3 cần xem chưa tick.
+        (bool Ready, bool Checked)[] rows = [(true, false), (false, true), (false, false), (true, true)];
+        Assert.Null(BatchCheckAll.State(rows));
+
+        var ticked = BatchCheckAll.Toggle(rows);
+        Assert.Equal([true, true, false, true], ticked);
+        Assert.True(BatchCheckAll.State([(true, true), (false, true), (false, false), (true, true)]));
+
+        Assert.Equal([false, false, false, false], BatchCheckAll.Toggle([(true, true), (false, true), (false, false), (true, true)]));
+        Assert.False(BatchCheckAll.State([(true, false), (false, false)]));
+    }
+
+    [Fact]
+    public void Check_all_without_ready_rows_unticks_the_ticked_review_rows()
+    {
+        Assert.Null(BatchCheckAll.State([(false, true), (false, false)]));
+        Assert.Equal([false, false], BatchCheckAll.Toggle([(false, true), (false, false)]));
+        Assert.Equal([false], BatchCheckAll.Toggle([(false, false)])); // không có gì để tick
+        Assert.False(BatchCheckAll.State([]));
+    }
+
     [Fact]
     public void Day_line_without_year_takes_the_year_nearest_today()
     {

@@ -504,6 +504,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Thẻ có nhãn Đã ghim + nút Bỏ ghim. Sửa tay chữ dòng đã ghim: mặc định tự bỏ ghim; Cài đặt → Nhập đơn hàng loạt → Hỏi trước
   khi bỏ ghim thì hỏi Bỏ ghim / Giữ ghim (giữ = chữ dòng trả về như cũ). Kèm: Sửa đơn giữ giá ở cột riêng chưa món nào dùng;
   Hoàn tác lô trả dòng về kèm ghim. Cập nhật F1, README. Unit test 245/245; GUI Sandbox (UIA) 19/19 (2026-11-13)
+- [x] Nhập đơn hàng loạt: ô **Tick hết đơn sẵn sàng** (người dùng yêu cầu 2026-11-13) cạnh Chỉ hiện dòng cần xem: bấm tick mọi đơn
+  sẵn sàng (lưu được, không cảnh báo, chưa có trong MeRon - kể cả dòng đang lọc ẩn), dòng cần xem giữ nguyên; đã tick hết thì bấm
+  lại bỏ tick toàn bộ; tick 1 phần thì ô lửng (–); không có gì để tick thì ô khoá. Cập nhật F1, README. Unit test 247/247; GUI
+  Sandbox (UIA) 10/10 (2026-11-13)
 - [ ] Người dùng thử tay Ghim trên dữ liệu thật (chọn khách trùng tên, Sửa đơn rồi sửa dòng khác / tắt mở app, bật Hỏi trước khi bỏ ghim)
 - [ ] Cửa sổ hẹp (~1000 px): ô Chọn món trên thẻ bị cắt mất nửa phải (hàng nút Sửa đơn / Chọn khách / Chọn món / Sửa dòng không
   xuống dòng)

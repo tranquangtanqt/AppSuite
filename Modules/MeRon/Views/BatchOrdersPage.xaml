@@ -91,6 +91,13 @@
             </Grid.ColumnDefinitions>
             <TextBlock Grid.ColumnSpan="5" Text="{x:Bind ViewModel.Summary, Mode=OneWay}" VerticalAlignment="Center" TextWrapping="Wrap" FontWeight="SemiBold"
                        AutomationProperties.AutomationId="BatchSummary" />
+            <!-- Bấm: tick hết đơn sẵn sàng / đã tick hết thì bỏ tick toàn bộ (BatchCheckAll). Click xử lý trong code, trạng thái theo ViewModel.AllChecked -->
+            <CheckBox x:Name="CheckAllBox" Grid.Row="1" Grid.Column="0" IsThreeState="False" MinWidth="0" Click="CheckAll_Click"
+                      IsChecked="{x:Bind ViewModel.AllChecked, Mode=OneWay}" IsEnabled="{x:Bind ViewModel.CanCheckAll, Mode=OneWay}"
+                      AutomationProperties.Name="Tick hết đơn sẵn sàng"
+                      ToolTipService.ToolTip="Tick mọi đơn sẵn sàng (lưu được, không cảnh báo, chưa có trong MeRon) - dòng cần xem giữ nguyên. Đã tick hết thì bấm lại để bỏ tick toàn bộ">
+                <TextBlock Text="Tick hết đơn sẵn sàng" TextWrapping="Wrap" />
+            </CheckBox>
             <CheckBox Grid.Row="1" Grid.Column="1" Content="Chỉ hiện dòng cần xem" IsChecked="{x:Bind ViewModel.OnlyNeedsReview, Mode=TwoWay}" MinWidth="0" />
             <Button Grid.Row="1" Grid.Column="2" Click="Reconcile_Click" AutomationProperties.Name="So khớp"
                     ToolTipService.ToolTip="Đối chiếu bảng nháp với các đơn đã có trong MeRon cùng ngày giao: khớp / khác / chỉ có trong sổ / chỉ có trong MeRon">

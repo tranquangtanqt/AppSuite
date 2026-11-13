@@ -29,6 +29,9 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
 
     public bool NeedsReview => !Match.CanSave || HasWarnings || Reconcile?.Kind == ReconcileKind.Different;
 
+    /// <summary>Đơn sẵn sàng (ô Tick hết đơn sẵn sàng, số "sẵn sàng" ở tóm tắt): lưu được, không cảnh báo, chưa có trong MeRon.</summary>
+    public bool IsReady => CanSave && !HasWarnings && !IsMatched && !IsDifferent;
+
     /// <summary>Dòng ổn không có hàng nút sửa: các nút hiện khi rê chuột.</summary>
     public bool EditOnHover => !NeedsReview;
 
@@ -147,6 +150,25 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
 
     [ObservableProperty]
     private int _checkedCount;
+
+    /// <summary>Ô Tick hết đơn sẵn sàng: true / false / null = tick 1 phần (<see cref="BatchCheckAll.State"/>).</summary>
+    [ObservableProperty]
+    private bool? _allChecked = false;
+
+    /// <summary>Còn gì để tick / bỏ tick (có đơn sẵn sàng hoặc có dòng đang tick).</summary>
+    [ObservableProperty]
+    private bool _canCheckAll;
+
+    /// <summary>Bấm ô Tick hết đơn sẵn sàng (<see cref="BatchCheckAll.Toggle"/>), cả các dòng đang bị lọc ẩn.</summary>
+    public void ToggleAll()
+    {
+        var ticks = BatchCheckAll.Toggle(_all.Select(r => (r.IsReady, r.IsChecked)).ToList());
+        for (var i = 0; i < _all.Count; i++)
+        {
+            _all[i].IsChecked = ticks[i];
+        }
+        UpdateCounts();
+    }
 
     /// <summary>Lô vừa lưu (đơn như lúc lưu + dòng chữ gốc) - Hoàn tác xoá các đơn còn nguyên và trả dòng về ô chữ.</summary>
     private List<BatchSavedOrder> _lastBatch = [];
@@ -384,12 +406,14 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
     private void UpdateCounts()
     {
         CheckedCount = _all.Count(r => r.IsChecked && r.CanSave);
+        AllChecked = BatchCheckAll.State(_all.Select(r => (r.IsReady, r.IsChecked && r.CanSave)).ToList());
+        CanCheckAll = _all.Any(r => r.IsReady || (r.IsChecked && r.CanSave));
         var problems = _all.Count(r => !r.CanSave);
         var warnings = _all.Count(r => r.CanSave && r.HasWarnings);
         var inApp = _all.Count(r => r.IsMatched || r.IsDifferent);
         Summary = _all.Count == 0
             ? "Chưa có dòng nào - dán chữ vào ô trên"
-            : $"{_all.Count} dòng  ·  {_all.Count(r => r.CanSave && !r.HasWarnings && !r.IsMatched && !r.IsDifferent)} sẵn sàng"
+            : $"{_all.Count} dòng  ·  {_all.Count(r => r.IsReady)} sẵn sàng"
               + (inApp > 0 ? $"  ·  {inApp} đã có trong MeRon" : string.Empty)
               + (warnings > 0 ? $"  ·  {warnings} nên xem lại" : string.Empty)
               + (problems > 0 ? $"  ·  {problems} cần sửa" : string.Empty)

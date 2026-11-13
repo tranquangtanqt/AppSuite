@@ -59,6 +59,13 @@ public sealed partial class BatchOrdersPage : Page
         ViewModel.ResolvePinnedEdits(edits, keepPinned: result == ContentDialogResult.Secondary);
     }
 
+    /// <summary>Ô Tick hết đơn sẵn sàng: bấm là CheckBox tự đổi trạng thái - đặt lại theo ViewModel (giá trị không đổi thì x:Bind không đặt lại).</summary>
+    private void CheckAll_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.ToggleAll();
+        CheckAllBox.IsChecked = ViewModel.AllChecked;
+    }
+
     private void Unpin_Click(object sender, RoutedEventArgs e)
     {
         if (RowOf(sender) is { } row)

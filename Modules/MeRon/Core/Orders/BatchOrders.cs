@@ -472,3 +472,28 @@ public static class BatchOrderMatcher
     private static List<string> Words(string text) =>
         Regex.Split(TextSearch.Fold(text), @"[^\p{L}\p{Nd}]+").Where(w => w.Length > 0).ToList();
 }
+
+/// <summary>
+/// Ô "Tick hết đơn sẵn sàng" của bảng nháp (người dùng yêu cầu 2026-11-13). Đơn sẵn sàng = lưu được, không cảnh báo, chưa có
+/// trong MeRon; dòng cần xem (cảnh báo, trùng, đã có / khác trong MeRon) không tự tick để khỏi lưu trùng.
+/// </summary>
+public static class BatchCheckAll
+{
+    /// <summary>true = mọi đơn sẵn sàng đã tick (có ít nhất 1), false = chưa tick dòng nào, null = tick 1 phần.</summary>
+    public static bool? State(IReadOnlyList<(bool Ready, bool Checked)> rows)
+    {
+        if (!rows.Any(r => r.Checked))
+        {
+            return false;
+        }
+        return rows.Any(r => r.Ready) && rows.Where(r => r.Ready).All(r => r.Checked) ? true : null;
+    }
+
+    /// <summary>Bấm ô: mọi đơn sẵn sàng đã tick (hoặc không có đơn sẵn sàng) mà đang có dòng tick → bỏ tick hết; không thì tick
+    /// mọi đơn sẵn sàng, dòng khác giữ nguyên. Trả về tick mới của từng dòng.</summary>
+    public static bool[] Toggle(IReadOnlyList<(bool Ready, bool Checked)> rows)
+    {
+        var untickAll = rows.Any(r => r.Checked) && rows.Where(r => r.Ready).All(r => r.Checked);
+        return rows.Select(r => !untickAll && (r.Ready || r.Checked)).ToArray();
+    }
+}
