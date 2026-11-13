@@ -78,7 +78,81 @@
 
                 <StackPanel Spacing="6">
                     <TextBlock Text="Theo từng món (số lượng giảm dần; món tự do gộp theo tên)" FontWeight="SemiBold" />
-                    <local:ReportTable Lines="{x:Bind ViewModel.Products}" />
+                    <TextBlock Text="{x:Bind ViewModel.PreviousText, Mode=OneWay}" Opacity="0.7" TextWrapping="Wrap"
+                               FontSize="{StaticResource FontSizeCaption}" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasPrevious), Mode=OneWay}" />
+                    <local:ReportTable Lines="{x:Bind ViewModel.Products}" ShowTrend="{x:Bind ViewModel.HasPrevious, Mode=OneWay}"
+                                       TrendHeaderTip="{x:Bind ViewModel.PreviousText, Mode=OneWay}" />
+                </StackPanel>
+
+                <!-- Món × thứ trong tuần (2026-11-13): trung bình mỗi ngày, nền cam đậm dần theo thứ bán nhiều nhất của từng món -->
+                <StackPanel Spacing="6" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasData), Mode=OneWay}">
+                    <TextBlock Text="Theo thứ trong tuần" FontWeight="SemiBold" />
+                    <TextBlock Text="{x:Bind ViewModel.WeekdayNote, Mode=OneWay}" Opacity="0.7" TextWrapping="Wrap" FontSize="{StaticResource FontSizeCaption}"
+                               AutomationProperties.AutomationId="WeekdayNote" />
+                    <Border CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                        <StackPanel>
+                            <Grid Padding="12,6" ColumnSpacing="4" Background="{ThemeResource LayerFillColorDefaultBrush}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" MinWidth="120" />
+                                    <ColumnDefinition Width="62" />
+                                    <ColumnDefinition Width="62" />
+                                    <ColumnDefinition Width="62" />
+                                    <ColumnDefinition Width="62" />
+                                    <ColumnDefinition Width="62" />
+                                    <ColumnDefinition Width="62" />
+                                    <ColumnDefinition Width="62" />
+                                    <ColumnDefinition Width="70" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Món" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="T2" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           ToolTipService.ToolTip="{x:Bind ViewModel.WeekdayTips[0], Mode=OneWay}" />
+                                <TextBlock Grid.Column="2" Text="T3" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           ToolTipService.ToolTip="{x:Bind ViewModel.WeekdayTips[1], Mode=OneWay}" />
+                                <TextBlock Grid.Column="3" Text="T4" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           ToolTipService.ToolTip="{x:Bind ViewModel.WeekdayTips[2], Mode=OneWay}" />
+                                <TextBlock Grid.Column="4" Text="T5" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           ToolTipService.ToolTip="{x:Bind ViewModel.WeekdayTips[3], Mode=OneWay}" />
+                                <TextBlock Grid.Column="5" Text="T6" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           ToolTipService.ToolTip="{x:Bind ViewModel.WeekdayTips[4], Mode=OneWay}" />
+                                <TextBlock Grid.Column="6" Text="T7" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           ToolTipService.ToolTip="{x:Bind ViewModel.WeekdayTips[5], Mode=OneWay}" />
+                                <TextBlock Grid.Column="7" Text="CN" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                           ToolTipService.ToolTip="{x:Bind ViewModel.WeekdayTips[6], Mode=OneWay}" />
+                                <TextBlock Grid.Column="8" Text="Tổng" FontWeight="SemiBold" HorizontalAlignment="Right" />
+                            </Grid>
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.Weekdays}" IsTabStop="False" AutomationProperties.Name="Món theo thứ trong tuần">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:WeekdayRowView">
+                                        <Grid Padding="12,3" ColumnSpacing="4" BorderThickness="0,0,0,1" BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" MinWidth="120" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="70" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                            <ItemsControl Grid.Column="1" ItemsSource="{x:Bind Cells}" IsTabStop="False">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Orientation="Horizontal" Spacing="4" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate x:DataType="vm:WeekdayCellView">
+                                                        <Grid Width="62" Height="28" ToolTipService.ToolTip="{x:Bind Tip}" AutomationProperties.Name="{x:Bind Tip}">
+                                                            <Border CornerRadius="4" Background="{StaticResource OrangeBrush}" Opacity="{x:Bind local:ReportProductPage.HeatOpacity(Heat)}" />
+                                                            <TextBlock Text="{x:Bind Text}" FontWeight="{x:Bind Weight}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                            <TextBlock Grid.Column="2" Text="{x:Bind Total}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <StackPanel Spacing="6">

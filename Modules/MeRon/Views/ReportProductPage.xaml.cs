@@ -32,6 +32,9 @@ public sealed partial class ReportProductPage : Page, IOrderListPage
 
     public void ReloadOrders() => ViewModel.Load();
 
+    /// <summary>Độ đậm nền ô bảng món × thứ: 0 (không bán) → trong suốt, thứ bán nhiều nhất của món → cam đậm vừa đủ đọc chữ.</summary>
+    public static double HeatOpacity(double heat) => heat <= 0 ? 0 : 0.08 + 0.42 * heat;
+
     private void Order_Click(object sender, RoutedEventArgs e)
     {
         if (sender is FrameworkElement { Tag: OrderCardViewModel card })

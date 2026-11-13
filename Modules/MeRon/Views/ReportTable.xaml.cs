@@ -1,7 +1,9 @@
 using System.Collections.Specialized;
+using MeRon.Core.Reports;
 using MeRon.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 namespace MeRon.Views;
 
@@ -15,6 +17,12 @@ public sealed partial class ReportTable : UserControl
 
     public static readonly DependencyProperty QuantityHeaderProperty = DependencyProperty.Register(
         nameof(QuantityHeader), typeof(string), typeof(ReportTable), new PropertyMetadata("Số lượng", (d, _) => ((ReportTable)d).Bindings.Update()));
+
+    public static readonly DependencyProperty ShowTrendProperty = DependencyProperty.Register(
+        nameof(ShowTrend), typeof(bool), typeof(ReportTable), new PropertyMetadata(false, (d, _) => ((ReportTable)d).Bindings.Update()));
+
+    public static readonly DependencyProperty TrendHeaderTipProperty = DependencyProperty.Register(
+        nameof(TrendHeaderTip), typeof(string), typeof(ReportTable), new PropertyMetadata(null, (d, _) => ((ReportTable)d).Bindings.Update()));
 
     public ReportTable()
     {
@@ -58,4 +66,26 @@ public sealed partial class ReportTable : UserControl
         get => (string)GetValue(QuantityHeaderProperty);
         set => SetValue(QuantityHeaderProperty, value);
     }
+
+    /// <summary>Hiện tiêu đề cột ▲▼ so với kỳ trước (dòng nào có thì <see cref="ReportLine.HasTrend"/>).</summary>
+    public bool ShowTrend
+    {
+        get => (bool)GetValue(ShowTrendProperty);
+        set => SetValue(ShowTrendProperty, value);
+    }
+
+    public string? TrendHeaderTip
+    {
+        get => (string?)GetValue(TrendHeaderTipProperty);
+        set => SetValue(TrendHeaderTipProperty, value);
+    }
+
+    /// <summary>Lên xanh lá, xuống / kỳ này không bán đỏ, món mới xanh dương, bằng: màu chữ thường.</summary>
+    public static Brush TrendBrush(TrendKind kind) => kind switch
+    {
+        TrendKind.Up => (Brush)Application.Current.Resources["GreenBrush"],
+        TrendKind.Down or TrendKind.Gone => (Brush)Application.Current.Resources["RedBrush"],
+        TrendKind.New => (Brush)Application.Current.Resources["BlueBrush"],
+        _ => (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+    };
 }

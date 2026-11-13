@@ -10,10 +10,25 @@ namespace MeRon.ViewModels;
 
 /// <summary>1 dòng bảng trong báo cáo (món / khoản hàng): tên, số lượng, thành tiền.</summary>
 /// <param name="Share">0–100: thanh tỷ lệ so với dòng lớn nhất (0 = không vẽ).</param>
-public sealed record ReportLine(string Name, string Quantity, string Amount, double Share = 0)
+/// <param name="HasTrend">Hiện cột ▲▼ so với kỳ trước (chỉ trang Theo món ăn, khi có kỳ trước).</param>
+public sealed record ReportLine(string Name, string Quantity, string Amount, double Share = 0,
+    bool HasTrend = false, string Trend = "", string? TrendTip = null, TrendKind TrendKind = TrendKind.None)
 {
     public bool HasShare => Share > 0;
+
+    /// <summary>Món kỳ này không bán (chỉ có ở kỳ trước): chữ mờ.</summary>
+    public double LineOpacity => TrendKind == TrendKind.Gone ? 0.6 : 1;
 }
+
+/// <summary>1 ô của bảng món × thứ: trung bình mỗi ngày, độ đậm màu nền (0–1 so với thứ bán nhiều nhất của món), in đậm thứ
+/// bán nhiều nhất.</summary>
+public sealed record WeekdayCellView(string Text, double Heat, bool IsMax, string Tip)
+{
+    public Windows.UI.Text.FontWeight Weight => IsMax ? Microsoft.UI.Text.FontWeights.Bold : Microsoft.UI.Text.FontWeights.Normal;
+}
+
+/// <summary>1 dòng (1 món) của bảng món × thứ.</summary>
+public sealed record WeekdayRowView(string Name, IReadOnlyList<WeekdayCellView> Cells, string Total);
 
 /// <summary>Ô số liệu theo trạng thái (Đã lên đơn / Đã thanh toán / Huỷ).</summary>
 /// <remarks><c>CountValue</c> / <c>AmountValue</c>: số đơn / tiền riêng (chữ lớn); <c>Share</c>: % số đơn trong kỳ.</remarks>
@@ -243,6 +258,25 @@ public sealed partial class ReportProductViewModel : ReportViewModel
 
     public ObservableCollection<OrderCardViewModel> Orders { get; } = [];
 
+    /// <summary>Có kỳ trước (khoảng ngày đủ 2 đầu) → hiện cột ▲▼.</summary>
+    [ObservableProperty]
+    private bool _hasPrevious;
+
+    /// <summary>"Số lượng so với kỳ trước 03/11/2026 – 09/11/2026".</summary>
+    [ObservableProperty]
+    private string _previousText = string.Empty;
+
+    public ObservableCollection<WeekdayRowView> Weekdays { get; } = [];
+
+    /// <summary>Tiêu đề cột T2 … CN (rê chuột: số ngày thứ đó trong khoảng).</summary>
+    [ObservableProperty]
+    private List<string> _weekdayTips = [.. Enumerable.Repeat(string.Empty, 7)];
+
+    [ObservableProperty]
+    private string _weekdayNote = string.Empty;
+
+    public static readonly string[] WeekdayNames = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
+
     private bool _suspend;
 
     partial void OnProductChanged(ProductOption value)
@@ -285,10 +319,24 @@ public sealed partial class ReportProductViewModel : ReportViewModel
         ProductCount = VnFormat.Number(report.Products.Count);
         Products.Clear();
         var maxQuantity = report.Products.Count > 0 ? report.Products.Max(p => p.Quantity) : 0;
-        foreach (var p in report.Products)
+        var period = ProductTrends.PreviousPeriod(Range.From, Range.To);
+        HasPrevious = report.Previous is not null && period is not null;
+        PreviousText = period is { } pp ? $"Số lượng so với kỳ trước {Show(pp.From)} – {Show(pp.To)} (cùng số ngày, liền trước)" : string.Empty;
+        foreach (var t in ProductTrends.Compare(report.Products, report.Previous))
         {
-            Products.Add(Line(p) with { Share = maxQuantity > 0 ? 100.0 * p.Quantity / maxQuantity : 0 });
+            var p = t.Current;
+            Products.Add(Line(p) with
+            {
+                Share = maxQuantity > 0 ? 100.0 * p.Quantity / maxQuantity : 0,
+                HasTrend = HasPrevious,
+                Trend = t.Text,
+                TrendTip = t.PreviousQuantity is { } old && period is { } pr
+                    ? $"Kỳ trước ({Show(pr.From)} – {Show(pr.To)}): {VnFormat.Number(old)}" + (t.Kind == TrendKind.Gone ? " · kỳ này không bán" : string.Empty)
+                    : null,
+                TrendKind = t.Kind,
+            });
         }
+        FillWeekdays(ProductTrends.Weekdays(report.Days, Range.From, Range.To));
         Orders.Clear();
         foreach (var o in report.Orders)
         {
@@ -296,6 +344,31 @@ public sealed partial class ReportProductViewModel : ReportViewModel
         }
         OrdersTitle = $"Đơn hàng liên quan ({VnFormat.Number(report.Orders.Count)})";
         HasData = report.Products.Count > 0;
+    }
+
+    private static string Show(DateOnly day) => day.ToString("dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string Average(double value) => value.ToString("0.#", VnFormat.Culture);
+
+    /// <summary>Bảng món × thứ: ô = trung bình mỗi ngày (thứ không có trong khoảng: "–"), nền cam đậm dần theo thứ bán nhiều
+    /// nhất của món đó.</summary>
+    private void FillWeekdays(WeekdayTable table)
+    {
+        Weekdays.Clear();
+        WeekdayTips = [.. table.DayCounts.Select((n, i) => $"{WeekdayNames[i]}: {n} ngày trong khoảng")];
+        WeekdayNote = table.From is { } f && table.To is { } t
+            ? $"Trung bình mỗi ngày giao từ {Show(f)} đến {Show(t)} (tổng ÷ số lần thứ đó có trong khoảng); ô đậm = bán nhiều, in đậm = thứ bán nhiều nhất của món."
+              + (table.TooShort ? " Khoảng ngày dưới 1 tuần - chọn ít nhất 1 tuần (nên 4–8 tuần) để so các thứ." : string.Empty)
+            : string.Empty;
+        foreach (var row in table.Rows)
+        {
+            var max = row.MaxAverage;
+            var cells = row.Cells.Select((c, i) => c.Average is { } avg
+                ? new WeekdayCellView(avg == 0 ? "0" : Average(avg), max > 0 ? avg / max : 0, max > 0 && avg == max,
+                    $"{WeekdayNames[i]}: {VnFormat.Number(c.Total)} trong {c.Days} ngày (TB {Average(avg)})")
+                : new WeekdayCellView("–", 0, false, $"{WeekdayNames[i]}: không có trong khoảng ngày")).ToList();
+            Weekdays.Add(new WeekdayRowView(row.Name, cells, VnFormat.Number(row.Total)));
+        }
     }
 }
 

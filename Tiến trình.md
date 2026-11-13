@@ -432,8 +432,14 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Enter khi không khớp → hộp thoại điền sẵn tên, lưu xong chọn luôn, đơn đang nhập giữ nguyên). Cập nhật F1, README. Unit
   test 147/147 (1 mới); GUI Sandbox 23/23 (bản sao database thật; chuột phải thật)
 - [ ] Đề xuất còn lại (2026-10-27): ô món ưu tiên món khách hay đặt; dán tin Zalo → đơn nháp;
-  danh sách giao hàng theo khu + phiếu chuẩn bị; so cùng kỳ năm trước (Biểu đồ); món tăng / giảm; món theo thứ; doanh thu theo
-  khu; công nợ theo tuổi nợ
+  danh sách giao hàng theo khu + phiếu chuẩn bị; so cùng kỳ năm trước (Biểu đồ); ~~món tăng / giảm; món theo thứ~~ (xong
+  2026-11-13, xem dưới); doanh thu theo khu; công nợ theo tuổi nợ
+- [x] Thống kê theo món ăn (người dùng chốt 4 đề xuất 2026-11-13): cột **So với kỳ trước** ▲▼ % theo số lượng (kỳ trước =
+  cùng số ngày liền trước, như Biểu đồ; "mới" = kỳ trước chưa bán; món kỳ trước có mà kỳ này không bán nữa nối cuối bảng, mờ,
+  ▼ 100%; Mọi ngày thì không có cột; các trang khác dùng chung bảng không đổi) + bảng **Theo thứ trong tuần** món × T2…CN
+  (trung bình mỗi ngày = tổng ÷ số lần thứ đó có trong khoảng, nền cam đậm theo thứ bán nhiều nhất của món, in đậm thứ đó;
+  khoảng dưới 1 tuần thì nhắc chọn 4–8 tuần). Cập nhật F1, README. Unit test 263/263; GUI Sandbox (UIA) 13/13 (2026-11-13)
+- [ ] Người dùng thử tay Thống kê theo món ăn (▲▼, Theo thứ trong tuần) trên dữ liệu thật, chọn 4–8 tuần
 - [ ] Thử tay: chuột phải thẻ đơn ở trang Chi tiết (Sandbox chỉ chạy trang Đặt hàng)
 - [x] **Nhập đơn hàng loạt - dán chữ → bảng nháp → lưu** (người dùng hỏi 2026-11-02, mẫu thật = ảnh 1 trang sổ ghi tay;
   làm 2026-11-03). Sổ viết tay: Common.Ocr không đọc được chữ viết tay, OCR offline khác không chắc → người dùng nhờ Claude

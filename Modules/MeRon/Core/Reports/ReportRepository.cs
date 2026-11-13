@@ -23,7 +23,10 @@ public sealed record OrderReport(
     IReadOnlyList<ProductSummary> Products,
     IReadOnlyList<CustomerSummary> Customers);
 
-public sealed record ProductReport(long TotalQuantity, IReadOnlyList<ProductSummary> Products, IReadOnlyList<Order> Orders);
+/// <param name="Previous">Theo món của kỳ trước (cùng số ngày, liền trước); null = khoảng ngày không đủ 2 đầu.</param>
+/// <param name="Days">Số lượng từng món theo ngày giao (bảng món × thứ).</param>
+public sealed record ProductReport(long TotalQuantity, IReadOnlyList<ProductSummary> Products, IReadOnlyList<Order> Orders,
+    IReadOnlyList<ProductSummary>? Previous, IReadOnlyList<ProductDay> Days);
 
 public sealed record SummaryReport(
     long OrderCount,
@@ -83,13 +86,36 @@ public sealed class ReportRepository(MeRonDatabase database, OrderRepository ord
             productParameters.Add(("$productId", productId));
         }
         var products = ProductSummaries(connection, productWhere, productParameters);
+        var days = Query(connection,
+            "SELECT D.productId, COALESCE(MAX(P.name), MIN(D.snapshotName)), substr(O.deliveryDatetime, 1, 10), COALESCE(SUM(D.quantity), 0) " +
+            "FROM Orders AS O JOIN OrderItems AS D ON O.id = D.orderId LEFT JOIN Products AS P ON P.id = D.productId " +
+            $"WHERE {productWhere} GROUP BY COALESCE(CAST(D.productId AS TEXT), 'name:' || D.snapshotName), substr(O.deliveryDatetime, 1, 10)",
+            r => (Id: r.IsDBNull(0) ? (long?)null : r.GetInt64(0), Name: r.IsDBNull(1) ? string.Empty : r.GetString(1), Day: Text(r, 2), Quantity: r.GetInt64(3)),
+            productParameters)
+            .Where(x => DateOnly.TryParseExact(x.Day, "yyyy-MM-dd", out _)) // ngày giao trống / sai dạng: không xếp được vào thứ
+            .Select(x => new ProductDay(x.Id, x.Name, DateOnly.ParseExact(x.Day!, "yyyy-MM-dd"), x.Quantity))
+            .ToList();
+
+        // Kỳ trước: cùng điều kiện món, khoảng ngày cùng độ dài liền trước.
+        List<ProductSummary>? previous = null;
+        if (ProductTrends.PreviousPeriod(from, to) is { } period)
+        {
+            var (previousWhere, previousParameters) = Where(period.From, period.To, null, null);
+            previousWhere += $" AND O.status <> {Cancelled}";
+            if (productId is not null)
+            {
+                previousWhere += " AND D.productId = $productId";
+                previousParameters.Add(("$productId", productId));
+            }
+            previous = ProductSummaries(connection, previousWhere, previousParameters);
+        }
 
         var related = orders.Query(new OrderFilter(null, from, to))
             .Where(o => o.Status != OrderStatus.Cancelled)
             .Select(o => productId is null ? o : o with { Items = o.Items.Where(i => i.ProductId == productId).ToList() })
             .Where(o => productId is null || o.Items.Count > 0)
             .ToList();
-        return new ProductReport(products.Sum(p => p.Quantity), products, related);
+        return new ProductReport(products.Sum(p => p.Quantity), products, related, previous, days);
     }
 
     /// <summary>Báo cáo Tổng hợp: đơn hàng (số đơn, thành tiền, theo món) + mua hàng (số phiếu, thành tiền, theo khoản).</summary>
