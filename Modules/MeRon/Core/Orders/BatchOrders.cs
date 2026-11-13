@@ -348,13 +348,20 @@ public static class BatchOrderMatcher
 
         var items = line.Items.Select(item =>
         {
-            var name = abbreviations.Expand(item.Name);
+            // Chữ viết tắt đổi từng từ: "đậu = sữa đậu" biến "Sữa đậu" thành "Sữa sữa đậu" (khớp nhiều món, chọn món rồi đọc
+            // lại vẫn hỏng - lỗi người dùng báo 2026-11-13). Chữ đã trùng nguyên tên 1 món thì giữ nguyên, không đổi.
+            var name = products.Count(p => Key(p.Name) == Key(item.Name)) == 1 ? item.Name : abbreviations.Expand(item.Name);
             // Tên món có giá ở cuối ("Yến chưng 40k"): số đó là tên, không phải giá ghi kèm.
             if (item.Price is { } written && products.FirstOrDefault(p => Key(p.Name) == Key($"{name} {BatchOrderParser.PriceText(written)}")) is { } priced)
             {
                 return new BatchItemMatch(item with { Price = null }, name, priced, [priced], null);
             }
             var (product, productCandidates) = MatchProduct(name, products);
+            // Đổi chữ viết tắt xong không ra đúng 1 món mà chữ như ghi thì ra: dùng chữ như ghi.
+            if (product is null && name != item.Name && MatchProduct(item.Name, products) is { Match: { } written1 } original)
+            {
+                (name, product, productCandidates) = (item.Name, written1, original.Candidates);
+            }
             return new BatchItemMatch(item, name, product, productCandidates, product is null ? item.Price : null);
         }).ToList();
 

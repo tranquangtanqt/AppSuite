@@ -508,6 +508,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   sẵn sàng (lưu được, không cảnh báo, chưa có trong MeRon - kể cả dòng đang lọc ẩn), dòng cần xem giữ nguyên; đã tick hết thì bấm
   lại bỏ tick toàn bộ; tick 1 phần thì ô lửng (–); không có gì để tick thì ô khoá. Cập nhật F1, README. Unit test 247/247; GUI
   Sandbox (UIA) 10/10 (2026-11-13)
+- [x] Lỗi người dùng báo 2026-11-13: "Ngọc Nam w1 | 1 Cháo dưỡng nhan; 1 Sữa đậu; ..." báo "Sữa sữa đậu": 2 món khớp, chọn món
+  trong ô Chọn món không đổi được. Nguyên nhân: chữ viết tắt "đậu = sữa đậu" đổi từng từ nên "Sữa đậu" thành "Sữa sữa đậu";
+  chọn món ghi lại "1 Sữa đậu" rồi đọc lại vẫn bị đổi. Sửa: chữ đã trùng nguyên tên 1 món thì không đổi chữ viết tắt; đổi xong
+  không ra món thì thử chữ như ghi. Cập nhật F1, README. Unit test 248/248 (2026-11-13)
 - [ ] Người dùng thử tay Ghim trên dữ liệu thật (chọn khách trùng tên, Sửa đơn rồi sửa dòng khác / tắt mở app, bật Hỏi trước khi bỏ ghim)
 - [ ] Cửa sổ hẹp (~1000 px): ô Chọn món trên thẻ bị cắt mất nửa phải (hàng nút Sửa đơn / Chọn khách / Chọn món / Sửa dòng không
   xuống dòng)

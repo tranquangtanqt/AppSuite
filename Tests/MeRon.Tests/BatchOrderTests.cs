@@ -617,6 +617,28 @@ public class BatchOrderTests
         }
     }
 
+    /// <summary>Lỗi người dùng báo 2026-11-13: chữ viết tắt "đậu = sữa đậu" biến "Sữa đậu" thành "Sữa sữa đậu" → khớp 2 món,
+    /// chọn món trên thẻ ghi lại "1 Sữa đậu" rồi đọc lại vẫn hỏng.</summary>
+    [Fact]
+    public void Abbreviation_does_not_spoil_a_name_that_already_is_a_product()
+    {
+        Product[] products = [.. Products, new(50, 1, "Sữa đậu", null, 15000, null), new(51, 1, "Sữa đậu nành", null, 20000, null)];
+        var abbr = new Abbreviations("đậu = sữa đậu\nsc = sữa chua");
+        Product? Match(string text) =>
+            Assert.Single(BatchOrderMatcher.Match(BatchOrderParser.Parse(text, Today).Lines.Single(), Customers, products, abbr).Items).Product;
+
+        Assert.Equal(50, Match("706 | 1 Sữa đậu")?.Id);
+        Assert.Equal(50, Match("706 | 1 sữa đậu")?.Id);
+        Assert.Equal(50, Match("706 | 1 đậu")?.Id);          // chữ viết tắt vẫn dùng được
+        Assert.Equal(51, Match("706 | 1 sữa đậu nành")?.Id);
+        Assert.Equal(10, Match("706 | 3 sc uống")?.Id);
+
+        // Chọn món trên thẻ rồi đọc lại: ra đúng món đã chọn, kể cả không có ghim.
+        var line = BatchOrderParser.Parse("706 | 1 Sữa đậu?", Today).Lines.Single();
+        Assert.Equal(50, Match(BatchOrderParser.Format(line, itemIndex: 0, itemName: "Sữa đậu"))?.Id);
+        Assert.Equal(51, Match(BatchOrderParser.Format(line, itemIndex: 0, itemName: "Sữa đậu nành"))?.Id);
+    }
+
     // ---------- Ô Tick hết đơn sẵn sàng (2026-11-13) ----------
 
     [Fact]
