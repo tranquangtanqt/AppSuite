@@ -38,11 +38,11 @@ public class CustomerDebtTests
         Assert.Equal(50000, huyen.Amount);
         Assert.Equal([11L, 10L, 12L], huyen.OrderIds); // cũ trước
         Assert.Equal((new DateOnly(2026, 9, 1), 52, new DateOnly(2026, 10, 23)), (huyen.OldestDay, huyen.OldestDays, huyen.NewestDay));
-        Assert.True(huyen.IsOverdue);
+        Assert.True(DebtAging.IsOverdue(huyen, DebtAging.DefaultMarks)); // 52 ngày > mốc lớn nhất 30
         Assert.Equal(("0901 234 567", "W2"), (huyen.Phone, huyen.Address));
 
         var binh = debts[0];
-        Assert.Equal((1, 1, false), (binh.OrderCount, binh.OldestDays, binh.IsOverdue));
+        Assert.Equal((1, 1, false), (binh.OrderCount, binh.OldestDays, DebtAging.IsOverdue(binh, DebtAging.DefaultMarks)));
         Assert.Null(binh.Phone); // SĐT chỉ có dấu cách
 
         Assert.Null(debts[2].UserId);

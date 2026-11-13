@@ -433,7 +433,13 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   test 147/147 (1 mới); GUI Sandbox 23/23 (bản sao database thật; chuột phải thật)
 - [ ] Đề xuất còn lại (2026-10-27): ô món ưu tiên món khách hay đặt; dán tin Zalo → đơn nháp;
   danh sách giao hàng theo khu + phiếu chuẩn bị; so cùng kỳ năm trước (Biểu đồ); ~~món tăng / giảm; món theo thứ~~ (xong
-  2026-11-13, xem dưới); doanh thu theo khu; công nợ theo tuổi nợ
+  2026-11-13, xem dưới); doanh thu theo khu; ~~công nợ theo tuổi nợ~~ (xong 2026-11-13, xem dưới)
+- [x] Công nợ theo tuổi nợ (người dùng chốt 4 đề xuất 2026-11-13): hàng ô đầu trang Công nợ, mỗi đơn chưa thanh toán vào 1
+  nhóm theo số ngày từ ngày giao (tiền, số đơn, số khách; nhóm lâu nhất tô cam); bấm ô = lọc khách có nợ trong nhóm; ô **Mốc
+  ngày** người dùng gõ (mặc định 7, 30; tối đa 5 mốc; sai thì báo đỏ, giữ mốc cũ; nhớ trong settings.json; nút Mặc định);
+  ô Chưa tới ngày giao khi tích đơn đặt trước; ô ngày trên thẻ khách cam khi quá mốc lớn nhất (thay số 30 cố định).
+  Cập nhật F1, README. Unit test 268/268; GUI Sandbox (UIA) 23/23 (2026-11-13)
+- [ ] Người dùng thử tay Công nợ theo tuổi nợ trên dữ liệu thật (đổi mốc, bấm lọc từng ô)
 - [x] Thống kê theo món ăn (người dùng chốt 4 đề xuất 2026-11-13): cột **So với kỳ trước** ▲▼ % theo số lượng (kỳ trước =
   cùng số ngày liền trước, như Biểu đồ; "mới" = kỳ trước chưa bán; món kỳ trước có mà kỳ này không bán nữa nối cuối bảng, mờ,
   ▼ 100%; Mọi ngày thì không có cột; các trang khác dùng chung bảng không đổi) + bảng **Theo thứ trong tuần** món × T2…CN

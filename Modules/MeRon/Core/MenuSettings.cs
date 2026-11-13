@@ -24,6 +24,9 @@ public sealed class MenuSettings
     /// giữ hay bỏ ghim; false (mặc định) = tự bỏ ghim, đọc theo chữ mới.</summary>
     public bool AskBeforeUnpin { get; set; }
 
+    /// <summary>Công nợ: mốc tuổi nợ (ngày), tăng dần - mặc định 7, 30 (nhóm 0–7, 8–30, trên 30).</summary>
+    public IReadOnlyList<int> DebtAgingMarks { get; set; } = Reports.DebtAging.DefaultMarks;
+
     public const string FileName = "settings.json";
 
     public const int DefaultCaptureKeepDays = 30;
@@ -83,6 +86,7 @@ public sealed class MenuSettings
                     settings.Theme = theme;
                 }
                 settings.AskBeforeUnpin = stored.AskBeforeUnpin ?? false;
+                settings.DebtAgingMarks = Reports.DebtAging.Normalize(stored.DebtAgingMarks);
             }
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
@@ -96,7 +100,7 @@ public sealed class MenuSettings
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         var stored = new Stored { HiddenMenu = [.. _hidden.Order(StringComparer.Ordinal)], CaptureKeepDays = CaptureKeepDays, Theme = Theme.ToString(),
-            AskBeforeUnpin = AskBeforeUnpin };
+            AskBeforeUnpin = AskBeforeUnpin, DebtAgingMarks = [.. DebtAgingMarks] };
         File.WriteAllText(path, JsonSerializer.Serialize(stored, new JsonSerializerOptions { WriteIndented = true }));
     }
 
@@ -112,5 +116,8 @@ public sealed class MenuSettings
 
         /// <summary>null = file cũ (trước 2026-11-13) → tự bỏ ghim.</summary>
         public bool? AskBeforeUnpin { get; set; }
+
+        /// <summary>null = file cũ (trước 2026-11-13) → 7, 30.</summary>
+        public List<int>? DebtAgingMarks { get; set; }
     }
 }

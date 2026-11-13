@@ -78,6 +78,13 @@ public sealed partial class MainWindow : Window
         SaveMenuSettings();
     }
 
+    /// <summary>Công nợ: mốc tuổi nợ người dùng nhập (đã kiểm tra bằng DebtAging.Parse).</summary>
+    public void SetDebtAgingMarks(IReadOnlyList<int> marks)
+    {
+        MenuSettings.DebtAgingMarks = marks;
+        SaveMenuSettings();
+    }
+
     // ---------- Ảnh chụp (Pictures\MeRon): tự dọn ảnh cũ - trang Cài đặt ----------
 
     public void SetCaptureKeepDays(int days)

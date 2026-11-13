@@ -43,12 +43,68 @@ public sealed partial class DebtsPage : Page
         ShowSort();
     }
 
+    private bool _marksLoaded;
+
     /// <summary>Mỗi lần vào trang đọc lại (vừa nhập dữ liệu / sửa đơn / thanh toán ở màn Chi tiết); bộ lọc giữ nguyên.</summary>
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
+        if (!_marksLoaded && App.MainWindow is { } window)
+        {
+            ViewModel.UseMarks(window.MenuSettings.DebtAgingMarks);
+            _marksLoaded = true;
+        }
         ViewModel.Message = string.Empty;
         ViewModel.Load();
     }
+
+    // ---------- Tuổi nợ ----------
+
+    private void CommitMarks()
+    {
+        if (ViewModel.CommitMarks() is { } marks)
+        {
+            App.MainWindow?.SetDebtAgingMarks(marks);
+        }
+    }
+
+    private void MarksBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            CommitMarks();
+            e.Handled = true;
+        }
+    }
+
+    private void MarksBox_LostFocus(object sender, RoutedEventArgs e) => CommitMarks();
+
+    private void MarksDefault_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel.MarksText = DebtAging.Format(DebtAging.DefaultMarks);
+        CommitMarks();
+    }
+
+    private void Tile_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: AgingTile tile })
+        {
+            ViewModel.ToggleBucket(tile.Bucket);
+        }
+    }
+
+    public static Microsoft.UI.Xaml.Thickness TileThickness(bool selected) => new(selected ? 2 : 1);
+
+    public static Microsoft.UI.Xaml.Media.Brush TileBorder(bool selected) => (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
+        selected ? "AccentFillColorDefaultBrush" : "CardStrokeColorDefaultBrush"];
+
+    public static Microsoft.UI.Xaml.Media.Brush TileForeground(bool oldest) => oldest
+        ? Ui.LapsedForeground(true)
+        : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorPrimaryBrush"];
+
+    /// <summary>Nhóm lâu nhất có nợ: nền cam nhạt như ô ngày quá hạn trên thẻ khách.</summary>
+    public static Microsoft.UI.Xaml.Media.Brush TileBackground(bool oldest) => oldest
+        ? Ui.LapsedBackground(true)
+        : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
 
     private void ShowSort()
     {

@@ -10,6 +10,7 @@ public sealed record UnpaidOrderPoint(long? UserId, long OrderId, DateOnly? Day,
 /// <param name="UserId">null = đơn không gắn khách.</param>
 /// <param name="OldestDay">Ngày giao của đơn cũ nhất (null = không đơn nào có ngày giao).</param>
 /// <param name="OldestDays">Đơn cũ nhất đã giao bao nhiêu ngày (0 = hôm nay / chưa tới ngày giao).</param>
+/// <param name="Orders">Từng đơn đang nợ (ngày giao, tiền) - chia nhóm tuổi nợ (<see cref="DebtAging"/>).</param>
 public sealed record CustomerDebt(
     long? UserId,
     string Name,
@@ -19,12 +20,10 @@ public sealed record CustomerDebt(
     long Amount,
     DateOnly? OldestDay,
     int OldestDays,
-    DateOnly? NewestDay)
+    DateOnly? NewestDay,
+    IReadOnlyList<UnpaidOrderPoint> Orders)
 {
     public int OrderCount => OrderIds.Count;
-
-    /// <summary>Đơn cũ nhất đã quá <see cref="CustomerDebts.OverdueDays"/> ngày - nên nhắc trước.</summary>
-    public bool IsOverdue => OldestDays >= CustomerDebts.OverdueDays;
 }
 
 public enum DebtSort
@@ -42,9 +41,6 @@ public enum DebtSort
 /// </summary>
 public static class CustomerDebts
 {
-    /// <summary>Đơn cũ nhất từ ngần này ngày trở lên thì thẻ khách tô cam.</summary>
-    public const int OverdueDays = 30;
-
     public const string NoCustomerName = "(không có khách)";
 
     public static IReadOnlyList<CustomerDebt> Build(IEnumerable<UnpaidOrderPoint> orders, IReadOnlyDictionary<long, Customer> customers, DateOnly today)
@@ -60,7 +56,7 @@ public static class CustomerDebts
             var name = group.Key is null ? NoCustomerName : Blank(customer?.Name) ?? $"Khách #{group.Key}";
             result.Add(new CustomerDebt(group.Key, name, Blank(customer?.Phone), Blank(customer?.Address),
                 list.OrderBy(o => o.Day ?? DateOnly.MaxValue).ThenBy(o => o.OrderId).Select(o => o.OrderId).ToList(),
-                list.Sum(o => o.Total), oldest, oldest is { } d ? Math.Max(0, today.DayNumber - d.DayNumber) : 0, newest));
+                list.Sum(o => o.Total), oldest, oldest is { } d ? Math.Max(0, today.DayNumber - d.DayNumber) : 0, newest, list));
         }
         return Sort(result, DebtSort.Amount);
     }

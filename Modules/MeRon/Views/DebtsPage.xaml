@@ -14,6 +14,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -38,7 +39,7 @@
         <Border x:Name="DetailLabelSwitch" Width="0" Height="0" />
         <Border x:Name="PayLabelSwitch" Width="0" Height="0" />
 
-        <!-- Bộ lọc: tính cả đơn giao sau hôm nay, sắp xếp -->
+        <!-- Bộ lọc: tính cả đơn giao sau hôm nay, sắp xếp, mốc tuổi nợ -->
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16">
             <CheckBox x:Name="IncludeFutureBox" Content="Tính cả đơn giao sau hôm nay (đặt trước)"
                       IsChecked="{x:Bind ViewModel.IncludeFuture, Mode=TwoWay}" AutomationProperties.Name="Tính cả đơn giao sau hôm nay" />
@@ -51,17 +52,53 @@
                     <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedLeft" />
                 </DropDownButton.Flyout>
             </DropDownButton>
+            <!-- Mốc tuổi nợ: Enter / rời ô thì áp dụng; nhớ trong settings.json -->
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="Mốc ngày" VerticalAlignment="Center" />
+                <TextBox x:Name="MarksBox" Width="120" Text="{x:Bind ViewModel.MarksText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         PlaceholderText="7, 30" AutomationProperties.Name="Mốc tuổi nợ" KeyDown="MarksBox_KeyDown" LostFocus="MarksBox_LostFocus"
+                         ToolTipService.ToolTip="Các mốc số ngày cách nhau bằng dấu phẩy (tối đa 5), vd 7, 30 → nhóm 0–7, 8–30, trên 30 ngày. Enter để áp dụng" />
+                <Button Content="Mặc định" Click="MarksDefault_Click" AutomationProperties.Name="Mốc tuổi nợ mặc định"
+                        ToolTipService.ToolTip="Về mốc 7, 30" />
+                <TextBlock Text="{x:Bind ViewModel.MarksError, Mode=OneWay}" Foreground="{ThemeResource SystemFillColorCriticalBrush}" VerticalAlignment="Center"
+                           TextWrapping="Wrap" MaxWidth="260" Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.MarksError), Mode=OneWay}"
+                           AutomationProperties.AutomationId="MarksError" />
+            </StackPanel>
         </StackPanel>
 
-        <InfoBar Grid.Row="2" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
+        <!-- Công nợ theo tuổi nợ (2026-11-13): mỗi đơn vào 1 nhóm theo số ngày từ ngày giao; bấm ô = lọc khách có nợ trong nhóm -->
+        <ItemsRepeater Grid.Row="2" ItemsSource="{x:Bind ViewModel.Tiles}" AutomationProperties.Name="Công nợ theo tuổi nợ"
+                       Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.HasTiles), Mode=OneWay}">
+            <ItemsRepeater.Layout>
+                <UniformGridLayout MinItemWidth="150" MinColumnSpacing="8" MinRowSpacing="8" ItemsStretch="Fill" />
+            </ItemsRepeater.Layout>
+            <ItemsRepeater.ItemTemplate>
+                <DataTemplate x:DataType="vm:AgingTile">
+                    <Button Tag="{x:Bind}" Click="Tile_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8"
+                            CornerRadius="10" BorderThickness="{x:Bind local:DebtsPage.TileThickness(IsSelected)}"
+                            BorderBrush="{x:Bind local:DebtsPage.TileBorder(IsSelected)}" Background="{x:Bind local:DebtsPage.TileBackground(IsOldest)}"
+                            AutomationProperties.Name="{x:Bind AccessibleName}"
+                            ToolTipService.ToolTip="Bấm để chỉ xem khách có nợ trong nhóm này (bấm lại để bỏ lọc)">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{x:Bind Label}" Opacity="0.8" Foreground="{x:Bind local:DebtsPage.TileForeground(IsOldest)}" />
+                            <TextBlock Text="{x:Bind AmountText}" FontSize="{StaticResource FontSizeEmphasis}" FontWeight="SemiBold"
+                                       Foreground="{x:Bind local:DebtsPage.TileForeground(IsOldest)}" />
+                            <TextBlock Text="{x:Bind CountText}" FontSize="{StaticResource FontSizeCaption}" Opacity="0.75"
+                                       Foreground="{x:Bind local:DebtsPage.TileForeground(IsOldest)}" />
+                        </StackPanel>
+                    </Button>
+                </DataTemplate>
+            </ItemsRepeater.ItemTemplate>
+        </ItemsRepeater>
+
+        <InfoBar Grid.Row="3" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                  IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
-        <InfoBar Grid.Row="2" Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+        <InfoBar Grid.Row="3" Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}"
                  IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="DebtMessage" />
 
-        <TextBlock Grid.Row="3" Opacity="0.75" TextWrapping="Wrap"
-                   Text="Đơn &quot;Đã lên đơn&quot; (chưa thanh toán) đã tới ngày giao, gộp theo khách. Ô bên trái = đơn cũ nhất đã giao bao nhiêu ngày (cam khi từ 30 ngày). Chi tiết: các đơn đang nợ của khách - bấm Chụp ảnh ở đó để gửi Zalo (Ctrl+V)." />
+        <TextBlock Grid.Row="4" Opacity="0.75" TextWrapping="Wrap" Text="{x:Bind ViewModel.Note, Mode=OneWay}" />
 
-        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="0,0,12,24" MaxWidth="980" HorizontalAlignment="Left">
                 <TextBlock Text="Không có đơn nào chưa thanh toán 🎉" Opacity="0.75" Margin="0,24,0,0"
                            Visibility="{x:Bind local:Ui.VisibleIfNot(ViewModel.HasData), Mode=OneWay}" />
@@ -71,7 +108,7 @@
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="vm:DebtRow">
-                            <!-- Thẻ khách: ô số ngày đơn cũ nhất (cam khi ≥ 30 ngày), thông tin, tổng nợ, nút -->
+                            <!-- Thẻ khách: ô số ngày đơn cũ nhất (cam khi quá mốc tuổi nợ lớn nhất), thông tin, tổng nợ, nút -->
                             <Border Padding="14,12" CornerRadius="10" BorderThickness="1"
                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     AutomationProperties.Name="{x:Bind AccessibleName}">
