@@ -266,7 +266,7 @@ public sealed partial class OrdersPage : Page, IOrderListPage
         var sorted = products.Where(p => !string.IsNullOrWhiteSpace(p.Name)).OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase).ToList();
 
         var mode = new RadioButtons { Header = "Cách đổi", MaxColumns = 1 };
-        mode.Items.Add("Đổi tên ghi trên đơn (giữ giá)");
+        mode.Items.Add("Đổi tên món (giữ giá)");
         mode.Items.Add("Thay bằng món khác trong danh sách");
         mode.Items.Add("Cập nhật mọi tên món theo Danh mục (đơn ghi tên cũ)");
         mode.SelectedIndex = names.Any(n => n.OutdatedName) ? 2 : 0;
@@ -288,11 +288,17 @@ public sealed partial class OrdersPage : Page, IOrderListPage
             {
                 1 => "Đơn chưa thanh toán / huỷ: lấy giá món mới, tính lại tổng. Đơn đã thanh toán: giữ giá và tiền đã thu, chỉ đổi món + tên.",
                 2 => "Đơn ghi tên món lúc đặt; món đã đổi tên trong Danh mục thì đơn cũ vẫn ghi tên cũ. Giữ giá.",
-                _ => "Chỉ đổi chữ ghi trên đơn (vd món tự do gõ sai), giá và số lượng giữ nguyên.",
+                _ when Target() is { IsFree: false } => "Món trong Danh mục: đổi tên luôn trong Danh mục (đơn mới, form đơn dùng tên mới) và trên các đơn "
+                    + "đã chọn có món này; giá giữ nguyên. Đơn không chọn vẫn ghi tên cũ - đổi sau bằng Cập nhật mọi tên món theo Danh mục.",
+                _ => "Món tự do: chỉ đổi chữ ghi trên đơn (vd gõ sai), giá và số lượng giữ nguyên.",
             };
         }
         BulkItemName? Target() => item.SelectedIndex >= 0 && item.SelectedIndex < names.Count ? names[item.SelectedIndex] : null;
-        item.SelectionChanged += (_, _) => newName.Text = Target() is { } t ? t.CatalogName ?? t.Name : string.Empty;
+        item.SelectionChanged += (_, _) =>
+        {
+            newName.Text = Target() is { } t ? t.CatalogName ?? t.Name : string.Empty;
+            ShowInputs();
+        };
         newName.Text = Target() is { } first ? first.CatalogName ?? first.Name : string.Empty;
         ShowInputs();
 
@@ -319,6 +325,10 @@ public sealed partial class OrdersPage : Page, IOrderListPage
                     {
                         return (null, "Chọn món trên đơn.");
                     }
+                    if (!t0.IsFree)
+                    {
+                        return BulkEdit.RenameProduct(selected, t0, newName.Text, productMap);
+                    }
                     return string.IsNullOrWhiteSpace(newName.Text) ? (null, "Gõ tên mới.")
                         : newName.Text.Trim() == t0.Name ? (null, "Tên mới giống tên đang ghi.")
                         : (BulkEdit.RenameItem(selected, t0, newName.Text), null);
@@ -335,15 +345,17 @@ public sealed partial class OrdersPage : Page, IOrderListPage
     /// <summary>Hoàn tác lô vừa sửa: chỉ đơn còn y như lúc vừa sửa; đơn đã sửa / xoá sau đó giữ nguyên.</summary>
     private async void BulkUndo_Click(object sender, RoutedEventArgs e)
     {
-        var (revert, keep) = ViewModel.PlanUndoBulk();
+        var (revert, keep, rename) = ViewModel.PlanUndoBulk();
         var kept = keep.Count == 0 ? string.Empty : $"\n\nGiữ nguyên {keep.Count} đơn đã sửa / xoá sau đó.";
-        if (revert.Count == 0)
+        if (revert.Count == 0 && rename is null)
         {
             await Dialogs.ShowMessageAsync(XamlRoot, "Hoàn tác sửa hàng loạt", "Không còn đơn nào trả lại được." + kept);
             return;
         }
-        if (await Dialogs.ConfirmAsync(XamlRoot, "Hoàn tác sửa hàng loạt", $"Trả {revert.Count} đơn về như trước khi sửa?" + kept, $"Hoàn tác {revert.Count} đơn")
-            && ViewModel.UndoBulk(revert, keep.Count) is { } error)
+        var question = (revert.Count > 0 ? $"Trả {revert.Count} đơn về như trước khi sửa?" : "Không còn đơn nào trả lại được.")
+                       + (rename is null ? string.Empty : $"\n\nDanh mục: trả tên \"{rename.NewName}\" về \"{rename.OldName}\".");
+        if (await Dialogs.ConfirmAsync(XamlRoot, "Hoàn tác sửa hàng loạt", question + kept, revert.Count > 0 ? $"Hoàn tác {revert.Count} đơn" : "Hoàn tác")
+            && ViewModel.UndoBulk(revert, keep.Count, rename) is { } error)
         {
             await Dialogs.ShowMessageAsync(XamlRoot, "Hoàn tác không được", error);
         }

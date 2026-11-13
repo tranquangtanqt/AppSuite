@@ -518,7 +518,7 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   bằng món khác - đơn đã thanh toán giữ giá / cập nhật tên theo Danh mục); Trạng thái (Trả về Đã lên đơn, Huỷ, Khôi phục); Xoá.
   Hộp xem trước trước mỗi thao tác (đơn đã thanh toán tô cam, đơn bỏ qua kèm lý do); Hoàn tác lô gần nhất (đơn đã xoá chèn lại
   đúng mã; đơn bị sửa thêm sau đó giữ nguyên). Cập nhật F1, README. Unit test 256/256; GUI Sandbox (UIA) 20/20 (tạo 4 đơn, chọn, ngày thanh toán + hoàn tác, đổi tên món, thay món, huỷ / khôi phục, đổi ngày giao + hoàn tác, xoá + hoàn tác) (2026-11-13)
-- [ ] Đổi tên món thuộc Danh mục bằng sửa hàng loạt: mở đơn đó trong form rồi Lưu thì tên quay về tên trong Danh mục (form lấy tên món theo Danh mục) - hỏi người dùng có cần giữ tên đã đổi không
+- [x] Đổi tên món thuộc Danh mục bằng sửa hàng loạt: mở đơn đó trong form rồi Lưu thì tên quay về tên trong Danh mục (form lấy tên món theo Danh mục) - người dùng chốt làm như phần mềm bán hàng thường làm: món trong Danh mục thì Đổi tên món = đổi luôn tên trong Danh mục + các đơn đã chọn (giữ giá, cùng 1 transaction, Hoàn tác trả cả tên Danh mục; trùng tên món khác thì không cho), món tự do vẫn chỉ đổi chữ trên đơn; form đơn giữ cách lấy tên theo Danh mục. Unit test 257/257; GUI Sandbox (UIA) 13/13 (2026-11-13)
 - [ ] Để sau (sửa hàng loạt): sao chép nhiều đơn sang ngày khác (khách đặt cố định); áp giá mới của món cho đơn chưa thanh toán
 - [ ] Người dùng thử tay Ghim trên dữ liệu thật (chọn khách trùng tên, Sửa đơn rồi sửa dòng khác / tắt mở app, bật Hỏi trước khi bỏ ghim)
 - [ ] Cửa sổ hẹp (~1000 px): ô Chọn món trên thẻ bị cắt mất nửa phải (hàng nút Sửa đơn / Chọn khách / Chọn món / Sửa dòng không

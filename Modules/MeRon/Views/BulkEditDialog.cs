@@ -65,7 +65,8 @@ internal static class BulkEditDialog
                 return;
             }
             var n = plan.Changes.Count;
-            summary.Text = (n == 0 ? "Không có đơn nào cần đổi." : $"{n} đơn sẽ {(delete ? "xoá" : "đổi")}")
+            summary.Text = (plan.Rename is { } r ? $"Danh mục: \"{r.OldName}\" → \"{r.NewName}\"  ·  " : string.Empty)
+                           + (n == 0 ? "Không có đơn nào cần đổi." : $"{n} đơn sẽ {(delete ? "xoá" : "đổi")}")
                            + (plan.WarnCount > 0 ? $"  ·  {plan.WarnCount} đơn đã thanh toán (tô cam)" : string.Empty)
                            + (plan.Skipped.Count > 0 ? $"  ·  bỏ qua {plan.Skipped.Count} đơn" : string.Empty);
             var caution = (Brush)Application.Current.Resources["SystemFillColorCautionBrush"];
@@ -90,8 +91,8 @@ internal static class BulkEditDialog
                     lines.Children.Add(new TextBlock { Text = $"• {Who(skip.Order)}: {skip.Reason}", TextWrapping = TextWrapping.Wrap, Opacity = 0.7 });
                 }
             }
-            dialog.PrimaryButtonText = delete ? $"Xoá {n} đơn" : $"Áp dụng cho {n} đơn";
-            dialog.IsPrimaryButtonEnabled = n > 0;
+            dialog.PrimaryButtonText = delete ? $"Xoá {n} đơn" : n == 0 && plan.Rename is not null ? "Đổi tên trong Danh mục" : $"Áp dụng cho {n} đơn";
+            dialog.IsPrimaryButtonEnabled = n > 0 || plan.Rename is not null;
         }
         watch?.Invoke(Refresh);
         Refresh();

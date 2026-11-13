@@ -193,6 +193,9 @@ public sealed partial class OrdersViewModel : ObservableObject
     /// <summary>Lô vừa sửa - Hoàn tác trả các đơn còn y như lúc vừa sửa về như trước.</summary>
     private IReadOnlyList<BulkChange> _lastBulk = [];
 
+    /// <summary>Lô vừa sửa có đổi tên món trong Danh mục.</summary>
+    private BulkProductRename? _lastRename;
+
     [ObservableProperty]
     private bool _canUndoBulk;
 
@@ -271,21 +274,23 @@ public sealed partial class OrdersViewModel : ObservableObject
     public string? ApplyBulk(BulkPlan plan)
     {
         var written = 0;
-        var error = AppServices.Try(plan.Title, () => written = AppServices.Orders.ApplyBulk(plan.Changes));
+        var error = AppServices.Try(plan.Title, () => written = AppServices.Orders.ApplyBulk(plan.Changes, plan.Rename));
         if (error is not null)
         {
             return error;
         }
         AppLog.For("Orders").LogInformation("Sửa hàng loạt: {Title} - {Count} đơn", plan.Title, written);
         _lastBulk = plan.Changes;
-        CanUndoBulk = written > 0;
+        _lastRename = plan.Rename;
+        CanUndoBulk = written > 0 || plan.Rename is not null;
         BulkMessage = $"{plan.Title}: đã sửa {VnFormat.Number(written)} đơn." + (plan.Skipped.Count > 0 ? $" Bỏ qua {plan.Skipped.Count} đơn." : string.Empty);
         Load();
         return null;
     }
 
-    /// <summary>Hoàn tác: (trả lại được, đã bị sửa / xoá sau đó - giữ nguyên).</summary>
-    public (IReadOnlyList<BulkChange> Revert, IReadOnlyList<BulkChange> Keep) PlanUndoBulk()
+    /// <summary>Hoàn tác: (trả lại được, đã bị sửa / xoá sau đó - giữ nguyên, tên Danh mục trả lại được - null nếu không đổi
+    /// hoặc món đã bị đổi tên / xoá tiếp).</summary>
+    public (IReadOnlyList<BulkChange> Revert, IReadOnlyList<BulkChange> Keep, BulkProductRename? Rename) PlanUndoBulk()
     {
         var revert = new List<BulkChange>();
         var keep = new List<BulkChange>();
@@ -293,21 +298,26 @@ public sealed partial class OrdersViewModel : ObservableObject
         {
             (BulkEdit.Untouched(change, AppServices.Orders.Get(change.Before.Id)) ? revert : keep).Add(change);
         }
-        return (revert, keep);
+        var rename = _lastRename is { } r && AppServices.MasterData.GetProducts().FirstOrDefault(p => p.Id == r.ProductId)?.Name?.Trim() == r.NewName
+            ? r : null;
+        return (revert, keep, rename);
     }
 
-    public string? UndoBulk(IReadOnlyList<BulkChange> revert, int kept)
+    public string? UndoBulk(IReadOnlyList<BulkChange> revert, int kept, BulkProductRename? rename)
     {
         var count = 0;
-        var error = AppServices.Try("Hoàn tác sửa hàng loạt", () => count = AppServices.Orders.RevertBulk(revert));
+        var error = AppServices.Try("Hoàn tác sửa hàng loạt", () => count = AppServices.Orders.RevertBulk(revert, rename));
         if (error is not null)
         {
             return error;
         }
         AppLog.For("Orders").LogInformation("Hoàn tác sửa hàng loạt: {Count} đơn, giữ {Kept}", count, kept);
         _lastBulk = [];
+        _lastRename = null;
         CanUndoBulk = false;
-        BulkMessage = $"Đã hoàn tác {VnFormat.Number(count)} đơn." + (kept > 0 ? $" Giữ nguyên {kept} đơn đã sửa / xoá sau đó." : string.Empty);
+        BulkMessage = $"Đã hoàn tác {VnFormat.Number(count)} đơn."
+                      + (rename is not null ? $" Danh mục: trả tên \"{rename.NewName}\" về \"{rename.OldName}\"." : string.Empty)
+                      + (kept > 0 ? $" Giữ nguyên {kept} đơn đã sửa / xoá sau đó." : string.Empty);
         Load();
         return null;
     }

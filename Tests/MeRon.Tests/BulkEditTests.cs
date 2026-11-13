@@ -108,6 +108,39 @@ public class BulkEditTests
     }
 
     [Fact]
+    public void Rename_product_renames_the_catalog_and_every_line_of_it_on_selected_orders()
+    {
+        var products = new Dictionary<long, Product> { [15] = Gio, [16] = Cha };
+        var oldName = Make(1, items: [new OrderItem(10, 1, 15, "Gio cu", 30000, 1, 30000), new OrderItem(11, 1, 15, "Giò", 25000, 1, 25000)]);
+        var paid = Make(2, OrderStatus.Completed, payment: "2026-11-11T09:00:00.000");
+        var noGio = Make(3, items: [new OrderItem(30, 3, 16, "Chả quế", 40000, 1, 40000)]);
+        var gio = BulkEdit.ItemNames([oldName, paid], products).First(n => n.ProductId == 15);
+
+        var (plan, hint) = BulkEdit.RenameProduct([oldName, paid, noGio], gio, " Giò lụa ", products);
+
+        Assert.Null(hint);
+        Assert.Equal(new BulkProductRename(15, "Giò", "Giò lụa"), plan!.Rename);
+        Assert.Equal([1L, 2L], plan.Changes.Select(c => c.Before.Id));
+        var a = plan.Changes[0].After!;
+        Assert.Equal(["Giò lụa", "Giò lụa"], a.Items.Select(i => i.SnapshotName)); // mọi dòng của món, kể cả tên cũ khác
+        Assert.Equal([30000L, 25000L], a.Items.Select(i => i.SnapshotPrice)); // giữ giá
+        Assert.Equal(oldName.Total, a.Total);
+        Assert.True(plan.Changes[1].Warn);
+        Assert.Equal("3: không có món này", plan.Skipped.Select(s => $"{s.Order.Id}: {s.Reason}").Single());
+
+        // Đơn đã ghi đúng tên mới: bỏ qua, Danh mục vẫn đổi.
+        var (already, _) = BulkEdit.RenameProduct([a], gio, "Giò lụa", products);
+        Assert.Empty(already!.Changes);
+        Assert.NotNull(already.Rename);
+
+        Assert.Equal("Tên mới giống tên trong Danh mục.", BulkEdit.RenameProduct([oldName], gio, "Giò", products).Hint);
+        Assert.Contains("Thay bằng món khác", BulkEdit.RenameProduct([oldName], gio, "chả QUẾ", products).Hint);
+        Assert.Null(BulkEdit.RenameProduct([oldName], gio, " ", products).Plan);
+        var free = new BulkItemName(null, "flan", 1, null);
+        Assert.Null(BulkEdit.RenameProduct([oldName], free, "Flan", products).Plan);
+    }
+
+    [Fact]
     public void Sync_catalog_names_only_touches_renamed_products()
     {
         var products = new Dictionary<long, Product> { [15] = Gio with { Name = "Giò lụa" }, [16] = Cha };
@@ -162,6 +195,16 @@ public class BulkEditTests
         var afterReplace = repo.Get(before[1].Id)!;
         Assert.True(BulkEdit.Untouched(replaced[0], afterReplace));
         Assert.Contains(afterReplace.Items, i => i.ProductId == other.Id);
+
+        // Lô 3: đổi tên món trong Danh mục (đơn + Danh mục cùng giao dịch), rồi hoàn tác.
+        var master = new MasterDataRepository(db);
+        var renameTarget = BulkEdit.ItemNames([afterReplace], products).First(n => n.ProductId == other.Id);
+        var renamed = BulkEdit.RenameProduct([afterReplace], renameTarget, "Tên mới thử", products).Plan!;
+        repo.ApplyBulk(renamed.Changes, renamed.Rename);
+        Assert.Equal("Tên mới thử", master.GetProducts().Single(p => p.Id == other.Id).Name);
+        Assert.Contains(repo.Get(before[1].Id)!.Items, i => i.SnapshotName == "Tên mới thử");
+        repo.RevertBulk(renamed.Changes, renamed.Rename);
+        Assert.Equal(other.Name, master.GetProducts().Single(p => p.Id == other.Id).Name);
 
         repo.RevertBulk(replaced);
         repo.RevertBulk([.. moved, .. deleted]);

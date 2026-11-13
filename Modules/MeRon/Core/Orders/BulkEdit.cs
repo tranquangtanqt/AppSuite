@@ -9,8 +9,12 @@ public sealed record BulkChange(Order Before, Order? After, string Description, 
 /// <summary>Đơn đã chọn mà không đổi + lý do (đã đúng ngày, đơn huỷ, không có món này...).</summary>
 public sealed record BulkSkip(Order Order, string Reason);
 
-/// <summary>Kết quả xét 1 thao tác hàng loạt trước khi ghi - nội dung hộp xem trước.</summary>
-public sealed record BulkPlan(string Title, IReadOnlyList<BulkChange> Changes, IReadOnlyList<BulkSkip> Skipped)
+/// <summary>Đổi tên 1 món trong Danh mục cùng lô sửa (Hoàn tác trả tên cũ nếu tên chưa bị đổi tiếp).</summary>
+public sealed record BulkProductRename(long ProductId, string OldName, string NewName);
+
+/// <summary>Kết quả xét 1 thao tác hàng loạt trước khi ghi - nội dung hộp xem trước. <see cref="Rename"/> = kèm đổi tên món
+/// trong Danh mục (áp dụng được cả khi không đơn nào cần đổi).</summary>
+public sealed record BulkPlan(string Title, IReadOnlyList<BulkChange> Changes, IReadOnlyList<BulkSkip> Skipped, BulkProductRename? Rename = null)
 {
     public int WarnCount => Changes.Count(c => c.Warn);
 }
@@ -30,7 +34,7 @@ public sealed record BulkItemName(long? ProductId, string Name, int OrderCount, 
 /// <summary>
 /// Sửa hàng loạt các đơn đã lưu (trang Đặt hàng, chế độ Chọn nhiều - người dùng chốt 2026-11-13): đổi ngày giao, ngày thanh toán
 /// (đơn đã thanh toán đổi ngày, đơn chưa thanh toán chuyển sang Đã thanh toán), trả về Đã lên đơn, huỷ / khôi phục, xoá, đổi
-/// tên món (giữ giá) / thay bằng món khác (đơn đã thanh toán giữ giá, chỉ đổi món + tên), cập nhật tên theo Danh mục.
+/// tên món (món tự do: tên trên đơn; món trong Danh mục: đổi trong Danh mục, giữ giá) / thay bằng món khác (đơn đã thanh toán giữ giá, chỉ đổi món + tên), cập nhật tên theo Danh mục.
 /// Chỉ tính ra trạng thái mới của từng đơn (<see cref="BulkPlan"/>), không ghi database.
 /// </summary>
 public static class BulkEdit
@@ -134,13 +138,50 @@ public static class BulkEdit
         return order with { Items = items, SubTotal = subTotal, Total = Math.Max(0, subTotal - order.DiscountValue) };
     }
 
-    /// <summary>Đổi tên món ghi trên đơn, giữ giá + số lượng (món tự do gõ sai, hoặc theo tên mới).</summary>
+    /// <summary>Đổi tên món ghi trên đơn, giữ giá + số lượng - dùng cho món tự do (gõ sai); món trong Danh mục dùng <see cref="RenameProduct"/>.</summary>
     public static BulkPlan RenameItem(IEnumerable<Order> orders, BulkItemName target, string newName)
     {
         var name = newName.Trim();
         return Plan($"Đổi tên món \"{target.Name}\" → \"{name}\"", orders,
             o => EditItems(o, target, i => i with { SnapshotName = name }) is { } after ? (after, $"\"{target.Name}\" → \"{name}\" (giữ giá)") : null,
             _ => "không có món này");
+    }
+
+    /// <summary>Đổi tên món trong Danh mục (món thực sự đổi tên): tên mới ghi vào Danh mục + mọi dòng món này trên các đơn đã
+    /// chọn, giữ giá. Không cho đặt tên riêng trên đơn cho món trong Danh mục - form đơn lấy tên Danh mục, Lưu lại sẽ mất (2026-11-13).
+    /// Null = tên trống / giống tên hiện tại / trùng món khác (kèm lời nhắc).</summary>
+    public static (BulkPlan? Plan, string? Hint) RenameProduct(IEnumerable<Order> orders, BulkItemName target, string newName,
+        IReadOnlyDictionary<long, Product> products)
+    {
+        if (target.ProductId is not { } id)
+        {
+            return (null, "Món tự do không có trong Danh mục.");
+        }
+        var name = newName.Trim();
+        var old = target.CatalogName ?? target.Name;
+        if (name.Length == 0)
+        {
+            return (null, "Gõ tên mới.");
+        }
+        if (name == old)
+        {
+            return (null, "Tên mới giống tên trong Danh mục.");
+        }
+        if (products.Values.FirstOrDefault(p => p.Id != id && Key(p.Name) == Key(name)) is { } same)
+        {
+            return (null, $"Danh mục đã có món \"{same.Name?.Trim()}\" - muốn gộp thì dùng Thay bằng món khác.");
+        }
+        var plan = Plan($"Đổi tên món trong Danh mục \"{old}\" → \"{name}\"", orders, o =>
+        {
+            var renamed = o.Items.Where(i => i.ProductId == id && i.SnapshotName != name).Select(i => i.SnapshotName).Distinct().ToList();
+            if (renamed.Count == 0)
+            {
+                return null;
+            }
+            var after = o with { Items = o.Items.Select(i => i.ProductId == id ? i with { SnapshotName = name } : i).ToList() };
+            return (after, string.Join("; ", renamed.Select(n => $"\"{n}\" → \"{name}\"")) + " (giữ giá)");
+        }, o => o.Items.Any(i => i.ProductId == id) ? "đã ghi tên này" : "không có món này");
+        return (plan with { Rename = new BulkProductRename(id, old, name) }, null);
     }
 
     /// <summary>Thay bằng món khác trong danh sách: đơn chưa thanh toán / huỷ lấy giá món mới (tính lại tiền); đơn đã thanh toán

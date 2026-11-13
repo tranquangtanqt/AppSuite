@@ -222,19 +222,26 @@ public sealed class OrderRepository(MeRonDatabase database)
     /// <summary>Sửa hàng loạt (<see cref="BulkEdit"/>): ghi trạng thái mới của mọi đơn trong 1 transaction - đơn sửa thì ghi
     /// trạng thái, ngày giao / thanh toán, tiền, các dòng món (theo mã dòng, không thêm / bớt dòng); <c>After</c> null thì xoá đơn.
     /// Đơn không còn thì bỏ qua. Trả số đơn đã ghi.</summary>
-    public int ApplyBulk(IReadOnlyList<BulkChange> changes) =>
-        WriteStates(changes.Select(c => (c.Before.Id, c.After, (Order?)null)).ToList());
+    public int ApplyBulk(IReadOnlyList<BulkChange> changes, BulkProductRename? rename = null) =>
+        WriteStates(changes.Select(c => (c.Before.Id, c.After, (Order?)null)).ToList(), rename is null ? null : (rename.ProductId, rename.NewName));
 
-    /// <summary>Hoàn tác lô vừa sửa: đơn đã sửa ghi lại như trước, đơn đã xoá chèn lại đúng mã đơn / mã dòng món.</summary>
-    public int RevertBulk(IReadOnlyList<BulkChange> changes) =>
-        WriteStates(changes.Select(c => (c.Before.Id, (Order?)c.Before, c.After is null ? c.Before : null)).ToList());
+    /// <summary>Hoàn tác lô vừa sửa: đơn đã sửa ghi lại như trước, đơn đã xoá chèn lại đúng mã đơn / mã dòng món;
+    /// <paramref name="rename"/> = trả tên món trong Danh mục về tên cũ.</summary>
+    public int RevertBulk(IReadOnlyList<BulkChange> changes, BulkProductRename? rename = null) =>
+        WriteStates(changes.Select(c => (c.Before.Id, (Order?)c.Before, c.After is null ? c.Before : null)).ToList(),
+            rename is null ? null : (rename.ProductId, rename.OldName));
 
-    private int WriteStates(IReadOnlyList<(long Id, Order? State, Order? Insert)> states)
+    private int WriteStates(IReadOnlyList<(long Id, Order? State, Order? Insert)> states, (long Id, string Name)? productName = null)
     {
         using var connection = database.Open();
         using var transaction = connection.BeginTransaction();
         var now = MeRonDatabase.Now();
         var written = 0;
+        if (productName is { } product)
+        {
+            Execute(connection, "UPDATE Products SET name = $name, updatedAt = $now WHERE id = $id",
+                ("$name", product.Name), ("$now", now), ("$id", product.Id));
+        }
         foreach (var (id, state, insert) in states)
         {
             if (insert is not null)
