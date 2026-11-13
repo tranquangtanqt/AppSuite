@@ -1421,27 +1421,46 @@ public sealed class HtmlReportGenerator
 
           // Danh sách bảng nhập vào: cách nhau bằng xuống dòng / dấu phẩy / khoảng trắng; mỗi tên khớp nguyên tên bảng (có hay
           // không tiền tố schema "dbo.") hoặc tên tiếng Nhật của bảng; không theo bộ lọc Tất cả / Bảng / View.
+          // Ký tự đại diện (2026-11-13): * = bao nhiêu ký tự cũng được (t_ma*, *_sub, t_*_sub, *ma*), ? = đúng 1 ký tự,
+          // -mẫu = loại trừ (-*_bk); chỉ có dòng loại trừ thì loại khỏi mọi bảng. Mẫu so trên cùng các tên như trên.
+          function wildcardRegex(pattern) {
+            return new RegExp('^' + pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.') + '$');
+          }
+
           function parseTableList(text) {
-            var byKey = Object.create(null);
-            tables.forEach(function (t) {
-              var keys = [t.name, t.name.split('.').pop(), t.japaneseName, firstLine(t.description)];
-              keys.forEach(function (k) { k = normalizeName(k); if (k) (byKey[k] || (byKey[k] = [])).push(t); });
+            var byKey = Object.create(null), keysOf = [];
+            tables.forEach(function (t, i) {
+              var keys = [t.name, t.name.split('.').pop(), t.japaneseName, firstLine(t.description)].map(normalizeName).filter(Boolean);
+              keysOf[i] = keys;
+              keys.forEach(function (k) { (byKey[k] || (byKey[k] = [])).push(t); });
             });
-            var picked = [], seen = Object.create(null), missing = [];
+            function matching(word) {
+              var key = normalizeName(word); // NFKC: ＊ ？ full-width cũng thành * ?
+              if (!/[*?]/.test(key)) return byKey[key] || [];
+              var re = wildcardRegex(key);
+              return tables.filter(function (t, i) { return keysOf[i].some(function (k) { return re.test(k); }); });
+            }
+            var picked = [], seen = Object.create(null), missing = [], patterns = [], excluded = Object.create(null), anyInclude = false;
             text.split(/[\s,;、，]+/).forEach(function (word) {
               if (!word) return;
-              var hits = byKey[normalizeName(word)];
-              if (!hits) { if (missing.indexOf(word) < 0) missing.push(word); return; }
+              var exclude = word.length > 1 && (word[0] === '-' || word[0] === '－');
+              var body = exclude ? word.slice(1) : word;
+              var hits = matching(body);
+              if (exclude || /[*?＊？]/.test(body)) patterns.push({ text: word, count: hits.length, exclude: exclude });
+              else if (!hits.length && missing.indexOf(word) < 0) missing.push(word);
+              if (exclude) { hits.forEach(function (t) { excluded[t.name] = true; }); return; }
+              anyInclude = true;
               hits.forEach(function (t) { if (!seen[t.name]) { seen[t.name] = true; picked.push(t); } });
             });
-            return { tables: picked, missing: missing };
+            if (!anyInclude && patterns.length) picked = tables.slice(); // chỉ có dòng loại trừ: bắt đầu từ mọi bảng
+            return { tables: picked.filter(function (t) { return !excluded[t.name]; }), missing: missing, patterns: patterns };
           }
 
           function batchScopeTables() {
             if (batchScope === 'current' && currentTable) return { key: 'table:' + currentTable.name, tables: [currentTable] };
             if (batchScope === 'list') {
               var list = parseTableList(batchTableText);
-              return { key: 'list:' + list.tables.map(function (t) { return t.name; }).join('\u0001'), tables: list.tables, missing: list.missing };
+              return { key: 'list:' + list.tables.map(function (t) { return t.name; }).join('\u0001'), tables: list.tables, missing: list.missing, patterns: list.patterns };
             }
             return { key: 'kind:' + kindFilter, tables: null };
           }
@@ -1451,8 +1470,14 @@ public sealed class HtmlReportGenerator
             var info = document.getElementById('batchTableInfo');
             if (!info) return;
             if (batchScope !== 'list') { info.innerHTML = ''; return; }
+            // Mẫu có ký tự đại diện: "t_ma* → 52 bảng", "-*_bk → bỏ 3 bảng"; mẫu không khớp bảng nào tô đỏ.
+            var patterns = scope.patterns.map(function (p) {
+              var text = escapeHtml(p.text) + ' → ' + (p.count ? (p.exclude ? 'bỏ ' : '') + p.count + ' bảng' : 'không khớp bảng nào');
+              return p.count ? text : '<span class="missing">' + text + '</span>';
+            });
             info.innerHTML = (scope.tables.length ? 'Tra trong ' + scope.tables.length + ' bảng.' : 'Chưa có bảng nào - nhập tên bảng ở trên.') +
-              (scope.missing.length ? ' <span class="missing">Không có bảng: ' + scope.missing.map(escapeHtml).join(', ') + '</span>' : '');
+              (patterns.length ? ' <span class="patterns">' + patterns.join(' · ') + '</span>' : '') +
+              (scope.missing.length ? (patterns.length ? ' · ' : ' ') + '<span class="missing">Không có bảng: ' + scope.missing.map(escapeHtml).join(', ') + '</span>' : '');
           }
 
           function renderBatchResult() {
@@ -1561,7 +1586,7 @@ public sealed class HtmlReportGenerator
               '<option value="list">Danh sách bảng nhập vào</option></select></label>' +
               '<button id="batchCopy" type="button">Copy cột Kết quả</button><span id="batchStatus"></span></div>' +
               '<div id="batchTableBox"><textarea id="batchTables" spellcheck="false" ' +
-              'placeholder="Tên bảng (hoặc tên tiếng Nhật của bảng), cách nhau bằng xuống dòng / dấu phẩy / khoảng trắng&#10;t_ma, t_tr"></textarea>' +
+              'placeholder="Tên bảng (hoặc tên tiếng Nhật của bảng), cách nhau bằng xuống dòng / dấu phẩy / khoảng trắng&#10;t_ma, t_tr&#10;* = nhiều ký tự, ? = 1 ký tự, -mẫu = loại trừ: t_ma*  t_*_sub  -*_bk"></textarea>' +
               '<div id="batchTableInfo"></div></div>' +
               '<div id="batchResult"></div></div>';
             var input = document.getElementById('batchInput');

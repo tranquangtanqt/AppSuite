@@ -1217,6 +1217,13 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] Thử tay: xuất lại HTML của DB thật → thử Back / Copy link / lịch sử, Thống kê cột với schema thật (xem tên cột khác
   kiểu / khác mô tả có hợp lý không)
 - [ ] Thử tay: xuất lại HTML của DB thật → Tra cột hàng loạt với danh sách tên tiếng Nhật thật, thử 4 cách khớp
+- [x] Tra cột hàng loạt - ô Danh sách bảng nhập vào có **ký tự đại diện** (người dùng chốt 2026-11-13: làm theo đề xuất, cần
+  `*` ở giữa tên, ô danh sách cột chưa cần): `*` = bao nhiêu ký tự cũng được (t_ma*, *_sub, t_*_sub, *ma*), `?` = đúng 1 ký tự,
+  `-mẫu` = loại trừ (-*_bk; chỉ có loại trừ thì bỏ khỏi mọi bảng); khớp cả tên tiếng Nhật, không phân biệt hoa / thường,
+  ＊ ？ full-width cũng được; dòng báo "t_ma* → 52 bảng · -*_bk → bỏ 3 bảng", mẫu 0 bảng chữ đỏ. Cập nhật F1, README. Edge
+  headless (qua DevTools) 17/17 + bộ cũ 79/79; 300k cột: đọc mẫu ~30 ms như dán tên đủ (lần đầu với bộ bảng mới vẫn
+  phải dựng chỉ mục cột như trước: 7.500 bảng ~1,5 s) (2026-11-13)
+- [ ] Thử tay: xuất lại HTML của DB thật → Tra cột hàng loạt, ô Danh sách bảng thử t_ma* / t_*_sub / -*_bk
 
 ## ModuleC
 

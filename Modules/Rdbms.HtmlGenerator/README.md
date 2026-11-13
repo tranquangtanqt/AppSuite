@@ -151,7 +151,8 @@ hoặc mở `Rdbms.HtmlGenerator.csproj` riêng trong Visual Studio, đặt Star
    nguyên, dòng trống cuối bỏ. Ô *Phạm vi* `#batchScope` (`batchScopeTables()`): Tất cả bảng (theo lọc), Bảng đang chọn
    (`currentTable` = bảng xem gần nhất, khoá khi chưa chọn), Danh sách bảng nhập vào (ô `#batchTables`, `parseTableList`:
    tách theo xuống dòng / dấu phẩy / khoảng trắng, mỗi tên khớp nguyên tên bảng, tên bỏ tiền tố schema, `japaneseName` hoặc
-   dòng đầu mô tả bảng qua `normalizeName`; không theo lọc Bảng / View; `#batchTableInfo` báo số bảng + tên không có, gõ thì
+   dòng đầu mô tả bảng qua `normalizeName`; ký tự đại diện `*` / `?` (`wildcardRegex`, khớp trên cùng các tên đó), `-mẫu` loại
+   trừ (chỉ có loại trừ thì bắt đầu từ mọi bảng), `#batchTableInfo` báo "mẫu → n bảng", mẫu 0 bảng chữ đỏ (2026-11-13); không theo lọc Bảng / View; `#batchTableInfo` báo số bảng + tên không có, gõ thì
    chờ 200 ms). Phạm vi và danh sách bảng giữ khi đi xem bảng rồi quay lại. Ô tick *Hiện nhiều dòng* `#batchLines` (cạnh
    chú thích, nhớ ở `localStorage` `rdbms.batchLines`) chỉ bật / tắt class `lines` của `#batchTable`: CSS ẩn `.sep` (" / ")
    và cho mỗi mô tả `.t` / link bảng `display: block` - không tra lại.
