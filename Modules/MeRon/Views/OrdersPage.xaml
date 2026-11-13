@@ -54,6 +54,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <SelectorBar x:Name="StatusBar" SelectionChanged="StatusBar_SelectionChanged" AutomationProperties.Name="Trạng thái">
                 <SelectorBarItem Text="Tất cả" Tag="0" />
@@ -61,7 +62,18 @@
                 <SelectorBarItem Text="Đã thanh toán" Tag="2" />
                 <SelectorBarItem Text="Huỷ" Tag="3" />
             </SelectorBar>
-            <DropDownButton x:Name="SortButton" Grid.Column="1" AutomationProperties.Name="Sắp xếp" VerticalAlignment="Center">
+            <!-- Chọn nhiều (2026-11-13): thẻ có ô tick + thanh sửa hàng loạt (BulkEdit) -->
+            <ToggleButton Grid.Column="1" IsChecked="{x:Bind ViewModel.SelectMode, Mode=TwoWay}" AutomationProperties.Name="Chọn nhiều" VerticalAlignment="Center"
+                          ToolTipService.ToolTip="Chọn nhiều đơn để sửa 1 lần: đổi ngày giao, ngày thanh toán, tên món, huỷ / khôi phục, xoá (Ctrl+M)">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE762;" FontSize="{StaticResource FontSizeBody}" />
+                    <TextBlock Text="Chọn nhiều" />
+                </StackPanel>
+                <ToggleButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Modifiers="Control" Key="M" />
+                </ToggleButton.KeyboardAccelerators>
+            </ToggleButton>
+            <DropDownButton x:Name="SortButton" Grid.Column="2" AutomationProperties.Name="Sắp xếp" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <FontIcon Glyph="&#xE8CB;" FontSize="{StaticResource FontSizeBody}" />
                     <TextBlock x:Name="SortText" Text="Sắp xếp" />
@@ -70,7 +82,7 @@
                     <MenuFlyout x:Name="SortMenu" Placement="BottomEdgeAlignedRight" />
                 </DropDownButton.Flyout>
             </DropDownButton>
-            <Button Grid.Column="2" Click="Refresh_Click" AutomationProperties.Name="Làm mới" ToolTipService.ToolTip="Tải lại (F5)" VerticalAlignment="Center">
+            <Button Grid.Column="3" Click="Refresh_Click" AutomationProperties.Name="Làm mới" ToolTipService.ToolTip="Tải lại (F5)" VerticalAlignment="Center">
                 <SymbolIcon Symbol="Refresh" />
                 <Button.KeyboardAccelerators>
                     <KeyboardAccelerator Key="F5" />
@@ -109,6 +121,59 @@
         </Grid>
 
         <StackPanel Grid.Row="3" Spacing="6">
+            <!-- Thanh sửa hàng loạt (chế độ Chọn nhiều): 2 hàng để cửa sổ hẹp không bị cắt -->
+            <Border Padding="12,8" CornerRadius="8" BorderThickness="1" BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.SelectMode), Mode=OneWay}">
+                <StackPanel Spacing="8">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="SelectAllBox" Content="Chọn hết" MinWidth="0" Click="SelectAll_Click" IsChecked="{x:Bind ViewModel.AllSelected, Mode=OneWay}"
+                                  AutomationProperties.Name="Chọn hết đơn đang hiện" ToolTipService.ToolTip="Chọn mọi đơn đang hiện (theo bộ lọc); đã chọn hết thì bỏ chọn hết" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}" VerticalAlignment="Center" TextWrapping="Wrap"
+                                   AutomationProperties.AutomationId="SelectionText" />
+                        <Button Grid.Column="2" Click="CloseSelect_Click" AutomationProperties.Name="Thoát chọn nhiều" ToolTipService.ToolTip="Thoát chọn nhiều (Ctrl+M)">
+                            <SymbolIcon Symbol="Cancel" />
+                        </Button>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Click="BulkDelivery_Click" IsEnabled="{x:Bind local:OrdersPage.Positive(ViewModel.SelectedCount), Mode=OneWay}" AutomationProperties.Name="Đổi ngày giao">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><SymbolIcon Symbol="Calendar" /><TextBlock Text="Ngày giao" /></StackPanel>
+                        </Button>
+                        <Button Click="BulkPayment_Click" IsEnabled="{x:Bind local:OrdersPage.Positive(ViewModel.SelectedCount), Mode=OneWay}" AutomationProperties.Name="Ngày thanh toán"
+                                ToolTipService.ToolTip="Đơn đã thanh toán: đổi ngày thanh toán. Đơn chưa thanh toán: chuyển sang Đã thanh toán ngày đó">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><SymbolIcon Symbol="Accept" /><TextBlock Text="Ngày thanh toán" /></StackPanel>
+                        </Button>
+                        <Button Click="BulkItems_Click" IsEnabled="{x:Bind local:OrdersPage.Positive(ViewModel.SelectedCount), Mode=OneWay}" AutomationProperties.Name="Đổi tên món"
+                                ToolTipService.ToolTip="Đổi tên món ghi trên đơn (giữ giá), thay bằng món khác, hoặc cập nhật tên theo Danh mục">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><SymbolIcon Symbol="Rename" /><TextBlock Text="Tên món" /></StackPanel>
+                        </Button>
+                        <DropDownButton IsEnabled="{x:Bind local:OrdersPage.Positive(ViewModel.SelectedCount), Mode=OneWay}" AutomationProperties.Name="Trạng thái đơn đã chọn">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><SymbolIcon Symbol="Tag" /><TextBlock Text="Trạng thái" /></StackPanel>
+                            <DropDownButton.Flyout>
+                                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                                    <MenuFlyoutItem Text="Trả về Đã lên đơn (chưa thanh toán)" Click="BulkUnpay_Click" />
+                                    <MenuFlyoutItem Text="Huỷ đơn" Click="BulkCancel_Click" />
+                                    <MenuFlyoutItem Text="Khôi phục đơn huỷ" Click="BulkRestore_Click" />
+                                </MenuFlyout>
+                            </DropDownButton.Flyout>
+                        </DropDownButton>
+                        <Button Click="BulkDelete_Click" IsEnabled="{x:Bind local:OrdersPage.Positive(ViewModel.SelectedCount), Mode=OneWay}" AutomationProperties.Name="Xoá đơn đã chọn">
+                            <StackPanel Orientation="Horizontal" Spacing="6"><SymbolIcon Symbol="Delete" /><TextBlock Text="Xoá" /></StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            <InfoBar Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.BulkMessage, Mode=OneWay}" Closed="BulkBar_Closed"
+                     IsOpen="{x:Bind local:Ui.HasText(ViewModel.BulkMessage), Mode=OneWay}" AutomationProperties.AutomationId="BulkMessage">
+                <InfoBar.ActionButton>
+                    <Button Content="Hoàn tác" Click="BulkUndo_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.CanUndoBulk), Mode=OneWay}"
+                            AutomationProperties.Name="Hoàn tác sửa hàng loạt" />
+                </InfoBar.ActionButton>
+            </InfoBar>
             <InfoBar Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                      IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
             <!-- Nhắc xuất (RefreshUnsynced): đơn tạo / sửa trên máy tính sẽ bị lần nhập backup từ điện thoại sau đè mất -->
@@ -132,10 +197,19 @@
                     </ItemsRepeater.Layout>
                     <ItemsRepeater.ItemTemplate>
                         <DataTemplate x:DataType="vm:OrderCardViewModel">
-                            <Button Click="Card_Click" Tag="{x:Bind}" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
-                                    Background="Transparent" BorderThickness="0" AutomationProperties.Name="{x:Bind AccessibleName}">
-                                <local:OrderCard Card="{x:Bind}" />
-                            </Button>
+                            <!-- Chọn nhiều: ô tick bên trái thẻ; bấm thẻ = đổi tick (Shift = cả dải) thay cho mở đơn -->
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}" Visibility="{x:Bind ShowCheck, Mode=OneWay}" MinWidth="0" VerticalAlignment="Top"
+                                          Margin="0,10,0,0" AutomationProperties.Name="{x:Bind local:OrdersPage.SelectName(AccessibleName)}" />
+                                <Button Grid.Column="1" Click="Card_Click" Tag="{x:Bind}" Padding="0" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                        Background="Transparent" BorderThickness="0" AutomationProperties.Name="{x:Bind AccessibleName}">
+                                    <local:OrderCard Card="{x:Bind}" />
+                                </Button>
+                            </Grid>
                         </DataTemplate>
                     </ItemsRepeater.ItemTemplate>
                 </ItemsRepeater>

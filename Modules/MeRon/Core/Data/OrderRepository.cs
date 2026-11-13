@@ -219,6 +219,73 @@ public sealed class OrderRepository(MeRonDatabase database)
         return changed;
     }
 
+    /// <summary>Sửa hàng loạt (<see cref="BulkEdit"/>): ghi trạng thái mới của mọi đơn trong 1 transaction - đơn sửa thì ghi
+    /// trạng thái, ngày giao / thanh toán, tiền, các dòng món (theo mã dòng, không thêm / bớt dòng); <c>After</c> null thì xoá đơn.
+    /// Đơn không còn thì bỏ qua. Trả số đơn đã ghi.</summary>
+    public int ApplyBulk(IReadOnlyList<BulkChange> changes) =>
+        WriteStates(changes.Select(c => (c.Before.Id, c.After, (Order?)null)).ToList());
+
+    /// <summary>Hoàn tác lô vừa sửa: đơn đã sửa ghi lại như trước, đơn đã xoá chèn lại đúng mã đơn / mã dòng món.</summary>
+    public int RevertBulk(IReadOnlyList<BulkChange> changes) =>
+        WriteStates(changes.Select(c => (c.Before.Id, (Order?)c.Before, c.After is null ? c.Before : null)).ToList());
+
+    private int WriteStates(IReadOnlyList<(long Id, Order? State, Order? Insert)> states)
+    {
+        using var connection = database.Open();
+        using var transaction = connection.BeginTransaction();
+        var now = MeRonDatabase.Now();
+        var written = 0;
+        foreach (var (id, state, insert) in states)
+        {
+            if (insert is not null)
+            {
+                Execute(connection,
+                    "INSERT INTO Orders(id, userId, status, deliveryDatetime, paymentDatetime, discountValue, subTotal, total, note, createdAt, updatedAt) " +
+                    "VALUES($id, $userId, $status, $delivery, $payment, $discount, $subTotal, $total, $note, $now, $now)",
+                    ("$id", insert.Id), ("$userId", insert.UserId), ("$status", (long)insert.Status), ("$delivery", insert.DeliveryDatetime),
+                    ("$payment", insert.PaymentDatetime), ("$discount", insert.DiscountValue), ("$subTotal", insert.SubTotal), ("$total", insert.Total),
+                    ("$note", insert.Note ?? string.Empty), ("$now", now));
+                foreach (var item in insert.Items)
+                {
+                    Execute(connection,
+                        "INSERT INTO OrderItems(id, orderId, productId, snapshotName, snapshotPrice, quantity, lineTotal, createdAt, updatedAt) " +
+                        "VALUES($id, $orderId, $productId, $name, $price, $quantity, $lineTotal, $now, $now)",
+                        ("$id", item.Id), ("$orderId", insert.Id), ("$productId", item.ProductId), ("$name", item.SnapshotName),
+                        ("$price", item.SnapshotPrice), ("$quantity", item.Quantity), ("$lineTotal", item.LineTotal), ("$now", now));
+                }
+                written++;
+            }
+            else if (state is null)
+            {
+                Execute(connection, "DELETE FROM OrderItems WHERE orderId = $id", ("$id", id));
+                written += Execute(connection, "DELETE FROM Orders WHERE id = $id", ("$id", id));
+            }
+            else
+            {
+                var changed = Execute(connection,
+                    "UPDATE Orders SET status = $status, deliveryDatetime = $delivery, paymentDatetime = $payment, subTotal = $subTotal, " +
+                    "total = $total, updatedAt = $now WHERE id = $id",
+                    ("$status", (long)state.Status), ("$delivery", state.DeliveryDatetime), ("$payment", state.PaymentDatetime),
+                    ("$subTotal", state.SubTotal), ("$total", state.Total), ("$now", now), ("$id", id));
+                if (changed == 0)
+                {
+                    continue;
+                }
+                written++;
+                foreach (var item in state.Items)
+                {
+                    Execute(connection,
+                        "UPDATE OrderItems SET productId = $productId, snapshotName = $name, snapshotPrice = $price, lineTotal = $lineTotal, updatedAt = $now " +
+                        "WHERE id = $itemId AND orderId = $id AND (productId IS NOT $productId OR snapshotName IS NOT $name OR snapshotPrice IS NOT $price OR lineTotal IS NOT $lineTotal)",
+                        ("$productId", item.ProductId), ("$name", item.SnapshotName), ("$price", item.SnapshotPrice), ("$lineTotal", item.LineTotal),
+                        ("$now", now), ("$itemId", item.Id), ("$id", id));
+                }
+            }
+        }
+        transaction.Commit();
+        return written;
+    }
+
     // ---- tiện ích ----
 
     private static List<Order> Read(SqliteConnection connection, string sql, params (string, object?)[] parameters)

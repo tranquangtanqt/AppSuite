@@ -10,9 +10,17 @@ public sealed record OrderCardLine(string Name, string Price, string Quantity, s
 /// Thẻ đơn hàng (danh sách Đặt hàng + màn Chi tiết) như order_card / order_detail_card của điện thoại: tên khách + ngày
 /// giao, các dòng món, Tạm tính / Giảm giá (chỉ khi có giảm giá), Tổng, ghi chú; nền theo trạng thái.
 /// </summary>
-public sealed class OrderCardViewModel(Order order)
+public sealed partial class OrderCardViewModel(Order order) : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
 {
     public Order Order { get; } = order;
+
+    /// <summary>Trang Đặt hàng, chế độ Chọn nhiều: đơn đang được tick.</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private bool _isSelected;
+
+    /// <summary>Đang ở chế độ Chọn nhiều - thẻ hiện ô tick.</summary>
+    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
+    private bool _showCheck;
 
     public long Id => Order.Id;
 

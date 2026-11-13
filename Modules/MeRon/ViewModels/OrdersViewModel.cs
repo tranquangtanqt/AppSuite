@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MeRon.Core;
 using MeRon.Core.Models;
+using MeRon.Core.Orders;
 using MeRon.Services;
 using Microsoft.Extensions.Logging;
 
@@ -138,11 +139,20 @@ public sealed partial class OrdersViewModel : ObservableObject
                 _suspendReload = false;
             }
             var orders = AppServices.Orders.Query(Filter);
+            foreach (var card in Cards)
+            {
+                card.PropertyChanged -= Card_PropertyChanged;
+            }
             Cards.Clear();
             foreach (var order in orders)
             {
-                Cards.Add(new OrderCardViewModel(order));
+                // Chọn nhiều: tải lại (sau khi sửa, đổi bộ lọc) giữ tick của các đơn vẫn còn trong danh sách.
+                var card = new OrderCardViewModel(order) { ShowCheck = SelectMode, IsSelected = SelectMode && _selectedIds.Contains(order.Id) };
+                card.PropertyChanged += Card_PropertyChanged;
+                Cards.Add(card);
             }
+            _selectedIds.IntersectWith(orders.Select(o => o.Id));
+            UpdateSelection();
             Summary = orders.Count == 0
                 ? "Không có đơn nào khớp bộ lọc."
                 : $"{VnFormat.Number(orders.Count)} đơn  ·  Tổng {VnFormat.Money(orders.Sum(o => o.Total))}";
@@ -154,6 +164,152 @@ public sealed partial class OrdersViewModel : ObservableObject
             Error = "Không đọc được đơn hàng: " + ex.Message;
         }
         OnPropertyChanged(nameof(IsEmpty));
+    }
+
+    // ---------- Chọn nhiều: sửa hàng loạt đơn đã lưu (BulkEdit, 2026-11-13) ----------
+
+    private readonly HashSet<long> _selectedIds = [];
+
+    /// <summary>Thẻ bấm gần nhất (gốc của Shift + bấm chọn 1 dải).</summary>
+    private int _anchor = -1;
+
+    [ObservableProperty]
+    private bool _selectMode;
+
+    [ObservableProperty]
+    private int _selectedCount;
+
+    [ObservableProperty]
+    private string _selectionText = string.Empty;
+
+    /// <summary>Ô Tick hết: true = mọi đơn đang hiện, false = chưa chọn, null = 1 phần.</summary>
+    [ObservableProperty]
+    private bool? _allSelected = false;
+
+    /// <summary>Báo kết quả lần sửa hàng loạt (InfoBar có nút Hoàn tác).</summary>
+    [ObservableProperty]
+    private string _bulkMessage = string.Empty;
+
+    /// <summary>Lô vừa sửa - Hoàn tác trả các đơn còn y như lúc vừa sửa về như trước.</summary>
+    private IReadOnlyList<BulkChange> _lastBulk = [];
+
+    [ObservableProperty]
+    private bool _canUndoBulk;
+
+    partial void OnSelectModeChanged(bool value)
+    {
+        _selectedIds.Clear();
+        _anchor = -1;
+        foreach (var card in Cards)
+        {
+            card.ShowCheck = value;
+            card.IsSelected = false;
+        }
+        UpdateSelection();
+    }
+
+    private void Card_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(OrderCardViewModel.IsSelected) && sender is OrderCardViewModel card)
+        {
+            if (card.IsSelected)
+            {
+                _selectedIds.Add(card.Id);
+            }
+            else
+            {
+                _selectedIds.Remove(card.Id);
+            }
+            UpdateSelection();
+        }
+    }
+
+    /// <summary>Bấm thẻ ở chế độ Chọn nhiều: đổi tick; <paramref name="range"/> (Shift) = tick cả dải từ thẻ bấm trước tới thẻ này.</summary>
+    public void Toggle(OrderCardViewModel card, bool range)
+    {
+        var index = Cards.IndexOf(card);
+        if (range && _anchor >= 0 && _anchor < Cards.Count && index >= 0)
+        {
+            for (var i = Math.Min(_anchor, index); i <= Math.Max(_anchor, index); i++)
+            {
+                Cards[i].IsSelected = true;
+            }
+        }
+        else
+        {
+            card.IsSelected = !card.IsSelected;
+        }
+        _anchor = index;
+    }
+
+    /// <summary>Ô Tick hết: đã chọn hết thì bỏ chọn hết, không thì chọn mọi đơn đang hiện (theo bộ lọc).</summary>
+    public void ToggleAll()
+    {
+        var select = AllSelected != true;
+        foreach (var card in Cards)
+        {
+            card.IsSelected = select;
+        }
+    }
+
+    private void UpdateSelection()
+    {
+        var selected = Cards.Where(c => c.IsSelected).ToList();
+        SelectedCount = selected.Count;
+        AllSelected = selected.Count == 0 ? false : selected.Count == Cards.Count ? true : null;
+        SelectionText = selected.Count == 0
+            ? "Bấm vào thẻ để chọn đơn (Shift + bấm: chọn cả dải)"
+            : $"Đã chọn {VnFormat.Number(selected.Count)} / {VnFormat.Number(Cards.Count)} đơn  ·  Tổng {VnFormat.Money(selected.Sum(c => c.Order.Total))}"
+              + (selected.Any(c => c.Status == OrderStatus.Completed) ? $"  ·  {selected.Count(c => c.Status == OrderStatus.Completed)} đã thanh toán" : string.Empty);
+    }
+
+    /// <summary>Các đơn đang chọn, đọc lại từ database (có thể vừa sửa ở nơi khác) theo thứ tự trên danh sách.</summary>
+    public IReadOnlyList<Order> SelectedOrders() =>
+        Cards.Where(c => c.IsSelected).Select(c => AppServices.Orders.Get(c.Id)).OfType<Order>().ToList();
+
+    /// <summary>Ghi lô đã xem trước; trả lỗi hoặc null. Nhớ lô để Hoàn tác.</summary>
+    public string? ApplyBulk(BulkPlan plan)
+    {
+        var written = 0;
+        var error = AppServices.Try(plan.Title, () => written = AppServices.Orders.ApplyBulk(plan.Changes));
+        if (error is not null)
+        {
+            return error;
+        }
+        AppLog.For("Orders").LogInformation("Sửa hàng loạt: {Title} - {Count} đơn", plan.Title, written);
+        _lastBulk = plan.Changes;
+        CanUndoBulk = written > 0;
+        BulkMessage = $"{plan.Title}: đã sửa {VnFormat.Number(written)} đơn." + (plan.Skipped.Count > 0 ? $" Bỏ qua {plan.Skipped.Count} đơn." : string.Empty);
+        Load();
+        return null;
+    }
+
+    /// <summary>Hoàn tác: (trả lại được, đã bị sửa / xoá sau đó - giữ nguyên).</summary>
+    public (IReadOnlyList<BulkChange> Revert, IReadOnlyList<BulkChange> Keep) PlanUndoBulk()
+    {
+        var revert = new List<BulkChange>();
+        var keep = new List<BulkChange>();
+        foreach (var change in _lastBulk)
+        {
+            (BulkEdit.Untouched(change, AppServices.Orders.Get(change.Before.Id)) ? revert : keep).Add(change);
+        }
+        return (revert, keep);
+    }
+
+    public string? UndoBulk(IReadOnlyList<BulkChange> revert, int kept)
+    {
+        var count = 0;
+        var error = AppServices.Try("Hoàn tác sửa hàng loạt", () => count = AppServices.Orders.RevertBulk(revert));
+        if (error is not null)
+        {
+            return error;
+        }
+        AppLog.For("Orders").LogInformation("Hoàn tác sửa hàng loạt: {Count} đơn, giữ {Kept}", count, kept);
+        _lastBulk = [];
+        CanUndoBulk = false;
+        BulkMessage = $"Đã hoàn tác {VnFormat.Number(count)} đơn." + (kept > 0 ? $" Giữ nguyên {kept} đơn đã sửa / xoá sau đó." : string.Empty);
+        Load();
+        return null;
     }
 
     /// <summary>Tham số cho đơn mới: điền sẵn khách đang lọc; Từ ngày = Đến ngày thì điền sẵn ngày giao đó (như điện thoại).</summary>

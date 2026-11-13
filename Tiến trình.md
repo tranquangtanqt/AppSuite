@@ -512,6 +512,14 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   trong ô Chọn món không đổi được. Nguyên nhân: chữ viết tắt "đậu = sữa đậu" đổi từng từ nên "Sữa đậu" thành "Sữa sữa đậu";
   chọn món ghi lại "1 Sữa đậu" rồi đọc lại vẫn bị đổi. Sửa: chữ đã trùng nguyên tên 1 món thì không đổi chữ viết tắt; đổi xong
   không ra món thì thử chữ như ghi. Cập nhật F1, README. Unit test 248/248 (2026-11-13)
+- [x] **Đặt hàng - Chọn nhiều, sửa hàng loạt đơn đã lưu** (người dùng chốt 2026-11-13: hay cần đổi ngày giao, ngày thanh toán,
+  đổi tên món; có Xoá): nút Chọn nhiều (Ctrl+M), thẻ có ô tick, bấm thẻ = tick, Shift + bấm = cả dải, Chọn hết theo bộ lọc. Thanh
+  thao tác: Ngày giao; Ngày thanh toán (đã thanh toán → đổi ngày, chưa → Đã thanh toán ngày đó); Tên món (đổi tên giữ giá / thay
+  bằng món khác - đơn đã thanh toán giữ giá / cập nhật tên theo Danh mục); Trạng thái (Trả về Đã lên đơn, Huỷ, Khôi phục); Xoá.
+  Hộp xem trước trước mỗi thao tác (đơn đã thanh toán tô cam, đơn bỏ qua kèm lý do); Hoàn tác lô gần nhất (đơn đã xoá chèn lại
+  đúng mã; đơn bị sửa thêm sau đó giữ nguyên). Cập nhật F1, README. Unit test 256/256; GUI Sandbox (UIA) 20/20 (tạo 4 đơn, chọn, ngày thanh toán + hoàn tác, đổi tên món, thay món, huỷ / khôi phục, đổi ngày giao + hoàn tác, xoá + hoàn tác) (2026-11-13)
+- [ ] Đổi tên món thuộc Danh mục bằng sửa hàng loạt: mở đơn đó trong form rồi Lưu thì tên quay về tên trong Danh mục (form lấy tên món theo Danh mục) - hỏi người dùng có cần giữ tên đã đổi không
+- [ ] Để sau (sửa hàng loạt): sao chép nhiều đơn sang ngày khác (khách đặt cố định); áp giá mới của món cho đơn chưa thanh toán
 - [ ] Người dùng thử tay Ghim trên dữ liệu thật (chọn khách trùng tên, Sửa đơn rồi sửa dòng khác / tắt mở app, bật Hỏi trước khi bỏ ghim)
 - [ ] Cửa sổ hẹp (~1000 px): ô Chọn món trên thẻ bị cắt mất nửa phải (hàng nút Sửa đơn / Chọn khách / Chọn món / Sửa dòng không
   xuống dòng)
