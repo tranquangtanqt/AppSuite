@@ -230,6 +230,11 @@ public class BatchOrderTests
         Assert.Equal("a\nX\nc", BatchOrderParser.ReplaceLine("a\rb\rc", 2, "X")); // ô nhập WinUI xuống dòng bằng \r
         Assert.Equal([1, 2], BatchOrderParser.Parse("706 | 1 giò\r205 | 1 giò", Today).Lines.Select(l => l.Number).ToArray());
         Assert.Equal("Ngày | 29/10\nc", BatchOrderParser.RemoveLines("Ngày | 29/10\nb\nc", [2]));
+
+        // Nút xoá trên thẻ: bỏ hẳn dòng (cả dòng Ngày), số dòng ngoài khoảng thì giữ nguyên
+        Assert.Equal("a\nc", BatchOrderParser.RemoveLine("a\rb\rc", 2));
+        Assert.Equal("b", BatchOrderParser.RemoveLine("a\nb", 1));
+        Assert.Equal("a\nb", BatchOrderParser.RemoveLine("a\nb", 5));
     }
 
     [Fact]

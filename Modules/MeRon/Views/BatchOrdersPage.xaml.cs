@@ -30,6 +30,11 @@ public sealed partial class BatchOrdersPage : Page
             _autoRefresh.Stop();
             ViewModel.RefreshIfChanged();
         };
+        _messageTimer.Tick += (_, _) =>
+        {
+            _messageTimer.Stop();
+            ViewModel.Message = string.Empty;
+        };
         ViewModel.PropertyChanged += ViewModel_PropertyChanged;
         ViewModel.PinnedLinesEdited += edits => DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => PinnedLinesEdited(edits));
     }
@@ -66,6 +71,40 @@ public sealed partial class BatchOrdersPage : Page
         CheckAllBox.IsChecked = ViewModel.AllChecked;
     }
 
+    /// <summary>Thông báo xanh tự đóng sau chừng này (rê chuột vào thì giữ).</summary>
+    private readonly DispatcherTimer _messageTimer = new() { Interval = TimeSpan.FromSeconds(8) };
+
+    private bool _overMessage;
+
+    private void MessageBar_Closed(InfoBar sender, InfoBarClosedEventArgs args) => ViewModel.Message = string.Empty;
+
+    private void MessageBar_PointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        _overMessage = true;
+        _messageTimer.Stop();
+    }
+
+    private void MessageBar_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        _overMessage = false;
+        if (ViewModel.Message.Length > 0)
+        {
+            _messageTimer.Start();
+        }
+    }
+
+    public static string RemoveName(string lineText) => $"Xoá {lineText}";
+
+    private void RemoveLine_Click(object sender, RoutedEventArgs e)
+    {
+        if (RowOf(sender) is { } row)
+        {
+            ViewModel.RemoveLine(row);
+        }
+    }
+
+    private void UndoRemove_Click(object sender, RoutedEventArgs e) => ViewModel.UndoRemove();
+
     private void Unpin_Click(object sender, RoutedEventArgs e)
     {
         if (RowOf(sender) is { } row)
@@ -76,6 +115,15 @@ public sealed partial class BatchOrdersPage : Page
 
     private void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName == nameof(BatchOrdersViewModel.Message))
+        {
+            _messageTimer.Stop();
+            if (ViewModel.Message.Length > 0 && !_overMessage)
+            {
+                _messageTimer.Start();
+            }
+            return;
+        }
         if (e.PropertyName is not (nameof(BatchOrdersViewModel.Text) or nameof(BatchOrdersViewModel.AbbreviationsText)))
         {
             return;

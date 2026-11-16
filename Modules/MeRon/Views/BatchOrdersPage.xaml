@@ -128,8 +128,15 @@
         <StackPanel Grid.Row="3" Spacing="6">
             <InfoBar Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                      IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
-            <InfoBar Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}"
-                     IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="BatchMessage" />
+            <!-- Tự đóng sau vài giây (MessageTimer); rê chuột vào thì giữ. ✕ / tự đóng đều xoá Message -->
+            <InfoBar Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}" Closed="MessageBar_Closed"
+                     PointerEntered="MessageBar_PointerEntered" PointerExited="MessageBar_PointerExited"
+                     IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="BatchMessage">
+                <InfoBar.ActionButton>
+                    <Button Content="Hoàn tác" Click="UndoRemove_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.CanUndoRemove), Mode=OneWay}"
+                            AutomationProperties.Name="Hoàn tác xoá dòng" />
+                </InfoBar.ActionButton>
+            </InfoBar>
         </StackPanel>
 
         <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
@@ -213,13 +220,25 @@
                                 <Button Content="Bỏ ghim" Click="Unpin_Click" Tag="{x:Bind}" Visibility="{x:Bind IsPinned}"
                                         ToolTipService.ToolTip="Bỏ khách / món đã chọn trong popup / ô chọn, đọc lại dòng theo chữ" />
                             </StackPanel>
-                            <StackPanel Grid.Column="3" Spacing="2" MinWidth="90">
+                            <Grid Grid.Column="3" RowSpacing="2" MinWidth="90">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
                                 <TextBlock Text="{x:Bind TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right" />
-                                <Border HorizontalAlignment="Right" CornerRadius="8" Padding="6,1" Visibility="{x:Bind Paid}"
+                                <Border Grid.Row="1" HorizontalAlignment="Right" CornerRadius="8" Padding="6,1" Visibility="{x:Bind Paid}"
                                         Background="{x:Bind local:BatchOrdersPage.PaidSoft(Paid)}">
                                     <TextBlock Text="Đã thanh toán" FontSize="{StaticResource FontSizeCaption}" Foreground="{x:Bind local:BatchOrdersPage.PaidSolid(Paid)}" />
                                 </Border>
-                            </StackPanel>
+                                <!-- Xoá dòng khỏi ô chữ (không đụng dữ liệu); thông báo có Hoàn tác -->
+                                <Button Grid.Row="2" Click="RemoveLine_Click" Tag="{x:Bind}" HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                                        Padding="7,5" Background="Transparent" BorderThickness="0" Margin="0,4,-4,-2"
+                                        AutomationProperties.Name="{x:Bind local:BatchOrdersPage.RemoveName(LineText)}"
+                                        ToolTipService.ToolTip="Xoá dòng này khỏi ô chữ (chưa lưu đơn nào, có Hoàn tác)">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="14" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                                </Button>
+                            </Grid>
                         </Grid>
                     </DataTemplate>
                 </ItemsRepeater.ItemTemplate>

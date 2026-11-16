@@ -367,6 +367,66 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         Refresh();
     }
 
+    /// <summary>Nút xoá trên thẻ: bỏ dòng khỏi ô chữ; thông báo có nút Hoàn tác (trả lại chữ + ghim) đến khi thông báo đóng / ô chữ đổi.</summary>
+    public void RemoveLine(BatchRowViewModel row)
+    {
+        var line = row.Match.Line;
+        if (!BatchOrderParser.HasLine(Text, line.Number, line.Raw))
+        {
+            Refresh();
+            Error = "Ô chữ vừa đổi nên chưa xoá được dòng này - xem lại danh sách rồi bấm lại.";
+            return;
+        }
+        var before = Text;
+        var pin = _pins.Get(line.Raw);
+        Text = BatchOrderParser.RemoveLine(Text, line.Number);
+        Refresh();
+        _removed = (before, Text, line.Raw, pin);
+        Message = $"Đã xoá dòng {line.Number}: {line.Raw}";
+        CanUndoRemove = true;
+    }
+
+    /// <summary>Hoàn tác xoá dòng: ô chữ chưa đổi từ lúc xoá thì trả lại nguyên chữ cũ (+ ghim của dòng).</summary>
+    public void UndoRemove()
+    {
+        if (_removed is not { } removed)
+        {
+            return;
+        }
+        _removed = null;
+        CanUndoRemove = false;
+        if (!BatchOrderParser.SameText(Text, removed.After))
+        {
+            Message = string.Empty;
+            Error = "Ô chữ đã đổi sau khi xoá nên không hoàn tác được - gõ lại dòng: " + removed.Raw;
+            return;
+        }
+        if (removed.Pin is not null)
+        {
+            _pins.Set(removed.Raw, removed.Pin);
+            SavePins();
+        }
+        Text = removed.Before;
+        Message = string.Empty;
+        Refresh();
+    }
+
+    private (string Before, string After, string Raw, BatchPin? Pin)? _removed;
+
+    /// <summary>Nút Hoàn tác trên thông báo "Đã xoá dòng".</summary>
+    [ObservableProperty]
+    private bool _canUndoRemove;
+
+    /// <summary>Thông báo đổi / đóng (tự đóng sau vài giây) → hết hoàn tác xoá dòng.</summary>
+    partial void OnMessageChanged(string value)
+    {
+        if (_removed is not null && !value.StartsWith("Đã xoá dòng ", StringComparison.Ordinal))
+        {
+            _removed = null;
+            CanUndoRemove = false;
+        }
+    }
+
     /// <summary>Chữ khách ghi vào dòng khi chọn khách (<see cref="BatchOrderParser.CustomerText"/>).</summary>
     public string CustomerLineText(long id, string? name, string? address) =>
         BatchOrderParser.CustomerText(id, name, address, Customers.Select(c => (c.Id, (string?)c.Name)));

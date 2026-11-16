@@ -453,6 +453,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   4 dòng) thu thành **1 dòng** dưới bộ lọc (~37 px): "N dòng thay đổi chưa xuất (từ dd/MM HH:mm) · nhập backup sẽ đè mất"
   (`UnsyncedEdits.ShortText`), câu đầy đủ ở tooltip; nút Xuất lên Google Drive + Xuất… (mở trang Xuất) + ✕; xuất xong dòng
   xanh "Đã xuất" / lỗi đỏ "Chưa xuất được". Ảnh trước / sau đã duyệt. Unit test 277/277; GUI Sandbox (UIA) 7/7 (2026-11-16)
+- [x] Nhập đơn hàng loạt (người dùng 2026-11-16): thông báo xanh ("Đã lưu 1 đơn…") **tự đóng sau 8 giây** (rê chuột vào thì
+  giữ); mỗi thẻ có **nút xoá** dạng icon (thùng rác đỏ, góc dưới phải) bỏ dòng khỏi ô chữ, thông báo có Hoàn tác (trả chữ + ghim).
+  Unit test 277/277; GUI Sandbox (UIA) 17/17 (2026-11-16)
 - [ ] Chuông Thông báo ở menu trái (cách a) - để sau, khi có thêm loại nhắc khác (vd tự sao lưu lên Google)
 - [x] Thống kê theo món ăn (người dùng chốt 4 đề xuất 2026-11-13): cột **So với kỳ trước** ▲▼ % theo số lượng (kỳ trước =
   cùng số ngày liền trước, như Biểu đồ; "mới" = kỳ trước chưa bán; món kỳ trước có mà kỳ này không bán nữa nối cuối bảng, mờ,

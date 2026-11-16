@@ -209,6 +209,17 @@ public static partial class BatchOrderParser
         return string.Join("\n", lines);
     }
 
+    /// <summary>Bỏ hẳn dòng số <paramref name="number"/> (từ 1) - nút xoá trên thẻ; các dòng sau dồn lên.</summary>
+    public static string RemoveLine(string text, int number)
+    {
+        var lines = SplitLines(text).ToList();
+        if (number >= 1 && number <= lines.Count)
+        {
+            lines.RemoveAt(number - 1);
+        }
+        return string.Join("\n", lines);
+    }
+
     /// <summary>Cùng nội dung, không tính kiểu xuống dòng (ô nhập của WinUI đổi \n thành \r).</summary>
     public static bool SameText(string? first, string? second) => SplitLines(first).SequenceEqual(SplitLines(second));
 
