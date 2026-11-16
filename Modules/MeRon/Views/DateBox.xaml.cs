@@ -36,6 +36,7 @@ public sealed partial class DateBox : UserControl
     {
         InitializeComponent();
         PlaceholderText = "dd/mm/yyyy";
+        Input.Loaded += (_, _) => HideDeleteButton();
         // Tên cho trình đọc màn hình / UI Automation đặt trên DateBox → chuyển vào ô gõ (bỏ khỏi khung ngoài: không thì có 2 phần
         // tử cùng tên "Từ ngày"...).
         Loaded += (_, _) =>
@@ -49,6 +50,37 @@ public sealed partial class DateBox : UserControl
             AutomationProperties.SetName(CalendarButton, $"Mở lịch {name}");
             AutomationProperties.SetName(this, string.Empty);
         };
+    }
+
+    /// <summary>
+    /// Nút ✕ (xoá chữ) của TextBox hiện khi ô có focus, chiếm thêm ~30 px nằm dưới nút lịch: ô 136 px chỉ còn chừng 60 px cho chữ nên
+    /// "15/11/2026" bị đẩy mất đầu ("/11/2026"). Xoá ngày đã có trong lịch → bỏ hẳn nút ✕. Đặt MaxWidth = 0 (không đặt Visibility:
+    /// trạng thái ButtonVisible của template ghi đè Visibility).
+    /// </summary>
+    private void HideDeleteButton()
+    {
+        if (FindChild(Input, "DeleteButton") is FrameworkElement delete)
+        {
+            delete.MaxWidth = 0;
+            delete.Margin = new Thickness(0);
+        }
+    }
+
+    private static DependencyObject? FindChild(DependencyObject parent, string name)
+    {
+        for (var i = 0; i < Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(parent, i);
+            if (child is FrameworkElement { Name: var n } && n == name)
+            {
+                return child;
+            }
+            if (FindChild(child, name) is { } found)
+            {
+                return found;
+            }
+        }
+        return null;
     }
 
     public DateTimeOffset? Date
