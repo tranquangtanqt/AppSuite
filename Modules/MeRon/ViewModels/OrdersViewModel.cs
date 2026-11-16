@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MeRon.Core;
+using MeRon.Core.Data;
 using MeRon.Core.Models;
 using MeRon.Core.Orders;
 using MeRon.Services;
@@ -17,7 +18,8 @@ public sealed record OrderFormArgs(long? OrderId, long? InitialUserId = null, Da
 
 /// <summary>Tham số màn Chi tiết: bộ lọc của danh sách đơn (hoặc của báo cáo, Đợt 3).</summary>
 /// <param name="Title">Dòng tiêu đề trên cùng phần được chụp ảnh (vd mở từ trang Công nợ: các đơn đang nợ của 1 khách); null = không có.</param>
-public sealed record OrderDetailArgs(OrderFilter Filter, string? Title = null);
+/// <param name="DebtName">Mở từ Công nợ: tiêu đề "khách · Tổng" tính lại mỗi lần đọc (xem <see cref="OrderDetailViewModel.Load"/>).</param>
+public sealed record OrderDetailArgs(OrderFilter Filter, string? Title = null, string? DebtName = null);
 
 /// <summary>
 /// Trang Đặt hàng: bộ lọc trạng thái / khách / khoảng ngày giao + sắp xếp, danh sách thẻ đơn. Như điện thoại: vào trang từ
@@ -382,11 +384,19 @@ public sealed partial class OrderDetailViewModel : ObservableObject
     [ObservableProperty]
     private string _captureTitle = string.Empty;
 
-    public void Load(OrderFilter filter, string? title = null)
+    private string? _title;
+
+    private string? _debtName;
+
+    /// <summary><paramref name="debtName"/> (mở từ Công nợ): tiêu đề = "khách · Tổng" tính lại theo các đơn đang hiện mỗi lần đọc -
+    /// quay lại từ form sửa đơn / sau Thanh toán toàn bộ thì tổng đúng ngay.</summary>
+    public void Load(OrderFilter filter, string? title = null, string? debtName = null)
     {
-        CaptureTitle = title ?? string.Empty;
+        _title = title;
+        _debtName = debtName;
         Filter = filter;
         _orders = AppServices.Orders.Query(filter);
+        CaptureTitle = debtName is not null ? DebtsViewModel.CaptureTitle(debtName, _orders.Sum(o => o.Total)) : title ?? string.Empty;
         Groups.Clear();
         foreach (var group in _orders.GroupBy(o => o.UserId ?? 0))
         {
@@ -403,16 +413,56 @@ public sealed partial class OrderDetailViewModel : ObservableObject
 
     public bool HasGroups => Groups.Count > 0;
 
-    /// <summary>Thanh toán toàn bộ; trả về lỗi hoặc null.</summary>
+    /// <summary>Lô vừa Thanh toán toàn bộ - nút Hoàn tác trên thông báo (thông báo đổi / đóng thì hết).</summary>
+    private PaidBatch? _paid;
+
+    private string _paidMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _canUndoPay;
+
+    partial void OnMessageChanged(string value)
+    {
+        if (value != _paidMessage)
+        {
+            _paid = null;
+            CanUndoPay = false;
+        }
+    }
+
+    /// <summary>Thanh toán toàn bộ; trả về lỗi hoặc null. Thông báo có nút Hoàn tác.</summary>
     public string? PayAll()
     {
+        PaidBatch? batch = null;
+        var error = AppServices.Try("Thanh toán toàn bộ", () => batch = AppServices.Orders.PayAll(_orders));
+        if (error is null && batch is not null)
+        {
+            AppLog.For("Orders").LogInformation("Thanh toán toàn bộ {Count} đơn", batch.Count);
+            Load(Filter, _title, _debtName);
+            _paid = batch.Count > 0 ? batch : null;
+            _paidMessage = $"Đã chuyển {VnFormat.Number(batch.Count)} đơn sang Đã thanh toán.";
+            Message = _paidMessage;
+            CanUndoPay = _paid is not null;
+        }
+        return error;
+    }
+
+    /// <summary>Nút Hoàn tác: trả các đơn vừa Thanh toán toàn bộ về Đã lên đơn; trả lỗi hoặc null.</summary>
+    public string? UndoPay()
+    {
+        if (_paid is not { } batch)
+        {
+            return null;
+        }
         var count = 0;
-        var error = AppServices.Try("Thanh toán toàn bộ", () => count = AppServices.Orders.PayAll(_orders));
+        var error = AppServices.Try("Hoàn tác thanh toán", () => count = AppServices.Orders.UndoPay(batch));
+        _paid = null;
+        CanUndoPay = false;
         if (error is null)
         {
-            AppLog.For("Orders").LogInformation("Thanh toán toàn bộ {Count} đơn", count);
-            Load(Filter, CaptureTitle);
-            Message = $"Đã chuyển {VnFormat.Number(count)} đơn sang Đã thanh toán.";
+            AppLog.For("Orders").LogInformation("Hoàn tác thanh toán toàn bộ {Count}/{Total} đơn", count, batch.Count);
+            Load(Filter, _title, _debtName);
+            Message = PaidBatch.UndoText(count, batch.Count);
         }
         return error;
     }

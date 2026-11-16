@@ -123,7 +123,7 @@ public sealed partial class DebtsPage : Page
     {
         if (DebtOf(sender) is { UserId: not null } debt)
         {
-            Frame.Navigate(typeof(OrderDetailPage), new OrderDetailArgs(ViewModel.DetailFilter(debt), DebtsViewModel.CaptureTitle(debt)));
+            Frame.Navigate(typeof(OrderDetailPage), new OrderDetailArgs(ViewModel.DetailFilter(debt), DebtName: debt.Name));
         }
     }
 
@@ -144,6 +144,17 @@ public sealed partial class DebtsPage : Page
             await Dialogs.ShowMessageAsync(XamlRoot, "Không thanh toán được", error);
         }
     }
+
+    private async void UndoPay_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.UndoPay() is { } error)
+        {
+            await Dialogs.ShowMessageAsync(XamlRoot, "Không hoàn tác được", error);
+        }
+    }
+
+    /// <summary>✕ đóng thông báo = xoá Message (hết Hoàn tác; lần sau cùng câu vẫn hiện lại).</summary>
+    private void Message_Closed(InfoBar sender, InfoBarClosedEventArgs args) => ViewModel.Message = string.Empty;
 
     private void CopyMessage_Click(object sender, RoutedEventArgs e)
     {

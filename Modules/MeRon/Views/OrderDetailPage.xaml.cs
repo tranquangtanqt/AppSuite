@@ -35,7 +35,7 @@ public sealed partial class OrderDetailPage : Page, IOrderListPage
         var args = _args;
         try
         {
-            ViewModel.Load(args.Filter, args.Title);
+            ViewModel.Load(args.Filter, args.Title, args.DebtName);
         }
         catch (Exception ex)
         {
@@ -73,6 +73,17 @@ public sealed partial class OrderDetailPage : Page, IOrderListPage
             await Dialogs.ShowMessageAsync(XamlRoot, "Không thanh toán được", error);
         }
     }
+
+    private async void UndoPay_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.UndoPay() is { } error)
+        {
+            await Dialogs.ShowMessageAsync(XamlRoot, "Không hoàn tác được", error);
+        }
+    }
+
+    /// <summary>✕ đóng thông báo = xoá Message (hết Hoàn tác).</summary>
+    private void Message_Closed(InfoBar sender, InfoBarClosedEventArgs args) => ViewModel.Message = string.Empty;
 
     private string? _lastCapture;
 

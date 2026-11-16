@@ -52,7 +52,13 @@
         </Grid>
 
         <InfoBar Grid.Row="1" Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}"
-                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="DetailMessage" />
+                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="DetailMessage"
+                 Closed="Message_Closed">
+            <InfoBar.ActionButton>
+                <Button Content="Hoàn tác" Click="UndoPay_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.CanUndoPay), Mode=OneWay}"
+                        AutomationProperties.Name="Hoàn tác thanh toán" ToolTipService.ToolTip="Lỡ thanh toán nhầm: trả các đơn vừa thanh toán về Đã lên đơn" />
+            </InfoBar.ActionButton>
+        </InfoBar>
 
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
             <!-- Phần này được chụp thành ảnh: nền đặc để ảnh không trong suốt. -->

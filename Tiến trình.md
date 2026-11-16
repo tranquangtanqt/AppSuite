@@ -456,6 +456,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [x] Nhập đơn hàng loạt (người dùng 2026-11-16): thông báo xanh ("Đã lưu 1 đơn…") **tự đóng sau 8 giây** (rê chuột vào thì
   giữ); mỗi thẻ có **nút xoá** dạng icon (thùng rác đỏ, góc dưới phải) bỏ dòng khỏi ô chữ, thông báo có Hoàn tác (trả chữ + ghim).
   Unit test 277/277; GUI Sandbox (UIA) 17/17 (2026-11-16)
+- [x] Công nợ (người dùng 2026-11-16): (1) Chi tiết của khách → sửa đơn → quay lại thì tiêu đề "khách · Tổng" tính lại (trước
+  giữ tổng cũ); (2) **Hoàn tác** thanh toán trên thông báo xanh sau Thanh toán hết (Công nợ) / Thanh toán toàn bộ (Chi tiết) -
+  lỡ thanh toán nhầm khách: đơn trả về Đã lên đơn + ngày thanh toán cũ, đơn đã sửa sau đó giữ nguyên.
+  Unit test 278/278; GUI Sandbox (UIA) 14/15 - 1 lượt sai kỳ vọng của script (hết đơn thì màn Chi tiết ẩn dòng tiêu đề), app đúng (2026-11-16)
 - [ ] Chuông Thông báo ở menu trái (cách a) - để sau, khi có thêm loại nhắc khác (vd tự sao lưu lên Google)
 - [x] Thống kê theo món ăn (người dùng chốt 4 đề xuất 2026-11-13): cột **So với kỳ trước** ▲▼ % theo số lượng (kỳ trước =
   cùng số ngày liền trước, như Biểu đồ; "mới" = kỳ trước chưa bán; món kỳ trước có mà kỳ này không bán nữa nối cuối bảng, mờ,

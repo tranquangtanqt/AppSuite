@@ -94,7 +94,13 @@
         <InfoBar Grid.Row="3" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                  IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
         <InfoBar Grid.Row="3" Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}"
-                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="DebtMessage" />
+                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="DebtMessage"
+                 Closed="Message_Closed">
+            <InfoBar.ActionButton>
+                <Button Content="Hoàn tác" Click="UndoPay_Click" Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.CanUndoPay), Mode=OneWay}"
+                        AutomationProperties.Name="Hoàn tác thanh toán" ToolTipService.ToolTip="Lỡ thanh toán nhầm khách: trả các đơn vừa thanh toán về Đã lên đơn" />
+            </InfoBar.ActionButton>
+        </InfoBar>
 
         <TextBlock Grid.Row="4" Opacity="0.75" TextWrapping="Wrap" Text="{x:Bind ViewModel.Note, Mode=OneWay}" />
 

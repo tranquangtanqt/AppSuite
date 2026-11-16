@@ -205,37 +205,71 @@ public sealed class OrderRepository(MeRonDatabase database, History.OrderHistory
     /// có đơn nào trong danh sách đã thanh toán từ trước thì từ chối cả lần (tránh thanh toán trùng). Đơn Huỷ bỏ qua.
     /// Trả về số đơn đã chuyển.
     /// </summary>
-    public int PayAll(IReadOnlyList<Order> orders)
+    public PaidBatch PayAll(IReadOnlyList<Order> orders)
     {
         if (orders.Any(o => o.Status == OrderStatus.Completed))
         {
             throw new MeRonValidationException("Không cho phép thanh toán với đơn có trạng thái đã thanh toán.");
         }
-        return PayShipping(orders.Where(o => o.Status == OrderStatus.Shipping).Select(o => o.Id).ToList());
+        return Pay(orders.Where(o => o.Status == OrderStatus.Shipping).Select(o => o.Id).ToList());
     }
 
     /// <summary>Chuyển các đơn (theo mã) đang Đã lên đơn sang Đã thanh toán trong 1 lần ghi, ghi ngày thanh toán =
     /// <paramref name="paidAt"/> (mặc định lúc bấm; cùng định dạng form đơn ghi khi tích "Đã thanh toán trước") - đơn đã đổi
     /// trạng thái (đã thanh toán / huỷ ở nơi khác) thì bỏ qua. Trả số đơn đã chuyển. Dùng cho "Thanh toán toàn bộ" (Chi tiết)
     /// và "Thanh toán hết" (Công nợ).</summary>
-    public int PayShipping(IReadOnlyList<long> ids, DateTime? paidAt = null) => Track("Thanh toán", ids, () => PayShippingCore(ids, paidAt));
+    public int PayShipping(IReadOnlyList<long> ids, DateTime? paidAt = null) => Pay(ids, paidAt).Count;
 
-    private int PayShippingCore(IReadOnlyList<long> ids, DateTime? paidAt)
+    /// <summary>Như <see cref="PayShipping"/>, trả cả lô đã chuyển (mã đơn + ngày thanh toán cũ) để <see cref="UndoPay"/>.</summary>
+    public PaidBatch Pay(IReadOnlyList<long> ids, DateTime? paidAt = null) => Track("Thanh toán", ids, () => PayCore(ids, paidAt));
+
+    private PaidBatch PayCore(IReadOnlyList<long> ids, DateTime? paidAt)
     {
         using var connection = database.Open();
         using var transaction = connection.BeginTransaction();
         var now = MeRonDatabase.Now();
         var payment = DbDate.Format(paidAt ?? DateTime.Now);
-        var changed = 0;
+        var paid = new List<PaidOrder>();
         foreach (var id in ids)
         {
-            changed += Execute(connection,
-                "UPDATE Orders SET status = $status, paymentDatetime = $payment, updatedAt = $now WHERE id = $id AND status = $shipping",
-                ("$status", (long)OrderStatus.Completed), ("$payment", payment), ("$now", now), ("$id", id), ("$shipping", (long)OrderStatus.Shipping));
+            using var read = Command(connection, "SELECT paymentDatetime FROM Orders WHERE id = $id AND status = $shipping",
+                [("$id", id), ("$shipping", (long)OrderStatus.Shipping)]);
+            using var reader = read.ExecuteReader();
+            if (!reader.Read())
+            {
+                continue; // đã thanh toán / huỷ ở nơi khác
+            }
+            var old = reader.IsDBNull(0) ? null : reader.GetString(0);
+            reader.Close();
+            Execute(connection,
+                "UPDATE Orders SET status = $status, paymentDatetime = $payment, updatedAt = $now WHERE id = $id",
+                ("$status", (long)OrderStatus.Completed), ("$payment", payment), ("$now", now), ("$id", id));
+            paid.Add(new PaidOrder(id, old));
         }
         transaction.Commit();
-        return changed;
+        return new PaidBatch(payment, paid);
     }
+
+    /// <summary>Hoàn tác "Thanh toán hết" / "Thanh toán toàn bộ" (lỡ thanh toán nhầm khách): đơn của lô còn Đã thanh toán với đúng
+    /// ngày thanh toán lúc đó thì trả về Đã lên đơn + ngày thanh toán cũ; đơn đã sửa sau đó thì bỏ qua. Trả số đơn đã trả về.</summary>
+    public int UndoPay(PaidBatch batch) =>
+        Track("Hoàn tác thanh toán", batch.Orders.Select(o => o.Id).ToList(), () =>
+        {
+            using var connection = database.Open();
+            using var transaction = connection.BeginTransaction();
+            var now = MeRonDatabase.Now();
+            var changed = 0;
+            foreach (var order in batch.Orders)
+            {
+                changed += Execute(connection,
+                    "UPDATE Orders SET status = $shipping, paymentDatetime = $old, updatedAt = $now " +
+                    "WHERE id = $id AND status = $completed AND paymentDatetime = $payment",
+                    ("$shipping", (long)OrderStatus.Shipping), ("$old", order.OldPayment), ("$now", now), ("$id", order.Id),
+                    ("$completed", (long)OrderStatus.Completed), ("$payment", batch.Payment));
+            }
+            transaction.Commit();
+            return changed;
+        });
 
     /// <summary>Sửa hàng loạt (<see cref="BulkEdit"/>): ghi trạng thái mới của mọi đơn trong 1 transaction - đơn sửa thì ghi
     /// trạng thái, ngày giao / thanh toán, tiền, các dòng món (theo mã dòng, không thêm / bớt dòng); <c>After</c> null thì xoá đơn.
@@ -543,3 +577,16 @@ public sealed class OrderRepository(MeRonDatabase database, History.OrderHistory
         return Convert.ToInt64(command.ExecuteScalar());
     }
 }
+
+/// <summary>Lô đơn vừa chuyển sang Đã thanh toán (<see cref="OrderRepository.Pay"/>): ngày thanh toán đã ghi + ngày cũ từng đơn.</summary>
+public sealed record PaidBatch(string Payment, IReadOnlyList<PaidOrder> Orders)
+{
+    public int Count => Orders.Count;
+
+    /// <summary>Câu báo sau Hoàn tác thanh toán (Công nợ, Chi tiết).</summary>
+    public static string UndoText(int count, int total) => count == total
+        ? $"Đã hoàn tác: {VnFormat.Number(count)} đơn trả về Đã lên đơn (chưa thanh toán)."
+        : $"Đã hoàn tác {VnFormat.Number(count)} / {VnFormat.Number(total)} đơn - các đơn còn lại đã sửa sau khi thanh toán nên giữ nguyên (xem Dữ liệu → Lịch sử chỉnh sửa).";
+}
+
+public sealed record PaidOrder(long Id, string? OldPayment);

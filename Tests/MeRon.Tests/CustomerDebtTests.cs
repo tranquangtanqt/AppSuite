@@ -105,4 +105,38 @@ public class CustomerDebtTests
         Assert.Null(orders.Get(cancelled)!.PaymentDatetime);
         Assert.DoesNotContain(reports.CustomerDebts(Today, false), d => d.Name == "Chị An");
     }
+
+    [Fact]
+    public void Undo_pay_returns_orders_to_unpaid_unless_changed_afterwards()
+    {
+        using var temp = new TempFolder();
+        var db = temp.NewDatabase();
+        BackupImporter.Apply(BackupImporter.Prepare(new LocalFolderBackupSource(Backup.Write(temp.Path)).Resolve()), db);
+        var orders = new OrderRepository(db);
+        var products = new MasterDataRepository(db).GetProducts().ToDictionary(p => p.Id);
+        OrderDraft Draft() => new(0, 1, OrderStatus.Shipping, new DateTime(2026, 10, 1, 7, 0, 0), false, null, 0, null, [new OrderLineDraft(1, 2)]);
+        var a = orders.Save(Draft(), products);
+        var b = orders.Save(Draft(), products);
+        var c = orders.Save(Draft(), products);
+        var oldPayment = orders.Get(a)!.PaymentDatetime;
+
+        // Lô 3 đơn + đơn 1 đã thanh toán từ trước (bỏ qua, không vào lô)
+        var batch = orders.Pay([a, b, c, 1], new DateTime(2026, 10, 23, 9, 30, 0));
+        Assert.Equal([a, b, c], batch.Orders.Select(o => o.Id).ToArray());
+        var paidOrder1 = orders.Get(1)!.PaymentDatetime;
+
+        // Sau khi thanh toán, đơn c bị huỷ → hoàn tác bỏ qua c
+        orders.SetStatus(c, OrderStatus.Cancelled);
+        Assert.Equal(2, orders.UndoPay(batch));
+        Assert.Equal(OrderStatus.Shipping, orders.Get(a)!.Status);
+        Assert.Equal(oldPayment, orders.Get(a)!.PaymentDatetime); // ngày thanh toán cũ
+        Assert.Equal(OrderStatus.Shipping, orders.Get(b)!.Status);
+        Assert.Equal(OrderStatus.Cancelled, orders.Get(c)!.Status);
+        Assert.Equal(OrderStatus.Completed, orders.Get(1)!.Status); // đơn ngoài lô không đổi
+        Assert.Equal(paidOrder1, orders.Get(1)!.PaymentDatetime);
+        Assert.Equal(0, orders.UndoPay(batch)); // bấm lại: không còn gì
+
+        Assert.Equal("Đã hoàn tác: 2 đơn trả về Đã lên đơn (chưa thanh toán).", PaidBatch.UndoText(2, 2));
+        Assert.Contains("2 / 3 đơn", PaidBatch.UndoText(2, 3));
+    }
 }

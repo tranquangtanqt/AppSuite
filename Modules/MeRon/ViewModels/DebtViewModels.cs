@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MeRon.Core;
+using MeRon.Core.Data;
 using MeRon.Core.Models;
 using MeRon.Core.Reports;
 using MeRon.Services;
@@ -167,19 +168,58 @@ public sealed partial class DebtsViewModel : ObservableObject
         new(OrderStatus.Shipping, null, IncludeFuture ? null : Today, debt.UserId);
 
     /// <summary>Tiêu đề trên ảnh hoá đơn (mở từ Công nợ nên không cần ghi "Đơn chưa thanh toán" / ngày).</summary>
-    public static string CaptureTitle(CustomerDebt debt) =>
-        $"{debt.Name}  ·  Tổng {VnFormat.Money(debt.Amount)}";
+    public static string CaptureTitle(string name, long amount) => $"{name}  ·  Tổng {VnFormat.Money(amount)}";
 
-    /// <summary>Thanh toán hết các đơn đang nợ của 1 khách; trả lỗi hoặc null.</summary>
+    /// <summary>Lô vừa Thanh toán hết - nút Hoàn tác trên thông báo (thông báo đổi / đóng thì hết).</summary>
+    private PaidBatch? _paid;
+
+    private string _paidMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool _canUndoPay;
+
+    partial void OnMessageChanged(string value)
+    {
+        if (value != _paidMessage)
+        {
+            _paid = null;
+            CanUndoPay = false;
+        }
+    }
+
+    /// <summary>Thanh toán hết các đơn đang nợ của 1 khách; trả lỗi hoặc null. Thông báo có nút Hoàn tác (lỡ bấm nhầm khách).</summary>
     public string? PayAll(CustomerDebt debt)
     {
+        PaidBatch? batch = null;
+        var error = AppServices.Try("Thanh toán hết", () => batch = AppServices.Orders.Pay(debt.OrderIds));
+        if (error is null && batch is not null)
+        {
+            AppLog.For("Orders").LogInformation("Công nợ: thanh toán hết {Count} đơn của khách {User}", batch.Count, debt.UserId);
+            Load();
+            _paid = batch.Count > 0 ? batch : null;
+            _paidMessage = $"Đã chuyển {VnFormat.Number(batch.Count)} đơn của {debt.Name} sang Đã thanh toán ({VnFormat.Money(debt.Amount)}).";
+            Message = _paidMessage;
+            CanUndoPay = _paid is not null;
+        }
+        return error;
+    }
+
+    /// <summary>Nút Hoàn tác: trả các đơn vừa Thanh toán hết về Đã lên đơn; trả lỗi hoặc null.</summary>
+    public string? UndoPay()
+    {
+        if (_paid is not { } batch)
+        {
+            return null;
+        }
         var count = 0;
-        var error = AppServices.Try("Thanh toán hết", () => count = AppServices.Orders.PayShipping(debt.OrderIds));
+        var error = AppServices.Try("Hoàn tác thanh toán", () => count = AppServices.Orders.UndoPay(batch));
+        _paid = null;
+        CanUndoPay = false;
         if (error is null)
         {
-            AppLog.For("Orders").LogInformation("Công nợ: thanh toán hết {Count} đơn của khách {User}", count, debt.UserId);
+            AppLog.For("Orders").LogInformation("Công nợ: hoàn tác thanh toán {Count}/{Total} đơn", count, batch.Count);
             Load();
-            Message = $"Đã chuyển {VnFormat.Number(count)} đơn của {debt.Name} sang Đã thanh toán ({VnFormat.Money(debt.Amount)}).";
+            Message = PaidBatch.UndoText(count, batch.Count);
         }
         return error;
     }
