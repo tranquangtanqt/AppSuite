@@ -69,6 +69,40 @@
                 </StackPanel>
             </Border>
 
+            <!-- Sao lưu tự động (Backups cạnh database): số bản hằng ngày giữ lại + danh sách bản sao, nút Khôi phục (2026-11-16) -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                            <FontIcon Glyph="&#xE777;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
+                        </Border>
+                        <TextBlock Text="Sao lưu tự động" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="Bản sao lưu nằm trong thư mục Backups cạnh dữ liệu. Lỡ làm hỏng dữ liệu thì bấm Khôi phục ở bản muốn lấy lại (trước khi khôi phục luôn chép dữ liệu hiện tại ra 1 bản)." />
+                    <CheckBox x:Name="AutoDailyBox" Content="Tự sao lưu mỗi ngày (lần đầu mở MeRon trong ngày)"
+                              Checked="BackupOption_Changed" Unchecked="BackupOption_Changed" />
+                    <StackPanel x:Name="DailyKeepPanel" Orientation="Horizontal" Spacing="8" Margin="28,0,0,0">
+                        <TextBlock Text="Giữ" VerticalAlignment="Center" />
+                        <NumberBox x:Name="DailyBackupBox" Minimum="1" Maximum="365" Width="90" SpinButtonPlacementMode="Hidden"
+                                   AutomationProperties.Name="Số bản sao lưu hằng ngày giữ lại" ValueChanged="DailyBackup_ValueChanged" />
+                        <TextBlock Text="bản sao lưu hằng ngày  (1 – 365, mặc định 14)" VerticalAlignment="Center" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <CheckBox x:Name="BeforeActionsBox" Content="Tự sao lưu khi thao tác (trước Nhập dữ liệu, Xoá toàn bộ, Dọn dữ liệu cũ - giữ 10 bản mỗi loại)"
+                              Checked="BackupOption_Changed" Unchecked="BackupOption_Changed" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="Mở thư mục Backups" Click="OpenBackups_Click" />
+                        <TextBlock x:Name="BackupStatus" VerticalAlignment="Center" Opacity="0.8" TextWrapping="Wrap"
+                                   AutomationProperties.AutomationId="BackupStatus" />
+                    </StackPanel>
+                    <!-- Mỗi dòng: loại · thời gian · số đơn / khách · dung lượng · Khôi phục (dựng trong code: ShowBackups) -->
+                    <ScrollViewer MaxHeight="320" VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
+                        <StackPanel x:Name="BackupList" Spacing="4" AutomationProperties.Name="Các bản sao lưu" />
+                    </ScrollViewer>
+                </StackPanel>
+            </Border>
+
             <!-- Lịch sử chỉnh sửa đơn (Core\History\OrderHistory): tự xoá dòng cũ khi mở app -->
             <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">

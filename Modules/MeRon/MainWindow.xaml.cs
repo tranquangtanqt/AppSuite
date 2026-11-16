@@ -19,6 +19,7 @@ public sealed partial class MainWindow : Window
         AppLog.For("App").LogInformation("Khởi động MeRon");
         Closed += (_, _) => _help?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
         MenuSettings = Core.MenuSettings.Load(MenuSettingsPath);
+        AppServices.Database.CopyBeforeActions = MenuSettings.BackupBeforeActions;
         ApplyMenuSettings();
         _ = Task.Run(CleanUpCaptures); // ảnh Chụp ảnh cũ → Thùng rác, không chặn lúc mở app
         _ = Task.Run(CleanUpHistory);
@@ -115,6 +116,30 @@ public sealed partial class MainWindow : Window
     }
 
     // ---------- Lịch sử chỉnh sửa: tự xoá dòng cũ - trang Cài đặt ----------
+
+    /// <summary>Cài đặt: tự sao lưu mỗi ngày / khi thao tác (Nhập, Xoá toàn bộ, Dọn).</summary>
+    public void SetBackupOptions(bool daily, bool beforeActions)
+    {
+        MenuSettings.AutoDailyBackup = daily;
+        MenuSettings.BackupBeforeActions = beforeActions;
+        AppServices.Database.CopyBeforeActions = beforeActions;
+        SaveMenuSettings();
+    }
+
+    /// <summary>Số bản sao lưu hằng ngày giữ lại (Cài đặt) - giảm thì xoá ngay các bản thừa cũ nhất.</summary>
+    public void SetDailyBackupKeep(int keep)
+    {
+        MenuSettings.DailyBackupKeep = keep;
+        SaveMenuSettings();
+        try
+        {
+            AppServices.Database.PruneCopies(Core.Data.MeRonDatabase.DailyCopyReason, MenuSettings.DailyBackupKeep);
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("App").LogError(ex, "Dọn bản sao lưu hằng ngày lỗi");
+        }
+    }
 
     public void SetHistoryKeepDays(int days)
     {

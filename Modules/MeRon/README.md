@@ -107,6 +107,14 @@ nhiều tài khoản thì vẫn cần link công khai để thấy hết.
 - **Sao lưu hằng ngày** (2026-11-10): mở app lần đầu trong ngày tự chép `me_ron_hang-ngay_<thời gian>.db` (luồng nền
   sau khi hiện cửa sổ, lỗi chỉ ghi log; database trống thì bỏ qua), giữ 14 bản gần nhất -
   `MeRonDatabase.MakeDailyCopy`, gọi ở `App.OnLaunched`. App mở liền nhiều ngày không tắt thì chỉ có bản của ngày mở.
+- **Sao lưu tự động ở Cài đặt** (2026-11-16): số bản hằng ngày giữ lại đổi được (settings.json `DailyBackupKeep`, 1 – 365,
+  mặc định 14; giảm thì `PruneCopies` xoá ngay bản thừa). Danh sách mọi bản trong `Backups` (`ListCopies` / `BackupCopy`: loại,
+  thời gian, số đơn / khách đọc từ bản sao, dung lượng) + nút **Khôi phục** (`RestoreCopy`: hỏi lại → chép dữ liệu hiện tại ra
+  `me_ron_truoc-lay-lai_…` → SQLite Online Backup từ bản sao đè lên database → `EnsureCreated` → mở lại app). Bản sao hỏng →
+  báo lỗi, không động tới dữ liệu. Lịch sử chỉnh sửa (`me_ron_history.db`) không bị thay. 2 ô tích (mặc định bật, settings.json):
+  **Tự sao lưu mỗi ngày** (`AutoDailyBackup` - tắt thì `App.OnLaunched` bỏ qua `MakeDailyCopy`) và **Tự sao lưu khi thao tác**
+  (`BackupBeforeActions` → `MeRonDatabase.CopyBeforeActions`: tắt thì `MakeSafetyCopy(reason)` trả null - Nhập, Xoá toàn bộ, Dọn,
+  khôi phục lần dọn không chép). Khôi phục 1 bản sao lưu luôn chép bản "trước khi lấy lại" dù tắt.
 - Log: `Logs\meron-yyyy-MM-dd.log` cạnh `MeRon.exe` (`Services\AppLog.cs`, giữ 14 ngày). Exception chưa xử lý
   (`Application.UnhandledException` + `AppDomain.UnhandledException` trong `App.xaml.cs`) ghi mức Critical kèm stack
   "Lỗi không xử lý được - app sẽ tắt" trước khi app tắt.

@@ -18,7 +18,7 @@
                 <InfoBar.Content>
                     <StackPanel Spacing="8" Margin="0,0,0,12">
                         <TextBlock TextWrapping="Wrap" Opacity="0.85"
-                                   Text="Nhập sẽ thay toàn bộ dữ liệu nên các thay đổi này sẽ mất (vẫn còn bản sao trong thư mục Backups). Nên xuất ra rồi nhập vào điện thoại trước." />
+                                   Text="Nhập sẽ thay toàn bộ dữ liệu nên các thay đổi này sẽ mất (còn bản sao trong thư mục Backups nếu bật Tự sao lưu khi thao tác ở Cài đặt). Nên xuất ra rồi nhập vào điện thoại trước." />
                         <Button Content="Mở trang Xuất / Xoá dữ liệu" Click="OpenExport_Click" AutomationProperties.Name="Mở trang Xuất" />
                     </StackPanel>
                 </InfoBar.Content>

@@ -78,26 +78,31 @@ public sealed class MeRonDatabase
     /// (SQLite Online Backup - an toàn kể cả khi đang mở). Bỏ qua (null) nếu chưa có dữ liệu gì. Giữ
     /// <see cref="KeepSafetyCopies"/> bản gần nhất của mỗi loại. Lấy lại = đóng app, chép bản sao đè lên me_ron.db.
     /// </summary>
-    public string? MakeSafetyCopy(string reason) => MakeSafetyCopy(reason, KeepSafetyCopies, DateTime.Now);
+    public string? MakeSafetyCopy(string reason) => CopyBeforeActions ? MakeSafetyCopy(reason, KeepSafetyCopies, DateTime.Now) : null;
+
+    /// <summary>Cài đặt "Tự sao lưu khi thao tác" (mặc định bật): tắt thì Nhập / Xoá toàn bộ / Dọn / khôi phục lần dọn không chép
+    /// bản sao (<see cref="MakeSafetyCopy(string)"/> trả null). Khôi phục 1 bản sao lưu (<see cref="RestoreCopy"/>) vẫn luôn chép.</summary>
+    public bool CopyBeforeActions { get; set; } = true;
 
     /// <summary>Loại bản sao tự chép mỗi ngày khi mở app (Backups\me_ron_hang-ngay_yyyyMMdd_HHmmss.db).</summary>
     public const string DailyCopyReason = "hang-ngay";
 
-    /// <summary>Số bản sao hằng ngày giữ lại (khoảng 2 tuần mở app).</summary>
+    /// <summary>Số bản sao hằng ngày giữ lại mặc định (khoảng 2 tuần mở app) - đổi ở Cài đặt (MenuSettings.DailyBackupKeep).</summary>
     public const int KeepDailyCopies = 14;
 
     /// <summary>
     /// Sao lưu hằng ngày (gọi khi mở app): hôm nay chưa có bản <see cref="DailyCopyReason"/> nào thì chép 1 bản, giữ
-    /// <see cref="KeepDailyCopies"/> bản gần nhất. Đã có bản hôm nay / database trống → null.
+    /// <paramref name="keep"/> bản gần nhất. Đã có bản hôm nay / database trống → null.
     /// </summary>
-    public string? MakeDailyCopy(DateTime now)
+    public string? MakeDailyCopy(DateTime now, int keep = KeepDailyCopies)
     {
         if (Directory.Exists(BackupsFolder)
             && Directory.EnumerateFiles(BackupsFolder, $"me_ron_{DailyCopyReason}_{now:yyyyMMdd}_*.db").Any())
         {
+            PruneCopies(DailyCopyReason, keep); // vừa giảm số bản ở Cài đặt
             return null;
         }
-        return MakeSafetyCopy(DailyCopyReason, KeepDailyCopies, now);
+        return MakeSafetyCopy(DailyCopyReason, keep, now);
     }
 
     private string? MakeSafetyCopy(string reason, int keep, DateTime now)
@@ -114,7 +119,83 @@ public sealed class MeRonDatabase
             destination.Open();
             source.BackupDatabase(destination);
         }
+        PruneCopies(reason, keep);
+        return target;
+    }
 
+    /// <summary>Loại bản sao chép trước khi Khôi phục 1 bản sao lưu (để lấy lại được dữ liệu ngay trước đó).</summary>
+    public const string BeforeRestoreReason = "truoc-lay-lai";
+
+    /// <summary>Các bản sao trong Backups (mọi loại), mới nhất trước. File tên lạ bỏ qua.</summary>
+    public IReadOnlyList<BackupCopy> ListCopies()
+    {
+        if (!Directory.Exists(BackupsFolder))
+        {
+            return [];
+        }
+        var copies = new List<BackupCopy>();
+        foreach (var file in new DirectoryInfo(BackupsFolder).GetFiles("me_ron_*.db"))
+        {
+            if (BackupCopy.TryParse(file.Name) is { } parsed)
+            {
+                copies.Add(parsed with { Path = file.FullName, Size = file.Length });
+            }
+        }
+        return [.. copies.OrderByDescending(c => c.Time).ThenBy(c => c.Reason, StringComparer.Ordinal)];
+    }
+    /// <summary>Đếm đơn / khách trong 1 bản sao (để chọn đúng bản); file hỏng / không phải database MeRon → null.</summary>
+    public static (long Orders, long Customers)? CountIn(string copyPath)
+    {
+        try
+        {
+            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = copyPath, Mode = SqliteOpenMode.ReadOnly, Pooling = false,
+            }.ToString());
+            connection.Open();
+            using var command = connection.CreateCommand();
+            command.CommandText = "SELECT (SELECT COUNT(*) FROM Orders), (SELECT COUNT(*) FROM Users)";
+            using var reader = command.ExecuteReader();
+            return reader.Read() ? (reader.GetInt64(0), reader.GetInt64(1)) : null;
+        }
+        catch (SqliteException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Khôi phục: thay TOÀN BỘ database hiện tại bằng 1 bản sao (SQLite Online Backup - cả 8 bảng + thông tin nhập / xuất lúc đó).
+    /// Trước khi thay luôn chép dữ liệu hiện tại ra bản <see cref="BeforeRestoreReason"/> (lấy lại được). Bản sao không đọc được
+    /// như database MeRon → lỗi, không động tới dữ liệu. Trả đường dẫn bản chép trước khi thay.
+    /// </summary>
+    public string? RestoreCopy(string copyPath, DateTime now)
+    {
+        if (CountIn(copyPath) is null)
+        {
+            throw new InvalidDataException("Bản sao không đọc được (hỏng hoặc không phải dữ liệu MeRon) - dữ liệu hiện tại giữ nguyên.");
+        }
+        var before = MakeSafetyCopy(BeforeRestoreReason, KeepSafetyCopies, now);
+        using (var source = new SqliteConnection(new SqliteConnectionStringBuilder
+               {
+                   DataSource = copyPath, Mode = SqliteOpenMode.ReadOnly, Pooling = false,
+               }.ToString()))
+        using (var destination = Open())
+        {
+            source.Open();
+            source.BackupDatabase(destination);
+        }
+        EnsureCreated(); // bản sao cũ (trước khi thêm bảng / trigger mới) → bổ sung cho đủ
+        return before;
+    }
+
+    /// <summary>Chỉ giữ <paramref name="keep"/> bản gần nhất của 1 loại (xoá bản cũ hơn).</summary>
+    public void PruneCopies(string reason, int keep)
+    {
+        if (!Directory.Exists(BackupsFolder))
+        {
+            return;
+        }
         foreach (var old in new DirectoryInfo(BackupsFolder).GetFiles($"me_ron_{reason}_*.db")
                      .OrderByDescending(f => f.Name, StringComparer.Ordinal).Skip(keep))
         {
@@ -127,7 +208,6 @@ public sealed class MeRonDatabase
                 // Bản cũ đang bị mở ở đâu đó - để lần sau dọn.
             }
         }
-        return target;
     }
 
     /// <summary>
@@ -276,4 +356,38 @@ public sealed record UnsyncedEdits(long Count, DateTime? Since, DateTime? Last)
         ? string.Empty
         : $"{VnFormat.Number(Count)} dòng thay đổi chưa xuất" + (Since is { } since ? $" (từ {since:dd/MM HH:mm})" : string.Empty) +
           " · nhập backup sẽ đè mất";
+}
+
+/// <summary>1 bản sao trong Backups: me_ron_<see cref="Reason"/>_yyyyMMdd_HHmmss.db.</summary>
+public sealed record BackupCopy(string Reason, DateTime Time, string Path = "", long Size = 0)
+{
+    /// <summary>Tên file đúng mẫu → bản sao (chưa có Path / Size); không đúng → null.</summary>
+    public static BackupCopy? TryParse(string fileName)
+    {
+        const string prefix = "me_ron_";
+        if (!fileName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) || !fileName.EndsWith(".db", StringComparison.OrdinalIgnoreCase)
+            || fileName.Length < prefix.Length + 1 + 16 + 3)
+        {
+            return null;
+        }
+        var stamp = fileName[^18..^3]; // yyyyMMdd_HHmmss
+        var reason = fileName[prefix.Length..^19];
+        return reason.Length > 0 && fileName[^19] == '_'
+               && DateTime.TryParseExact(stamp, "yyyyMMdd_HHmmss", System.Globalization.CultureInfo.InvariantCulture,
+                   System.Globalization.DateTimeStyles.None, out var time)
+            ? new BackupCopy(reason, time)
+            : null;
+    }
+
+    /// <summary>Tên loại cho người dùng.</summary>
+    public string Label => Reason switch
+    {
+        MeRonDatabase.DailyCopyReason => "Hằng ngày",
+        "truoc-import" => "Trước khi Nhập dữ liệu",
+        "truoc-xoa" => "Trước khi Xoá toàn bộ",
+        "truoc-don" => "Trước khi Dọn dữ liệu cũ",
+        "truoc-khoi-phuc" => "Trước khi khôi phục lần dọn",
+        MeRonDatabase.BeforeRestoreReason => "Trước khi lấy lại bản sao",
+        _ => Reason,
+    };
 }

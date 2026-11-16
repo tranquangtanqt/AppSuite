@@ -54,6 +54,24 @@ public sealed class MenuSettings
         set => _historyKeepDays = Math.Clamp(value, 0, MaxCaptureKeepDays);
     }
 
+    /// <summary>Tự sao lưu mỗi ngày lần đầu mở app (Backups\me_ron_hang-ngay_…); mặc định bật.</summary>
+    public bool AutoDailyBackup { get; set; } = true;
+
+    /// <summary>Tự sao lưu trước Nhập dữ liệu / Xoá toàn bộ / Dọn dữ liệu cũ / khôi phục lần dọn; mặc định bật
+    /// (MeRonDatabase.CopyBeforeActions).</summary>
+    public bool BackupBeforeActions { get; set; } = true;
+
+    public const int MaxDailyBackupKeep = 365;
+
+    private int _dailyBackupKeep = Data.MeRonDatabase.KeepDailyCopies;
+
+    /// <summary>Số bản sao lưu hằng ngày (Backups\me_ron_hang-ngay_…) giữ lại, 1 – 365; mặc định 14.</summary>
+    public int DailyBackupKeep
+    {
+        get => _dailyBackupKeep;
+        set => _dailyBackupKeep = Math.Clamp(value, 1, MaxDailyBackupKeep);
+    }
+
     /// <summary>Không ẩn được: Đặt hàng là trang mở đầu (Cài đặt, Hướng dẫn nằm ở chân menu, không có trong danh sách).</summary>
     public static IReadOnlySet<string> AlwaysVisible { get; } = new HashSet<string> { "OrdersPage" };
 
@@ -102,6 +120,12 @@ public sealed class MenuSettings
                 {
                     settings.HistoryKeepDays = historyDays;
                 }
+                if (stored.DailyBackupKeep is { } keep)
+                {
+                    settings.DailyBackupKeep = keep;
+                }
+                settings.AutoDailyBackup = stored.AutoDailyBackup ?? true;
+                settings.BackupBeforeActions = stored.BackupBeforeActions ?? true;
             }
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
@@ -115,7 +139,8 @@ public sealed class MenuSettings
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         var stored = new Stored { HiddenMenu = [.. _hidden.Order(StringComparer.Ordinal)], CaptureKeepDays = CaptureKeepDays, Theme = Theme.ToString(),
-            AskBeforeUnpin = AskBeforeUnpin, DebtAgingMarks = [.. DebtAgingMarks], HistoryKeepDays = HistoryKeepDays };
+            AskBeforeUnpin = AskBeforeUnpin, DebtAgingMarks = [.. DebtAgingMarks], HistoryKeepDays = HistoryKeepDays,
+            DailyBackupKeep = DailyBackupKeep, AutoDailyBackup = AutoDailyBackup, BackupBeforeActions = BackupBeforeActions };
         File.WriteAllText(path, JsonSerializer.Serialize(stored, new JsonSerializerOptions { WriteIndented = true }));
     }
 
@@ -137,5 +162,14 @@ public sealed class MenuSettings
 
         /// <summary>null = file cũ (trước 2026-11-16) → 90.</summary>
         public int? HistoryKeepDays { get; set; }
+
+        /// <summary>null = file cũ (trước 2026-11-16) → 14.</summary>
+        public int? DailyBackupKeep { get; set; }
+
+        /// <summary>null = file cũ (trước 2026-11-16) → bật.</summary>
+        public bool? AutoDailyBackup { get; set; }
+
+        /// <summary>null = file cũ (trước 2026-11-16) → bật.</summary>
+        public bool? BackupBeforeActions { get; set; }
     }
 }

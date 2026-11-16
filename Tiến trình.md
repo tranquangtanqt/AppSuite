@@ -464,6 +464,13 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   lịch, chiếm ~30 px → bỏ nút ✕ (Xoá ngày đã có trong lịch). Ảnh trước / sau Sandbox 2/2 (2026-11-16)
 - [x] Công nợ: ô tuổi nợ đang lọc - bấm xong (chuột còn trên ô) không thấy viền cam vì trạng thái rê chuột của Button thay
   viền bằng màu xám → viền cam vẽ bằng Border đè lên nút (không bắt chuột). Ảnh trước / sau Sandbox 4/4 (2026-11-16)
+- [x] Tự sao lưu database (người dùng 2026-11-16; bản hằng ngày + trước Nhập đã có từ 11-10): Cài đặt → khung **Sao lưu tự
+  động**: số bản hằng ngày giữ lại đổi được (mặc định 14, 1 – 365, giảm thì xoá ngay bản thừa); danh sách mọi bản trong Backups
+  (thời gian, loại, số đơn / khách, dung lượng) + nút **Khôi phục** (hỏi lại, chép dữ liệu hiện tại ra bản "Trước khi lấy lại
+  bản sao" rồi thay, MeRon tự mở lại). Unit test 280/280; GUI Sandbox (UIA) 13/13 (2026-11-16)
+  + 2 ô tích (mặc định bật): **Tự sao lưu mỗi ngày** và **Tự sao lưu khi thao tác** (trước Nhập / Xoá toàn bộ / Dọn); tắt thì
+  không chép bản mới, bản cũ giữ; Khôi phục bản sao vẫn luôn chép bản "trước khi lấy lại". Câu "luôn có bản sao" ở trang Nhập /
+  Xuất / Thông tin dữ liệu + F1 sửa thành "nếu bật". Unit test 280/280; GUI Sandbox (UIA) 7/7 (2026-11-16)
 - [ ] Chuông Thông báo ở menu trái (cách a) - để sau, khi có thêm loại nhắc khác (vd tự sao lưu lên Google)
 - [x] Thống kê theo món ăn (người dùng chốt 4 đề xuất 2026-11-13): cột **So với kỳ trước** ▲▼ % theo số lượng (kỳ trước =
   cùng số ngày liền trước, như Biểu đồ; "mới" = kỳ trước chưa bán; món kỳ trước có mà kỳ này không bán nữa nối cuối bảng, mờ,
