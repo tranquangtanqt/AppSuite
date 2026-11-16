@@ -21,6 +21,7 @@ public sealed partial class MainWindow : Window
         MenuSettings = Core.MenuSettings.Load(MenuSettingsPath);
         ApplyMenuSettings();
         _ = Task.Run(CleanUpCaptures); // ảnh Chụp ảnh cũ → Thùng rác, không chặn lúc mở app
+        _ = Task.Run(CleanUpHistory);
         var start = StartPage();
         Nav.SelectedItem = FindItem(MenuSettings.IsVisible(start) ? start : "OrdersPage");
     }
@@ -110,6 +111,33 @@ public sealed partial class MainWindow : Window
         {
             AppLog.For("App").LogError(ex, "Dọn ảnh chụp cũ lỗi");
             return (0, 1);
+        }
+    }
+
+    // ---------- Lịch sử chỉnh sửa: tự xoá dòng cũ - trang Cài đặt ----------
+
+    public void SetHistoryKeepDays(int days)
+    {
+        MenuSettings.HistoryKeepDays = days;
+        SaveMenuSettings();
+    }
+
+    /// <summary>Xoá lịch sử chỉnh sửa cũ hơn số ngày ở Cài đặt (lúc mở app, nút "Dọn ngay"). Trả số dòng đã xoá (-1 = lỗi).</summary>
+    public int CleanUpHistory()
+    {
+        try
+        {
+            var deleted = AppServices.History.Cleanup(MenuSettings.HistoryKeepDays, DateTime.Now);
+            if (deleted > 0)
+            {
+                AppLog.For("App").LogInformation("Xoá lịch sử chỉnh sửa cũ hơn {Days} ngày: {Count} dòng", MenuSettings.HistoryKeepDays, deleted);
+            }
+            return deleted;
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("App").LogError(ex, "Dọn lịch sử chỉnh sửa lỗi");
+            return -1;
         }
     }
 

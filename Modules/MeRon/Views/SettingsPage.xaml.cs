@@ -29,6 +29,61 @@ public sealed partial class SettingsPage : Page
         _loadingUnpin = true;
         AskUnpinBox.IsChecked = Window?.MenuSettings.AskBeforeUnpin ?? false;
         _loadingUnpin = false;
+        _loadingHistory = true;
+        HistoryDaysBox.Value = Window?.MenuSettings.HistoryKeepDays ?? MenuSettings.DefaultHistoryKeepDays;
+        _loadingHistory = false;
+        ShowHistoryStatus();
+    }
+
+    // ---------- Lịch sử chỉnh sửa ----------
+
+    private bool _loadingHistory;
+
+    /// <summary>Đổi số ngày là lưu ngay (xoá thật lúc mở app / Dọn ngay); ô trống / số lạ → về mặc định 90.</summary>
+    private void HistoryDays_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_loadingHistory || Window is not { } window)
+        {
+            return;
+        }
+        var days = double.IsNaN(args.NewValue) ? MenuSettings.DefaultHistoryKeepDays : (int)Math.Round(args.NewValue);
+        window.SetHistoryKeepDays(days);
+        if (sender.Value != window.MenuSettings.HistoryKeepDays)
+        {
+            sender.Value = window.MenuSettings.HistoryKeepDays;
+        }
+        ShowHistoryStatus();
+    }
+
+    private void CleanHistory_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window is not { } window)
+        {
+            return;
+        }
+        if (window.MenuSettings.HistoryKeepDays == 0)
+        {
+            ShowHistoryStatus("Đang chọn giữ hết (0) - không xoá gì.");
+            return;
+        }
+        var deleted = window.CleanUpHistory();
+        ShowHistoryStatus(deleted < 0 ? "Dọn lỗi (xem log)."
+            : deleted == 0 ? $"Không có lịch sử nào cũ hơn {window.MenuSettings.HistoryKeepDays} ngày."
+            : $"Đã xoá {deleted} dòng lịch sử cũ.");
+    }
+
+    private void ShowHistoryStatus(string? result = null)
+    {
+        long count;
+        try
+        {
+            count = Services.AppServices.History.Count();
+        }
+        catch (Exception)
+        {
+            count = 0;
+        }
+        HistoryStatus.Text = (result is null ? "" : result + "  ") + $"Hiện có {VnFormat.Number(count)} dòng lịch sử.";
     }
 
     // ---------- Nhập đơn hàng loạt ----------

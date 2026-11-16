@@ -43,6 +43,17 @@ public sealed class MenuSettings
         set => _captureKeepDays = Math.Clamp(value, 0, MaxCaptureKeepDays);
     }
 
+    public const int DefaultHistoryKeepDays = 90;
+
+    private int _historyKeepDays = DefaultHistoryKeepDays;
+
+    /// <summary>Lịch sử chỉnh sửa đơn cũ hơn ngần này ngày thì tự xoá khi mở app. 0 = giữ hết.</summary>
+    public int HistoryKeepDays
+    {
+        get => _historyKeepDays;
+        set => _historyKeepDays = Math.Clamp(value, 0, MaxCaptureKeepDays);
+    }
+
     /// <summary>Không ẩn được: Đặt hàng là trang mở đầu (Cài đặt, Hướng dẫn nằm ở chân menu, không có trong danh sách).</summary>
     public static IReadOnlySet<string> AlwaysVisible { get; } = new HashSet<string> { "OrdersPage" };
 
@@ -87,6 +98,10 @@ public sealed class MenuSettings
                 }
                 settings.AskBeforeUnpin = stored.AskBeforeUnpin ?? false;
                 settings.DebtAgingMarks = Reports.DebtAging.Normalize(stored.DebtAgingMarks);
+                if (stored.HistoryKeepDays is { } historyDays)
+                {
+                    settings.HistoryKeepDays = historyDays;
+                }
             }
         }
         catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
@@ -100,7 +115,7 @@ public sealed class MenuSettings
     {
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path))!);
         var stored = new Stored { HiddenMenu = [.. _hidden.Order(StringComparer.Ordinal)], CaptureKeepDays = CaptureKeepDays, Theme = Theme.ToString(),
-            AskBeforeUnpin = AskBeforeUnpin, DebtAgingMarks = [.. DebtAgingMarks] };
+            AskBeforeUnpin = AskBeforeUnpin, DebtAgingMarks = [.. DebtAgingMarks], HistoryKeepDays = HistoryKeepDays };
         File.WriteAllText(path, JsonSerializer.Serialize(stored, new JsonSerializerOptions { WriteIndented = true }));
     }
 
@@ -119,5 +134,8 @@ public sealed class MenuSettings
 
         /// <summary>null = file cũ (trước 2026-11-13) → 7, 30.</summary>
         public List<int>? DebtAgingMarks { get; set; }
+
+        /// <summary>null = file cũ (trước 2026-11-16) → 90.</summary>
+        public int? HistoryKeepDays { get; set; }
     }
 }

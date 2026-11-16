@@ -370,4 +370,14 @@ public class UnsyncedEditTests
         db.WipeAll();
         Assert.False(db.GetUnsyncedEdits().Any);
     }
+
+    [Fact]
+    public void Short_text_fits_one_line_reminder()
+    {
+        var since = new DateTime(2026, 11, 3, 14, 48, 0);
+        Assert.Equal("1.234 dòng thay đổi chưa xuất (từ 03/11 14:48) · nhập backup sẽ đè mất",
+            new UnsyncedEdits(1234, since, since.AddDays(13)).ShortText());
+        Assert.Equal("2 dòng thay đổi chưa xuất · nhập backup sẽ đè mất", new UnsyncedEdits(2, null, null).ShortText());
+        Assert.Equal(string.Empty, new UnsyncedEdits(0, null, null).ShortText());
+    }
 }

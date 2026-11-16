@@ -11,9 +11,14 @@ namespace MeRon.Core.Data;
 /// - xoá đơn xoá luôn các dòng món;
 /// - Thanh toán toàn bộ chỉ chuyển đơn "Đã lên đơn" (điện thoại chuyển cả đơn đã huỷ).
 /// Không phân trang: bản máy tính tải hết đơn khớp bộ lọc (vài nghìn đơn vẫn nhanh).
+/// Có <paramref name="history"/> thì mọi thao tác ghi (lưu, huỷ, xoá, thanh toán, đổi ngày giao, sửa hàng loạt, khôi phục)
+/// đọc đơn trước / sau rồi ghi vào Lịch sử chỉnh sửa - ghi lịch sử lỗi không làm hỏng thao tác (báo qua <see cref="HistoryError"/>).
 /// </summary>
-public sealed class OrderRepository(MeRonDatabase database)
+public sealed class OrderRepository(MeRonDatabase database, History.OrderHistory? history = null)
 {
+    /// <summary>Ghi lịch sử chỉnh sửa lỗi (file bị khoá...) - thao tác chính vẫn xong; app ghi log.</summary>
+    public Action<Exception>? HistoryError { get; set; }
+
     private const string OrderColumns =
         "O.id, O.userId, U.name, O.status, O.deliveryDatetime, O.paymentDatetime, O.discountValue, O.subTotal, O.total, O.note";
 
@@ -93,8 +98,13 @@ public sealed class OrderRepository(MeRonDatabase database)
     }
 
     /// <summary>Tạo / cập nhật đơn + dòng món trong 1 transaction (cập nhật = xoá hết dòng cũ rồi chèn lại, như điện thoại).
-    /// Trả về id đơn.</summary>
-    public long Save(OrderDraft draft, IReadOnlyDictionary<long, Product> products)
+    /// Trả về id đơn. <paramref name="action"/>: tên thao tác ghi vào lịch sử (mặc định Thêm đơn / Sửa đơn).</summary>
+    public long Save(OrderDraft draft, IReadOnlyDictionary<long, Product> products, string? action = null) =>
+        draft.Id == 0
+            ? TrackNew(action ?? "Thêm đơn", () => SaveCore(draft, products))
+            : Track(action ?? "Sửa đơn", [draft.Id], () => SaveCore(draft, products));
+
+    private long SaveCore(OrderDraft draft, IReadOnlyDictionary<long, Product> products)
     {
         OrderCalculator.Validate(draft);
         var subTotal = OrderCalculator.SubTotal(draft.Lines, products);
@@ -151,15 +161,18 @@ public sealed class OrderRepository(MeRonDatabase database)
         return orderId;
     }
 
-    public void SetStatus(long id, OrderStatus status)
-    {
-        using var connection = database.Open();
-        Execute(connection, "UPDATE Orders SET status = $status, updatedAt = $now WHERE id = $id",
-            ("$status", (long)status), ("$now", MeRonDatabase.Now()), ("$id", id));
-    }
+    public void SetStatus(long id, OrderStatus status) =>
+        Track(status == OrderStatus.Cancelled ? "Huỷ đơn" : "Đổi trạng thái", [id], () =>
+        {
+            using var connection = database.Open();
+            return Execute(connection, "UPDATE Orders SET status = $status, updatedAt = $now WHERE id = $id",
+                ("$status", (long)status), ("$now", MeRonDatabase.Now()), ("$id", id));
+        });
 
     /// <summary>Đổi ngày giao (menu chuột phải thẻ đơn: Giao hôm nay / ngày mai), giữ giờ giao cũ. Trả false nếu đơn không còn.</summary>
-    public bool SetDeliveryDay(long id, DateOnly day)
+    public bool SetDeliveryDay(long id, DateOnly day) => Track("Đổi ngày giao", [id], () => SetDeliveryDayCore(id, day));
+
+    private bool SetDeliveryDayCore(long id, DateOnly day)
     {
         using var connection = database.Open();
         using var transaction = connection.BeginTransaction();
@@ -175,14 +188,17 @@ public sealed class OrderRepository(MeRonDatabase database)
         return changed > 0;
     }
 
-    public void Delete(long id)
-    {
-        using var connection = database.Open();
-        using var transaction = connection.BeginTransaction();
-        Execute(connection, "DELETE FROM OrderItems WHERE orderId = $id", ("$id", id));
-        Execute(connection, "DELETE FROM Orders WHERE id = $id", ("$id", id));
-        transaction.Commit();
-    }
+    /// <param name="action">Tên thao tác ghi vào lịch sử (mặc định Xoá đơn).</param>
+    public void Delete(long id, string? action = null) =>
+        Track(action ?? "Xoá đơn", [id], () =>
+        {
+            using var connection = database.Open();
+            using var transaction = connection.BeginTransaction();
+            Execute(connection, "DELETE FROM OrderItems WHERE orderId = $id", ("$id", id));
+            var deleted = Execute(connection, "DELETE FROM Orders WHERE id = $id", ("$id", id));
+            transaction.Commit();
+            return deleted;
+        });
 
     /// <summary>
     /// "Thanh toán toàn bộ": chuyển mọi đơn Đã lên đơn trong danh sách sang Đã thanh toán (1 transaction). Như điện thoại:
@@ -202,7 +218,9 @@ public sealed class OrderRepository(MeRonDatabase database)
     /// <paramref name="paidAt"/> (mặc định lúc bấm; cùng định dạng form đơn ghi khi tích "Đã thanh toán trước") - đơn đã đổi
     /// trạng thái (đã thanh toán / huỷ ở nơi khác) thì bỏ qua. Trả số đơn đã chuyển. Dùng cho "Thanh toán toàn bộ" (Chi tiết)
     /// và "Thanh toán hết" (Công nợ).</summary>
-    public int PayShipping(IReadOnlyList<long> ids, DateTime? paidAt = null)
+    public int PayShipping(IReadOnlyList<long> ids, DateTime? paidAt = null) => Track("Thanh toán", ids, () => PayShippingCore(ids, paidAt));
+
+    private int PayShippingCore(IReadOnlyList<long> ids, DateTime? paidAt)
     {
         using var connection = database.Open();
         using var transaction = connection.BeginTransaction();
@@ -221,15 +239,166 @@ public sealed class OrderRepository(MeRonDatabase database)
 
     /// <summary>Sửa hàng loạt (<see cref="BulkEdit"/>): ghi trạng thái mới của mọi đơn trong 1 transaction - đơn sửa thì ghi
     /// trạng thái, ngày giao / thanh toán, tiền, các dòng món (theo mã dòng, không thêm / bớt dòng); <c>After</c> null thì xoá đơn.
-    /// Đơn không còn thì bỏ qua. Trả số đơn đã ghi.</summary>
-    public int ApplyBulk(IReadOnlyList<BulkChange> changes, BulkProductRename? rename = null) =>
-        WriteStates(changes.Select(c => (c.Before.Id, c.After, (Order?)null)).ToList(), rename is null ? null : (rename.ProductId, rename.NewName));
+    /// Đơn không còn thì bỏ qua. Trả số đơn đã ghi. <paramref name="action"/>: tên thao tác ghi vào lịch sử.</summary>
+    public int ApplyBulk(IReadOnlyList<BulkChange> changes, BulkProductRename? rename = null, string action = "Sửa hàng loạt") =>
+        Track(action, changes.Select(c => c.Before.Id).ToList(), () =>
+            WriteStates(changes.Select(c => (c.Before.Id, c.After, (Order?)null)).ToList(), rename is null ? null : (rename.ProductId, rename.NewName)));
 
     /// <summary>Hoàn tác lô vừa sửa: đơn đã sửa ghi lại như trước, đơn đã xoá chèn lại đúng mã đơn / mã dòng món;
     /// <paramref name="rename"/> = trả tên món trong Danh mục về tên cũ.</summary>
     public int RevertBulk(IReadOnlyList<BulkChange> changes, BulkProductRename? rename = null) =>
-        WriteStates(changes.Select(c => (c.Before.Id, (Order?)c.Before, c.After is null ? c.Before : null)).ToList(),
-            rename is null ? null : (rename.ProductId, rename.OldName));
+        Track("Hoàn tác sửa hàng loạt", changes.Select(c => c.Before.Id).ToList(), () =>
+            WriteStates(changes.Select(c => (c.Before.Id, (Order?)c.Before, c.After is null ? c.Before : null)).ToList(),
+                rename is null ? null : (rename.ProductId, rename.OldName)));
+
+    // ---- Lịch sử chỉnh sửa ----
+
+    /// <summary>Khách còn trong danh sách? (khôi phục đơn của khách đã bị xoá / nhập backup không có khách đó)</summary>
+    public bool CustomerExists(long userId)
+    {
+        using var connection = database.Open();
+        using var command = Command(connection, "SELECT COUNT(*) FROM Users WHERE id = $id", [("$id", userId)]);
+        return Convert.ToInt64(command.ExecuteScalar()) > 0;
+    }
+
+    /// <summary>
+    /// Khôi phục (trang Lịch sử chỉnh sửa): ghi lại từng đơn đúng như trước lần thay đổi (<see cref="History.RestorePlan"/>) trong
+    /// 1 transaction - đơn còn thì ghi đè, không còn thì chèn lại đúng mã đơn, <see cref="History.RestorePlan.AsNew"/> thì thành
+    /// đơn mới; dòng món giữ mã cũ nếu mã đó còn trống. Bản bị chặn (<c>Blocked</c>) bỏ qua. Ghi vào lịch sử là "Khôi phục"
+    /// (khôi phục nhầm thì khôi phục lại được). Trả số đơn đã ghi.
+    /// </summary>
+    public int Restore(IReadOnlyList<History.RestorePlan> plans)
+    {
+        var usable = plans.Where(p => p.Blocked is null && p.Target is not null).ToList();
+        if (usable.Count == 0)
+        {
+            return 0;
+        }
+        var before = history is null ? null : TryGetMany(usable.Where(p => !p.AsNew).Select(p => p.Entry.OrderId).ToList());
+        var written = new List<(long Id, long? OldId)>();
+        using (var connection = database.Open())
+        using (var transaction = connection.BeginTransaction())
+        {
+            foreach (var plan in usable)
+            {
+                written.Add((WriteOrder(connection, plan.Target!, plan.AsNew), plan.AsNew ? null : plan.Entry.OrderId));
+            }
+            transaction.Commit();
+        }
+        if (before is not null)
+        {
+            RecordSafe("Khôi phục", written.Select(w => w.Id).ToList(),
+                written.Where(w => w.OldId is { } old && before.ContainsKey(old)).ToDictionary(w => w.Id, w => before[w.OldId!.Value]));
+        }
+        return written.Count;
+    }
+
+    /// <summary>Ghi cả đơn + dòng món đúng như <paramref name="order"/>. Trả mã đơn.</summary>
+    private static long WriteOrder(SqliteConnection connection, Order order, bool asNew)
+    {
+        var now = MeRonDatabase.Now();
+        var values = new (string, object?)[]
+        {
+            ("$userId", order.UserId), ("$status", (long)order.Status), ("$delivery", order.DeliveryDatetime), ("$payment", order.PaymentDatetime),
+            ("$discount", order.DiscountValue), ("$subTotal", order.SubTotal), ("$total", order.Total), ("$note", order.Note ?? string.Empty),
+            ("$now", now), ("$id", order.Id),
+        };
+        long id;
+        if (asNew)
+        {
+            Execute(connection,
+                "INSERT INTO Orders(userId, status, deliveryDatetime, paymentDatetime, discountValue, subTotal, total, note, createdAt, updatedAt) " +
+                "VALUES($userId, $status, $delivery, $payment, $discount, $subTotal, $total, $note, $now, $now)", values);
+            id = LastId(connection);
+        }
+        else
+        {
+            id = order.Id;
+            var updated = Execute(connection,
+                "UPDATE Orders SET userId = $userId, status = $status, deliveryDatetime = $delivery, paymentDatetime = $payment, " +
+                "discountValue = $discount, subTotal = $subTotal, total = $total, note = $note, updatedAt = $now WHERE id = $id", values);
+            if (updated == 0)
+            {
+                Execute(connection,
+                    "INSERT INTO Orders(id, userId, status, deliveryDatetime, paymentDatetime, discountValue, subTotal, total, note, createdAt, updatedAt) " +
+                    "VALUES($id, $userId, $status, $delivery, $payment, $discount, $subTotal, $total, $note, $now, $now)", values);
+            }
+        }
+        Execute(connection, "DELETE FROM OrderItems WHERE orderId = $id", ("$id", id));
+        foreach (var item in order.Items)
+        {
+            Execute(connection,
+                "INSERT INTO OrderItems(id, orderId, productId, snapshotName, snapshotPrice, quantity, lineTotal, createdAt, updatedAt) " +
+                "VALUES(CASE WHEN EXISTS(SELECT 1 FROM OrderItems WHERE id = $itemId) THEN NULL ELSE $itemId END, $orderId, $productId, $name, $price, $quantity, $lineTotal, $now, $now)",
+                ("$itemId", item.Id), ("$orderId", id), ("$productId", item.ProductId), ("$name", item.SnapshotName),
+                ("$price", item.SnapshotPrice), ("$quantity", item.Quantity), ("$lineTotal", item.LineTotal), ("$now", now));
+        }
+        return id;
+    }
+
+    /// <summary>Đọc đơn trước, chạy <paramref name="write"/>, đọc lại rồi ghi lịch sử các đơn <paramref name="ids"/>.</summary>
+    private T Track<T>(string action, IReadOnlyList<long> ids, Func<T> write)
+    {
+        var before = history is null ? null : TryGetMany(ids);
+        var result = write();
+        if (before is not null)
+        {
+            RecordSafe(action, ids, before);
+        }
+        return result;
+    }
+
+    /// <summary>Thêm đơn mới: trước = không có.</summary>
+    private long TrackNew(string action, Func<long> write)
+    {
+        var id = write();
+        if (history is not null)
+        {
+            RecordSafe(action, [id], new Dictionary<long, Order>());
+        }
+        return id;
+    }
+
+    private Dictionary<long, Order>? TryGetMany(IReadOnlyList<long> ids)
+    {
+        try
+        {
+            return GetMany(ids);
+        }
+        catch (Exception ex)
+        {
+            HistoryError?.Invoke(ex);
+            return null;
+        }
+    }
+
+    private void RecordSafe(string action, IReadOnlyList<long> ids, IReadOnlyDictionary<long, Order> before)
+    {
+        try
+        {
+            var after = GetMany(ids);
+            history!.Record(action, ids.Distinct().Select(id => (before.GetValueOrDefault(id), after.GetValueOrDefault(id))), DateTime.Now);
+        }
+        catch (Exception ex)
+        {
+            HistoryError?.Invoke(ex);
+        }
+    }
+
+    private Dictionary<long, Order> GetMany(IReadOnlyList<long> ids)
+    {
+        var result = new Dictionary<long, Order>();
+        using var connection = database.Open();
+        foreach (var chunk in ids.Distinct().Chunk(500))
+        {
+            var orders = Read(connection, $"SELECT {OrderColumns} FROM Orders AS O LEFT JOIN Users AS U ON O.userId = U.id WHERE O.id IN ({string.Join(",", chunk)})");
+            foreach (var order in AttachItems(connection, orders))
+            {
+                result[order.Id] = order;
+            }
+        }
+        return result;
+    }
 
     private int WriteStates(IReadOnlyList<(long Id, Order? State, Order? Insert)> states, (long Id, string Name)? productName = null)
     {

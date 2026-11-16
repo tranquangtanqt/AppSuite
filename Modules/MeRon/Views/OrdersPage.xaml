@@ -177,14 +177,33 @@
             <InfoBar Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                      IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
             <!-- Nhắc xuất (RefreshUnsynced): đơn tạo / sửa trên máy tính sẽ bị lần nhập backup từ điện thoại sau đè mất -->
-            <InfoBar x:Name="UnsyncedBar" Severity="Warning" IsClosable="True" Title="Chưa xuất sang điện thoại"
-                     AutomationProperties.AutomationId="OrdersUnsyncedBar" Closed="UnsyncedBar_Closed">
-                <!-- ActionButton chỉ nhận 1 nút → 2 nút đặt ở Content (dưới câu nhắc) -->
-                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,0,0,12">
-                    <Button x:Name="UploadDriveButton" Content="Xuất lên Google Drive" Click="UploadDrive_Click" Style="{StaticResource AccentButtonStyle}" />
-                    <Button Content="Mở trang Xuất" Click="OpenExport_Click" />
-                </StackPanel>
-            </InfoBar>
+            <!-- Gọn 1 dòng (~36 px) thay InfoBar 4 dòng: câu dài (Describe) ở tooltip; màu nền theo trạng thái (SetUnsynced) -->
+            <Border x:Name="UnsyncedBar" Visibility="Collapsed" CornerRadius="4" BorderThickness="1" Padding="10,3,3,3"
+                    Background="{ThemeResource SystemFillColorCautionBackgroundBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    AutomationProperties.AutomationId="OrdersUnsyncedBar">
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <FontIcon x:Name="UnsyncedIcon" Glyph="&#xE7BA;" FontSize="14" VerticalAlignment="Center"
+                              Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                    <TextBlock x:Name="UnsyncedText" Grid.Column="1" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+                               AutomationProperties.AutomationId="OrdersUnsyncedText" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                        <Button x:Name="UploadDriveButton" Content="Xuất lên Google Drive" Click="UploadDrive_Click" Padding="10,3"
+                                Style="{StaticResource AccentButtonStyle}" />
+                        <Button Content="Xuất…" Click="OpenExport_Click" Padding="10,3" AutomationProperties.Name="Mở trang Xuất"
+                                ToolTipService.ToolTip="Mở trang Xuất (đăng nhập Google, lưu file backup)" />
+                    </StackPanel>
+                    <Button Grid.Column="3" Click="UnsyncedClose_Click" Padding="8,6" Background="Transparent" BorderThickness="0"
+                            AutomationProperties.Name="Ẩn nhắc xuất" ToolTipService.ToolTip="Ẩn - có thay đổi mới thì nhắc lại">
+                        <FontIcon Glyph="&#xE711;" FontSize="11" />
+                    </Button>
+                </Grid>
+            </Border>
         </StackPanel>
 
         <Grid Grid.Row="4">

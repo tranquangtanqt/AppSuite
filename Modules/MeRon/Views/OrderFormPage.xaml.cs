@@ -279,7 +279,7 @@ public sealed partial class OrderFormPage : Page
 
     private async void Delete_Click(object sender, RoutedEventArgs e)
     {
-        if (await Dialogs.ConfirmAsync(XamlRoot, "Xoá đơn?", "Xoá hẳn đơn và các dòng món của đơn khỏi dữ liệu. Không hoàn tác được.", "Xoá")
+        if (await Dialogs.ConfirmAsync(XamlRoot, "Xoá đơn?", "Xoá hẳn đơn và các dòng món của đơn khỏi dữ liệu. Xoá nhầm thì lấy lại ở Dữ liệu → Lịch sử chỉnh sửa.", "Xoá")
             && ViewModel.DeleteOrder())
         {
             GoBack();

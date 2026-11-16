@@ -98,6 +98,11 @@
                             <FontIcon Glyph="&#xE9D9;" />
                         </NavigationViewItem.Icon>
                     </NavigationViewItem>
+                    <NavigationViewItem Content="Lịch sử chỉnh sửa" Tag="HistoryPage">
+                        <NavigationViewItem.Icon>
+                            <FontIcon Glyph="&#xE81C;" />
+                        </NavigationViewItem.Icon>
+                    </NavigationViewItem>
                 </NavigationViewItem.MenuItems>
             </NavigationViewItem>
         </NavigationView.MenuItems>

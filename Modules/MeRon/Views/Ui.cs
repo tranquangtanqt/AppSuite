@@ -153,6 +153,30 @@ internal static class Ui
 
     public static Brush LapsedForeground(bool overHabit) => overHabit ? ShippingSolid : (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
 
+    // Nhãn loại thay đổi (Lịch sử chỉnh sửa): Xoá đỏ, Sửa cam, Thêm xanh lá.
+    private static readonly Brush LossSoft = new SolidColorBrush(ColorHelper.FromArgb(0x26, 0xE0, 0x31, 0x31));
+
+    public static string HistoryKindText(Core.History.HistoryKind kind) => kind switch
+    {
+        Core.History.HistoryKind.Delete => "Xoá",
+        Core.History.HistoryKind.Create => "Thêm",
+        _ => "Sửa",
+    };
+
+    public static Brush HistoryKindBackground(Core.History.HistoryKind kind) => kind switch
+    {
+        Core.History.HistoryKind.Delete => LossSoft,
+        Core.History.HistoryKind.Create => PaidSoft,
+        _ => ShippingSoft,
+    };
+
+    public static Brush HistoryKindForeground(Core.History.HistoryKind kind) => kind switch
+    {
+        Core.History.HistoryKind.Delete => LossSolid,
+        Core.History.HistoryKind.Create => PaidSolid,
+        _ => ShippingSolid,
+    };
+
     public static string Initial(string? name)
     {
         var word = (name ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries)

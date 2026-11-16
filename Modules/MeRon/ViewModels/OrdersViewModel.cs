@@ -274,7 +274,7 @@ public sealed partial class OrdersViewModel : ObservableObject
     public string? ApplyBulk(BulkPlan plan)
     {
         var written = 0;
-        var error = AppServices.Try(plan.Title, () => written = AppServices.Orders.ApplyBulk(plan.Changes, plan.Rename));
+        var error = AppServices.Try(plan.Title, () => written = AppServices.Orders.ApplyBulk(plan.Changes, plan.Rename, "Sửa hàng loạt: " + plan.Title));
         if (error is not null)
         {
             return error;

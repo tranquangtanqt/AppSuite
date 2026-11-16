@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="MeRon.Views.HistoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:MeRon.ViewModels"
+    xmlns:local="using:MeRon.Views"
+    NavigationCacheMode="Enabled">
+
+    <Grid Padding="24,12,24,0" RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="3*" MinWidth="150" />
+                <ColumnDefinition Width="2*" MinWidth="140" MaxWidth="280" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Lịch sử chỉnh sửa" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+            <Border Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="4,4,0,0" CornerRadius="14" Padding="12,3,12,4"
+                    Background="{StaticResource OrangeSoftBrush}">
+                <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                           TextWrapping="Wrap" AutomationProperties.AutomationId="HistorySummary" />
+            </Border>
+            <TextBox x:Name="SearchBox" Grid.Column="2" VerticalAlignment="Center" Style="{StaticResource DefaultTextBoxStyle}"
+                     PlaceholderText="Tìm theo tên khách hoặc mã đơn" AutomationProperties.Name="Tìm trong lịch sử"
+                     Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+        <!-- Bộ lọc: ngày sửa, loại thay đổi; nút mở thư mục log của app -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="12">
+            <local:DateRangeBar x:Name="RangeBar" Filter="{x:Bind ViewModel.Filter}" />
+            <ComboBox x:Name="KindBox" SelectedIndex="{x:Bind ViewModel.KindIndex, Mode=TwoWay}" MinWidth="150"
+                      AutomationProperties.Name="Loại thay đổi" />
+            <Button Click="OpenLogs_Click" AutomationProperties.Name="Nhật ký ứng dụng"
+                    ToolTipService.ToolTip="Mở thư mục Logs của MeRon (file meron-ngày.log, giữ 14 ngày) - có lỗi thì gửi file của ngày đó">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE9F9;" FontSize="{StaticResource FontSizeBody}" />
+                    <TextBlock Text="Nhật ký ứng dụng" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
+
+        <InfoBar Grid.Row="2" Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
+                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
+        <InfoBar Grid.Row="2" Severity="Success" IsClosable="True" Message="{x:Bind ViewModel.Message, Mode=OneWay}"
+                 IsOpen="{x:Bind local:Ui.HasText(ViewModel.Message), Mode=OneWay}" AutomationProperties.AutomationId="HistoryMessage" />
+
+        <TextBlock Grid.Row="3" Opacity="0.75" TextWrapping="Wrap"
+                   Text="Mỗi lần thêm / sửa / huỷ / xoá / thanh toán / đổi ngày giao đơn trên máy tính, mới nhất trước. Khôi phục = đưa đơn về đúng như trước lần đó (đơn đã xoá được thêm lại). Thay đổi trên điện thoại không có ở đây. Khoảng ngày là ngày sửa, không phải ngày giao." />
+
+        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="0,0,12,24" MaxWidth="980" HorizontalAlignment="Left">
+                <TextBlock Text="Chưa có thay đổi nào trong khoảng ngày / bộ lọc này." Opacity="0.7" Margin="0,8,0,0"
+                           Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsEmpty), Mode=OneWay}" />
+                <ItemsRepeater x:Name="RowsRepeater" ItemsSource="{x:Bind ViewModel.Rows}">
+                    <ItemsRepeater.Layout>
+                        <StackLayout Spacing="8" />
+                    </ItemsRepeater.Layout>
+                    <ItemsRepeater.ItemTemplate>
+                        <DataTemplate x:DataType="vm:HistoryRow">
+                            <!-- Thẻ 1 lần thay đổi: nhãn loại (Xoá đỏ / Sửa cam / Thêm xanh), lúc sửa, thao tác, khách, đơn, các thay đổi, nút -->
+                            <Border Padding="14,12" CornerRadius="10" BorderThickness="1"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                    AutomationProperties.Name="{x:Bind AccessibleName}">
+                                <Grid ColumnSpacing="14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="56" CornerRadius="10" Padding="0,6" VerticalAlignment="Top" Background="{x:Bind local:Ui.HistoryKindBackground(Kind)}">
+                                        <TextBlock Text="{x:Bind local:Ui.HistoryKindText(Kind)}" FontWeight="SemiBold" HorizontalAlignment="Center"
+                                                   Foreground="{x:Bind local:Ui.HistoryKindForeground(Kind)}" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Spacing="3">
+                                        <TextBlock TextWrapping="Wrap">
+                                            <Run Text="{x:Bind TimeText}" /><Run Text="  ·  " /><Run Text="{x:Bind Action}" FontWeight="SemiBold" />
+                                        </TextBlock>
+                                        <TextBlock TextWrapping="Wrap">
+                                            <Run Text="{x:Bind CustomerText}" FontWeight="SemiBold" /><Run Text="  ·  " /><Run Text="{x:Bind OrderText}" />
+                                        </TextBlock>
+                                        <TextBlock Text="{x:Bind ChangesText}" Opacity="0.8" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Spacing="6" VerticalAlignment="Top">
+                                        <Button Tag="{x:Bind}" Click="Restore_Click" AutomationProperties.Name="Khôi phục" HorizontalAlignment="Stretch"
+                                                ToolTipService.ToolTip="Đưa đơn về đúng như trước lần thay đổi này" Visibility="{x:Bind local:Ui.VisibleIf(CanRestore)}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <SymbolIcon Symbol="Undo" />
+                                                <TextBlock Text="Khôi phục" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Tag="{x:Bind}" Click="RestoreBatch_Click" AutomationProperties.Name="Khôi phục cả lô" HorizontalAlignment="Stretch"
+                                                ToolTipService.ToolTip="Khôi phục mọi đơn đổi cùng lần này (Thanh toán toàn bộ, sửa hàng loạt...)"
+                                                Visibility="{x:Bind local:Ui.VisibleIf(HasBatch)}" Content="{x:Bind BatchText}" />
+                                        <Button Tag="{x:Bind}" Click="Open_Click" AutomationProperties.Name="Mở đơn" HorizontalAlignment="Stretch"
+                                                ToolTipService.ToolTip="Mở đơn hiện tại trong form sửa">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <SymbolIcon Symbol="Edit" />
+                                                <TextBlock Text="Mở đơn" />
+                                            </StackPanel>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsRepeater.ItemTemplate>
+                </ItemsRepeater>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Page>

@@ -440,6 +440,20 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   ô Chưa tới ngày giao khi tích đơn đặt trước; ô ngày trên thẻ khách cam khi quá mốc lớn nhất (thay số 30 cố định).
   Cập nhật F1, README. Unit test 268/268; GUI Sandbox (UIA) 23/23 (2026-11-13)
 - [ ] Người dùng thử tay Công nợ theo tuổi nợ trên dữ liệu thật (đổi mốc, bấm lọc từng ô)
+- [x] **Lịch sử chỉnh sửa** (người dùng hỏi 2026-11-16, mục đích chính: khôi phục đơn xoá / sửa nhầm): trang mới nhóm Dữ liệu;
+  mọi thao tác ghi đơn qua `OrderRepository` (thêm, sửa, huỷ, xoá, thanh toán / Thanh toán toàn bộ / hết, đổi ngày giao, sửa
+  hàng loạt + Hoàn tác, Nhập đơn hàng loạt + Hoàn tác lô) lưu đơn trước / sau vào file riêng `me_ron_history.db` (nhập backup /
+  Xoá toàn bộ không mất); mỗi dòng: nhãn Xoá / Sửa / Thêm, thao tác, khách, đơn, từng thay đổi (2 → 5, + món, Tổng…); lọc
+  ngày sửa / loại / khách, mã đơn; **Khôi phục** 1 đơn hoặc **cả lô** (cảnh báo đơn đã sửa tiếp, mã đơn là đơn khác → thêm
+  thành đơn mới, khách không còn; lần khôi phục cũng ghi lịch sử); Mở đơn; nút Nhật ký ứng dụng (mở thư mục Logs). Cài đặt:
+  giữ lịch sử N ngày (mặc định 90, 0 = giữ hết, Dọn ngay). Câu hỏi xoá đơn bỏ "Không hoàn tác được". Chỉ đơn hàng (khách / món
+  / phiếu nhập chưa ghi). Cập nhật F1, README. Unit test 276/276; GUI Sandbox (UIA) 25/25 (2026-11-16)
+- [ ] Người dùng thử tay Lịch sử chỉnh sửa trên dữ liệu thật (xoá / sửa nhầm 1 đơn rồi Khôi phục; Thanh toán toàn bộ rồi Khôi phục cả lô)
+- [x] Thông báo gọn (người dùng 2026-11-16, chọn cách b): khung vàng "Chưa xuất sang điện thoại" ở trang Đặt hàng (~200 px,
+  4 dòng) thu thành **1 dòng** dưới bộ lọc (~37 px): "N dòng thay đổi chưa xuất (từ dd/MM HH:mm) · nhập backup sẽ đè mất"
+  (`UnsyncedEdits.ShortText`), câu đầy đủ ở tooltip; nút Xuất lên Google Drive + Xuất… (mở trang Xuất) + ✕; xuất xong dòng
+  xanh "Đã xuất" / lỗi đỏ "Chưa xuất được". Ảnh trước / sau đã duyệt. Unit test 277/277; GUI Sandbox (UIA) 7/7 (2026-11-16)
+- [ ] Chuông Thông báo ở menu trái (cách a) - để sau, khi có thêm loại nhắc khác (vd tự sao lưu lên Google)
 - [x] Thống kê theo món ăn (người dùng chốt 4 đề xuất 2026-11-13): cột **So với kỳ trước** ▲▼ % theo số lượng (kỳ trước =
   cùng số ngày liền trước, như Biểu đồ; "mới" = kỳ trước chưa bán; món kỳ trước có mà kỳ này không bán nữa nối cuối bảng, mờ,
   ▼ 100%; Mọi ngày thì không có cột; các trang khác dùng chung bảng không đổi) + bảng **Theo thứ trong tuần** món × T2…CN

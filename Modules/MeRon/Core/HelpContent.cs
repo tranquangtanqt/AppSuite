@@ -16,7 +16,7 @@ public static class HelpContent
     /// <summary>Các trang có trên menu - unit test đối chiếu với <see cref="Sections"/>.</summary>
     public static IReadOnlyList<string> Pages { get; } =
         ["OrdersPage", "OrderFormPage", "OrderDetailPage", "BatchOrdersPage", "PurchasesPage", "PurchaseFormPage", "DebtsPage",
-         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ChartsPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "DataInfoPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
+         "ReportOrderPage", "ReportProductPage", "ReportSummaryPage", "ChartsPage", "ReportCustomerPage", "LapsedCustomersPage", "ImportPage", "ExportPage", "DataInfoPage", "HistoryPage", "CustomersPage", "ProductsPage", "CategoriesPage", "AddressesPage", "SettingsPage"];
 
     public static IReadOnlyList<HelpSection> Sections { get; } =
     [
@@ -57,7 +57,7 @@ public static class HelpContent
 
         new("Đặt hàng", "", "Danh sách đơn đặt hàng: lọc, sắp xếp, thêm / sửa đơn.", "OrdersPage",
         [
-            new("Nhắc xuất sang điện thoại", "Có thêm / sửa / xoá trên máy tính chưa xuất (vd vừa Nhập đơn hàng loạt) thì đầu trang hiện khung vàng \"Chưa xuất sang điện thoại\": số dòng, từ lúc nào - lần nhập backup từ điện thoại sau sẽ đè mất. Nút Xuất lên Google Drive: đã đăng nhập Google ở trang Xuất thì xuất + tải lên ngay tại đây (xong thì nhập bản đó vào điện thoại); chưa đăng nhập thì mở trang Xuất. ✕ ẩn khung đến khi có thay đổi mới."),
+            new("Nhắc xuất sang điện thoại", "Có thêm / sửa / xoá trên máy tính chưa xuất (vd vừa Nhập đơn hàng loạt) thì dưới bộ lọc hiện 1 dòng vàng: \"43 dòng thay đổi chưa xuất (từ 03/11 14:48) · nhập backup sẽ đè mất\" - lần nhập backup từ điện thoại sau sẽ đè mất các thay đổi đó; rê chuột vào dòng chữ xem câu đầy đủ (cả lần sửa cuối). Nút Xuất lên Google Drive: đã đăng nhập Google ở trang Xuất thì xuất + tải lên ngay tại đây (dòng chuyển xanh \"Đã xuất\", xong thì nhập bản đó vào điện thoại; lỗi thì đỏ \"Chưa xuất được\"); chưa đăng nhập thì mở trang Xuất. Nút Xuất… mở trang Xuất. ✕ ẩn dòng nhắc đến khi có thay đổi mới."),
             new("Lọc theo trạng thái", "Tất cả / Đã lên đơn / Đã thanh toán / Huỷ. Lần đầu mở trang thì mặc định là Đã lên đơn, giao hôm nay. Phím Ctrl+1…4 = 4 tab.", "Ctrl+1…4"),
             new("Lọc theo khách", "Gõ tên hoặc số điện thoại vào ô Lọc theo khách hàng (không phân biệt dấu) rồi chọn trong gợi ý: Enter hoặc Tab = gợi ý đầu; ↑ / ↓ tô gợi ý khác rồi Enter / Tab để chọn. Nút X bỏ lọc. Ctrl+F đưa con trỏ vào ô.", "Ctrl+F"),
             new("Khoảng ngày giao", "Từ ngày – Đến ngày, tính theo ngày giao hàng (cả 2 ngày). Nút Khoảng ngày chọn nhanh: Hôm nay, Hôm qua, 7 ngày qua, Tháng này, Tháng trước, Mọi ngày (bỏ lọc ngày). (Ctrl+D). Đổi bộ lọc là tìm lại ngay.", "Ctrl+D"),
@@ -86,7 +86,7 @@ public static class HelpContent
             new("Tiền", "Tổng = Tạm tính − Giảm giá (không âm), tự tính khi đổi món / số lượng / giảm giá. Tổng số lượng món (cả món tự do) hiện ngay trên Tạm tính."),
             new("Ngày giao / thanh toán", "Chọn Ngày giao hàng. Bật Đã thanh toán trước nếu khách trả tiền ngay - hiện thêm Ngày thanh toán (mặc định = ngày giao); lưu thành Đã thanh toán, tắt = Đã lên đơn."),
             new("Lưu", "Nút Lưu hoặc Ctrl+S. Khách đã có đơn khác cùng ngày giao (không tính đơn huỷ) thì hỏi Cảnh báo trùng đơn: Huỷ hoặc Vẫn lưu. Không phải đợi tới lúc Lưu: chọn khách xong (hoặc đổi Ngày giao hàng) là dưới ô Khách hàng hiện ngay khung vàng \"Khách hàng này đã có đơn đặt hàng giao ngày …\"; đổi khách / ngày không trùng nữa thì khung tự tắt. Bấm Lưu vẫn hỏi lại như trên. Form thêm đơn có thêm 2 nút: Lưu và thêm mới (Ctrl+Shift+N) = lưu xong mở luôn đơn mới trống cùng ngày giao; Lưu và chép cho khách khác (Ctrl+Shift+K) = lưu xong mở đơn mới giống hệt đơn vừa lưu nhưng bỏ trống khách để chọn khách khác (2 phím này dùng được cả khi sửa đơn). Esc = quay lại không lưu.", "Ctrl+S", "Ctrl+Shift+N", "Ctrl+Shift+K", "Esc"),
-            new("Huỷ đơn / Xoá đơn", "Huỷ đơn: chuyển sang Huỷ, giữ lại để tra cứu, không tính vào báo cáo. Xoá đơn: xoá hẳn đơn và các dòng món, không hoàn tác. Đơn đã huỷ sửa và Lưu vẫn giữ Huỷ."),
+            new("Huỷ đơn / Xoá đơn", "Huỷ đơn: chuyển sang Huỷ, giữ lại để tra cứu, không tính vào báo cáo. Xoá đơn: xoá hẳn đơn và các dòng món. Xoá / sửa nhầm thì lấy lại ở Dữ liệu → Lịch sử chỉnh sửa → Khôi phục. Đơn đã huỷ sửa và Lưu vẫn giữ Huỷ."),
             new("Sao chép đơn", "Khách quen đặt lặp lại: chuột phải 1 đơn (trang Đặt hàng, Chi tiết, Theo món ăn; hoặc Shift+F10 - menu còn có Đã thanh toán, Giao hôm nay / ngày mai, Huỷ đơn) → Sao chép đơn, hoặc nút Sao chép đơn trong form sửa (Ctrl+Shift+C). Mở form Thêm đặt hàng điền sẵn khách, các món + số lượng, món tự do, giảm giá, ghi chú; giữ nguyên ngày giờ giao của đơn gốc (đơn gốc không có ngày giao → hôm nay), Đã lên đơn, chưa thanh toán; món tính giá hiện tại - giá đổi so với đơn gốc thì báo ở đầu form; món không còn trong danh sách chép thành món tự do. Chưa lưu gì cho đến khi bấm Lưu.", "Chuột phải", "Ctrl+Shift+C"),
         ]),
 
@@ -230,6 +230,19 @@ public static class HelpContent
             new("Ảnh hưởng báo cáo", "Thống kê, Khách hàng tiềm năng, Khách lâu không đặt... chỉ tính trên dữ liệu còn lại - phần đã xoá không còn được cộng."),
         ]),
 
+        new("Lịch sử chỉnh sửa", "", "Mọi lần thay đổi đơn trên máy tính - khôi phục đơn xoá nhầm, sửa nhầm.", "HistoryPage",
+        [
+            new("Ghi những gì", "Mỗi lần thêm đơn, sửa đơn (form, popup), Huỷ đơn, Xoá đơn, Đã thanh toán / Thanh toán toàn bộ / Thanh toán hết, Giao hôm nay / ngày mai, sửa hàng loạt + Hoàn tác, Nhập đơn hàng loạt + Hoàn tác lô, Khôi phục: ghi lại nguyên đơn (khách, món, số lượng, giá, ngày, trạng thái, ghi chú) trước và sau. Chỉ đơn hàng - khách, món, phiếu nhập chưa có. Thay đổi trên điện thoại không có ở đây; Nhập dữ liệu (thay toàn bộ) cũng không ghi từng đơn - lấy lại bản cũ ở thư mục Backups."),
+            new("Mỗi dòng", "Nhãn Xoá (đỏ) / Sửa (cam) / Thêm (xanh), lúc sửa, thao tác (vd \"Sửa đơn\", \"Thanh toán\", \"Sửa hàng loạt: Ngày giao\"), khách, mã đơn + ngày giao, rồi từng thay đổi: \"Trạng thái: Đã lên đơn → Đã thanh toán\", \"Bánh bao: 3 → 5\", \"+ Xôi × 2\", \"− Trà × 1\", \"Tổng: 75.000 đ → 125.000 đ\"; đơn bị xoá thì tóm tắt cả đơn. Mới nhất trước; chữ thay đổi bôi đen chép được."),
+            new("Lọc / tìm", "Khoảng ngày = ngày sửa (không phải ngày giao), mặc định Mọi ngày; ô loại: Tất cả / Đơn bị xoá / Đơn bị sửa / Đơn thêm mới; ô tìm: tên khách (không dấu cũng được) hoặc mã đơn. Bộ lọc giữ khi chuyển trang.", "Ctrl+F"),
+            new("Khôi phục", "Đưa đơn về đúng như TRƯỚC lần thay đổi đó: dòng Xoá = thêm lại đơn (đúng mã đơn cũ), dòng Sửa = ghi đè đơn bằng bản trước khi sửa. Hộp hỏi lại liệt kê những gì sẽ đổi so với đơn đang có, và cảnh báo khi: đơn đã bị sửa / xoá tiếp sau lần đó (khôi phục sẽ bỏ cả các lần sau), mã đơn đang là đơn khác (vd đã nhập lại backup - đơn được thêm thành đơn mới), khách không còn. Đơn đang giống hệt bản trước thì báo không có gì để khôi phục. Dòng Thêm không có nút Khôi phục: muốn bỏ đơn thì Mở đơn rồi Xoá."),
+            new("Khôi phục cả lô", "Thao tác đổi nhiều đơn 1 lần (Thanh toán toàn bộ, Thanh toán hết, sửa / xoá hàng loạt...) có thêm nút Khôi phục cả lô (n đơn): khôi phục mọi đơn của lần đó trong 1 lần, đơn không cần / không khôi phục được thì bỏ qua (hộp hỏi lại có danh sách)."),
+            new("Khôi phục nhầm", "Lần khôi phục cũng được ghi thành dòng \"Khôi phục\" - bấm Khôi phục ở dòng đó để trả lại như trước khi khôi phục. Khôi phục xong nhớ xuất sang điện thoại như mọi thay đổi khác."),
+            new("Mở đơn", "Mở đơn hiện tại trong form sửa; đơn không còn thì báo."),
+            new("Giữ bao lâu", "Mặc định 90 ngày: dòng cũ hơn tự xoá mỗi lần mở app. Đổi ở Cài đặt → Lịch sử chỉnh sửa (0 = giữ hết, nút Dọn ngay). Lưu ở file me_ron_history.db cạnh database - nhập backup, Xoá toàn bộ dữ liệu không mất lịch sử."),
+            new("Nhật ký ứng dụng", "Nút Nhật ký ứng dụng: mở thư mục Logs của MeRon (file meron-<ngày>.log, giữ 14 ngày) - app lỗi / tự tắt thì gửi file của ngày đó."),
+        ]),
+
         new("Khách hàng", "", "Danh sách khách hàng dùng cho đơn hàng và báo cáo.", "CustomersPage",
         [
             new("Tìm", "Gõ vào ô tìm - lọc ngay theo tên hoặc số điện thoại, không phân biệt hoa thường và dấu (\"chi an\" khớp \"Chị An\")."),
@@ -259,12 +272,13 @@ public static class HelpContent
             new("Xoá", "Nút Xoá trong hộp thoại sửa. Khách hàng đã ghi địa chỉ này vẫn giữ nguyên chữ đã ghi."),
         ]),
 
-        new("Cài đặt", "", "Giao diện sáng / tối, ẩn / hiện các mục của menu bên trái, ghim ở Nhập đơn hàng loạt, tự dọn ảnh chụp cũ.", "SettingsPage",
+        new("Cài đặt", "", "Giao diện sáng / tối, ẩn / hiện các mục của menu bên trái, ghim ở Nhập đơn hàng loạt, giữ lịch sử chỉnh sửa, tự dọn ảnh chụp cũ.", "SettingsPage",
         [
             new("Giao diện", "Khung Giao diện: Theo Windows (mặc định), Sáng hoặc Tối. Đổi xong bấm Mở lại ngay để áp dụng (đơn đang nhập dở chưa Lưu sẽ mất), hoặc để lần mở app sau. Áp dụng cho cả hộp thoại và cửa sổ Hướng dẫn."),
             new("Ẩn mục menu", "Mục Cài đặt ở cuối menu (cạnh Hướng dẫn) → khung Menu bên trái: bỏ tích mục ít dùng (vd Địa chỉ, Danh mục món ăn) là mục đó biến khỏi menu ngay; tích lại để hiện. Nhóm ẩn hết mục thì tiêu đề nhóm (Thống kê, Danh mục...) cũng ẩn. Hiện tất cả = trả về như cũ."),
             new("Luôn hiện", "Đặt hàng (trang mở đầu), Cài đặt và Hướng dẫn không ẩn được. Ẩn trang Xuất thì nút Mở trang Xuất (cảnh báo ở trang Nhập) vẫn mở được trang đó."),
             new("Nhập đơn hàng loạt", "Ô Hỏi trước khi bỏ ghim (mặc định tắt): sửa tay chữ của dòng đã ghim (khách / món chọn trong popup Sửa đơn hoặc ô chọn trên thẻ) thì hỏi Bỏ ghim (đọc theo chữ mới) hay Giữ ghim (chữ dòng trả về như trước). Tắt = tự bỏ ghim, không hỏi."),
+            new("Lịch sử chỉnh sửa", "Khung Lịch sử chỉnh sửa: Giữ lịch sử … ngày (mặc định 90, 0 = giữ hết) - mỗi lần mở app, lịch sử thay đổi đơn cũ hơn số ngày đó tự xoá. Dọn ngay: xoá luôn không cần mở lại app. Dòng bên cạnh cho biết đang có bao nhiêu dòng lịch sử."),
             new("Ảnh chụp", "Khung Ảnh chụp: Tự xoá ảnh cũ hơn … ngày (mặc định 30, 0 = giữ hết) - mỗi lần mở app, ảnh do nút Chụp ảnh lưu trong Pictures\\MeRon (chi_tiet_don_hang_…, hoa_don_cong_no_…) cũ hơn số ngày đó được đưa vào Thùng rác (lấy lại được); file khác trong thư mục giữ nguyên. Dọn ngay: dọn luôn không cần mở lại app. Mở thư mục ảnh: mở Pictures\\MeRon. Dòng bên cạnh cho biết đang có bao nhiêu ảnh."),
             new("Lưu ở đâu", "Lưu ngay khi đổi, trong file settings.json cạnh database (%LOCALAPPDATA%\\AppSuite\\MeRon) - tắt app mở lại vẫn giữ; nhập backup hay Xoá toàn bộ dữ liệu không ảnh hưởng."),
             new("App tự tắt", "Nếu app đơ rồi tự tắt, lỗi được ghi (kèm vị trí trong code) vào file Logs\\meron-<ngày>.log trong thư mục cài MeRon (cạnh MeRon.exe), dòng có chữ \"Lỗi không xử lý được\". Gửi file đó kèm các bước vừa làm để sửa lỗi. Log giữ 14 ngày."),

@@ -69,6 +69,32 @@
                 </StackPanel>
             </Border>
 
+            <!-- Lịch sử chỉnh sửa đơn (Core\History\OrderHistory): tự xoá dòng cũ khi mở app -->
+            <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="16" Background="{StaticResource OrangeSoftBrush}">
+                            <FontIcon Glyph="&#xE81C;" FontSize="{StaticResource FontSizeEmphasis}" Foreground="{StaticResource OrangeBrush}" />
+                        </Border>
+                        <TextBlock Text="Lịch sử chỉnh sửa" Style="{StaticResource GroupTitleTextBlockStyle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock TextWrapping="Wrap" Opacity="0.8"
+                               Text="Mỗi lần thêm / sửa / huỷ / xoá / thanh toán đơn trên máy tính được ghi lại để khôi phục khi làm nhầm (trang Dữ liệu → Lịch sử chỉnh sửa). Lịch sử cũ hơn số ngày dưới đây tự xoá mỗi lần mở app." />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="Giữ lịch sử" VerticalAlignment="Center" />
+                        <NumberBox x:Name="HistoryDaysBox" Minimum="0" Maximum="3650" Width="90" SpinButtonPlacementMode="Hidden"
+                                   AutomationProperties.Name="Số ngày giữ lịch sử" ValueChanged="HistoryDays_ValueChanged" />
+                        <TextBlock Text="ngày  (0 = giữ hết)" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button Content="Dọn ngay" Click="CleanHistory_Click" AutomationProperties.Name="Dọn lịch sử cũ ngay" />
+                        <TextBlock x:Name="HistoryStatus" VerticalAlignment="Center" Opacity="0.8" TextWrapping="Wrap"
+                                   AutomationProperties.AutomationId="HistoryStatus" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- Ảnh "Chụp ảnh" (Pictures\MeRon): tự đưa ảnh cũ vào Thùng rác khi mở app (Core\CaptureFiles) -->
             <Border Padding="18,16" CornerRadius="10" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">

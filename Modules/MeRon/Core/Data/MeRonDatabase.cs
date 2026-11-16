@@ -270,4 +270,10 @@ public sealed record UnsyncedEdits(long Count, DateTime? Since, DateTime? Last)
         ? string.Empty
         : $"Trên máy tính có {VnFormat.Number(Count)} dòng dữ liệu đã thêm / sửa / xoá chưa xuất" +
           (Since is { } since ? $" (từ {since:dd/MM/yyyy HH:mm}" + (Last is { } last && last - since >= TimeSpan.FromMinutes(1) ? $", lần cuối {last:dd/MM/yyyy HH:mm})." : ").") : ".");
+
+    /// <summary>Câu ngắn cho dòng nhắc 1 hàng ở trang Đặt hàng (câu đầy đủ = Describe, để ở tooltip); không có thay đổi → rỗng.</summary>
+    public string ShortText() => !Any
+        ? string.Empty
+        : $"{VnFormat.Number(Count)} dòng thay đổi chưa xuất" + (Since is { } since ? $" (từ {since:dd/MM HH:mm})" : string.Empty) +
+          " · nhập backup sẽ đè mất";
 }

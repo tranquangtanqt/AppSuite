@@ -438,7 +438,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
             Order? order = null;
             var error = AppServices.Try("Lưu đơn", () =>
             {
-                var id = AppServices.Orders.Save(row.Match.ToDraft(DeliveryDay), products);
+                var id = AppServices.Orders.Save(row.Match.ToDraft(DeliveryDay), products, "Nhập đơn hàng loạt");
                 order = AppServices.Orders.Get(id);
             });
             if (error is not null || order is null)
@@ -479,7 +479,7 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         {
             foreach (var item in plan.Delete)
             {
-                AppServices.Orders.Delete(item.Saved.Id);
+                AppServices.Orders.Delete(item.Saved.Id, "Hoàn tác nhập hàng loạt");
             }
         });
         if (error is not null)

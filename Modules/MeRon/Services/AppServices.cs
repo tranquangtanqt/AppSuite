@@ -18,7 +18,13 @@ public static class AppServices
 
     public static MasterDataRepository MasterData { get; } = new(Database);
 
-    public static OrderRepository Orders { get; } = new(Database);
+    /// <summary>Lịch sử chỉnh sửa đơn: file riêng cạnh database (nhập backup / xoá toàn bộ không mất).</summary>
+    public static Core.History.OrderHistory History { get; } = new(Path.Combine(Database.Folder, Core.History.OrderHistory.FileName));
+
+    public static OrderRepository Orders { get; } = new(Database, History)
+    {
+        HistoryError = ex => AppLog.For("History").LogError(ex, "Ghi lịch sử chỉnh sửa lỗi"),
+    };
 
     public static PurchaseRepository Purchases { get; } = new(Database);
 
