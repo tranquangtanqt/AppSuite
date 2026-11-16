@@ -462,6 +462,8 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Unit test 278/278; GUI Sandbox (UIA) 14/15 - 1 lượt sai kỳ vọng của script (hết đơn thì màn Chi tiết ẩn dòng tiêu đề), app đúng (2026-11-16)
 - [x] Ô ngày (DateBox, mọi trang MeRon) khi có focus bị che chữ ("/11/2026"): nút ✕ xoá chữ của TextBox hiện ra nằm dưới nút
   lịch, chiếm ~30 px → bỏ nút ✕ (Xoá ngày đã có trong lịch). Ảnh trước / sau Sandbox 2/2 (2026-11-16)
+- [x] Công nợ: ô tuổi nợ đang lọc - bấm xong (chuột còn trên ô) không thấy viền cam vì trạng thái rê chuột của Button thay
+  viền bằng màu xám → viền cam vẽ bằng Border đè lên nút (không bắt chuột). Ảnh trước / sau Sandbox 4/4 (2026-11-16)
 - [ ] Chuông Thông báo ở menu trái (cách a) - để sau, khi có thêm loại nhắc khác (vd tự sao lưu lên Google)
 - [x] Thống kê theo món ăn (người dùng chốt 4 đề xuất 2026-11-13): cột **So với kỳ trước** ▲▼ % theo số lượng (kỳ trước =
   cùng số ngày liền trước, như Biểu đồ; "mới" = kỳ trước chưa bán; món kỳ trước có mà kỳ này không bán nữa nối cuối bảng, mờ,

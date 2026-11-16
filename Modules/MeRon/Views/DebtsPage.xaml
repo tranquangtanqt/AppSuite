@@ -74,9 +74,11 @@
             </ItemsRepeater.Layout>
             <ItemsRepeater.ItemTemplate>
                 <DataTemplate x:DataType="vm:AgingTile">
+                    <!-- Viền cam "đang lọc" vẽ bằng Border đè lên nút (không bắt chuột): BorderBrush của Button bị trạng thái
+                         PointerOver / Pressed thay bằng màu xám nên vừa bấm xong (chuột còn trên ô) không thấy viền cam -->
+                    <Grid>
                     <Button Tag="{x:Bind}" Click="Tile_Click" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left" Padding="12,8"
-                            CornerRadius="10" BorderThickness="{x:Bind local:DebtsPage.TileThickness(IsSelected)}"
-                            BorderBrush="{x:Bind local:DebtsPage.TileBorder(IsSelected)}" Background="{x:Bind local:DebtsPage.TileBackground(IsOldest)}"
+                            CornerRadius="10" Background="{x:Bind local:DebtsPage.TileBackground(IsOldest)}"
                             AutomationProperties.Name="{x:Bind AccessibleName}"
                             ToolTipService.ToolTip="Bấm để chỉ xem khách có nợ trong nhóm này (bấm lại để bỏ lọc)">
                         <StackPanel Spacing="2">
@@ -87,6 +89,9 @@
                                        Foreground="{x:Bind local:DebtsPage.TileForeground(IsOldest)}" />
                         </StackPanel>
                     </Button>
+                    <Border CornerRadius="10" BorderThickness="2" IsHitTestVisible="False" BorderBrush="{x:Bind local:DebtsPage.TileBorder(IsSelected)}"
+                            Visibility="{x:Bind local:Ui.VisibleIf(IsSelected)}" />
+                    </Grid>
                 </DataTemplate>
             </ItemsRepeater.ItemTemplate>
         </ItemsRepeater>

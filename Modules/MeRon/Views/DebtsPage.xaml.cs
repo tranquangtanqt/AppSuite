@@ -92,8 +92,6 @@ public sealed partial class DebtsPage : Page
         }
     }
 
-    public static Microsoft.UI.Xaml.Thickness TileThickness(bool selected) => new(selected ? 2 : 1);
-
     public static Microsoft.UI.Xaml.Media.Brush TileBorder(bool selected) => (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[
         selected ? "AccentFillColorDefaultBrush" : "CardStrokeColorDefaultBrush"];
 
