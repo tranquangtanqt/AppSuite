@@ -154,10 +154,18 @@ public sealed partial class DebtsPage : Page
     /// <summary>✕ đóng thông báo = xoá Message (hết Hoàn tác; lần sau cùng câu vẫn hiện lại).</summary>
     private void Message_Closed(InfoBar sender, InfoBarClosedEventArgs args) => ViewModel.Message = string.Empty;
 
-    private void CopyMessage_Click(object sender, RoutedEventArgs e)
+    private async void CopyMessage_Click(object sender, RoutedEventArgs e)
     {
         if (DebtOf(sender) is { UserId: not null } debt)
         {
+            // Có đơn cần xác nhận (chưa rõ giá...) → tổng trong tin nhắn có thể thiếu: hỏi lại trước khi chép.
+            if ((sender as FrameworkElement)?.Tag is DebtRow { NeedsConfirm: true } row
+                && !await Dialogs.ConfirmAsync(XamlRoot, "Có đơn cần xác nhận",
+                    $"{debt.Name} có {row.ConfirmCount} đơn cần xác nhận (chưa rõ giá...) - tổng {VnFormat.Money(debt.Amount)} trong tin nhắn có thể chưa đúng. Vẫn chép tin nhắn?",
+                    "Vẫn chép"))
+            {
+                return;
+            }
             CopyText(CustomerDebts.ReminderMessage(debt));
             ViewModel.Message = $"Đã chép tin nhắn nhắc thanh toán cho {debt.Name} - dán vào Zalo bằng Ctrl+V (Chi tiết → Chụp ảnh để gửi kèm ảnh).";
         }

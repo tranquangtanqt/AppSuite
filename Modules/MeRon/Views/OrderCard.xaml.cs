@@ -117,6 +117,24 @@ public sealed partial class OrderCard : UserControl
         {
             return menu;
         }
+        // Cần xác nhận (2026-11-16): đơn ở khách chung → Chọn khách đúng; đơn tự đánh dấu → Đã xác nhận (bỏ dấu).
+        if (card.IsUnknownCustomer)
+        {
+            Add(menu, "Chọn khách đúng…", Symbol.Contact, async () =>
+            {
+                var root = XamlRoot;
+                var hint = Core.Orders.OrderConfirm.CustomerHint(card.Order.Note);
+                if (await PickCustomerDialog.ShowAsync(root, hint, $"Đơn {card.DeliveryText} · {card.TotalText} - đang ghi \"Chưa rõ khách\"" +
+                        (hint.Length > 0 ? $" (đã ghi: {hint})" : "") + ".") is { } userId)
+                {
+                    Run("Chọn khách đúng", () => AppServices.Orders.SetCustomer(card.Id, userId));
+                }
+            });
+        }
+        if (Core.Orders.OrderConfirm.Parse(card.Order.Note).Marked)
+        {
+            Add(menu, "Đã xác nhận (bỏ dấu Cần xác nhận)", Symbol.Accept, () => Run("Đã xác nhận", () => AppServices.Orders.ClearConfirm(card.Id)));
+        }
         menu.Items.Add(new MenuFlyoutSeparator());
         if (card.Status == OrderStatus.Shipping)
         {

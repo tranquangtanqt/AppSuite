@@ -103,6 +103,28 @@ public sealed partial class OrdersViewModel : ObservableObject
 
     partial void OnCustomerChanged(CustomerOption? value) => AutoReload();
 
+    // ---- Cần xác nhận (OrderConfirm, 2026-11-16) ----
+
+    /// <summary>Nút lọc "Cần xác nhận": bật = mọi đơn cần hỏi lại (mọi ngày, trừ Huỷ), bỏ qua ngày / trạng thái; lọc khách vẫn áp.</summary>
+    [ObservableProperty]
+    private bool _onlyConfirm;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowConfirmFilter))]
+    [NotifyPropertyChangedFor(nameof(ConfirmFilterText))]
+    private int _confirmCount;
+
+    /// <summary>Hiện nút khi có đơn cần xác nhận (hoặc đang bật lọc).</summary>
+    public bool ShowConfirmFilter => ConfirmCount > 0 || OnlyConfirm;
+
+    public string ConfirmFilterText => $"Cần xác nhận ({VnFormat.Number(ConfirmCount)})";
+
+    partial void OnOnlyConfirmChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowConfirmFilter));
+        AutoReload();
+    }
+
     partial void OnSortChanged(OrderSort value) => AutoReload();
 
     private void AutoReload()
@@ -123,6 +145,7 @@ public sealed partial class OrdersViewModel : ObservableObject
         ToDate = ToOffset(today.To);
         Customer = null;
         Sort = OrderSort.Default;
+        OnlyConfirm = false;
         _suspendReload = false;
     }
 
@@ -140,7 +163,11 @@ public sealed partial class OrdersViewModel : ObservableObject
                 Customer = Customers.FirstOrDefault(c => c.Id == Customer.Id);
                 _suspendReload = false;
             }
-            var orders = AppServices.Orders.Query(Filter);
+            var confirm = AppServices.Orders.NeedsConfirm();
+            ConfirmCount = confirm.Count;
+            var orders = OnlyConfirm
+                ? confirm.Where(o => Customer is null || o.UserId == Customer.Id).ToList()
+                : AppServices.Orders.Query(Filter);
             foreach (var card in Cards)
             {
                 card.PropertyChanged -= Card_PropertyChanged;
@@ -155,9 +182,12 @@ public sealed partial class OrdersViewModel : ObservableObject
             }
             _selectedIds.IntersectWith(orders.Select(o => o.Id));
             UpdateSelection();
-            Summary = orders.Count == 0
-                ? "Không có đơn nào khớp bộ lọc."
-                : $"{VnFormat.Number(orders.Count)} đơn  ·  Tổng {VnFormat.Money(orders.Sum(o => o.Total))}";
+            Summary = OnlyConfirm
+                ? orders.Count == 0 ? "Không còn đơn nào cần xác nhận."
+                  : $"{VnFormat.Number(orders.Count)} đơn cần xác nhận (mọi ngày)  ·  Tổng {VnFormat.Money(orders.Sum(o => o.Total))}"
+                : orders.Count == 0
+                    ? "Không có đơn nào khớp bộ lọc."
+                    : $"{VnFormat.Number(orders.Count)} đơn  ·  Tổng {VnFormat.Money(orders.Sum(o => o.Total))}";
             Error = string.Empty;
         }
         catch (Exception ex)

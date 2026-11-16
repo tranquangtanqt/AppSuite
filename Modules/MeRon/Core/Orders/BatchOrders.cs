@@ -314,7 +314,13 @@ public sealed record BatchLineMatch(
 
     public long Total => Items.Sum(i => i.UnitPrice * i.Quantity);
 
-    public OrderDraft ToDraft(DateOnly day) => new(0, Customer?.Id, OrderStatus.Shipping, day.ToDateTime(TimeOnly.MinValue), Line.Paid, null, 0, null,
+    /// <summary>Đơn ghi vào khách chung "Chưa rõ khách" (nút Chưa rõ khách trên thẻ) → ghi chú có dấu Cần xác nhận kèm chữ khách đã ghi.</summary>
+    public string? DraftNote => Customer is { } c && OrderConfirm.IsUnknownCustomer(c.Name)
+        ? OrderConfirm.Compose(true, OrderConfirm.UnknownCustomerReason +
+            (Line.Customer.Replace("?", string.Empty).Trim() is { Length: > 0 } hint && !OrderConfirm.IsUnknownCustomer(hint) ? ": " + hint : string.Empty), null)
+        : null;
+
+    public OrderDraft ToDraft(DateOnly day) => new(0, Customer?.Id, OrderStatus.Shipping, day.ToDateTime(TimeOnly.MinValue), Line.Paid, null, 0, DraftNote,
         Items.Select(i => i.Product is { } p
             ? new OrderLineDraft(p.Id, i.Quantity)
             : new OrderLineDraft(null, i.Quantity, true, i.FreeName, i.FreePrice)).ToList());

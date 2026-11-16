@@ -78,6 +78,9 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
     /// <summary>Không khách nào khớp → nút "Thêm khách" (popup, điền sẵn tên + số căn hộ).</summary>
     public bool NeedsNewCustomer => Match.Customer is null && Match.CustomerCandidates.Count == 0 && Match.Line.Error is null;
 
+    /// <summary>Chưa ghép được khách (không ai khớp / nhiều người khớp) → nút "Chưa rõ khách": lưu tạm vào khách chung.</summary>
+    public bool CanUseUnknownCustomer => Match.Customer is null && Match.Line.Error is null;
+
     /// <summary>Nhiều khách khớp → ô chọn khách.</summary>
     public IReadOnlyList<Customer> CustomerChoices => Match.Customer is null ? Match.CustomerCandidates : [];
 
@@ -352,6 +355,19 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         SavePins();
         Text = text;
         Refresh();
+    }
+
+    /// <summary>Nút "Chưa rõ khách" trên thẻ: ghim dòng vào khách chung (tạo nếu chưa có), giữ nguyên chữ khách đã ghi (thành lý do
+    /// Cần xác nhận khi lưu - <see cref="BatchLineMatch.DraftNote"/>).</summary>
+    public void UseUnknownCustomer(BatchRowViewModel row)
+    {
+        long id = 0;
+        if (AppServices.Try("Khách chung", () => id = AppServices.MasterData.EnsureCustomer(OrderConfirm.UnknownCustomerName)) is { } error)
+        {
+            Error = error;
+            return;
+        }
+        RewriteLine(row, row.Match.Line.Raw, PinOf(row).WithCustomer(id));
     }
 
     /// <summary>Ghim hiện có của dòng (chưa ghim → rỗng) - để chọn thêm khách / món mà không mất phần đã ghim.</summary>

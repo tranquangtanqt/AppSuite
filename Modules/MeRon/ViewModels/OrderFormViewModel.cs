@@ -218,12 +218,70 @@ public sealed partial class OrderFormViewModel : ObservableObject
     [ObservableProperty]
     private CustomerOption? _customer;
 
-    partial void OnCustomerChanged(CustomerOption? value)
+    partial void OnCustomerChanged(CustomerOption? oldValue, CustomerOption? newValue)
     {
         Error = string.Empty;
         RefreshLastOrder();
         RefreshDuplicate();
+        // Chọn thẳng khách chung trong danh sách → bật Cần xác nhận (nút "Chưa rõ khách" tự đặt lý do kèm chữ đã gõ).
+        if (_loaded && OrderConfirm.IsUnknownCustomer(newValue?.Name) && !NeedsConfirm)
+        {
+            NeedsConfirm = true;
+            ConfirmReason = OrderConfirm.UnknownCustomerReason;
+        }
+        // Từ khách chung "Chưa rõ khách" đổi sang khách thật (đã hỏi xong) → lý do chỉ là chưa rõ khách thì tự bỏ dấu.
+        if (_loaded && OrderConfirm.IsUnknownCustomer(oldValue?.Name) && newValue is not null && !OrderConfirm.IsUnknownCustomer(newValue.Name)
+            && NeedsConfirm && OrderConfirm.IsOnlyUnknownCustomer(ConfirmReason))
+        {
+            NeedsConfirm = false;
+            ConfirmReason = string.Empty;
+        }
     }
+
+    // ---- Cần xác nhận (2026-11-16): dấu ở đầu ô Ghi chú, xem OrderConfirm ----
+
+    /// <summary>Ô tích "Cần xác nhận" (đơn tạm, còn phải hỏi lại).</summary>
+    [ObservableProperty]
+    private bool _needsConfirm;
+
+    /// <summary>Lý do ngắn: "Nhung nào? hỏi vợ", "XX chưa rõ giá"...</summary>
+    [ObservableProperty]
+    private string _confirmReason = string.Empty;
+
+    /// <summary>Nút "Chưa rõ khách": ghi đơn vào khách chung (tạo nếu chưa có), bật Cần xác nhận với chữ khách đang gõ.</summary>
+    public string? UseUnknownCustomer(string typed)
+    {
+        long id = 0;
+        var error = AppServices.Try("Khách chung", () => id = AppServices.MasterData.EnsureCustomer(OrderConfirm.UnknownCustomerName));
+        if (error is not null)
+        {
+            return error;
+        }
+        ReloadCustomers();
+        Customer = Customers.FirstOrDefault(c => c.Id == id);
+        var hint = typed.Trim();
+        if (OrderConfirm.IsUnknownCustomer(hint))
+        {
+            hint = string.Empty;
+        }
+        NeedsConfirm = true;
+        ConfirmReason = OrderConfirm.UnknownCustomerReason + (hint.Length > 0 ? ": " + hint : string.Empty);
+        return null;
+    }
+
+    /// <summary>Món ≤ 1đ trên form (chưa có giá) - hiện nhắc ở khung Cần xác nhận; không cần tích, app tự tính.</summary>
+    public string UnknownPriceText
+    {
+        get
+        {
+            var names = Lines.Where(l => OrderCalculator.UnitPrice(l.ToDraft(), ProductMap) <= OrderConfirm.UnknownPriceMax)
+                .Select(l => l.IsFree ? l.FreeName : l.SelectedProduct?.Name).Where(n => !string.IsNullOrWhiteSpace(n)).Distinct().ToList();
+            return names.Count == 0 ? string.Empty
+                : $"Món chưa có giá (≤ 1đ): {string.Join(", ", names)} - đơn tự tính là cần xác nhận cho tới khi sửa giá.";
+        }
+    }
+
+    public bool HasUnknownPrice => UnknownPriceText.Length > 0;
 
     partial void OnDeliveryDateChanged(DateTimeOffset? value) => RefreshDuplicate();
 
@@ -404,7 +462,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
             PaymentDate = IsPrepaid ? DeliveryDate : null;
             _originalPayment = null;
             Discount = draft.Discount;
-            Note = draft.Note ?? string.Empty;
+            SetNote(draft.Note);
             foreach (var line in draft.Lines)
             {
                 Lines.Add(new OrderLineViewModel(this, line));
@@ -422,7 +480,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
             PaymentDate = null;
             _originalPayment = null;
             Discount = 0;
-            Note = string.Empty;
+            SetNote(null);
         }
         else
         {
@@ -435,7 +493,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
             _originalPayment = order.Payment;
             PaymentDate = order.Payment is { } p ? new DateTimeOffset(p.Date) : IsPrepaid ? DeliveryDate : null;
             Discount = order.DiscountValue;
-            Note = order.Note ?? string.Empty;
+            SetNote(order.Note);
             // Món không còn trong danh mục (bị xoá) → hiện như món tự do, giống điện thoại.
             foreach (var item in order.Items)
             {
@@ -454,6 +512,15 @@ public sealed partial class OrderFormViewModel : ObservableObject
         {
             Error = "Không tìm thấy đơn hàng (có thể vừa nhập lại backup) - đang mở form đơn mới.";
         }
+    }
+
+    /// <summary>Tách ô Ghi chú đã lưu thành dấu Cần xác nhận + lý do + phần ghi chú còn lại.</summary>
+    private void SetNote(string? stored)
+    {
+        var parts = OrderConfirm.Parse(stored);
+        Note = parts.Rest;
+        NeedsConfirm = parts.Marked;
+        ConfirmReason = parts.Reason;
     }
 
     /// <summary>Nạp 1 dòng của Nhập đơn hàng loạt vào popup Sửa đơn. Món chưa ghép được thành dòng thường chưa chọn món, báo đỏ để chọn.</summary>
@@ -521,6 +588,8 @@ public sealed partial class OrderFormViewModel : ObservableObject
         SubTotalText = "Tạm tính: " + VnFormat.Money(subTotal);
         TotalText = "Tổng: " + VnFormat.Money(OrderCalculator.Total(subTotal, discount));
         QuantityText = $"Tổng số lượng: {VnFormat.Number(OrderCalculator.TotalQuantity(drafts))} món";
+        OnPropertyChanged(nameof(UnknownPriceText));
+        OnPropertyChanged(nameof(HasUnknownPrice));
         Error = string.Empty; // người dùng vừa sửa form - lỗi cũ không còn đúng
     }
 
@@ -535,7 +604,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
             ? _originalPayment is { } op && op.Date == pd.Date ? op : pd.Date
             : null;
         return new OrderDraft(Id, Customer?.Id, OriginalStatus, delivery, IsPrepaid, payment,
-            DiscountValue, Note, Lines.Select(l => l.ToDraft()).ToList());
+            DiscountValue, OrderConfirm.Compose(NeedsConfirm, ConfirmReason, Note), Lines.Select(l => l.ToDraft()).ToList());
     }
 
     /// <summary>Kiểm tra form; trả về lỗi (kèm dòng / ô cần đưa con trỏ tới) hoặc null.</summary>

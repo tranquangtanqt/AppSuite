@@ -57,6 +57,15 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            <!-- Cần xác nhận (OrderConfirm): chưa rõ khách / chưa có giá / tự đánh dấu - nền cam nhạt như ô quá hạn -->
+            <Border CornerRadius="4" Padding="8,4" Background="{x:Bind local:Ui.LapsedBackground(Card.NeedsConfirm), Mode=OneWay}"
+                    Visibility="{x:Bind local:Ui.VisibleIf(Card.NeedsConfirm), Mode=OneWay}" AutomationProperties.AutomationId="CardConfirm">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE9CE;" FontSize="{StaticResource FontSizeCaption}" Foreground="{x:Bind local:Ui.LapsedForeground(Card.NeedsConfirm), Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind Card.ConfirmText, Mode=OneWay}" FontSize="{StaticResource FontSizeCaption}" FontWeight="SemiBold" TextWrapping="Wrap"
+                               Foreground="{x:Bind local:Ui.LapsedForeground(Card.NeedsConfirm), Mode=OneWay}" />
+                </StackPanel>
+            </Border>
             <Border CornerRadius="4" Padding="8,4" Background="{ThemeResource SubtleFillColorSecondaryBrush}"
                     Visibility="{x:Bind local:Ui.VisibleIf(Card.HasNote), Mode=OneWay}">
                 <StackPanel Orientation="Horizontal" Spacing="6">

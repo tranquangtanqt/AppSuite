@@ -59,75 +59,43 @@ public sealed partial class OrdersPage : Page, IOrderListPage
             ViewModel.Reset();
             _filterInitialized = true;
         }
-        ViewModel.Load();
+        _current = this;
+        if (_showConfirm && !ViewModel.OnlyConfirm)
+        {
+            ViewModel.OnlyConfirm = true; // tự tải lại
+        }
+        else
+        {
+            ViewModel.Load();
+        }
+        _showConfirm = false;
         CustomerBox.Text = ViewModel.Customer?.Name ?? string.Empty;
         SyncStatusBar();
         DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, SyncStatusBar);
         ShowSort();
-        RefreshUnsynced();
     }
 
-    // ---------- Nhắc xuất: thay đổi trên máy tính chưa xuất sang điện thoại ----------
+    private static bool _showConfirm;
 
-    /// <summary>Số dòng lúc bấm ✕ - còn đúng số đó thì không nhắc lại (trong phiên); có thêm thay đổi thì nhắc lại.</summary>
-    private static long _dismissedCount = -1;
+    private static OrdersPage? _current;
 
-    private void RefreshUnsynced()
+    /// <summary>Chuông Thông báo → "Xem các đơn": bật lọc Cần xác nhận. Trang đang mở thì áp ngay; chưa mở (hoặc đang ở form đơn)
+    /// thì áp khi vào trang (MainWindow gọi SelectMenu sau đó).</summary>
+    public static void ShowConfirm()
     {
-        var edits = Services.AppServices.Database.GetUnsyncedEdits();
-        SetUnsynced(InfoBarSeverity.Warning, edits.ShortText(),
-            "Chưa xuất sang điện thoại. " + edits.Describe() + " Lần nhập backup từ điện thoại sau sẽ đè mất - nên xuất trước.");
-        UploadDriveButton.IsEnabled = true;
-        ToolTipService.SetToolTip(UploadDriveButton, string.IsNullOrEmpty(Services.GoogleServices.Auth?.Email)
-            ? "Chưa đăng nhập Google - bấm để mở trang Xuất đăng nhập"
-            : "Xuất backup và tải lên Google Drive ngay");
-        UnsyncedBar.Visibility = edits.Any && edits.Count != _dismissedCount ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    /// <summary>Dòng nhắc: biểu tượng + màu nền theo trạng thái, câu ngắn trên dòng, câu đầy đủ ở tooltip.</summary>
-    private void SetUnsynced(InfoBarSeverity severity, string text, string? detail = null)
-    {
-        var (glyph, icon, background) = severity switch
+        if (_current is null)
         {
-            InfoBarSeverity.Success => ("", "SystemFillColorSuccessBrush", "SystemFillColorSuccessBackgroundBrush"),
-            InfoBarSeverity.Error => ("", "SystemFillColorCriticalBrush", "SystemFillColorCriticalBackgroundBrush"),
-            _ => ("", "SystemFillColorCautionBrush", "SystemFillColorCautionBackgroundBrush"),
-        };
-        UnsyncedIcon.Glyph = glyph;
-        UnsyncedIcon.Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[icon];
-        UnsyncedBar.Background = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources[background];
-        UnsyncedText.Text = text;
-        ToolTipService.SetToolTip(UnsyncedText, detail ?? text);
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(UnsyncedBar, detail ?? text);
-    }
-
-    private void UnsyncedClose_Click(object sender, RoutedEventArgs e)
-    {
-        _dismissedCount = Services.AppServices.Database.GetUnsyncedEdits().Count;
-        UnsyncedBar.Visibility = Visibility.Collapsed;
-    }
-
-    /// <summary>Đã đăng nhập Google (trang Xuất) → xuất + tải lên Drive ngay tại đây (bộ đếm về 0); chưa → mở trang Xuất.</summary>
-    private async void UploadDrive_Click(object sender, RoutedEventArgs e)
-    {
-        var export = new ExportViewModel();
-        export.RefreshGoogle();
-        if (!export.IsSignedIn)
-        {
-            App.MainWindow?.SelectMenu("ExportPage");
-            return;
+            _showConfirm = true;
         }
-        UploadDriveButton.IsEnabled = false;
-        UnsyncedText.Text = "Đang xuất và tải lên Google Drive...";
-        await export.UploadToDriveAsync();
-        var left = Services.AppServices.Database.GetUnsyncedEdits();
-        var status = (left.Any ? "Chưa xuất được: " : "Đã xuất: ") + export.DriveStatus;
-        SetUnsynced(left.Any ? InfoBarSeverity.Error : InfoBarSeverity.Success, status,
-            status + (left.Any ? string.Empty : " Nhập bản này vào điện thoại để điện thoại có các đơn mới."));
-        UploadDriveButton.IsEnabled = left.Any;
+        else if (Session.OnlyConfirm)
+        {
+            Session.Load();
+        }
+        else
+        {
+            Session.OnlyConfirm = true;
+        }
     }
-
-    private void OpenExport_Click(object sender, RoutedEventArgs e) => App.MainWindow?.SelectMenu("ExportPage");
 
     /// <summary>
     /// ViewModel sống cả phiên, trang thì không - gỡ mọi chỗ nghe ViewModel (x:Bind, danh sách thẻ): trang cũ đã gỡ khỏi cửa sổ
@@ -138,6 +106,10 @@ public sealed partial class OrdersPage : Page, IOrderListPage
         ViewModel.PropertyChanged -= OnViewModelChanged;
         Bindings.StopTracking();
         CardsRepeater.ItemsSource = null;
+        if (ReferenceEquals(_current, this))
+        {
+            _current = null;
+        }
     }
 
     private bool _syncing;

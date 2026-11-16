@@ -72,7 +72,7 @@ public static class OrderCopier
             ? day.ToDateTime(source.Delivery is { } d ? TimeOnly.FromDateTime(d) : TimeOnly.MinValue)
             : source.Delivery ?? fallbackDay.ToDateTime(TimeOnly.MinValue);
         var draft = new OrderDraft(0, source.UserId, OrderStatus.Shipping, delivery, false, null,
-            source.DiscountValue, source.Note, lines);
+            source.DiscountValue, OrderConfirm.Parse(source.Note).Rest, lines); // dấu Cần xác nhận của đơn gốc không chép sang
         return new OrderCopy(draft, notices);
     }
 }

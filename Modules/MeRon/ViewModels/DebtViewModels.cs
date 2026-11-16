@@ -24,8 +24,20 @@ public sealed record AgingTile(AgingBucket Bucket, bool IsSelected)
 }
 
 /// <summary>1 thẻ khách ở trang Công nợ. <paramref name="IsOverdue"/>: đơn cũ nhất quá mốc tuổi nợ lớn nhất (ô ngày tô cam).</summary>
-public sealed record DebtRow(CustomerDebt Debt, bool IsOverdue)
+/// <paramref name="ConfirmCount"/>: số đơn đang nợ cần xác nhận (OrderConfirm: chưa rõ giá, tự đánh dấu, khách chung).
+public sealed record DebtRow(CustomerDebt Debt, bool IsOverdue, int ConfirmCount = 0)
 {
+    /// <summary>Khách chung "Chưa rõ khách": không chép tin nhắn nhắc nợ (chưa biết gửi ai), nằm cuối danh sách.</summary>
+    public bool IsUnknownCustomer => Core.Orders.OrderConfirm.IsUnknownCustomer(Debt.Name);
+
+    public bool NeedsConfirm => ConfirmCount > 0;
+
+    public string ConfirmText => IsUnknownCustomer
+        ? $"⚠ {VnFormat.Number(Debt.OrderCount)} đơn chưa rõ khách - mở Chi tiết, chuột phải từng đơn → Chọn khách đúng"
+        : $"⚠ {VnFormat.Number(ConfirmCount)} đơn cần xác nhận (chưa rõ giá...) - tổng có thể chưa đúng";
+
+    public bool CanRemind => HasCustomer && !IsUnknownCustomer;
+
     public string Name => Debt.Name;
 
     public string Contact => string.Join("  ·  ", new[] { Debt.Phone, Debt.Address }.Where(s => s is not null));
@@ -48,7 +60,7 @@ public sealed record DebtRow(CustomerDebt Debt, bool IsOverdue)
             ? $"{VnFormat.Number(Debt.OrderCount)} đơn chưa thanh toán  ·  giao {oldest:dd/MM/yyyy}"
             : $"{VnFormat.Number(Debt.OrderCount)} đơn chưa thanh toán  ·  {oldest:dd/MM/yyyy} – {Debt.NewestDay:dd/MM/yyyy}";
 
-    public string AccessibleName => $"{Name} - nợ {AmountText} - {OrdersText}";
+    public string AccessibleName => $"{Name} - nợ {AmountText} - {OrdersText}" + (NeedsConfirm ? " - " + ConfirmText : string.Empty);
 }
 
 /// <summary>
@@ -147,11 +159,15 @@ public sealed partial class DebtsViewModel : ObservableObject
         Apply();
     }
 
+    /// <summary>Mã các đơn cần xác nhận (OrderConfirm) - đếm trên từng thẻ khách.</summary>
+    private HashSet<long> _confirmIds = [];
+
     public void Load()
     {
         try
         {
             _all = AppServices.Reports.CustomerDebts(Today, IncludeFuture);
+            _confirmIds = AppServices.Orders.NeedsConfirm().Select(o => o.Id).ToHashSet();
             Error = string.Empty;
         }
         catch (Exception ex)
@@ -241,11 +257,13 @@ public sealed partial class DebtsViewModel : ObservableObject
                $"(cam khi trên {Marks[^1]} ngày). Bấm 1 ô nhóm tuổi nợ ở trên để chỉ xem khách có nợ trong nhóm đó. Chi tiết: các đơn đang nợ " +
                "của khách - bấm Chụp ảnh ở đó để gửi Zalo (Ctrl+V).";
 
-        var shown = CustomerDebts.Sort(bucket is null ? searched : searched.Where(d => DebtAging.HasOrderIn(d, bucket, Today)), Sort);
+        // Khách chung "Chưa rõ khách" luôn nằm cuối (không phải 1 người thật để nhắc nợ).
+        var shown = CustomerDebts.Sort(bucket is null ? searched : searched.Where(d => DebtAging.HasOrderIn(d, bucket, Today)), Sort)
+            .OrderBy(d => Core.Orders.OrderConfirm.IsUnknownCustomer(d.Name) ? 1 : 0).ToList();
         Rows.Clear();
         foreach (var d in shown)
         {
-            Rows.Add(new DebtRow(d, DebtAging.IsOverdue(d, Marks)));
+            Rows.Add(new DebtRow(d, DebtAging.IsOverdue(d, Marks), d.OrderIds.Count(_confirmIds.Contains)));
         }
         var total = shown.Sum(d => d.Amount);
         var orders = shown.Sum(d => d.OrderCount);

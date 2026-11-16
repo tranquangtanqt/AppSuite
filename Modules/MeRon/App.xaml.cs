@@ -63,8 +63,9 @@ public partial class App : Application
         MainWindow = new MainWindow();
         _window = MainWindow;
         _window.Activate();
-        var keep = MainWindow.MenuSettings.DailyBackupKeep;
-        if (!MainWindow.MenuSettings.AutoDailyBackup)
+        var window = MainWindow;
+        var keep = window.MenuSettings.DailyBackupKeep;
+        if (!window.MenuSettings.AutoDailyBackup)
         {
             return; // Cài đặt: tắt tự sao lưu mỗi ngày
         }
@@ -76,6 +77,7 @@ public partial class App : Application
                 if (AppServices.Database.MakeDailyCopy(DateTime.Now, keep) is { } copy)
                 {
                     AppLog.For("App").LogInformation("Sao lưu hằng ngày: {Path}", copy);
+                    window.DispatcherQueue.TryEnqueue(window.RefreshNotices); // chuông: dòng sao lưu thành "hôm nay"
                 }
             }
             catch (Exception ex)

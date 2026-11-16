@@ -28,7 +28,7 @@ Lần đầu mở (database trống) app vào thẳng trang **Nhập dữ liệu
 
 | Menu | Trang | Làm gì |
 |---|---|---|
-| Bán hàng | **Đặt hàng** | Lọc trạng thái (Tất cả / Đã lên đơn / Đã thanh toán / Huỷ), khách (gõ tên / SĐT, không dấu), khoảng ngày giao; sắp xếp theo thành tiền / ngày giao; "N đơn · Tổng X". Thẻ đơn: khách, trạng thái, ngày giao, các món, ghi chú, Tạm tính / Giảm giá, Tổng; vạch màu bên trái + nhãn trạng thái (cam = Đã lên đơn nền trắng, xanh lá = Đã thanh toán nền xanh nhạt, xám = Huỷ nền xám mờ); mỗi thẻ là 1 nút (chuột, Tab + Enter). **Chuột phải thẻ** (cả Chi tiết, Theo món ăn; Shift+F10 - 2026-10-27): Sao chép đơn, Đã thanh toán (`PayShipping` 1 mã, ghi ngày thanh toán), Giao hôm nay / ngày mai (`OrderRepository.SetDeliveryDay`, giữ giờ giao), Huỷ đơn (hỏi lại); menu dựng mới mỗi lần mở theo trạng thái (`OrderCard.BuildMenu` qua ContextRequested - ContextFlyout dựng mục trong Opening thì không mở vì menu rỗng), xong thì trang tải lại qua `IOrderListPage`. Lần đầu mở = mặc định (Đã lên đơn, hôm nay); sau đó giữ bộ lọc khi vào form / Chi tiết hoặc chuyển trang khác rồi quay lại (cả báo cáo, Mua hàng, ô tìm ở danh mục) - đến khi tắt app. Ctrl+N thêm (form mở ra con trỏ ở sẵn ô Khách hàng, hiện danh sách khách), F5 làm mới **Nhắc xuất** (2026-11-03): còn thay đổi chưa xuất (`UnsyncedEdits.Describe`, câu chung với trang Nhập) → **1 dòng vàng gọn** dưới bộ lọc (2026-11-16, thay khung InfoBar ~200 px): `UnsyncedEdits.ShortText` "N dòng thay đổi chưa xuất (từ dd/MM HH:mm) · nhập backup sẽ đè mất", câu đầy đủ ở tooltip + tên UIA; nút **Xuất lên Google Drive** (đã đăng nhập: xuất + tải lên ngay, bộ đếm về 0, dòng chuyển xanh "Đã xuất" / đỏ "Chưa xuất được"; chưa: mở trang Xuất) + **Xuất…** (Mở trang Xuất); ✕ ẩn đến khi số thay đổi đổi |
+| Bán hàng | **Đặt hàng** | Lọc trạng thái (Tất cả / Đã lên đơn / Đã thanh toán / Huỷ), khách (gõ tên / SĐT, không dấu), khoảng ngày giao; sắp xếp theo thành tiền / ngày giao; "N đơn · Tổng X". Thẻ đơn: khách, trạng thái, ngày giao, các món, ghi chú, Tạm tính / Giảm giá, Tổng; vạch màu bên trái + nhãn trạng thái (cam = Đã lên đơn nền trắng, xanh lá = Đã thanh toán nền xanh nhạt, xám = Huỷ nền xám mờ); mỗi thẻ là 1 nút (chuột, Tab + Enter). **Chuột phải thẻ** (cả Chi tiết, Theo món ăn; Shift+F10 - 2026-10-27): Sao chép đơn, Đã thanh toán (`PayShipping` 1 mã, ghi ngày thanh toán), Giao hôm nay / ngày mai (`OrderRepository.SetDeliveryDay`, giữ giờ giao), Huỷ đơn (hỏi lại); menu dựng mới mỗi lần mở theo trạng thái (`OrderCard.BuildMenu` qua ContextRequested - ContextFlyout dựng mục trong Opening thì không mở vì menu rỗng), xong thì trang tải lại qua `IOrderListPage`. Lần đầu mở = mặc định (Đã lên đơn, hôm nay); sau đó giữ bộ lọc khi vào form / Chi tiết hoặc chuyển trang khác rồi quay lại (cả báo cáo, Mua hàng, ô tìm ở danh mục) - đến khi tắt app. Ctrl+N thêm (form mở ra con trỏ ở sẵn ô Khách hàng, hiện danh sách khách), F5 làm mới **Nhắc xuất** (2026-11-03): còn thay đổi chưa xuất (`UnsyncedEdits.Describe`, câu chung với trang Nhập) → 2026-11-16 chuyển hẳn vào chuông **Thông báo** ở menu trái (dòng "Chưa xuất sang điện thoại", `UnsyncedEdits.ShortText`, nút Xuất lên Google Drive - xem mục Thông báo); trang Đặt hàng không còn khung nhắc |
 | | **Chọn nhiều / sửa hàng loạt** (2026-11-13) | Nút Chọn nhiều (Ctrl+M) trên trang Đặt hàng: thẻ có ô tick (`OrderCardViewModel.IsSelected` / `ShowCheck`), bấm thẻ = tick, Shift + bấm = cả dải, Chọn hết theo bộ lọc; tick giữ qua lần tải lại. Thanh thao tác: Ngày giao, Ngày thanh toán (đã thanh toán → đổi ngày giữ giờ; chưa → Đã thanh toán ngày đó; huỷ bỏ qua), Tên món (đổi tên giữ giá: món tự do đổi chữ trên đơn, món trong Danh mục đổi luôn tên trong Danh mục cùng transaction - `BulkEdit.RenameProduct`, `BulkPlan.Rename` / thay bằng món khác - đơn đã thanh toán giữ giá / cập nhật tên theo Danh mục), Trạng thái (Trả về Đã lên đơn, Huỷ, Khôi phục - có ngày thanh toán thì về Đã thanh toán), Xoá. `Core/Orders/BulkEdit.cs` tính trước trạng thái mới từng đơn (`BulkPlan`: đơn đổi + đơn bỏ qua kèm lý do, đơn đã thanh toán `Warn`) → `Views/BulkEditDialog` xem trước (tô cam) → `OrderRepository.ApplyBulk` ghi 1 transaction (dòng món sửa theo mã dòng). Hoàn tác lô gần nhất (`RevertBulk`: ghi lại như trước, đơn đã xoá chèn lại đúng mã đơn / mã dòng) chỉ cho đơn còn y như lúc vừa sửa (`BulkEdit.Untouched`); tên Danh mục trả về tên cũ nếu chưa bị đổi tiếp. |
 | | **Thêm / sửa đơn** | Khách (Enter / Tab chọn gợi ý đầu, ↑ / ↓ tô gợi ý khác rồi Enter / Tab; chọn xong con trỏ sang nút Thêm món; tên chưa có → gợi ý cuối **"＋ Thêm khách mới"** (hoặc Enter khi không khớp ai) → hộp thoại Thêm khách hàng dùng chung với trang Khách hàng (`Views\CustomerForm.cs`) điền sẵn tên, con trỏ ở Số điện thoại, lưu xong chọn luôn - 2026-10-27; dưới ô khách dòng **Lần trước** (đơn gần nhất theo ngày giao, không tính Huỷ: tối đa 4 món · tổng) + *Chép vào đơn* / Ctrl+L - chép món như Sao chép đơn (giá hiện tại), đã có món thì hỏi Thay; điền sẵn khách đang lọc; ngày giao điền sẵn khi Từ = Đến), dòng món thường (ô món gõ lọc không dấu theo từng từ, Enter / Tab chọn gợi ý đầu hoặc gợi ý đang tô bằng ↑ / ↓, **bắt buộc chọn trong danh sách**, chọn xong con trỏ sang ô Số lượng, Số lượng Enter / Tab → nút Thêm món; **gõ kèm số lượng** "2 chao" / "chao 2" (`CoreQuantityText.cs`; tên món có đúng số đó như "Combo 2" vẫn là tên) → chọn món + đặt số lượng, con trỏ sang nút Thêm món (không tự thêm dòng) - 2026-10-27; danh sách gợi ý mở lên trên vẫn thấy gợi ý đầu; − / số / +) và **món tự do** (tên + đơn giá; Thêm món tự do → con trỏ ở ô Tên, Enter → ô Đơn giá), Giảm giá, Tạm tính / Tổng / tổng số lượng tự tính, Ngày giao, Đã thanh toán trước + Ngày thanh toán, Ghi chú. **Dòng đổi giá bị khoá** (giữ đơn giá lúc đặt). Lưu (Ctrl+S) có **Cảnh báo trùng đơn**; báo trước ngay khi chọn khách / đổi ngày giao (khung vàng dưới ô Khách hàng, `DuplicateWarning` - 2026-10-27), Lưu vẫn hỏi lại. Form thêm có nút **Lưu và thêm mới** (Ctrl+Shift+N: đơn mới trống, cùng ngày giao) và **Lưu và chép cho khách khác** (Ctrl+Shift+K: đơn mới giống đơn vừa lưu - món, số lượng, giảm giá, ngày giao, ghi chú, đã thanh toán trước - bỏ trống khách, con trỏ ở ô Khách hàng). Lỗi hiện cạnh nút Lưu, con trỏ về đúng ô, tự tắt khi sửa. Huỷ đơn, Xoá đơn. **Sao chép đơn** (chuột phải thẻ đơn / nút trong form): đơn mới cùng khách, món, giảm giá, ghi chú; giữ ngày giao của đơn gốc, Đã lên đơn, giá hiện tại (báo nếu giá đổi; món không còn → món tự do) |
 | | **Chi tiết** | Toàn bộ đơn khớp bộ lọc, gộp theo khách + Tổng đơn từng khách (tên khách 1 lần ở đầu khung; thẻ đơn `ShowCustomer="False"`: ngày giao lên đầu thẻ); bấm đơn để sửa. **Thanh toán toàn bộ** (từ chối nếu có đơn đã thanh toán; đơn Huỷ không đổi). **Chụp ảnh** cả danh sách (kể cả phần phải cuộn; quá 4096 px thì thu nhỏ) → clipboard + `Pictures\MeRon\chi_tiet_don_hang_*.png`; nút **Thư mục ảnh** (2026-10-27): Explorer ở Pictures\MeRon, vừa chụp thì `/select` ảnh vừa lưu |
@@ -127,6 +127,37 @@ nhiều tài khoản thì vẫn cần link công khai để thấy hết.
   bảng rỗng = file rỗng hẳn; MeRon nhập được cả 2 kiểu. Ngày giờ giữ nguyên chuỗi gốc (điện thoại ghi lẫn
   `2026-06-27T14:20:53.242992` và `2026-06-27 07:20:53`).
 
+### Đơn cần xác nhận (2026-11-16)
+
+Đơn tạm, cần hỏi lại (chưa rõ khách / chưa rõ giá / tự đánh dấu) - `Core\Orders\OrderConfirm.cs`. **Không thêm cột dữ liệu**
+(giữ tương thích điện thoại): dấu nằm ở đầu ô Ghi chú `[Cần xác nhận: lý do] ghi chú cũ` (`Parse` / `Compose`; `]` trong lý do
+đổi thành `)`). `Reasons(order)`: dấu + khách tên `Chưa rõ khách` (`UnknownCustomerName`) + món `SnapshotPrice ≤ 1`
+(`UnknownPriceMax`); đơn Huỷ không tính.
+
+- Khách chung: `MasterDataRepository.EnsureCustomer` tạo 1 lần. Form đơn: nút **Chưa rõ khách** (`OrderFormViewModel.UseUnknownCustomer`,
+  chữ đang gõ thành lý do "Chưa rõ khách: Nhung"); chọn thẳng khách chung → tự tích; đổi sang khách thật mà lý do chỉ là chưa rõ
+  khách → tự bỏ dấu. Form có ô tích **Cần xác nhận** + lý do (dưới Ghi chú, `SetNote` / `BuildDraft` tách / ghép), dòng cam món
+  ≤ 1đ (`UnknownPriceText`). Sao chép đơn bỏ dấu (`OrderCopier`).
+- Nhập đơn hàng loạt: nút **Chưa rõ khách** trên thẻ chưa ghép được khách (`CanUseUnknownCustomer`) → ghim dòng vào khách chung,
+  giữ chữ; lưu thì `BatchLineMatch.DraftNote` ghi dấu kèm chữ đã ghi (bỏ `?`).
+- Thẻ đơn: nhãn cam `ConfirmText` (AutomationId `CardConfirm`), ghi chú hiện phần không có dấu. Chuột phải: **Chọn khách đúng…**
+  (`PickCustomerDialog`: ô tìm điền sẵn `CustomerHint`, danh sách khớp `TextSearch.Filter`, ＋ Thêm khách mới →
+  `OrderRepository.SetCustomer`, bỏ dấu nếu lý do chỉ là chưa rõ khách), **Đã xác nhận** (`ClearConfirm`). Cả 2 ghi Lịch sử.
+- Đặt hàng: ToggleButton **Cần xác nhận (n)** (ẩn khi 0) - `OrderRepository.NeedsConfirm()` mọi ngày, trừ Huỷ, bỏ qua lọc
+  ngày / trạng thái, lọc khách vẫn áp; giữ trạng thái trong phiên (như các bộ lọc khác). `OrdersPage.ShowConfirm()` (chuông
+  Thông báo) bật lọc rồi mở trang.
+
+### Thông báo (2026-11-16)
+
+Chuông **Thông báo** ở chân menu trái (`MainWindow`: `NoticeItem` + `InfoBadge` cam, `NoticeFlyout` dựng trong code). Nội dung:
+`Core\Notices.cs` - `Build(đơn cần xác nhận, UnsyncedEdits, bản sao gần nhất, có dữ liệu, now)` → các `Notice` (Confirm / Unsynced /
+Backup); số trên chuông = số dòng `Warning`. Dòng sao lưu luôn có (Info), thành Warning khi chưa có bản nào / quá `BackupStaleDays`
+(3) ngày. Nút: Xem các đơn (`OrdersPage.ShowConfirm` + `SelectMenu`), Xuất lên Google Drive (`ExportViewModel.UploadToDriveAsync`
+ngay trong khung; chưa đăng nhập → trang Xuất), Mở Cài đặt sao lưu. Tính lại: `ContentFrame.Navigated`, cửa sổ Activated, mỗi phút,
+lúc mở khung. Khung nhắc "chưa xuất" ở trang Đặt hàng đã bỏ (chuyển vào chuông).
+- Công nợ: `DebtRow.ConfirmCount` (đơn đang nợ cần xác nhận) → dòng cam ⚠, Chép tin nhắn hỏi lại; khách chung nằm cuối, không
+  chép tin nhắn (`CanRemind`). Chi tiết: Chụp ảnh hỏi lại nếu có đơn cần xác nhận, ẩn nhãn `CardConfirm` khi chụp.
+
 ## Cấu trúc code
 
 ```
@@ -142,6 +173,7 @@ Modules/MeRon/
 |   |-- Orders/BatchPins.cs      Ghim khách / món đã chọn trên bảng nháp (lưu nhap-don-hang-loat.ghim.json)
 |   |-- Orders/BulkEdit.cs       Sửa hàng loạt đơn đã lưu (ngày giao / thanh toán, tên món, trạng thái, xoá) + Hoàn tác
 |   |-- Orders/BatchReconcile.cs So khớp bảng nháp với đơn cùng ngày giao trong MeRon
+|   |-- Orders/OrderConfirm.cs   Đơn cần xác nhận: dấu [Cần xác nhận: lý do] đầu ghi chú, món ≤ 1đ, khách chung "Chưa rõ khách"
 |   |-- History/OrderHistory.cs  Lịch sử chỉnh sửa đơn (me_ron_history.db riêng); HistoryText.cs: mô tả thay đổi + RestorePlan
 |   |-- Reports/ReportRepository.cs  4 báo cáo bằng truy vấn tổng hợp SQL (bỏ đơn Huỷ)
 |   |-- Import/BackupSource.cs   IBackupSource, LocalFolderBackupSource (thư mục / thư mục cha)

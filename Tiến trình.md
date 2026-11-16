@@ -471,7 +471,20 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   + 2 ô tích (mặc định bật): **Tự sao lưu mỗi ngày** và **Tự sao lưu khi thao tác** (trước Nhập / Xoá toàn bộ / Dọn); tắt thì
   không chép bản mới, bản cũ giữ; Khôi phục bản sao vẫn luôn chép bản "trước khi lấy lại". Câu "luôn có bản sao" ở trang Nhập /
   Xuất / Thông tin dữ liệu + F1 sửa thành "nếu bật". Unit test 280/280; GUI Sandbox (UIA) 7/7 (2026-11-16)
-- [ ] Chuông Thông báo ở menu trái (cách a) - để sau, khi có thêm loại nhắc khác (vd tự sao lưu lên Google)
+- [x] **Đơn cần xác nhận** (người dùng 2026-11-16: món tự do chưa rõ giá nhập tạm 1đ; vợ ghi "Nhung" chưa rõ Nhung nào; không
+  muốn thêm khách tạm mỗi lần): dấu `[Cần xác nhận: lý do]` đầu ô Ghi chú (không thêm cột, tương thích điện thoại) + tự tính khi
+  món ≤ 1đ / khách chung "Chưa rõ khách" (app tự tạo 1 lần). Form đơn: nút Chưa rõ khách, ô tích Cần xác nhận + lý do, dòng cam
+  món chưa có giá. Nhập đơn hàng loạt: nút Chưa rõ khách trên thẻ. Thẻ đơn: nhãn cam; chuột phải Chọn khách đúng… (gợi ý theo
+  chữ đã ghi, ＋ Thêm khách mới) / Đã xác nhận. Đặt hàng: nút lọc Cần xác nhận (n) mọi ngày. Công nợ: ⚠ n đơn cần xác nhận,
+  hỏi lại khi chép tin nhắn; khách chung nằm cuối, không nhắc nợ. Chi tiết: hỏi lại khi Chụp ảnh, nhãn không vào ảnh. F1 mục
+  riêng "Đơn cần xác nhận". Unit test 284/284; GUI Sandbox (UIA) 17/17 (2026-11-16)
+- [ ] Người dùng thử tay Đơn cần xác nhận trên dữ liệu thật (chưa rõ khách ở form + Nhập hàng loạt, món 1đ, Chọn khách đúng)
+- [ ] Ô lọc khách ở Đặt hàng tìm cả trong ghi chú (đã gợi ý, chưa làm - ô hiện chọn 1 khách, cần đổi cách lọc)
+- [x] **Chuông Thông báo** ở chân menu trái (người dùng 2026-11-16 chọn cách B; bỏ khung nhắc xuất ở Đặt hàng; có dòng sao lưu):
+  số cam = việc đang chờ; khung liệt kê n đơn cần xác nhận (chưa rõ khách / chưa có giá / tự đánh dấu) → Xem các đơn (mở Đặt
+  hàng, lọc Cần xác nhận bật sẵn); Chưa xuất sang điện thoại → Xuất lên Google Drive ngay trong khung; Sao lưu gần nhất (thành
+  việc chờ khi chưa có / quá 3 ngày) → Mở Cài đặt sao lưu. `Core\Notices.cs`. Sửa kèm: `SelectMenu` tìm cả mục ở chân menu
+  (Cài đặt). F1 mục Thông báo. Unit test 286/286; GUI Sandbox (UIA) 11/11 (2026-11-16) - để sau, khi có thêm loại nhắc khác (vd tự sao lưu lên Google)
 - [x] Thống kê theo món ăn (người dùng chốt 4 đề xuất 2026-11-13): cột **So với kỳ trước** ▲▼ % theo số lượng (kỳ trước =
   cùng số ngày liền trước, như Biểu đồ; "mới" = kỳ trước chưa bán; món kỳ trước có mà kỳ này không bán nữa nối cuối bảng, mờ,
   ▼ 100%; Mọi ngày thì không có cột; các trang khác dùng chung bảng không đổi) + bảng **Theo thứ trong tuần** món × T2…CN

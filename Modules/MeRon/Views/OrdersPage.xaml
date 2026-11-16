@@ -100,6 +100,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <AutoSuggestBox x:Name="CustomerBox" PlaceholderText="Lọc theo khách (tên / SĐT)" QueryIcon="Find"
                             AutomationProperties.Name="Lọc theo khách hàng" />
@@ -118,6 +119,16 @@
                     <MenuFlyout x:Name="RangeMenu" Placement="BottomEdgeAlignedRight" />
                 </DropDownButton.Flyout>
             </DropDownButton>
+            <!-- Cần xác nhận (OrderConfirm, 2026-11-16): bật = mọi đơn cần hỏi lại, bỏ qua ngày / trạng thái; ẩn khi không có đơn nào -->
+            <ToggleButton Grid.Column="6" IsChecked="{x:Bind ViewModel.OnlyConfirm, Mode=TwoWay}" VerticalAlignment="Center"
+                          Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.ShowConfirmFilter), Mode=OneWay}"
+                          AutomationProperties.Name="Cần xác nhận"
+                          ToolTipService.ToolTip="Chỉ xem các đơn cần hỏi lại (chưa rõ khách, chưa có giá, đánh dấu Cần xác nhận) - mọi ngày, bỏ qua lọc ngày / trạng thái">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE9CE;" FontSize="{StaticResource FontSizeBody}" Foreground="{x:Bind local:Ui.LapsedForeground(ViewModel.ShowConfirmFilter), Mode=OneWay}" />
+                    <TextBlock Text="{x:Bind ViewModel.ConfirmFilterText, Mode=OneWay}" AutomationProperties.AutomationId="ConfirmFilterText" />
+                </StackPanel>
+            </ToggleButton>
         </Grid>
 
         <StackPanel Grid.Row="3" Spacing="6">
@@ -176,34 +187,7 @@
             </InfoBar>
             <InfoBar Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"
                      IsOpen="{x:Bind local:Ui.HasText(ViewModel.Error), Mode=OneWay}" />
-            <!-- Nhắc xuất (RefreshUnsynced): đơn tạo / sửa trên máy tính sẽ bị lần nhập backup từ điện thoại sau đè mất -->
-            <!-- Gọn 1 dòng (~36 px) thay InfoBar 4 dòng: câu dài (Describe) ở tooltip; màu nền theo trạng thái (SetUnsynced) -->
-            <Border x:Name="UnsyncedBar" Visibility="Collapsed" CornerRadius="4" BorderThickness="1" Padding="10,3,3,3"
-                    Background="{ThemeResource SystemFillColorCautionBackgroundBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                    AutomationProperties.AutomationId="OrdersUnsyncedBar">
-                <Grid ColumnSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <FontIcon x:Name="UnsyncedIcon" Glyph="&#xE7BA;" FontSize="14" VerticalAlignment="Center"
-                              Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-                    <TextBlock x:Name="UnsyncedText" Grid.Column="1" VerticalAlignment="Center" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
-                               AutomationProperties.AutomationId="OrdersUnsyncedText" />
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
-                        <Button x:Name="UploadDriveButton" Content="Xuất lên Google Drive" Click="UploadDrive_Click" Padding="10,3"
-                                Style="{StaticResource AccentButtonStyle}" />
-                        <Button Content="Xuất…" Click="OpenExport_Click" Padding="10,3" AutomationProperties.Name="Mở trang Xuất"
-                                ToolTipService.ToolTip="Mở trang Xuất (đăng nhập Google, lưu file backup)" />
-                    </StackPanel>
-                    <Button Grid.Column="3" Click="UnsyncedClose_Click" Padding="8,6" Background="Transparent" BorderThickness="0"
-                            AutomationProperties.Name="Ẩn nhắc xuất" ToolTipService.ToolTip="Ẩn - có thay đổi mới thì nhắc lại">
-                        <FontIcon Glyph="&#xE711;" FontSize="11" />
-                    </Button>
-                </Grid>
-            </Border>
+            <!-- Nhắc "chưa xuất sang điện thoại" chuyển sang chuông Thông báo ở menu trái (2026-11-16, Core\Notices) -->
         </StackPanel>
 
         <Grid Grid.Row="4">

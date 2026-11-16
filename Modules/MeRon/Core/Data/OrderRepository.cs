@@ -65,6 +65,50 @@ public sealed class OrderRepository(MeRonDatabase database, History.OrderHistory
         return AttachItems(connection, orders);
     }
 
+    /// <summary>Mọi đơn cần xác nhận (<see cref="OrderConfirm"/>), mọi ngày, không tính đơn Huỷ - ngày giao mới nhất trước.
+    /// Lọc thô bằng SQL (dấu ở đầu ghi chú / khách chung / món ≤ 1đ) rồi kiểm lại bằng <see cref="OrderConfirm.Needs"/>.</summary>
+    public IReadOnlyList<Order> NeedsConfirm()
+    {
+        using var connection = database.Open();
+        var orders = Read(connection,
+            $"SELECT {OrderColumns} FROM Orders AS O LEFT JOIN Users AS U ON O.userId = U.id " +
+            "WHERE O.status <> $cancelled AND (O.note LIKE '[Cần xác nhận%' OR lower(trim(U.name)) = lower($unknown) " +
+            "OR EXISTS (SELECT 1 FROM OrderItems AS I WHERE I.orderId = O.id AND I.snapshotPrice <= $maxPrice)) " +
+            "ORDER BY julianday(replace(O.deliveryDatetime, 'T', ' ')) DESC, O.id DESC",
+            ("$cancelled", (long)OrderStatus.Cancelled), ("$unknown", OrderConfirm.UnknownCustomerName), ("$maxPrice", OrderConfirm.UnknownPriceMax));
+        return AttachItems(connection, orders).Where(OrderConfirm.Needs).ToList();
+    }
+
+    /// <summary>Nút "Chọn khách đúng": đổi khách của đơn; lý do chỉ là "Chưa rõ khách…" thì bỏ luôn dấu Cần xác nhận.</summary>
+    public bool SetCustomer(long id, long userId) => Track("Chọn khách đúng", [id], () =>
+    {
+        using var connection = database.Open();
+        string? note;
+        using (var read = Command(connection, "SELECT note FROM Orders WHERE id = $id", [("$id", id)]))
+        {
+            var value = read.ExecuteScalar();
+            if (value is null)
+            {
+                return false;
+            }
+            note = value is DBNull ? null : Convert.ToString(value);
+        }
+        var parts = OrderConfirm.Parse(note);
+        var newNote = parts.Marked && OrderConfirm.IsOnlyUnknownCustomer(parts.Reason) ? parts.Rest : note ?? string.Empty;
+        return Execute(connection, "UPDATE Orders SET userId = $userId, note = $note, updatedAt = $now WHERE id = $id",
+            ("$userId", userId), ("$note", newNote), ("$now", MeRonDatabase.Now()), ("$id", id)) > 0;
+    });
+
+    /// <summary>Bỏ dấu "Cần xác nhận" ở ghi chú (đã hỏi xong); giữ phần ghi chú còn lại.</summary>
+    public bool ClearConfirm(long id) => Track("Đã xác nhận", [id], () =>
+    {
+        using var connection = database.Open();
+        using var read = Command(connection, "SELECT note FROM Orders WHERE id = $id", [("$id", id)]);
+        var parts = OrderConfirm.Parse(read.ExecuteScalar() is string s ? s : null);
+        return parts.Marked && Execute(connection, "UPDATE Orders SET note = $note, updatedAt = $now WHERE id = $id",
+            ("$note", parts.Rest), ("$now", MeRonDatabase.Now()), ("$id", id)) > 0;
+    });
+
     public Order? Get(long id)
     {
         using var connection = database.Open();

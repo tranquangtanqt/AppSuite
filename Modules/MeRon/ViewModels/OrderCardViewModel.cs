@@ -45,12 +45,23 @@ public sealed partial class OrderCardViewModel(Order order) : CommunityToolkit.M
 
     public string TotalText => VnFormat.Money(Order.Total);
 
-    public bool HasNote => !string.IsNullOrWhiteSpace(Order.Note);
+    /// <summary>Ghi chú không kèm dấu [Cần xác nhận…] (dấu hiện riêng ở <see cref="ConfirmText"/>).</summary>
+    public string Note { get; } = Core.Orders.OrderConfirm.Parse(order.Note).Rest;
 
-    public string Note => Order.Note?.Trim() ?? string.Empty;
+    public bool HasNote => Note.Length > 0;
+
+    /// <summary>Lý do cần xác nhận (chưa rõ khách, chưa có giá, tự đánh dấu); rỗng = không cần.</summary>
+    public IReadOnlyList<string> ConfirmReasons { get; } = Core.Orders.OrderConfirm.Reasons(order);
+
+    public bool NeedsConfirm => ConfirmReasons.Count > 0;
+
+    public string ConfirmText => "Cần xác nhận: " + string.Join(" · ", ConfirmReasons);
+
+    /// <summary>Đơn đang ghi vào khách chung "Chưa rõ khách" → menu chuột phải có Chọn khách đúng.</summary>
+    public bool IsUnknownCustomer => Core.Orders.OrderConfirm.IsUnknownCustomer(Order.UserName);
 
     /// <summary>Tên cho trình đọc màn hình / UI Automation.</summary>
-    public string AccessibleName => $"Đơn {Id} - {CustomerName} - {DeliveryText} - {StatusText} - {TotalText}";
+    public string AccessibleName => $"Đơn {Id} - {CustomerName} - {DeliveryText} - {StatusText} - {TotalText}" + (NeedsConfirm ? " - " + ConfirmText : string.Empty);
 }
 
 /// <summary>Lựa chọn khách hàng trong ô tìm khách (lọc đơn, form đơn).</summary>

@@ -115,10 +115,25 @@ public sealed partial class OrderDetailPage : Page, IOrderListPage
             await Dialogs.ShowMessageAsync(XamlRoot, "Chụp ảnh", "Không có đơn hàng để chụp ảnh.");
             return;
         }
+        // Có đơn cần xác nhận (chưa rõ giá / chưa rõ khách): tổng trên ảnh có thể chưa đúng → hỏi lại. Nhãn cam không vào ảnh.
+        var confirm = ViewModel.Groups.SelectMany(g => g.Orders).Count(o => o.NeedsConfirm);
+        if (confirm > 0 && !await Dialogs.ConfirmAsync(XamlRoot, "Có đơn cần xác nhận",
+                $"{confirm} đơn trong danh sách cần xác nhận (chưa rõ giá / chưa rõ khách) - tổng trên ảnh có thể chưa đúng. Vẫn chụp ảnh? (Nhãn \"Cần xác nhận\" không có trong ảnh.)",
+                "Vẫn chụp"))
+        {
+            return;
+        }
+        var hidden = new List<UIElement>();
         try
         {
+            HideConfirmLabels(CaptureArea, hidden);
             var bitmap = new RenderTargetBitmap();
             await bitmap.RenderAsync(CaptureArea);
+            foreach (var element in hidden)
+            {
+                element.Visibility = Visibility.Visible;
+            }
+            hidden.Clear();
             var pixels = await bitmap.GetPixelsAsync();
             var scale = XamlRoot.RasterizationScale;
 
@@ -151,6 +166,39 @@ public sealed partial class OrderDetailPage : Page, IOrderListPage
         {
             AppLog.For("Orders").LogError(ex, "Chụp ảnh lỗi");
             await Dialogs.ShowMessageAsync(XamlRoot, "Không chụp được ảnh", ex.Message);
+        }
+        finally
+        {
+            foreach (var element in hidden)
+            {
+                element.Visibility = Visibility.Visible;
+            }
+        }
+    }
+
+    /// <summary>Ẩn nhãn "Cần xác nhận" của các thẻ (AutomationId CardConfirm) trước khi chụp - lý do kiểu "Nhung nào? hỏi vợ" không
+    /// gửi cho khách.</summary>
+    private static void HideConfirmLabels(UIElement root, List<UIElement> hidden)
+    {
+        void Walk(DependencyObject node)
+        {
+            for (var i = 0; i < Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChildrenCount(node); i++)
+            {
+                var child = Microsoft.UI.Xaml.Media.VisualTreeHelper.GetChild(node, i);
+                if (child is FrameworkElement element && element.Visibility == Visibility.Visible
+                    && Microsoft.UI.Xaml.Automation.AutomationProperties.GetAutomationId(element) == "CardConfirm")
+                {
+                    element.Visibility = Visibility.Collapsed;
+                    hidden.Add(element);
+                    continue;
+                }
+                Walk(child);
+            }
+        }
+        Walk(root);
+        if (hidden.Count > 0)
+        {
+            root.UpdateLayout();
         }
     }
 }

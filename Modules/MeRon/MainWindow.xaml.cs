@@ -25,6 +25,7 @@ public sealed partial class MainWindow : Window
         _ = Task.Run(CleanUpHistory);
         var start = StartPage();
         Nav.SelectedItem = FindItem(MenuSettings.IsVisible(start) ? start : "OrdersPage");
+        StartNotices();
     }
 
     // ---------- Ẩn / hiện mục menu (trang Cài đặt) ----------
@@ -216,7 +217,9 @@ public sealed partial class MainWindow : Window
     private IEnumerable<NavigationViewItem> AllItems() =>
         Nav.MenuItems.OfType<NavigationViewItem>().SelectMany(i => i.MenuItems.Count > 0 ? i.MenuItems.OfType<NavigationViewItem>() : [i]);
 
-    private NavigationViewItem? FindItem(string tag) => AllItems().FirstOrDefault(i => i.Tag as string == tag);
+    /// <summary>Tìm cả mục ở chân menu (Cài đặt) - vd chuông Thông báo → Mở Cài đặt sao lưu.</summary>
+    private NavigationViewItem? FindItem(string tag) =>
+        AllItems().Concat(Nav.FooterMenuItems.OfType<NavigationViewItem>()).FirstOrDefault(i => i.Tag as string == tag);
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
@@ -258,7 +261,11 @@ public sealed partial class MainWindow : Window
 
     private void Nav_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
-        if (args.InvokedItemContainer is NavigationViewItem { Tag: "Help" })
+        if (args.InvokedItemContainer is NavigationViewItem { Tag: "Notices" } notices)
+        {
+            Microsoft.UI.Xaml.Controls.Primitives.FlyoutBase.ShowAttachedFlyout(notices);
+        }
+        else if (args.InvokedItemContainer is NavigationViewItem { Tag: "Help" })
         {
             // Mở sau khi cú bấm chuột xong: mở ngay trong ItemInvoked thì lúc thả chuột cửa sổ chính được kéo lại lên trên,
             // Hướng dẫn nằm phía sau (F1 không bị vì không có cú bấm).
@@ -269,6 +276,144 @@ public sealed partial class MainWindow : Window
         {
             NavigateFromMenu(tag);
         }
+    }
+
+    // ---------- Thông báo (Core\Notices, 2026-11-16) ----------
+
+    private readonly DispatcherTimer _noticeTimer = new() { Interval = TimeSpan.FromMinutes(1) };
+
+    private IReadOnlyList<Core.Notice> _notices = [];
+
+    /// <summary>Gọi trong ctor: tính lại số trên chuông mỗi lần đổi trang (vừa lưu / sửa đơn rồi quay lại), khi cửa sổ được
+    /// kích hoạt và mỗi phút (qua ngày, bản sao lưu ở luồng nền vừa xong).</summary>
+    private void StartNotices()
+    {
+        ContentFrame.Navigated += (_, _) => RefreshNotices();
+        Activated += (_, args) =>
+        {
+            if (args.WindowActivationState != WindowActivationState.Deactivated)
+            {
+                RefreshNotices();
+            }
+        };
+        _noticeTimer.Tick += (_, _) => RefreshNotices();
+        _noticeTimer.Start();
+        RefreshNotices();
+    }
+
+    /// <summary>Đọc lại các việc cần để ý; lỗi chỉ ghi log (không làm phiền).</summary>
+    public void RefreshNotices()
+    {
+        try
+        {
+            var database = AppServices.Database;
+            _notices = Core.Notices.Build(AppServices.Orders.NeedsConfirm(), database.GetUnsyncedEdits(),
+                database.ListCopies().FirstOrDefault()?.Time, database.Count("Orders") + database.Count("Users") > 0, DateTime.Now);
+        }
+        catch (Exception ex)
+        {
+            AppLog.For("App").LogWarning(ex, "Đọc thông báo lỗi");
+            return;
+        }
+        var count = Core.Notices.WarningCount(_notices);
+        NoticeBadge.Value = count;
+        NoticeBadge.Visibility = count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        NoticeItem.Content = count > 0 ? $"Thông báo ({count})" : "Thông báo";
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(NoticeItem, count > 0 ? $"Thông báo - {count} việc đang chờ" : "Thông báo");
+    }
+
+    private void NoticeFlyout_Opening(object? sender, object e)
+    {
+        RefreshNotices();
+        ShowNoticePanel();
+    }
+
+    /// <summary>Khung Thông báo: mỗi việc 1 khối (biểu tượng, tiêu đề, chi tiết, nút làm ngay).</summary>
+    private void ShowNoticePanel(string? status = null)
+    {
+        NoticePanel.Children.Clear();
+        NoticePanel.Children.Add(new TextBlock { Text = "Thông báo", Style = (Style)Application.Current.Resources["SubtitleTextBlockStyle"] });
+        if (Core.Notices.WarningCount(_notices) == 0)
+        {
+            NoticePanel.Children.Add(new TextBlock { Text = "Không có việc gì đang chờ.", Opacity = 0.8 });
+        }
+        foreach (var notice in _notices)
+        {
+            NoticePanel.Children.Add(NoticeBlock(notice));
+        }
+        if (status is not null)
+        {
+            NoticePanel.Children.Add(new TextBlock { Text = status, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 });
+        }
+    }
+
+    private Grid NoticeBlock(Core.Notice notice)
+    {
+        var warning = notice.Level == Core.NoticeLevel.Warning;
+        var grid = new Grid { ColumnSpacing = 10, Padding = new Thickness(10, 8, 10, 8), CornerRadius = new CornerRadius(6) };
+        grid.Background = warning ? Views.Ui.LapsedBackground(true) : (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["SubtleFillColorSecondaryBrush"];
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        var glyph = notice.Kind switch { Core.NoticeKind.Confirm => "", Core.NoticeKind.Unsynced => "", _ => "" };
+        var icon = new FontIcon { Glyph = glyph, FontSize = 16, VerticalAlignment = VerticalAlignment.Top, Margin = new Thickness(0, 2, 0, 0) };
+        if (warning)
+        {
+            icon.Foreground = Views.Ui.LapsedForeground(true);
+        }
+        var body = new StackPanel { Spacing = 4 };
+        body.Children.Add(new TextBlock { Text = notice.Title, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
+        if (notice.Detail.Length > 0)
+        {
+            body.Children.Add(new TextBlock { Text = notice.Detail, TextWrapping = TextWrapping.Wrap, Opacity = 0.85 });
+        }
+        var (label, action) = notice.Kind switch
+        {
+            Core.NoticeKind.Confirm => ("Xem các đơn", (Action)(() =>
+            {
+                Views.OrdersPage.ShowConfirm();
+                SelectMenu("OrdersPage");
+            })),
+            Core.NoticeKind.Unsynced => ("Xuất lên Google Drive", () => _ = UploadDriveAsync()),
+            _ => ("Mở Cài đặt sao lưu", (Action)(() => SelectMenu("SettingsPage"))),
+        };
+        var button = new Button { Content = label, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 2, 0, 0) };
+        if (notice.Kind == Core.NoticeKind.Unsynced)
+        {
+            button.Style = (Style)Application.Current.Resources["AccentButtonStyle"];
+        }
+        button.Click += (_, _) =>
+        {
+            if (notice.Kind != Core.NoticeKind.Unsynced)
+            {
+                NoticeFlyout.Hide();
+            }
+            action();
+        };
+        body.Children.Add(button);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(grid, $"{notice.Title}. {notice.Detail}");
+        Grid.SetColumn(body, 1);
+        grid.Children.Add(icon);
+        grid.Children.Add(body);
+        return grid;
+    }
+
+    /// <summary>Đã đăng nhập Google (trang Xuất) → xuất + tải lên ngay trong khung (bộ đếm chưa xuất về 0); chưa → mở trang Xuất.</summary>
+    private async Task UploadDriveAsync()
+    {
+        var export = new ViewModels.ExportViewModel();
+        export.RefreshGoogle();
+        if (!export.IsSignedIn)
+        {
+            NoticeFlyout.Hide();
+            SelectMenu("ExportPage");
+            return;
+        }
+        ShowNoticePanel("Đang xuất và tải lên Google Drive...");
+        await export.UploadToDriveAsync();
+        RefreshNotices();
+        var left = AppServices.Database.GetUnsyncedEdits();
+        ShowNoticePanel((left.Any ? "Chưa xuất được: " : "Đã xuất: ") + export.DriveStatus
+                        + (left.Any ? string.Empty : " Nhập bản này vào điện thoại để điện thoại có các đơn mới."));
     }
 
     private void F1_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)

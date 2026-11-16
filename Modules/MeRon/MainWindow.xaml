@@ -108,6 +108,20 @@
         </NavigationView.MenuItems>
         <NavigationView.FooterMenuItems>
             <!-- Mở cửa sổ Hướng dẫn, không chuyển trang (SelectsOnInvoked=False → xử lý ở ItemInvoked). -->
+            <!-- Thông báo (Core\Notices): đơn cần xác nhận, chưa xuất sang điện thoại, sao lưu - bấm mở khung (NoticeFlyout), số cam = việc đang chờ -->
+            <NavigationViewItem x:Name="NoticeItem" Content="Thông báo" Tag="Notices" SelectsOnInvoked="False" AutomationProperties.AutomationId="NoticeItem">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xEA8F;" />
+                </NavigationViewItem.Icon>
+                <NavigationViewItem.InfoBadge>
+                    <InfoBadge x:Name="NoticeBadge" Visibility="Collapsed" Background="{StaticResource OrangeBrush}" />
+                </NavigationViewItem.InfoBadge>
+                <FlyoutBase.AttachedFlyout>
+                    <Flyout x:Name="NoticeFlyout" Placement="RightEdgeAlignedBottom" Opening="NoticeFlyout_Opening">
+                        <StackPanel x:Name="NoticePanel" Spacing="10" Width="420" AutomationProperties.Name="Thông báo" />
+                    </Flyout>
+                </FlyoutBase.AttachedFlyout>
+            </NavigationViewItem>
             <NavigationViewItem Content="Hướng dẫn (F1)" Tag="Help" Icon="Help" SelectsOnInvoked="False" />
             <NavigationViewItem Content="Cài đặt" Tag="SettingsPage" Icon="Setting" />
         </NavigationView.FooterMenuItems>

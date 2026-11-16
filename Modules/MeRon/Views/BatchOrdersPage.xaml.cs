@@ -225,6 +225,14 @@ public sealed partial class BatchOrdersPage : Page
     private static BatchRowViewModel? RowOf(object sender) => (sender as FrameworkElement)?.Tag as BatchRowViewModel;
 
     /// <summary>Khách chưa có: popup Thêm khách điền sẵn - từ có số (706, W1, 12a09) vào Địa chỉ, còn lại vào Tên.</summary>
+    private void UnknownCustomer_Click(object sender, RoutedEventArgs e)
+    {
+        if (RowOf(sender) is { } row)
+        {
+            ViewModel.UseUnknownCustomer(row);
+        }
+    }
+
     private async void AddCustomer_Click(object sender, RoutedEventArgs e)
     {
         if (RowOf(sender) is not { } row)

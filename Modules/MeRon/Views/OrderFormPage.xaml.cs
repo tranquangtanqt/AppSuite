@@ -51,6 +51,22 @@ public sealed partial class OrderFormPage : Page
         return ViewModel.Customers.FirstOrDefault(c => c.Id == id);
     }
 
+    /// <summary>Nút "Chưa rõ khách": chữ đang gõ ở ô Khách hàng (vd "Nhung") thành lý do; đơn ghi vào khách chung.</summary>
+    private async void UnknownCustomer_Click(object sender, RoutedEventArgs e)
+    {
+        var typed = CustomerBox.Text ?? string.Empty;
+        if (ViewModel.Customer is { } current && typed.Trim() == current.Name)
+        {
+            typed = string.Empty; // ô đang hiện tên khách đã chọn, không phải chữ gõ dở
+        }
+        if (ViewModel.UseUnknownCustomer(typed) is { } error)
+        {
+            await Dialogs.ShowMessageAsync(XamlRoot, "Không ghi được khách chung", error);
+            return;
+        }
+        CustomerBox.Text = ViewModel.Customer?.Name ?? string.Empty;
+    }
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         ViewModel.Load(e.Parameter as OrderFormArgs ?? new OrderFormArgs(null));

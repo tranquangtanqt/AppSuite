@@ -182,6 +182,8 @@
                                 <shared:WrapPanel Spacing="6" Visibility="{x:Bind NeedsReview}">
                                     <Button Content="Sửa đơn" Click="EditOrder_Click" Tag="{x:Bind}" ToolTipService.ToolTip="Sửa khách, món, số lượng, thanh toán trong popup giống form đơn. Chỉ sửa dòng này, chưa lưu đơn" />
                                     <Button Content="＋ Thêm khách" Click="AddCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind NeedsNewCustomer}" />
+                                    <Button Content="Chưa rõ khách" Click="UnknownCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind CanUseUnknownCustomer}"
+                                            ToolTipService.ToolTip="Chưa biết là khách nào (vd vợ ghi &quot;Nhung&quot;): lưu tạm vào khách chung &quot;Chưa rõ khách&quot;, đơn có dấu Cần xác nhận kèm chữ đã ghi. Hỏi xong: trang Đặt hàng, chuột phải thẻ đơn → Chọn khách đúng." />
                                     <Button Content="Chọn khách" Click="ChooseCustomer_Click" Tag="{x:Bind}" Visibility="{x:Bind CanChooseCustomer}"
                                             ToolTipService.ToolTip="Thay chữ trên dòng bằng 1 khách đã có trong danh sách" />
                                     <ComboBox ItemsSource="{x:Bind CustomerChoices}" PlaceholderText="Chọn khách..." Tag="{x:Bind}" MinWidth="180"

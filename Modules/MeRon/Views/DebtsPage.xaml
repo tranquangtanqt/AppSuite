@@ -149,6 +149,9 @@
                                         </Grid>
                                         <TextBlock Text="{x:Bind Contact}" Opacity="0.75" TextTrimming="CharacterEllipsis" Visibility="{x:Bind local:Ui.VisibleIf(HasContact)}" />
                                         <TextBlock Text="{x:Bind OrdersText}" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind OrdersText}" />
+                                        <!-- Cần xác nhận (OrderConfirm): đơn chưa rõ giá / tự đánh dấu, hoặc cả thẻ là khách chung "Chưa rõ khách" -->
+                                        <TextBlock Text="{x:Bind ConfirmText}" TextWrapping="Wrap" FontWeight="SemiBold"
+                                                   Foreground="{x:Bind local:Ui.LapsedForeground(NeedsConfirm)}" Visibility="{x:Bind local:Ui.VisibleIf(NeedsConfirm)}" />
                                     </StackPanel>
                                     <TextBlock Grid.Column="2" Text="{x:Bind AmountText}" FontSize="{StaticResource FontSizeNumber}" FontWeight="SemiBold" VerticalAlignment="Center"
                                                Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
@@ -169,7 +172,7 @@
                                             </StackPanel>
                                         </Button>
                                         <Button Tag="{x:Bind}" Click="CopyMessage_Click" AutomationProperties.Name="Chép tin nhắn nhắc nợ"
-                                                IsEnabled="{x:Bind HasCustomer}" ToolTipService.ToolTip="Chép tin nhắn nhắc thanh toán để dán vào Zalo (gửi kèm ảnh)">
+                                                IsEnabled="{x:Bind CanRemind}" ToolTipService.ToolTip="Chép tin nhắn nhắc thanh toán để dán vào Zalo (gửi kèm ảnh)">
                                             <SymbolIcon Symbol="Message" />
                                         </Button>
                                         <Button Tag="{x:Bind}" Click="CopyPhone_Click" AutomationProperties.Name="Chép số điện thoại"

@@ -111,6 +111,17 @@ public sealed class MasterDataRepository(MeRonDatabase database)
         return customer.Id;
     }
 
+    /// <summary>Id khách có tên này (không phân biệt hoa thường); chưa có thì tạo - dùng cho khách chung "Chưa rõ khách".</summary>
+    public long EnsureCustomer(string name)
+    {
+        var lower = name.Trim().ToLowerInvariant();
+        if (GetCustomers().FirstOrDefault(c => c.Name?.Trim().ToLowerInvariant() == lower) is { } existing)
+        {
+            return existing.Id;
+        }
+        return SaveCustomer(new Customer(0, name.Trim(), null, null, "Khách chung cho đơn chưa rõ người (MeRon tự tạo) - đổi sang khách đúng khi đã xác nhận."));
+    }
+
     public void DeleteCustomer(long id)
     {
         using var connection = database.Open();
