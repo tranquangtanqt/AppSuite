@@ -15,14 +15,28 @@ public enum RulerMode
     Line,
 }
 
+/// <summary>Dò cạnh hiện chiều nào (2026-11-17): cả 2 vạch, chỉ vạch ngang (đo rộng) hay chỉ vạch dọc (đo cao). Lưu trong
+/// settings.json, dùng chung cho Thước đo trên màn hình và trong Editor.</summary>
+public enum RulerAxis
+{
+    Both,
+    Horizontal,
+    Vertical,
+}
+
 /// <summary>
 /// 1 số đo, toạ độ pixel vật lý trên ảnh màn hình (gốc = góc trái trên màn hình ảo).
 /// Edges: [X1..X2] × [Y1..Y2] là vùng cùng màu quanh điểm (CursorX, CursorY), tính cả 2 đầu.
 /// Box: chữ nhật phủ pixel X1..X2, Y1..Y2 (tính cả 2 đầu). Line: từ tâm pixel (X1, Y1) tới tâm (X2, Y2).
 /// <paramref name="Scale"/> = tỉ lệ DPI của màn hình chứa số đo (1.5 = 150%) để ghi kèm pixel logic.
+/// <paramref name="Axis"/> (chỉ với Edges): chỉ đo chiều ngang / dọc - nhãn, nét vẽ, Copy, Chèn vào ảnh chỉ có chiều đó.
 /// </summary>
-public sealed record RulerMeasurement(RulerMode Mode, int X1, int Y1, int X2, int Y2, int CursorX = 0, int CursorY = 0, double Scale = 1.0)
+public sealed record RulerMeasurement(RulerMode Mode, int X1, int Y1, int X2, int Y2, int CursorX = 0, int CursorY = 0, double Scale = 1.0,
+    RulerAxis Axis = RulerAxis.Both)
 {
+    /// <summary>Edges chỉ 1 chiều: Horizontal / Vertical; còn lại Both.</summary>
+    public RulerAxis EdgeAxis => Mode == RulerMode.Edges ? Axis : RulerAxis.Both;
+
     public int Width => Mode == RulerMode.Line ? Math.Abs(X2 - X1) : Math.Abs(X2 - X1) + 1;
     public int Height => Mode == RulerMode.Line ? Math.Abs(Y2 - Y1) : Math.Abs(Y2 - Y1) + 1;
     public double Length => Math.Sqrt((double)Width * Width + (double)Height * Height);
@@ -30,7 +44,12 @@ public sealed record RulerMeasurement(RulerMode Mode, int X1, int Y1, int X2, in
     /// <summary>Nhãn chính (pixel vật lý), vd "120 × 32 px" / "Δx 100 · Δy 40 · 107,7 px".</summary>
     public string Label => Mode == RulerMode.Line
         ? $"Δx {Width} · Δy {Height} · {Ruler.Number(Length)} px"
-        : $"{Width} × {Height} px";
+        : EdgeAxis switch
+        {
+            RulerAxis.Horizontal => $"{Width} px",
+            RulerAxis.Vertical => $"{Height} px",
+            _ => $"{Width} × {Height} px",
+        };
 
     /// <summary>Dòng phụ pixel logic (null khi màn hình 100%), vd "logic 80 × 21,3 (150%)".</summary>
     public string? LogicalLabel
@@ -42,8 +61,9 @@ public sealed record RulerMeasurement(RulerMode Mode, int X1, int Y1, int X2, in
                 return null;
             }
             string percent = $"({Math.Round(Scale * 100)}%)";
-            return Mode == RulerMode.Line
-                ? $"logic {Ruler.Number(Length / Scale)} {percent}"
+            return Mode == RulerMode.Line ? $"logic {Ruler.Number(Length / Scale)} {percent}"
+                : EdgeAxis == RulerAxis.Horizontal ? $"logic {Ruler.Number(Width / Scale)} {percent}"
+                : EdgeAxis == RulerAxis.Vertical ? $"logic {Ruler.Number(Height / Scale)} {percent}"
                 : $"logic {Ruler.Number(Width / Scale)} × {Ruler.Number(Height / Scale)} {percent}";
         }
     }
@@ -132,9 +152,23 @@ public static class Ruler
                 {
                     float cy = m.CursorY + 0.5f, cx = m.CursorX + 0.5f;
                     float l = m.X1, r = m.X2 + 1, t = m.Y1, b = m.Y2 + 1;
-                    Segments(canvas, [(l, cy, r, cy), (l, cy - tick, l, cy + tick), (r, cy - tick, r, cy + tick),
-                                      (cx, t, cx, b), (cx - tick, t, cx + tick, t), (cx - tick, b, cx + tick, b)], halo, line);
-                    DrawLabel(canvas, m, cx + 10 * ui, cy + 10 * ui, cy - 10 * ui, ui, anchorCenter: false, labelBounds);
+                    (float, float, float, float)[] across = [(l, cy, r, cy), (l, cy - tick, l, cy + tick), (r, cy - tick, r, cy + tick)];
+                    (float, float, float, float)[] down = [(cx, t, cx, b), (cx - tick, t, cx + tick, t), (cx - tick, b, cx + tick, b)];
+                    switch (m.EdgeAxis)
+                    {
+                        case RulerAxis.Horizontal: // nhãn giữa vạch ngang
+                            Segments(canvas, across, halo, line);
+                            DrawLabel(canvas, m, (l + r) / 2, cy + 8 * ui, cy - 8 * ui, ui, anchorCenter: true, labelBounds);
+                            break;
+                        case RulerAxis.Vertical: // nhãn cạnh giữa vạch dọc
+                            Segments(canvas, down, halo, line);
+                            DrawLabel(canvas, m, cx + 10 * ui, (t + b) / 2, (t + b) / 2, ui, anchorCenter: false, labelBounds);
+                            break;
+                        default:
+                            Segments(canvas, [.. across, .. down], halo, line);
+                            DrawLabel(canvas, m, cx + 10 * ui, cy + 10 * ui, cy - 10 * ui, ui, anchorCenter: false, labelBounds);
+                            break;
+                    }
                     break;
                 }
                 case RulerMode.Box:
@@ -207,6 +241,21 @@ public static class Ruler
         }
     }
 
+    /// <summary>Nút / phím H đổi vòng: Cả 2 → Chỉ ngang → Chỉ dọc → Cả 2.</summary>
+    public static RulerAxis NextAxis(RulerAxis axis) => axis switch
+    {
+        RulerAxis.Both => RulerAxis.Horizontal,
+        RulerAxis.Horizontal => RulerAxis.Vertical,
+        _ => RulerAxis.Both,
+    };
+
+    public static string AxisName(RulerAxis axis) => axis switch
+    {
+        RulerAxis.Horizontal => "Chỉ ngang",
+        RulerAxis.Vertical => "Chỉ dọc",
+        _ => "Ngang + dọc",
+    };
+
     /// <summary>
     /// Bước vạch có số của thước kẻ ở mép khung ảnh (Editor): số "đẹp" 1 / 2 / 5 × 10^k nhỏ nhất sao cho 2 vạch có số cách
     /// nhau ít nhất <paramref name="minGap"/> trên màn hình. <paramref name="pixelsPerUnit"/> = 1 pixel ảnh chiếm bao nhiêu
@@ -277,9 +326,20 @@ public static class Ruler
             default:
             {
                 float cx = m.CursorX + 0.5f, cy = m.CursorY + 0.5f;
-                shapes.Add(DimensionLine(new SKPoint(m.X1, cy), new SKPoint(m.X2 + 1, cy)));
-                shapes.Add(DimensionLine(new SKPoint(cx, m.Y1), new SKPoint(cx, m.Y2 + 1)));
-                (labelX, labelY, labelAbove, center) = (cx + 10, cy + 10, cy - 10, false);
+                if (m.EdgeAxis != RulerAxis.Vertical)
+                {
+                    shapes.Add(DimensionLine(new SKPoint(m.X1, cy), new SKPoint(m.X2 + 1, cy)));
+                }
+                if (m.EdgeAxis != RulerAxis.Horizontal)
+                {
+                    shapes.Add(DimensionLine(new SKPoint(cx, m.Y1), new SKPoint(cx, m.Y2 + 1)));
+                }
+                (labelX, labelY, labelAbove, center) = m.EdgeAxis switch
+                {
+                    RulerAxis.Horizontal => ((m.X1 + m.X2 + 1) / 2f, cy + 8, cy - 8, true),
+                    RulerAxis.Vertical => (cx + 10, (m.Y1 + m.Y2 + 1) / 2f, (m.Y1 + m.Y2 + 1) / 2f, false),
+                    _ => (cx + 10, cy + 10, cy - 10, false),
+                };
                 break;
             }
         }

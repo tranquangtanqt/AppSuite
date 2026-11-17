@@ -727,6 +727,10 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   theo pixel ảnh ở mọi mức zoom; thước kẻ mép trên / trái khung ảnh (số theo zoom, vạch hồng con trỏ, dải hồng khoảng đo);
   Copy số đo / Chèn vào ảnh (thành hình vẽ thường: mũi tên 2 đầu / chữ nhật + ô chữ, 1 bước Hoàn tác) / Xoá số đo. Unit test
   124/124; GUI Sandbox (UIA) 27/27 (2026-11-17)
+- [x] **Thước đo: Dò cạnh chỉ ngang / chỉ dọc** (người dùng hỏi + chọn mặc định 2026-11-17): nút "Ngang + dọc" (đổi vòng
+  Chỉ ngang → Chỉ dọc → Ngang + dọc) + phím H ở cả Thước đo trên màn hình và trong Editor; nhãn / Copy / Mở trong Editor /
+  Chèn vào ảnh chỉ có chiều đang đo; nhớ trong cài đặt, dùng chung 2 nơi. Unit test 129/129; GUI Sandbox (UIA) 16/16 + chạy
+  lại Thước đo Editor 27/27, Thước đo màn hình 33/33 (2026-11-17)
 - [ ] Bug cũ phát hiện khi làm Thước đo trong Editor (2026-11-17, chưa sửa - chờ người dùng): ở màn hình 150%, ảnh trong
   Editor nhoè 1 hàng pixel theo chiều dọc khi chiều cao khung ảnh × 1,5 không tròn (vd ảnh cao 300 px: mép trắng / xanh ra
   1 hàng màu pha). Nghi do SKXamlCanvas tạo bitmap (int)(ActualHeight × 1,5) = 331 px rồi kéo giãn ra 332 px. Có cả khi

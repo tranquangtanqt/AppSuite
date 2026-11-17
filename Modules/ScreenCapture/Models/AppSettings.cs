@@ -94,6 +94,9 @@ public sealed class AppSettings
     /// <summary>Chờ sau mỗi lần lăn chuột trước khi chụp (ms) - tăng lên cho trang tải/vẽ chậm.</summary>
     public int ScrollSettleMs { get; set; } = 450;
 
+    /// <summary>Thước đo (màn hình + Editor), chế độ Dò cạnh: hiện cả 2 vạch / chỉ ngang / chỉ dọc (nút ↔ hoặc phím H).</summary>
+    public RulerAxis RulerAxis { get; set; } = RulerAxis.Both;
+
     public static readonly (int Min, int Max) ScrollMaxStepsRange = (10, 1000);
     // Trên 60.000px ảnh ghép (vd 2000px × 60.000px ≈ 480 MB RAM) dễ làm Editor chậm / hết bộ nhớ.
     public static readonly (int Min, int Max) ScrollMaxLengthRange = (2000, 60000);

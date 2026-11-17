@@ -26,6 +26,13 @@ public sealed partial class EditorWindow
     private SKBitmap? _measureBitmap;
     /// <summary>Thông báo việc vừa làm (Đã copy / Đã chèn) giữ trên thanh trạng thái cho tới lần bấm sau.</summary>
     private string? _measureNotice;
+    private RulerAxis _measureAxis = RulerAxis.Both;
+
+    /// <summary>Chiều Dò cạnh đã lưu (launcher đọc từ cài đặt) - đọc mỗi lần bật Thước đo để khớp với Thước đo trên màn hình.</summary>
+    public Func<RulerAxis>? RulerAxisSource { get; set; }
+
+    /// <summary>Người dùng đổi chiều Dò cạnh (nút Ngang + dọc / phím H) → launcher lưu cài đặt.</summary>
+    public event EventHandler<RulerAxis>? RulerAxisChanged;
 
     private bool IsMeasuring => _viewModel.SelectedTool == CaptureTool.Measure && !_isCropping;
 
@@ -33,11 +40,30 @@ public sealed partial class EditorWindow
     private void MeasureCopyButton_Click(object sender, RoutedEventArgs e) => CopyMeasurements();
     private void MeasureInsertButton_Click(object sender, RoutedEventArgs e) => InsertMeasurements();
     private void MeasureClearButton_Click(object sender, RoutedEventArgs e) => ClearMeasurements();
+    private void MeasureAxisButton_Click(object sender, RoutedEventArgs e) => SetMeasureAxis(Ruler.NextAxis(_measureAxis));
+
+    private void SetMeasureAxis(RulerAxis axis)
+    {
+        _measureAxis = axis;
+        MeasureAxisText.Text = Ruler.AxisName(axis);
+        RulerAxisChanged?.Invoke(this, axis);
+        if (_measureLive is { Mode: RulerMode.Edges } live)
+        {
+            _measureLive = live with { Axis = axis };
+        }
+        ShowMeasureStatus();
+        Canvas.Invalidate();
+    }
 
     /// <summary>Gọi khi đổi công cụ / bật Cắt: hiện / ẩn thước kẻ; rời Thước đo thì bỏ các số đo (chỉ là số đo tạm).</summary>
     private void UpdateMeasureTool()
     {
         bool on = IsMeasuring;
+        if (on && RulerAxisSource is not null)
+        {
+            _measureAxis = RulerAxisSource();
+            MeasureAxisText.Text = Ruler.AxisName(_measureAxis);
+        }
         HorizontalRuler.Visibility = VerticalRuler.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
         if (!on)
         {
@@ -89,7 +115,7 @@ public sealed partial class EditorWindow
         Math.Clamp((int)MathF.Floor(pos.Y), 0, _viewModel.Bitmap.Height - 1));
 
     private RulerMeasurement? EdgesAt(SKPointI p) =>
-        _viewModel.Bitmap.BytesPerPixel == 4 ? Ruler.FindEdges(_viewModel.Bitmap, p.X, p.Y, Ruler.DefaultTolerance) : null;
+        _viewModel.Bitmap.BytesPerPixel == 4 ? Ruler.FindEdges(_viewModel.Bitmap, p.X, p.Y, Ruler.DefaultTolerance) with { Axis = _measureAxis } : null;
 
     private void MeasurePressed(SKPoint pos, PointerRoutedEventArgs e)
     {
@@ -253,6 +279,11 @@ public sealed partial class EditorWindow
     /// <summary>Phím khi đang dùng Thước đo. True = đã xử lý.</summary>
     private bool HandleMeasureKey(Windows.System.VirtualKey key, bool ctrl)
     {
+        if (IsMeasuring && key == Windows.System.VirtualKey.H && !ctrl)
+        {
+            SetMeasureAxis(Ruler.NextAxis(_measureAxis));
+            return true;
+        }
         if (!IsMeasuring || _measurements.Count == 0 && _measureDragStart is null)
         {
             return false; // chưa ghim gì: Ctrl+C copy ảnh, Esc... như bình thường
@@ -367,7 +398,8 @@ public sealed partial class EditorWindow
         Rect(At(0), At(imageLength), 0, thick, imagePaint);
 
         var span = _measureLive ?? _measurements.LastOrDefault();
-        if (span is not null)
+        // Dò cạnh chỉ 1 chiều: thước của chiều kia không tô khoảng đo.
+        if (span is not null && span.EdgeAxis != (horizontal ? RulerAxis.Vertical : RulerAxis.Horizontal))
         {
             int lo = horizontal ? Math.Min(span.X1, span.X2) : Math.Min(span.Y1, span.Y2);
             int hi = horizontal ? Math.Max(span.X1, span.X2) : Math.Max(span.Y1, span.Y2);

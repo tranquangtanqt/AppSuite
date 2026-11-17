@@ -19,7 +19,7 @@ using WinRT.Interop;
 namespace ScreenCapture.Views;
 
 /// <summary>Kết quả Thước đo: các số đo đã ghim (hoặc số đo đang hiện nếu chưa ghim gì) + có mở ảnh trong Editor không.</summary>
-public sealed record RulerResult(IReadOnlyList<RulerMeasurement> Measurements, bool OpenInEditor);
+public sealed record RulerResult(IReadOnlyList<RulerMeasurement> Measurements, bool OpenInEditor, RulerAxis Axis);
 
 /// <summary>
 /// Thước đo trên màn hình (2026-11-17): ảnh màn hình đứng yên phủ kín màn hình ảo (như Hút màu), đo bằng pixel vật lý.
@@ -39,6 +39,9 @@ public sealed class RulerOverlayWindow : Window
     private readonly UserControl _host;
     private readonly ToggleButton _edgesButton, _boxButton, _lineButton, _loupeButton;
     private readonly Slider _toleranceSlider;
+    private readonly Button _axisButton;
+    private readonly TextBlock _axisText = new();
+    private RulerAxis _axis;
     private readonly TextBlock _valueText = new() { FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, VerticalAlignment = VerticalAlignment.Center, MinWidth = 150 };
     private readonly TextBlock _hintText = new() { FontSize = 12, Opacity = 0.85, TextWrapping = TextWrapping.Wrap };
     private readonly List<RulerMeasurement> _pinned = [];
@@ -54,8 +57,9 @@ public sealed class RulerOverlayWindow : Window
     private bool _toolbarAtBottom, _pointerOverToolbar;
     private readonly DispatcherTimer _toolbarFlipTimer = new() { Interval = TimeSpan.FromMilliseconds(800) };
 
-    public RulerOverlayWindow(SKBitmap frozenScreen, RECT virtualRect, Action<string> copyText)
+    public RulerOverlayWindow(SKBitmap frozenScreen, RECT virtualRect, Action<string> copyText, RulerAxis axis = RulerAxis.Both)
     {
+        _axis = axis;
         _frozenScreen = frozenScreen;
         _virtualRect = virtualRect;
         _copyText = copyText;
@@ -72,6 +76,15 @@ public sealed class RulerOverlayWindow : Window
         AutomationProperties.SetName(_toleranceSlider, "Độ nhạy");
         ToolTipService.SetToolTip(_toleranceSlider, "Độ lệch màu tối đa vẫn coi là cùng màu khi Dò cạnh (0 = đúng màu). Nền có bóng mờ / gradient thì tăng lên.");
         _toleranceSlider.ValueChanged += (_, _) => UpdateLive();
+        // Dò cạnh hiện chiều nào: bấm đổi vòng Ngang + dọc → Chỉ ngang → Chỉ dọc (phím H).
+        var axisContent = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
+        axisContent.Children.Add(Icon(""));
+        axisContent.Children.Add(_axisText);
+        _axisButton = new Button { Content = axisContent, AllowFocusOnInteraction = false, IsTabStop = false };
+        AutomationProperties.SetName(_axisButton, "Chiều đo");
+        ToolTipService.SetToolTip(_axisButton, "Dò cạnh đo chiều nào: Ngang + dọc → Chỉ ngang (đo rộng) → Chỉ dọc (đo cao). Phím H");
+        _axisButton.Click += (_, _) => SetAxis(Ruler.NextAxis(_axis));
+        _axisText.Text = Ruler.AxisName(_axis);
         _loupeButton = new ToggleButton { IsChecked = true, Content = Icon(""), AllowFocusOnInteraction = false, IsTabStop = false };
         AutomationProperties.SetName(_loupeButton, "Kính lúp");
         ToolTipService.SetToolTip(_loupeButton, "Kính lúp cạnh con trỏ (phím L)");
@@ -84,6 +97,7 @@ public sealed class RulerOverlayWindow : Window
         row.Children.Add(new Border { Width = 1, Margin = new Thickness(4, 4, 4, 4), Background = new SolidColorBrush(Windows.UI.Color.FromArgb(80, 255, 255, 255)) });
         row.Children.Add(new TextBlock { Text = "Độ nhạy", VerticalAlignment = VerticalAlignment.Center });
         row.Children.Add(_toleranceSlider);
+        row.Children.Add(_axisButton);
         row.Children.Add(_loupeButton);
         row.Children.Add(ActionButton("Copy", "", "Copy số đo (Ctrl+C): các số đo đã ghim, chưa ghim thì số đo đang hiện", Copy));
         row.Children.Add(ActionButton("Mở trong Editor", "", "Mở ảnh màn hình kèm các vạch đo trong Editor (Enter)", () => Finish(openInEditor: true)));
@@ -162,7 +176,7 @@ public sealed class RulerOverlayWindow : Window
         {
             _keyTimer.Stop();
             _toolbarFlipTimer.Stop();
-            _tcs?.TrySetResult(new RulerResult(Result(), false));
+            _tcs?.TrySetResult(new RulerResult(Result(), false, _axis));
         };
         SetMode(RulerMode.Edges);
     }
@@ -238,7 +252,15 @@ public sealed class RulerOverlayWindow : Window
         _boxButton.IsChecked = mode == RulerMode.Box;
         _lineButton.IsChecked = mode == RulerMode.Line;
         _toleranceSlider.IsEnabled = mode == RulerMode.Edges;
+        _axisButton.IsEnabled = mode == RulerMode.Edges;
         _status = null;
+        UpdateLive();
+    }
+
+    private void SetAxis(RulerAxis axis)
+    {
+        _axis = axis;
+        _axisText.Text = Ruler.AxisName(axis);
         UpdateLive();
     }
 
@@ -251,7 +273,7 @@ public sealed class RulerOverlayWindow : Window
 
     private string Hint => _mode switch
     {
-        RulerMode.Edges => "Rê chuột vào khoảng trống giữa 2 thành phần · bấm = ghim",
+        RulerMode.Edges => "Rê chuột vào khoảng trống giữa 2 thành phần · bấm = ghim · H = đổi chiều",
         RulerMode.Box => "Kéo chuột để đo rộng × cao",
         _ => "Kéo từ A tới B · Shift = ngang / dọc",
     } + " · ←↑→↓ dịch 1 px · Enter mở trong Editor · Esc thoát";
@@ -335,6 +357,7 @@ public sealed class RulerOverlayWindow : Window
             case VirtualKey.Number2 or VirtualKey.NumberPad2: SetMode(RulerMode.Box); break;
             case VirtualKey.Number3 or VirtualKey.NumberPad3: SetMode(RulerMode.Line); break;
             case VirtualKey.L: SetLoupe(!_showLoupe); break;
+            case VirtualKey.H when _mode == RulerMode.Edges: SetAxis(Ruler.NextAxis(_axis)); break;
             case VirtualKey.C when ctrl: Copy(); break;
             case VirtualKey.Z when ctrl: RemoveLastPinned(); break;
             case VirtualKey.Back: RemoveLastPinned(); break;
@@ -414,7 +437,7 @@ public sealed class RulerOverlayWindow : Window
         else
         {
             _live = _mode == RulerMode.Edges
-                ? Ruler.FindEdges(_frozenScreen, _cursorX, _cursorY, (int)_toleranceSlider.Value, ScaleAt(_cursorX, _cursorY))
+                ? Ruler.FindEdges(_frozenScreen, _cursorX, _cursorY, (int)_toleranceSlider.Value, ScaleAt(_cursorX, _cursorY)) with { Axis = _axis }
                 : null;
         }
 
@@ -546,7 +569,7 @@ public sealed class RulerOverlayWindow : Window
             return;
         }
         _finished = true;
-        _tcs?.TrySetResult(new RulerResult(Result(), openInEditor));
+        _tcs?.TrySetResult(new RulerResult(Result(), openInEditor, _axis));
         Close();
     }
 

@@ -264,3 +264,61 @@ public class EditorRulerTests
         Assert.False(darkOutside, "nhãn tràn xuống dưới khung ảnh");
     }
 }
+
+/// <summary>Dò cạnh chỉ ngang / chỉ dọc (2026-11-17).</summary>
+public class RulerAxisTests
+{
+    private static readonly RulerMeasurement Gap = new(RulerMode.Edges, 3, 0, 102, 49, 50, 20); // 100 × 50
+
+    [Fact]
+    public void Nhan_va_copy_chi_co_chieu_dang_do()
+    {
+        Assert.Equal("100 × 50 px", Gap.Label);
+        Assert.Equal("100 px", (Gap with { Axis = RulerAxis.Horizontal }).Label);
+        Assert.Equal("50 px", (Gap with { Axis = RulerAxis.Vertical }).Label);
+        var scaled = Gap with { Axis = RulerAxis.Horizontal, Scale = 1.5 };
+        Assert.Equal("100 px (logic 66,7 (150%))", scaled.CopyText);
+    }
+
+    [Fact]
+    public void Chieu_chi_ap_cho_do_canh()
+    {
+        var box = Ruler.Box(0, 0, 9, 4) with { Axis = RulerAxis.Horizontal };
+
+        Assert.Equal("10 × 5 px", box.Label);
+    }
+
+    [Fact]
+    public void Doi_vong_ca_2_ngang_doc()
+    {
+        Assert.Equal(RulerAxis.Horizontal, Ruler.NextAxis(RulerAxis.Both));
+        Assert.Equal(RulerAxis.Vertical, Ruler.NextAxis(RulerAxis.Horizontal));
+        Assert.Equal(RulerAxis.Both, Ruler.NextAxis(RulerAxis.Vertical));
+        Assert.Equal(RulerAxis.Both, new AppSettings().RulerAxis);
+    }
+
+    [Fact]
+    public void Chi_ngang_chi_ve_vach_ngang()
+    {
+        using var bitmap = new SKBitmap(200, 120);
+        bitmap.Erase(SKColors.White);
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            Ruler.Draw(canvas, [new RulerMeasurement(RulerMode.Edges, 0, 0, 199, 119, 150, 5, Axis: RulerAxis.Horizontal)]);
+        }
+
+        Assert.Equal(Ruler.LineColor, bitmap.GetPixel(60, 5));      // vạch ngang qua hàng con trỏ
+        Assert.NotEqual(Ruler.LineColor, bitmap.GetPixel(150, 80)); // không có vạch dọc qua cột con trỏ
+    }
+
+    [Fact]
+    public void Chen_chi_doc_thanh_1_duong_va_o_chu()
+    {
+        var shapes = Ruler.ToAnnotations(Gap with { Axis = RulerAxis.Vertical }, SKRect.Create(200, 100));
+
+        var line = Assert.IsType<LineArrowAnnotation>(shapes[0]);
+        Assert.Equal((new SKPoint(50.5f, 0), new SKPoint(50.5f, 50)), (line.Start, line.End));
+        Assert.Equal("50 px", Assert.IsType<TextAnnotation>(shapes[1]).Text);
+        Assert.Equal(2, shapes.Count);
+    }
+}

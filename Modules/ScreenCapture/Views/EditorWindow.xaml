@@ -444,7 +444,7 @@
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                             <StackPanel Orientation="Horizontal" Spacing="2">
                                 <ToggleButton x:Name="MeasureToolButton" Style="{StaticResource ToolButtonStyle}" Click="MeasureToolButton_Click"
-                                              ToolTipService.ToolTip="Thước đo: rê chuột = dò khoảng trống tới chỗ màu đổi, bấm = ghim số đo; kéo = đo chữ nhật; Ctrl + kéo = đo đường thẳng (thêm Shift: ngang / dọc). Hiện thước kẻ ở mép khung ảnh">
+                                              ToolTipService.ToolTip="Thước đo: rê chuột = dò khoảng trống tới chỗ màu đổi (H: ngang + dọc / chỉ ngang / chỉ dọc), bấm = ghim số đo; kéo = đo chữ nhật; Ctrl + kéo = đo đường thẳng (thêm Shift: ngang / dọc). Hiện thước kẻ ở mép khung ảnh">
                                     <StackPanel Style="{StaticResource ToolButtonContentStyle}">
                                         <FontIcon Glyph="&#xED5E;" />
                                         <TextBlock Text="Thước đo" FontSize="12" />
@@ -470,6 +470,15 @@
                                         <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
                                             <FontIcon Glyph="&#xE74D;" FontSize="12" />
                                             <TextBlock Text="Xoá số đo" FontSize="12" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <Button x:Name="MeasureAxisButton" Style="{StaticResource SmallToolButtonStyle}" Click="MeasureAxisButton_Click"
+                                            ToolTipService.ToolTip="Dò cạnh đo chiều nào: Ngang + dọc → Chỉ ngang (đo rộng) → Chỉ dọc (đo cao). Phím H khi đang dùng Thước đo. Nhớ cho lần sau, dùng chung với Thước đo trên màn hình">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE8AB;" FontSize="12" />
+                                            <TextBlock x:Name="MeasureAxisText" Text="Ngang + dọc" FontSize="12" />
                                         </StackPanel>
                                     </Button>
                                 </StackPanel>

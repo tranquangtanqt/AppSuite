@@ -119,6 +119,12 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   ảnh. *Chèn vào ảnh*: `Ruler.ToAnnotations` → `RectangleAnnotation` / `LineArrowAnnotation` mũi tên 2 đầu (đoạn < 40 px
   không mũi tên) màu `Ruler.LineColor` + `TextAnnotation` nền tối chữ trắng 16 px, thêm bằng `EditorViewModel.AddAnnotations`
   (1 bước Hoàn tác). Bấm vào ảnh đưa tiêu điểm về `CanvasScroller` để Enter không bấm lại nút Thước đo.
+- Dò cạnh 1 chiều (2026-11-17, người dùng yêu cầu): `RulerAxis` Both / Horizontal / Vertical là tham số cuối của
+  `RulerMeasurement` (`EdgeAxis` = Axis khi Mode = Edges, chế độ khác luôn Both) → `Label` / `LogicalLabel` / `CopyText` chỉ
+  1 số ("240 px"), `Ruler.Draw` chỉ vẽ vạch đó (nhãn giữa vạch), `Ruler.ToAnnotations` chỉ 1 đường + ô chữ. Đổi vòng bằng
+  `Ruler.NextAxis` (nút "Ngang + dọc / Chỉ ngang / Chỉ dọc" + phím H ở lớp phủ và Editor); lưu `AppSettings.RulerAxis` (giữ
+  qua cửa sổ Cài đặt trong `ApplySettings`). Lớp phủ nhận / trả chiều qua constructor / `RulerResult.Axis`; Editor đọc
+  `RulerAxisSource` mỗi lần bật Thước đo và báo `RulerAxisChanged`. Thước kẻ Editor chỉ tô khoảng đo ở thước của chiều đang đo.
 
 ### Hướng dẫn (cửa sổ dùng chung `SharedUI.Help.HelpWindow`)
 
@@ -480,7 +486,7 @@ Biên dịch kèm trực tiếp `Models\` (trừ `HelpContent.cs` - dùng Shared
 - Hiệu ứng: Grayscale, Invert, Viền, Đổ bóng (nền trong suốt).
 - Thước đo (`Ruler`): dò cạnh dừng đúng chỗ màu đổi / tới mép ảnh / độ nhạy bỏ qua pixel gần giống / kẹp toạ độ ngoài ảnh /
   trên SKBitmap; chữ nhật 2 góc bất kỳ; đường thẳng Δx Δy độ dài, Shift ngang / dọc; nhãn pixel logic ở 150%; vẽ lên ảnh;
-  phím tắt mặc định Ctrl+Shift+M (113 test); Editor: bước vạch thước kẻ theo zoom, chèn số đo thành hình (chữ nhật / 2 mũi tên / ô chữ trong khung ảnh), vẽ khi canvas có zoom (124 test, 2026-11-17).
+  phím tắt mặc định Ctrl+Shift+M (113 test); Editor: bước vạch thước kẻ theo zoom, chèn số đo thành hình (chữ nhật / 2 mũi tên / ô chữ trong khung ảnh), vẽ khi canvas có zoom; Dò cạnh chỉ ngang / chỉ dọc (nhãn, nét vẽ, chèn, đổi vòng, mặc định) (129 test, 2026-11-17).
 - Phiên tạm: lưu → mở lại đủ tab / hình (chữ, mũi tên, góc bo) / hướng ảnh / file đã lưu / tab đang mở; giới hạn số tab +
   dọn file thừa; tắt nhớ tab; `session.json` hỏng; mất 1 file ảnh chỉ bỏ tab đó. Chạy trong thư mục tạm riêng
   (`SCREENCAPTURE_SESSION_DIR` đặt bằng ModuleInitializer) - **không đụng phiên thật** của người dùng.

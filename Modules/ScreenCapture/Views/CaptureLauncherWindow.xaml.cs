@@ -466,6 +466,7 @@ public sealed partial class CaptureLauncherWindow : Window
         settings.OcrLanguage = _settings.OcrLanguage;
         settings.CustomColors = _settings.CustomColors; // Bảng màu có thể đã thêm màu khi cửa sổ Cài đặt đang mở
         settings.ColorCopyFormat = _settings.ColorCopyFormat;
+        settings.RulerAxis = _settings.RulerAxis;
         _settings = settings;
         _fileService.JpegQuality = settings.JpegQuality;
         try
@@ -949,7 +950,12 @@ public sealed partial class CaptureLauncherWindow : Window
             await Task.Delay(200); // chờ Windows vẽ lại phần bị các cửa sổ vừa ẩn che
             var virtualRect = _captureService.GetVirtualScreenRect();
             using var frozenScreen = _captureService.CaptureRect(virtualRect);
-            var result = await new RulerOverlayWindow(frozenScreen, virtualRect, _clipboardService.CopyText).MeasureAsync();
+            var result = await new RulerOverlayWindow(frozenScreen, virtualRect, _clipboardService.CopyText, _settings.RulerAxis).MeasureAsync();
+            if (result.Axis != _settings.RulerAxis)
+            {
+                _settings.RulerAxis = result.Axis; // nhớ chiều Dò cạnh cho lần đo sau (cả Editor)
+                SaveSettings();
+            }
             Log.LogInformation("Thước đo: {Count} số đo, mở Editor: {Open}", result.Measurements.Count, result.OpenInEditor);
             if (result.OpenInEditor)
             {
@@ -1358,6 +1364,13 @@ public sealed partial class CaptureLauncherWindow : Window
         {
             _settings.AutoSavedCloseAction = action;
             _settingsStore.Save(_settings);
+        };
+        // Thước đo: chiều Dò cạnh dùng chung với Thước đo trên màn hình (đọc lúc bật công cụ, đổi thì lưu).
+        editor.RulerAxisSource = () => _settings.RulerAxis;
+        editor.RulerAxisChanged += (_, axis) =>
+        {
+            _settings.RulerAxis = axis;
+            SaveSettings();
         };
         editor.OcrLanguageChanged += (_, language) =>
         {
