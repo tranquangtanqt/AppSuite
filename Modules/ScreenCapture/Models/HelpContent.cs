@@ -22,6 +22,7 @@ public static class HelpContent
         (HotkeyAction.RepeatLast, "Chụp lại lần gần nhất"),
         (HotkeyAction.RegionText, "Chụp lấy chữ (OCR)"),
         (HotkeyAction.PickColor, "Hút màu trên màn hình"),
+        (HotkeyAction.Ruler, "Thước đo trên màn hình"),
     ];
 
     public static IReadOnlyList<HelpSection> Build(AppSettings settings) =>
@@ -256,6 +257,17 @@ public static class HelpContent
             new("Copy mã màu", "Chọn định dạng HTML (#757369) hoặc RGB (rgb(117, 115, 105)) rồi bấm Copy. Định dạng được nhớ cho lần sau, dùng cả cho phím tắt hút màu."),
             new("Màu tự chọn", "20 ô (2 hàng): màu đã hút và màu bấm Thêm vào màu tự chọn, mới nhất đứng đầu; đầy thì màu cũ nhất bị đẩy ra. Nhớ qua lần mở app sau."),
             new("Dùng cho hình vẽ", "Mở Bảng màu từ Editor thì có thêm Dùng làm Màu nét / Dùng làm Màu nền: đặt màu cho hình vẽ tiếp theo và cả hình đang chọn."),
+        ]),
+
+        new("Thước đo trên màn hình", "", "Đo pixel, khoảng cách giữa các thành phần trên màn hình (nút, ô, lề...) - đo được cả cửa sổ của app khác.",
+        [
+            new("Mở thước đo", $"Phím tắt ({settings.GetHotkey(HotkeyAction.Ruler).Describe()}), nút Thước đo ở cửa sổ chính hoặc menu khay > Thước đo trên màn hình: màn hình đứng yên, thanh công cụ ở giữa cạnh trên màn hình đang có con trỏ. Đi chuột tới thanh để bấm nút thì thanh đứng yên; để chuột đứng yên sát thanh (đang đo chỗ đó) khoảng 1 giây, hoặc kéo đo tới gần, thì thanh tự dời sang cạnh dưới / trên. Đơn vị là pixel thật của màn hình (đúng pixel của ảnh chụp); màn hình phóng to (vd 150%) thì nhãn ghi thêm dòng pixel logic (150 px thật = 100 px logic)."),
+            new("Dò cạnh", "Chế độ mặc định: rê chuột vào khoảng trống giữa 2 thành phần - vạch ngang / dọc tự dừng ở chỗ màu đổi (mép nút, viền ô), nhãn ghi rộng × cao của khoảng trống đó. Rê lên chính thành phần (nền đồng màu) thì đo cỡ của nó. Bấm chuột = ghim số đo. Nền có bóng mờ / chuyển màu mà vạch dừng sớm thì kéo Độ nhạy lên (0 = đúng màu).", "1"),
+            new("Chữ nhật", "Kéo chuột để đo rộng × cao (tính cả 2 pixel đầu). Trước khi kéo có đường gióng ngang + dọc qua con trỏ để căn thẳng hàng. Thả chuột = ghim.", "2"),
+            new("Đường thẳng", "Kéo từ điểm A tới B: Δx, Δy và độ dài. Giữ Shift khi kéo = đường ngang hoặc dọc. Thả chuột = ghim.", "3", "Shift"),
+            new("Chính xác từng pixel", "Kính lúp cạnh con trỏ phóng to 11 × 11 pixel kèm toạ độ (phím L hoặc nút kính lúp để ẩn / hiện). Phím mũi tên dời con trỏ 1 px, Shift + mũi tên 10 px.", "←↑→↓", "L"),
+            new("Ghim, copy, bỏ", "Ghim được nhiều số đo trên màn hình. Copy (Ctrl+C) chép chữ các số đo đã ghim (mỗi số đo 1 dòng, vd 120 × 32 px), chưa ghim thì chép số đo đang hiện. Bỏ số đo vừa ghim: Ctrl+Z / Backspace / chuột phải; Xoá hết: Delete.", "Ctrl+C", "Ctrl+Z", "Delete"),
+            new("Mở trong Editor, thoát", "Enter hoặc nút Mở trong Editor: ảnh màn hình kèm các vạch đo + nhãn mở thành tab mới \"Thước đo\" để ghi chú, lưu, gửi. Esc / nút Đóng / chuột phải khi chưa ghim gì = thoát.", "Enter", "Esc"),
         ]),
 
         new("Cài đặt", "\uE713", "Nút Cài đặt ở cửa sổ chính, tab Tệp của Editor hoặc menu khay. Bấm OK mới lưu; Mặc định đưa mọi tuỳ chọn về ban đầu.",

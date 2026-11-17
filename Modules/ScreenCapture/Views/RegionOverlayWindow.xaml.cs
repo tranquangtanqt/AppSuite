@@ -137,6 +137,7 @@ public sealed partial class RegionOverlayWindow : Window
         using var data = image.Encode(SKEncodedImageFormat.Png, 100);
         BackgroundImage.Source = await LoadBitmapAsync(data.ToArray());
         this.Activate();
+        WindowChrome.AlignClientTo(this, _virtualRect); // không thì ảnh nền lệch 3 px → ảnh chụp lệch so với vùng nhìn thấy
         return await _tcs.Task;
     }
 

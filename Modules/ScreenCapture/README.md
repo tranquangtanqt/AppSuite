@@ -77,6 +77,31 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   dùng chung với phím tắt), mã, *Copy* (chữ đổi "Đã copy" 1,5 giây). Launcher ghi settings.json khi Màu tự chọn / định
   dạng đổi, và giữ 2 giá trị này khi bấm OK ở Cài đặt.
 
+### Thước đo trên màn hình (2026-11-17)
+
+- Mở: phím tắt mặc định `Ctrl+Shift+M` (`HotkeyAction.Ruler`, thêm cuối enum), nút *Thước đo* (`RulerButton`) ở hàng nút
+  trên cùng cửa sổ chính, menu khay *Thước đo trên màn hình*. `CaptureLauncherWindow.MeasureScreenAsync` ẩn cửa sổ của app
+  như Hút màu (cả Bảng màu, ảnh ghim) rồi mở `Views\RulerOverlayWindow.cs` trên ảnh màn hình đứng yên.
+- Đơn vị: pixel vật lý của ảnh chụp. Mỗi số đo nhớ tỉ lệ DPI của màn hình chứa nó (`MonitorFromPoint` + `GetDpiForMonitor`) →
+  nhãn thêm dòng "logic 80 × 21,3 (150%)" khi màn hình khác 100%.
+- 3 chế độ (`RulerMode`, phím 1 / 2 / 3, nút trên thanh công cụ): **Dò cạnh** (mặc định - từ con trỏ đi 4 hướng tới pixel
+  lệch màu quá *Độ nhạy*, `Ruler.FindEdges`, mặc định 30 / kênh; bấm = ghim), **Chữ nhật** (kéo, tính cả 2 pixel đầu; có
+  đường gióng qua con trỏ trước khi kéo), **Đường thẳng** (kéo A → B: Δx, Δy, độ dài; Shift = ngang / dọc -
+  `Ruler.SnapLine`). Thả chuột = ghim; ghim nhiều số đo. Kính lúp 11 × 11 pixel + toạ độ (phím L), mũi tên dời con trỏ
+  thật 1 px (Shift 10 px).
+- Vẽ: lớp `SKXamlCanvas` trong suốt trên ảnh nền, dùng chung `Ruler.Draw` (nét hồng `#FF2D8C` có viền tối, nhãn nền tối;
+  nhãn sát mép dưới thì lên trên để không đè vạch) với ảnh mở trong Editor.
+- Thanh công cụ: giữa cạnh trên màn hình có con trỏ (`PlaceToolbar`). Con trỏ đứng yên 0,8 giây sát thanh (40 DIP, phía trong
+  màn hình 180 DIP vì kính lúp / nhãn) mà không vào thanh (`PointerEntered`) → dời sang cạnh kia; đang kéo đo tới gần → dời
+  ngay. Còn di chuyển thì đếm lại - đi tới bấm nút không bị nhảy (bản đầu né ngay khi tới gần nên không bấm được).
+- Cả 3 lớp phủ (Vùng chọn - dùng cho Vùng chọn / Vùng cố định / Chụp cuộn / Chụp lấy chữ, Hút màu, Thước đo) gọi
+  `WindowChrome.AlignClientTo` sau Activate: cửa sổ WinUI không viền vẫn chừa khung 3 px (150%) → ảnh nền lệch xuống-phải,
+  ảnh chụp lệch so với vùng nhìn thấy (bug cũ, sửa 2026-11-17).
+- Phím: Ctrl+C copy chữ các số đo đã ghim (mỗi số 1 dòng, chưa ghim thì số đang hiện), Ctrl+Z / Backspace / chuột phải
+  bỏ số vừa ghim (chưa ghim gì thì chuột phải = thoát), Delete xoá hết, Enter → ảnh màn hình + vạch đo mở tab "Thước đo"
+  trong Editor, Esc thoát (kèm `GetAsyncKeyState` dự phòng như Hút màu).
+- Chưa có (hướng B, làm sau): công cụ Đo trong Editor, thước kẻ ở mép khung ảnh.
+
 ### Hướng dẫn (cửa sổ dùng chung `SharedUI.Help.HelpWindow`)
 
 Liệt kê mọi tính năng cho người dùng cuối, chia 16 danh mục (chế độ chụp, phím tắt, khay, Editor,
@@ -97,7 +122,7 @@ tuỳ chọn về ban đầu.
 | Lưu ảnh | Chất lượng JPG khi Lưu / Lưu thành (30–100, mặc định 90). Tự lưu mỗi ảnh chụp thành PNG vào 1 thư mục (mặc định `Pictures\ScreenCapture`), tên theo **mẫu tên file** (xem dưới); ảnh đã tự lưu đóng tab không hỏi lưu. **Khi đóng ảnh đã tự lưu**: *Giữ file* (mặc định) / *Hỏi có xoá file không* / *Luôn xoá file* (vào Thùng rác) — `AutoSavedCloseAction` |
 | Phiên làm việc | Bật/tắt nhớ tab khi tắt app; giới hạn số tab / MB; xem dung lượng + mở thư mục tạm. **Mở lại tab vừa đóng** (Ctrl+Shift+T): giữ tối đa N tab (0–50, mặc định 10, 0 = tắt) / M MB (50–4000, mặc định 300) trong bộ nhớ |
 | Chụp cuộn | Số lần cuộn tối đa (10–1000, mặc định 150); độ dài ảnh tối đa theo chiều cuộn (2.000–60.000px, mặc định 30.000); thời gian chờ sau mỗi lần cuộn (200–3000ms, mặc định 450 — tăng cho trang tải chậm) |
-| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất / Chụp lấy chữ / Hút màu — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
+| Phím tắt | Phím tắt toàn cục cho Toàn màn hình / Màn hình hiện tại / Cửa sổ hiện tại / Vùng chọn / Vùng cố định / Chụp cuộn dọc / Chụp cuộn ngang / Chụp lại lần gần nhất / Chụp lấy chữ / Hút màu / Thước đo — Shift/Ctrl/Alt + 1 phím (PrintScreen, A–Z, 0–9, F1–F12) |
 
 - Phím tắt mặc định giống PicPick: `PrtSc`, `Alt+PrtSc`, `Shift+PrtSc`, `Ctrl+Shift+PrtSc`,
   `Ctrl+Alt+PrtSc` (chụp cuộn dọc), `Ctrl+Alt+T` (chụp lấy chữ), `Ctrl+Alt+C` (hút màu). Màn hình hiện tại, Chụp cuộn ngang và Chụp lại lần gần nhất mặc định không có phím.
@@ -435,6 +460,9 @@ Biên dịch kèm trực tiếp `Models\` (trừ `HelpContent.cs` - dùng Shared
 - Xoay / lật / co giãn: cỡ ảnh, vị trí pixel, `MapPoint`, shape cũ giữ nguyên; mọi chuỗi xoay / lật về hướng ban đầu
   trong ≤ 2 bước (`ImageOrientation.UndoSteps`).
 - Hiệu ứng: Grayscale, Invert, Viền, Đổ bóng (nền trong suốt).
+- Thước đo (`Ruler`): dò cạnh dừng đúng chỗ màu đổi / tới mép ảnh / độ nhạy bỏ qua pixel gần giống / kẹp toạ độ ngoài ảnh /
+  trên SKBitmap; chữ nhật 2 góc bất kỳ; đường thẳng Δx Δy độ dài, Shift ngang / dọc; nhãn pixel logic ở 150%; vẽ lên ảnh;
+  phím tắt mặc định Ctrl+Shift+M (113 test, 2026-11-17).
 - Phiên tạm: lưu → mở lại đủ tab / hình (chữ, mũi tên, góc bo) / hướng ảnh / file đã lưu / tab đang mở; giới hạn số tab +
   dọn file thừa; tắt nhớ tab; `session.json` hỏng; mất 1 file ảnh chỉ bỏ tab đó. Chạy trong thư mục tạm riêng
   (`SCREENCAPTURE_SESSION_DIR` đặt bằng ModuleInitializer) - **không đụng phiên thật** của người dùng.

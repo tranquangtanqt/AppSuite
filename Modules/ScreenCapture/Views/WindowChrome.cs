@@ -20,6 +20,28 @@ internal static class WindowChrome
         }
     }
 
+    /// <summary>
+    /// Lớp phủ toàn màn hình (Vùng chọn, Hút màu, Thước đo): cửa sổ WinUI không viền (OverlappedPresenter, SetBorderAndTitleBar
+    /// false) vẫn chừa khung vài px quanh vùng client (đo ở 150%: 3 px) → ảnh nền lệch xuống-phải so với màn hình thật, vùng
+    /// chọn nhìn thấy và ảnh chụp ra lệch nhau. Gọi sau Activate: nới cửa sổ để vùng client trùng đúng <paramref name="screen"/>.
+    /// </summary>
+    public static void AlignClientTo(Window window, RECT screen)
+    {
+        var hwnd = WindowNative.GetWindowHandle(window);
+        var origin = new POINT();
+        if (!NativeMethods.ClientToScreen(hwnd, ref origin) || !NativeMethods.GetClientRect(hwnd, out var client)
+            || !NativeMethods.GetWindowRect(hwnd, out var outer))
+        {
+            return;
+        }
+        int dx = screen.Left - origin.X, dy = screen.Top - origin.Y;
+        int dw = screen.Width - client.Width, dh = screen.Height - client.Height;
+        if (dx != 0 || dy != 0 || dw != 0 || dh != 0)
+        {
+            window.AppWindow.MoveAndResize(new Windows.Graphics.RectInt32(outer.Left + dx, outer.Top + dy, outer.Width + dw, outer.Height + dh));
+        }
+    }
+
     /// <summary>Đặt cỡ cửa sổ (logical) nhưng không vượt vùng làm việc của màn hình - màn thấp (vd 1366×768 ở 150%) thì hàng
     /// nút cuối cửa sổ không bị rơi xuống dưới mép màn hình.</summary>
     public static void Resize(Window window, double width, double height)

@@ -88,6 +88,13 @@
                     <TextBlock Text="Bảng màu" />
                 </StackPanel>
             </Button>
+            <Button x:Name="RulerButton" Click="RulerButton_Click"
+                    ToolTipService.ToolTip="Thước đo trên màn hình: đo pixel, khoảng cách giữa các thành phần (dò cạnh tự động, chữ nhật, đường thẳng). Phím tắt mặc định Ctrl+Shift+M">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xED5E;" FontSize="14" />
+                    <TextBlock Text="Thước đo" />
+                </StackPanel>
+            </Button>
             <Button x:Name="HelpButton" Click="HelpButton_Click"
                     ToolTipService.ToolTip="Hướng dẫn: tất cả tính năng và phím tắt của ScreenCapture (F1)">
                 <StackPanel Orientation="Horizontal" Spacing="6">

@@ -151,7 +151,7 @@ public sealed partial class CaptureLauncherWindow : Window
         Activate();
     }
 
-    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab, RegionText, PickColor, ColorPalette, CloseAllPins }
+    private enum TrayCommand { FullScreen = 1, ActiveWindow, Region, FixedRegion, OpenLauncher, OpenEditor, Settings, Exit, Scroll, ScrollHorizontal, Help, CurrentMonitor, ReopenClosedTab, RegionText, PickColor, ColorPalette, CloseAllPins, Ruler }
 
     private void ShowTrayMenu()
     {
@@ -167,6 +167,7 @@ public sealed partial class CaptureLauncherWindow : Window
             ((int)TrayCommand.ScrollHorizontal, "Chụp cuộn ngang", true),
             ((int)TrayCommand.RegionText, "Chụp lấy chữ (copy chữ trong vùng)", true),
             ((int)TrayCommand.PickColor, "Hút màu trên màn hình", true),
+            ((int)TrayCommand.Ruler, "Thước đo trên màn hình", true),
             ((int)TrayCommand.ColorPalette, "Bảng màu...", true),
             (0, null, true),
             ((int)TrayCommand.OpenLauncher, "Mở cửa sổ chính", true),
@@ -190,6 +191,7 @@ public sealed partial class CaptureLauncherWindow : Window
             case TrayCommand.ScrollHorizontal: RunInBackground(() => CaptureScrollAsync(ScrollDirection.Horizontal)); break;
             case TrayCommand.RegionText: RunInBackground(CaptureRegionTextAsync); break;
             case TrayCommand.PickColor: RunInBackground(PickColorFromHotkeyAsync); break;
+            case TrayCommand.Ruler: RunInBackground(MeasureScreenAsync); break;
             case TrayCommand.ColorPalette: OpenPalette(); break;
             case TrayCommand.OpenLauncher: ShowLauncher(); break;
             case TrayCommand.OpenEditor: OpenExistingEditor(); break;
@@ -509,6 +511,7 @@ public sealed partial class CaptureLauncherWindow : Window
         HotkeyAction.ScrollCaptureHorizontal => () => CaptureScrollAsync(ScrollDirection.Horizontal),
         HotkeyAction.RegionText => CaptureRegionTextAsync,
         HotkeyAction.PickColor => PickColorFromHotkeyAsync,
+        HotkeyAction.Ruler => MeasureScreenAsync,
         _ => () => Task.CompletedTask,
     });
 
@@ -814,6 +817,7 @@ public sealed partial class CaptureLauncherWindow : Window
     private EditorWindow? _paletteEditor;
 
     private void ColorPaletteButton_Click(object sender, RoutedEventArgs e) => OpenPalette();
+    private void RulerButton_Click(object sender, RoutedEventArgs e) => RunInBackground(MeasureScreenAsync);
 
     /// <summary>Mở (hoặc đưa lên) Bảng màu. <paramref name="editor"/>: mở từ Editor → có nút Dùng làm Màu nét / Màu nền.</summary>
     private void OpenPalette(SKColor? initial = null, EditorWindow? editor = null)
@@ -921,6 +925,56 @@ public sealed partial class CaptureLauncherWindow : Window
         };
         _toast = toast;
         toast.ShowWithoutFocus();
+    }
+
+    /// <summary>Thước đo trên màn hình (phím tắt / menu khay / nút Thước đo): ẩn các cửa sổ của app như Hút màu, đo trên ảnh
+    /// màn hình đứng yên. Enter / Mở trong Editor → ảnh màn hình kèm các vạch đo mở thành tab mới.</summary>
+    private async Task MeasureScreenAsync()
+    {
+        if (_isCapturing)
+        {
+            return;
+        }
+        _isCapturing = true;
+        bool paletteShown = _palette is not null && _palette.AppWindow.IsVisible;
+        SKBitmap? edited = null;
+        try
+        {
+            CloseCaptureToast();
+            if (paletteShown)
+            {
+                _palette!.AppWindow.Hide();
+            }
+            MinimizeForCapture(WindowNative.GetWindowHandle(this));
+            await Task.Delay(200); // chờ Windows vẽ lại phần bị các cửa sổ vừa ẩn che
+            var virtualRect = _captureService.GetVirtualScreenRect();
+            using var frozenScreen = _captureService.CaptureRect(virtualRect);
+            var result = await new RulerOverlayWindow(frozenScreen, virtualRect, _clipboardService.CopyText).MeasureAsync();
+            Log.LogInformation("Thước đo: {Count} số đo, mở Editor: {Open}", result.Measurements.Count, result.OpenInEditor);
+            if (result.OpenInEditor)
+            {
+                edited = frozenScreen.Copy();
+                using var canvas = new SKCanvas(edited);
+                Ruler.Draw(canvas, result.Measurements, (float)(result.Measurements.FirstOrDefault()?.Scale ?? 1.0));
+            }
+        }
+        finally
+        {
+            _isCapturing = false;
+            RestoreLauncherAfterCapture();
+            if (paletteShown && _palette is not null)
+            {
+                _palette.AppWindow.Show();
+            }
+            if (edited is null)
+            {
+                RestoreEditorAfterCancel();
+            }
+        }
+        if (edited is not null)
+        {
+            OpenEditor(edited, "Thước đo");
+        }
     }
 
     private void SaveSettings()

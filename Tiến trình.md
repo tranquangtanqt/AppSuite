@@ -703,6 +703,26 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [ ] Thử tay ảnh ghim trên máy thật: kéo bằng chuột thật, lăn chuột thật (Sandbox gửi message thẳng vào cửa sổ), Ctrl+C sau
   khi bấm vào ảnh, kéo sang màn hình thứ 2 khác DPI
 - [ ] Để sau (ảnh ghim): chế độ bấm xuyên qua ảnh ghim; nhớ các ảnh đang ghim khi tắt mở lại app
+- [x] **Thước đo trên màn hình** (người dùng hỏi + chọn mặc định 2026-11-17, hướng A): phím tắt `Ctrl+Shift+M` / nút Thước đo ở
+  cửa sổ chính / menu khay → màn hình đứng yên, đo bằng pixel thật (màn hình ≠ 100% ghi thêm pixel logic, vd "logic 160 ×
+  146,7 (150%)"). 3 chế độ: **Dò cạnh** (rê chuột → vạch ngang / dọc dừng ở chỗ màu đổi = khoảng trống giữa các thành phần,
+  Độ nhạy 0–100), **Chữ nhật** (kéo, có đường gióng), **Đường thẳng** (Δx, Δy, độ dài; Shift = ngang / dọc). Ghim nhiều số đo,
+  kính lúp + toạ độ (L), mũi tên dời 1 px (Shift 10), Ctrl+C copy chữ số đo, Ctrl+Z / Backspace / chuột phải bỏ số cuối,
+  Delete xoá hết, Enter mở ảnh kèm vạch đo trong Editor (tab "Thước đo"), Esc thoát. Thanh công cụ giữa màn hình có con trỏ,
+  dời sang cạnh dưới khi con trỏ đứng yên sát thanh. `Models/Ruler.cs`, `Views/RulerOverlayWindow.cs`. Cập nhật F1, README. Unit test
+  113/113 (+14); GUI Sandbox (UIA) 25/25 (2026-11-17)
+- [x] **Bug cũ phát hiện khi làm Thước đo** (người dùng đồng ý sửa 2026-11-17): lớp phủ Vùng chọn (dùng cho Vùng chọn / Vùng
+  cố định / Chụp cuộn / Chụp lấy chữ) và Hút màu lệch xuống-phải 3 px so với màn hình thật (Sandbox 150%: ảnh nền bắt đầu ở
+  43 / 523 thay vì 40 / 520) → ảnh chụp ra lệch 3 px so với vùng nhìn thấy, hút màu cạnh viền lấy nhầm pixel. Nguyên nhân:
+  cửa sổ WinUI không viền vẫn chừa khung 3 px. Sửa: `WindowChrome.AlignClientTo` (nới cửa sổ cho vùng client trùng màn hình
+  ảo) cho cả 3 lớp phủ. GUI Sandbox: Hút màu / Vùng chọn khớp màn hình, chọn đúng khoảng trắng → ảnh chụp viền 0 pixel tối
+  (2026-11-17)
+- [x] Bug Thước đo (người dùng báo 2026-11-17, ảnh máy thật): rê chuột tới thanh công cụ thì thanh nhảy lên / xuống, không
+  bấm được nút. Sửa: không né ngay khi tới gần - chỉ dời sang cạnh kia khi con trỏ đứng yên 0,8 giây sát thanh mà không vào
+  thanh, hoặc đang kéo đo tới gần. GUI Sandbox: đi chuột từ từ tới nút Chữ nhật rồi bấm chuột thật → thanh đứng yên, đổi chế
+  độ được (tổng 33/33, 2026-11-17)
+- [ ] Thử tay Thước đo trên máy thật: nhiều màn hình khác DPI, dò cạnh trên trang web / Excel (nền có bóng mờ → chỉnh Độ nhạy)
+- [ ] Hướng B (để sau): công cụ Đo trong Editor (đường kích thước có nhãn px, sửa / hoàn tác như hình vẽ), thước kẻ mép khung ảnh
 
 - [x] Popup **Danh sách ảnh** khi nhiều ảnh bị đẩy lên trên (che nút / tab) hoặc bị cắt mất nút "Mở lại tab vừa đóng"; ít ảnh
   (lọc) thì đúng chỗ (người dùng báo 2026-10-22). Nguyên nhân: danh sách `MaxHeight="520"` cố định + ô lọc + nút ≈ 640 px,

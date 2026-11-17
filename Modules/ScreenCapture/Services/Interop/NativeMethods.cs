@@ -220,6 +220,14 @@ internal static partial class NativeMethods
     [return: MarshalAs(UnmanagedType.Bool)]
     public static partial bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool GetClientRect(IntPtr hWnd, out RECT lpRect);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool ClientToScreen(IntPtr hWnd, ref POINT lpPoint);
+
     [LibraryImport("dwmapi.dll")]
     public static partial int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT pvAttribute, int cbAttribute);
 

@@ -133,6 +133,7 @@ public sealed class ColorPickOverlayWindow : Window
             _background.Source = await LoadBitmapAsync(data.ToArray());
         }
         Activate();
+        WindowChrome.AlignClientTo(this, _virtualRect); // không thì ảnh nền lệch 3 px so với màn hình thật
         NativeMethods.SetForegroundWindow(WindowNative.GetWindowHandle(this));
         FitBackground();
         double scale = Scale;

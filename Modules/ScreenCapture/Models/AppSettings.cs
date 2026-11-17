@@ -116,6 +116,7 @@ public sealed class AppSettings
         new() { Action = HotkeyAction.RepeatLast, Key = HotkeyBinding.NoKey },
         new() { Action = HotkeyAction.RegionText, Ctrl = true, Alt = true, Key = "T" },
         new() { Action = HotkeyAction.PickColor, Ctrl = true, Alt = true, Key = "C" },
+        new() { Action = HotkeyAction.Ruler, Ctrl = true, Shift = true, Key = "M" },
     ];
 
     /// <summary>Luôn có đủ 1 binding cho mỗi HotkeyAction (file cũ thiếu action mới thì bổ sung mặc định).</summary>
@@ -154,6 +155,8 @@ public enum HotkeyAction
     RegionText,
     /// <summary>Hút màu trên màn hình: chọn 1 điểm → copy mã màu, thêm vào Màu tự chọn của Bảng màu (thêm 2026-11-09).</summary>
     PickColor,
+    /// <summary>Thước đo trên màn hình: đo pixel, khoảng cách giữa các thành phần (thêm 2026-11-17).</summary>
+    Ruler,
 }
 
 public sealed class HotkeyBinding
