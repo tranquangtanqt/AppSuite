@@ -207,8 +207,11 @@ public sealed class RulerOverlayWindow : Window
     /// <summary>Ảnh chụp và lớp vẽ tính bằng pixel vật lý, bố cục XAML tính bằng DIP → co về đúng cỡ màn hình.</summary>
     private void FitToScreen()
     {
-        _background.Width = _surface.Width = _virtualRect.Width / Scale;
-        _background.Height = _surface.Height = _virtualRect.Height / Scale;
+        _background.Width = _virtualRect.Width / Scale;
+        _background.Height = _virtualRect.Height / Scale;
+        // Lớp vẽ số đo: số DIP nguyên để bitmap của SKXamlCanvas khớp 1:1 với pixel màn hình (CanvasSize).
+        _surface.Width = CanvasSize.ExactDip(_virtualRect.Width, Scale);
+        _surface.Height = CanvasSize.ExactDip(_virtualRect.Height, Scale);
     }
 
     // ---- Thanh công cụ ----

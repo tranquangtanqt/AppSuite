@@ -125,6 +125,10 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
   `Ruler.NextAxis` (nút "Ngang + dọc / Chỉ ngang / Chỉ dọc" + phím H ở lớp phủ và Editor); lưu `AppSettings.RulerAxis` (giữ
   qua cửa sổ Cài đặt trong `ApplySettings`). Lớp phủ nhận / trả chiều qua constructor / `RulerResult.Axis`; Editor đọc
   `RulerAxisSource` mỗi lần bật Thước đo và báo `RulerAxisChanged`. Thước kẻ Editor chỉ tô khoảng đo ở thước của chiều đang đo.
+- Ảnh nhoè ở màn hình phóng to (bug cũ, sửa 2026-11-17): SKXamlCanvas tạo bitmap `(int)(ActualWidth × scale)` px rồi kéo
+  giãn cho đầy control → khung 332 px ở 150% (221,333 DIP) ra bitmap 331 px → mép ảnh 1 hàng pixel màu pha (125%: nhoè cả
+  chiều ngang). Khung ảnh Editor và lớp vẽ của Thước đo đặt kích thước bằng `CanvasSize.ExactDip`: số DIP nguyên ≥ số pixel
+  cần (150%: bội 3 px, dư tối đa 2 px trong suốt ở mép phải / dưới) → bitmap khớp 1:1. Thước kẻ Editor (rộng `*`) chưa áp.
 
 ### Hướng dẫn (cửa sổ dùng chung `SharedUI.Help.HelpWindow`)
 
@@ -486,7 +490,7 @@ Biên dịch kèm trực tiếp `Models\` (trừ `HelpContent.cs` - dùng Shared
 - Hiệu ứng: Grayscale, Invert, Viền, Đổ bóng (nền trong suốt).
 - Thước đo (`Ruler`): dò cạnh dừng đúng chỗ màu đổi / tới mép ảnh / độ nhạy bỏ qua pixel gần giống / kẹp toạ độ ngoài ảnh /
   trên SKBitmap; chữ nhật 2 góc bất kỳ; đường thẳng Δx Δy độ dài, Shift ngang / dọc; nhãn pixel logic ở 150%; vẽ lên ảnh;
-  phím tắt mặc định Ctrl+Shift+M (113 test); Editor: bước vạch thước kẻ theo zoom, chèn số đo thành hình (chữ nhật / 2 mũi tên / ô chữ trong khung ảnh), vẽ khi canvas có zoom; Dò cạnh chỉ ngang / chỉ dọc (nhãn, nét vẽ, chèn, đổi vòng, mặc định) (129 test, 2026-11-17).
+  phím tắt mặc định Ctrl+Shift+M (113 test); Editor: bước vạch thước kẻ theo zoom, chèn số đo thành hình (chữ nhật / 2 mũi tên / ô chữ trong khung ảnh), vẽ khi canvas có zoom; Dò cạnh chỉ ngang / chỉ dọc (nhãn, nét vẽ, chèn, đổi vòng, mặc định) (129 test); kích thước khung vẽ không nhoè - số DIP nguyên ở 100 / 125 / 150 / 175% (136 test, 2026-11-17).
 - Phiên tạm: lưu → mở lại đủ tab / hình (chữ, mũi tên, góc bo) / hướng ảnh / file đã lưu / tab đang mở; giới hạn số tab +
   dọn file thừa; tắt nhớ tab; `session.json` hỏng; mất 1 file ảnh chỉ bỏ tab đó. Chạy trong thư mục tạm riêng
   (`SCREENCAPTURE_SESSION_DIR` đặt bằng ModuleInitializer) - **không đụng phiên thật** của người dùng.

@@ -731,10 +731,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   Chỉ ngang → Chỉ dọc → Ngang + dọc) + phím H ở cả Thước đo trên màn hình và trong Editor; nhãn / Copy / Mở trong Editor /
   Chèn vào ảnh chỉ có chiều đang đo; nhớ trong cài đặt, dùng chung 2 nơi. Unit test 129/129; GUI Sandbox (UIA) 16/16 + chạy
   lại Thước đo Editor 27/27, Thước đo màn hình 33/33 (2026-11-17)
-- [ ] Bug cũ phát hiện khi làm Thước đo trong Editor (2026-11-17, chưa sửa - chờ người dùng): ở màn hình 150%, ảnh trong
-  Editor nhoè 1 hàng pixel theo chiều dọc khi chiều cao khung ảnh × 1,5 không tròn (vd ảnh cao 300 px: mép trắng / xanh ra
-  1 hàng màu pha). Nghi do SKXamlCanvas tạo bitmap (int)(ActualHeight × 1,5) = 331 px rồi kéo giãn ra 332 px. Có cả khi
-  không dùng Thước đo
+- [x] Bug cũ phát hiện khi làm Thước đo trong Editor (người dùng đồng ý sửa 2026-11-17): ở màn hình phóng to ảnh trong Editor
+  nhoè 1 hàng pixel ở mép (150%: chiều dọc khi chiều cao khung × 1,5 không tròn; 125%: cả chiều ngang) - SKXamlCanvas tạo bitmap
+  (int)(DIP × tỉ lệ) = 331 px rồi kéo giãn ra 332 px. Sửa: khung ảnh Editor + lớp vẽ Thước đo dùng số DIP nguyên
+  (CanvasSize.ExactDip). GUI Sandbox: bản cũ 3 / 3 trường hợp có pixel màu pha, bản mới 0 (100% Di chuyển, 100% Thước đo, 125%);
+  chạy lại Thước đo Editor 27/27, chiều đo 16/16, Thước đo màn hình 33/33; unit test 136/136 (2026-11-17)
 
 - [x] Popup **Danh sách ảnh** khi nhiều ảnh bị đẩy lên trên (che nút / tab) hoặc bị cắt mất nút "Mở lại tab vừa đóng"; ít ảnh
   (lọc) thì đúng chỗ (người dùng báo 2026-10-22). Nguyên nhân: danh sách `MaxHeight="520"` cố định + ô lọc + nút ≈ 640 px,

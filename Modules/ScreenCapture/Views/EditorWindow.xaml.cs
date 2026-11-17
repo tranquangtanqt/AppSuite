@@ -1333,8 +1333,9 @@ public sealed partial class EditorWindow : Window
         }
         _viewOrigin = new SKPoint(CanvasPad - content.Left * _zoom, CanvasPad - content.Top * _zoom);
         double scale = CurrentScale;
-        Canvas.Width = (content.Width * _zoom + 2 * CanvasPad) / scale;
-        Canvas.Height = (content.Height * _zoom + 2 * CanvasPad) / scale;
+        // Số DIP nguyên: SKXamlCanvas cắt (int)(DIP × scale) → thiếu 1 px là ảnh bị kéo giãn, nhoè 1 hàng (CanvasSize).
+        Canvas.Width = CanvasSize.ExactDip(content.Width * _zoom + 2 * CanvasPad, scale);
+        Canvas.Height = CanvasSize.ExactDip(content.Height * _zoom + 2 * CanvasPad, scale);
         Canvas.Invalidate();
     }
 
