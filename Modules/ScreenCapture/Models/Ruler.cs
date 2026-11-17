@@ -114,10 +114,14 @@ public static class Ruler
     /// Vẽ các số đo (đường + nhãn) lên <paramref name="canvas"/> theo toạ độ pixel vật lý. Dùng cho cả lớp phủ lúc đo và ảnh
     /// mở trong Editor. <paramref name="ui"/> = hệ số phóng chữ / nét (tỉ lệ DPI của cửa sổ) để nhãn không quá nhỏ ở 150%.
     /// </summary>
-    public static void Draw(SKCanvas canvas, IEnumerable<RulerMeasurement> measurements, float ui = 1f)
+    /// <param name="bounds">Vùng nhãn phải nằm trong (theo toạ độ của canvas), mặc định = cả canvas. Editor truyền khung ảnh vì canvas
+    /// ở đó đã dời + phóng theo zoom.</param>
+    public static void Draw(SKCanvas canvas, IEnumerable<RulerMeasurement> measurements, float ui = 1f, SKRect? bounds = null)
     {
+        var labelBounds = bounds ?? canvas.DeviceClipBounds;
         using var halo = new SKPaint { Color = HaloColor, StrokeWidth = 3 * ui, Style = SKPaintStyle.Stroke, IsAntialias = false };
-        using var line = new SKPaint { Color = LineColor, StrokeWidth = Math.Max(1, MathF.Round(ui)), Style = SKPaintStyle.Stroke, IsAntialias = false };
+        // ui < 1: Editor đang phóng to (nét tính theo pixel ảnh) → nét mảnh theo đúng tỉ lệ thay vì dày 1 pixel ảnh.
+        using var line = new SKPaint { Color = LineColor, StrokeWidth = ui >= 1 ? MathF.Round(ui) : ui, Style = SKPaintStyle.Stroke, IsAntialias = false };
         using var fill = new SKPaint { Color = LineColor.WithAlpha(36), Style = SKPaintStyle.Fill };
         foreach (var m in measurements)
         {
@@ -130,7 +134,7 @@ public static class Ruler
                     float l = m.X1, r = m.X2 + 1, t = m.Y1, b = m.Y2 + 1;
                     Segments(canvas, [(l, cy, r, cy), (l, cy - tick, l, cy + tick), (r, cy - tick, r, cy + tick),
                                       (cx, t, cx, b), (cx - tick, t, cx + tick, t), (cx - tick, b, cx + tick, b)], halo, line);
-                    DrawLabel(canvas, m, cx + 10 * ui, cy + 10 * ui, cy - 10 * ui, ui, anchorCenter: false);
+                    DrawLabel(canvas, m, cx + 10 * ui, cy + 10 * ui, cy - 10 * ui, ui, anchorCenter: false, labelBounds);
                     break;
                 }
                 case RulerMode.Box:
@@ -139,7 +143,7 @@ public static class Ruler
                     canvas.DrawRect(rect, fill);
                     canvas.DrawRect(rect, halo);
                     canvas.DrawRect(new SKRect(rect.Left + 0.5f, rect.Top + 0.5f, rect.Right - 0.5f, rect.Bottom - 0.5f), line);
-                    DrawLabel(canvas, m, rect.MidX, rect.Bottom + 6 * ui, rect.Top - 6 * ui, ui, anchorCenter: true);
+                    DrawLabel(canvas, m, rect.MidX, rect.Bottom + 6 * ui, rect.Top - 6 * ui, ui, anchorCenter: true, labelBounds);
                     break;
                 }
                 case RulerMode.Line:
@@ -148,7 +152,7 @@ public static class Ruler
                     float dx = bx - ax, dy = by - ay, len = MathF.Max(1, MathF.Sqrt(dx * dx + dy * dy));
                     float nx = -dy / len * tick, ny = dx / len * tick; // vạch đầu mút vuông góc với đoạn
                     Segments(canvas, [(ax, ay, bx, by), (ax - nx, ay - ny, ax + nx, ay + ny), (bx - nx, by - ny, bx + nx, by + ny)], halo, line);
-                    DrawLabel(canvas, m, (ax + bx) / 2, (ay + by) / 2 + 8 * ui, (ay + by) / 2 - 8 * ui, ui, anchorCenter: true);
+                    DrawLabel(canvas, m, (ax + bx) / 2, (ay + by) / 2 + 8 * ui, (ay + by) / 2 - 8 * ui, ui, anchorCenter: true, labelBounds);
                     break;
                 }
             }
@@ -169,7 +173,7 @@ public static class Ruler
 
     /// <summary>Nhãn nền tối chữ trắng, đặt dưới số đo (đỉnh nhãn ở <paramref name="y"/>); không đủ chỗ ở dưới thì lên trên
     /// (đáy nhãn ở <paramref name="yAbove"/>) để không đè lên vạch đo. Luôn nằm trong ảnh (đẩy vào khi sát mép).</summary>
-    private static void DrawLabel(SKCanvas canvas, RulerMeasurement m, float x, float y, float yAbove, float ui, bool anchorCenter)
+    private static void DrawLabel(SKCanvas canvas, RulerMeasurement m, float x, float y, float yAbove, float ui, bool anchorCenter, SKRect bounds)
     {
         using var bold = SKTypeface.FromFamilyName("Segoe UI", SKFontStyle.Bold);
         using var regular = SKTypeface.FromFamilyName("Segoe UI");
@@ -188,7 +192,6 @@ public static class Ruler
         float height = white.FontSpacing + (sub is null ? 0 : dim.FontSpacing);
         float left = anchorCenter ? x - width / 2 - pad : x;
         var box = new SKRect(left, y, left + width + 2 * pad, y + height + 2 * pad);
-        var bounds = canvas.DeviceClipBounds;
         if (box.Right > bounds.Right) box.Offset(bounds.Right - box.Right, 0);
         if (box.Bottom > bounds.Bottom) box.Offset(0, yAbove - box.Bottom);
         if (box.Bottom > bounds.Bottom) box.Offset(0, bounds.Bottom - box.Bottom);
@@ -202,5 +205,118 @@ public static class Ruler
         {
             canvas.DrawText(sub, box.Left + pad, baseline + white.FontMetrics.Descent - dim.FontMetrics.Ascent, dim);
         }
+    }
+
+    /// <summary>
+    /// Bước vạch có số của thước kẻ ở mép khung ảnh (Editor): số "đẹp" 1 / 2 / 5 × 10^k nhỏ nhất sao cho 2 vạch có số cách
+    /// nhau ít nhất <paramref name="minGap"/> trên màn hình. <paramref name="pixelsPerUnit"/> = 1 pixel ảnh chiếm bao nhiêu
+    /// đơn vị màn hình (zoom).
+    /// </summary>
+    public static int TickStep(double pixelsPerUnit, double minGap)
+    {
+        if (pixelsPerUnit <= 0)
+        {
+            return 1;
+        }
+        double needed = minGap / pixelsPerUnit;
+        for (long magnitude = 1; magnitude <= 100_000_000; magnitude *= 10)
+        {
+            foreach (int m in (ReadOnlySpan<int>)[1, 2, 5])
+            {
+                if (m * magnitude >= needed)
+                {
+                    return (int)(m * magnitude);
+                }
+            }
+        }
+        return 1_000_000_000;
+    }
+
+    /// <summary>Vạch nhỏ giữa 2 vạch có số: chia 10 / 5 / 2 (vạch nhỏ cách nhau ≥ <paramref name="minGap"/>), 0 = không có.</summary>
+    public static int MinorTickStep(int step, double pixelsPerUnit, double minGap)
+    {
+        foreach (int parts in (ReadOnlySpan<int>)[10, 5, 2])
+        {
+            if (step % parts == 0 && step / parts * pixelsPerUnit >= minGap)
+            {
+                return step / parts;
+            }
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// Editor → "Chèn vào ảnh": 1 số đo thành các hình vẽ thường (sửa / xoá / di chuyển được như hình tự vẽ): chữ nhật hoặc
+    /// đường có mũi tên 2 đầu (màu hồng của thước) + ô chữ ghi số đo (nền tối chữ trắng). Ô chữ nằm dưới số đo, không đủ chỗ
+    /// thì lên trên, luôn trong <paramref name="image"/>.
+    /// </summary>
+    public static List<AnnotationShape> ToAnnotations(RulerMeasurement m, SKRect image)
+    {
+        const float stroke = 2f;
+        var shapes = new List<AnnotationShape>();
+        float labelX, labelY, labelAbove;
+        bool center;
+        switch (m.Mode)
+        {
+            case RulerMode.Box:
+            {
+                var rect = new SKRect(m.X1, m.Y1, m.X2 + 1, m.Y2 + 1);
+                shapes.Add(new RectangleAnnotation { Bounds = rect, Color = LineColor, StrokeWidth = stroke });
+                (labelX, labelY, labelAbove, center) = (rect.MidX, rect.Bottom + 6, rect.Top - 6, true);
+                break;
+            }
+            case RulerMode.Line:
+            {
+                var a = new SKPoint(m.X1 + 0.5f, m.Y1 + 0.5f);
+                var b = new SKPoint(m.X2 + 0.5f, m.Y2 + 0.5f);
+                shapes.Add(DimensionLine(a, b));
+                float midY = (a.Y + b.Y) / 2;
+                (labelX, labelY, labelAbove, center) = ((a.X + b.X) / 2, midY + 8, midY - 8, true);
+                break;
+            }
+            default:
+            {
+                float cx = m.CursorX + 0.5f, cy = m.CursorY + 0.5f;
+                shapes.Add(DimensionLine(new SKPoint(m.X1, cy), new SKPoint(m.X2 + 1, cy)));
+                shapes.Add(DimensionLine(new SKPoint(cx, m.Y1), new SKPoint(cx, m.Y2 + 1)));
+                (labelX, labelY, labelAbove, center) = (cx + 10, cy + 10, cy - 10, false);
+                break;
+            }
+        }
+
+        var label = new TextAnnotation
+        {
+            Text = m.Label,
+            FontSize = 16,
+            Bold = true,
+            Color = SKColors.White,
+            BackgroundColor = new SKColor(24, 24, 24, 225),
+        };
+        label.Bounds = SKRect.Create(labelX, labelY, 1, 1);
+        label.FitBounds();
+        var box = label.Bounds;
+        if (center) box.Offset(-box.Width / 2, 0);
+        if (box.Right > image.Right) box.Offset(image.Right - box.Right, 0);
+        if (box.Bottom > image.Bottom) box.Offset(0, labelAbove - box.Bottom);
+        if (box.Bottom > image.Bottom) box.Offset(0, image.Bottom - box.Bottom);
+        if (box.Left < image.Left) box.Offset(image.Left - box.Left, 0);
+        if (box.Top < image.Top) box.Offset(0, image.Top - box.Top);
+        label.Bounds = box;
+        shapes.Add(label);
+        return shapes;
+    }
+
+    /// <summary>Đường kích thước: mũi tên 2 đầu; đoạn ngắn (mũi tên sẽ chồng nhau) thì không có mũi tên.</summary>
+    private static LineArrowAnnotation DimensionLine(SKPoint a, SKPoint b)
+    {
+        bool arrows = SKPoint.Distance(a, b) >= 40;
+        return new LineArrowAnnotation
+        {
+            Bounds = LineArrowAnnotation.FromPoints(a, b),
+            Color = LineColor,
+            StrokeWidth = 2f,
+            StartHead = arrows ? ArrowHead.Arrow : ArrowHead.None,
+            EndHead = arrows ? ArrowHead.Arrow : ArrowHead.None,
+        };
     }
 }

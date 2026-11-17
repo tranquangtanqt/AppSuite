@@ -75,7 +75,7 @@ public sealed partial class EditorWindow : Window
     // Flyout property) - nó không có IsChecked nên không nằm trong danh sách bật/tắt dưới đây.
     private List<ToggleButton> ToolButtons => [
         MoveToolButton, SelectToolButton, RectangleToolButton, FilledRectangleToolButton, EllipseToolButton, LineToolButton, ArrowToolButton,
-        PenToolButton, HighlightToolButton, TextToolButton, CalloutToolButton, FillToolButton, MosaicToolButton, BlurToolButton,
+        PenToolButton, HighlightToolButton, TextToolButton, CalloutToolButton, FillToolButton, MosaicToolButton, BlurToolButton, MeasureToolButton,
     ];
 
     /// <param name="restored">Các tab của phiên trước (SessionService.Load), có thể rỗng.</param>
@@ -437,6 +437,7 @@ public sealed partial class EditorWindow : Window
         _isDraggingRegion = false;
         _regionHandle = -1;
         SetRegion(null);
+        ResetMeasurements();
 
         Title = $"ScreenCapture - {TabTitle.Full(vm.Title)}";
         StatusText.Text = vm.StatusText;
@@ -921,6 +922,7 @@ public sealed partial class EditorWindow : Window
         }
         _draftShape?.Draw(canvas, _viewModel.Bitmap);
         DrawTextSearchOverlay(canvas); // chỗ khớp của khung Tìm chữ (không vẽ vào ảnh)
+        DrawMeasureOverlay(canvas); // số đo của Thước đo (không vẽ vào ảnh)
 
         if (_viewModel.SelectedAnnotation is { } selected)
         {
@@ -1487,6 +1489,12 @@ public sealed partial class EditorWindow : Window
             return;
         }
 
+        if (IsMeasuring)
+        {
+            MeasurePressed(pos, e);
+            return;
+        }
+
         if (_viewModel.SelectedTool == CaptureTool.Select)
         {
             // Đã có vùng chọn: bấm trúng 1 trong 8 handle → chỉnh kích thước, bấm bên trong → di chuyển.
@@ -1624,6 +1632,12 @@ public sealed partial class EditorWindow : Window
     {
         var pos = ToCanvasPoint(e.GetCurrentPoint(Canvas).Position);
         bool shift = e.KeyModifiers.HasFlag(Windows.System.VirtualKeyModifiers.Shift);
+
+        if (IsMeasuring)
+        {
+            MeasureMoved(pos, e);
+            return;
+        }
 
         if (_isCropping && e.GetCurrentPoint(Canvas).Properties.IsLeftButtonPressed)
         {
@@ -1867,6 +1881,12 @@ public sealed partial class EditorWindow : Window
     {
         Canvas.ReleasePointerCapture(e.Pointer);
 
+        if (IsMeasuring)
+        {
+            MeasureReleased();
+            return;
+        }
+
         if (_isDraggingRegion || _regionHandle >= 0)
         {
             var r = _regionDrag;
@@ -2028,6 +2048,12 @@ public sealed partial class EditorWindow : Window
                 e.Handled = true;
                 return;
             }
+        }
+
+        if (HandleMeasureKey(e.Key, ctrl))
+        {
+            e.Handled = true;
+            return;
         }
 
         if (ctrl && e.Key == Windows.System.VirtualKey.V)
@@ -2226,6 +2252,7 @@ public sealed partial class EditorWindow : Window
             btn.IsChecked = ReferenceEquals(btn, pressedButton);
         }
         UpdateFormatTab();
+        UpdateMeasureTool();
         Canvas.Invalidate();
     }
 
@@ -2243,6 +2270,7 @@ public sealed partial class EditorWindow : Window
                 btn.IsChecked = false;
             }
         }
+        UpdateMeasureTool();
     }
 
     // ---- Xoay / lật / đổi cỡ cả ảnh ----

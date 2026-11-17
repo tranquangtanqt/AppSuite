@@ -438,6 +438,46 @@
                         </Grid>
                     </Border>
 
+                    <!-- Thước đo trong Editor (EditorWindow.Measure.cs): đo pixel trên ảnh, thước kẻ ở mép trên / trái khung ảnh. -->
+                    <Border Style="{StaticResource RibbonGroupStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                            <StackPanel Orientation="Horizontal" Spacing="2">
+                                <ToggleButton x:Name="MeasureToolButton" Style="{StaticResource ToolButtonStyle}" Click="MeasureToolButton_Click"
+                                              ToolTipService.ToolTip="Thước đo: rê chuột = dò khoảng trống tới chỗ màu đổi, bấm = ghim số đo; kéo = đo chữ nhật; Ctrl + kéo = đo đường thẳng (thêm Shift: ngang / dọc). Hiện thước kẻ ở mép khung ảnh">
+                                    <StackPanel Style="{StaticResource ToolButtonContentStyle}">
+                                        <FontIcon Glyph="&#xED5E;" />
+                                        <TextBlock Text="Thước đo" FontSize="12" />
+                                    </StackPanel>
+                                </ToggleButton>
+                                <StackPanel Spacing="1" VerticalAlignment="Center">
+                                    <Button x:Name="MeasureCopyButton" Style="{StaticResource SmallToolButtonStyle}" Click="MeasureCopyButton_Click" IsEnabled="False"
+                                            ToolTipService.ToolTip="Copy các số đo dạng chữ (Ctrl+C khi đang dùng Thước đo)">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE8C8;" FontSize="12" />
+                                            <TextBlock Text="Copy số đo" FontSize="12" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="MeasureInsertButton" Style="{StaticResource SmallToolButtonStyle}" Click="MeasureInsertButton_Click" IsEnabled="False"
+                                            ToolTipService.ToolTip="Chèn các số đo vào ảnh thành hình vẽ thường (đường mũi tên / chữ nhật + ô chữ) - sửa, xoá được, lưu cùng ảnh (Enter)">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                            <TextBlock Text="Chèn vào ảnh" FontSize="12" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="MeasureClearButton" Style="{StaticResource SmallToolButtonStyle}" Click="MeasureClearButton_Click" IsEnabled="False"
+                                            ToolTipService.ToolTip="Xoá hết số đo đang ghim (Delete; Backspace / chuột phải = bỏ số đo cuối)">
+                                        <StackPanel Style="{StaticResource SmallToolButtonContentStyle}">
+                                            <FontIcon Glyph="&#xE74D;" FontSize="12" />
+                                            <TextBlock Text="Xoá số đo" FontSize="12" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                            <TextBlock Grid.Row="1" Text="Đo" Style="{StaticResource RibbonGroupLabelStyle}" />
+                        </Grid>
+                    </Border>
+
                     <Border Style="{StaticResource RibbonGroupStyle}">
                         <Grid>
                             <Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
@@ -1063,11 +1103,17 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
+        <!-- Thước kẻ ở mép trên / trái khung ảnh: chỉ hiện khi dùng Thước đo, chạy theo zoom + cuộn (EditorWindow.Measure.cs). -->
+        <Grid Margin="0,0,0,8">
+            <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+            <skia:SKXamlCanvas x:Name="HorizontalRuler" Grid.Column="1" Height="20" Visibility="Collapsed" PaintSurface="HorizontalRuler_PaintSurface" />
+            <skia:SKXamlCanvas x:Name="VerticalRuler" Grid.Row="1" Width="20" Visibility="Collapsed" PaintSurface="VerticalRuler_PaintSurface" />
         <!-- IsTabStop: nhận lại focus khi đóng ô gõ chữ trên ảnh, để phím tắt của Editor vẫn chạy. -->
-        <ScrollViewer x:Name="CanvasScroller" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+        <ScrollViewer x:Name="CanvasScroller" Grid.Row="1" Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
                       Background="{ThemeResource CanvasAreaBackgroundBrush}" CornerRadius="4"
-                      IsTabStop="True" UseSystemFocusVisuals="False"
-                      HorizontalContentAlignment="Left" VerticalContentAlignment="Top" Margin="0,0,0,8">
+                      IsTabStop="True" UseSystemFocusVisuals="False" ViewChanged="CanvasScroller_ViewChanged"
+                      HorizontalContentAlignment="Left" VerticalContentAlignment="Top">
             <!-- Viền ảnh + 8 handle khung ảnh vẽ trong Skia (có lề CanvasPad), không dùng viền Border. -->
             <Grid HorizontalAlignment="Left" VerticalAlignment="Top">
                 <skia:SKXamlCanvas x:Name="Canvas"
@@ -1075,12 +1121,14 @@
                                     PointerPressed="Canvas_PointerPressed"
                                     PointerMoved="Canvas_PointerMoved"
                                     PointerReleased="Canvas_PointerReleased"
+                                    PointerExited="Canvas_PointerExited"
                                     DoubleTapped="Canvas_DoubleTapped" />
                 <!-- Ô gõ chữ ngay trên ảnh (Text / Khung chú thích) được thêm vào đây khi đang gõ. Không có Background nên
                      phần trống không chặn chuột của Canvas. -->
                 <Grid x:Name="InlineEditorHost" />
             </Grid>
         </ScrollViewer>
+        </Grid>
 
         <!-- Khung Tìm chữ (EditorWindow.TextSearch.cs): đọc chữ ảnh của tab đang mở 1 lần (nhớ theo ảnh + ngôn ngữ), tìm
              không phân biệt dấu / hoa thường (+ gần đúng ≈), chỗ khớp tô vàng đè lên ảnh (không vẽ vào ảnh). -->

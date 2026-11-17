@@ -111,6 +111,14 @@ public sealed partial class EditorViewModel : ObservableObject
         StatusText = $"{description}.";
     }
 
+    /// <summary>Thước đo → "Chèn vào ảnh": thêm nhiều hình 1 lúc, cả nhóm 1 bước Undo.</summary>
+    public void AddAnnotations(IReadOnlyList<AnnotationShape> shapes, string description)
+    {
+        var commands = shapes.Select(shape => (IEditCommand)new AddAnnotationCommand(Annotations, shape)).ToList();
+        UndoRedo.Do(new CompositeEditCommand(commands, description));
+        StatusText = $"{description}.";
+    }
+
     public void RemoveAnnotation(AnnotationShape shape) =>
         UndoRedo.Do(new RemoveAnnotationCommand(Annotations, shape));
 

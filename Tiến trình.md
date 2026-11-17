@@ -722,7 +722,15 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   thanh, hoặc đang kéo đo tới gần. GUI Sandbox: đi chuột từ từ tới nút Chữ nhật rồi bấm chuột thật → thanh đứng yên, đổi chế
   độ được (tổng 33/33, 2026-11-17)
 - [ ] Thử tay Thước đo trên máy thật: nhiều màn hình khác DPI, dò cạnh trên trang web / Excel (nền có bóng mờ → chỉnh Độ nhạy)
-- [ ] Hướng B (để sau): công cụ Đo trong Editor (đường kích thước có nhãn px, sửa / hoàn tác như hình vẽ), thước kẻ mép khung ảnh
+- [x] **Thước đo trong Editor** (hướng B, người dùng yêu cầu 2026-11-17): nút Thước đo (nhóm Đo, tab Trang chủ; cửa sổ hẹp
+  nằm trong nút Thêm) - rê chuột dò khoảng trống, bấm = ghim, kéo = chữ nhật, Ctrl + kéo = đường thẳng (Shift ngang / dọc),
+  theo pixel ảnh ở mọi mức zoom; thước kẻ mép trên / trái khung ảnh (số theo zoom, vạch hồng con trỏ, dải hồng khoảng đo);
+  Copy số đo / Chèn vào ảnh (thành hình vẽ thường: mũi tên 2 đầu / chữ nhật + ô chữ, 1 bước Hoàn tác) / Xoá số đo. Unit test
+  124/124; GUI Sandbox (UIA) 27/27 (2026-11-17)
+- [ ] Bug cũ phát hiện khi làm Thước đo trong Editor (2026-11-17, chưa sửa - chờ người dùng): ở màn hình 150%, ảnh trong
+  Editor nhoè 1 hàng pixel theo chiều dọc khi chiều cao khung ảnh × 1,5 không tròn (vd ảnh cao 300 px: mép trắng / xanh ra
+  1 hàng màu pha). Nghi do SKXamlCanvas tạo bitmap (int)(ActualHeight × 1,5) = 331 px rồi kéo giãn ra 332 px. Có cả khi
+  không dùng Thước đo
 
 - [x] Popup **Danh sách ảnh** khi nhiều ảnh bị đẩy lên trên (che nút / tab) hoặc bị cắt mất nút "Mở lại tab vừa đóng"; ít ảnh
   (lọc) thì đúng chỗ (người dùng báo 2026-10-22). Nguyên nhân: danh sách `MaxHeight="520"` cố định + ô lọc + nút ≈ 640 px,

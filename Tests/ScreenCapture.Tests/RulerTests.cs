@@ -174,3 +174,93 @@ public class RulerHotkeyTests
         Assert.Equal("Ctrl+Shift+M", binding.Describe());
     }
 }
+
+/// <summary>Thước đo trong Editor (hướng B): thước kẻ mép khung ảnh, Chèn số đo vào ảnh, vẽ khi canvas có zoom.</summary>
+public class EditorRulerTests
+{
+    [Theory]
+    [InlineData(1.0, 50, 50)]    // 100%: vạch có số mỗi 50 px
+    [InlineData(1.5, 75, 50)]    // màn hình 150% (khoảng cách tính theo pixel vật lý) → 50
+    [InlineData(4.0, 50, 20)]    // phóng to 400% → 20 px ảnh = 80 px màn hình
+    [InlineData(0.25, 50, 200)]  // thu nhỏ 25% → 200
+    [InlineData(0.1, 50, 500)]
+    [InlineData(8.0, 50, 10)]
+    public void Buoc_vach_co_so_la_so_dep(double zoom, double minGap, int expected)
+    {
+        Assert.Equal(expected, Ruler.TickStep(zoom, minGap));
+    }
+
+    [Fact]
+    public void Vach_nho_chia_10_5_2_hoac_khong_co()
+    {
+        Assert.Equal(10, Ruler.MinorTickStep(100, 1.0, 5));  // 10 px màn hình / vạch
+        Assert.Equal(10, Ruler.MinorTickStep(50, 0.8, 5));   // 50 / 10 = 4 px màn hình: chật → chia 5
+        Assert.Equal(1, Ruler.MinorTickStep(10, 8.0, 5));
+        Assert.Equal(0, Ruler.MinorTickStep(1, 50, 5));      // bước 1 px: không chia nhỏ được
+    }
+
+    [Fact]
+    public void Chen_chu_nhat_thanh_hinh_chu_nhat_va_o_chu()
+    {
+        var shapes = Ruler.ToAnnotations(Ruler.Box(10, 20, 109, 59), SKRect.Create(400, 300));
+
+        var rect = Assert.IsType<RectangleAnnotation>(shapes[0]);
+        Assert.Equal(new SKRect(10, 20, 110, 60), rect.Bounds);
+        Assert.Equal(Ruler.LineColor, rect.Color);
+        var label = Assert.IsType<TextAnnotation>(shapes[1]);
+        Assert.Equal("100 × 40 px", label.Text);
+        Assert.True(label.Bounds.Top >= 60, "ô chữ nằm dưới chữ nhật");
+        Assert.Equal(60f, label.Bounds.MidX, 1);
+    }
+
+    [Fact]
+    public void Chen_do_canh_thanh_2_duong_mui_ten_2_dau()
+    {
+        var shapes = Ruler.ToAnnotations(new RulerMeasurement(RulerMode.Edges, 3, 0, 102, 9, 50, 4), SKRect.Create(200, 10));
+
+        var across = Assert.IsType<LineArrowAnnotation>(shapes[0]);
+        Assert.Equal((new SKPoint(3, 4.5f), new SKPoint(103, 4.5f)), (across.Start, across.End));
+        Assert.Equal((ArrowHead.Arrow, ArrowHead.Arrow), (across.StartHead, across.EndHead));
+        var down = Assert.IsType<LineArrowAnnotation>(shapes[1]);
+        Assert.Equal((ArrowHead.None, ArrowHead.None), (down.StartHead, down.EndHead)); // 10 px: ngắn quá, bỏ mũi tên
+        var label = Assert.IsType<TextAnnotation>(shapes[2]);
+        Assert.Equal("100 × 10 px", label.Text);
+        Assert.True(label.Bounds.Left >= 0 && label.Bounds.Right <= 200, "ô chữ không ra ngoài ảnh");
+    }
+
+    [Fact]
+    public void O_chu_sat_mep_duoi_thi_len_tren()
+    {
+        var shapes = Ruler.ToAnnotations(new RulerMeasurement(RulerMode.Line, 10, 290, 190, 290), SKRect.Create(200, 300));
+
+        var label = Assert.IsType<TextAnnotation>(shapes[^1]);
+        Assert.True(label.Bounds.Bottom <= 290, $"ô chữ phải lên trên đường đo: {label.Bounds}");
+        Assert.True(label.Bounds.Right <= 200);
+    }
+
+    [Fact]
+    public void Ve_khi_canvas_co_zoom_nhan_nam_trong_khung_anh()
+    {
+        // Ảnh 50×40 phóng 4 lần, dời 16 px như Editor: nhãn phải nằm trong khung ảnh (không theo cả canvas).
+        using var bitmap = new SKBitmap(16 + 200 + 100, 16 + 160 + 100);
+        bitmap.Erase(SKColors.White);
+        using (var canvas = new SKCanvas(bitmap))
+        {
+            canvas.Translate(16, 16);
+            canvas.Scale(4);
+            Ruler.Draw(canvas, [Ruler.Box(10, 30, 39, 39)], 1f / 4, SKRect.Create(50, 40));
+        }
+
+        // Vạch chữ nhật nằm giữa pixel mép (x = 10,5 pixel ảnh = 58 pixel màn hình), mảnh 1 pixel màn hình.
+        Assert.Contains(Ruler.LineColor, new[] { bitmap.GetPixel(57, 16 + 35 * 4), bitmap.GetPixel(58, 16 + 35 * 4) });
+        bool darkOutside = false;
+        for (int y = 16 + 160 + 2; y < bitmap.Height; y++)
+        {
+            for (int x = 0; x < bitmap.Width; x++)
+            {
+                darkOutside |= bitmap.GetPixel(x, y).Red < 100;
+            }
+        }
+        Assert.False(darkOutside, "nhãn tràn xuống dưới khung ảnh");
+    }
+}

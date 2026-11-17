@@ -25,4 +25,6 @@ public enum CaptureTool
     /// <summary>Che vùng bằng ô vuông pixel / làm mờ (RedactAnnotation).</summary>
     Mosaic,
     Blur,
+    /// <summary>Thước đo: đo pixel trên ảnh (dò khoảng trống / chữ nhật / đường thẳng), không vẽ vào ảnh trừ khi Chèn vào ảnh.</summary>
+    Measure,
 }

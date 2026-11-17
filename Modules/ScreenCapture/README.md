@@ -100,7 +100,25 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
 - Phím: Ctrl+C copy chữ các số đo đã ghim (mỗi số 1 dòng, chưa ghim thì số đang hiện), Ctrl+Z / Backspace / chuột phải
   bỏ số vừa ghim (chưa ghim gì thì chuột phải = thoát), Delete xoá hết, Enter → ảnh màn hình + vạch đo mở tab "Thước đo"
   trong Editor, Esc thoát (kèm `GetAsyncKeyState` dự phòng như Hút màu).
-- Chưa có (hướng B, làm sau): công cụ Đo trong Editor, thước kẻ ở mép khung ảnh.
+
+### Thước đo trong Editor (2026-11-17, hướng B)
+
+- Nút *Thước đo* (`MeasureToolButton`, `CaptureTool.Measure`) nhóm *Đo* tab Trang chủ, cạnh 3 nút nhỏ *Copy số đo* /
+  *Chèn vào ảnh* / *Xoá số đo*. Code ở `Views\EditorWindow.Measure.cs`; hook trong `EditorWindow.xaml.cs` (Pointer
+  Pressed / Moved / Released, `DrawMeasureOverlay` cuối PaintSurface, `HandleMeasureKey` trong KeyDown, `UpdateMeasureTool`
+  trong `SelectTool` / nút Cắt, `ResetMeasurements` khi đổi tab).
+- Cùng logic với lớp phủ (`Ruler.FindEdges`, `Ruler.Box`, `Ruler.SnapLine`, `Ruler.Draw`) nhưng theo pixel ảnh
+  (`_viewModel.Bitmap`, không tính hình vẽ); nét / nhãn chia cho zoom (`ui = scale / zoom`), nhãn kẹp trong khung ảnh
+  (tham số `bounds` của `Ruler.Draw`). Rê = dò cạnh, bấm không kéo (< 4 px màn hình) = ghim dò cạnh, kéo = chữ nhật,
+  Ctrl + kéo = đường thẳng (Shift = ngang / dọc). Số đo là lớp vẽ đè, không vào ảnh; cắt / xoay / đổi cỡ ảnh (Bitmap đổi)
+  thì bỏ số đo cũ.
+- Thước kẻ: 2 `SKXamlCanvas` (`HorizontalRuler` / `VerticalRuler`, 20 DIP) quanh `CanvasScroller`, chỉ hiện khi dùng
+  Thước đo; vẽ lại khi Canvas vẽ lại và `ViewChanged`. Vạch có số theo `Ruler.TickStep` (1 / 2 / 5 × 10^k, cách ≥ 50 px),
+  vạch nhỏ `Ruler.MinorTickStep`; vạch hồng = con trỏ, dải hồng = khoảng đang đo.
+- Phím (chỉ khi đã ghim): Ctrl+C copy chữ số đo, Backspace / chuột phải bỏ số cuối, Delete / Esc xoá hết, Enter = Chèn vào
+  ảnh. *Chèn vào ảnh*: `Ruler.ToAnnotations` → `RectangleAnnotation` / `LineArrowAnnotation` mũi tên 2 đầu (đoạn < 40 px
+  không mũi tên) màu `Ruler.LineColor` + `TextAnnotation` nền tối chữ trắng 16 px, thêm bằng `EditorViewModel.AddAnnotations`
+  (1 bước Hoàn tác). Bấm vào ảnh đưa tiêu điểm về `CanvasScroller` để Enter không bấm lại nút Thước đo.
 
 ### Hướng dẫn (cửa sổ dùng chung `SharedUI.Help.HelpWindow`)
 
@@ -462,7 +480,7 @@ Biên dịch kèm trực tiếp `Models\` (trừ `HelpContent.cs` - dùng Shared
 - Hiệu ứng: Grayscale, Invert, Viền, Đổ bóng (nền trong suốt).
 - Thước đo (`Ruler`): dò cạnh dừng đúng chỗ màu đổi / tới mép ảnh / độ nhạy bỏ qua pixel gần giống / kẹp toạ độ ngoài ảnh /
   trên SKBitmap; chữ nhật 2 góc bất kỳ; đường thẳng Δx Δy độ dài, Shift ngang / dọc; nhãn pixel logic ở 150%; vẽ lên ảnh;
-  phím tắt mặc định Ctrl+Shift+M (113 test, 2026-11-17).
+  phím tắt mặc định Ctrl+Shift+M (113 test); Editor: bước vạch thước kẻ theo zoom, chèn số đo thành hình (chữ nhật / 2 mũi tên / ô chữ trong khung ảnh), vẽ khi canvas có zoom (124 test, 2026-11-17).
 - Phiên tạm: lưu → mở lại đủ tab / hình (chữ, mũi tên, góc bo) / hướng ảnh / file đã lưu / tab đang mở; giới hạn số tab +
   dọn file thừa; tắt nhớ tab; `session.json` hỏng; mất 1 file ảnh chỉ bỏ tab đó. Chạy trong thư mục tạm riêng
   (`SCREENCAPTURE_SESSION_DIR` đặt bằng ModuleInitializer) - **không đụng phiên thật** của người dùng.

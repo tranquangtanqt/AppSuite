@@ -270,6 +270,15 @@ public static class HelpContent
             new("Mở trong Editor, thoát", "Enter hoặc nút Mở trong Editor: ảnh màn hình kèm các vạch đo + nhãn mở thành tab mới \"Thước đo\" để ghi chú, lưu, gửi. Esc / nút Đóng / chuột phải khi chưa ghim gì = thoát.", "Enter", "Esc"),
         ]),
 
+        new("Thước đo trong Editor", "", "Đo pixel trên ảnh đang mở (ảnh chụp, ảnh mở từ file): nút Thước đo, nhóm Đo, tab Trang chủ (cửa sổ hẹp: trong nút Thêm). Đơn vị là pixel của ảnh, đúng ở mọi mức zoom; đo trên ảnh gốc, không tính hình đã vẽ.",
+        [
+            new("Thước kẻ", "Bật Thước đo thì mép trên và mép trái khung ảnh có thước kẻ (số = pixel ảnh, tự đổi bước theo zoom). Vạch hồng = vị trí con trỏ, dải hồng = khoảng đang đo. Thanh trạng thái ghi số đo và toạ độ con trỏ. Chọn công cụ khác thì thước kẻ ẩn và các số đo chưa chèn mất đi."),
+            new("Dò khoảng trống", "Rê chuột vào khoảng trống giữa 2 thành phần: vạch ngang / dọc tự dừng ở chỗ màu đổi, nhãn ghi rộng × cao. Bấm chuột (không kéo) = ghim số đo."),
+            new("Chữ nhật, đường thẳng", "Kéo = đo chữ nhật (rộng × cao, tính cả 2 pixel đầu). Giữ Ctrl khi kéo = đo đường thẳng (Δx, Δy, độ dài), thêm Shift = đường ngang / dọc. Thả chuột = ghim. Phóng to (Ctrl + lăn chuột) để đặt đúng từng pixel.", "Kéo chuột", "Ctrl", "Shift"),
+            new("Copy, bỏ số đo", "Copy số đo (Ctrl+C khi đã ghim): chép chữ các số đo, mỗi số đo 1 dòng. Bỏ số đo vừa ghim: Backspace / chuột phải; Xoá số đo (Delete / Esc): bỏ hết. Chưa ghim gì thì Ctrl+C vẫn copy ảnh như thường.", "Ctrl+C", "Backspace", "Delete"),
+            new("Chèn vào ảnh", "Nút Chèn vào ảnh (Enter): các số đo đã ghim thành hình vẽ thường - đường mũi tên 2 đầu / khung chữ nhật màu hồng + ô chữ ghi số đo - di chuyển, sửa, xoá được như hình tự vẽ và lưu cùng ảnh. Ctrl+Z bỏ cả lần chèn.", "Enter"),
+        ]),
+
         new("Cài đặt", "\uE713", "Nút Cài đặt ở cửa sổ chính, tab Tệp của Editor hoặc menu khay. Bấm OK mới lưu; Mặc định đưa mọi tuỳ chọn về ban đầu.",
         [
             new("Chung", "Hẹn giờ trước khi chụp; Sau khi chụp (chọn nhiều việc): Mở trong Editor, Copy vào clipboard, Tự lưu file, Hiện thông báo nhỏ ở góc màn hình, Ghim ảnh lên màn hình - tắt Editor để chụp nhanh liên tục, phải chọn ít nhất 1 việc; chụp kèm con trỏ chuột (Toàn màn hình, Màn hình hiện tại, Cửa sổ hiện tại, Chụp lại lần trước - không áp cho vùng chọn / chụp cuộn); chạy ngầm ở khay hệ thống; khởi động cùng Windows."),
