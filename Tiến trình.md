@@ -480,6 +480,11 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   riêng "Đơn cần xác nhận". Unit test 284/284; GUI Sandbox (UIA) 17/17 (2026-11-16)
 - [ ] Người dùng thử tay Đơn cần xác nhận trên dữ liệu thật (chưa rõ khách ở form + Nhập hàng loạt, món 1đ, Chọn khách đúng)
 - [ ] Ô lọc khách ở Đặt hàng tìm cả trong ghi chú (đã gợi ý, chưa làm - ô hiện chọn 1 khách, cần đổi cách lọc)
+- [ ] Đề xuất cải tiến MeRon (2026-11-16, chờ người dùng chọn; khuyên làm theo thứ tự): Phiếu chuẩn bị theo ngày giao (tổng số
+  lượng từng món + danh sách giao theo toà / khu, chụp ảnh gửi Zalo); Nhập đơn hàng loạt nhiều ngày 1 lần dán; sao chép nhiều
+  đơn sang ngày khác. Nhỏ: Hoàn tác "Đã thanh toán" 1 đơn; tự sao lưu khi qua ngày mới lúc app vẫn mở; Khách lâu không đặt
+  "đã liên hệ"; áp giá mới cho đơn chưa thanh toán; doanh thu theo khu; so cùng kỳ năm trước
+- [ ] Commit các việc MeRon 2026-11-16 rồi publish MeRon vào Application\ (bản đang dùng còn cũ)
 - [x] **Chuông Thông báo** ở chân menu trái (người dùng 2026-11-16 chọn cách B; bỏ khung nhắc xuất ở Đặt hàng; có dòng sao lưu):
   số cam = việc đang chờ; khung liệt kê n đơn cần xác nhận (chưa rõ khách / chưa có giá / tự đánh dấu) → Xem các đơn (mở Đặt
   hàng, lọc Cần xác nhận bật sẵn); Chưa xuất sang điện thoại → Xuất lên Google Drive ngay trong khung; Sao lưu gần nhất (thành
@@ -1410,3 +1415,14 @@ dùng chọn lượt / mục; nên commit Đợt 1 + 2 trước):
 - [ ] **[Đề xuất · Có thể]** Thiết kế lại giao diện - đợt 2 (mục 5–7 còn lại): (5) sọc dòng, số canh phải, cố định cột đầu,
   ẩn / hiện hàng lọc; (6) thanh trạng thái: encoding / dấu phân cách là nút, Đếm / Tổng / TB vùng chọn; (7) lỗi dữ liệu
   thành InfoBar bấm nhảy tới dòng
+- [x] **So sánh 2 file CSV** (người dùng duyệt thiết kế + bản thử 2026-11-17; ảnh bản thử `Pictures\AppSuite_UI\CsvEditor_SoSanh_2026-11-17`):
+  nút `⇄` / `Ctrl+Shift+D` so bảng đang mở (A) với file B theo bản ghi và từng ô. Hộp thoại: file B (Chọn / kéo-thả / file gần
+  đây), ghép **theo cột khoá** (tích 1 hoặc nhiều cột, tự gợi ý cột / tổ hợp ≤ 3 cột không trùng, dòng kiểm tra ✓ / ⚠ trùng kèm
+  ví dụ) hoặc **không có cột khoá** - tự căn theo thứ tự dòng (Myers như FileTools, dòng giống ≥ 1 nửa số cột = Sửa), cách so
+  (bỏ khoảng trắng, hoa thường, số theo giá trị), bỏ qua cột. Cửa sổ kết quả: mỗi ô khác 1 dòng (Khoá | Cột | A | B | Trạng thái),
+  4 ô số Giống / Sửa / Chỉ có ở B / Chỉ có ở A là bộ lọc (ẩn Giống sẵn), tìm, đổi chỗ A ⇄ B, Tuỳ chọn..., bấm đúp / Enter tới ô
+  trong A, F8 chỗ khác kế tiếp, Xuất Excel (sheet Kết quả tô màu + Tóm tắt). Cập nhật F1 (mục So sánh 2 file), README. Unit test
+  241/241 (+28 `CompareTests`); GUI Sandbox (UIA) 32/32 (51/6/5/3 với file đổi thứ tự cột + thêm cột, khoá trùng ⚠, thiếu B /
+  thiếu khoá báo lỗi, F8 + Enter phím thật, xuất Excel, theo thứ tự dòng, đổi chỗ, không có khoá → chọn sẵn căn dòng 5/1/1/0,
+  khoá ghép Mã KH + Tháng, Tối) (2026-11-17)
+- [ ] Người dùng thử tay So sánh 2 file với file thật (file IF nhiều cột, file lớn, Shift-JIS) và mở file Excel xuất ra

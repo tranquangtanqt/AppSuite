@@ -67,6 +67,17 @@ internal static class HelpContent
             new("Sắp xếp", "Sắp xếp nhiều cột theo thứ tự ưu tiên; nhanh hơn: chuột phải tiêu đề cột → tăng / giảm dần. Ô là số (2.5 hoặc 2,5) thì so theo số, còn lại so chữ. ✕ trên thẻ Sắp xếp trả về thứ tự gốc. Sắp xếp chỉ là cách hiển thị - Lưu vẫn giữ thứ tự gốc của file."),
         ]),
 
+        new("So sánh 2 file", "", "So file đang mở (A) với 1 file CSV khác (B): bản ghi nào sửa ô nào, thêm, bớt.",
+        [
+            new("Mở", "Nút ⇄ cạnh 📊 trên thanh công cụ, hoặc Ctrl+Shift+D. File A là bảng đang mở (kể cả sửa chưa lưu - so được bản đang sửa với bản trên đĩa). Chọn file B bằng Chọn..., kéo-thả vào ô File B, dán đường dẫn, hoặc nút 🕘 file gần đây. File B tự nhận bảng mã / dấu phân cách như lúc mở file.", "Ctrl+Shift+D"),
+            new("Ghép theo cột khoá", "Tích 1 hoặc nhiều cột (vd Mã KH, hoặc Mã KH + Tháng): bản ghi A và B ghép với nhau khi giống nhau ở mọi cột đã tích. Mở hộp thoại thì tự chọn sẵn: cột không trống, không trùng (ưu tiên tên giống mã / id); không có thì tổ hợp 2 - 3 cột. Dòng kiểm tra ngay dưới báo ✓ không trùng, hoặc ⚠ số giá trị bị trùng kèm ví dụ - vẫn so được, bản ghi cùng khoá ghép theo thứ tự xuất hiện, nhưng nên tích thêm cột."),
+            new("Không có cột khoá", "Chọn Không có cột khoá: tự căn theo thứ tự dòng (tự chọn sẵn khi không tìm được khoá). Dòng giống hệt được căn với nhau nên chèn / xoá 1 dòng ở giữa không làm lệch các dòng sau; dòng giống từ 1 nửa số cột trở lên tính là Sửa, còn lại là Chỉ có ở A / B. Cột Khoá ghi số dòng (Dòng 12 → 13). File B bị sắp xếp lại thì các dòng đổi chỗ thành thêm + bớt - khi đó dùng cột khoá. 2 file khác nhau quá nhiều (trên ~4.000 chỗ) thì chỉ ghép dòng giống hệt, không đoán Sửa."),
+            new("Cách so", "Bỏ khoảng trắng đầu / cuối ô (mặc định bật), Không phân biệt hoa thường (mặc định tắt), Số bằng nhau coi là giống - 1.0 = 1, 50000 = 50000.00 (mặc định bật; không đoán dấu phân nhóm nên 1,000 ≠ 1000). Bỏ qua cột: tích cột không cần so (vd ngày cập nhật). Cột ghép theo tên (không phân biệt hoa thường) nên thứ tự cột 2 file khác nhau vẫn so được; cột chỉ có ở 1 file được ghi ở dưới cùng, không tính là sửa."),
+            new("Đọc kết quả", "Cửa sổ riêng (file A không đổi). Trên cùng: A ⇄ B (nút ⇄ đổi chỗ), khoá đang dùng, Tuỳ chọn... (đổi file B / khoá / cách so), Xuất Excel. 4 ô số Giống / Sửa (số ô) / Chỉ có ở B (thêm) / Chỉ có ở A (bớt) cũng là bộ lọc: bấm để hiện / ẩn loại đó - mặc định ẩn Giống. Bảng: mỗi ô khác 1 dòng (Khoá | Cột | File A | File B | Trạng thái), bản ghi sửa nhiều ô chỉ ghi khoá ở dòng đầu; bản ghi thêm / bớt / giống là 1 dòng (cả bản ghi) với 3 giá trị đầu. Ô tìm lọc theo khoá, tên cột, giá trị.", "Ctrl+F"),
+            new("Tới ô trong file A", "Bấm đúp hoặc Enter trên 1 dòng kết quả: cửa sổ chính chọn đúng ô đó để sửa luôn. F8 / Shift+F8: bản ghi khác kế tiếp / trước đó. Không tới được khi dòng đang bị lọc ở cửa sổ chính, khi bản ghi chỉ có ở B, hoặc khi đã đổi chỗ A ⇄ B.", "F8", "Shift+F8", "Enter"),
+            new("Xuất Excel", "Xuất các dòng đang hiện (theo 4 ô lọc + ô tìm) ra .xlsx: sheet Kết quả tô màu theo trạng thái (vàng Sửa, xanh thêm, đỏ bớt, xám giống), tiêu đề cố định + nút lọc; sheet Tóm tắt ghi 2 file, cách ghép / so, số lượng, cột chỉ có ở 1 file. Mọi ô ghi thành chữ (giữ 00123, 1.0 như trong file)."),
+        ]),
+
         new("Thống kê & cảnh báo", "", "Số liệu từng cột và các vấn đề phát hiện trong file.",
         [
             new("Thống kê", "Nút 📊 cạnh Sắp xếp. Số dòng, số cột, dòng trùng; theo từng cột: số ô rỗng, giá trị khác nhau, Nhỏ nhất / Lớn nhất / Trung bình / Tổng (với cột số)."),
@@ -86,6 +97,7 @@ internal static class HelpContent
             new("Đi tới dòng", "", "Ctrl+G"),
             new("Đi tới cột theo tên", "", "Ctrl+Shift+G"),
             new("Xem dọc dòng đang chọn (mở / đóng)", "", "Ctrl+R"),
+            new("So sánh với file khác / chỗ khác kế tiếp", "", "Ctrl+Shift+D", "F8", "Shift+F8"),
             new("Sửa ô / xong / huỷ", "", "F2", "Enter", "Esc"),
             new("Hướng dẫn", "", "F1"),
         ]),

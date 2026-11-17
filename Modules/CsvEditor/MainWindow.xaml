@@ -208,6 +208,13 @@
                     <Button Click="StatisticsButton_Click" AccessKey="K" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}" ToolTipService.ToolTip="Thống kê từng cột (đếm, trống, tổng, nhỏ nhất / lớn nhất...)" AutomationProperties.Name="Thống kê">
                         <FontIcon Glyph="&#xE9D9;" FontSize="14" />
                     </Button>
+                    <Button x:Name="CompareButton" Click="CompareButton_Click" AccessKey="B" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}"
+                            ToolTipService.ToolTip="So sánh với file khác: bản ghi / ô nào sửa, thêm, bớt (Ctrl+Shift+D)" AutomationProperties.Name="So sánh với file khác">
+                        <FontIcon Glyph="&#xE8AB;" FontSize="14" />
+                        <Button.KeyboardAccelerators>
+                            <KeyboardAccelerator Key="D" Modifiers="Control,Shift" />
+                        </Button.KeyboardAccelerators>
+                    </Button>
                     <ToggleButton x:Name="RecordViewToggle" Click="RecordViewToggle_Click" AccessKey="V" IsEnabled="{x:Bind HasColumns(ViewModel.ColumnCount), Mode=OneWay}"
                                   ToolTipService.ToolTip="Xem dọc dòng đang chọn: tên cột - giá trị, sửa được, tìm cột (Ctrl+R)" AutomationProperties.Name="Xem dọc">
                         <FontIcon Glyph="&#xE8A0;" FontSize="14" />

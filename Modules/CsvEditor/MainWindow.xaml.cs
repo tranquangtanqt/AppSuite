@@ -113,7 +113,14 @@ public sealed partial class MainWindow : Window
             }
         };
 
-        Closed += (_, _) => _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn
+        Closed += (_, _) =>
+        {
+            _helpWindow?.Close(); // đóng app thì đóng luôn cửa sổ Hướng dẫn và các cửa sổ So sánh
+            foreach (var window in _compareWindows.ToList())
+            {
+                window.Close();
+            }
+        };
 
         RebuildColumns();
     }
@@ -1662,6 +1669,40 @@ public sealed partial class MainWindow : Window
         {
             ViewModel.IsBusy = false;
         }
+    }
+
+    // ----- So sánh với file khác (Views/CompareWindow) -----
+
+    private readonly List<CompareWindow> _compareWindows = new();
+
+    private async void CompareButton_Click(object sender, RoutedEventArgs e)
+    {
+        var fileService = new CsvFileService(new EncodingDetector(), new DelimiterDetector(), new ValidationService());
+        var recent = _recentFiles.Paths
+            .Where(p => !string.Equals(p, ViewModel.Document.FilePath, StringComparison.OrdinalIgnoreCase) && File.Exists(p))
+            .ToList();
+        var window = await CompareWindow.StartAsync(this, Content.XamlRoot, fileService, ViewModel.Document, recent, GoToCompareCell);
+        if (window is not null)
+        {
+            _compareWindows.Add(window);
+            window.Closed += (_, _) => _compareWindows.Remove(window);
+            FileLog.LogInformation("So sánh: {FileA} với file khác", ViewModel.Document.FilePath);
+        }
+    }
+
+    /// <summary>Bấm đúp 1 dòng kết quả so sánh: chọn ô đó trong bảng (theo lọc / sắp xếp đang hiện). False nếu dòng đang
+    /// bị lọc hoặc đã xoá.</summary>
+    private bool GoToCompareCell(CsvRow row, int columnIndex)
+    {
+        var index = ViewModel.ViewRows.IndexOf(row);
+        if (index < 0)
+        {
+            return false;
+        }
+        NavigateToCell(new CellRef(index, columnIndex));
+        Activate();
+        Grid.Focus(FocusState.Programmatic);
+        return true;
     }
 
     // ----- Hướng dẫn (F1) -----

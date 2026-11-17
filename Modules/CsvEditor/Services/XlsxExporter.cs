@@ -181,7 +181,7 @@ public static partial class XlsxExporter
     private static partial Regex PlainNumberRegex();
 
     /// <summary>Bỏ ký tự XML không cho phép (ký tự điều khiển, surrogate lẻ) - còn sót thì Excel báo file hỏng.</summary>
-    private static string CleanText(string value)
+    internal static string CleanText(string value)
     {
         StringBuilder? sb = null;
         for (var i = 0; i < value.Length; i++)

@@ -29,11 +29,11 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 
 ## Toolbar
 
-Alt hiện chữ tắt (`AccessKey`): M Mở, G File gần đây, L Lưu, X Xuất, H Hoàn tác, A Làm lại, D Dòng, C Cột, T Tìm, I Đi tới dòng, O Lọc, S Sắp xếp, K Thống kê, V Xem dọc, E Giao diện, N Hướng dẫn. Mọi nút và ô lọc có `AutomationProperties.Name`.
+Alt hiện chữ tắt (`AccessKey`): M Mở, G File gần đây, L Lưu, X Xuất, H Hoàn tác, A Làm lại, D Dòng, C Cột, T Tìm, I Đi tới dòng, O Lọc, S Sắp xếp, K Thống kê, B So sánh, V Xem dọc, E Giao diện, N Hướng dẫn. Mọi nút và ô lọc có `AutomationProperties.Name`.
 
 Cửa sổ hẹp hơn 1040 logical (`RootGrid_SizeChanged`): Xuất, Dòng, Cột, Tìm, Lọc, Sắp xếp chỉ còn icon + tooltip.
 
-`Mở` `🕘` `Lưu` `Xuất ▾` | `↶` `↷` | `Dòng ▾` `Cột ▾` | `Tìm` `→` `Lọc` `Sắp xếp` `📊` `▤` … `?` (giao diện làm lại
+`Mở` `🕘` `Lưu` `Xuất ▾` | `↶` `↷` | `Dòng ▾` `Cột ▾` | `Tìm` `→` `Lọc` `Sắp xếp` `📊` `⇄` `▤` … `?` (`⇄` = So sánh với file khác, `Ctrl+Shift+D` - thêm 2026-11-17; giao diện làm lại
 2026-11-03: tiếng Việt, việc ít dùng gom vào menu thả xuống - vừa 1 hàng ở cửa sổ ~1000 px). Nút có phím tắt đều nằm ngoài
 menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đang mở). Tiêu đề cửa sổ = tên file (`● ` khi chưa lưu).
 
@@ -143,6 +143,42 @@ menu thả xuống (phím tắt của mục trong menu chỉ chạy khi menu đa
   Sao chép / Dán dùng dạng Tab như Excel (ô có tab / xuống dòng / ngoặc kép được bọc `"…"`), nên dán qua lại với Excel vẫn
   đúng từng ô.
 
+## So sánh 2 file (2026-11-17)
+
+Nút `⇄` / `Ctrl+Shift+D`: so bảng đang mở (A, kể cả sửa chưa lưu) với 1 file CSV / TSV khác (B), theo **bản ghi và từng ô**
+(khác FileTools › So sánh 2 file - so từng dòng chữ). Phần so: `Services/CsvCompare` (không phụ thuộc WinUI, có unit test);
+giao diện: `Views/CompareWindow` (hộp thoại dựng bằng code + cửa sổ kết quả); xuất Excel: `Services/CompareXlsxExporter`.
+
+- **Hộp thoại**: file B (Chọn..., kéo-thả, dán đường dẫn, file gần đây - đọc bằng `CsvFileService` nên tự nhận bảng mã /
+  dấu phân cách, cùng lựa chọn "Dòng đầu là tiêu đề" với A). **Ghép bản ghi**:
+  - *Theo cột khoá* - tích 1 hoặc nhiều cột (khoá ghép, vd Mã KH + Tháng). `SuggestKey` chọn sẵn: 1 cột không trống, không
+    trùng (ưu tiên tên chứa id / mã / code / key / コード / 番号), không có thì tổ hợp 2 rồi 3 cột trong 10 cột đầu; xét 20.000
+    dòng đầu. `CheckKey` chạy nền mỗi lần đổi khoá / cách so: `✓ … không trùng` hoặc `⚠ n giá trị bị trùng (vd "W3" có 15
+    dòng), m dòng trống khoá` - vẫn so được, khoá trùng ghép theo thứ tự xuất hiện.
+  - *Không có cột khoá: tự căn theo thứ tự dòng* (chọn sẵn khi `SuggestKey` không tìm được). Mỗi dòng → 1 số (dòng giống nhau
+    theo cách so = cùng số), cắt đầu / cuối giống nhau rồi Myers (chép từ `FileTools.Core.TextDiff` - module không reference
+    nhau, giới hạn 4.000 bước); trong mỗi đoạn khác ghép dòng A với dòng B giống nhất (theo thứ tự) nếu giống ≥ 1 nửa số cột →
+    Sửa, còn lại Chỉ có ở A / B. Quá 4.000 bước → `TooDifferent`: chỉ ghép dòng giống hệt như tập hợp. Khoá hiển thị
+    `Dòng 12 → 13`, `Dòng 4 (B)`. Ở cách này cột khoá cũng được đem so.
+  - **Cách so** (`Canonical`): bỏ khoảng trắng đầu / cuối (mặc định bật), không phân biệt hoa thường (tắt), số theo giá trị qua
+    `CsvNumber` (bật: 1.0 = 1, 00123 = 123; không nhận dấu phân nhóm). **Bỏ qua cột** (cột khoá không tích được).
+  - Cột 2 file ghép theo tên (không phân biệt hoa thường, bỏ khoảng trắng); cột chỉ có ở 1 bên báo riêng. File B thiếu cột khoá →
+    hộp thoại "Không so sánh được" liệt kê cột của B.
+- **Cửa sổ kết quả** (1000 × 600 logical, không quá 95% vùng màn hình, đặt giữa): A ⇄ B (đổi chỗ), khoá, *Tuỳ chọn...*,
+  *Xuất Excel*; 4 ô số Giống / Sửa (n ô) / Chỉ có ở B / Chỉ có ở A = bộ lọc bấm bật / tắt (mặc định ẩn Giống); ô tìm (khoá, cột,
+  giá trị; trễ 250 ms). Bảng `ListView` (ảo hoá): mỗi ô khác 1 dòng `Khoá | Cột | File A | File B | Trạng thái`, bản ghi sửa nhiều
+  ô chỉ ghi khoá ở dòng đầu + vạch ngăn nhóm; bản ghi Giống / thêm / bớt 1 dòng *(cả bản ghi)* tóm tắt 3 giá trị đầu - cả 2 bên
+  theo thứ tự cột của A. Màu theo `SystemFillColorCaution / Success / Critical(Background)Brush` nên tự đúng Sáng / Tối. So chạy
+  nền (`Task.Run`, `ProgressRing`). Thứ tự: theo khoá = bản ghi có ở cả 2 (theo A) → chỉ có ở B → chỉ có ở A; theo thứ tự dòng =
+  theo file.
+- **Tới ô trong A**: bấm đúp / Enter (`PreviewKeyDown` - `KeyDown` không tới vì `ListViewItem` tự xử lý Enter) → `GoToCompareCell`
+  ở cửa sổ chính (`ViewRows.IndexOf` → `NavigateToCell`; dòng đang bị lọc → báo ở chân cửa sổ). `F8` / `Shift+F8` = bản ghi khác
+  kế tiếp / trước (quay vòng). Đóng cửa sổ chính thì đóng mọi cửa sổ So sánh.
+- **Xuất Excel**: các dòng đang hiện → sheet *Kết quả* (tô màu theo trạng thái, tiêu đề cố định + nút lọc, mọi ô là chữ) + sheet
+  *Tóm tắt*. `XlsxExporter.CleanText` đổi sang `internal` để dùng chung.
+- Lưu ý XAML: phần tử có `x:Name` trùng tên thuộc tính của kiểu trong `DataTemplate x:DataType` (vd `StatusText`) làm XAML
+  compiler lỗi `WMC9999` không rõ lý do.
+
 ## Dữ liệu lớn
 
 File được đọc bất đồng bộ (không chặn UI) kèm progress bar và có thể Hủy giữa chừng, nhưng luôn nạp
@@ -191,7 +227,8 @@ chỉ bọc ngoặc kép khi cần, giữ delimiter/encoding/BOM, Save As), **Se
 hoa thường), **Sort** (số / chữ, nhiều cột, không đổi dữ liệu gốc), **Filter** (mọi toán tử, NOT,
 AND/OR), **Statistics**, **Undo/Redo** (mọi thao tác sửa, dán / thay thế = 1 bước, trạng thái "chưa lưu"). Thêm sau:
 dòng tiêu đề / dòng dài, **Export .xlsx** (đọc lại bằng Open XML SDK + kiểm schema), clipboard dạng Tab, file gần đây —
-tổng 120 test (2026-10-02); tự nhận Shift-JIS + mẫu 8 KB cắt giữa chữ - 125 test; Đi tới cột (`ColumnFinderTests`) - 131 test (2026-11-03).
+tổng 120 test (2026-10-02); tự nhận Shift-JIS + mẫu 8 KB cắt giữa chữ - 125 test; Đi tới cột (`ColumnFinderTests`) - 131 test (2026-11-03); So sánh 2 file (`CompareTests`: theo khoá / khoá ghép / khoá trùng,
+theo thứ tự dòng, cách so, gợi ý / kiểm tra khoá, xuất Excel) - 241 test (2026-11-17).
 
 ```powershell
 dotnet test Tests\CsvEditor.Tests          # hoặc: dotnet run --project Tests\CsvEditor.Tests
