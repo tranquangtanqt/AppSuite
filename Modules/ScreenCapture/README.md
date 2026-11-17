@@ -128,7 +128,7 @@ chọn vùng, không tìm thấy cửa sổ...) hiện bằng `InfoBar` ở cu�
 - Ảnh nhoè ở màn hình phóng to (bug cũ, sửa 2026-11-17): SKXamlCanvas tạo bitmap `(int)(ActualWidth × scale)` px rồi kéo
   giãn cho đầy control → khung 332 px ở 150% (221,333 DIP) ra bitmap 331 px → mép ảnh 1 hàng pixel màu pha (125%: nhoè cả
   chiều ngang). Khung ảnh Editor và lớp vẽ của Thước đo đặt kích thước bằng `CanvasSize.ExactDip`: số DIP nguyên ≥ số pixel
-  cần (150%: bội 3 px, dư tối đa 2 px trong suốt ở mép phải / dưới) → bitmap khớp 1:1. Thước kẻ Editor (rộng `*`) chưa áp.
+  cần (150%: bội 3 px, dư tối đa 2 px trong suốt ở mép phải / dưới) → bitmap khớp 1:1. Thước kẻ Editor cũng vậy: không co giãn theo lưới (HorizontalAlignment Left / VerticalAlignment Top), dài = `ExactDip` của khung ảnh, đặt lại ở `CanvasScroller.SizeChanged` và mỗi lần vẽ thước (`FitRulers`, đổi DPI khi kéo sang màn khác).
 
 ### Hướng dẫn (cửa sổ dùng chung `SharedUI.Help.HelpWindow`)
 

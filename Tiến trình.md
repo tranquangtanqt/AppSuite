@@ -736,6 +736,9 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   (int)(DIP × tỉ lệ) = 331 px rồi kéo giãn ra 332 px. Sửa: khung ảnh Editor + lớp vẽ Thước đo dùng số DIP nguyên
   (CanvasSize.ExactDip). GUI Sandbox: bản cũ 3 / 3 trường hợp có pixel màu pha, bản mới 0 (100% Di chuyển, 100% Thước đo, 125%);
   chạy lại Thước đo Editor 27/27, chiều đo 16/16, Thước đo màn hình 33/33; unit test 136/136 (2026-11-17)
+- [x] Thước kẻ Editor nhoè ở màn hình phóng to (người dùng yêu cầu sửa 2026-11-17, cùng nguyên nhân SKXamlCanvas): thước
+  không co giãn theo lưới nữa, dài theo số DIP nguyên của khung ảnh. GUI Sandbox: bản trước ~140 pixel pha ở vạch thước (100%
+  và 125%), bản mới 0; chạy lại Thước đo Editor 27/27, chiều đo 16/16 (2026-11-17)
 
 - [x] Popup **Danh sách ảnh** khi nhiều ảnh bị đẩy lên trên (che nút / tab) hoặc bị cắt mất nút "Mở lại tab vừa đóng"; ít ảnh
   (lọc) thì đúng chỗ (người dùng báo 2026-10-22). Nguyên nhân: danh sách `MaxHeight="520"` cố định + ô lọc + nút ≈ 640 px,

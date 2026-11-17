@@ -339,10 +339,24 @@ public sealed partial class EditorWindow
     {
         if (HorizontalRuler.Visibility == Visibility.Visible)
         {
+            FitRulers();
             HorizontalRuler.Invalidate();
             VerticalRuler.Invalidate();
         }
     }
+
+    /// <summary>Thước dài bằng khung ảnh nhưng theo số DIP nguyên (CanvasSize): để lưới co giãn thì bitmap của SKXamlCanvas thiếu
+    /// 1 px rồi bị kéo giãn → vạch thước nhoè. Gọi khi khung ảnh đổi cỡ và mỗi lần vẽ lại thước (đổi DPI khi kéo sang màn khác).</summary>
+    private void FitRulers()
+    {
+        double scale = CurrentScale;
+        double width = CanvasSize.ExactDip(CanvasScroller.ActualWidth * scale, scale);
+        double height = CanvasSize.ExactDip(CanvasScroller.ActualHeight * scale, scale);
+        if (HorizontalRuler.Width != width) HorizontalRuler.Width = width;
+        if (VerticalRuler.Height != height) VerticalRuler.Height = height;
+    }
+
+    private void CanvasScroller_SizeChanged(object sender, SizeChangedEventArgs e) => InvalidateRulers();
 
     private void CanvasScroller_ViewChanged(object? sender, Microsoft.UI.Xaml.Controls.ScrollViewerViewChangedEventArgs e) => InvalidateRulers();
 
