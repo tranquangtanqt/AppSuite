@@ -146,6 +146,24 @@ Tổng hợp từ các mục `- [ ]` bên dưới, xếp theo lợi ích / công
 `.\build\Sync-Modules-Dev.ps1 -Configuration <cấu hình đó>` để chép module vào cạnh launcher — thiếu
 bước này thì Start module nào cũng lỗi "Executable not found" (đã gặp 2026-09-29).
 
+## DbTools (module mới — chạy thư mục script SQL lên PostgreSQL, `Modules/DbTools/PLAN.md`)
+
+- [x] Đợt 1 (2026-11-18): module riêng, 3 trang. **Chạy thư mục SQL**: tách câu (chuỗi, $BODY$, chú thích, `\encoding`), nhận
+  loại lệnh, tự sắp thứ tự (phụ thuộc giữa file + DELETE trước INSERT cùng bảng + theo loại; chỉnh tay / Bỏ khỏi danh sách nhớ
+  theo thư mục), Kiểm tra (chỉ đọc catalog: CREATE sẽ lỗi vì đã có, lệnh psql / BEGIN / VACUUM không chạy được, xoá / sửa dữ
+  liệu), Chạy thử (rollback cuối), Chạy (hỏi lại, 1 transaction, lỗi là rollback hết, báo file + dòng), Xoá đối tượng cũ rồi
+  tạo lại + Xem script xoá (DROP IF EXISTS ngược, không CASCADE). **Lịch sử chạy** (bản svn / git, log từng lần). **Kết nối**
+  (hồ sơ, mật khẩu DPAPI, Thử kết nối). Unit test 75/75 (gồm 7 test chạy thật trên PostgreSQL 17 tạm); thư mục thật
+  `202604_MCF7\...\postgresql_sqlfile` (27 file, đối tượng nền giả lập) chạy thử / chạy / chạy lại xoá-rồi-tạo đều đạt;
+  GUI Sandbox (UIA, PostgreSQL 17 trong Sandbox) 26/26
+- [ ] Người dùng thử tay trên DB dev thật (thư mục `postgresql_sqlfile`): Kiểm tra → Chạy thử → Chạy; xem thứ tự tự sắp có
+  đúng ý không, hộp thoại hỏi lại, Lịch sử chạy có số revision svn
+- [ ] Publish DbTools vào `Application\` (`Publish-AppSuite.ps1 -Targets DbTools,MainLauncher` - MainLauncher đọc modules.json mới)
+- [ ] Đợt 2 (đã đề xuất): Dump / Restore / Copy DB + ngắt phiên; sao lưu đối tượng bị ảnh hưởng trước khi chạy
+- [ ] Đợt 3: ô chạy SQL nhanh + mở kết quả bằng CsvEditor; tìm trong mã nguồn hàm / view; so DDL trên DB với file svn;
+  chạy cùng lô lên nhiều DB
+- [ ] Đợt 4: Oracle (tạo user / tablespace + quyền, impdp / expdp có REMAP_SCHEMA)
+
 ## FileTools (module mới — xử lý file text/CSV/log lớn, `Modules/FileTools/PLAN.md`)
 
 - [x] Đợt 1–2: khung + lõi đọc/ghi stream + **Nối file**, **Tách file** (dung lượng / số dòng / số phần),

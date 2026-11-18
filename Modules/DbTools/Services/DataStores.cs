@@ -1,0 +1,217 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using DbTools.Models;
+
+namespace DbTools.Services;
+
+/// <summary>Thư mục dữ liệu của module: Data\ cạnh exe (như các module khác). Biến môi trường DBTOOLS_DATA_DIR đổi sang
+/// thư mục khác (test / Sandbox không đụng dữ liệu thật).</summary>
+public static class DataPaths
+{
+    public static string Root { get; set; } =
+        Environment.GetEnvironmentVariable("DBTOOLS_DATA_DIR") is { Length: > 0 } custom
+            ? custom
+            : Path.Combine(AppContext.BaseDirectory, "Data");
+
+    public static string Config => Path.Combine(Root, "Config");
+    public static string History => Path.Combine(Root, "History");
+
+    /// <summary>File tạm (script xoá sinh ra...).</summary>
+    public static string Temp => Path.Combine(Path.GetTempPath(), "AppSuite", "DbTools");
+}
+
+/// <summary>Ghi JSON an toàn: ghi file tạm rồi thay, đang ghi mà lỗi thì file cũ còn nguyên.</summary>
+internal static class JsonFile
+{
+    public static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
+
+    public static T Read<T>(string path) where T : new()
+    {
+        try
+        {
+            return File.Exists(path) ? JsonSerializer.Deserialize<T>(File.ReadAllText(path), Options) ?? new T() : new T();
+        }
+        catch (Exception)
+        {
+            return new T(); // file hỏng - bắt đầu lại
+        }
+    }
+
+    public static void Write<T>(string path, T value)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var temp = path + ".tmp";
+        File.WriteAllText(temp, JsonSerializer.Serialize(value, Options));
+        // Trình diệt virus / tìm kiếm của Windows có thể giữ file vừa ghi trong chốc lát → thay file bị từ chối: thử lại.
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                File.Move(temp, path, overwrite: true);
+                return;
+            }
+            catch (UnauthorizedAccessException) when (attempt < 5)
+            {
+                Thread.Sleep(50 * attempt);
+            }
+            catch (IOException) when (attempt < 5)
+            {
+                Thread.Sleep(50 * attempt);
+            }
+        }
+    }
+}
+
+/// <summary>Hồ sơ kết nối: Data\Config\connections.json. Mật khẩu mã hoá bằng DPAPI (CurrentUser) - file chép sang máy /
+/// tài khoản khác thì mật khẩu không giải được (để trống, nhập lại).</summary>
+public sealed class ConnectionStore(string? path = null)
+{
+    private static readonly byte[] Entropy = Encoding.UTF8.GetBytes("AppSuite.DbTools.v1");
+
+    public string FilePath { get; } = path ?? Path.Combine(DataPaths.Config, "connections.json");
+
+    public List<ConnectionProfile> Load()
+    {
+        var list = JsonFile.Read<List<ConnectionProfile>>(FilePath);
+        foreach (var p in list)
+        {
+            p.Password = Unprotect(p.ProtectedPassword);
+        }
+        return list;
+    }
+
+    public void Save(IEnumerable<ConnectionProfile> profiles)
+    {
+        var list = profiles.ToList();
+        foreach (var p in list)
+        {
+            p.ProtectedPassword = Protect(p.Password);
+        }
+        JsonFile.Write(FilePath, list);
+    }
+
+    internal static string Protect(string password) => password.Length == 0
+        ? string.Empty
+        : Convert.ToBase64String(ProtectedData.Protect(Encoding.UTF8.GetBytes(password), Entropy, DataProtectionScope.CurrentUser));
+
+    internal static string Unprotect(string value)
+    {
+        if (value.Length == 0)
+        {
+            return string.Empty;
+        }
+        try
+        {
+            return Encoding.UTF8.GetString(ProtectedData.Unprotect(Convert.FromBase64String(value), Entropy, DataProtectionScope.CurrentUser));
+        }
+        catch (Exception)
+        {
+            return string.Empty; // file của tài khoản / máy khác
+        }
+    }
+}
+
+/// <summary>Cài đặt nhỏ nhớ giữa các lần mở + thứ tự chạy đã lưu theo từng thư mục.</summary>
+public sealed class AppSettings
+{
+    public string LastFolder { get; set; } = string.Empty;
+    public bool IncludeSubfolders { get; set; } = true;
+    public string LastProfile { get; set; } = string.Empty;
+
+    /// <summary>Thư mục (đường dẫn đầy đủ, viết thường) → danh sách đường dẫn tương đối theo thứ tự chạy đã lưu.</summary>
+    public Dictionary<string, List<string>> SavedOrders { get; set; } = [];
+
+    /// <summary>Thư mục → các file đã "Bỏ khỏi danh sách" (đọc lại thư mục vẫn bỏ qua, tới khi Sắp lại tự động).</summary>
+    public Dictionary<string, List<string>> ExcludedFiles { get; set; } = [];
+
+    public static string OrderKey(string folder) => Path.GetFullPath(folder).TrimEnd('\\', '/').ToLowerInvariant();
+}
+
+public sealed class SettingsStore(string? path = null)
+{
+    public string FilePath { get; } = path ?? Path.Combine(DataPaths.Config, "settings.json");
+
+    public AppSettings Load() => JsonFile.Read<AppSettings>(FilePath);
+
+    public void Save(AppSettings settings) => JsonFile.Write(FilePath, settings);
+}
+
+/// <summary>1 lần chạy (Chạy / Chạy thử) - hiện ở trang Lịch sử chạy.</summary>
+public sealed class RunRecord
+{
+    public DateTime Time { get; set; }
+    public string Mode { get; set; } = string.Empty;
+    public bool DropFirst { get; set; }
+    public string Folder { get; set; } = string.Empty;
+    public string Profile { get; set; } = string.Empty;
+    public string Target { get; set; } = string.Empty;
+    public string User { get; set; } = string.Empty;
+    public bool Success { get; set; }
+    public int FileCount { get; set; }
+    public int FilesDone { get; set; }
+    public string Error { get; set; } = string.Empty;
+    public string Revision { get; set; } = string.Empty;
+    public long DurationMs { get; set; }
+    public string LogPath { get; set; } = string.Empty;
+}
+
+/// <summary>Lịch sử chạy: Data\History\history.json (mới nhất ở đầu, giữ tối đa <see cref="MaxRecords"/> lần) + log từng lần
+/// ở Data\History\Logs.</summary>
+public sealed class HistoryStore(string? folder = null)
+{
+    public const int MaxRecords = 500;
+
+    public string Folder { get; } = folder ?? DataPaths.History;
+    public string FilePath => Path.Combine(Folder, "history.json");
+    public string LogFolder => Path.Combine(Folder, "Logs");
+
+    public List<RunRecord> Load() => JsonFile.Read<List<RunRecord>>(FilePath);
+
+    public void Add(RunRecord record)
+    {
+        var list = Load();
+        list.Insert(0, record);
+        foreach (var old in list.Skip(MaxRecords))
+        {
+            TryDelete(old.LogPath);
+        }
+        JsonFile.Write(FilePath, list.Take(MaxRecords).ToList());
+    }
+
+    public void Clear()
+    {
+        foreach (var r in Load())
+        {
+            TryDelete(r.LogPath);
+        }
+        JsonFile.Write(FilePath, new List<RunRecord>());
+    }
+
+    /// <summary>Đường dẫn file log cho lần chạy bắt đầu lúc <paramref name="time"/>.</summary>
+    public string NewLogPath(DateTime time)
+    {
+        Directory.CreateDirectory(LogFolder);
+        var path = Path.Combine(LogFolder, $"run-{time:yyyyMMdd-HHmmss}.log");
+        for (var n = 2; File.Exists(path); n++)
+        {
+            path = Path.Combine(LogFolder, $"run-{time:yyyyMMdd-HHmmss}-{n}.log");
+        }
+        return path;
+    }
+
+    private void TryDelete(string path)
+    {
+        try
+        {
+            if (path.Length > 0 && path.StartsWith(Folder, StringComparison.OrdinalIgnoreCase) && File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception)
+        {
+            // Không xoá được log cũ thì thôi.
+        }
+    }
+}

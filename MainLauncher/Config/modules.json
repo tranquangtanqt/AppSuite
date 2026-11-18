@@ -82,5 +82,12 @@
     "Path": ".\\Modules\\MeRon\\MeRon.exe",
     "Arguments": "",
     "AutoStart": false
+  },
+  {
+    "Name": "DbTools",
+    "Description": "Chạy thư mục script SQL lên PostgreSQL: tự sắp thứ tự, kiểm tra, chạy thử, chạy trong 1 transaction (lỗi là rollback hết), lịch sử chạy",
+    "Path": ".\\Modules\\DbTools\\DbTools.exe",
+    "Arguments": "",
+    "AutoStart": false
   }
 ]

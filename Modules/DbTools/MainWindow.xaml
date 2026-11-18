@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="DbTools.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="DbTools - chạy script SQL lên PostgreSQL">
+
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <!-- Mỗi mục 1 trang; Tag = tên class trang trong DbTools.Views. -->
+    <NavigationView x:Name="Nav" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" PaneDisplayMode="Auto"
+                    OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked">
+        <NavigationView.MenuItems>
+            <NavigationViewItem Content="Chạy thư mục SQL" Tag="RunPage" Icon="Play" />
+            <NavigationViewItem Content="Lịch sử chạy" Tag="HistoryPage" Icon="Clock" />
+            <NavigationViewItem Content="Kết nối" Tag="ConnectionsPage" Icon="World" />
+        </NavigationView.MenuItems>
+        <NavigationView.FooterMenuItems>
+            <!-- Mở cửa sổ Hướng dẫn, không chuyển trang (SelectsOnInvoked=False → xử lý ở ItemInvoked). -->
+            <NavigationViewItem Content="Hướng dẫn (F1)" Tag="Help" Icon="Help" SelectsOnInvoked="False" />
+        </NavigationView.FooterMenuItems>
+
+        <Grid>
+            <Frame x:Name="ContentFrame" />
+            <Button Content="?" Width="36" Margin="0,12,20,0" HorizontalAlignment="Right" VerticalAlignment="Top" Click="Help_Click"
+                    ToolTipService.ToolTip="Hướng dẫn trang này (F1)" AutomationProperties.Name="Hướng dẫn">
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="F1" />
+                </Button.KeyboardAccelerators>
+            </Button>
+        </Grid>
+    </NavigationView>
+</Window>

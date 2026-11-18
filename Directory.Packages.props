@@ -55,6 +55,8 @@
     <PackageVersion Include="Npgsql" Version="8.0.5" />
     <PackageVersion Include="Oracle.ManagedDataAccess.Core" Version="23.6.1" />
     <PackageVersion Include="System.IO.Hashing" Version="8.0.0" />
+    <!-- DbTools: mã hoá mật khẩu hồ sơ kết nối bằng DPAPI. -->
+    <PackageVersion Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
     <PackageVersion Include="System.Text.Encoding.CodePages" Version="8.0.0" />
     <PackageVersion Include="Tesseract" Version="5.2.0" />
   </ItemGroup>

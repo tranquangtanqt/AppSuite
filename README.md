@@ -19,6 +19,7 @@ MainLauncher.exe
     |-- Modules\ImageCompare\ImageCompare.exe
     |-- Modules\FileTools\FileTools.exe
     |-- Modules\MeRon\MeRon.exe
+    |-- Modules\DbTools\DbTools.exe
     |-- ... (them Module moi theo cung mot khuon mau)
 ```
 
@@ -63,10 +64,12 @@ AppSuite.sln
 |   |-- ScreenCapture/            Chup man hinh + chinh sua anh (PicPick-like)
 |   |-- ImageCompare/             So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)
 |   |-- FileTools/                Xu ly file text/CSV/log lon (vai GB): noi, tach, trich, tim, loc, doi encoding...
-|   `-- MeRon/                   Quan ly ban hang (ban may tinh cua app dien thoai me-ron): dat hang, mua hang, 4 bao cao, danh muc; nhap / xuat backup TSV
+|   |-- MeRon/                   Quan ly ban hang (ban may tinh cua app dien thoai me-ron): dat hang, mua hang, 4 bao cao, danh muc; nhap / xuat backup TSV
+|   `-- DbTools/                 Chay thu muc script SQL len PostgreSQL: tu sap thu tu, kiem tra, chay thu, 1 transaction (loi la rollback het), lich su
 |
 |-- Tests/                      Unit test (xUnit v3, exe tu chay) - xem muc "Unit test" trong README cua tung module
 |   |-- CsvEditor.Tests/
+|   |-- DbTools.Tests/          Tach cau SQL, nhan loai lenh, sap thu tu, script xoa nguoc, DPAPI; chay that tren PostgreSQL neu co DBTOOLS_TEST_PG
 |   |-- FileTools.Tests/        Doc/ghi stream, encoding, noi/tach/trich/tim/loc/doi encoding (+ test file 2 GB chay tay)
 |   |-- ImageCompare.Tests/     Engine: so pixel, tu can, tim anh con, OCR, bao cao (chi x64)
 |   |-- Mcf.CrudDiagram.Tests/  Doc sheet CRUD図 -> HTML -> SQLite
@@ -175,7 +178,7 @@ powershell -ExecutionPolicy Bypass -File .\build\Publish-AppSuite.ps1 -Configura
 Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ```
 
-Publish cả 12 project (MainLauncher + 11 module) khá mất thời gian. Khi chỉ đang sửa 1 module, dùng
+Publish cả 14 project (MainLauncher + 13 module) khá mất thời gian. Khi chỉ đang sửa 1 module, dùng
 `-Targets` để publish riêng project đó thay vì chờ build hết:
 
 ```powershell
@@ -184,7 +187,7 @@ Publish cả 12 project (MainLauncher + 11 module) khá mất thời gian. Khi c
 ```
 
 Tên hợp lệ: `MainLauncher`, `ModuleA`, `ModuleB`, `ModuleC`, `Mcf.DbDef.HtmlGenerator`, `Rdbms.HtmlGenerator`,
-`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator`, `ScreenCapture`, `ImageCompare`, `FileTools`, `MeRon` (không phân biệt
+`CsvEditor`, `Mcf.Screen.HtmlGenerator`, `Mcf.CrudDiagram.HtmlGenerator`, `ScreenCapture`, `ImageCompare`, `FileTools`, `MeRon`, `DbTools` (không phân biệt
 hoa/thường). Bỏ qua `-Targets` để publish toàn bộ như trước.
 
 Kết quả nằm ở `Application\`:
@@ -204,6 +207,7 @@ Application\
 |-- Modules\ImageCompare\ImageCompare.exe
 |-- Modules\FileTools\FileTools.exe
 |-- Modules\MeRon\MeRon.exe
+|-- Modules\DbTools\DbTools.exe
 `-- Config\modules.json, appsettings.json
 ```
 
