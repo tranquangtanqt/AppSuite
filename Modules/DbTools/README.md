@@ -39,10 +39,19 @@ F1 / nút ? / mục Hướng dẫn: cửa sổ hướng dẫn dùng chung `Share
 5. **Chạy**: hỏi lại (host:port/database, file xoá / sửa dữ liệu, bảng sẽ mất dữ liệu; nút mặc định là Huỷ) →
    `BEGIN` → mọi câu → `COMMIT`. Lỗi / Huỷ → `ROLLBACK`, báo file + **dòng** lỗi (vị trí lỗi PostgreSQL trả về đổi ra dòng
    trong file) + SQLSTATE, chi tiết, gợi ý.
-6. **Xoá đối tượng cũ rồi tạo lại** (`Core\DropScript`): trước khi chạy, `DROP ... IF EXISTS` các đối tượng thư mục tạo
+6. **Schema** (ô cạnh ô database, nút ✕ = về mặc định; lưu theo hồ sơ: `ConnectionProfile.Schema` / `IncludePublic`): để trống = theo
+   search_path mặc định của server / user (thường là public). Có giá trị → `Pg.OpenAsync` chạy
+   `SET search_path TO "<schema>"[, public]` ngay sau khi mở kết nối (chỉ kết nối đó, không pool), nên Kiểm tra / Chạy thử /
+   Chạy / đếm dữ liệu cùng nhìn 1 schema; tên có ghi schema trong file vẫn theo file. "Tìm cả trong public" (bật sẵn) để
+   dùng được bảng / hàm nền ở public. Schema chưa có → báo lỗi, không tự `CREATE SCHEMA`. Kiểm tra "đã có" xét
+   `current_schema()` (nơi CREATE tạo đối tượng); trigger / ràng buộc xét cả search_path (bảng có thể ở public). Hộp thoại
+   hỏi lại, nhật ký, lịch sử ghi schema.
+7. **Xoá đối tượng cũ rồi tạo lại** (`Core\DropScript`): trước khi chạy, `DROP ... IF EXISTS` các đối tượng thư mục tạo
    ra theo thứ tự ngược, **không CASCADE**, trong cùng transaction. Trigger luôn xoá riêng (trước hàm trigger); index /
    ràng buộc trên bảng do thư mục tạo thì đi theo bảng. INSERT / UPDATE / DELETE không tự đảo ngược - liệt kê cuối
-   script. **Xem script xoá** ghi script ra `%TEMP%\AppSuite\DbTools\drop_*.sql` và mở ra.
+   script. **Xem script xoá** ghi script ra `%TEMP%\AppSuite\DbTools\drop_*.sql` và mở ra. Đã chọn schema: bảng / view /
+   hàm / sequence / kiểu không ghi schema được ghi rõ schema đó (search_path có public thì `DROP TABLE x` có thể xoá nhầm
+   `public.x`); index / trigger / ràng buộc trên bảng có sẵn giữ nguyên.
 
 Npgsql chạy ở chế độ raw (`Npgsql.EnableSqlRewriting = false`, đặt trong `App()`): DbTools tự tách câu nên gửi nguyên
 văn từng câu, biết chính xác câu nào lỗi.

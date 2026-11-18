@@ -147,6 +147,9 @@ public sealed class RunRecord
     public string Profile { get; set; } = string.Empty;
     public string Target { get; set; } = string.Empty;
     public string User { get; set; } = string.Empty;
+
+    /// <summary>Schema lúc chạy, vd "schema abc + public" (rỗng ở lịch sử cũ = mặc định).</summary>
+    public string Schema { get; set; } = string.Empty;
     public bool Success { get; set; }
     public int FileCount { get; set; }
     public int FilesDone { get; set; }

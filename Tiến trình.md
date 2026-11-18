@@ -156,8 +156,14 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   (hồ sơ, mật khẩu DPAPI, Thử kết nối). Unit test 75/75 (gồm 7 test chạy thật trên PostgreSQL 17 tạm); thư mục thật
   `202604_MCF7\...\postgresql_sqlfile` (27 file, đối tượng nền giả lập) chạy thử / chạy / chạy lại xoá-rồi-tạo đều đạt;
   GUI Sandbox (UIA, PostgreSQL 17 trong Sandbox) 26/26
+- [x] Chọn schema (2026-11-18): ô Schema cạnh ô database (danh sách schema của DB / gõ tay, nút ✕ = mặc định, nhớ theo hồ sơ):
+  để trống = search_path mặc định (thường public); chọn = `SET search_path TO <schema>[, public]` ngay khi mở kết nối, cho cả
+  Kiểm tra / Chạy thử / Chạy; ô tích "Tìm cả trong public" (bật sẵn) cho bảng / hàm nền ở public; schema chưa có → báo lỗi,
+  không tự tạo. Script xoá ghi rõ schema (không xoá nhầm bảng cùng tên ở public); Kiểm tra "đã có" theo current_schema(),
+  trigger / ràng buộc trên bảng thư mục tự tạo không bị báo nhầm vì trigger cùng tên ở public. Hỏi lại / nhật ký / lịch sử ghi
+  schema; Thử kết nối báo schema + search_path. Unit test 81/81 (gồm 10 test PostgreSQL 17 thật); GUI Sandbox 36/36
 - [ ] Người dùng thử tay trên DB dev thật (thư mục `postgresql_sqlfile`): Kiểm tra → Chạy thử → Chạy; xem thứ tự tự sắp có
-  đúng ý không, hộp thoại hỏi lại, Lịch sử chạy có số revision svn
+  đúng ý không, hộp thoại hỏi lại, Lịch sử chạy có số revision svn; thử chạy vào 1 schema riêng (bảng nền mcframe ở public)
 - [ ] Publish DbTools vào `Application\` (`Publish-AppSuite.ps1 -Targets DbTools,MainLauncher` - MainLauncher đọc modules.json mới)
 - [ ] Đợt 2 (đã đề xuất): Dump / Restore / Copy DB + ngắt phiên; sao lưu đối tượng bị ảnh hưởng trước khi chạy
 - [ ] Đợt 3: ô chạy SQL nhanh + mở kết quả bằng CsvEditor; tìm trong mã nguồn hàm / view; so DDL trên DB với file svn;

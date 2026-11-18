@@ -45,22 +45,40 @@
         <!-- Kết nối -->
         <Grid Grid.Row="2" ColumnSpacing="8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MaxWidth="460" />
+                <ColumnDefinition Width="*" MaxWidth="420" />
+                <ColumnDefinition Width="200" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <ComboBox x:Name="ProfileBox" Header="Chạy lên database" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
                       SelectedItem="{x:Bind ViewModel.SelectedProfile, Mode=TwoWay}" PlaceholderText="(chưa có kết nối)"
-                      IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}">
+                      IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind ViewModel.ProfileInfo, Mode=OneWay}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="models:ConnectionProfile">
                         <TextBlock Text="{x:Bind Display, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>
-            <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Quản lý kết nối..." Click="ManageConnections_Click" />
-            <TextBlock Grid.Column="2" VerticalAlignment="Bottom" Margin="4,0,0,6" Opacity="0.7" TextTrimming="CharacterEllipsis"
-                       Text="{x:Bind ViewModel.ProfileInfo, Mode=OneWay}" />
+            <!-- Schema: để trống = mặc định (search_path của server / user, thường là public). Nhớ theo hồ sơ kết nối. -->
+            <Grid Grid.Column="1" ColumnSpacing="4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+            <ComboBox x:Name="SchemaBox" Header="Schema" IsEditable="True" HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Bind ViewModel.Schemas}" Text="{x:Bind ViewModel.SchemaInput, Mode=TwoWay}"
+                      PlaceholderText="(mặc định: public)" IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
+                      DropDownOpened="SchemaBox_DropDownOpened" TextSubmitted="SchemaBox_TextSubmitted" LostFocus="SchemaBox_LostFocus"
+                      AutomationProperties.AutomationId="SchemaBox"
+                      ToolTipService.ToolTip="Schema chạy script: tên không ghi schema trong file sẽ tạo / tìm ở schema này (SET search_path). Để trống = mặc định của server / user (thường là public). Tên có ghi schema trong file vẫn theo file." />
+                <Button Grid.Column="1" VerticalAlignment="Bottom" Content="✕" Width="32" Padding="0" Click="ClearSchema_Click"
+                        IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" AutomationProperties.Name="Bỏ schema"
+                        ToolTipService.ToolTip="Bỏ schema - về mặc định (search_path của server / user, thường là public)" />
+            </Grid>
+            <CheckBox Grid.Column="2" VerticalAlignment="Bottom" Content="Tìm cả trong public" IsChecked="{x:Bind ViewModel.IncludePublic, Mode=TwoWay}"
+                      IsEnabled="{x:Bind ViewModel.HasSchema, Mode=OneWay}"
+                      ToolTipService.ToolTip="search_path = schema đã chọn, public: script dùng được bảng / hàm nền nằm ở public. Đối tượng mới vẫn tạo ở schema đã chọn." />
+            <Button Grid.Column="3" VerticalAlignment="Bottom" HorizontalAlignment="Left" Content="Quản lý kết nối..." Click="ManageConnections_Click" />
         </Grid>
 
         <!-- Thanh công cụ danh sách -->

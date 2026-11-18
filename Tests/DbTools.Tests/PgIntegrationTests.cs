@@ -187,6 +187,82 @@ public sealed class PgIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Chosen_schema_creates_there_and_finds_base_objects_in_public()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(Server), "Chưa đặt DBTOOLS_TEST_PG.");
+        // Bảng nền ở public; public còn có 1 bảng trùng tên với bảng script tạo (có dữ liệu) - không được đụng tới.
+        await ExecAsync(SampleScripts.BaseObjects + "\nCREATE SCHEMA addon;\nCREATE TABLE app_order_all (x int);\nINSERT INTO app_order_all VALUES (42);");
+        using var folder = new TempFolder();
+        var files = SampleInOrder(folder);
+        var addon = _profile.Clone("addon");
+        addon.Schema = "addon";
+        addon.IncludePublic = true;
+
+        Assert.True(await PgCatalog.SchemaExistsAsync(addon, CancellationToken.None));
+        Assert.Contains("addon", await PgCatalog.ListSchemasAsync(addon, CancellationToken.None));
+        Assert.Contains("tạo đối tượng ở schema addon", await Pg.TestAsync(addon, CancellationToken.None));
+        // Bảng cùng tên ở public không làm CREATE TABLE trong addon lỗi → không báo "đã có".
+        var existing = await PgCatalog.FindExistingAsync(addon, Precheck.CreatedNames(files), CancellationToken.None);
+        Assert.DoesNotContain(existing, e => e.Name == "app_order_all");
+
+        var first = await PgRunner.RunAsync(addon, files, null, false, new Collect(), CancellationToken.None);
+        Assert.True(first.Success, first.Error);
+        Assert.True(await ExistsAsync("addon.app_order_all"));
+        Assert.True(await ExistsAsync("addon.app_order_$s"));
+        Assert.Equal(1L, await ScalarAsync("SELECT count(*) FROM public.app_history_table")); // INSERT vào bảng nền ở public
+
+        // Chạy lại xoá-rồi-tạo trong addon: bảng public.app_order_all (có dữ liệu) vẫn nguyên.
+        var drop = DropScript.Build(files, addon.SchemaOrNull);
+        var rows = await PgCatalog.CountRowsAsync(addon, drop.Tables, 1000, CancellationToken.None);
+        Assert.Equal(0L, rows["app_order_all"]); // đếm bảng của addon, không phải public
+        var again = await PgRunner.RunAsync(addon, files, drop, false, new Collect(), CancellationToken.None);
+        Assert.True(again.Success, again.Error);
+        Assert.Equal(42, await ScalarAsync("SELECT x FROM public.app_order_all"));
+    }
+
+    [Fact]
+    public async Task Objects_already_in_public_do_not_warn_when_running_into_another_schema()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(Server), "Chưa đặt DBTOOLS_TEST_PG.");
+        await ExecAsync(SampleScripts.BaseObjects + "\nCREATE SCHEMA addon;");
+        using var folder = new TempFolder();
+        var files = SampleInOrder(folder);
+        var (inPublic, _) = await RunAsync(files, dryRun: false);
+        Assert.True(inPublic.Success, inPublic.Error);
+        var addon = _profile.Clone("addon");
+        addon.Schema = "addon";
+
+        var existing = await PgCatalog.FindExistingAsync(addon, Precheck.CreatedNames(files), CancellationToken.None);
+        var created = Precheck.CreatedRelations(files);
+        var warnings = files.SelectMany(f => Precheck.Compare(f, existing, false, created)).Where(i => i.Level == IssueLevel.Warning).ToList();
+        var outcome = await PgRunner.RunAsync(addon, files, null, true, new Collect(), CancellationToken.None);
+
+        Assert.Empty(warnings);
+        Assert.True(outcome.Success, outcome.Error); // và chạy thật được (khớp với kết quả Kiểm tra)
+    }
+
+    [Fact]
+    public async Task Schema_without_public_cannot_see_base_objects_and_missing_schema_is_detected()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(Server), "Chưa đặt DBTOOLS_TEST_PG.");
+        await ExecAsync(SampleScripts.BaseObjects + "\nCREATE SCHEMA addon;");
+        using var folder = new TempFolder();
+        var files = SampleInOrder(folder);
+        var only = _profile.Clone("only");
+        only.Schema = "addon";
+        only.IncludePublic = false;
+        var missing = _profile.Clone("missing");
+        missing.Schema = "khong_co";
+
+        var outcome = await PgRunner.RunAsync(only, files, null, true, new Collect(), CancellationToken.None);
+
+        Assert.False(outcome.Success);
+        Assert.Contains("app_context", outcome.Error); // view dùng bảng nền ở public
+        Assert.False(await PgCatalog.SchemaExistsAsync(missing, CancellationToken.None));
+        Assert.True(await PgCatalog.SchemaExistsAsync(_profile, CancellationToken.None)); // không chọn schema = luôn được
+    }
+
+    [Fact]
     public async Task Error_line_points_inside_multi_line_statement()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(Server), "Chưa đặt DBTOOLS_TEST_PG.");

@@ -11,7 +11,9 @@ public sealed class HistoryRow(RunRecord record)
     public RunRecord Record { get; } = record;
     public string Time => Record.Time.ToString("yyyy-MM-dd HH:mm");
     public string Mode => Record.Mode + (Record.DropFirst ? " (xoá rồi tạo)" : string.Empty);
-    public string Target => $"{Record.User}@{Record.Target}";
+    /// <summary>user@host:port/db, kèm schema nếu đã chọn schema riêng (mặc định thì không ghi cho gọn).</summary>
+    public string Target => $"{Record.User}@{Record.Target}"
+        + (Record.Schema.Length > 0 && !Record.Schema.Contains("mặc định") ? $" · {Record.Schema}" : string.Empty);
     public string Folder => Record.Folder;
     public string FolderName => Path.GetFileName(Record.Folder.TrimEnd('\\', '/'));
     public string Revision => Record.Revision;

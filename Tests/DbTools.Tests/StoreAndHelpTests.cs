@@ -25,6 +25,30 @@ public class StoreTests
     }
 
     [Fact]
+    public void Schema_choice_is_saved_per_profile_and_builds_search_path()
+    {
+        using var folder = new TempFolder();
+        var store = new ConnectionStore(Path.Combine(folder.Path, "connections.json"));
+        var withSchema = new ConnectionProfile { Name = "a", Schema = " addon ", IncludePublic = false };
+        var plain = new ConnectionProfile { Name = "b" };
+        var quoted = new ConnectionProfile { Name = "c", Schema = "My\"Schema", IncludePublic = true };
+
+        store.Save([withSchema, plain, quoted]);
+        var loaded = store.Load();
+
+        Assert.Equal(" addon ", loaded[0].Schema);
+        Assert.False(loaded[0].IncludePublic);
+        Assert.True(loaded[1].IncludePublic); // mặc định bật
+        Assert.Equal("SET search_path TO \"addon\"", Pg.SearchPathSql(loaded[0]));
+        Assert.Null(Pg.SearchPathSql(loaded[1]));
+        Assert.Equal("SET search_path TO \"My\"\"Schema\", public", Pg.SearchPathSql(loaded[2]));
+        Assert.Equal("SET search_path TO \"public\"", Pg.SearchPathSql(new ConnectionProfile { Schema = "public" }));
+        Assert.Equal("schema addon", loaded[0].SchemaText);
+        Assert.Equal("schema My\"Schema + public", loaded[2].SchemaText);
+        Assert.StartsWith("schema mặc định", loaded[1].SchemaText);
+    }
+
+    [Fact]
     public void Password_from_another_account_becomes_empty()
     {
         Assert.Equal(string.Empty, ConnectionStore.Unprotect(Convert.ToBase64String([1, 2, 3])));

@@ -44,9 +44,14 @@ public sealed record DropScript(IReadOnlyList<DropStatement> Statements, IReadOn
     /// <summary>
     /// Đi ngược thứ tự chạy, mỗi đối tượng được tạo → 1 câu DROP ... IF EXISTS. Index / ràng buộc gắn vào bảng /
     /// view mà chính thư mục tạo ra thì bỏ (xoá bảng là mất theo). Đối tượng tạo nhiều lần (CREATE OR REPLACE ở 2 file) chỉ xoá 1 lần.
+    /// <paramref name="schema"/> (schema đã chọn ở trang Chạy): bảng / view / hàm / sequence / kiểu không ghi schema trong file được
+    /// ghi rõ schema đó - search_path còn có public thì DROP không ghi schema có thể xoá nhầm đối tượng cùng tên ở public.
+    /// Index / trigger / ràng buộc trên bảng có sẵn (không do thư mục tạo) giữ nguyên, tìm theo search_path như lúc tạo.
     /// </summary>
-    public static DropScript Build(IReadOnlyList<SqlScriptFile> files)
+    public static DropScript Build(IReadOnlyList<SqlScriptFile> files, string? schema = null)
     {
+        QualifiedName Own(QualifiedName q) => schema is null || q.Schema is not null ? q : q with { Schema = schema };
+
         var all = files.SelectMany(f => f.Statements.Select(s => (File: f, Info: s))).ToList();
         var createdRelations = all
             .Where(x => x.Info.Kind is StatementKind.CreateTable or StatementKind.CreateView && x.Info.Object is not null)
@@ -69,13 +74,17 @@ public sealed record DropScript(IReadOnlyList<DropStatement> Statements, IReadOn
             {
                 continue;
             }
-            var obj = s.Object;
             var onCreatedRelation = s.Table is not null && createdRelations.Contains(s.Table.Key);
+            var obj = s.Kind is StatementKind.CreateTable or StatementKind.CreateView or StatementKind.CreateFunction
+                or StatementKind.CreateProcedure or StatementKind.CreateSequence or StatementKind.CreateType or StatementKind.CreateDomain
+                ? Own(s.Object)
+                : s.Object;
             var sql = s.Kind switch
             {
                 // Trigger luôn xoá riêng, kể cả trên bảng do thư mục tạo: hàm trigger thường được tạo trước trigger nên xoá
                 // trước bảng - còn trigger thì DROP FUNCTION lỗi. Bảng chưa có thì IF EXISTS chỉ báo NOTICE.
-                StatementKind.CreateTrigger when s.Table is not null => $"DROP TRIGGER IF EXISTS {obj.Sql} ON {s.Table.Sql}",
+                StatementKind.CreateTrigger when s.Table is not null =>
+                    $"DROP TRIGGER IF EXISTS {obj.Sql} ON {(onCreatedRelation ? Own(s.Table) : s.Table).Sql}",
                 StatementKind.CreateIndex when !onCreatedRelation => $"DROP INDEX IF EXISTS {obj.Sql}",
                 StatementKind.AddConstraint when !onCreatedRelation && s.Table is not null => $"ALTER TABLE IF EXISTS {s.Table.Sql} DROP CONSTRAINT IF EXISTS {obj.Sql}",
                 StatementKind.CreateView => $"DROP {(s.Materialized ? "MATERIALIZED " : string.Empty)}VIEW IF EXISTS {obj.Sql}",

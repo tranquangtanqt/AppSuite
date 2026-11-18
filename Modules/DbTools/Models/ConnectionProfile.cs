@@ -29,6 +29,28 @@ public sealed partial class ConnectionProfile : ObservableObject
     [property: JsonIgnore]
     private string _password = string.Empty;
 
+    /// <summary>Schema chạy script (chọn ở trang Chạy, nhớ theo hồ sơ). Rỗng = theo search_path mặc định của server / user
+    /// (thường là public); có giá trị = mở kết nối xong đặt search_path = schema đó.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SchemaOrNull), nameof(SchemaText))]
+    private string _schema = string.Empty;
+
+    /// <summary>Khi đã chọn schema: tìm cả trong public (search_path = schema, public) - để script dùng được bảng / hàm nền
+    /// nằm ở public. Đối tượng mới vẫn tạo ở schema đã chọn.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SchemaText))]
+    private bool _includePublic = true;
+
+    /// <summary>Schema đã chọn (bỏ khoảng trắng), null = mặc định.</summary>
+    [JsonIgnore]
+    public string? SchemaOrNull => string.IsNullOrWhiteSpace(Schema) ? null : Schema.Trim();
+
+    /// <summary>Mô tả ngắn để hiện / ghi lịch sử, vd "schema abc + public" hoặc "schema mặc định".</summary>
+    [JsonIgnore]
+    public string SchemaText => SchemaOrNull is { } s
+        ? $"schema {s}{(IncludePublic && s != "public" ? " + public" : string.Empty)}"
+        : "schema mặc định (search_path)";
+
     /// <summary>Mật khẩu đã mã hoá (Base64) - chỉ dùng khi đọc / ghi file.</summary>
     public string ProtectedPassword { get; set; } = string.Empty;
 
@@ -55,6 +77,8 @@ public sealed partial class ConnectionProfile : ObservableObject
         Database = Database,
         Username = Username,
         Password = Password,
+        Schema = Schema,
+        IncludePublic = IncludePublic,
     };
 
     public override string ToString() => Display;

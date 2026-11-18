@@ -37,9 +37,41 @@ public sealed partial class RunViewModel : ObservableObject
     private bool _includeSubfolders = AppState.Settings.IncludeSubfolders;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ProfileInfo))]
+    [NotifyPropertyChangedFor(nameof(ProfileInfo), nameof(SchemaInput), nameof(IncludePublic), nameof(HasSchema))]
     [NotifyCanExecuteChangedFor(nameof(CheckCommand), nameof(DryRunCommand), nameof(RunCommand))]
     private ConnectionProfile? _selectedProfile;
+
+    /// <summary>Schema có trong DB đang chọn (ô Schema, gõ tay cũng được).</summary>
+    public ObservableCollection<string> Schemas { get; } = [];
+
+    /// <summary>Schema chạy script, nhớ theo hồ sơ. Để trống = mặc định (search_path của server / user, thường là public).</summary>
+    public string SchemaInput
+    {
+        get => SelectedProfile?.Schema ?? string.Empty;
+        set
+        {
+            var schema = value?.Trim() ?? string.Empty;
+            if (SelectedProfile is not null && SelectedProfile.Schema != schema)
+            {
+                SelectedProfile.Schema = schema;
+            }
+        }
+    }
+
+    /// <summary>Đã chọn schema: tìm cả trong public (search_path = schema, public). Nhớ theo hồ sơ.</summary>
+    public bool IncludePublic
+    {
+        get => SelectedProfile?.IncludePublic ?? true;
+        set
+        {
+            if (SelectedProfile is not null)
+            {
+                SelectedProfile.IncludePublic = value;
+            }
+        }
+    }
+
+    public bool HasSchema => SelectedProfile?.SchemaOrNull is { } s && s != "public";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(SelectedDetail))]
@@ -81,7 +113,7 @@ public sealed partial class RunViewModel : ObservableObject
 
     public string ProfileInfo => SelectedProfile is null
         ? "Chưa có kết nối - thêm ở trang Kết nối."
-        : $"{SelectedProfile.Username}@{SelectedProfile.Target}";
+        : $"{SelectedProfile.Username}@{SelectedProfile.Target} · {SelectedProfile.SchemaText}";
 
     public string SelectedDetail => SelectedFile is null
         ? "Chọn 1 file để xem chi tiết kiểm tra / lỗi."
@@ -115,11 +147,63 @@ public sealed partial class RunViewModel : ObservableObject
         {
             newValue.PropertyChanged += SelectedProfile_PropertyChanged;
         }
+        Schemas.Clear();
+        _ = LoadSchemasAsync();
     }
 
-    /// <summary>Sửa hồ sơ đang chọn ở trang Kết nối → dòng user@host:port/db cập nhật theo.</summary>
-    private void SelectedProfile_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) =>
+    /// <summary>Sửa hồ sơ đang chọn (trang Kết nối, ô Schema) → dòng user@host:port/db · schema cập nhật theo.</summary>
+    private void SelectedProfile_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
         OnPropertyChanged(nameof(ProfileInfo));
+        if (e.PropertyName is nameof(ConnectionProfile.Schema))
+        {
+            OnPropertyChanged(nameof(HasSchema));
+            OnPropertyChanged(nameof(SchemaInput));
+        }
+    }
+
+    /// <summary>Đọc danh sách schema của DB cho ô Schema (mở ô / đổi hồ sơ). Không kết nối được thì để trống - vẫn gõ tay được.</summary>
+    public async Task LoadSchemasAsync()
+    {
+        if (SelectedProfile is not { } profile || profile.Database.Trim().Length == 0)
+        {
+            return;
+        }
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var schemas = await PgCatalog.ListSchemasAsync(profile, cts.Token);
+            if (SelectedProfile != profile)
+            {
+                return;
+            }
+            var keep = SchemaInput;
+            foreach (var s in schemas.Where(s => !Schemas.Contains(s)))
+            {
+                Schemas.Add(s);
+            }
+            if (SchemaInput != keep)
+            {
+                SchemaInput = keep; // ComboBox có thể đổi chữ khi danh sách đổi
+            }
+        }
+        catch (Exception ex)
+        {
+            _log.LogInformation("Không đọc được danh sách schema: {Error}", Pg.Describe(ex));
+        }
+    }
+
+    /// <summary>Schema đã chọn phải có trong DB (không tự tạo - tránh chạy vào schema gõ nhầm tên). False → đã báo lỗi.</summary>
+    private async Task<bool> EnsureSchemaExistsAsync(ConnectionProfile profile, CancellationToken ct)
+    {
+        if (profile.SchemaOrNull is not { } schema || await PgCatalog.SchemaExistsAsync(profile, ct))
+        {
+            return true;
+        }
+        AppendLog($"✗ Schema \"{schema}\" chưa có trong database {profile.Target}. Tạo trước (CREATE SCHEMA {Pg.QuoteIdent(schema)}) hoặc chọn schema khác.");
+        Status = $"Schema \"{schema}\" chưa có trong database - tạo trước hoặc chọn schema khác.";
+        return false;
+    }
 
     partial void OnSelectedProfileChanged(ConnectionProfile? value)
     {
@@ -384,9 +468,13 @@ public sealed partial class RunViewModel : ObservableObject
                 return;
             }
             var profile = SelectedProfile!;
-            AppendLog($"Kiểm tra {Files.Count} file với {profile.Username}@{profile.Target} (chỉ đọc catalog, không thay đổi DB)...");
+            AppendLog($"Kiểm tra {Files.Count} file với {profile.Username}@{profile.Target}, {profile.SchemaText} (chỉ đọc catalog, không thay đổi DB)...");
             Status = "Đang kiểm tra...";
             using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            if (!await EnsureSchemaExistsAsync(profile, cts.Token))
+            {
+                return;
+            }
             var files = Files.Select(f => f.File).ToList();
             var existing = await PgCatalog.FindExistingAsync(profile, Precheck.CreatedNames(files), cts.Token);
             await DbChecksAsync(profile, files, existing, cts.Token);
@@ -407,10 +495,11 @@ public sealed partial class RunViewModel : ObservableObject
     private async Task<List<string>> DbChecksAsync(ConnectionProfile profile, List<SqlScriptFile> files, List<ExistingObject> existing, CancellationToken ct)
     {
         var warnings = 0;
+        var createdRelations = Precheck.CreatedRelations(files);
         var errors = 0;
         for (var i = 0; i < Files.Count; i++)
         {
-            var issues = files[i].Issues.Concat(Precheck.Compare(files[i], existing, DropFirst)).ToList();
+            var issues = files[i].Issues.Concat(Precheck.Compare(files[i], existing, DropFirst, createdRelations)).ToList();
             Files[i].ApplyIssues(issues, "Đạt kiểm tra");
             warnings += issues.Count(x => x.Level == IssueLevel.Warning);
             errors += issues.Count(x => x.Level == IssueLevel.Error);
@@ -422,7 +511,7 @@ public sealed partial class RunViewModel : ObservableObject
         var dataLoss = new List<string>();
         if (DropFirst)
         {
-            var drop = DropScript.Build(files);
+            var drop = DropScript.Build(files, profile.SchemaOrNull);
             var rows = await PgCatalog.CountRowsAsync(profile, drop.Tables, 100_001, ct);
             foreach (var (table, count) in rows.Where(r => r.Value > 0))
             {
@@ -465,6 +554,7 @@ public sealed partial class RunViewModel : ObservableObject
             Profile = profile.Name,
             Target = profile.Target,
             User = profile.Username,
+            Schema = profile.SchemaText,
             FileCount = Files.Count,
         };
         var attempted = false; // đã gửi lên server (qua kiểm tra + người dùng đồng ý) → ghi lịch sử
@@ -489,11 +579,15 @@ public sealed partial class RunViewModel : ObservableObject
                 return;
             }
 
-            var drop = DropFirst ? DropScript.Build(files) : null;
+            var drop = DropFirst ? DropScript.Build(files, profile.SchemaOrNull) : null;
             Status = "Đang kiểm tra trước khi chạy...";
             List<string> dataLoss;
             using (var check = new CancellationTokenSource(TimeSpan.FromMinutes(2)))
             {
+                if (!await EnsureSchemaExistsAsync(profile, check.Token))
+                {
+                    return;
+                }
                 var existing = await PgCatalog.FindExistingAsync(profile, Precheck.CreatedNames(files), check.Token);
                 dataLoss = await DbChecksAsync(profile, files, existing, check.Token);
             }
@@ -503,6 +597,8 @@ public sealed partial class RunViewModel : ObservableObject
                 var lines = new List<string>
                 {
                     $"Database: {profile.Username}@{profile.Target}" + (profile.Name.Length > 0 ? $"  (hồ sơ \"{profile.Name}\")" : string.Empty),
+                    $"Schema: {(profile.SchemaOrNull is { } s ? s + (profile.IncludePublic && s != "public" ? " (tìm cả trong public)" : string.Empty) : "mặc định - theo search_path của server / user (thường là public)")}"
+                        + " - tên có ghi schema trong file vẫn theo file.",
                     $"Thư mục: {Folder.Trim()}",
                     $"{files.Count} file, {files.Sum(f => f.Statements.Count)} câu - chạy trong 1 transaction: lỗi ở đâu là huỷ (rollback) hết.",
                 };
@@ -624,7 +720,7 @@ public sealed partial class RunViewModel : ObservableObject
             var header = new StringBuilder()
                 .AppendLine($"DbTools - {record.Mode}{(record.DropFirst ? " (xoá đối tượng cũ rồi tạo lại)" : string.Empty)}")
                 .AppendLine($"Thời gian: {record.Time:yyyy-MM-dd HH:mm:ss}")
-                .AppendLine($"Database: {record.User}@{record.Target} (hồ sơ \"{record.Profile}\")")
+                .AppendLine($"Database: {record.User}@{record.Target} (hồ sơ \"{record.Profile}\"), {record.Schema}")
                 .AppendLine($"Thư mục: {record.Folder} {record.Revision}")
                 .AppendLine($"Kết quả: {(record.Success ? "Đạt" : "Thất bại")} {record.Error}")
                 .AppendLine("Thứ tự chạy:");
@@ -660,7 +756,7 @@ public sealed partial class RunViewModel : ObservableObject
         try
         {
             var files = Files.Select(f => f.File).ToList();
-            var drop = DropScript.Build(files);
+            var drop = DropScript.Build(files, SelectedProfile?.SchemaOrNull);
             Directory.CreateDirectory(DataPaths.Temp);
             var name = new DirectoryInfo(Folder.Trim()).Name;
             var path = Path.Combine(DataPaths.Temp, $"drop_{name}_{DateTime.Now:yyyyMMdd_HHmmss}.sql");

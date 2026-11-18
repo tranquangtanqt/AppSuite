@@ -58,6 +58,41 @@ public class DropScriptTests
     }
 
     [Fact]
+    public void Chosen_schema_qualifies_own_objects_only()
+    {
+        var files = new[]
+        {
+            Parse("a.sql", """
+                CREATE TABLE t1 (a int);
+                CREATE TABLE other.t2 (a int);
+                CREATE VIEW v1 AS SELECT * FROM t1;
+                CREATE OR REPLACE FUNCTION f() RETURNS trigger AS $$ BEGIN RETURN NEW; END $$ LANGUAGE plpgsql;
+                CREATE TRIGGER tr1 BEFORE INSERT ON t1 FOR EACH ROW EXECUTE FUNCTION f();
+                CREATE TRIGGER tr2 BEFORE INSERT ON base_table FOR EACH ROW EXECUTE FUNCTION f();
+                CREATE INDEX base_ix ON base_table (x);
+                CREATE SEQUENCE s1;
+                """),
+        };
+
+        var drop = DropScript.Build(files, "Addon");
+        var sql = drop.Statements.Select(s => s.Sql).ToList();
+
+        Assert.Equal(
+            [
+                "DROP SEQUENCE IF EXISTS \"Addon\".s1",
+                "DROP INDEX IF EXISTS base_ix",                          // index trên bảng có sẵn: tìm theo search_path như lúc tạo
+                "DROP TRIGGER IF EXISTS tr2 ON base_table",              // bảng có sẵn: giữ nguyên
+                "DROP TRIGGER IF EXISTS tr1 ON \"Addon\".t1",            // bảng do thư mục tạo: ghi rõ schema
+                "DROP FUNCTION IF EXISTS \"Addon\".f()",
+                "DROP VIEW IF EXISTS \"Addon\".v1",
+                "DROP TABLE IF EXISTS other.t2",                         // file đã ghi schema → theo file
+                "DROP TABLE IF EXISTS \"Addon\".t1",
+            ], sql);
+        Assert.Equal(["\"Addon\".t1", "other.t2"], drop.Tables.Select(t => t.Sql).Order());
+        Assert.DoesNotContain(DropScript.Build(files).Statements, s => s.Sql.Contains("Addon"));
+    }
+
+    [Fact]
     public void Object_created_twice_is_dropped_once()
     {
         var files = new[] { Parse("a.sql", "CREATE OR REPLACE VIEW v AS SELECT 1;"), Parse("b.sql", "CREATE OR REPLACE VIEW v AS SELECT 2;") };
@@ -103,6 +138,22 @@ public class PrecheckTests
         var issues = Precheck.Compare(file, [new ExistingObject("table", "t1", "")], dropFirst: true);
 
         Assert.Equal(IssueLevel.Info, Assert.Single(issues).Level);
+    }
+
+    [Fact]
+    public void Trigger_on_own_table_counts_only_in_current_schema()
+    {
+        var table = Parse("CREATE TABLE t1 (a int);");
+        var trigger = Parse("CREATE TRIGGER tr BEFORE INSERT ON t1 FOR EACH ROW EXECUTE FUNCTION f();\nCREATE TRIGGER tb BEFORE INSERT ON base FOR EACH ROW EXECUTE FUNCTION f();");
+        var created = Precheck.CreatedRelations([table, trigger]);
+        // Đã chọn schema addon: trigger cùng tên có trên public.t1 / public.base (search_path = addon, public).
+        var existing = new[] { new ExistingObject("trigger", "tr", "t1", InCurrentSchema: false), new ExistingObject("trigger", "tb", "base", InCurrentSchema: false) };
+
+        var issues = Precheck.Compare(trigger, existing, dropFirst: false, created);
+
+        // t1 do thư mục tạo (sẽ ở addon) → trigger trên public.t1 không liên quan; base là bảng có sẵn ở public → đúng là sẽ lỗi.
+        Assert.Equal(2, Assert.Single(issues).Line);
+        Assert.Equal(2, Precheck.Compare(trigger, existing, dropFirst: false).Count); // không truyền danh sách: như cũ
     }
 
     [Fact]

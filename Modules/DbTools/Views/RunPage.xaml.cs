@@ -62,6 +62,23 @@ public sealed partial class RunPage : Page
 
     private void ManageConnections_Click(object sender, RoutedEventArgs e) => App.MainWindow?.ShowPage("ConnectionsPage");
 
+    /// <summary>Mở ô Schema → đọc lại danh sách schema của DB (có thể vừa tạo schema mới).</summary>
+    private async void SchemaBox_DropDownOpened(object sender, object e) => await ViewModel.LoadSchemasAsync();
+
+    /// <summary>ComboBox gõ được không đẩy chữ rỗng qua binding (xoá trống để về mặc định không lưu) → chốt tay khi Enter /
+    /// rời ô.</summary>
+    private void SchemaBox_TextSubmitted(ComboBox sender, ComboBoxTextSubmittedEventArgs args) => ViewModel.SchemaInput = args.Text;
+
+    private void SchemaBox_LostFocus(object sender, RoutedEventArgs e) => ViewModel.SchemaInput = SchemaBox.Text;
+
+    /// <summary>Nút ✕: về schema mặc định. Xoá chữ trong ComboBox gõ được không đủ - nó tự trả lại chữ của mục đang chọn.</summary>
+    private void ClearSchema_Click(object sender, RoutedEventArgs e)
+    {
+        SchemaBox.SelectedItem = null;
+        SchemaBox.Text = string.Empty;
+        ViewModel.SchemaInput = string.Empty;
+    }
+
     private void FolderBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key == VirtualKey.Enter && ViewModel.LoadFolderCommand.CanExecute(null))

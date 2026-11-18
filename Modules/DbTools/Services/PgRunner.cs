@@ -28,12 +28,27 @@ public static class Pg
         Pooling = false,
     }.ConnectionString;
 
+    /// <summary>Câu đặt search_path theo schema đã chọn (null = để mặc định của server / user). Tên schema luôn trong "..."
+    /// (giữ đúng hoa / thường như trong danh sách schema của DB).</summary>
+    public static string? SearchPathSql(ConnectionProfile p) => p.SchemaOrNull is { } schema
+        ? $"SET search_path TO {QuoteIdent(schema)}{(p.IncludePublic && schema != "public" ? ", public" : string.Empty)}"
+        : null;
+
+    public static string QuoteIdent(string name) => "\"" + name.Replace("\"", "\"\"") + "\"";
+
+    /// <summary>Mở kết nối (không dùng pool) và đặt search_path theo schema của hồ sơ - mọi việc sau đó (kiểm tra catalog, chạy
+    /// script, script xoá) cùng nhìn 1 schema. Chỉ có tác dụng trên kết nối này, không đổi cấu hình DB / user.</summary>
     public static async Task<NpgsqlConnection> OpenAsync(ConnectionProfile p, CancellationToken ct)
     {
         var connection = new NpgsqlConnection(ConnectionString(p));
         try
         {
             await connection.OpenAsync(ct);
+            if (SearchPathSql(p) is { } setPath)
+            {
+                await using var cmd = new NpgsqlCommand(setPath, connection);
+                await cmd.ExecuteNonQueryAsync(ct);
+            }
             return connection;
         }
         catch
@@ -47,10 +62,14 @@ public static class Pg
     public static async Task<string> TestAsync(ConnectionProfile p, CancellationToken ct)
     {
         await using var connection = await OpenAsync(p, ct);
-        await using var cmd = new NpgsqlCommand("SELECT current_user, current_database(), current_setting('server_version')", connection);
+        await using var cmd = new NpgsqlCommand(
+            "SELECT current_user, current_database(), current_setting('server_version'), coalesce(current_schema(), ''), current_setting('search_path')", connection);
         await using var reader = await cmd.ExecuteReaderAsync(ct);
         await reader.ReadAsync(ct);
-        return $"PostgreSQL {reader.GetString(2)} · {reader.GetString(0)}@{reader.GetString(1)}";
+        var schema = reader.GetString(3);
+        return $"PostgreSQL {reader.GetString(2)} · {reader.GetString(0)}@{reader.GetString(1)} · "
+            + (schema.Length > 0 ? $"tạo đối tượng ở schema {schema}" : "chưa có schema nào trong search_path")
+            + $" (search_path: {reader.GetString(4)})";
     }
 
     /// <summary>Lỗi kết nối / SQL thành 1 dòng dễ đọc.</summary>
@@ -66,8 +85,41 @@ public static class Pg
 /// <summary>Đọc catalog để Kiểm tra trước khi chạy - chỉ SELECT, không thay đổi DB.</summary>
 public static class PgCatalog
 {
+    /// <summary>Các schema người dùng (bỏ pg_*, information_schema) - cho ô chọn schema.</summary>
+    public static async Task<List<string>> ListSchemasAsync(ConnectionProfile p, CancellationToken ct)
+    {
+        var bare = p.Clone(p.Name);
+        bare.Schema = string.Empty; // schema đang chọn có thể chưa tồn tại - không đặt search_path khi chỉ đọc danh sách
+        await using var connection = await Pg.OpenAsync(bare, ct);
+        await using var cmd = new NpgsqlCommand(
+            "SELECT nspname FROM pg_namespace WHERE nspname NOT LIKE 'pg\\_%' AND nspname <> 'information_schema' ORDER BY nspname", connection);
+        var result = new List<string>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            result.Add(reader.GetString(0));
+        }
+        return result;
+    }
+
+    /// <summary>Schema đã chọn có trong DB chưa (chưa có thì không chạy - không tự CREATE SCHEMA để tránh gõ nhầm tên).</summary>
+    public static async Task<bool> SchemaExistsAsync(ConnectionProfile p, CancellationToken ct)
+    {
+        if (p.SchemaOrNull is not { } schema)
+        {
+            return true;
+        }
+        var bare = p.Clone(p.Name);
+        bare.Schema = string.Empty;
+        await using var connection = await Pg.OpenAsync(bare, ct);
+        await using var cmd = new NpgsqlCommand("SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = $1)", connection);
+        cmd.Parameters.Add(new NpgsqlParameter { Value = schema });
+        return await cmd.ExecuteScalarAsync(ct) is true;
+    }
+
     /// <summary>Trong các tên cho trước, tên nào đã có trong DB (bảng / view / sequence / index, hàm, trigger, ràng buộc, kiểu, schema).
-    /// Chỉ xét schema trong search_path.</summary>
+    /// Chỉ xét current_schema() - nơi CREATE không ghi schema sẽ tạo đối tượng (schema đã chọn, hoặc schema đầu tiên có thật
+    /// trong search_path mặc định). Bảng cùng tên ở public khi đã chọn schema khác không làm CREATE lỗi nên không tính.</summary>
     public static async Task<List<ExistingObject>> FindExistingAsync(ConnectionProfile p, IReadOnlyCollection<string> names, CancellationToken ct)
     {
         var result = new List<ExistingObject>();
@@ -76,25 +128,25 @@ public static class PgCatalog
             return result;
         }
         const string sql = """
-            SELECT 'rel', c.relname, c.relkind::text FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-             WHERE n.nspname = ANY(current_schemas(false)) AND c.relname = ANY($1)
+            SELECT 'rel', c.relname, c.relkind::text, true FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+             WHERE n.nspname = current_schema() AND c.relname = ANY($1)
             UNION ALL
-            SELECT 'func', p.proname, '' FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-             WHERE n.nspname = ANY(current_schemas(false)) AND p.proname = ANY($1)
+            SELECT 'func', p.proname, '', true FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+             WHERE n.nspname = current_schema() AND p.proname = ANY($1)
             UNION ALL
-            SELECT 'trigger', t.tgname, c.relname FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
+            SELECT 'trigger', t.tgname, c.relname, n.nspname = current_schema() FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid
              JOIN pg_namespace n ON n.oid = c.relnamespace
              WHERE NOT t.tgisinternal AND n.nspname = ANY(current_schemas(false)) AND t.tgname = ANY($1)
             UNION ALL
-            SELECT 'constraint', con.conname, c.relname FROM pg_constraint con JOIN pg_class c ON c.oid = con.conrelid
+            SELECT 'constraint', con.conname, c.relname, n.nspname = current_schema() FROM pg_constraint con JOIN pg_class c ON c.oid = con.conrelid
              JOIN pg_namespace n ON n.oid = c.relnamespace
              WHERE n.nspname = ANY(current_schemas(false)) AND con.conname = ANY($1)
             UNION ALL
-            SELECT 'type', t.typname, '' FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace
-             WHERE n.nspname = ANY(current_schemas(false)) AND t.typname = ANY($1) AND t.typtype IN ('c', 'e', 'd', 'r')
+            SELECT 'type', t.typname, '', true FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace
+             WHERE n.nspname = current_schema() AND t.typname = ANY($1) AND t.typtype IN ('c', 'e', 'd', 'r')
                AND NOT EXISTS (SELECT 1 FROM pg_class c WHERE c.reltype = t.oid)
             UNION ALL
-            SELECT 'schema', nspname, '' FROM pg_namespace WHERE nspname = ANY($1)
+            SELECT 'schema', nspname, '', true FROM pg_namespace WHERE nspname = ANY($1)
             """;
         await using var connection = await Pg.OpenAsync(p, ct);
         await using var cmd = new NpgsqlCommand(sql, connection);
@@ -118,7 +170,7 @@ public static class PgCatalog
             }
             else
             {
-                result.Add(new ExistingObject(kind, reader.GetString(1), reader.GetString(2)));
+                result.Add(new ExistingObject(kind, reader.GetString(1), reader.GetString(2), !reader.IsDBNull(3) && reader.GetBoolean(3)));
             }
         }
         return result;
@@ -172,7 +224,8 @@ public static class PgRunner
             progress.Report(new RunLog($"Kết nối {profile.Username}@{profile.Target}..."));
             connection = await Pg.OpenAsync(profile, ct);
             connection.Notice += (_, e) => progress.Report(new RunLog($"    NOTICE: {e.Notice.MessageText}"));
-            progress.Report(new RunLog($"Đã kết nối (PostgreSQL {connection.ServerVersion}). BEGIN"));
+            progress.Report(new RunLog($"Đã kết nối (PostgreSQL {connection.ServerVersion}), {profile.SchemaText}"
+                + (Pg.SearchPathSql(profile) is { } setPath ? $": {setPath}" : string.Empty) + ". BEGIN"));
             tx = await connection.BeginTransactionAsync(ct);
 
             if (dropFirst is { Statements.Count: > 0 })
