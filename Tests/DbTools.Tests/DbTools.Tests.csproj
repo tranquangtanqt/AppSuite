@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Unit test cho phần logic của DbTools: tách câu SQL, nhận loại lệnh, tự sắp thứ tự chạy, script xoá ngược, đối chiếu với
+    DB, lưu hồ sơ kết nối (DPAPI) / cài đặt / lịch sử. DbTools là app WinUI (WinExe) nên không ProjectReference được: các
+    thư mục logic không phụ thuộc WinUI được biên dịch kèm trực tiếp (Compile Include, dạng link).
+
+    Test chạy thật trên PostgreSQL (PgIntegrationTests) chỉ chạy khi có biến môi trường DBTOOLS_TEST_PG
+    (vd "Host=localhost;Port=55432;Username=postgres;Password=..."): mỗi test tạo 1 database tạm rồi xoá.
+
+    xUnit v3: project test là 1 file exe tự chạy. Trên máy dev: `dotnet test` hoặc `dotnet run`.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>DbTools.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Modules\DbTools\Core\**\*.cs" Link="DbTools\Core\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Modules\DbTools\Models\**\*.cs" Link="DbTools\Models\%(RecursiveDir)%(Filename)%(Extension)" />
+    <!-- AppLog (Common.Logging) và Shell (hộp thoại WinUI) không phải logic cần test. -->
+    <Compile Include="..\..\Modules\DbTools\Services\DataStores.cs" Link="DbTools\Services\DataStores.cs" />
+    <Compile Include="..\..\Modules\DbTools\Services\PgRunner.cs" Link="DbTools\Services\PgRunner.cs" />
+    <Compile Include="..\..\Modules\DbTools\Services\VcsInfo.cs" Link="DbTools\Services\VcsInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Npgsql" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="xunit.v3" />
+    <PackageReference Include="xunit.runner.visualstudio" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>
