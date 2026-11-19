@@ -64,7 +64,7 @@ public static class PgAdmin
     public static async Task<int> ServerMajorAsync(ConnectionProfile p, CancellationToken ct)
     {
         await using var c = await OpenMaintenanceAsync(p, ct);
-        await using var cmd = new NpgsqlCommand("SELECT current_setting('server_version_num')::int", c);
+        await using var cmd = new NpgsqlCommand(PgSql.ServerVersion, c);
         return Convert.ToInt32(await cmd.ExecuteScalarAsync(ct)) / 10000;
     }
 
@@ -119,7 +119,7 @@ public static class PgAdmin
     public static async Task CreateDatabaseAsync(ConnectionProfile p, string database, CancellationToken ct)
     {
         await using var c = await OpenMaintenanceAsync(p, ct);
-        await using var cmd = new NpgsqlCommand($"CREATE DATABASE {Pg.QuoteIdent(database)} TEMPLATE template0", c);
+        await using var cmd = new NpgsqlCommand(PgSql.CreateDatabase(database), c);
         await cmd.ExecuteNonQueryAsync(ct);
     }
 
@@ -128,7 +128,7 @@ public static class PgAdmin
     public static async Task CopyDatabaseAsync(ConnectionProfile p, string source, string target, CancellationToken ct)
     {
         await using var c = await OpenMaintenanceAsync(p, ct);
-        await using var cmd = new NpgsqlCommand($"CREATE DATABASE {Pg.QuoteIdent(target)} TEMPLATE {Pg.QuoteIdent(source)}", c) { CommandTimeout = 0 };
+        await using var cmd = new NpgsqlCommand(PgSql.CopyDatabase(source, target), c) { CommandTimeout = 0 };
         await cmd.ExecuteNonQueryAsync(ct);
     }
 

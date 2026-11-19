@@ -15,6 +15,43 @@ public sealed partial class BackupPage : Page
         ScrollFit.Attach(Scroller, Root, 560);
         ViewModel.Confirm = ConfirmAsync;
         ViewModel.PickFile = () => Shell.PickFileAsync(".dump", ".backup", ".sql", ".tar", "*");
+        ViewModel.ShowCommands = ShowCommandsAsync;
+    }
+
+    /// <summary>Hộp thoại Xem lệnh: script chọn / bôi đen được, nút Copy chép cả script vào clipboard.</summary>
+    private async Task ShowCommandsAsync(string title, string text)
+    {
+        // AcceptsReturn phải bật TRƯỚC khi gán Text: TextBox 1 dòng cắt mất mọi thứ sau dấu xuống dòng đầu tiên.
+        var box = new TextBox
+        {
+            IsReadOnly = true,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Consolas"),
+            FontSize = 12,
+            MinWidth = 640,
+            MaxHeight = 380,
+        };
+        box.Text = text;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(box, "CommandPreviewBox");
+        ScrollViewer.SetVerticalScrollBarVisibility(box, ScrollBarVisibility.Auto);
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = title,
+            Content = box,
+            PrimaryButtonText = "Copy",
+            CloseButtonText = "Đóng",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        dialog.Resources["ContentDialogMaxWidth"] = 900.0;
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+            package.SetText(text);
+            Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
+            ViewModel.Status = "Đã copy các câu lệnh (dán vào file .bat, điền mật khẩu ở dòng set PGPASSWORD để chạy tay).";
+        }
     }
 
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)
@@ -25,8 +62,16 @@ public sealed partial class BackupPage : Page
 
     private Task<bool> ConfirmAsync(RunConfirmation confirmation) => Dialogs.ConfirmAsync(XamlRoot, confirmation);
 
-    private void Tabs_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args) =>
+    private void Tabs_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
+    {
         ViewModel.Tab = sender.Items.IndexOf(sender.SelectedItem);
+        // Ô database của tab đang ẩn lúc trang load chưa dựng xong nên đặt chữ lúc đó không hiện → đặt lại khi tab hiện ra.
+        ComboBox? box = ViewModel.Tab switch { 0 => DumpDbBox, 1 => RestoreDbBox, 2 => CopySourceDbBox, _ => null };
+        if (box is not null)
+        {
+            DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => Ui.RefreshEditableText(box, new RoutedEventArgs()));
+        }
+    }
 
     private void DbBox_Loaded(object sender, RoutedEventArgs e) => Ui.RefreshEditableText(sender, e);
 

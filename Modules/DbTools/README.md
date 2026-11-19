@@ -89,6 +89,10 @@ hiện 200 KB cuối (file log đủ).
 - **Copy DB**: cùng host + port → `CREATE DATABASE <mới> TEMPLATE <nguồn>`; nguồn còn phiên → hộp thoại báo, bấm "Ngắt phiên
   rồi copy" mới ngắt (`pg_terminate_backend`, thử lại tối đa 3 lần). Khác server → `pg_dump -Fc` ra file tạm trong thư mục
   dump → tạo DB trên đích → `pg_restore` 1 transaction (Bỏ owner / quyền bật sẵn) → xoá file tạm.
+- **Xem lệnh** (nút cạnh Dump / Restore / Copy, `Core\CommandPreview`): các bước sẽ chạy với lựa chọn hiện tại thành script
+  .bat (`chcp 65001`, `REM` từng bước, `set PGPASSWORD=<mật khẩu của hồ sơ ...>` để trống, câu SQL Npgsql viết thành
+  `psql -c`), hộp thoại có nút Copy. Dùng chung `PgArgs` và `PgSql` (CREATE DATABASE, kiểm tra bản / DB có chưa, ngắt phiên)
+  với lúc chạy thật nên luôn khớp; dấu nháy theo quy tắc của ArgumentList (MSVC). Test chạy thật script dán ra bằng cmd.
 - Mỗi việc ghi 1 dòng Lịch sử (Mode = Dump / Restore / Copy DB, `Folder` = file dump hoặc nguồn) + file log.
 
 ## Phiên kết nối

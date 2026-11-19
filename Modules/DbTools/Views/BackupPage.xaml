@@ -100,9 +100,12 @@
                                   IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" ToolTipService.ToolTip="pg_dump -s: bảng, view, hàm, trigger... không có dòng dữ liệu" />
                         <TextBox Grid.Column="1" Header="Chỉ 1 schema (trống = cả DB)" Text="{x:Bind ViewModel.DumpSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="vd: public" ToolTipService.ToolTip="pg_dump -n &quot;schema&quot;" />
-                        <Button Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Dump" MinWidth="96"
-                                Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.DumpCommand}"
-                                AutomationProperties.AutomationId="DumpButton" />
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                            <Button Content="Xem lệnh" Command="{x:Bind ViewModel.PreviewDumpCommand}" AutomationProperties.AutomationId="PreviewDumpButton"
+                                    ToolTipService.ToolTip="Xem / copy các câu lệnh sẽ chạy khi bấm Dump (dạng file .bat, không có mật khẩu) - chưa chạy gì" />
+                            <Button Content="Dump" MinWidth="96" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.DumpCommand}"
+                                    AutomationProperties.AutomationId="DumpButton" />
+                        </StackPanel>
                     </Grid>
                     <TextBlock Text="{x:Bind ViewModel.DumpFilePreview, Mode=OneWay}" Opacity="0.7" FontSize="12" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
                 </StackPanel>
@@ -160,8 +163,12 @@
                         <CheckBox Grid.Column="2" Content="Lỗi là huỷ hết" IsChecked="{x:Bind ViewModel.RestoreSingleTransaction, Mode=TwoWay}"
                                   IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
                                   ToolTipService.ToolTip="1 transaction (--single-transaction --exit-on-error; file .sql: psql --single-transaction, ON_ERROR_STOP): lỗi ở đâu là rollback hết, DB đích không dở dang." />
-                        <Button Grid.Column="3" HorizontalAlignment="Right" Content="Restore" MinWidth="96" Style="{StaticResource CompactAccentButtonStyle}"
-                                Command="{x:Bind ViewModel.RestoreCommand}" AutomationProperties.AutomationId="RestoreButton" />
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                            <Button Content="Xem lệnh" Command="{x:Bind ViewModel.PreviewRestoreCommand}" AutomationProperties.AutomationId="PreviewRestoreButton"
+                                    ToolTipService.ToolTip="Xem / copy các câu lệnh sẽ chạy khi bấm Restore (dạng file .bat, không có mật khẩu) - chưa chạy gì" />
+                            <Button Content="Restore" MinWidth="96" Style="{StaticResource CompactAccentButtonStyle}"
+                                    Command="{x:Bind ViewModel.RestoreCommand}" AutomationProperties.AutomationId="RestoreButton" />
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
 
@@ -194,8 +201,12 @@
                         <CheckBox Content="Bỏ owner / quyền (khi khác server)" IsChecked="{x:Bind ViewModel.CopyNoOwner, Mode=TwoWay}"
                                   IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
                                   ToolTipService.ToolTip="--no-owner --no-privileges khi restore sang server khác: đối tượng thuộc user của hồ sơ đích (user gốc có thể không có trên server đó)." />
-                        <Button HorizontalAlignment="Right" Content="Copy" MinWidth="96" Style="{StaticResource CompactAccentButtonStyle}"
-                                Command="{x:Bind ViewModel.CopyCommand}" AutomationProperties.AutomationId="CopyButton" />
+                        <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                            <Button Content="Xem lệnh" Command="{x:Bind ViewModel.PreviewCopyCommand}" AutomationProperties.AutomationId="PreviewCopyButton"
+                                    ToolTipService.ToolTip="Xem / copy các câu lệnh sẽ chạy khi bấm Copy (dạng file .bat, không có mật khẩu) - chưa chạy gì" />
+                            <Button Content="Copy" MinWidth="96" Style="{StaticResource CompactAccentButtonStyle}"
+                                    Command="{x:Bind ViewModel.CopyCommand}" AutomationProperties.AutomationId="CopyButton" />
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
             </Grid>

@@ -174,6 +174,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   (bật sẵn): dump bảng bị đổi dữ liệu (cả dữ liệu), bảng / view bị thay hoặc thêm trigger / index (cấu trúc), định nghĩa hàm /
   trigger cũ ra .sql vào D:\DMP\TruocKhiChay\...; lỗi thì không chạy; Lịch sử có nút Mở bản sao lưu; Dump / Restore / Copy
   cũng ghi lịch sử. Unit test 104/104 (gồm 16 test PostgreSQL 17 thật); GUI Sandbox 37/37 + ảnh ô Database sau sửa
+- [x] Nút **Xem lệnh** cạnh Dump / Restore / Copy (2026-11-19): xem / copy trước các bước sẽ chạy dạng script .bat (câu kiểm tra,
+  CREATE DATABASE, ngắt phiên, pg_dump / pg_restore / psql đủ tham số; mật khẩu để trống ở dòng set PGPASSWORD), dùng chung
+  hàm dựng lệnh với lúc chạy thật. Sửa ô Database tab Restore / Copy trống khi mở tab lần đầu. Unit test 115/115 (gồm 17 test
+  PostgreSQL 17 thật, có chạy script dán ra bằng cmd); GUI Sandbox 10/10
 - [ ] Publish DbTools + MainLauncher bản đợt 2 vào `Application\` rồi người dùng thử tay Dump / Restore / Copy trên DB dev
   (thư mục D:\DMP, bản PostgreSQL client 12 / 17 trên máy)
 - [ ] Đợt 3: ô chạy SQL nhanh + mở kết quả bằng CsvEditor; tìm trong mã nguồn hàm / view; so DDL trên DB với file svn;

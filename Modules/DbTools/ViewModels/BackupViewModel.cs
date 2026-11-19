@@ -442,7 +442,7 @@ public sealed partial class BackupViewModel : ObservableObject
         {
             throw new UserError($"Chưa có database {database} trên {profile.Host}:{profile.Port} - chọn \"Tạo DB mới\".");
         }
-        var options = new RestoreOptions(RestoreClean && !RestoreToNew && !info.IsPlainSql, RestoreNoOwner && !info.IsPlainSql, RestoreSingleTransaction);
+        var options = RestoreOptionsFor(info.IsPlainSql);
         var lines = new List<string>
         {
             $"File: {file}",
@@ -470,7 +470,7 @@ public sealed partial class BackupViewModel : ObservableObject
         record.LogPath = AppState.History.NewLogPath(DateTime.Now);
         if (RestoreToNew)
         {
-            AppendLog($"CREATE DATABASE {Pg.QuoteIdent(database)} TEMPLATE template0");
+            AppendLog(PgSql.CreateDatabase(database));
             await PgAdmin.CreateDatabaseAsync(profile, database, ct);
         }
         AppendLog($"Restore {file} → {target.Display}");
@@ -545,7 +545,7 @@ public sealed partial class BackupViewModel : ObservableObject
                 }
                 try
                 {
-                    AppendLog($"CREATE DATABASE {Pg.QuoteIdent(targetDb)} TEMPLATE {Pg.QuoteIdent(sourceDb)}");
+                    AppendLog(PgSql.CopyDatabase(sourceDb, targetDb));
                     await PgAdmin.CopyDatabaseAsync(source, sourceDb, targetDb, ct);
                     break;
                 }
@@ -573,7 +573,7 @@ public sealed partial class BackupViewModel : ObservableObject
         {
             throw new UserError("Chưa copy gì.", cancelled: true);
         }
-        var temp = PgArgs.UniquePath(EnsureDumpFolder(), $"copy_{PgArgs.SafeFileName(sourceDb)}_{DateTime.Now:yyyyMMdd_HHmmss}.dump");
+        var temp = CopyTempPath(sourceDb, EnsureDumpFolder());
         try
         {
             AppendLog($"1/3 pg_dump {source.Host}:{source.Port}/{sourceDb} → {temp}");
@@ -582,7 +582,7 @@ public sealed partial class BackupViewModel : ObservableObject
             {
                 throw new UserError($"pg_dump lỗi (mã {code}) - xem nhật ký. Chưa tạo gì trên server đích.");
             }
-            AppendLog($"2/3 CREATE DATABASE {Pg.QuoteIdent(targetDb)} TEMPLATE template0 trên {destination.Host}:{destination.Port}");
+            AppendLog($"2/3 {PgSql.CreateDatabase(targetDb)} trên {destination.Host}:{destination.Port}");
             await PgAdmin.CreateDatabaseAsync(destination, targetDb, ct);
             AppendLog($"3/3 pg_restore → {destination.Host}:{destination.Port}/{targetDb}");
             code = await RunToolAsync(client.Exe("pg_restore"),
@@ -603,6 +603,80 @@ public sealed partial class BackupViewModel : ObservableObject
     private static string Describe(List<PgSession> sessions) =>
         string.Join(", ", sessions.Take(5).Select(s => $"{s.User}{(s.Application.Length > 0 ? " / " + s.Application : string.Empty)} từ {s.Client}"))
         + (sessions.Count > 5 ? ", ..." : string.Empty);
+
+    // ----- Xem lệnh: các bước sẽ chạy, dạng script .bat (không có mật khẩu) -----
+
+    /// <summary>Trang gắn vào: hiện script (tiêu đề, nội dung) - có nút Copy.</summary>
+    public Func<string, string, Task>? ShowCommands { get; set; }
+
+    /// <summary>Tuỳ chọn restore thật sự dùng (chung cho Restore và Xem lệnh): --clean chỉ khi ghi vào DB có sẵn; file .sql (psql) không
+    /// có --clean / --no-owner.</summary>
+    private RestoreOptions RestoreOptionsFor(bool plainSql) =>
+        new(RestoreClean && !RestoreToNew && !plainSql, RestoreNoOwner && !plainSql, RestoreSingleTransaction);
+
+    [RelayCommand]
+    private Task PreviewDumpAsync()
+    {
+        if (DumpProfile is not { } profile || DumpDatabase.Trim().Length == 0)
+        {
+            return ShowAsync("Xem lệnh - Dump", "Chọn server và database cần dump trước.");
+        }
+        var database = DumpDatabase.Trim();
+        var options = new DumpOptions(SelectedDumpFormat, DumpSchemaOnly, DumpSchema.Trim().Length > 0 ? DumpSchema.Trim() : null);
+        var file = PgArgs.UniquePath(DumpFolder.Trim(), PgArgs.DumpFileName(database, options.Format, DateTime.Now, options.Schema));
+        return ShowAsync("Xem lệnh - Dump", CommandPreview.ForDump(_client, profile.Name, PgAdmin.Target(profile, database), options, file));
+    }
+
+    [RelayCommand]
+    private Task PreviewRestoreAsync()
+    {
+        var file = RestoreFile.Trim().Trim('"');
+        if (RestoreProfile is not { } profile || RestoreDatabase.Trim().Length == 0 || file.Length == 0)
+        {
+            return ShowAsync("Xem lệnh - Restore", "Chọn file dump, server và database đích trước.");
+        }
+        var plain = _restoreArchive?.IsPlainSql ?? IsPlainSqlFile(file);
+        return ShowAsync("Xem lệnh - Restore", CommandPreview.ForRestore(_client, profile.Name, PgAdmin.Target(profile, RestoreDatabase.Trim()),
+            RestoreOptionsFor(plain), file, plain, RestoreToNew));
+    }
+
+    [RelayCommand]
+    private Task PreviewCopyAsync()
+    {
+        if (CopySourceProfile is not { } source || CopyTargetProfile is not { } destination
+            || CopySourceDatabase.Trim().Length == 0 || CopyTargetDatabase.Trim().Length == 0)
+        {
+            return ShowAsync("Xem lệnh - Copy DB", "Nhập đủ server / database nguồn và tên database mới trước.");
+        }
+        var sourceDb = CopySourceDatabase.Trim();
+        var targetDb = CopyTargetDatabase.Trim();
+        var text = CopySameServer
+            ? CommandPreview.ForCopySameServer(_client, source.Name, PgAdmin.Target(source, sourceDb), sourceDb, targetDb)
+            : CommandPreview.ForCopyOtherServer(_client, source.Name, PgAdmin.Target(source, sourceDb), destination.Name,
+                PgAdmin.Target(destination, targetDb), CopyNoOwner, CopyTempPath(sourceDb, DumpFolder.Trim()));
+        return ShowAsync("Xem lệnh - Copy DB", text);
+    }
+
+    private Task ShowAsync(string title, string text) => ShowCommands?.Invoke(title, text) ?? Task.CompletedTask;
+
+    private static string CopyTempPath(string sourceDb, string folder) =>
+        PgArgs.UniquePath(folder, $"copy_{PgArgs.SafeFileName(sourceDb)}_{DateTime.Now:yyyyMMdd_HHmmss}.dump");
+
+    /// <summary>Chưa bấm Xem nội dung: đoán kiểu file theo vài byte đầu (không có chữ ký PGDMP / tar = SQL thường).</summary>
+    private static bool IsPlainSqlFile(string file)
+    {
+        try
+        {
+            var head = new byte[512];
+            using var stream = File.OpenRead(file);
+            var n = stream.Read(head, 0, head.Length);
+            return !DumpArchiveInfo.IsArchive(head.AsSpan(0, n));
+        }
+        catch (Exception)
+        {
+            return Path.GetExtension(file).Equals(".sql", StringComparison.OrdinalIgnoreCase);
+        }
+    }
 
     // ----- Chạy 1 việc: trạng thái, nhật ký, lịch sử -----
 
