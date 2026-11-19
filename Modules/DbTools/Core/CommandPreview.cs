@@ -9,6 +9,25 @@ public static class PgSql
 
     public static string Literal(string text) => "'" + text.Replace("'", "''") + "'";
 
+    /// <summary>Như quote_ident của PostgreSQL: chỉ thêm "..." khi cần (chữ hoa, ký tự lạ, bắt đầu bằng số, từ khoá hay gặp).</summary>
+    public static string QuoteIdentIfNeeded(string name) =>
+        name.Length > 0 && (char.IsAsciiLetterLower(name[0]) || name[0] == '_')
+        && name.All(c => char.IsAsciiLetterLower(c) || char.IsAsciiDigit(c) || c is '_' or '$')
+        && !ReservedWords.Contains(name)
+            ? name
+            : QuoteIdent(name);
+
+    private static readonly HashSet<string> ReservedWords = new(StringComparer.Ordinal)
+    {
+        "all", "analyse", "analyze", "and", "any", "array", "as", "asc", "asymmetric", "both", "case", "cast", "check", "collate",
+        "column", "constraint", "create", "current_catalog", "current_date", "current_role", "current_time", "current_timestamp",
+        "current_user", "default", "deferrable", "desc", "distinct", "do", "else", "end", "except", "false", "fetch", "for", "foreign",
+        "from", "grant", "group", "having", "in", "initially", "intersect", "into", "lateral", "leading", "limit", "localtime",
+        "localtimestamp", "not", "null", "offset", "on", "only", "or", "order", "placing", "primary", "references", "returning",
+        "select", "session_user", "some", "symmetric", "table", "then", "to", "trailing", "true", "union", "unique", "user", "using",
+        "variadic", "when", "where", "window", "with",
+    };
+
     public static string CreateDatabase(string database) => $"CREATE DATABASE {QuoteIdent(database)} TEMPLATE template0";
 
     public static string CopyDatabase(string source, string target) => $"CREATE DATABASE {QuoteIdent(target)} TEMPLATE {QuoteIdent(source)}";

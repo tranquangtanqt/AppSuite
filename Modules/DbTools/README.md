@@ -16,6 +16,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 |---|---|
 | **Chạy thư mục SQL** | Đọc thư mục (gồm thư mục con) → danh sách file theo thứ tự chạy → Kiểm tra / Chạy thử / Chạy |
 | **Sao lưu / Khôi phục** | Dump (pg_dump), Restore (pg_restore / psql), Copy DB (TEMPLATE cùng server / dump-restore khác server) |
+| **Thông tin DB** | Tra cứu cấu trúc (thay DBeaver, chỉ đọc): tổng quan, bảng (cột, index, ràng buộc, trigger, DDL), view / hàm / trigger / sequence / extension + định nghĩa |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
 | **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu), Thử kết nối |
@@ -94,6 +95,26 @@ hiện 200 KB cuối (file log đủ).
   `psql -c`), hộp thoại có nút Copy. Dùng chung `PgArgs` và `PgSql` (CREATE DATABASE, kiểm tra bản / DB có chưa, ngắt phiên)
   với lúc chạy thật nên luôn khớp; dấu nháy theo quy tắc của ArgumentList (MSVC). Test chạy thật script dán ra bằng cmd.
 - Mỗi việc ghi 1 dòng Lịch sử (Mode = Dump / Restore / Copy DB, `Folder` = file dump hoặc nguồn) + file log.
+
+## Thông tin DB
+
+`Services\PgInfo` đọc catalog của 1 database (chỉ SELECT; bỏ pg_catalog, information_schema, pg_toast, pg_temp), 1 lần cho cả
+trang - lọc / sắp làm phía app:
+
+- **Tổng quan**: bản server, `pg_database_size`, encoding / collate / ctype, owner, `pg_postmaster_start_time`, số phiên, số đối
+  tượng; theo schema: owner, số bảng / view / hàm / trigger / sequence, dung lượng.
+- **Bảng**: schema.tên, loại (phân vùng / phân vùng con / bảng ngoài), số dòng ước lượng `greatest(n_live_tup, reltuples)` (≈) -
+  Đếm chính xác = `count(*)` các bảng đang hiện, dung lượng tổng / bảng / index, số cột, có PK, COMMENT, lần VACUUM / ANALYZE.
+  Lọc schema + một phần tên, sắp theo tên / dung lượng / số dòng.
+- **Chi tiết bảng** (bấm đúp / Enter / Xem chi tiết): cột (`format_type`, NOT NULL, mặc định / identity / cột tính, COLLATE
+  khác mặc định, PK, FK → bảng(cột), comment), index (`pg_get_indexdef`, dung lượng), ràng buộc (`pg_get_constraintdef`),
+  trigger (`pg_get_triggerdef`, bật / tắt), DDL. PostgreSQL không có hàm lấy DDL bảng → `Core\TableDdl` dựng lại theo thứ tự
+  của pg_dump: CREATE TABLE (cả PARTITION BY / PARTITION OF / INHERITS / UNLOGGED / FOREIGN) → ADD CONSTRAINT (FK sau cùng) →
+  CREATE INDEX (không thuộc ràng buộc) → CREATE TRIGGER (+ DISABLE) → COMMENT ON. Không có GRANT / owner. Test khứ hồi: DDL
+  dựng ra chạy vào DB trống rồi dựng lại phải y hệt.
+- **Đối tượng khác**: view / materialized view (`pg_get_viewdef` → CREATE OR REPLACE VIEW), hàm / procedure
+  (`pg_get_functiondef`), trigger, sequence (`pg_sequences`, giá trị hiện tại → CREATE SEQUENCE), extension. Chọn dòng → định
+  nghĩa + Copy.
 
 ## Phiên kết nối
 

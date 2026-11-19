@@ -178,6 +178,12 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   CREATE DATABASE, ngắt phiên, pg_dump / pg_restore / psql đủ tham số; mật khẩu để trống ở dòng set PGPASSWORD), dùng chung
   hàm dựng lệnh với lúc chạy thật. Sửa ô Database tab Restore / Copy trống khi mở tab lần đầu. Unit test 115/115 (gồm 17 test
   PostgreSQL 17 thật, có chạy script dán ra bằng cmd); GUI Sandbox 10/10
+- [x] Trang **Thông tin DB** (2026-11-19, tra cứu cấu trúc thay DBeaver, chỉ đọc catalog): Tổng quan (bản server, dung lượng,
+  encoding, owner, phiên, số đối tượng theo schema), Bảng (lọc schema / tên, sắp tên / dung lượng / số dòng, số dòng ước lượng +
+  Đếm chính xác), Chi tiết bảng (cột + PK / FK, index, ràng buộc, trigger, DDL dựng từ catalog + Copy DDL), Đối tượng khác (view,
+  hàm / procedure, trigger, sequence, extension + định nghĩa, Copy). Unit test 125/125 (gồm 19 test PostgreSQL 17 thật, có DDL
+  khứ hồi); GUI Sandbox 22/22
+- [ ] Thông tin DB đợt sau: Xuất CSV danh sách bảng / cột (mở bằng CsvEditor), So sánh 2 DB (bảng / cột / hàm thiếu, khác)
 - [ ] Publish DbTools + MainLauncher bản đợt 2 vào `Application\` rồi người dùng thử tay Dump / Restore / Copy trên DB dev
   (thư mục D:\DMP, bản PostgreSQL client 12 / 17 trên máy)
 - [ ] Đợt 3: ô chạy SQL nhanh + mở kết quả bằng CsvEditor; tìm trong mã nguồn hàm / view; so DDL trên DB với file svn;

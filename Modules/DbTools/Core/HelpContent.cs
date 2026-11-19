@@ -56,6 +56,18 @@ public static class HelpContent
             new("Nhật ký / Huỷ", "Nhật ký hiện lệnh đã chạy (không có mật khẩu) và mọi dòng pg_dump / pg_restore in ra. Huỷ = dừng tiến trình đang chạy (restore 1 transaction thì không đổi gì). Mỗi lần Dump / Restore / Copy được ghi vào Lịch sử chạy kèm file log."),
         ]),
 
+        new("Thông tin DB", "", "Tra cứu cấu trúc database thay DBeaver: tổng quan, bảng (cột, index, ràng buộc, trigger, DDL), view / hàm / trigger / sequence / extension. Chỉ đọc catalog, không thay đổi gì.", "DbInfoPage",
+        [
+            new("Đọc", "Chọn server (hồ sơ kết nối) + database (mở ô để chọn trong danh sách DB của server, hoặc gõ) → Đọc. Đọc 1 lần cả danh sách bảng / đối tượng; DB vừa đổi (chạy script, restore) thì bấm Đọc lại."),
+            new("Tổng quan", "Bản PostgreSQL, dung lượng DB, encoding / collate, owner, server chạy từ lúc nào, số phiên đang kết nối, tổng số bảng / view / hàm / trigger / sequence / extension; bảng theo schema: owner, số đối tượng từng loại, dung lượng."),
+            new("Lọc", "Tab Bảng và Đối tượng khác: chọn 1 schema hoặc (Tất cả schema), gõ một phần tên (không phân biệt hoa / thường, gõ được cả schema.tên). Bảng sắp được theo tên, dung lượng (tìm bảng to) hoặc số dòng."),
+            new("Bảng", "Mỗi dòng: schema.tên (kèm phân vùng / bảng ngoài), số dòng, dung lượng (bảng + index + TOAST), số cột, có khoá chính (✓) không, ghi chú (COMMENT). Rê chuột: dung lượng bảng / index, lần VACUUM / ANALYZE gần nhất."),
+            new("Số dòng ≈", "Số dòng mặc định là ước lượng theo thống kê của server (nhanh, có thể lệch nếu bảng chưa ANALYZE). Đếm chính xác = SELECT count(*) các bảng đang hiện (lọc trước cho ít bảng - bảng lớn có thể lâu); trong chi tiết bảng có nút Đếm dòng chính xác.", "Đếm chính xác"),
+            new("Chi tiết bảng", "Bấm đúp / Enter / Xem chi tiết. Cột: số thứ tự, tên, kiểu (độ dài / số lẻ), NOT NULL, mặc định (cả identity, cột tính), khoá (PK, FK → bảng(cột)), ghi chú. Index: tên, khoá chính / duy nhất, dung lượng, câu CREATE INDEX. Ràng buộc: khoá chính, duy nhất, khoá ngoại (ON DELETE...), check. Trigger: bật / ĐANG TẮT, hàm, câu CREATE TRIGGER. ← Danh sách bảng để quay lại.", "Bấm đúp", "Enter"),
+            new("DDL", "CREATE TABLE dựng lại từ catalog (PostgreSQL không có sẵn lệnh lấy DDL bảng) theo thứ tự như pg_dump: CREATE TABLE → ALTER TABLE ADD CONSTRAINT (khoá ngoại sau cùng) → CREATE INDEX → CREATE TRIGGER (+ DISABLE TRIGGER nếu đang tắt) → COMMENT ON. Copy DDL để dán vào script / so với file svn. Không gồm GRANT, owner, giá trị sequence."),
+            new("Đối tượng khác", "View (cả materialized), Hàm / procedure (tham số → kiểu trả về · ngôn ngữ), Trigger (trên bảng nào → hàm nào, ĐANG TẮT), Sequence (giá trị hiện tại), Extension (bản). Chọn 1 dòng → định nghĩa ở ô dưới: CREATE OR REPLACE VIEW / FUNCTION, CREATE TRIGGER, CREATE SEQUENCE, CREATE EXTENSION; Copy để chép."),
+        ]),
+
         new("Phiên kết nối", "\uE716", "Ai đang kết nối vào database nào; ngắt phiên trước khi copy DB / restore, hoặc gỡ phiên treo đang giữ khoá.", "SessionsPage",
         [
             new("Làm mới", "Đọc pg_stat_activity: PID, database, user · ứng dụng (vd DBeaver, pgAdmin, AppSuite DbTools), máy kết nối, trạng thái (đang chạy / rảnh / rảnh trong transaction...), lúc kết nối, câu gần nhất (rê chuột để xem đủ). Ô Database lọc theo 1 DB; nút ✕ = mọi DB trên server. Phiên \"(DbTools)\" là phiên app dùng để đọc danh sách - không ngắt."),

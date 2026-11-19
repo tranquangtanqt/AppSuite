@@ -15,6 +15,7 @@
         <NavigationView.MenuItems>
             <NavigationViewItem Content="Chạy thư mục SQL" Tag="RunPage" Icon="Play" />
             <NavigationViewItem Content="Sao lưu / Khôi phục" Tag="BackupPage" Icon="Save" />
+            <NavigationViewItem Content="Thông tin DB" Tag="DbInfoPage" Icon="Library" />
             <NavigationViewItem Content="Phiên kết nối" Tag="SessionsPage" Icon="People" />
             <NavigationViewItem Content="Lịch sử chạy" Tag="HistoryPage" Icon="Clock" />
             <NavigationViewItem Content="Kết nối" Tag="ConnectionsPage" Icon="World" />
