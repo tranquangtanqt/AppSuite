@@ -82,6 +82,18 @@ public sealed partial class RunViewModel : ObservableObject
     [ObservableProperty]
     private bool _dropFirst;
 
+    /// <summary>Chạy thật: dump trước các bảng / hàm / trigger đang có sẽ bị đổi (nhớ trong cài đặt, bật sẵn).</summary>
+    [ObservableProperty]
+    private bool _backupBeforeRun = AppState.Settings.BackupBeforeRun;
+
+    partial void OnBackupBeforeRunChanged(bool value)
+    {
+        AppState.Settings.BackupBeforeRun = value;
+        AppState.SaveSettings();
+    }
+
+    public string BackupTip => $"Trước khi Chạy (không áp dụng cho Chạy thử): dump các bảng / view / hàm / trigger đang có trong DB mà script sẽ đổi vào {Path.Combine(AppState.Settings.DumpFolder, PreRunBackup.SubFolder)} (đổi thư mục ở trang Sao lưu / Khôi phục). Sao lưu lỗi thì không chạy.";
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIdle))]
     [NotifyCanExecuteChangedFor(nameof(LoadFolderCommand), nameof(BrowseFolderCommand), nameof(AutoSortCommand), nameof(CheckCommand),
@@ -612,6 +624,9 @@ public sealed partial class RunViewModel : ObservableObject
                     lines.Add($"⚠ Xoá đối tượng cũ rồi tạo lại: {drop.Statements.Count} câu DROP, gồm {drop.Tables.Count()} bảng (mất cả dữ liệu trong bảng).");
                     lines.AddRange(dataLoss.Select(d => "⚠ Bảng đang có dữ liệu: " + d));
                 }
+                lines.Add(BackupBeforeRun
+                    ? $"Sao lưu trước khi chạy: bảng / hàm / trigger đang có sẽ bị đổi → {Path.Combine(AppState.Settings.DumpFolder, PreRunBackup.SubFolder)}"
+                    : "⚠ Không sao lưu trước khi chạy (đã bỏ tích).");
                 var warned = Files.Count(f => f.Status == RowStatus.Warning);
                 if (warned > 0)
                 {
@@ -634,6 +649,35 @@ public sealed partial class RunViewModel : ObservableObject
             AppendLog($"{mode} lúc {started:yyyy-MM-dd HH:mm:ss}{(record.Revision.Length > 0 ? " · " + record.Revision : string.Empty)}");
             _cts = new CancellationTokenSource();
             CancelCommand.NotifyCanExecuteChanged();
+            if (!dryRun && BackupBeforeRun)
+            {
+                Status = "Đang sao lưu trước khi chạy...";
+                try
+                {
+                    var client = await PgTools.ResolveAsync(AppState.Settings.PgBinFolder, _cts.Token);
+                    var backup = await PreRunBackup.RunAsync(profile, client, BackupPlan.Build(files, DropFirst), AppState.Settings.DumpFolder,
+                        Folder.Trim(), AppendLog, _cts.Token);
+                    record.BackupPath = backup.Folder;
+                    AppendLog(backup.Skipped
+                        ? "Sao lưu trước khi chạy: bỏ qua - " + backup.Describe() + "."
+                        : $"Đã sao lưu ({backup.Describe()}): {backup.Folder}");
+                }
+                catch (OperationCanceledException)
+                {
+                    record.Error = "Đã huỷ lúc sao lưu";
+                    AppendLog("Đã huỷ lúc sao lưu - chưa chạy gì, DB không đổi.");
+                    Status = "Đã huỷ - chưa chạy gì.";
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    record.Error = "Sao lưu trước khi chạy lỗi: " + Pg.Describe(ex);
+                    AppendLog("✗ " + record.Error);
+                    AppendLog("Chưa chạy gì, DB không đổi. Sửa lỗi sao lưu, hoặc bỏ tích \"Sao lưu trước khi chạy\" nếu chắc chắn muốn chạy không sao lưu.");
+                    Status = "Sao lưu trước khi chạy lỗi - chưa chạy gì. Xem nhật ký.";
+                    return;
+                }
+            }
             Status = dryRun ? "Đang chạy thử..." : "Đang chạy...";
             var failedIndex = -1;
             var progress = new Progress<RunEvent>(e =>
@@ -723,6 +767,7 @@ public sealed partial class RunViewModel : ObservableObject
                 .AppendLine($"Database: {record.User}@{record.Target} (hồ sơ \"{record.Profile}\"), {record.Schema}")
                 .AppendLine($"Thư mục: {record.Folder} {record.Revision}")
                 .AppendLine($"Kết quả: {(record.Success ? "Đạt" : "Thất bại")} {record.Error}")
+                .AppendLine(record.BackupPath.Length > 0 ? $"Sao lưu trước khi chạy: {record.BackupPath}" : string.Empty)
                 .AppendLine("Thứ tự chạy:");
             foreach (var row in Files)
             {

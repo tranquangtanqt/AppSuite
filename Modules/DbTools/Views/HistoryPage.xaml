@@ -16,7 +16,7 @@
         <StackPanel Spacing="2" Margin="0,0,48,0">
             <TextBlock Text="Lịch sử chạy" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock Opacity="0.7" TextWrapping="Wrap"
-                       Text="Mọi lần Chạy / Chạy thử: lúc nào, database nào, thư mục nào (bản svn / git), kết quả. Mới nhất ở trên." />
+                       Text="Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào (bản svn / git), kết quả. Mới nhất ở trên." />
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnSpacing="8">
@@ -27,7 +27,10 @@
             <TextBlock Text="{x:Bind ViewModel.Summary, Mode=OneWay}" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
                 <Button Content="Mở log" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.OpenLogCommand}" />
-                <Button Content="Mở thư mục" Command="{x:Bind ViewModel.OpenFolderCommand}" />
+                <Button Content="Mở thư mục" Command="{x:Bind ViewModel.OpenFolderCommand}"
+                        ToolTipService.ToolTip="Thư mục script của lần chạy; với Dump / Restore: file dump" />
+                <Button Content="Mở bản sao lưu" Command="{x:Bind ViewModel.OpenBackupCommand}"
+                        ToolTipService.ToolTip="Thư mục Sao lưu trước khi chạy của lần chạy đó" />
                 <Button Content="Làm mới" Command="{x:Bind ViewModel.RefreshCommand}" />
                 <Button Content="Xoá lịch sử" Command="{x:Bind ViewModel.ClearCommand}" />
             </StackPanel>

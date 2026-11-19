@@ -162,10 +162,20 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   không tự tạo. Script xoá ghi rõ schema (không xoá nhầm bảng cùng tên ở public); Kiểm tra "đã có" theo current_schema(),
   trigger / ràng buộc trên bảng thư mục tự tạo không bị báo nhầm vì trigger cùng tên ở public. Hỏi lại / nhật ký / lịch sử ghi
   schema; Thử kết nối báo schema + search_path. Unit test 81/81 (gồm 10 test PostgreSQL 17 thật); GUI Sandbox 36/36
-- [ ] Người dùng thử tay trên DB dev thật (thư mục `postgresql_sqlfile`): Kiểm tra → Chạy thử → Chạy; xem thứ tự tự sắp có
-  đúng ý không, hộp thoại hỏi lại, Lịch sử chạy có số revision svn; thử chạy vào 1 schema riêng (bảng nền mcframe ở public)
-- [ ] Publish DbTools vào `Application\` (`Publish-AppSuite.ps1 -Targets DbTools,MainLauncher` - MainLauncher đọc modules.json mới)
-- [ ] Đợt 2 (đã đề xuất): Dump / Restore / Copy DB + ngắt phiên; sao lưu đối tượng bị ảnh hưởng trước khi chạy
+- [x] Người dùng thử tay trên DB dev thật (thư mục `postgresql_sqlfile`): Kiểm tra → Chạy thử → Chạy, chạy vào schema riêng -
+  hiện tại ổn, có lỗi sẽ gửi log (2026-11-19)
+- [x] Publish DbTools + MainLauncher vào `Application\` (2026-11-18, bản có chọn schema)
+- [x] Đợt 2 (2026-11-19): trang **Sao lưu / Khôi phục** gọi pg_dump / pg_restore / psql của máy (tự chọn bản mới nhất trong
+  Program Files\PostgreSQL\*\bin / PATH hoặc chọn thư mục bin; mật khẩu qua PGPASSWORD, không trên dòng lệnh / log; thư mục
+  lưu dump mặc định D:\DMP, đổi được): **Dump** (custom / SQL, chỉ cấu trúc, 1 schema; file `<db>_yyyyMMdd_HHmm.dump` + .log),
+  **Restore** (Xem nội dung = pg_restore -l; tạo DB mới từ template0 / ghi vào DB có sẵn + --clean; bỏ owner / quyền; lỗi là
+  huỷ hết; file .sql chạy bằng psql), **Copy DB** (cùng server: TEMPLATE, còn phiên thì hỏi "Ngắt phiên rồi copy"; khác server:
+  dump file tạm → restore). Trang **Phiên kết nối** (pg_stat_activity, ngắt đã chọn / ngắt hết). **Sao lưu trước khi chạy**
+  (bật sẵn): dump bảng bị đổi dữ liệu (cả dữ liệu), bảng / view bị thay hoặc thêm trigger / index (cấu trúc), định nghĩa hàm /
+  trigger cũ ra .sql vào D:\DMP\TruocKhiChay\...; lỗi thì không chạy; Lịch sử có nút Mở bản sao lưu; Dump / Restore / Copy
+  cũng ghi lịch sử. Unit test 104/104 (gồm 16 test PostgreSQL 17 thật); GUI Sandbox 37/37 + ảnh ô Database sau sửa
+- [ ] Publish DbTools + MainLauncher bản đợt 2 vào `Application\` rồi người dùng thử tay Dump / Restore / Copy trên DB dev
+  (thư mục D:\DMP, bản PostgreSQL client 12 / 17 trên máy)
 - [ ] Đợt 3: ô chạy SQL nhanh + mở kết quả bằng CsvEditor; tìm trong mã nguồn hàm / view; so DDL trên DB với file svn;
   chạy cùng lô lên nhiều DB
 - [ ] Đợt 4: Oracle (tạo user / tablespace + quyền, impdp / expdp có REMAP_SCHEMA)

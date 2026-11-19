@@ -30,4 +30,26 @@ internal static class Ui
     public static string ResultGlyph(bool success) => success ? "" : "";
 
     public static Visibility VisibleIf(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>Phần nội dung của tab <paramref name="index"/> (SelectorBar) chỉ hiện khi tab đó đang chọn.</summary>
+    public static Visibility TabVisible(int current, int index) => current == index ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>ComboBox gõ được (IsEditable) nhận Text qua binding trước khi load xong thì ô hiện trống dù Text đã có giá trị →
+    /// gắn vào Loaded: đặt lại chữ khi control đã sẵn sàng.</summary>
+    public static void RefreshEditableText(object sender, RoutedEventArgs e)
+    {
+        if (sender is Microsoft.UI.Xaml.Controls.ComboBox { IsEditable: true } box && !string.IsNullOrEmpty(box.Text))
+        {
+            var text = box.Text;
+            box.DispatcherQueue.TryEnqueue(() =>
+            {
+                box.Text = string.Empty;
+                box.Text = text;
+            });
+        }
+    }
+
+    public static bool And2(bool a, bool b) => a && b;
+
+    public static bool And3(bool a, bool b, bool c) => a && b && c;
 }

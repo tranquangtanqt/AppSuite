@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DbTools.Views.BackupPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:DbTools.Views"
+    xmlns:vm="using:DbTools.ViewModels"
+    xmlns:models="using:DbTools.Models"
+    NavigationCacheMode="Required">
+
+    <Page.Resources>
+        <DataTemplate x:Key="ProfileTemplate" x:DataType="models:ConnectionProfile">
+            <TextBlock Text="{x:Bind Display, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+        </DataTemplate>
+    </Page.Resources>
+
+    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+    <Grid x:Name="Root" Padding="24,12" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" MinHeight="100" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Spacing="2" Margin="0,0,48,0">
+            <TextBlock Text="Sao lưu / Khôi phục" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Opacity="0.7" TextWrapping="Wrap"
+                       Text="Dump database ra file (pg_dump), Restore từ file (pg_restore / psql), Copy DB sang tên mới hoặc server khác." />
+        </StackPanel>
+
+        <!-- Cài đặt: thư mục lưu dump + bộ PostgreSQL client -->
+        <Grid Grid.Row="1" ColumnSpacing="8" RowSpacing="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <TextBox x:Name="DumpFolderBox" Header="Thư mục lưu file dump" Text="{x:Bind ViewModel.DumpFolder, Mode=TwoWay}"
+                     IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" AutomationProperties.AutomationId="DumpFolderBox"
+                     ToolTipService.ToolTip="File dump, file tạm khi Copy DB khác server, và bản Sao lưu trước khi chạy (thư mục con TruocKhiChay) đều nằm ở đây." />
+            <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseDumpFolderCommand}" />
+            <Button Grid.Column="2" VerticalAlignment="Bottom" Content="Mở" Command="{x:Bind ViewModel.OpenDumpFolderCommand}"
+                    ToolTipService.ToolTip="Mở thư mục lưu dump trong Explorer" />
+            <ComboBox x:Name="ClientBox" Grid.Column="3" Header="PostgreSQL client (pg_dump / pg_restore / psql)" HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Bind ViewModel.ClientOptions}" SelectedItem="{x:Bind ViewModel.SelectedClient, Mode=TwoWay}"
+                      IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" AutomationProperties.AutomationId="ClientBox"
+                      ToolTipService.ToolTip="Tự động = bản mới nhất tìm thấy (Program Files\PostgreSQL\*\bin, PATH). pg_dump phải cùng bản hoặc mới hơn server." />
+            <Button Grid.Column="4" VerticalAlignment="Bottom" Content="Thư mục bin..." Command="{x:Bind ViewModel.BrowseClientFolderCommand}"
+                    ToolTipService.ToolTip="Chọn thư mục bin có pg_dump.exe (vd D:\PostgreSQL12_9\PostgreSQL\12\bin)" />
+            <TextBlock Grid.Row="1" Grid.ColumnSpan="5" Text="{x:Bind ViewModel.ClientInfo, Mode=OneWay}" Opacity="0.7" FontSize="12"
+                       TextWrapping="Wrap" AutomationProperties.AutomationId="ClientInfo" />
+        </Grid>
+
+        <SelectorBar x:Name="Tabs" Grid.Row="2" SelectionChanged="Tabs_SelectionChanged" AutomationProperties.AutomationId="Tabs">
+            <SelectorBarItem Text="Dump (sao lưu ra file)" IsSelected="True" />
+            <SelectorBarItem Text="Restore (khôi phục từ file)" />
+            <SelectorBarItem Text="Copy DB" />
+        </SelectorBar>
+
+        <Border Grid.Row="3" Padding="16,12" CornerRadius="4" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid>
+                <!-- Dump -->
+                <StackPanel Spacing="8" Visibility="{x:Bind views:Ui.TabVisible(ViewModel.Tab, 0), Mode=OneWay}">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MaxWidth="420" />
+                            <ColumnDefinition Width="*" MaxWidth="260" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Header="Server (hồ sơ kết nối)" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
+                                  SelectedItem="{x:Bind ViewModel.DumpProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="(chưa có kết nối)" />
+                        <ComboBox x:Name="DumpDbBox" Grid.Column="1" Header="Database" IsEditable="True" HorizontalAlignment="Stretch"
+                                  ItemsSource="{x:Bind ViewModel.DumpDatabases}" Text="{x:Bind ViewModel.DumpDatabase, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" DropDownOpened="DumpDbBox_DropDownOpened" Loaded="DbBox_Loaded"
+                                  AutomationProperties.AutomationId="DumpDbBox" />
+                        <ComboBox Grid.Column="2" Header="Kiểu file" SelectedIndex="{x:Bind ViewModel.DumpFormatIndex, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" AutomationProperties.AutomationId="DumpFormatBox">
+                            <ComboBoxItem Content="Custom (.dump) - khuyên dùng" />
+                            <ComboBoxItem Content="SQL thường (.sql)" />
+                        </ComboBox>
+                    </Grid>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="220" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox VerticalAlignment="Bottom" Content="Chỉ cấu trúc (không dữ liệu)" IsChecked="{x:Bind ViewModel.DumpSchemaOnly, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" ToolTipService.ToolTip="pg_dump -s: bảng, view, hàm, trigger... không có dòng dữ liệu" />
+                        <TextBox Grid.Column="1" Header="Chỉ 1 schema (trống = cả DB)" Text="{x:Bind ViewModel.DumpSchema, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="vd: public" ToolTipService.ToolTip="pg_dump -n &quot;schema&quot;" />
+                        <Button Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Dump" MinWidth="96"
+                                Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.DumpCommand}"
+                                AutomationProperties.AutomationId="DumpButton" />
+                    </Grid>
+                    <TextBlock Text="{x:Bind ViewModel.DumpFilePreview, Mode=OneWay}" Opacity="0.7" FontSize="12" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                </StackPanel>
+
+                <!-- Restore -->
+                <StackPanel Spacing="8" Visibility="{x:Bind views:Ui.TabVisible(ViewModel.Tab, 1), Mode=OneWay}">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="RestoreFileBox" Header="File dump" Text="{x:Bind ViewModel.RestoreFile, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="D:\DMP\db_20261119_0930.dump"
+                                 AutomationProperties.AutomationId="RestoreFileBox" />
+                        <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Chọn..." Command="{x:Bind ViewModel.BrowseRestoreFileCommand}" />
+                        <Button Grid.Column="2" VerticalAlignment="Bottom" Content="Xem nội dung" Command="{x:Bind ViewModel.InspectCommand}"
+                                ToolTipService.ToolTip="Đọc thông tin file dump (pg_restore -l): DB gốc, lúc dump, bản PostgreSQL, số bảng / hàm / view" />
+                    </Grid>
+                    <TextBlock x:Name="RestoreInfoText" Text="{x:Bind ViewModel.RestoreInfo, Mode=OneWay}" FontSize="12" TextWrapping="Wrap"
+                               IsTextSelectionEnabled="True" AutomationProperties.AutomationId="RestoreInfo" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MaxWidth="420" />
+                            <ColumnDefinition Width="*" MaxWidth="260" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Header="Restore lên server" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
+                                  SelectedItem="{x:Bind ViewModel.RestoreProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="(chưa có kết nối)" />
+                        <ComboBox x:Name="RestoreDbBox" Grid.Column="1" Header="Database đích" IsEditable="True" HorizontalAlignment="Stretch"
+                                  ItemsSource="{x:Bind ViewModel.RestoreDatabases}" Text="{x:Bind ViewModel.RestoreDatabase, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" DropDownOpened="RestoreDbBox_DropDownOpened" Loaded="DbBox_Loaded"
+                                  AutomationProperties.AutomationId="RestoreDbBox" />
+                        <StackPanel Grid.Column="2" VerticalAlignment="Bottom">
+                            <RadioButton x:Name="RestoreNewRadio" GroupName="RestoreMode" MinHeight="28" Content="Tạo DB mới" IsChecked="{x:Bind ViewModel.RestoreToNew, Mode=TwoWay}"
+                                         IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" ToolTipService.ToolTip="Tên chưa có trên server: tạo database trống (template0) rồi restore vào" />
+                            <RadioButton x:Name="RestoreExistingRadio" GroupName="RestoreMode" MinHeight="28" Content="Ghi vào DB có sẵn" IsChecked="{x:Bind ViewModel.RestoreToExisting, Mode=TwoWay}"
+                                         IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="RestoreCleanBox" Content="Xoá đối tượng trùng tên trước" IsChecked="{x:Bind ViewModel.RestoreClean, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind views:Ui.And3(ViewModel.RestoreToExisting, ViewModel.RestoreIsArchive, ViewModel.IsIdle), Mode=OneWay}"
+                                  ToolTipService.ToolTip="--clean --if-exists: bảng / hàm... trong DB đích trùng tên với file dump bị xoá (cả dữ liệu) rồi tạo lại. Chỉ khi Ghi vào DB có sẵn, file custom." />
+                        <CheckBox Grid.Column="1" Content="Bỏ owner / quyền" IsChecked="{x:Bind ViewModel.RestoreNoOwner, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind views:Ui.And2(ViewModel.RestoreIsArchive, ViewModel.IsIdle), Mode=OneWay}"
+                                  ToolTipService.ToolTip="--no-owner --no-privileges: không đặt owner / GRANT như DB gốc - dùng khi user trên server đích khác (user gốc chưa có thì restore lỗi)." />
+                        <CheckBox Grid.Column="2" Content="Lỗi là huỷ hết" IsChecked="{x:Bind ViewModel.RestoreSingleTransaction, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
+                                  ToolTipService.ToolTip="1 transaction (--single-transaction --exit-on-error; file .sql: psql --single-transaction, ON_ERROR_STOP): lỗi ở đâu là rollback hết, DB đích không dở dang." />
+                        <Button Grid.Column="3" HorizontalAlignment="Right" Content="Restore" MinWidth="96" Style="{StaticResource CompactAccentButtonStyle}"
+                                Command="{x:Bind ViewModel.RestoreCommand}" AutomationProperties.AutomationId="RestoreButton" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Copy DB -->
+                <StackPanel Spacing="8" Visibility="{x:Bind views:Ui.TabVisible(ViewModel.Tab, 2), Mode=OneWay}">
+                    <Grid ColumnSpacing="8" RowSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MaxWidth="420" />
+                            <ColumnDefinition Width="*" MaxWidth="260" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <ComboBox Header="Nguồn: server" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
+                                  SelectedItem="{x:Bind ViewModel.CopySourceProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="(chưa có kết nối)" />
+                        <ComboBox x:Name="CopySourceDbBox" Grid.Column="1" Header="Database nguồn" IsEditable="True" HorizontalAlignment="Stretch"
+                                  ItemsSource="{x:Bind ViewModel.CopySourceDatabases}" Text="{x:Bind ViewModel.CopySourceDatabase, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" DropDownOpened="CopySourceDbBox_DropDownOpened" Loaded="DbBox_Loaded"
+                                  AutomationProperties.AutomationId="CopySourceDbBox" />
+                        <ComboBox Grid.Row="1" Header="Đích: server" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
+                                  SelectedItem="{x:Bind ViewModel.CopyTargetProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="(chưa có kết nối)" />
+                        <TextBox x:Name="CopyTargetDbBox" Grid.Row="1" Grid.Column="1" Header="Tên database mới" Text="{x:Bind ViewModel.CopyTargetDatabase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                 IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" AutomationProperties.AutomationId="CopyTargetDbBox" />
+                    </Grid>
+                    <TextBlock Text="{x:Bind ViewModel.CopyModeInfo, Mode=OneWay}" Opacity="0.8" FontSize="12" TextWrapping="Wrap" AutomationProperties.AutomationId="CopyModeInfo" />
+                    <Grid>
+                        <CheckBox Content="Bỏ owner / quyền (khi khác server)" IsChecked="{x:Bind ViewModel.CopyNoOwner, Mode=TwoWay}"
+                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
+                                  ToolTipService.ToolTip="--no-owner --no-privileges khi restore sang server khác: đối tượng thuộc user của hồ sơ đích (user gốc có thể không có trên server đó)." />
+                        <Button HorizontalAlignment="Right" Content="Copy" MinWidth="96" Style="{StaticResource CompactAccentButtonStyle}"
+                                Command="{x:Bind ViewModel.CopyCommand}" AutomationProperties.AutomationId="CopyButton" />
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Trạng thái -->
+        <Grid Grid.Row="4" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ProgressRing IsActive="{x:Bind ViewModel.IsBusy, Mode=OneWay}" Width="20" Height="20" />
+            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Status, Mode=OneWay}" TextWrapping="Wrap" VerticalAlignment="Center"
+                       AutomationProperties.AutomationId="StatusText" />
+            <Button Grid.Column="2" Content="Huỷ" Command="{x:Bind ViewModel.CancelCommand}" ToolTipService.ToolTip="Dừng pg_dump / pg_restore đang chạy" />
+            <HyperlinkButton Grid.Column="3" VerticalAlignment="Center" Content="Copy nhật ký" Padding="4,0" Command="{x:Bind ViewModel.CopyLogCommand}" />
+        </Grid>
+
+        <TextBox x:Name="LogBox" Grid.Row="5" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" FontFamily="Consolas" FontSize="12"
+                 Text="{x:Bind ViewModel.LogOutput, Mode=OneWay}" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 AutomationProperties.AutomationId="LogBox" AutomationProperties.Name="Nhật ký" TextChanged="LogBox_TextChanged" />
+    </Grid>
+    </ScrollViewer>
+</Page>

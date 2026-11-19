@@ -119,6 +119,18 @@ public sealed class AppSettings
     public bool IncludeSubfolders { get; set; } = true;
     public string LastProfile { get; set; } = string.Empty;
 
+    /// <summary>Thư mục lưu file dump (Dump, Copy DB khác server dùng file tạm ở đây) + bản sao lưu trước khi chạy
+    /// (&lt;thư mục&gt;\TruocKhiChay). Đổi ở trang Sao lưu / Khôi phục.</summary>
+    public string DumpFolder { get; set; } = DefaultDumpFolder;
+
+    public const string DefaultDumpFolder = @"D:\DMP";
+
+    /// <summary>Thư mục bin của PostgreSQL client (pg_dump / pg_restore / psql). Rỗng = tự động (bản mới nhất tìm được).</summary>
+    public string PgBinFolder { get; set; } = string.Empty;
+
+    /// <summary>Chạy (thật) thư mục script: dump trước các bảng / hàm / trigger đang có sẽ bị đổi. Bật sẵn.</summary>
+    public bool BackupBeforeRun { get; set; } = true;
+
     /// <summary>Thư mục (đường dẫn đầy đủ, viết thường) → danh sách đường dẫn tương đối theo thứ tự chạy đã lưu.</summary>
     public Dictionary<string, List<string>> SavedOrders { get; set; } = [];
 
@@ -157,6 +169,9 @@ public sealed class RunRecord
     public string Revision { get; set; } = string.Empty;
     public long DurationMs { get; set; }
     public string LogPath { get; set; } = string.Empty;
+
+    /// <summary>Thư mục sao lưu trước khi chạy (rỗng = không sao lưu / không có gì cần sao lưu).</summary>
+    public string BackupPath { get; set; } = string.Empty;
 }
 
 /// <summary>Lịch sử chạy: Data\History\history.json (mới nhất ở đầu, giữ tối đa <see cref="MaxRecords"/> lần) + log từng lần

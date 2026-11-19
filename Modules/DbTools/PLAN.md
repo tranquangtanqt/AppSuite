@@ -43,8 +43,24 @@ Kiểm tra trước khi chạy + Script xoá ngược + Lịch sử chạy.
 - Thử với thư mục thật (27 file, đối tượng nền mcframe giả lập): thứ tự đúng, chạy thử / chạy / chạy lại xoá-rồi-tạo đều đạt.
 - GUI trong Windows Sandbox (UIA): 3 trang, đọc thư mục, thứ tự, kiểm tra / chạy thử / chạy, hỏi lại, lịch sử, cửa sổ hẹp.
 
+## Đợt 2 (2026-11-19, người dùng chọn "làm hết theo đề xuất", thư mục lưu D:\DMP đổi được, sao lưu trước khi chạy bật sẵn)
+
+Thay các bat `backup*.bat` / `restore*.bat` (mật khẩu ghi rõ, đường dẫn PostgreSQL 12 / 17 cố định, không biết lỗi ở đâu).
+
+- **Gọi pg_dump / pg_restore / psql của máy**, không tự viết dump: định dạng custom chuẩn, dùng lẫn được với bat / pgAdmin.
+  Tự chọn bản mới nhất (bản mới đọc được server / file cũ; pg_dump cũ hơn server bị từ chối → báo trước). Mật khẩu qua
+  `PGPASSWORD` của tiến trình con, `-w` để không bao giờ treo chờ gõ mật khẩu.
+- **Restore an toàn mặc định**: 1 transaction + dừng ở lỗi đầu; tạo DB mới từ template0 hoặc ghi vào DB có sẵn (`--clean`
+  phải tự bật). Không làm DROP DATABASE.
+- **Copy DB**: cùng server dùng TEMPLATE (nhanh, nhưng cần không còn phiên → hỏi trước khi ngắt, không tự ngắt khi chưa
+  được đồng ý); khác server dump ra file tạm rồi restore.
+- **Phiên kết nối**: trang riêng để xem / ngắt (pg_stat_activity / pg_terminate_backend).
+- **Sao lưu trước khi chạy**: không dump cả DB (có thể rất lớn) mà chỉ đối tượng đang có sẽ bị đổi; bảng nền chỉ bị thêm
+  trigger / index thì lấy cấu trúc, bảng bị đổi dữ liệu / bị xoá thì lấy cả dữ liệu; hàm / trigger lấy định nghĩa hiện tại
+  ra .sql chạy lại được. Sao lưu lỗi thì không chạy.
+
 ## Đợt sau (đã đề xuất)
 
-Dump / Restore / Copy DB + ngắt phiên; sao lưu đối tượng bị ảnh hưởng trước khi chạy; chạy cùng lô lên nhiều DB; ô chạy
+Chạy cùng lô lên nhiều DB; ô chạy
 SQL nhanh + mở kết quả bằng CsvEditor; tìm trong mã nguồn hàm / view; so DDL trên DB với file svn; Oracle (tạo user /
 tablespace + quyền, impdp / expdp có REMAP_SCHEMA).

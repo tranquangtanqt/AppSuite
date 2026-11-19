@@ -33,6 +33,22 @@ public static class Shell
         }
     }
 
+    /// <summary>Chọn 1 file; <paramref name="extensions"/> dạng ".dump" (hoặc "*" = mọi file).</summary>
+    public static async Task<string?> PickFileAsync(params string[] extensions)
+    {
+        var picker = new FileOpenPicker { SuggestedStartLocation = PickerLocationId.ComputerFolder };
+        foreach (var ext in extensions)
+        {
+            picker.FileTypeFilter.Add(ext);
+        }
+        if (App.MainWindow is { } window)
+        {
+            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(window));
+        }
+        StorageFile? file = await picker.PickSingleFileAsync();
+        return file?.Path;
+    }
+
     public static async Task<string?> PickFolderAsync()
     {
         var picker = new FolderPicker { SuggestedStartLocation = PickerLocationId.ComputerFolder };

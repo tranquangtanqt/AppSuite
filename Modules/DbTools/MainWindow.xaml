@@ -3,7 +3,7 @@
     x:Class="DbTools.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    Title="DbTools - chạy script SQL lên PostgreSQL">
+    Title="DbTools - script SQL, sao lưu / khôi phục PostgreSQL">
 
     <Window.SystemBackdrop>
         <MicaBackdrop />
@@ -14,6 +14,8 @@
                     OpenPaneLength="220" SelectionChanged="Nav_SelectionChanged" ItemInvoked="Nav_ItemInvoked">
         <NavigationView.MenuItems>
             <NavigationViewItem Content="Chạy thư mục SQL" Tag="RunPage" Icon="Play" />
+            <NavigationViewItem Content="Sao lưu / Khôi phục" Tag="BackupPage" Icon="Save" />
+            <NavigationViewItem Content="Phiên kết nối" Tag="SessionsPage" Icon="People" />
             <NavigationViewItem Content="Lịch sử chạy" Tag="HistoryPage" Icon="Clock" />
             <NavigationViewItem Content="Kết nối" Tag="ConnectionsPage" Icon="World" />
         </NavigationView.MenuItems>

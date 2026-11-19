@@ -184,12 +184,17 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <CheckBox x:Name="DropFirstBox" VerticalAlignment="Center" Content="Xoá đối tượng cũ rồi tạo lại" IsChecked="{x:Bind ViewModel.DropFirst, Mode=TwoWay}"
-                      IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
-                      ToolTipService.ToolTip="Trước khi chạy: DROP ... IF EXISTS các đối tượng mà thư mục tạo ra (thứ tự ngược, không CASCADE), trong cùng transaction. DROP TABLE xoá luôn dữ liệu." />
-            <Button Grid.Column="1" Content="Xem script xoá" Command="{x:Bind ViewModel.SaveDropScriptCommand}"
+            <StackPanel VerticalAlignment="Center">
+                <CheckBox x:Name="DropFirstBox" MinHeight="28" Content="Xoá đối tượng cũ rồi tạo lại" IsChecked="{x:Bind ViewModel.DropFirst, Mode=TwoWay}"
+                          IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
+                          ToolTipService.ToolTip="Trước khi chạy: DROP ... IF EXISTS các đối tượng mà thư mục tạo ra (thứ tự ngược, không CASCADE), trong cùng transaction. DROP TABLE xoá luôn dữ liệu." />
+                <CheckBox x:Name="BackupFirstBox" MinHeight="28" Content="Sao lưu trước khi chạy" IsChecked="{x:Bind ViewModel.BackupBeforeRun, Mode=TwoWay}"
+                          IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" AutomationProperties.AutomationId="BackupFirstBox"
+                          ToolTipService.ToolTip="{x:Bind ViewModel.BackupTip}" />
+            </StackPanel>
+            <Button Grid.Column="1" VerticalAlignment="Center" Content="Xem script xoá" Command="{x:Bind ViewModel.SaveDropScriptCommand}"
                     ToolTipService.ToolTip="Ghi script xoá ngược ra file .sql tạm và mở ra xem" />
-            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
+            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <Button Content="Kiểm tra" Command="{x:Bind ViewModel.CheckCommand}"
                         ToolTipService.ToolTip="Đối chiếu với DB (chỉ đọc): đối tượng đã có, file xoá / sửa dữ liệu, lệnh không chạy được" />
                 <Button Content="Chạy thử" Command="{x:Bind ViewModel.DryRunCommand}"

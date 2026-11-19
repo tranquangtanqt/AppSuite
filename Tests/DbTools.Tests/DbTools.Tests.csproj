@@ -23,6 +23,10 @@
     <Compile Include="..\..\Modules\DbTools\Services\DataStores.cs" Link="DbTools\Services\DataStores.cs" />
     <Compile Include="..\..\Modules\DbTools\Services\PgRunner.cs" Link="DbTools\Services\PgRunner.cs" />
     <Compile Include="..\..\Modules\DbTools\Services\VcsInfo.cs" Link="DbTools\Services\VcsInfo.cs" />
+    <!-- Sao lưu / khôi phục: gọi pg_dump / pg_restore (test thật cần DBTOOLS_TEST_PG + PostgreSQL client trên máy). -->
+    <Compile Include="..\..\Modules\DbTools\Services\PgTools.cs" Link="DbTools\Services\PgTools.cs" />
+    <Compile Include="..\..\Modules\DbTools\Services\PgAdmin.cs" Link="DbTools\Services\PgAdmin.cs" />
+    <Compile Include="..\..\Modules\DbTools\Services\PreRunBackup.cs" Link="DbTools\Services\PreRunBackup.cs" />
   </ItemGroup>
 
   <ItemGroup>

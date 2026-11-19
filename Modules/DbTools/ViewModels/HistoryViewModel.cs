@@ -16,7 +16,7 @@ public sealed class HistoryRow(RunRecord record)
         + (Record.Schema.Length > 0 && !Record.Schema.Contains("mặc định") ? $" · {Record.Schema}" : string.Empty);
     public string Folder => Record.Folder;
     public string FolderName => Path.GetFileName(Record.Folder.TrimEnd('\\', '/'));
-    public string Revision => Record.Revision;
+    public string Revision => Record.BackupPath.Length > 0 ? $"{Record.Revision} · có sao lưu trước khi chạy".TrimStart(' ', '·') : Record.Revision;
     public bool Success => Record.Success;
     public string Result => Record.Success
         ? $"Đạt · {Record.FilesDone}/{Record.FileCount} file · {Record.DurationMs / 1000.0:0.0}s"
@@ -29,7 +29,7 @@ public sealed partial class HistoryViewModel : ObservableObject
     public ObservableCollection<HistoryRow> Rows { get; } = [];
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(OpenLogCommand), nameof(OpenFolderCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenLogCommand), nameof(OpenFolderCommand), nameof(OpenBackupCommand))]
     private HistoryRow? _selected;
 
     [ObservableProperty]
@@ -60,10 +60,17 @@ public sealed partial class HistoryViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanOpenLog))]
     private void OpenLog() => Shell.Open(Selected!.Record.LogPath);
 
-    private bool CanOpenFolder => Selected is not null && Directory.Exists(Selected.Folder);
+    /// <summary>Thư mục script (Chạy), hoặc file dump (Dump / Restore: mở Explorer chọn sẵn file).</summary>
+    private bool CanOpenFolder => Selected is not null && (Directory.Exists(Selected.Folder) || File.Exists(Selected.Folder));
 
     [RelayCommand(CanExecute = nameof(CanOpenFolder))]
-    private void OpenFolder() => Shell.Open(Selected!.Folder);
+    private void OpenFolder() => Shell.Reveal(Selected!.Folder);
+
+    private bool CanOpenBackup => Selected is { Record.BackupPath.Length: > 0 } s && Directory.Exists(s.Record.BackupPath);
+
+    /// <summary>Thư mục sao lưu trước khi chạy của lần chạy đó.</summary>
+    [RelayCommand(CanExecute = nameof(CanOpenBackup))]
+    private void OpenBackup() => Shell.Open(Selected!.Record.BackupPath);
 
     private bool CanClear => Rows.Count > 0;
 
