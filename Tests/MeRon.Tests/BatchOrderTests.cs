@@ -678,4 +678,78 @@ public class BatchOrderTests
         Assert.Equal(new DateOnly(2026, 10, 29), BatchOrderParser.Parse("Ngày | 29/10", Today).Day);
         Assert.Equal(new DateOnly(2027, 12, 30), BatchOrderParser.Parse("Ngày | 30/12/2027", new DateOnly(2027, 1, 2)).Day);
     }
+
+    // ----- Giảm giá (cột "giảm 10k", popup Sửa đơn) -----
+
+    [Theory]
+    [InlineData("giảm 10k", 10000L)]
+    [InlineData("Giảm giá 10.000", 10000L)]
+    [InlineData("giam 5000", 5000L)]
+    [InlineData("gg 15k", 15000L)]
+    [InlineData("GG: 2,5k", 2500L)]
+    [InlineData("-10k", 10000L)]
+    [InlineData("giảm", null)]
+    [InlineData("10k", null)]
+    [InlineData("CK", null)]
+    public void Parses_discount_text(string text, long? expected)
+    {
+        Assert.Equal(expected, BatchOrderParser.ParseDiscount(text));
+    }
+
+    [Fact]
+    public void Discount_column_in_any_order_with_price_and_ck()
+    {
+        var a = BatchOrderParser.Parse("Mỹ Ly | 3 sc uống | giảm 5k | CK", Today).Lines.Single();
+        Assert.Equal((5000L, true, (long?)null), (a.Discount, a.Paid, a.Price));
+        var b = BatchOrderParser.Parse("1201 | 1 phần cá | CK | 45k | gg 10k", Today).Lines.Single();
+        Assert.Equal((10000L, true, (long?)45000), (b.Discount, b.Paid, b.Price));
+        Assert.Equal(0, BatchOrderParser.Parse("Mỹ Ly | 3 sc uống", Today).Lines.Single().Discount);
+    }
+
+    [Fact]
+    public void Discount_written_among_items_is_not_a_free_item()
+    {
+        var line = BatchOrderParser.Parse("Mỹ Ly: 3 sc uống + giảm 10k + 1 giò", Today).Lines.Single();
+        Assert.Equal(10000, line.Discount);
+        Assert.Equal(["sc uống", "giò"], line.Items.Select(i => i.Name));
+        // "gg 2" (viết tắt + số lượng nhỏ) vẫn là món, không phải giảm 2đ
+        Assert.Equal(0, BatchOrderParser.Parse("Mỹ Ly | gg 2", Today).Lines.Single().Discount);
+    }
+
+    [Fact]
+    public void Discount_lowers_total_and_goes_into_the_order()
+    {
+        var match = MatchLine("Mỹ Ly | 3 sc uống; 1 giò | giảm 10k | CK");
+        Assert.True(match.CanSave);
+        Assert.Empty(match.Warnings);
+        Assert.Equal(75000, match.SubTotal);
+        Assert.Equal(65000, match.Total);
+        var draft = match.ToDraft(Today);
+        Assert.Equal(10000, draft.Discount);
+        Assert.True(draft.IsPrepaid);
+    }
+
+    [Fact]
+    public void Discount_not_below_items_total_warns()
+    {
+        var match = MatchLine("Mỹ Ly | 1 nấm | giảm 10k");
+        Assert.Equal(0, match.Total);
+        Assert.Contains(match.Warnings, w => w.StartsWith("Giảm 10.000"));
+    }
+
+    [Fact]
+    public void Compose_and_format_keep_discount_and_read_back()
+    {
+        var map = Products.ToDictionary(p => p.Id);
+        var line = BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(10, 3)], map, paid: true, discount: 5000);
+        Assert.Equal("Mỹ Ly | 3 Sữa chua uống |  | giảm 5k | CK", line);
+        var match = Reread(line, Products);
+        Assert.Equal((5000L, true, 40000L), (match.Line.Discount, match.Line.Paid, match.Total));
+
+        Assert.Equal("Mỹ Ly | 3 Sữa chua uống |  | giảm 5k", BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(10, 3)], map, paid: false, discount: 5000));
+        Assert.Equal("Mỹ Ly | 3 Sữa chua uống |  | giảm 1500", BatchOrderParser.Compose("Mỹ Ly", [new OrderLineDraft(10, 3)], map, paid: false, discount: 1500));
+        // Chọn khách / món trên thẻ (Format) không làm mất giảm giá
+        var picked = BatchOrderParser.Format(BatchOrderParser.Parse("Ly? | 3 sc uống | 45k | giảm 2k | CK", Today).Lines.Single(), customer: "Mỹ Ly");
+        Assert.Equal("Mỹ Ly | 3 sc uống | 45k | giảm 2k | CK", picked);
+    }
 }

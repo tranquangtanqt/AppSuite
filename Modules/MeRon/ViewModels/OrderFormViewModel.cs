@@ -528,6 +528,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
     {
         Load(new OrderFormArgs(null, InitialUserId: match.Customer?.Id));
         IsPrepaid = match.Line.Paid;
+        Discount = match.Line.Discount;
         foreach (var item in match.Items)
         {
             Lines.Add(item.Product is { } product ? new OrderLineViewModel(this, new OrderLineDraft(product.Id, item.Quantity))
@@ -551,7 +552,7 @@ public sealed partial class OrderFormViewModel : ObservableObject
         var customer = Customer is { IsNew: false } c
             ? BatchOrderParser.CustomerText(c.Id, c.Name, c.Address, Customers.Select(o => (o.Id, (string?)o.Name)))
             : match.Line.Customer;
-        return (BatchOrderParser.Compose(customer, drafts, ProductMap, IsPrepaid, BatchOrderParser.UnusedLinePrice(match)),
+        return (BatchOrderParser.Compose(customer, drafts, ProductMap, IsPrepaid, BatchOrderParser.UnusedLinePrice(match), DiscountValue),
             BatchPin.FromLines(Customer is { IsNew: false } picked ? picked.Id : null, drafts));
     }
 

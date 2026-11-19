@@ -65,7 +65,9 @@ public sealed partial class BatchRowViewModel(BatchLineMatch match, bool isCheck
         : i.IsResolved ? i.Label
         : $"{i.Label} ⚠"));
 
-    public string TotalText => Match.CanSave ? VnFormat.Money(Match.Total) : "?";
+    public string TotalText => !Match.CanSave ? "?"
+        : Match.Line.Discount > 0 ? $"{VnFormat.Money(Match.Total)} (giảm {VnFormat.Money(Match.Line.Discount)})"
+        : VnFormat.Money(Match.Total);
 
     public bool Paid => Match.Line.Paid;
 
@@ -611,10 +613,11 @@ public sealed partial class BatchOrdersViewModel : ObservableObject
         "Tôi gửi ảnh chụp trang sổ ghi đơn hàng viết tay (bán đồ ăn cho cư dân chung cư).\n" +
         "Mỗi dòng sổ là 1 đơn: bên trái là khách (số căn hộ và/hoặc tên, vd \"706 Mỹ Ly\", \"W1 Tuấn Chung\", \"12a09\"), bên phải là các món nối bằng dấu \"+\".\n\n" +
         "Hãy chép lại MỖI ĐƠN 1 DÒNG theo đúng mẫu sau, không thêm gì khác:\n" +
-        "khách | số lượng tên món; số lượng tên món | giá nếu có ghi | CK nếu có ghi\n\n" +
+        "khách | số lượng tên món; số lượng tên món | giá nếu có ghi | giảm ... nếu có ghi giảm giá | CK nếu có ghi\n\n" +
         "Quy tắc:\n" +
         "- Giữ nguyên chữ viết tắt như trong sổ (vd \"3 sc uống\"), tôi tự đổi.\n" +
         "- Giá viết như trong sổ (vd 45k). Không ghi giá thì để trống.\n" +
+        "- Có ghi giảm giá (vd \"giảm 5k\", \"-5k\") thì thêm cột: giảm 5k. Không có thì bỏ cột này.\n" +
         "- Chữ nào đọc không chắc thì thêm dấu ? ngay sau chữ đó, vd \"5 pana?\".\n" +
         "- Dòng bị gạch bỏ thì bỏ qua.\n" +
         "- Dòng đầu tiên ghi ngày của trang sổ, dạng: Ngày | 29/10\n\n" +

@@ -91,15 +91,23 @@
         <Grid ColumnSpacing="16">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <ToggleSwitch Header="Đã thanh toán (CK)" IsOn="{x:Bind ViewModel.IsPrepaid, Mode=TwoWay}" OnContent="Có" OffContent="Không"
                           AutomationProperties.Name="Đã thanh toán" />
-            <Border Grid.Column="1" Padding="12,6" CornerRadius="8" HorizontalAlignment="Right" VerticalAlignment="Bottom"
-                    Background="{ThemeResource AccentFillColorDefaultBrush}">
-                <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeEmphasis}"
-                           Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" AutomationProperties.AutomationId="BatchEditTotal" />
-            </Border>
+            <!-- Giảm giá như form đơn; Áp dụng ghi thành cột "giảm 10k" trên dòng chữ -->
+            <NumberBox Grid.Column="1" Header="Giảm giá" Value="{x:Bind ViewModel.Discount, Mode=TwoWay}" Minimum="0" Width="160"
+                       VerticalAlignment="Bottom" Loaded="DiscountBox_Loaded"
+                       AutomationProperties.Name="Giảm giá" AutomationProperties.AutomationId="BatchEditDiscount" />
+            <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Spacing="2">
+                <TextBlock Text="{x:Bind ViewModel.SubTotalText, Mode=OneWay}" HorizontalAlignment="Right" Opacity="0.8"
+                           AutomationProperties.AutomationId="BatchEditSubTotal" />
+                <Border Padding="12,6" CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                    <TextBlock Text="{x:Bind ViewModel.TotalText, Mode=OneWay}" FontWeight="SemiBold" FontSize="{StaticResource FontSizeEmphasis}"
+                               Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" AutomationProperties.AutomationId="BatchEditTotal" />
+                </Border>
+            </StackPanel>
         </Grid>
 
         <InfoBar Severity="Error" IsClosable="False" Message="{x:Bind ViewModel.Error, Mode=OneWay}"

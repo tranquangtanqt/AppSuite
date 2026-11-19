@@ -506,6 +506,12 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
 - [x] Nhập đơn hàng loạt (người dùng 2026-11-16): thông báo xanh ("Đã lưu 1 đơn…") **tự đóng sau 8 giây** (rê chuột vào thì
   giữ); mỗi thẻ có **nút xoá** dạng icon (thùng rác đỏ, góc dưới phải) bỏ dòng khỏi ô chữ, thông báo có Hoàn tác (trả chữ + ghim).
   Unit test 277/277; GUI Sandbox (UIA) 17/17 (2026-11-16)
+- [x] Nhập đơn hàng loạt - **Giảm giá** (người dùng 2026-11-19: popup Sửa đơn chưa có Giảm giá): dòng chữ có cột `giảm 10k`
+  (cũng hiểu `giảm giá 10.000`, `gg 10k`, `-10k`, ghi lẫn trong phần món từ 1.000đ); popup Sửa đơn có ô Giảm giá + Tạm tính / Tổng,
+  Áp dụng ghi cột `giảm …`; thẻ hiện tổng đã trừ "(giảm …)"; Lưu tạo đơn kèm Giảm giá; giảm ≥ tiền hàng thì cảnh báo; chọn khách /
+  món trên thẻ giữ cột giảm; câu lệnh Chép cho Claude có thêm cột giảm. Unit test 300/300; GUI Sandbox (UIA) 10/12 - 2 lượt script
+  tìm chữ thiếu " đ", ảnh + DB đã lưu đúng (giảm 10.000 / 2.000, tổng 35.000 / 28.000) (2026-11-19)
+- [ ] Cập nhật hướng dẫn của Project "MeRon – đọc sổ đơn" trên claude.ai thêm cột `giảm …` (app chỉ đổi câu lệnh Chép ở nút ▾)
 - [x] Công nợ (người dùng 2026-11-16): (1) Chi tiết của khách → sửa đơn → quay lại thì tiêu đề "khách · Tổng" tính lại (trước
   giữ tổng cũ); (2) **Hoàn tác** thanh toán trên thông báo xanh sau Thanh toán hết (Công nợ) / Thanh toán toàn bộ (Chi tiết) -
   lỡ thanh toán nhầm khách: đơn trả về Đã lên đơn + ngày thanh toán cũ, đơn đã sửa sau đó giữ nguyên.

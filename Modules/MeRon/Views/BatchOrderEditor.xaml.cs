@@ -9,8 +9,8 @@ using Windows.System;
 namespace MeRon.Views;
 
 /// <summary>
-/// Popup Sửa đơn của Nhập đơn hàng loạt: giống form đơn nhưng chỉ có những gì dòng chữ ghi được (khách, món, đã thanh toán).
-/// Giảm giá, ghi chú không có; ngày giao dùng chung ở đầu trang.
+/// Popup Sửa đơn của Nhập đơn hàng loạt: giống form đơn nhưng chỉ có những gì dòng chữ ghi được (khách, món, đã thanh toán,
+/// giảm giá - cột "giảm 10k"). Ghi chú không có; ngày giao dùng chung ở đầu trang.
 /// </summary>
 public sealed partial class BatchOrderEditor : UserControl
 {
@@ -98,6 +98,14 @@ public sealed partial class BatchOrderEditor : UserControl
             CustomerBox.Focus(FocusState.Programmatic);
         }
         return null;
+    }
+
+    /// <summary>Như form đơn: định dạng tiền, Tổng đổi ngay khi đang gõ.</summary>
+    private void DiscountBox_Loaded(object sender, RoutedEventArgs e)
+    {
+        var box = (NumberBox)sender;
+        box.NumberFormatter = Format.MoneyFormatter();
+        LiveNumberBox.Attach(box, ViewModel.PreviewDiscount, TextAlignment.Right);
     }
 
     private void FreePriceBox_Loaded(object sender, RoutedEventArgs e)

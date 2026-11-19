@@ -9,16 +9,17 @@ namespace MeRon.Core.Orders;
 /// như ghi trong sổ (cả số lượng, bỏ giá / dấu ?) - tên của món tự do ("5 lạng tôm").</summary>
 public sealed record BatchItem(long Quantity, string Name, long? Price, bool Unsure, string Text);
 
-/// <summary>1 dòng = 1 đơn: <c>khách | món; món | giá | CK</c>. <see cref="Number"/> = số dòng (từ 1) trong ô chữ.</summary>
+/// <summary>1 dòng = 1 đơn: <c>khách | món; món | giá | giảm 10k | CK</c>. <see cref="Number"/> = số dòng (từ 1) trong ô chữ.
+/// <see cref="Discount"/> = giảm giá của đơn (0 = không giảm).</summary>
 public sealed record BatchLine(int Number, string Raw, string Customer, bool CustomerUnsure, IReadOnlyList<BatchItem> Items, long? Price, bool Paid,
-    string? Error = null);
+    string? Error = null, long Discount = 0);
 
 /// <summary>Kết quả đọc cả ô chữ: ngày giao (dòng "Ngày | 29/10", null = không ghi) + các dòng đơn.</summary>
 public sealed record BatchText(DateOnly? Day, IReadOnlyList<BatchLine> Lines);
 
 /// <summary>
 /// Đọc chữ dán vào trang Nhập đơn hàng loạt - chép từ sổ ghi tay (nhờ Claude đọc ảnh), tin nhắn Zalo hoặc gõ tay. Mỗi dòng 1
-/// đơn: <c>khách | món; món | giá | CK</c> (không có "|" thì "khách: món + món"). Món cách nhau bằng ";", "+" hoặc ",";
+/// đơn: <c>khách | món; món | giá | giảm 10k | CK</c> (không có "|" thì "khách: món + món"). Món cách nhau bằng ";", "+" hoặc ",";
 /// "3 Sữa chua uống", "3sc", "sc x3" đều là 3; giá "45k" = 45.000, "45.000" / "45000"; "CK" = đã chuyển khoản.
 /// </summary>
 public static partial class BatchOrderParser
@@ -34,6 +35,14 @@ public static partial class BatchOrderParser
 
     [GeneratedRegex(@"^ng[aà]y\s*[|:]?\s*(.+)$", RegexOptions.IgnoreCase)]
     private static partial Regex DayLine();
+
+    /// <summary>Giảm giá (đã bỏ dấu): "giam 10k", "giam gia 10k", "gg 10k", "-10k".</summary>
+    [GeneratedRegex(@"^(?:giam(?:\s*gia)?|gg|-)\s*:?\s*(\d.*)$", RegexOptions.IgnoreCase)]
+    private static partial Regex DiscountText();
+
+    /// <summary>"giảm 10k" / "giảm giá 10.000" / "gg 10k" / "-10k" → 10000; không phải giảm giá → null.</summary>
+    public static long? ParseDiscount(string? text) =>
+        DiscountText().Match(TextSearch.Fold(text).Trim()) is { Success: true } m ? ParsePrice(m.Groups[1].Value) : null;
 
     /// <summary>Tách dòng: \r\n, \n và \r (ô nhập nhiều dòng của WinUI dùng \r) - số dòng khớp với dòng nhìn thấy trong ô.</summary>
     public static string[] SplitLines(string? text) => (text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
@@ -78,11 +87,16 @@ public static partial class BatchOrderParser
 
         var paid = false;
         long? price = null;
+        long discount = 0;
         foreach (var extra in parts.Skip(2).Select(p => p.Trim()).Where(p => p.Length > 0))
         {
             if (string.Equals(extra, "CK", StringComparison.OrdinalIgnoreCase))
             {
                 paid = true;
+            }
+            else if (ParseDiscount(extra) is { } off)
+            {
+                discount = off;
             }
             else if (ParsePrice(extra) is { } value)
             {
@@ -96,7 +110,14 @@ public static partial class BatchOrderParser
             paid = true;
             itemsText = TrailingCk().Replace(itemsText, string.Empty);
         }
-        var items = itemsText.Split([';', '+', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        // "giảm 10k" ghi lẫn trong phần món (2 sc; giảm 10k) vẫn là giảm giá, không thành món tự do giá 10k.
+        var itemTexts = itemsText.Split([';', '+', ','], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+        foreach (var text in itemTexts.Where(t => ParseDiscount(t) is >= 1000).ToList()) // "gg 2" (viết tắt + số lượng) không phải giảm 2đ
+        {
+            discount = ParseDiscount(text)!.Value;
+            itemTexts.Remove(text);
+        }
+        var items = itemTexts
             .Select(ParseItem)
             .Where(item => item.Name.Length > 0)
             .ToList();
@@ -105,7 +126,7 @@ public static partial class BatchOrderParser
         var customerUnsure = customer.Contains('?');
         customer = customer.Replace("?", string.Empty).Trim();
         string? error = customer.Length == 0 ? "Thiếu khách" : items.Count == 0 ? "Thiếu món" : null;
-        return new BatchLine(number, raw, customer, customerUnsure, items, price, paid, error);
+        return new BatchLine(number, raw, customer, customerUnsure, items, price, paid, error, discount);
     }
 
     private static BatchItem ParseItem(string text)
@@ -158,20 +179,23 @@ public static partial class BatchOrderParser
             return $"{item.Quantity} {name}{(item.Price is { } p ? " " + PriceText(p) : string.Empty)}{(unsure ? "?" : string.Empty)}";
         });
         var customerText = customer is not null ? Clean(customer) : line.Customer + (line.CustomerUnsure ? "?" : string.Empty);
-        return $"{customerText} | {string.Join("; ", items)} | {(line.Price is { } price ? PriceText(price) : string.Empty)} | {(line.Paid ? "CK" : string.Empty)}"
+        return $"{customerText} | {string.Join("; ", items)} | {(line.Price is { } price ? PriceText(price) : string.Empty)}{DiscountColumn(line.Discount)} | {(line.Paid ? "CK" : string.Empty)}"
             .TrimEnd(' ', '|');
     }
+
+    /// <summary>Cột giảm giá viết thêm sau cột giá (không giảm → không có cột, dòng giữ đúng như trước).</summary>
+    private static string DiscountColumn(long discount) => discount > 0 ? $" | giảm {PriceText(discount)}" : string.Empty;
 
     /// <summary>Viết lại cả dòng từ popup Sửa đơn: mọi món đã chọn xong nên không còn dấu ? và giá ở cột riêng. Món tự do ghi giá
     /// cả dòng, tên kèm số lượng ("2 phần cá 90k"): đọc lại sẽ là 1 × 90.000, đúng thành tiền đã thấy trên popup.
     /// <paramref name="linePrice"/> = giá ghi ở cột riêng của dòng cũ mà chưa món tự do nào dùng: giữ lại, không xoá chữ người dùng ghi.</summary>
     public static string Compose(string customer, IEnumerable<OrderLineDraft> lines, IReadOnlyDictionary<long, Product> products, bool paid,
-        long? linePrice = null)
+        long? linePrice = null, long discount = 0)
     {
         var items = lines.Select(line => line.IsFree
             ? $"{(line.Quantity > 1 ? $"{line.Quantity} " : string.Empty)}{Clean(line.FreeName)} {PriceText((line.FreePrice ?? 0) * line.Quantity)}"
             : $"{line.Quantity} {Clean(products[line.ProductId!.Value].Name)}");
-        return $"{Clean(customer)} | {string.Join("; ", items)} | {(linePrice is { } price ? PriceText(price) : string.Empty)} | {(paid ? "CK" : string.Empty)}"
+        return $"{Clean(customer)} | {string.Join("; ", items)} | {(linePrice is { } price ? PriceText(price) : string.Empty)}{DiscountColumn(discount)} | {(paid ? "CK" : string.Empty)}"
             .TrimEnd(' ', '|');
     }
 
@@ -312,7 +336,11 @@ public sealed record BatchLineMatch(
     /// <summary>Khách / món lấy theo ghim (<see cref="BatchPin"/>) chứ không theo chữ.</summary>
     public bool Pinned { get; init; }
 
-    public long Total => Items.Sum(i => i.UnitPrice * i.Quantity);
+    /// <summary>Tiền hàng (chưa trừ giảm giá).</summary>
+    public long SubTotal => Items.Sum(i => i.UnitPrice * i.Quantity);
+
+    /// <summary>Tổng sau giảm giá (như đơn sẽ lưu: không âm).</summary>
+    public long Total => OrderCalculator.Total(SubTotal, Line.Discount);
 
     /// <summary>Đơn ghi vào khách chung "Chưa rõ khách" (nút Chưa rõ khách trên thẻ) → ghi chú có dấu Cần xác nhận kèm chữ khách đã ghi.</summary>
     public string? DraftNote => Customer is { } c && OrderConfirm.IsUnknownCustomer(c.Name)
@@ -320,7 +348,7 @@ public sealed record BatchLineMatch(
             (Line.Customer.Replace("?", string.Empty).Trim() is { Length: > 0 } hint && !OrderConfirm.IsUnknownCustomer(hint) ? ": " + hint : string.Empty), null)
         : null;
 
-    public OrderDraft ToDraft(DateOnly day) => new(0, Customer?.Id, OrderStatus.Shipping, day.ToDateTime(TimeOnly.MinValue), Line.Paid, null, 0, DraftNote,
+    public OrderDraft ToDraft(DateOnly day) => new(0, Customer?.Id, OrderStatus.Shipping, day.ToDateTime(TimeOnly.MinValue), Line.Paid, null, Line.Discount, DraftNote,
         Items.Select(i => i.Product is { } p
             ? new OrderLineDraft(p.Id, i.Quantity)
             : new OrderLineDraft(null, i.Quantity, true, i.FreeName, i.FreePrice)).ToList());
@@ -435,6 +463,11 @@ public static class BatchOrderMatcher
         foreach (var item in items.Where(i => i.Product is not null && i.Source.Price is { } p && p != i.Product.Price))
         {
             warnings.Add($"\"{item.Name}\" ghi giá {VnFormat.Money(item.Source.Price)} - tính theo giá món {VnFormat.Money(item.Product!.Price ?? 0)}");
+        }
+        var subTotal = items.Sum(i => i.UnitPrice * i.Quantity);
+        if (line.Discount > 0 && problems.Count == 0 && line.Discount >= subTotal)
+        {
+            warnings.Add($"Giảm {VnFormat.Money(line.Discount)} ≥ tiền hàng {VnFormat.Money(subTotal)} - đơn thành 0đ, xem lại số giảm");
         }
         return new BatchLineMatch(line, customer, candidates, items, problems, warnings) { Pinned = pinned };
     }

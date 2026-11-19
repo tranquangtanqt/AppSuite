@@ -67,7 +67,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="260" />
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="PasteBox" Header="Dán chữ - mỗi dòng 1 đơn: khách | món; món | giá | CK  (vd: 706 Mỹ Ly | 3 sc uống)"
+            <TextBox x:Name="PasteBox" Header="Dán chữ - mỗi dòng 1 đơn: khách | món; món | giá | giảm 10k | CK  (vd: 706 Mỹ Ly | 3 sc uống)"
                      Text="{x:Bind ViewModel.Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" TextWrapping="Wrap"
                      Height="150" ScrollViewer.VerticalScrollBarVisibility="Auto" FontFamily="Consolas"
                      PlaceholderText="Ngày | 29/10&#x0a;706 Mỹ Ly | 3 sc uống&#x0a;W1 Tuấn Chung | 1 bún; 10 nấm; 1 giò&#x0a;1201 | 1 phần cá | 45k | CK"
