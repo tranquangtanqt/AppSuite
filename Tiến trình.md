@@ -183,6 +183,12 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   Đếm chính xác), Chi tiết bảng (cột + PK / FK, index, ràng buộc, trigger, DDL dựng từ catalog + Copy DDL), Đối tượng khác (view,
   hàm / procedure, trigger, sequence, extension + định nghĩa, Copy). Unit test 125/125 (gồm 19 test PostgreSQL 17 thật, có DDL
   khứ hồi); GUI Sandbox 22/22
+- [x] Trang **Sinh dữ liệu mẫu** (2026-11-19): nguồn bảng trong DB (kiểu, khoá, FK, DB tự sinh, N dòng mẫu) hoặc file CSV
+  (UTF-8 / Shift-JIS, đoán kiểu); cách sinh từng cột app đề xuất, chỉnh được (Bỏ qua, Tăng dần số / mã, Số / Ngày ngẫu nhiên,
+  Chọn trong danh sách, Mẫu chuỗi {n}, Giữ nguyên, NULL, true / false, UUID, Khoá ngoại); kiểm tra NOT NULL / độ dài / numeric /
+  không trùng; Xem trước 20 dòng = đầu file; đầu ra CSV và / hoặc INSERT (encoding, tiêu đề, NULL, số dòng tới 1.000.000, thư mục -
+  nhớ trong cài đặt); nút Sinh dữ liệu mẫu trong chi tiết bảng (Thông tin DB). Unit test 141/141 (gồm 20 test PostgreSQL 17
+  thật, có sinh 2000 dòng rồi INSERT vào DB không lỗi khoá); GUI Sandbox 15/15 (file INSERT chạy bằng psql đủ 1500 dòng)
 - [ ] Thông tin DB đợt sau: Xuất CSV danh sách bảng / cột (mở bằng CsvEditor), So sánh 2 DB (bảng / cột / hàm thiếu, khác)
 - [ ] Publish DbTools + MainLauncher bản đợt 2 vào `Application\` rồi người dùng thử tay Dump / Restore / Copy trên DB dev
   (thư mục D:\DMP, bản PostgreSQL client 12 / 17 trên máy)

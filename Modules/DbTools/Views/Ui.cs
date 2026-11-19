@@ -31,6 +31,8 @@ internal static class Ui
 
     public static Visibility VisibleIf(bool value) => value ? Visibility.Visible : Visibility.Collapsed;
 
+    public static Visibility HiddenIf(bool value) => value ? Visibility.Collapsed : Visibility.Visible;
+
     /// <summary>Phần nội dung của tab <paramref name="index"/> (SelectorBar) chỉ hiện khi tab đó đang chọn.</summary>
     public static Visibility TabVisible(int current, int index) => current == index ? Visibility.Visible : Visibility.Collapsed;
 

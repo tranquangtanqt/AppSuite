@@ -65,7 +65,7 @@ AppSuite.sln
 |   |-- ImageCompare/             So sanh 2 hinh anh: khac biet, canh nhau, chong mo, tim anh con, tim chu (OCR)
 |   |-- FileTools/                Xu ly file text/CSV/log lon (vai GB): noi, tach, trich, tim, loc, doi encoding...
 |   |-- MeRon/                   Quan ly ban hang (ban may tinh cua app dien thoai me-ron): dat hang, mua hang, 4 bao cao, danh muc; nhap / xuat backup TSV
-|   `-- DbTools/                 Chay thu muc script SQL len PostgreSQL: tu sap thu tu, kiem tra, chay thu, 1 transaction (loi la rollback het), sao luu truoc khi chay, lich su; Dump / Restore / Copy DB (pg_dump / pg_restore), xem / ngat phien ket noi, Thong tin DB (tra cuu cau truc bang / DDL / view / ham)
+|   `-- DbTools/                 Chay thu muc script SQL len PostgreSQL: tu sap thu tu, kiem tra, chay thu, 1 transaction (loi la rollback het), sao luu truoc khi chay, lich su; Dump / Restore / Copy DB (pg_dump / pg_restore), xem / ngat phien ket noi, Thong tin DB (tra cuu cau truc bang / DDL / view / ham), sinh du lieu mau (CSV / INSERT)
 |
 |-- Tests/                      Unit test (xUnit v3, exe tu chay) - xem muc "Unit test" trong README cua tung module
 |   |-- CsvEditor.Tests/

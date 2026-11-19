@@ -28,6 +28,7 @@
     <Compile Include="..\..\Modules\DbTools\Services\PgAdmin.cs" Link="DbTools\Services\PgAdmin.cs" />
     <Compile Include="..\..\Modules\DbTools\Services\PreRunBackup.cs" Link="DbTools\Services\PreRunBackup.cs" />
     <Compile Include="..\..\Modules\DbTools\Services\PgInfo.cs" Link="DbTools\Services\PgInfo.cs" />
+    <Compile Include="..\..\Modules\DbTools\Services\MockSource.cs" Link="DbTools\Services\MockSource.cs" />
   </ItemGroup>
 
   <ItemGroup>

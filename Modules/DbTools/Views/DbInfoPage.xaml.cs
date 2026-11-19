@@ -31,6 +31,15 @@ public sealed partial class DbInfoPage : Page
     private void ObjectKinds_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args) =>
         ViewModel.ObjectKind = sender.Items.IndexOf(sender.SelectedItem);
 
+    private void MockData_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.LoadedProfile is { } profile)
+        {
+            MockDataViewModel.Pending = (profile, ViewModel.LoadedDatabase, ViewModel.DetailTitle);
+            App.MainWindow?.ShowPage("MockDataPage");
+        }
+    }
+
     private void DbBox_Loaded(object sender, RoutedEventArgs e) => Ui.RefreshEditableText(sender, e);
 
     private async void DbBox_DropDownOpened(object sender, object e) => await ViewModel.LoadDatabasesAsync();

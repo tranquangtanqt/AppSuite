@@ -131,6 +131,31 @@ public sealed class AppSettings
     /// <summary>Chạy (thật) thư mục script: dump trước các bảng / hàm / trigger đang có sẽ bị đổi. Bật sẵn.</summary>
     public bool BackupBeforeRun { get; set; } = true;
 
+    // ----- Sinh dữ liệu mẫu (nhớ lựa chọn lần trước) -----
+
+    /// <summary>Số dòng sinh ra (1 - <see cref="MockMaxRows"/>).</summary>
+    public int MockRows { get; set; } = 100;
+
+    public const int MockMaxRows = 1_000_000;
+
+    /// <summary>Số dòng mẫu đọc từ bảng.</summary>
+    public int MockSampleRows { get; set; } = 5;
+    public bool MockCsv { get; set; } = true;
+    public bool MockSql { get; set; } = true;
+
+    /// <summary>Utf8Bom / Utf8 / ShiftJis (tên của DbTools.Core.CsvEncoding).</summary>
+    public string MockEncoding { get; set; } = "Utf8Bom";
+    public bool MockHeader { get; set; } = true;
+
+    /// <summary>False = NULL ghi ô trống; true = ghi chữ NULL.</summary>
+    public bool MockNullAsText { get; set; }
+
+    /// <summary>Thư mục lưu file sinh ra. Rỗng = &lt;thư mục dump&gt;\DuLieuMau.</summary>
+    public string MockFolder { get; set; } = string.Empty;
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string MockFolderOrDefault => MockFolder.Trim().Length > 0 ? MockFolder.Trim() : Path.Combine(DumpFolder, "DuLieuMau");
+
     /// <summary>Thư mục (đường dẫn đầy đủ, viết thường) → danh sách đường dẫn tương đối theo thứ tự chạy đã lưu.</summary>
     public Dictionary<string, List<string>> SavedOrders { get; set; } = [];
 

@@ -283,6 +283,8 @@
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
                         <Button Content="Đếm dòng chính xác" Command="{x:Bind ViewModel.CountRowsCommand}" ToolTipService.ToolTip="SELECT count(*) (bảng lớn có thể lâu)" />
                         <Button Content="Copy DDL" Command="{x:Bind ViewModel.CopyDdlCommand}" AutomationProperties.AutomationId="CopyDdlButton" />
+                        <Button Content="Sinh dữ liệu mẫu" Click="MockData_Click" AutomationProperties.AutomationId="MockDataButton"
+                                ToolTipService.ToolTip="Mở trang Sinh dữ liệu mẫu với bảng này (lấy vài dòng đầu làm mẫu)" />
                     </StackPanel>
                 </Grid>
                 <TextBlock Grid.Row="1" Text="{x:Bind ViewModel.DetailInfo, Mode=OneWay}" Opacity="0.8" TextWrapping="Wrap" IsTextSelectionEnabled="True"

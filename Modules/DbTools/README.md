@@ -17,6 +17,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Chạy thư mục SQL** | Đọc thư mục (gồm thư mục con) → danh sách file theo thứ tự chạy → Kiểm tra / Chạy thử / Chạy |
 | **Sao lưu / Khôi phục** | Dump (pg_dump), Restore (pg_restore / psql), Copy DB (TEMPLATE cùng server / dump-restore khác server) |
 | **Thông tin DB** | Tra cứu cấu trúc (thay DBeaver, chỉ đọc): tổng quan, bảng (cột, index, ràng buộc, trigger, DDL), view / hàm / trigger / sequence / extension + định nghĩa |
+| **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
 | **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu), Thử kết nối |
@@ -115,6 +116,24 @@ trang - lọc / sắp làm phía app:
 - **Đối tượng khác**: view / materialized view (`pg_get_viewdef` → CREATE OR REPLACE VIEW), hàm / procedure
   (`pg_get_functiondef`), trigger, sequence (`pg_sequences`, giá trị hiện tại → CREATE SEQUENCE), extension. Chọn dòng → định
   nghĩa + Copy.
+
+## Sinh dữ liệu mẫu
+
+- **Nguồn** (`Services\MockSource`): bảng trong DB - `PgInfo.TableDetailAsync` (kiểu, NOT NULL, identity / cột tính / DEFAULT
+  nextval = DB tự sinh), N dòng đầu ép `::text`, khoá chính / duy nhất (danh sách cột), `max()` của cột không trùng 1 cột, giá trị
+  đang có của khoá ngoại 1 cột (`DISTINCT`, tối đa 5000); hoặc file CSV (`MockOutput.ReadCsv`: UTF-8 / Shift-JIS qua
+  `SqlScriptFile.Decode`, phẩy / tab, ô trống / `NULL` = NULL; kiểu đoán bằng `MockType.Infer`). Từ Thông tin DB → chi tiết bảng →
+  Sinh dữ liệu mẫu (`MockDataViewModel.Pending`).
+- **Cách sinh** (`Core\MockData`, `MockSuggest.For` đề xuất): Bỏ qua (DB tự sinh), Tăng dần (số / mã giữ tiền tố + số chữ số, sau
+  max đang có; số 1, 2, 3... và mã A001, A002 cùng tiền tố cũng đề xuất Tăng dần), Số ngẫu nhiên min..max (đúng scale), Ngày
+  ngẫu nhiên (±30 ngày quanh mẫu), Chọn trong danh sách A|B|C (cờ / mã ngắn / giá trị lặp), Mẫu chuỗi {n}, Giữ nguyên, NULL,
+  true / false, UUID, Khoá ngoại.
+- **Sinh** (`MockGenerator.Stream`): từng dòng theo 1 `Random(seed)` - seed đổi mỗi lần Đọc mẫu, Xem trước 20 dòng = 20 dòng đầu
+  file; CSV và INSERT sinh 2 lượt cùng seed nên khớp nhau, không giữ cả khối trong bộ nhớ (tới 1.000.000 dòng). Lỗi NOT NULL, độ
+  dài varchar / char, numeric(p,s), trùng khoá chính / duy nhất → `MockError` báo cột + giá trị, xoá file dở dang.
+- **Ghi** (`MockOutput`): CSV (UTF-8 BOM / UTF-8 / Shift-JIS, tiêu đề, NULL = ô trống / chữ NULL, dấu nháy theo RFC 4180), INSERT
+  500 dòng / câu, không BEGIN / COMMIT. File `<bảng>_<N>dong_<lúc>.csv|.sql` trong `MockFolder` (mặc định `<thư mục dump>\DuLieuMau`).
+  Lựa chọn nhớ trong `settings.json` (`Mock*`).
 
 ## Phiên kết nối
 

@@ -104,6 +104,11 @@ public sealed partial class DbInfoViewModel : ObservableObject
     private List<TableRow> _allTables = [];
     private List<DbObjectItem> _allObjects = [];
     private ConnectionProfile? _loadedProfile;
+
+    /// <summary>Server + database của lần Đọc gần nhất (chi tiết bảng mở trên đó).</summary>
+    public ConnectionProfile? LoadedProfile => _loadedProfile;
+
+    public string LoadedDatabase => _loadedDatabase;
     private string _loadedDatabase = string.Empty;
 
     public ObservableCollection<ConnectionProfile> Profiles => AppState.Profiles;
