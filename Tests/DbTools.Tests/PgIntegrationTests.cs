@@ -187,6 +187,35 @@ public sealed class PgIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Runs_sql_standard_function_bodies_begin_atomic()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(Server), "Chưa đặt DBTOOLS_TEST_PG.");
+        await ExecAsync("CREATE TABLE atomic_t (id int, kind text)");
+        var file = SqlScriptFile.Parse(System.Text.Encoding.UTF8.GetBytes("""
+            CREATE OR REPLACE FUNCTION atomic_count() RETURNS bigint LANGUAGE sql
+            BEGIN ATOMIC
+                SELECT count(*) FROM atomic_t;
+            END;
+            CREATE OR REPLACE PROCEDURE atomic_add(x int) LANGUAGE sql
+            BEGIN ATOMIC
+                INSERT INTO atomic_t VALUES (x, CASE WHEN x > 0 THEN 'dương;' ELSE 'âm' END);
+                INSERT INTO atomic_t VALUES (x + 1, 'kế');
+            END;
+            CALL atomic_add(5);
+            """), "atomic.sql", "atomic.sql");
+        Assert.Equal(3, file.Statements.Count);
+
+        var (first, _) = await RunAsync([file], dryRun: false, DropScript.Build([file]));
+        Assert.True(first.Success, first.Error);
+        Assert.Equal(2L, await ScalarAsync("SELECT atomic_count()"));
+        Assert.Equal("dương;", await ScalarAsync("SELECT kind FROM atomic_t WHERE id = 5"));
+        // Chạy lại có Xoá đối tượng cũ: DROP đúng tên hàm / procedure rồi tạo lại
+        var (second, _) = await RunAsync([file], dryRun: false, DropScript.Build([file]));
+        Assert.True(second.Success, second.Error);
+        Assert.Equal(4L, await ScalarAsync("SELECT atomic_count()"));
+    }
+
+    [Fact]
     public async Task Chosen_schema_creates_there_and_finds_base_objects_in_public()
     {
         Assert.SkipWhen(string.IsNullOrEmpty(Server), "Chưa đặt DBTOOLS_TEST_PG.");

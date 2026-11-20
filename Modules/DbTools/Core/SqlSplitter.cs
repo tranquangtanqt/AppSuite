@@ -30,6 +30,10 @@ public static class SqlSplitter
         var n = text.Length;
         var start = -1; // vị trí ký tự đầu của câu đang đọc; -1 = chưa vào câu nào
         var i = 0;
+        // Thân hàm SQL chuẩn (CREATE FUNCTION ... BEGIN ATOMIC ...; END, PostgreSQL 14+) - như psql: trong câu CREATE [OR REPLACE]
+        // FUNCTION / PROCEDURE, BEGIN / CASE tăng độ sâu (cả trong ngoặc - CASE trong VALUES (...)), END giảm; ; chỉ kết thúc câu khi độ sâu = 0.
+        var words = new List<string>(4); // 4 từ đầu của câu (viết thường) để nhận CREATE ... FUNCTION / PROCEDURE
+        var beginDepth = 0;
 
         void Emit(int end)
         {
@@ -39,7 +43,13 @@ public static class SqlSplitter
                 statements.Add(new SqlStatement(body, lines.LineOf(start), start));
             }
             start = -1;
+            words.Clear();
+            beginDepth = 0;
         }
+
+        bool IsRoutine() => words.Count >= 2 && words[0] == "create"
+            && (words[1] is "function" or "procedure"
+                || (words.Count >= 4 && words[1] == "or" && words[2] == "replace" && words[3] is "function" or "procedure"));
 
         while (i < n)
         {
@@ -95,8 +105,33 @@ public static class SqlSplitter
             }
             else if (c == ';')
             {
-                Emit(i);
+                if (beginDepth == 0)
+                {
+                    Emit(i);
+                }
                 i++;
+            }
+            else if ((char.IsLetter(c) || c == '_') && (i == 0 || !IsIdentChar(text[i - 1])))
+            {
+                var j = i + 1;
+                while (j < n && IsIdentChar(text[j]))
+                {
+                    j++;
+                }
+                var word = text[i..j].ToLowerInvariant();
+                if (words.Count < 4)
+                {
+                    words.Add(word);
+                }
+                if (word is "begin" or "case" && IsRoutine())
+                {
+                    beginDepth++;
+                }
+                else if (word == "end" && beginDepth > 0)
+                {
+                    beginDepth--;
+                }
+                i = j;
             }
             else
             {

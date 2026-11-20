@@ -28,7 +28,8 @@ F1 / nút ? / mục Hướng dẫn: cửa sổ hướng dẫn dùng chung `Share
 
 1. **Đọc thư mục**: mọi `*.sql` (bỏ `.svn`, `.git`), mỗi file được tách thành từng câu (`Core\SqlSplitter`: hiểu chuỗi
    `'...'`, `E'...'`, tên `"..."`, thân hàm `$tag$...$tag$`, chú thích `--` / `/* */` lồng nhau; `$` dính sau tên như
-   `msta_x_$s` là 1 phần của tên) rồi nhận loại lệnh (`Core\SqlAnalyzer`: CREATE TABLE / VIEW / FUNCTION / TRIGGER / INDEX,
+   `msta_x_$s` là 1 phần của tên; thân hàm SQL chuẩn `CREATE FUNCTION / PROCEDURE ... BEGIN ATOMIC ...; END` là 1 câu - như
+   psql, `BEGIN` / `CASE` ... `END` trong câu CREATE FUNCTION / PROCEDURE chưa đóng thì `;` không kết thúc câu) rồi nhận loại lệnh (`Core\SqlAnalyzer`: CREATE TABLE / VIEW / FUNCTION / TRIGGER / INDEX,
    ALTER TABLE ADD CONSTRAINT, COMMENT, INSERT / UPDATE / DELETE...).
 2. **Thứ tự tự động** (`Core\RunOrder`):
    - File A nhắc tới đối tượng do file B tạo (kể cả trong thân hàm) → B chạy trước A.
@@ -126,8 +127,6 @@ trang - lọc / sắp làm phía app:
 - **Tìm trong mã nguồn** (tab cuối Đối tượng khác, 2026-11-20): `PgInfo.SourcesAsync` đọc 1 lần định nghĩa mọi view + hàm /
   procedure (bỏ hàm của extension; chữ giống hệt ô Định nghĩa nên số dòng / vị trí khớp), `SourceSearch.Find` (cả từ, phân biệt
   hoa thường) tìm phía app; chọn kết quả → `DbInfoPage.Highlight` bôi đen + cuộn tới chỗ khớp đầu. Đọc lại thì bỏ bộ nhớ đệm.
-
-Giới hạn đã biết: `Core\SqlSplitter` (trang Chạy) chưa hiểu hàm `BEGIN ATOMIC ... END` (PostgreSQL 14+) - cắt ở dấu `;` bên trong.
 
 ## Sinh dữ liệu mẫu
 

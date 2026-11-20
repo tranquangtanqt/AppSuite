@@ -205,8 +205,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   mã nguồn + trigger bảng khác gọi các hàm đó (dò mã nguồn, bỏ chú thích, đọc SQL động); Đối tượng khác có tab Tìm trong mã nguồn
   (mọi view / hàm, Cả từ, Phân biệt hoa thường, bôi đen chỗ khớp). Unit test 149/149 (chạy với PostgreSQL 17 thật trên máy);
   GUI Sandbox (UIA) 18/18 (2026-11-20)
-- [ ] DbTools: `SqlSplitter` (trang Chạy) cắt nhầm hàm `BEGIN ATOMIC ... END` (PostgreSQL 14+) ở dấu `;` bên trong - phát hiện
-  2026-11-20 khi viết test, chưa sửa
+- [x] DbTools: `SqlSplitter` (trang Chạy) cắt nhầm hàm `BEGIN ATOMIC ... END` (PostgreSQL 14+) ở dấu `;` bên trong - phát hiện
+  2026-11-20 khi viết test. Sửa như psql: trong câu CREATE [OR REPLACE] FUNCTION / PROCEDURE, BEGIN / CASE ... END chưa đóng thì
+  ; không kết thúc câu. Unit test 151/151 (PostgreSQL 17 thật: chạy file có hàm + procedure BEGIN ATOMIC, CALL, chạy lại có
+  Xoá đối tượng cũ); 27 file svn postgresql_sqlfile tách y hệt bản cũ (161 câu) (2026-11-20)
 - [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools còn lại (gợi ý 2026-11-19, khuyên làm 3 → 2):
   1. ~~Hồ sơ "Quan trọng / Production"~~ - xong 2026-11-20 (mục trên)
   2. So thư mục script svn ↔ DB: đối tượng chưa áp, hàm / view định nghĩa khác, bảng thiếu / thừa cột (vừa)

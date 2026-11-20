@@ -55,6 +55,45 @@ public class SqlSplitterTests
     }
 
     [Fact]
+    public void Sql_standard_function_body_begin_atomic_is_one_statement()
+    {
+        // PostgreSQL 14+: thân hàm SQL chuẩn có ; bên trong - như psql, ; chỉ kết thúc câu khi BEGIN / CASE ... END đã đóng hết
+        var sql = """
+            CREATE FUNCTION a.f_count() RETURNS bigint LANGUAGE sql
+            BEGIN ATOMIC
+                SELECT count(*) FROM a.cust;
+            END;
+            CREATE OR REPLACE PROCEDURE a.p_fix(x int) LANGUAGE sql
+            BEGIN ATOMIC
+                UPDATE a.cust SET kind = CASE WHEN x > 0 THEN 'a;b' ELSE 'c' END;
+                INSERT INTO a.cust VALUES (x, (CASE WHEN x > 0 THEN 1 END));
+                DELETE FROM a.cust WHERE id = x;
+            END;
+            create or replace function a.f2() returns int language sql begin atomic; select 1; end;
+            BEGIN;
+            SELECT CASE WHEN true THEN 1 END;
+            COMMIT;
+            CREATE TABLE t (id int DEFAULT (CASE WHEN true THEN 1 END));
+            CREATE FUNCTION a.f3() RETURNS int AS $$ BEGIN RETURN 1; END $$ LANGUAGE plpgsql;
+            SELECT 2;
+            """;
+
+        var s = SqlSplitter.Split(sql).Statements;
+
+        Assert.Equal(9, s.Count);
+        Assert.StartsWith("CREATE FUNCTION a.f_count()", s[0].Text);
+        Assert.EndsWith("END", s[0].Text);
+        Assert.StartsWith("CREATE OR REPLACE PROCEDURE a.p_fix", s[1].Text);
+        Assert.Contains("DELETE FROM a.cust WHERE id = x;", s[1].Text);
+        Assert.Equal(5, s[1].StartLine);
+        Assert.EndsWith("end", s[2].Text);
+        Assert.Equal(["BEGIN", "SELECT CASE WHEN true THEN 1 END", "COMMIT"], s.Skip(3).Take(3).Select(x => x.Text).ToArray()); // BEGIN giao dịch không phải thân hàm
+        Assert.StartsWith("CREATE TABLE t", s[6].Text);
+        Assert.EndsWith("LANGUAGE plpgsql", s[7].Text);
+        Assert.Equal("SELECT 2", s[8].Text);
+    }
+
+    [Fact]
     public void Dollar_after_identifier_is_part_of_the_name_not_a_quote()
     {
         // Tên view kiểu mcframe: msta_x_$s, msta_x_$u; alias cũng có $.

@@ -15,7 +15,7 @@ public static class HelpContent
         new("Bắt đầu nhanh", "", "DbTools chạy cả thư mục script .sql lên PostgreSQL theo đúng thứ tự, trong 1 transaction: lỗi ở đâu là huỷ hết, DB không bị dở dang.", null,
         [
             new("1. Tạo kết nối", "Trang Kết nối → Thêm: host, port, database, user, mật khẩu → Thử kết nối. Tạo nhiều hồ sơ (dev, test...) để đổi nhanh."),
-            new("2. Đọc thư mục", "Trang Chạy thư mục SQL → chọn thư mục chứa file .sql (kéo-thả thư mục vào trang cũng được) → Đọc thư mục. App tự sắp thứ tự chạy."),
+            new("2. Đọc thư mục", "Trang Chạy thư mục SQL → chọn thư mục chứa file .sql (kéo-thả thư mục vào trang cũng được) → Đọc thư mục. App tự sắp thứ tự chạy. Mỗi file tách thành từng câu theo dấu ; như psql (bỏ qua ; trong chuỗi, chú thích, thân hàm $$...$$ và thân hàm SQL chuẩn BEGIN ATOMIC ... END)."),
             new("3. Kiểm tra", "Đối chiếu với DB mà không thay đổi gì: đối tượng nào đã có (CREATE sẽ lỗi), file nào xoá / sửa dữ liệu, lệnh nào không chạy được."),
             new("4. Chạy thử", "Chạy thật mọi câu rồi ROLLBACK ở cuối: biết chắc script chạy được trên DB đó mà DB không đổi."),
             new("5. Chạy", "Hỏi lại (ghi rõ database đích), sao lưu những gì sẽ bị đổi (bật sẵn) rồi chạy trong 1 transaction và COMMIT. Lỗi ở câu nào: ROLLBACK toàn bộ, báo file + dòng lỗi."),

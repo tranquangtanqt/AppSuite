@@ -121,10 +121,12 @@ public sealed class DependencyIntegrationTests : IAsyncLifetime
         _admin = new ConnectionProfile { Host = b.Host!, Port = b.Port, Username = b.Username!, Password = b.Password ?? "", Database = "postgres" };
         await PgAdmin.CreateDatabaseAsync(_admin, _db, CancellationToken.None);
         await using var c = await PgInfo.OpenAsync(_admin, _db, CancellationToken.None);
-        // Mỗi dòng 1 câu (không dùng SqlSplitter: nó cắt nhầm BEGIN ATOMIC ...; END; ở dấu ; bên trong)
-        foreach (var line in Schema.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        // Tách bằng SqlSplitter như trang Chạy - có hàm BEGIN ATOMIC ...; END (; bên trong thân hàm)
+        var statements = SqlSplitter.Split(Schema).Statements;
+        Assert.Equal(12, statements.Count);
+        foreach (var s in statements)
         {
-            await using var cmd = new NpgsqlCommand(line, c);
+            await using var cmd = new NpgsqlCommand(s.Text, c);
             await cmd.ExecuteNonQueryAsync();
         }
     }
