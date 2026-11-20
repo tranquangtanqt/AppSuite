@@ -16,4 +16,7 @@ internal static class Format
         FractionDigits = 0,
         NumberRounder = new IncrementNumberRounder { Increment = 1, RoundingAlgorithm = RoundingAlgorithm.RoundHalfUp },
     };
+
+    /// <summary>Như <see cref="MoneyFormatter"/>, gõ 2–999 hiểu là nghìn đồng (Đơn giá món tự do, Giá bán, Giảm giá).</summary>
+    public static ThousandsFormatter PriceFormatter(Microsoft.UI.Xaml.Controls.NumberBox box) => new(box, MoneyFormatter());
 }

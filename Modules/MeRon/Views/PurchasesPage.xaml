@@ -46,7 +46,7 @@
 
         <Grid Grid.Row="3">
             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Cards}" AutomationProperties.Name="Danh sách phiếu nhập">
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Cards}" AutomationProperties.Name="Danh sách phiếu nhập" VerticalCacheLength="40">
                     <ItemsRepeater.Layout>
                         <StackLayout Spacing="10" />
                     </ItemsRepeater.Layout>

@@ -192,9 +192,11 @@
 
         <Grid Grid.Row="4">
             <!-- Mỗi thẻ là 1 nút: bấm chuột, Tab + Enter, trình đọc màn hình đều mở được đơn. ItemsRepeater vẫn ảo hoá
-                 (vài nghìn đơn không tạo hết thẻ). -->
+                 (vài nghìn đơn không tạo hết thẻ). VerticalCacheLength lớn: dựng sẵn ~20 màn hình mỗi phía - thẻ cao thấp khác nhau
+                 mà chỉ dựng quanh chỗ đang xem thì chiều cao phần chưa dựng là ước lượng, cuộn tới cuối danh sách giật lên xuống. -->
             <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,0,12,0">
-                <ItemsRepeater x:Name="CardsRepeater" ItemsSource="{x:Bind ViewModel.Cards}" AutomationProperties.Name="Danh sách đơn hàng">
+                <ItemsRepeater x:Name="CardsRepeater" ItemsSource="{x:Bind ViewModel.Cards}" AutomationProperties.Name="Danh sách đơn hàng"
+                               VerticalCacheLength="40">
                     <ItemsRepeater.Layout>
                         <StackLayout Spacing="10" />
                     </ItemsRepeater.Layout>

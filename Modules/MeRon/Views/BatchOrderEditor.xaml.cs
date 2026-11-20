@@ -104,14 +104,14 @@ public sealed partial class BatchOrderEditor : UserControl
     private void DiscountBox_Loaded(object sender, RoutedEventArgs e)
     {
         var box = (NumberBox)sender;
-        box.NumberFormatter = Format.MoneyFormatter();
+        box.NumberFormatter = Format.PriceFormatter(box);
         LiveNumberBox.Attach(box, ViewModel.PreviewDiscount, TextAlignment.Right);
     }
 
     private void FreePriceBox_Loaded(object sender, RoutedEventArgs e)
     {
         var box = (NumberBox)sender;
-        box.NumberFormatter = Format.MoneyFormatter();
+        box.NumberFormatter = Format.PriceFormatter(box);
         if (box.DataContext is OrderLineViewModel line)
         {
             LiveNumberBox.Attach(box, line.PreviewFreePrice, TextAlignment.Right);

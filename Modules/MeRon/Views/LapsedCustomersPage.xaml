@@ -79,7 +79,7 @@
                    Text="Khách đã đặt đủ số đơn mà đơn gần nhất (theo ngày giao, không tính đơn Huỷ) đã quá số ngày trên. Thói quen = trung bình bao nhiêu ngày đặt 1 lần (cần từ 3 lần đặt); nghỉ gấp 2 lần thói quen trở lên thì có nhãn cam - nên hỏi thăm trước." />
 
         <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
-            <ItemsRepeater x:Name="RowsRepeater" ItemsSource="{x:Bind ViewModel.Rows}" Margin="0,0,12,24" MaxWidth="980" HorizontalAlignment="Left">
+            <ItemsRepeater x:Name="RowsRepeater" ItemsSource="{x:Bind ViewModel.Rows}" VerticalCacheLength="40" Margin="0,0,12,24" MaxWidth="980" HorizontalAlignment="Left">
                 <ItemsRepeater.Layout>
                     <StackLayout Spacing="8" />
                 </ItemsRepeater.Layout>

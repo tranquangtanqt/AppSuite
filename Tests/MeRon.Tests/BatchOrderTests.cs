@@ -1,3 +1,4 @@
+using MeRon.Core;
 using MeRon.Core.Models;
 using MeRon.Core.Orders;
 
@@ -704,6 +705,48 @@ public class BatchOrderTests
         var b = BatchOrderParser.Parse("1201 | 1 phần cá | CK | 45k | gg 10k", Today).Lines.Single();
         Assert.Equal((10000L, true, (long?)45000), (b.Discount, b.Paid, b.Price));
         Assert.Equal(0, BatchOrderParser.Parse("Mỹ Ly | 3 sc uống", Today).Lines.Single().Discount);
+    }
+
+    [Theory] // cột giá / giảm ghi số trơn 2–999 = nghìn đồng; 0 / 1, có "k", có dấu chấm, từ 1.000 thì giữ như viết
+    [InlineData("706 | 1 phần cá | 45", 45000L, 0L)]
+    [InlineData("706 | 1 phần cá | 999 | giảm 10", 999000L, 10000L)]
+    [InlineData("706 | 1 phần cá | 1 | gg 5", 1L, 5000L)]
+    [InlineData("706 | 1 phần cá | 0,5k | giảm 1", 500L, 1L)]
+    [InlineData("706 | 1 phần cá | 45000 | -2", 45000L, 2000L)]
+    [InlineData("706 | 1 phần cá | 1.500 | giảm 1.000", 1500L, 1000L)]
+    public void Column_price_and_discount_under_1000_are_thousands(string text, long price, long discount)
+    {
+        var line = BatchOrderParser.Parse(text, Today).Lines.Single();
+        Assert.Equal((price, discount), (line.Price, line.Discount));
+    }
+
+    [Fact]
+    public void Price_written_after_item_name_is_not_multiplied()
+    {
+        // "2 bánh 15": 15 không phải giá (có thể là số trong tên) - như trước; viết "15k" mới là giá
+        Assert.Null(BatchOrderParser.Parse("706 | 2 bánh 15", Today).Lines.Single().Items.Single().Price);
+        Assert.Equal(15000, BatchOrderParser.Parse("706 | 2 bánh 15k", Today).Lines.Single().Items.Single().Price);
+        // giảm ghi lẫn trong phần món vẫn cần >= 1.000 ("gg 2" là món)
+        Assert.Equal(0, BatchOrderParser.Parse("Mỹ Ly | 1 giò; gg 2", Today).Lines.Single().Discount);
+    }
+
+    [Theory]
+    [InlineData(25, 25000)]
+    [InlineData(2, 2000)]
+    [InlineData(999, 999000)]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(1000, 1000)]
+    [InlineData(45000, 45000)]
+    [InlineData(1.5, 1.5)]
+    [InlineData(25.5, 25.5)]
+    public void Money_input_under_1000_means_thousands(double typed, double expected)
+    {
+        Assert.Equal(expected, MoneyInput.Thousands(typed));
+        if (typed == Math.Floor(typed))
+        {
+            Assert.Equal((long)expected, MoneyInput.Thousands((long)typed));
+        }
     }
 
     [Fact]

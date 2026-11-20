@@ -96,11 +96,11 @@ public static partial class BatchOrderParser
             }
             else if (ParseDiscount(extra) is { } off)
             {
-                discount = off;
+                discount = ColumnMoney(extra, off);
             }
             else if (ParsePrice(extra) is { } value)
             {
-                price = value;
+                price = ColumnMoney(extra, value);
             }
         }
 
@@ -168,6 +168,11 @@ public static partial class BatchOrderParser
         value = value.Replace(".", string.Empty).Replace(",", string.Empty);
         return value.Length > 0 && value.All(char.IsAsciiDigit) && long.TryParse(value, out var number) && number > 0 ? number : null;
     }
+
+    /// <summary>Cột giá / giảm của dòng: số trơn 2–999 (không "k", không dấu chấm / phẩy) là nghìn đồng - "| 15" = 15.000,
+    /// "| giảm 10" = 10.000 (<see cref="MoneyInput"/>). Giá ghi cuối tên món ("2 bánh 15") không đổi: 15 còn có thể là số trong tên.</summary>
+    private static long ColumnMoney(string text, long value) =>
+        text.IndexOfAny(['k', 'K', '.', ',']) >= 0 ? value : MoneyInput.Thousands(value);
 
     /// <summary>Viết lại 1 dòng sau khi chọn khách / món trên bảng nháp (bỏ dấu ? của phần đã chọn).</summary>
     public static string Format(BatchLine line, string? customer = null, int? itemIndex = null, string? itemName = null)

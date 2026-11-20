@@ -37,7 +37,7 @@
                 <TextBlock Text="Xếp theo tổng tiền đã đặt (không tính đơn Huỷ), tối đa 100 khách. Bấm 1 khách để xem các đơn trong khoảng ngày."
                            Opacity="0.75" TextWrapping="Wrap" />
                 <!-- Mỗi khách 1 thẻ: hạng (1-3 vàng / bạc / đồng), ô tròn chữ cái đầu, tên + thanh tỷ lệ so với khách nhiều nhất -->
-                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Rows}">
+                <ItemsRepeater ItemsSource="{x:Bind ViewModel.Rows}" VerticalCacheLength="40">
                     <ItemsRepeater.Layout>
                         <StackLayout Spacing="6" />
                     </ItemsRepeater.Layout>

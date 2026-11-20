@@ -59,7 +59,7 @@
             <StackPanel Margin="0,0,12,24" MaxWidth="980" HorizontalAlignment="Left">
                 <TextBlock Text="Chưa có thay đổi nào trong khoảng ngày / bộ lọc này." Opacity="0.7" Margin="0,8,0,0"
                            Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsEmpty), Mode=OneWay}" />
-                <ItemsRepeater x:Name="RowsRepeater" ItemsSource="{x:Bind ViewModel.Rows}">
+                <ItemsRepeater x:Name="RowsRepeater" ItemsSource="{x:Bind ViewModel.Rows}" VerticalCacheLength="40">
                     <ItemsRepeater.Layout>
                         <StackLayout Spacing="8" />
                     </ItemsRepeater.Layout>

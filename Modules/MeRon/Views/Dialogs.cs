@@ -120,7 +120,7 @@ internal static class Dialogs
 
     /// <summary>
     /// Ô số tiền (VNĐ, số nguyên không âm, nhóm hàng nghìn). Không có nút tăng / giảm (kiểu Compact bật ra khung ▲▼ lơ lửng cạnh ô
-    /// khi bấm vào - như các ô số khác của app); ↑ / ↓ vẫn ±1.000.
+    /// khi bấm vào - như các ô số khác của app); ↑ / ↓ vẫn ±1.000. Gõ 2–999 hiểu là nghìn đồng (<see cref="ThousandsFormatter"/>).
     /// </summary>
     public static NumberBox Money(string header, long? value)
     {
@@ -132,8 +132,8 @@ internal static class Dialogs
             SmallChange = 1000,
             LargeChange = 10000,
             SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Hidden,
-            NumberFormatter = Format.MoneyFormatter(),
         };
+        box.NumberFormatter = Format.PriceFormatter(box);
         AutomationProperties.SetName(box, header);
         return box;
     }

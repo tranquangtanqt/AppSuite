@@ -524,6 +524,15 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   món trên thẻ giữ cột giảm; câu lệnh Chép cho Claude có thêm cột giảm. Unit test 300/300; GUI Sandbox (UIA) 10/12 - 2 lượt script
   tìm chữ thiếu " đ", ảnh + DB đã lưu đúng (giảm 10.000 / 2.000, tổng 35.000 / 28.000) (2026-11-19)
 - [ ] Cập nhật hướng dẫn của Project "MeRon – đọc sổ đơn" trên claude.ai thêm cột `giảm …` (app chỉ đổi câu lệnh Chép ở nút ▾)
+- [x] **Gõ giá theo nghìn** (người dùng 2026-11-20: nhập giá < 1000, trừ 0 và 1, thì tự nhân 1000; không áp số lẻ): ô Đơn giá món
+  tự do + Giảm giá (form đơn, popup Sửa đơn ở Nhập đơn hàng loạt), Giá bán (Món ăn): gõ 2–999 rời ô / Enter → × 1000, Tổng tạm
+  tính lúc gõ cũng vậy; đơn cũ giá 500đ mở ra rời ô vẫn 500; ô Giá tiền Mua hàng không đổi. Nhập đơn hàng loạt: cột `| 45` = 45.000,
+  `| giảm 10` = 10.000 (giá cuối tên món vẫn cần `k`). Unit test 316/316; GUI Sandbox (UIA) 16/18 - 2 bước gõ phím thật
+  không vào được do cửa sổ Sandbox không ở trên cùng; lượt đầu các bước đó đạt (gõ 30 + Tab → 30.000, Tổng tạm tính 30.000) (2026-11-20)
+- [x] **Cuộn tới cuối danh sách bị giật** (người dùng 2026-11-20: danh sách đơn nhảy lên vài đơn rồi nhảy xuống): ItemsRepeater chỉ
+  dựng thẻ quanh chỗ đang xem, thẻ cao thấp khác nhau → chiều cao ước lượng đổi mỗi nấc chuột. Đặt `VerticalCacheLength="40"` cho
+  8 danh sách thẻ (Đặt hàng, Mua hàng, Công nợ, Lịch sử, Nhập đơn hàng loạt, Khách lâu không đặt, Khách hàng tiềm năng, Theo món
+  ăn). Sandbox với bản sao dữ liệu thật (27 đơn 13–16/11): trước 8 lần nhảy ~20 px ở cuối, sau 0 (2026-11-20)
 - [x] Công nợ (người dùng 2026-11-16): (1) Chi tiết của khách → sửa đơn → quay lại thì tiêu đề "khách · Tổng" tính lại (trước
   giữ tổng cũ); (2) **Hoàn tác** thanh toán trên thông báo xanh sau Thanh toán hết (Công nợ) / Thanh toán toàn bộ (Chi tiết) -
   lỡ thanh toán nhầm khách: đơn trả về Đã lên đơn + ngày thanh toán cũ, đơn đã sửa sau đó giữ nguyên.

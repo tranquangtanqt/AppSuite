@@ -157,7 +157,7 @@
 
                 <StackPanel Spacing="6">
                     <TextBlock Text="{x:Bind ViewModel.OrdersTitle, Mode=OneWay}" FontWeight="SemiBold" AutomationProperties.AutomationId="ProductOrdersTitle" />
-                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Orders}">
+                    <ItemsRepeater ItemsSource="{x:Bind ViewModel.Orders}" VerticalCacheLength="40">
                         <ItemsRepeater.Layout>
                             <StackLayout Spacing="6" />
                         </ItemsRepeater.Layout>
