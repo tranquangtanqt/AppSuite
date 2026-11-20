@@ -43,6 +43,13 @@ F1 / nút ? / mục Hướng dẫn: cửa sổ hướng dẫn dùng chung `Share
    lệnh psql khác `\encoding`, BEGIN / COMMIT trong file, lệnh không chạy được trong transaction (CREATE DATABASE, VACUUM,
    CREATE INDEX CONCURRENTLY...) → lỗi; DELETE / UPDATE / TRUNCATE / DROP → cảnh báo; file không phải UTF-8 → đọc theo
    Shift-JIS + cảnh báo.
+   **Cảnh báo phụ thuộc** (2026-11-20, cả lúc Chạy thử / Chạy): `Core\TableChanges.Find` nhận DROP TABLE (nhiều bảng,
+   CASCADE), ALTER TABLE ... DROP COLUMN / ALTER COLUMN TYPE / SET DATA TYPE / RENAME COLUMN / RENAME TO / SET SCHEMA (tách
+   các thao tác theo dấu phẩy ngoài ngoặc) + bảng của "Xoá đối tượng cũ rồi tạo lại"; bảng đang có (`PgInfo.FindTableAsync`,
+   `to_regclass` theo search_path của hồ sơ) → `PgInfo.DependentsAsync` (như tab Phụ thuộc) → `TableChanges.Describe` chọn cái
+   bị ảnh hưởng thật (xoá bảng: view / khoá ngoại / hàm SQL chuẩn = sẽ lỗi, hàm nhắc tên = lỗi lúc chạy; cột: view / khoá
+   ngoại dùng đúng cột đó, hàm nhắc tên cột; đổi tên: chỉ hàm), bỏ đối tượng thư mục tạo lại. Cảnh báo gắn vào dòng file (cột
+   Kết quả), nhật ký và hộp hỏi lại (tối đa 10 dòng). Không tra được (quyền...) thì ghi nhật ký, không chặn.
 4. **Chạy thử**: chạy hết rồi ROLLBACK - bắt mọi lỗi thật mà DB không đổi.
 5. **Chạy**: hỏi lại (host:port/database, file xoá / sửa dữ liệu, bảng sẽ mất dữ liệu; nút mặc định là Huỷ) →
    `BEGIN` → mọi câu → `COMMIT`. Lỗi / Huỷ → `ROLLBACK`, báo file + **dòng** lỗi (vị trí lỗi PostgreSQL trả về đổi ra dòng

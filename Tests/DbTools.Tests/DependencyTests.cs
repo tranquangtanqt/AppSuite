@@ -89,6 +89,69 @@ public class DependencyTests
     }
 }
 
+/// <summary>Trang Chạy - cảnh báo phụ thuộc: nhận câu xoá / sửa bảng trong script, chọn đối tượng bị ảnh hưởng.</summary>
+public class TableChangeTests
+{
+    private static SqlScriptFile Script(string sql, string name = "a.sql") =>
+        SqlScriptFile.Parse(System.Text.Encoding.UTF8.GetBytes(sql), name, name);
+
+    [Fact]
+    public void Finds_drop_and_alter_table_changes()
+    {
+        var file = Script("""
+            DROP TABLE IF EXISTS a.t1, t2 CASCADE;
+            ALTER TABLE ONLY a.t3 DROP COLUMN IF EXISTS c1, ALTER COLUMN c2 TYPE bigint, ALTER c3 SET DATA TYPE text, RENAME COLUMN c4 TO c5;
+            ALTER TABLE t4 RENAME TO t4_old;
+            ALTER TABLE t5 SET SCHEMA b;
+            ALTER TABLE t6 DROP CONSTRAINT k, ALTER COLUMN c DROP DEFAULT, ADD COLUMN d int, RENAME CONSTRAINT x TO y;
+            ALTER TABLE t7 DROP c9, ADD CONSTRAINT ck CHECK (a IN (1, 2));
+            DROP VIEW v1;
+            """);
+
+        var changes = TableChanges.Find([file]);
+
+        Assert.Equal([
+            "DROP TABLE a.t1 CASCADE (a.sql dòng 1)", "DROP TABLE t2 CASCADE (a.sql dòng 1)",
+            "xoá cột a.t3.c1 (a.sql dòng 2)", "đổi kiểu cột a.t3.c2 (a.sql dòng 2)", "đổi kiểu cột a.t3.c3 (a.sql dòng 2)", "đổi tên cột a.t3.c4 (a.sql dòng 2)",
+            "đổi tên / chuyển schema bảng t4 (a.sql dòng 3)", "đổi tên / chuyển schema bảng t5 (a.sql dòng 4)",
+            "xoá cột t7.c9 (a.sql dòng 6)",
+        ], changes.Select(c => $"{c.Text} ({c.Where})").ToArray());
+    }
+
+    private static readonly DependentItem[] Deps =
+    [
+        new(DependentKind.View, "a.v1", "", ["id", "name"], ""),
+        new(DependentKind.View, "a.v_new", "", ["id"], ""),
+        new(DependentKind.ForeignKey, "a.line (fk)", "", ["id"], ""),
+        new(DependentKind.Trigger, "tr", "", [], ""),
+        new(DependentKind.Function, "a.f_name()", "", [], "SELECT name FROM a.t"),
+        new(DependentKind.Function, "a.f_all()", "", [], "SELECT count(*) FROM a.t"),
+    ];
+
+    private static List<string> Describe(TableChangeKind kind, string? column = null, bool cascade = false) =>
+        TableChanges.Describe(new TableChange(kind, new QualifiedName("a", "t", false), column, "x.sql", 3, cascade), Deps,
+            new HashSet<string>(["v_new"])); // v_new: thư mục tự tạo lại → bỏ qua
+
+    [Fact]
+    public void Describes_only_what_each_change_breaks()
+    {
+        Assert.Equal([
+            "DROP TABLE a.t (x.sql dòng 3): sẽ LỖI (rollback cả lô) vì đang được dùng bởi: a.v1, a.line (fk)",
+            "DROP TABLE a.t (x.sql dòng 3): hàm nhắc tên bảng sẽ lỗi lúc chạy: a.f_name(), a.f_all()",
+        ], Describe(TableChangeKind.DropTable));
+        Assert.StartsWith("DROP TABLE a.t CASCADE (x.sql dòng 3): CASCADE sẽ xoá / bỏ kèm: a.v1, a.line (fk)", Describe(TableChangeKind.DropTable, cascade: true)[0]);
+        Assert.Equal(["xoá cột a.t.name (x.sql dòng 3): sẽ LỖI (rollback cả lô) vì cột đang được dùng bởi: a.v1",
+            "xoá cột a.t.name (x.sql dòng 3): hàm nhắc tên cột sẽ lỗi lúc chạy: a.f_name()"], Describe(TableChangeKind.DropColumn, "name"));
+        Assert.Equal(["xoá cột a.t.id (x.sql dòng 3): sẽ LỖI (rollback cả lô) vì cột đang được dùng bởi: a.v1, a.line (fk)"], Describe(TableChangeKind.DropColumn, "id"));
+        Assert.Empty(Describe(TableChangeKind.DropColumn, "memo")); // cột không ai dùng
+        Assert.StartsWith("đổi kiểu cột a.t.name (x.sql dòng 3): sẽ LỖI (rollback cả lô): PostgreSQL không cho đổi kiểu cột view đang dùng - a.v1",
+            Describe(TableChangeKind.AlterColumnType, "name")[0]);
+        Assert.Equal(["đổi tên cột a.t.name (x.sql dòng 3): hàm nhắc tên cột sẽ lỗi lúc chạy: a.f_name()"], Describe(TableChangeKind.RenameColumn, "name"));
+        Assert.Equal(["đổi tên / chuyển schema bảng a.t (x.sql dòng 3): hàm gọi bảng theo tên cũ sẽ lỗi lúc chạy (view / khoá ngoại tự theo tên mới): a.f_name(), a.f_all()"],
+            Describe(TableChangeKind.RenameTable));
+    }
+}
+
 /// <summary>Phụ thuộc + mã nguồn đọc từ catalog thật (cần DBTOOLS_TEST_PG).</summary>
 public sealed class DependencyIntegrationTests : IAsyncLifetime
 {
@@ -190,6 +253,60 @@ public sealed class DependencyIntegrationTests : IAsyncLifetime
         // Định nghĩa đọc cả lô = định nghĩa đọc khi chọn 1 dòng ở tab Hàm → số dòng khớp đúng chỗ
         Assert.Equal(await PgInfo.DefinitionAsync(c, objects.Single(o => o.Name == "f_total"), CancellationToken.None), total.s.Definition);
         Assert.Contains("amount", total.m[0].LineText);
+    }
+
+    [Fact]
+    public async Task Predicted_breaks_match_what_postgresql_does()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(Server), "Chưa đặt DBTOOLS_TEST_PG.");
+        var file = SqlScriptFile.Parse(System.Text.Encoding.UTF8.GetBytes("""
+            ALTER TABLE addon.cust DROP COLUMN name;
+            ALTER TABLE addon.cust DROP COLUMN amount;
+            ALTER TABLE addon.cust ALTER COLUMN name TYPE varchar(10);
+            DROP TABLE addon.cust;
+            DROP TABLE addon.not_there;
+            """), "x.sql", "x.sql");
+        await using var c = await PgInfo.OpenAsync(_admin, _db, CancellationToken.None);
+        var sources = await PgInfo.SourcesAsync(c, CancellationToken.None);
+        var warnings = new List<string>();
+        foreach (var change in TableChanges.Find([file]))
+        {
+            if (await PgInfo.FindTableAsync(c, change.Table.Sql, CancellationToken.None) is { } t)
+            {
+                var deps = await PgInfo.DependentsAsync(c, t.Oid, t.Schema, t.Name, sources, CancellationToken.None);
+                warnings.AddRange(TableChanges.Describe(change, deps, new HashSet<string>()));
+            }
+        }
+        Assert.Null(await PgInfo.FindTableAsync(c, "addon.not_there", CancellationToken.None));
+        Assert.Contains(warnings, w => w.StartsWith("xoá cột addon.cust.name (x.sql dòng 1): sẽ LỖI") && w.Contains("addon.v_cust"));
+        Assert.Contains(warnings, w => w.StartsWith("xoá cột addon.cust.amount (x.sql dòng 2): hàm nhắc tên cột sẽ lỗi lúc chạy: addon.f_total()"));
+        Assert.DoesNotContain(warnings, w => w.StartsWith("xoá cột addon.cust.amount") && w.Contains("sẽ LỖI")); // không view nào dùng amount
+        Assert.Contains(warnings, w => w.StartsWith("đổi kiểu cột addon.cust.name (x.sql dòng 3): sẽ LỖI"));
+        Assert.Contains(warnings, w => w.StartsWith("DROP TABLE addon.cust (x.sql dòng 4): sẽ LỖI") && w.Contains("addon.line (line_cust_id_fkey)"));
+
+        // PostgreSQL thật: câu dự đoán LỖI thì lỗi, câu chỉ cảnh báo hàm thì chạy được (trong transaction, rollback)
+        async Task<bool> FailsAsync(string sql)
+        {
+            await using var tx = await c.BeginTransactionAsync();
+            try
+            {
+                await using var cmd = new NpgsqlCommand(sql, c, tx);
+                await cmd.ExecuteNonQueryAsync();
+                return false;
+            }
+            catch (PostgresException)
+            {
+                return true;
+            }
+            finally
+            {
+                await tx.RollbackAsync();
+            }
+        }
+        Assert.True(await FailsAsync("ALTER TABLE addon.cust DROP COLUMN name"));
+        Assert.False(await FailsAsync("ALTER TABLE addon.cust DROP COLUMN amount"));
+        Assert.True(await FailsAsync("ALTER TABLE addon.cust ALTER COLUMN name TYPE varchar(10)"));
+        Assert.True(await FailsAsync("DROP TABLE addon.cust"));
     }
 
     private static async Task<T> ScalarAsync<T>(NpgsqlConnection c, string sql)

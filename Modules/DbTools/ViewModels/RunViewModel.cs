@@ -504,15 +504,70 @@ public sealed partial class RunViewModel : ObservableObject
         }
     }
 
-    /// <summary>Đối chiếu từng file với DB + (nếu Xoá rồi tạo lại) báo bảng đang có dữ liệu sẽ bị xoá.</summary>
-    private async Task<List<string>> DbChecksAsync(ConnectionProfile profile, List<SqlScriptFile> files, List<ExistingObject> existing, CancellationToken ct)
+    /// <summary>Kết quả kiểm tra trước khi chạy: bảng có dữ liệu sẽ bị xoá (Xoá rồi tạo lại) + cảnh báo phụ thuộc.</summary>
+    private sealed record DbCheckResult(List<string> DataLoss, List<string> Dependents);
+
+    /// <summary>
+    /// Cảnh báo phụ thuộc: câu DROP TABLE / ALTER TABLE ... DROP / ALTER TYPE / RENAME COLUMN, đổi tên bảng (và DROP của "Xoá
+    /// đối tượng cũ rồi tạo lại") đụng bảng đang có trong DB → đối tượng dùng bảng / cột đó (như tab Phụ thuộc của Thông tin DB),
+    /// bỏ những cái chính thư mục tạo lại. Trả (file, dòng, cảnh báo); file rỗng = từ Xoá rồi tạo lại.
+    /// </summary>
+    private async Task<List<(string File, int Line, string Message)>> DependencyChecksAsync(ConnectionProfile profile, List<SqlScriptFile> files,
+        CancellationToken ct)
+    {
+        var changes = TableChanges.Find(files);
+        if (DropFirst)
+        {
+            changes.AddRange(DropScript.Build(files, profile.SchemaOrNull).Tables
+                .Select(t => new TableChange(TableChangeKind.DropTable, t, null, string.Empty, 0, FromDropFirst: true)));
+        }
+        var result = new List<(string, int, string)>();
+        if (changes.Count == 0)
+        {
+            return result;
+        }
+        var recreated = Precheck.CreatedNames(files).ToHashSet(StringComparer.Ordinal);
+        await using var c = await Pg.OpenAsync(profile, ct);
+        List<DbObjectItem>? sources = null;
+        var cache = new Dictionary<uint, List<DependentItem>>();
+        foreach (var change in changes)
+        {
+            if (await PgInfo.FindTableAsync(c, change.Table.Sql, ct) is not { } table)
+            {
+                continue; // bảng chưa có trong DB (thư mục tạo mới) - không ai dùng
+            }
+            if (!cache.TryGetValue(table.Oid, out var dependents))
+            {
+                sources ??= await PgInfo.SourcesAsync(c, ct);
+                dependents = await PgInfo.DependentsAsync(c, table.Oid, table.Schema, table.Name, sources, ct);
+                cache[table.Oid] = dependents;
+            }
+            result.AddRange(TableChanges.Describe(change, dependents, recreated).Select(m => (change.FromDropFirst ? string.Empty : change.File, change.Line, m)));
+        }
+        return result;
+    }
+
+    /// <summary>Đối chiếu từng file với DB + (nếu Xoá rồi tạo lại) báo bảng đang có dữ liệu sẽ bị xoá + cảnh báo phụ thuộc.</summary>
+    private async Task<DbCheckResult> DbChecksAsync(ConnectionProfile profile, List<SqlScriptFile> files, List<ExistingObject> existing, CancellationToken ct)
     {
         var warnings = 0;
         var createdRelations = Precheck.CreatedRelations(files);
         var errors = 0;
+        List<(string File, int Line, string Message)> dependents;
+        try
+        {
+            dependents = await DependencyChecksAsync(profile, files, ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            dependents = [];
+            AppendLog("  [Cảnh báo] Không kiểm tra được phụ thuộc (view / hàm dùng bảng bị đổi): " + Pg.Describe(ex));
+        }
         for (var i = 0; i < Files.Count; i++)
         {
-            var issues = files[i].Issues.Concat(Precheck.Compare(files[i], existing, DropFirst, createdRelations)).ToList();
+            var issues = files[i].Issues.Concat(Precheck.Compare(files[i], existing, DropFirst, createdRelations))
+                .Concat(dependents.Where(d => d.File == files[i].RelativePath).Select(d => new ScriptIssue(IssueLevel.Warning, d.Line, "Phụ thuộc: " + d.Message)))
+                .ToList();
             Files[i].ApplyIssues(issues, "Đạt kiểm tra");
             warnings += issues.Count(x => x.Level == IssueLevel.Warning);
             errors += issues.Count(x => x.Level == IssueLevel.Error);
@@ -536,8 +591,15 @@ public sealed partial class RunViewModel : ObservableObject
                 AppendLog($"  [Cảnh báo] Bảng có dữ liệu sẽ bị xoá - {line}");
             }
         }
-        AppendLog($"Kết quả: {errors} lỗi, {warnings} cảnh báo{(dataLoss.Count > 0 ? $", {dataLoss.Count} bảng có dữ liệu sẽ bị xoá" : string.Empty)}.");
-        return dataLoss;
+        var fromDrop = dependents.Where(d => d.File.Length == 0).ToList();
+        foreach (var d in fromDrop)
+        {
+            AppendLog($"  [Cảnh báo] Phụ thuộc: {d.Message}");
+        }
+        warnings += fromDrop.Count;
+        AppendLog($"Kết quả: {errors} lỗi, {warnings} cảnh báo{(dataLoss.Count > 0 ? $", {dataLoss.Count} bảng có dữ liệu sẽ bị xoá" : string.Empty)}"
+            + (dependents.Count > 0 ? $", {dependents.Count} cảnh báo phụ thuộc (view / hàm dùng bảng bị đổi)" : string.Empty) + ".");
+        return new DbCheckResult(dataLoss, dependents.Select(d => d.Message).ToList());
     }
 
     [RelayCommand(CanExecute = nameof(CanUseDb))]
@@ -594,7 +656,7 @@ public sealed partial class RunViewModel : ObservableObject
 
             var drop = DropFirst ? DropScript.Build(files, profile.SchemaOrNull) : null;
             Status = "Đang kiểm tra trước khi chạy...";
-            List<string> dataLoss;
+            List<string> dataLoss, dependents;
             using (var check = new CancellationTokenSource(TimeSpan.FromMinutes(2)))
             {
                 if (!await EnsureSchemaExistsAsync(profile, check.Token))
@@ -602,7 +664,7 @@ public sealed partial class RunViewModel : ObservableObject
                     return;
                 }
                 var existing = await PgCatalog.FindExistingAsync(profile, Precheck.CreatedNames(files), check.Token);
-                dataLoss = await DbChecksAsync(profile, files, existing, check.Token);
+                (dataLoss, dependents) = await DbChecksAsync(profile, files, existing, check.Token);
             }
 
             if (!dryRun && Confirm is not null)
@@ -624,6 +686,11 @@ public sealed partial class RunViewModel : ObservableObject
                 {
                     lines.Add($"⚠ Xoá đối tượng cũ rồi tạo lại: {drop.Statements.Count} câu DROP, gồm {drop.Tables.Count()} bảng (mất cả dữ liệu trong bảng).");
                     lines.AddRange(dataLoss.Select(d => "⚠ Bảng đang có dữ liệu: " + d));
+                }
+                lines.AddRange(dependents.Take(10).Select(d => "⚠ Phụ thuộc: " + d));
+                if (dependents.Count > 10)
+                {
+                    lines.Add($"⚠ ... và {dependents.Count - 10} cảnh báo phụ thuộc khác (xem nhật ký).");
                 }
                 lines.Add(BackupBeforeRun
                     ? $"Sao lưu trước khi chạy: bảng / hàm / trigger đang có sẽ bị đổi → {Path.Combine(AppState.Settings.DumpFolder, PreRunBackup.SubFolder)}"

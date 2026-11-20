@@ -209,6 +209,17 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   2026-11-20 khi viết test. Sửa như psql: trong câu CREATE [OR REPLACE] FUNCTION / PROCEDURE, BEGIN / CASE ... END chưa đóng thì
   ; không kết thúc câu. Unit test 151/151 (PostgreSQL 17 thật: chạy file có hàm + procedure BEGIN ATOMIC, CALL, chạy lại có
   Xoá đối tượng cũ); 27 file svn postgresql_sqlfile tách y hệt bản cũ (161 câu) (2026-11-20)
+- [x] **Cảnh báo phụ thuộc trên trang Chạy** (người dùng 2026-11-20 chọn mục 2 của danh sách cải tiến mới): Kiểm tra / Chạy thử /
+  Chạy - script có DROP TABLE, ALTER TABLE ... DROP COLUMN / đổi kiểu / đổi tên cột, đổi tên / chuyển schema bảng (và DROP của
+  Xoá đối tượng cũ rồi tạo lại) đụng bảng đang có → tra view / khoá ngoại / hàm đang dùng bảng / cột đó (dùng lại tab Phụ thuộc),
+  báo "sẽ LỖI (rollback cả lô)", "CASCADE sẽ xoá kèm" hoặc "hàm sẽ lỗi lúc chạy" trên dòng file, nhật ký và hộp hỏi lại; bỏ đối
+  tượng thư mục tự tạo lại. Unit test 154/154 (PostgreSQL 17 thật: câu báo "sẽ LỖI" lỗi thật, câu chỉ cảnh báo hàm chạy được);
+  GUI Sandbox (UIA) 7/7 (2026-11-20)
+- [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools mới (gợi ý 2026-11-20, khuyên làm 1 → 3): (1) ô chạy SQL nhanh (READ ONLY mặc
+  định, kết quả bảng, CSV / CsvEditor, lịch sử câu); (3) Thông tin DB: tìm 1 cột trong toàn DB, xem 100 dòng đầu, phụ thuộc theo
+  cột; (4) so thư mục svn ↔ DB; (5) khôi phục từ "Sao lưu trước khi chạy" + dọn bản cũ; (6) Restore chọn lọc bảng; (7) Phiên: ai
+  chặn ai, huỷ câu đang chạy; (8) so sánh 2 DB, xuất CSV bảng / cột; (9) chạy lên nhiều DB, dòng lệnh; (10) nhập hồ sơ DBeaver /
+  pgpass; (11) Sinh dữ liệu mẫu cha - con, ghi thẳng DB; (12) sửa test History_is_newest_first_and_capped chập chờn khi chạy cả bộ
 - [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools còn lại (gợi ý 2026-11-19, khuyên làm 3 → 2):
   1. ~~Hồ sơ "Quan trọng / Production"~~ - xong 2026-11-20 (mục trên)
   2. So thư mục script svn ↔ DB: đối tượng chưa áp, hàm / view định nghĩa khác, bảng thiếu / thừa cột (vừa)

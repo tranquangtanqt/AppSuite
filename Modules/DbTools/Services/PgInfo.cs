@@ -212,6 +212,18 @@ public static class PgInfo
         return result;
     }
 
+    /// <summary>Bảng đang có trong DB theo tên như ghi trong script (không schema → theo search_path của kết nối); null = chưa có.</summary>
+    public static async Task<(uint Oid, string Schema, string Name)?> FindTableAsync(NpgsqlConnection c, string name, CancellationToken ct)
+    {
+        await using var cmd = new NpgsqlCommand("""
+            SELECT c.oid, n.nspname, c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+             WHERE c.oid = to_regclass($1) AND c.relkind IN ('r', 'p', 'f')
+            """, c);
+        cmd.Parameters.Add(new NpgsqlParameter { Value = name });
+        await using var r = await cmd.ExecuteReaderAsync(ct);
+        return await r.ReadAsync(ct) ? (r.GetFieldValue<uint>(0), r.GetString(1), r.GetString(2)) : null;
+    }
+
     /// <summary>
     /// Đối tượng phụ thuộc vào bảng <paramref name="oid"/>: view (pg_depend, cả view dựng trên view - tối đa 10 lớp, kèm cột dùng),
     /// khoá ngoại từ bảng khác, trigger, sequence thuộc cột, hàm SQL chuẩn được PostgreSQL ghi nhận; hàm / procedure nhắc tên bảng
