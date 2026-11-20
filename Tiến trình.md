@@ -190,10 +190,22 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   nhớ trong cài đặt); nút Sinh dữ liệu mẫu trong chi tiết bảng (Thông tin DB). Unit test 141/141 (gồm 20 test PostgreSQL 17
   thật, có sinh 2000 dòng rồi INSERT vào DB không lỗi khoá); GUI Sandbox 15/15 (file INSERT chạy bằng psql đủ 1500 dòng)
 - [ ] Thông tin DB đợt sau: Xuất CSV danh sách bảng / cột (mở bằng CsvEditor), So sánh 2 DB (bảng / cột / hàm thiếu, khác)
-- [ ] Publish DbTools + MainLauncher bản đợt 2 vào `Application\` rồi người dùng thử tay Dump / Restore / Copy trên DB dev
-  (thư mục D:\DMP, bản PostgreSQL client 12 / 17 trên máy)
-- [ ] Đợt 3: ô chạy SQL nhanh + mở kết quả bằng CsvEditor; tìm trong mã nguồn hàm / view; so DDL trên DB với file svn;
-  chạy cùng lô lên nhiều DB
+- [x] Publish DbTools (người dùng tự publish 2026-11-19 15:29, có đủ Sao lưu / Thông tin DB / Sinh dữ liệu mẫu)
+- [ ] Publish MainLauncher (mô tả DbTools mới trong modules.json) - làm cùng lần publish MeRon
+- [ ] Người dùng thử tay trên DB dev: Dump / Restore / Copy (thư mục D:\DMP, client PostgreSQL 12 / 17), Xem lệnh, Thông tin DB
+  (chi tiết bảng, DDL), Sinh dữ liệu mẫu
+- [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools (gợi ý 2026-11-19, khuyên làm 1 → 3 → 2):
+  1. Hồ sơ "Quan trọng / Production": tô đỏ, gõ lại tên DB trước Chạy / Restore ghi đè / Ngắt phiên / Copy (nhỏ)
+  2. So thư mục script svn ↔ DB: đối tượng chưa áp, hàm / view định nghĩa khác, bảng thiếu / thừa cột (vừa)
+  3. Ô chạy SQL nhanh: mặc định READ ONLY, kết quả dạng bảng, giới hạn dòng, Copy / CSV / mở CsvEditor, lịch sử câu (vừa)
+  4. Thông tin DB: tìm cột trong toàn DB; phụ thuộc (hàm / view / trigger dùng bảng X) + tìm chữ trong mã nguồn hàm / view;
+     xem 100 dòng đầu của bảng
+  5. Lịch sử: Khôi phục từ "Sao lưu trước khi chạy" ngay trong app; dọn bản sao lưu cũ (giữ N ngày); bảng "DB nào đã áp bản svn nào"
+  6. Restore chọn lọc vài bảng (`pg_restore -t` / `-L`)
+  7. Chạy cùng lô lên nhiều DB / schema; chế độ dòng lệnh `DbTools.exe run --folder … --profile … --dry-run`
+  8. Phiên kết nối: hiện khoá (ai chặn ai), Huỷ câu đang chạy (`pg_cancel_backend`), tự làm mới
+  9. Sinh dữ liệu mẫu: bảng cha - con cùng lúc; ghi thẳng vào DB + Xoá dữ liệu mẫu vừa sinh
+  10. Kết nối: nhập hồ sơ từ DBeaver / pgpass, nhóm hồ sơ theo dự án
 - [ ] Đợt 4: Oracle (tạo user / tablespace + quyền, impdp / expdp có REMAP_SCHEMA)
 
 ## FileTools (module mới — xử lý file text/CSV/log lớn, `Modules/FileTools/PLAN.md`)
@@ -540,7 +552,7 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   lượng từng món + danh sách giao theo toà / khu, chụp ảnh gửi Zalo); Nhập đơn hàng loạt nhiều ngày 1 lần dán; sao chép nhiều
   đơn sang ngày khác. Nhỏ: Hoàn tác "Đã thanh toán" 1 đơn; tự sao lưu khi qua ngày mới lúc app vẫn mở; Khách lâu không đặt
   "đã liên hệ"; áp giá mới cho đơn chưa thanh toán; doanh thu theo khu; so cùng kỳ năm trước
-- [ ] Commit các việc MeRon 2026-11-16 rồi publish MeRon vào Application\ (bản đang dùng còn cũ)
+- [ ] Publish MeRon vào `Application\` (bản đang dùng 2026-11-18, chưa có Giảm giá ở Nhập đơn hàng loạt) - các việc 11-16 → 11-19 đã commit
 - [x] **Chuông Thông báo** ở chân menu trái (người dùng 2026-11-16 chọn cách B; bỏ khung nhắc xuất ở Đặt hàng; có dòng sao lưu):
   số cam = việc đang chờ; khung liệt kê n đơn cần xác nhận (chưa rõ khách / chưa có giá / tự đánh dấu) → Xem các đơn (mở Đặt
   hàng, lọc Cần xác nhận bật sẵn); Chưa xuất sang điện thoại → Xuất lên Google Drive ngay trong khung; Sao lưu gần nhất (thành
