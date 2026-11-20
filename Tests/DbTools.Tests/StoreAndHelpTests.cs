@@ -49,6 +49,54 @@ public class StoreTests
     }
 
     [Fact]
+    public void Production_flag_is_saved_cloned_and_marked_red_in_pickers()
+    {
+        using var folder = new TempFolder();
+        var store = new ConnectionStore(Path.Combine(folder.Path, "connections.json"));
+        var prod = new ConnectionProfile { Name = "prod", Host = "10.0.0.5", Database = "mcf" , IsProduction = true };
+        var dev = new ConnectionProfile { Name = "dev", Database = "mcf" };
+
+        store.Save([prod, dev]);
+        var loaded = store.Load();
+
+        Assert.True(loaded[0].IsProduction);
+        Assert.False(loaded[1].IsProduction); // file cũ không có trường này → hồ sơ thường
+        Assert.True(loaded[0].Clone("prod 2").IsProduction); // nhân bản giữ dấu Production
+        Assert.StartsWith("🔴 PRODUCTION · prod", loaded[0].ToString());
+        Assert.Equal(loaded[1].Display, loaded[1].ToString());
+    }
+
+    [Fact]
+    public void Production_guard_asks_for_the_name_of_the_database_being_changed()
+    {
+        // hồ sơ thường: không hỏi gõ lại
+        Assert.Null(ProductionGuard.ForRun(false, "mcf", "dev"));
+        Assert.Null(ProductionGuard.ForRestore(false, "mcf", "dev"));
+        Assert.Null(ProductionGuard.ForCopy(false, false, true, "a", "b"));
+        Assert.Null(ProductionGuard.ForSessions(false, ["mcf"], "dev", "mcf"));
+
+        Assert.Equal("mcf", ProductionGuard.ForRun(true, " mcf ", "prod"));
+        Assert.Equal("prod", ProductionGuard.ForRun(true, "", "prod")); // hồ sơ chưa điền Database → gõ tên hồ sơ
+        Assert.Equal("PRODUCTION", ProductionGuard.ForRun(true, "", " ")); // không bao giờ để ô trống tự khớp
+        Assert.Equal("mcf_new", ProductionGuard.ForRestore(true, "mcf_new", "prod"));
+
+        // Copy: ngắt phiên DB nguồn production → tên nguồn; ghi lên đích production → tên đích; chỉ đọc nguồn → không hỏi
+        Assert.Equal("mcf", ProductionGuard.ForCopy(true, true, true, "mcf", "mcf_copy"));
+        Assert.Equal("mcf_copy", ProductionGuard.ForCopy(true, true, false, "mcf", "mcf_copy"));
+        Assert.Equal("mcf_copy", ProductionGuard.ForCopy(false, true, false, "mcf", "mcf_copy"));
+        Assert.Null(ProductionGuard.ForCopy(true, false, false, "mcf", "mcf_copy"));
+
+        // Ngắt phiên: cùng 1 DB → tên DB; nhiều DB → tên hồ sơ
+        Assert.Equal("mcf", ProductionGuard.ForSessions(true, ["mcf", "mcf", null], "prod", "postgres"));
+        Assert.Equal("prod", ProductionGuard.ForSessions(true, ["mcf", "other"], "prod", "postgres"));
+
+        Assert.True(ProductionGuard.Matches(" mcf ", "mcf"));
+        Assert.False(ProductionGuard.Matches("MCF", "mcf")); // tên DB phân biệt hoa thường
+        Assert.False(ProductionGuard.Matches(null, "mcf"));
+        Assert.False(ProductionGuard.Matches("", "mcf"));
+    }
+
+    [Fact]
     public void Password_from_another_account_becomes_empty()
     {
         Assert.Equal(string.Empty, ConnectionStore.Unprotect(Convert.ToBase64String([1, 2, 3])));

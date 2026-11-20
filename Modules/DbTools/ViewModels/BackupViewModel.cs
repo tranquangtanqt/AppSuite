@@ -463,7 +463,8 @@ public sealed partial class BackupViewModel : ObservableObject
         {
             lines.Add($"⚠ File dump có owner {string.Join(", ", otherOwners)} khác user {target.User}: user đó chưa có trên server đích thì sẽ lỗi - bật \"Bỏ owner / quyền\".");
         }
-        if (Confirm is not null && !await Confirm(new RunConfirmation($"Restore vào {database}?", lines, "Restore")))
+        if (Confirm is not null && !await Confirm(new RunConfirmation($"Restore vào {database}?", lines, "Restore",
+                ProductionGuard.ForRestore(profile.IsProduction, database, profile.Name))))
         {
             throw new UserError("Chưa restore gì.", cancelled: true);
         }
@@ -530,7 +531,8 @@ public sealed partial class BackupViewModel : ObservableObject
             {
                 lines.Add($"⚠ DB nguồn đang có {sessions.Count} phiên kết nối ({Describe(sessions)}). Copy bằng TEMPLATE cần ngắt hết - bấm \"Ngắt phiên rồi copy\".");
             }
-            if (Confirm is not null && !await Confirm(new RunConfirmation($"Copy {sourceDb} → {targetDb}?", lines, sessions.Count > 0 ? "Ngắt phiên rồi copy" : "Copy")))
+            if (Confirm is not null && !await Confirm(new RunConfirmation($"Copy {sourceDb} → {targetDb}?", lines, sessions.Count > 0 ? "Ngắt phiên rồi copy" : "Copy",
+                    ProductionGuard.ForCopy(source.IsProduction, destination.IsProduction, sessions.Count > 0, sourceDb, targetDb))))
             {
                 throw new UserError("Chưa copy gì.", cancelled: true);
             }
@@ -569,7 +571,8 @@ public sealed partial class BackupViewModel : ObservableObject
         {
             lines.Add("Bỏ owner / quyền (--no-owner --no-privileges): đối tượng thuộc user của server đích.");
         }
-        if (Confirm is not null && !await Confirm(new RunConfirmation($"Copy {sourceDb} → {destination.Host}/{targetDb}?", lines, "Copy")))
+        if (Confirm is not null && !await Confirm(new RunConfirmation($"Copy {sourceDb} → {destination.Host}/{targetDb}?", lines, "Copy",
+                ProductionGuard.ForCopy(source.IsProduction, destination.IsProduction, killsSourceSessions: false, sourceDb, targetDb))))
         {
             throw new UserError("Chưa copy gì.", cancelled: true);
         }

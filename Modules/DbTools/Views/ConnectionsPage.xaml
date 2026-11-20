@@ -43,10 +43,20 @@
                                   AutomationProperties.AutomationId="ProfileList" AutomationProperties.Name="Hồ sơ kết nối">
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="models:ConnectionProfile">
-                                    <StackPanel Padding="0,6" AutomationProperties.Name="{x:Bind Name, Mode=OneWay}">
-                                        <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{x:Bind Target, Mode=OneWay}" Opacity="0.7" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
+                                    <!-- Hồ sơ Production: vạch đỏ bên trái + nhãn PRODUCTION -->
+                                    <Grid ColumnSpacing="8" Padding="0,6" AutomationProperties.Name="{x:Bind Name, Mode=OneWay}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="4" CornerRadius="2" Background="{x:Bind views:Ui.ProductionBrush(IsProduction), Mode=OneWay}" />
+                                        <StackPanel Grid.Column="1">
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{x:Bind Target, Mode=OneWay}" Opacity="0.7" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="PRODUCTION" FontSize="11" FontWeight="Bold" Foreground="{x:Bind views:Ui.ProductionBrush(IsProduction), Mode=OneWay}"
+                                                       Visibility="{x:Bind views:Ui.VisibleIf(IsProduction), Mode=OneWay}" />
+                                        </StackPanel>
+                                    </Grid>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
@@ -73,6 +83,12 @@
                 <TextBox Header="Database" Text="{x:Bind ViewModel.Selected.Database, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue=''}" />
                 <TextBox Header="User" Text="{x:Bind ViewModel.Selected.Username, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue=''}" />
                 <PasswordBox x:Name="PasswordBox" Header="Mật khẩu" PasswordChanged="PasswordBox_PasswordChanged" />
+                <CheckBox Content="Quan trọng (Production)" IsChecked="{x:Bind ViewModel.Selected.IsProduction, Mode=TwoWay, FallbackValue=False}"
+                          AutomationProperties.AutomationId="ProductionCheck"
+                          ToolTipService.ToolTip="Tô đỏ hồ sơ; Chạy / Restore / Copy / Ngắt phiên phải gõ lại tên database mới bật được nút" />
+                <TextBlock Text="Chạy (thật), Restore, Copy, Ngắt phiên lên hồ sơ này phải gõ lại tên database trong hộp hỏi lại. Chạy thử, Dump, xem thông tin không hỏi thêm."
+                           Opacity="0.7" FontSize="12" TextWrapping="Wrap" Margin="0,-6,0,0"
+                           Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.Selected.IsProduction), Mode=OneWay, FallbackValue=Collapsed}" />
                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
                     <Button Content="Thử kết nối" Command="{x:Bind ViewModel.TestCommand}" />
                     <ProgressRing IsActive="{x:Bind ViewModel.IsTesting, Mode=OneWay}" Width="20" Height="20" />

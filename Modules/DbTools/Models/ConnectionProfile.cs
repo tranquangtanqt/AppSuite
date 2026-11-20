@@ -51,6 +51,15 @@ public sealed partial class ConnectionProfile : ObservableObject
         ? $"schema {s}{(IncludePublic && s != "public" ? " + public" : string.Empty)}"
         : "schema mặc định (search_path)";
 
+    /// <summary>Hồ sơ quan trọng (Production): tô đỏ, Chạy / Restore / Copy / Ngắt phiên phải gõ lại tên DB (<see cref="Core.ProductionGuard"/>).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PickerText))]
+    private bool _isProduction;
+
+    /// <summary>Chữ trong ô chọn server (ComboBox) ở các trang: hồ sơ Production có dấu đỏ ở đầu.</summary>
+    [JsonIgnore]
+    public string PickerText => IsProduction ? "🔴 PRODUCTION · " + Display : Display;
+
     /// <summary>Mật khẩu đã mã hoá (Base64) - chỉ dùng khi đọc / ghi file.</summary>
     public string ProtectedPassword { get; set; } = string.Empty;
 
@@ -61,13 +70,19 @@ public sealed partial class ConnectionProfile : ObservableObject
     [JsonIgnore]
     public string Display => string.IsNullOrWhiteSpace(Name) ? Target : $"{Name}  ({Target})";
 
-    partial void OnNameChanged(string value) => OnPropertyChanged(nameof(Display));
+    partial void OnNameChanged(string value) => DisplayChanged();
 
-    partial void OnHostChanged(string value) => OnPropertyChanged(nameof(Display));
+    partial void OnHostChanged(string value) => DisplayChanged();
 
-    partial void OnPortChanged(int value) => OnPropertyChanged(nameof(Display));
+    partial void OnPortChanged(int value) => DisplayChanged();
 
-    partial void OnDatabaseChanged(string value) => OnPropertyChanged(nameof(Display));
+    partial void OnDatabaseChanged(string value) => DisplayChanged();
+
+    private void DisplayChanged()
+    {
+        OnPropertyChanged(nameof(Display));
+        OnPropertyChanged(nameof(PickerText));
+    }
 
     public ConnectionProfile Clone(string name) => new()
     {
@@ -79,7 +94,8 @@ public sealed partial class ConnectionProfile : ObservableObject
         Password = Password,
         Schema = Schema,
         IncludePublic = IncludePublic,
+        IsProduction = IsProduction,
     };
 
-    public override string ToString() => Display;
+    public override string ToString() => PickerText;
 }

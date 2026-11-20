@@ -48,7 +48,7 @@ public static class AppState
 
     private static void Profile_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is not (nameof(ConnectionProfile.Target) or nameof(ConnectionProfile.Display)))
+        if (e.PropertyName is not (nameof(ConnectionProfile.Target) or nameof(ConnectionProfile.Display) or nameof(ConnectionProfile.PickerText)))
         {
             SaveProfiles();
         }

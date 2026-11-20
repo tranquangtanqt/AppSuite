@@ -1,7 +1,10 @@
+using DbTools.Core;
 using DbTools.Services;
 using DbTools.ViewModels;
 using Microsoft.UI.Xaml;
+using Microsoft.UI;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 
 namespace DbTools.Views;
 
@@ -93,12 +96,44 @@ public sealed partial class BackupPage : Page
     }
 }
 
-/// <summary>Hộp thoại hỏi lại dùng chung (Chạy, Restore, Copy, Ngắt phiên): nút mặc định là Huỷ để Enter không vô tình chạy.</summary>
+/// <summary>Hộp thoại hỏi lại dùng chung (Chạy, Restore, Copy, Ngắt phiên): nút mặc định là Huỷ để Enter không vô tình chạy.
+/// Hồ sơ Production (<see cref="RunConfirmation.TypeToConfirm"/>): khung đỏ + ô gõ lại tên, nút chỉ bật khi gõ đúng.</summary>
 internal static class Dialogs
 {
+    private static readonly Brush ProductionRed = new SolidColorBrush(ColorHelper.FromArgb(0xFF, 0xDC, 0x26, 0x26));
+
     public static async Task<bool> ConfirmAsync(XamlRoot root, RunConfirmation confirmation)
     {
         var panel = new StackPanel { Spacing = 8, MaxWidth = 560 };
+        TextBox? nameBox = null;
+        if (confirmation.TypeToConfirm is { } expected)
+        {
+            nameBox = new TextBox { PlaceholderText = expected, IsSpellCheckEnabled = false };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(nameBox, "ProductionConfirmBox");
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(nameBox, "Gõ lại tên để xác nhận");
+            panel.Children.Add(new Border
+            {
+                BorderBrush = ProductionRed,
+                BorderThickness = new Thickness(2),
+                CornerRadius = new CornerRadius(6),
+                Padding = new Thickness(12, 10, 12, 12),
+                Child = new StackPanel
+                {
+                    Spacing = 8,
+                    Children =
+                    {
+                        new TextBlock
+                        {
+                            Text = "🔴 PRODUCTION - hồ sơ quan trọng",
+                            Foreground = ProductionRed,
+                            FontWeight = Microsoft.UI.Text.FontWeights.Bold,
+                        },
+                        new TextBlock { Text = $"Gõ lại \"{expected}\" để bật nút {confirmation.PrimaryText}.", TextWrapping = TextWrapping.Wrap },
+                        nameBox,
+                    },
+                },
+            });
+        }
         foreach (var line in confirmation.Lines)
         {
             panel.Children.Add(new TextBlock
@@ -112,12 +147,19 @@ internal static class Dialogs
         var dialog = new ContentDialog
         {
             XamlRoot = root,
-            Title = confirmation.Title,
+            Title = (nameBox is null ? string.Empty : "🔴 ") + confirmation.Title,
             Content = new ScrollViewer { Content = panel, MaxHeight = 360, VerticalScrollBarVisibility = ScrollBarVisibility.Auto },
             PrimaryButtonText = confirmation.PrimaryText,
             CloseButtonText = "Huỷ",
-            DefaultButton = ContentDialogButton.Close,
+            DefaultButton = ContentDialogButton.Close, // Enter không vô tình chạy thật
+            IsPrimaryButtonEnabled = nameBox is null,
         };
+        if (nameBox is not null)
+        {
+            var name = confirmation.TypeToConfirm!;
+            nameBox.TextChanged += (_, _) => dialog.IsPrimaryButtonEnabled = ProductionGuard.Matches(nameBox.Text, name);
+            nameBox.Loaded += (_, _) => nameBox.Focus(FocusState.Programmatic);
+        }
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 }

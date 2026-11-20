@@ -27,6 +27,11 @@ internal static class Ui
 
     public static Brush FailBrush(bool failed) => failed ? Red : Green;
 
+    /// <summary>Vạch / nhãn hồ sơ Production (đỏ); hồ sơ thường trong suốt.</summary>
+    public static Brush ProductionBrush(bool production) => production ? Red : Transparent;
+
+    private static readonly Brush Transparent = new SolidColorBrush(Colors.Transparent);
+
     public static string ResultGlyph(bool success) => success ? "" : "";
 
     public static Visibility VisibleIf(bool value) => value ? Visibility.Visible : Visibility.Collapsed;

@@ -35,30 +35,8 @@ public sealed partial class RunPage : Page
         ViewModel.EnsureProfile();
     }
 
-    private async Task<bool> ConfirmAsync(RunConfirmation confirmation)
-    {
-        var panel = new StackPanel { Spacing = 8, MaxWidth = 560 };
-        foreach (var line in confirmation.Lines)
-        {
-            panel.Children.Add(new TextBlock
-            {
-                Text = line,
-                TextWrapping = TextWrapping.Wrap,
-                IsTextSelectionEnabled = true,
-                FontWeight = line.StartsWith('⚠') ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal,
-            });
-        }
-        var dialog = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            Title = confirmation.Title,
-            Content = new ScrollViewer { Content = panel, MaxHeight = 360, VerticalScrollBarVisibility = ScrollBarVisibility.Auto },
-            PrimaryButtonText = confirmation.PrimaryText,
-            CloseButtonText = "Huỷ",
-            DefaultButton = ContentDialogButton.Close, // Enter không vô tình chạy thật
-        };
-        return await dialog.ShowAsync() == ContentDialogResult.Primary;
-    }
+    // Hộp hỏi lại dùng chung với Sao lưu / Phiên kết nối (có khung Production gõ lại tên DB).
+    private Task<bool> ConfirmAsync(RunConfirmation confirmation) => Dialogs.ConfirmAsync(XamlRoot, confirmation);
 
     private void ManageConnections_Click(object sender, RoutedEventArgs e) => App.MainWindow?.ShowPage("ConnectionsPage");
 

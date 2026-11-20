@@ -20,7 +20,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
-| **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu), Thử kết nối |
+| **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu), Thử kết nối; ô **Quan trọng (Production)** (xem mục Hồ sơ Production) |
 
 F1 / nút ? / mục Hướng dẫn: cửa sổ hướng dẫn dùng chung `SharedUI.Help.HelpWindow`, nội dung ở `Core\HelpContent.cs`.
 
@@ -143,6 +143,25 @@ chính DbTools đánh dấu, không ngắt. Ngắt phiên đã chọn (ListView 
 
 Npgsql chạy ở chế độ raw (`Npgsql.EnableSqlRewriting = false`, đặt trong `App()`): DbTools tự tách câu nên gửi nguyên
 văn từng câu, biết chính xác câu nào lỗi.
+
+## Hồ sơ Production (2026-11-20)
+
+`ConnectionProfile.IsProduction` (lưu trong connections.json, file cũ thiếu trường = hồ sơ thường; Nhân bản giữ). Tô đỏ: vạch +
+nhãn PRODUCTION ở danh sách Kết nối (`Ui.ProductionBrush`), ô chọn server ở các trang bind `PickerText` ("🔴 PRODUCTION · …").
+Mọi hộp hỏi lại (Chạy, Restore, Copy, Ngắt phiên) dùng chung `Views\Dialogs.ConfirmAsync` (cuối `BackupPage.xaml.cs`);
+`RunConfirmation.TypeToConfirm` khác null → khung đỏ + ô gõ lại (`ProductionConfirmBox`), nút chính tắt tới khi gõ đúng
+(`ProductionGuard.Matches`: bỏ khoảng trắng 2 đầu, phân biệt hoa thường), nút mặc định vẫn là Huỷ. Chữ phải gõ do
+`Core\ProductionGuard` quyết định:
+
+| Thao tác | Gõ lại |
+|---|---|
+| Chạy (thật; Chạy thử không hỏi) | database của hồ sơ |
+| Restore (DB mới hoặc có sẵn) | database đích |
+| Copy cùng server, phải ngắt phiên DB nguồn Production | database nguồn |
+| Copy lên server đích Production | database đích (chỉ đọc nguồn Production bằng pg_dump thì không hỏi) |
+| Ngắt phiên | database của các phiên; nhiều DB → tên hồ sơ |
+
+Tên trống (hồ sơ chưa điền Database) → gõ tên hồ sơ; cả 2 trống → gõ `PRODUCTION`.
 
 ## Dữ liệu (cạnh exe, `DBTOOLS_DATA_DIR` đổi chỗ khác khi test)
 

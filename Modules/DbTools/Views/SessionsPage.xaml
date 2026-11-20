@@ -33,7 +33,7 @@
                       SelectedItem="{x:Bind ViewModel.Profile, Mode=TwoWay}" PlaceholderText="(chưa có kết nối)" AutomationProperties.AutomationId="SessionProfileBox">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="models:ConnectionProfile">
-                        <TextBlock Text="{x:Bind Display, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{x:Bind PickerText, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
                     </DataTemplate>
                 </ComboBox.ItemTemplate>
             </ComboBox>

@@ -11,8 +11,9 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace DbTools.ViewModels;
 
-/// <summary>Nội dung hộp thoại hỏi lại trước khi Chạy thật.</summary>
-public sealed record RunConfirmation(string Title, IReadOnlyList<string> Lines, string PrimaryText);
+/// <summary>Nội dung hộp thoại hỏi lại trước khi Chạy thật / Restore / Copy / Ngắt phiên. <paramref name="TypeToConfirm"/>: hồ sơ
+/// Production - phải gõ lại đúng chữ này thì nút mới bật (<see cref="Core.ProductionGuard"/>); null = hỏi lại như thường.</summary>
+public sealed record RunConfirmation(string Title, IReadOnlyList<string> Lines, string PrimaryText, string? TypeToConfirm = null);
 
 /// <summary>
 /// Trang "Chạy thư mục SQL": đọc thư mục → danh sách file theo thứ tự chạy (tự sắp / chỉnh tay, nhớ theo thư mục) →
@@ -632,7 +633,8 @@ public sealed partial class RunViewModel : ObservableObject
                 {
                     lines.Add($"{warned} file có cảnh báo khi kiểm tra (xem nhật ký) - nên Chạy thử trước.");
                 }
-                if (!await Confirm(new RunConfirmation($"Chạy lên {profile.Target}?", lines, "Chạy")))
+                if (!await Confirm(new RunConfirmation($"Chạy lên {profile.Target}?", lines, "Chạy",
+                        ProductionGuard.ForRun(profile.IsProduction, profile.Database, profile.Name))))
                 {
                     AppendLog("Đã huỷ - chưa chạy gì.");
                     Status = "Chưa chạy.";

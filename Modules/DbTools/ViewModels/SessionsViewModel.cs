@@ -179,7 +179,8 @@ public sealed partial class SessionsViewModel : ObservableObject
         {
             lines.Add($"  ... và {rows.Count - 12} phiên khác");
         }
-        if (Confirm is not null && !await Confirm(new RunConfirmation($"Ngắt {rows.Count} phiên?", lines, "Ngắt phiên")))
+        if (Confirm is not null && !await Confirm(new RunConfirmation($"Ngắt {rows.Count} phiên?", lines, "Ngắt phiên",
+                Core.ProductionGuard.ForSessions(profile.IsProduction, rows.Select(r => r.Database), profile.Name, profile.Database))))
         {
             return;
         }

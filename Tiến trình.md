@@ -194,8 +194,13 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [ ] Publish MainLauncher (mô tả DbTools mới trong modules.json) - làm cùng lần publish MeRon
 - [ ] Người dùng thử tay trên DB dev: Dump / Restore / Copy (thư mục D:\DMP, client PostgreSQL 12 / 17), Xem lệnh, Thông tin DB
   (chi tiết bảng, DDL), Sinh dữ liệu mẫu
-- [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools (gợi ý 2026-11-19, khuyên làm 1 → 3 → 2):
-  1. Hồ sơ "Quan trọng / Production": tô đỏ, gõ lại tên DB trước Chạy / Restore ghi đè / Ngắt phiên / Copy (nhỏ)
+- [x] **Hồ sơ Production** (người dùng 2026-11-20 chọn mục 1): ô tích Quan trọng (Production) ở trang Kết nối; danh sách hồ sơ vạch
+  đỏ + nhãn PRODUCTION, ô chọn server ở mọi trang "🔴 PRODUCTION · …"; Chạy (thật), Restore, Copy DB, Ngắt phiên: hộp hỏi lại khung
+  đỏ, phải gõ lại đúng tên DB (Copy phải ngắt phiên nguồn → tên DB nguồn; Ngắt phiên nhiều DB → tên hồ sơ) mới bật nút; Chạy thử /
+  Dump / Thông tin DB không hỏi thêm; Nhân bản giữ dấu. Trang Chạy dùng chung hộp hỏi lại với Sao lưu / Phiên. Unit test 123/123
+  (+ 20 test PostgreSQL thật bỏ qua - chưa có server); GUI Sandbox (UIA, PostgreSQL 17 trong Sandbox) 34/34 (2026-11-20)
+- [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools còn lại (gợi ý 2026-11-19, khuyên làm 3 → 2):
+  1. ~~Hồ sơ "Quan trọng / Production"~~ - xong 2026-11-20 (mục trên)
   2. So thư mục script svn ↔ DB: đối tượng chưa áp, hàm / view định nghĩa khác, bảng thiếu / thừa cột (vừa)
   3. Ô chạy SQL nhanh: mặc định READ ONLY, kết quả dạng bảng, giới hạn dòng, Copy / CSV / mở CsvEditor, lịch sử câu (vừa)
   4. Thông tin DB: tìm cột trong toàn DB; phụ thuộc (hàm / view / trigger dùng bảng X) + tìm chữ trong mã nguồn hàm / view;
