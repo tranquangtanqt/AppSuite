@@ -14,6 +14,38 @@ public sealed partial class DbInfoPage : Page
     {
         InitializeComponent();
         ScrollFit.Attach(Scroller, Root, 560);
+        ViewModel.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(DbInfoViewModel.DefinitionHighlight) && ViewModel.DefinitionHighlight is { } match)
+            {
+                // Chữ định nghĩa vừa đổi → chờ dựng xong rồi bôi đen chỗ khớp đầu tiên + cuộn tới đó
+                DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => Highlight(match));
+            }
+        };
+    }
+
+    private void Highlight(Core.SourceMatch match)
+    {
+        // Chữ trong TextBox dùng \r thay \n: độ dài giữ nguyên nên vị trí vẫn đúng
+        if (match.Index + match.Length > DefinitionBox.Text.Length)
+        {
+            return;
+        }
+        DefinitionBox.Select(match.Index, match.Length);
+        if (DefinitionBox.FindDescendant<ScrollViewer>() is { } viewer)
+        {
+            var rect = DefinitionBox.GetRectFromCharacterIndex(match.Index, false);
+            viewer.ChangeView(null, Math.Max(0, viewer.VerticalOffset + rect.Top - 60), null, disableAnimation: true);
+        }
+    }
+
+    private async void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter && ViewModel.SearchCommand.CanExecute(null))
+        {
+            e.Handled = true;
+            await ViewModel.SearchCommand.ExecuteAsync(null);
+        }
     }
 
     protected override void OnNavigatedTo(Microsoft.UI.Xaml.Navigation.NavigationEventArgs e)

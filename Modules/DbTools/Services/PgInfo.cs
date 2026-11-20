@@ -166,7 +166,6 @@ public static class PgInfo
         {
             return item.Definition;
         }
-        var name = $"{PgSql.QuoteIdentIfNeeded(item.Schema)}.{PgSql.QuoteIdentIfNeeded(item.Name)}";
         var sql = item.Kind switch
         {
             "view" or "matview" => "SELECT pg_get_viewdef($1::oid, true)",
@@ -176,7 +175,171 @@ public static class PgInfo
         };
         await using var cmd = new NpgsqlCommand(sql, c);
         cmd.Parameters.Add(new NpgsqlParameter { Value = (long)item.Oid });
-        var body = (await cmd.ExecuteScalarAsync(ct) as string ?? string.Empty).TrimEnd();
+        var body = await cmd.ExecuteScalarAsync(ct) as string ?? string.Empty;
+        return FormatDefinition(item, body);
+    }
+
+    /// <summary>
+    /// Định nghĩa đầy đủ của mọi view / materialized view / hàm / procedure (1 lần đọc) - để tìm chữ trong mã nguồn và dò hàm
+    /// nhắc tới 1 bảng. <see cref="DbObjectItem.Definition"/> = đúng chữ hiện ở ô Định nghĩa (số dòng khớp nhau).
+    /// </summary>
+    public static async Task<List<DbObjectItem>> SourcesAsync(NpgsqlConnection c, CancellationToken ct)
+    {
+        var result = new List<DbObjectItem>();
+        var sql = $"""
+            SELECT c.oid, CASE c.relkind WHEN 'm' THEN 'matview' ELSE 'view' END, n.nspname, c.relname,
+                   coalesce(obj_description(c.oid, 'pg_class'), ''), pg_get_viewdef(c.oid, true)
+              FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+             WHERE c.relkind IN ('v', 'm') AND {UserSchemas}
+            UNION ALL
+            SELECT p.oid, CASE p.prokind WHEN 'p' THEN 'procedure' ELSE 'function' END, n.nspname, p.proname,
+                   '(' || pg_get_function_identity_arguments(p.oid) || ')', pg_get_functiondef(p.oid)
+              FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+             WHERE p.prokind IN ('f', 'p') AND {UserSchemas}
+               AND NOT EXISTS (SELECT 1 FROM pg_depend d WHERE d.classid = 'pg_proc'::regclass AND d.objid = p.oid AND d.deptype = 'e')
+             ORDER BY 3, 4
+            """;
+        await using var cmd = new NpgsqlCommand(sql, c) { CommandTimeout = 120 };
+        await using var r = await cmd.ExecuteReaderAsync(ct);
+        while (await r.ReadAsync(ct))
+        {
+            var kind = r.GetString(1);
+            var isView = kind is "view" or "matview";
+            // Hàm: Info = (tham số) để phân biệt hàm trùng tên (overload); view: Comment để FormatDefinition ghi COMMENT ON
+            var item = new DbObjectItem(r.GetFieldValue<uint>(0), kind, r.GetString(2), r.GetString(3), isView ? kind : r.GetString(4), isView ? r.GetString(4) : string.Empty);
+            result.Add(item with { Definition = FormatDefinition(item, r.IsDBNull(5) ? string.Empty : r.GetString(5)) });
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Đối tượng phụ thuộc vào bảng <paramref name="oid"/>: view (pg_depend, cả view dựng trên view - tối đa 10 lớp, kèm cột dùng),
+    /// khoá ngoại từ bảng khác, trigger, sequence thuộc cột, hàm SQL chuẩn được PostgreSQL ghi nhận; hàm / procedure nhắc tên bảng
+    /// trong mã nguồn (<see cref="SourceSearch.FindTable"/> trên <paramref name="sources"/>) + trigger bảng khác gọi các hàm đó.
+    /// </summary>
+    public static async Task<List<DependentItem>> DependentsAsync(NpgsqlConnection c, uint oid, string schema, string table,
+        IReadOnlyList<DbObjectItem> sources, CancellationToken ct)
+    {
+        var id = new NpgsqlParameter { Value = (long)oid };
+        var result = new List<DependentItem>();
+        var definitions = sources.ToDictionary(s => (s.Kind is "view" or "matview" ? "v" : "f", s.Oid), s => s.Definition);
+        async Task Read(string sql, Action<NpgsqlDataReader> map)
+        {
+            await using var cmd = new NpgsqlCommand(sql, c);
+            cmd.Parameters.Add(id.Clone());
+            await using var r = await cmd.ExecuteReaderAsync(ct);
+            while (await r.ReadAsync(ct))
+            {
+                map(r);
+            }
+        }
+        static List<string> Cols(NpgsqlDataReader r, int i) => r.IsDBNull(i) ? [] : [.. r.GetFieldValue<string[]>(i)];
+
+        // View: rule (pg_rewrite) của view phụ thuộc bảng; lặp để ra view dựng trên view
+        await Read("""
+            WITH RECURSIVE deps(oid, via, depth) AS (
+                SELECT DISTINCT r.ev_class, 0::oid, 1
+                  FROM pg_depend d JOIN pg_rewrite r ON r.oid = d.objid
+                 WHERE d.classid = 'pg_rewrite'::regclass AND d.refclassid = 'pg_class'::regclass AND d.refobjid = $1::oid AND r.ev_class <> $1::oid
+                UNION
+                SELECT DISTINCT r.ev_class, deps.oid, deps.depth + 1
+                  FROM deps JOIN pg_depend d ON d.refobjid = deps.oid AND d.refclassid = 'pg_class'::regclass AND d.classid = 'pg_rewrite'::regclass
+                  JOIN pg_rewrite r ON r.oid = d.objid
+                 WHERE r.ev_class <> deps.oid AND deps.depth < 10
+            )
+            SELECT DISTINCT ON (deps.oid) deps.oid, n.nspname || '.' || c.relname, c.relkind::text,
+                   CASE WHEN deps.via = 0 THEN '' ELSE deps.via::regclass::text END, deps.depth,
+                   (SELECT array_agg(DISTINCT a.attname::text ORDER BY a.attname::text)
+                      FROM pg_depend d2 JOIN pg_rewrite r2 ON r2.oid = d2.objid
+                      JOIN pg_attribute a ON a.attrelid = d2.refobjid AND a.attnum = d2.refobjsubid
+                     WHERE r2.ev_class = deps.oid AND d2.classid = 'pg_rewrite'::regclass AND d2.refobjid = $1::oid AND d2.refobjsubid > 0)
+              FROM deps JOIN pg_class c ON c.oid = deps.oid JOIN pg_namespace n ON n.oid = c.relnamespace
+             ORDER BY deps.oid, deps.depth
+            """, r =>
+        {
+            var columns = Cols(r, 5);
+            var via = r.GetString(3);
+            var relation = (r.GetString(2) == "m" ? "materialized view" : "view")
+                + (via.Length > 0 ? $" · gián tiếp qua {via}" : columns.Count > 0 ? " · dùng cột " + string.Join(", ", columns) : string.Empty);
+            result.Add(new DependentItem(DependentKind.View, r.GetString(1), relation, columns,
+                definitions.GetValueOrDefault(("v", r.GetFieldValue<uint>(0))) ?? string.Empty, r.GetInt32(4)));
+        });
+
+        await Read("""
+            SELECT k.conname, k.conrelid::regclass::text, pg_get_constraintdef(k.oid, true),
+                   (SELECT array_agg(a.attname::text ORDER BY a.attnum) FROM pg_attribute a WHERE a.attrelid = k.confrelid AND a.attnum = ANY(k.confkey))
+              FROM pg_constraint k WHERE k.confrelid = $1::oid AND k.contype = 'f' AND k.conrelid <> $1::oid ORDER BY 2, 1
+            """, r =>
+        {
+            var columns = Cols(r, 3);
+            result.Add(new DependentItem(DependentKind.ForeignKey, $"{r.GetString(1)} ({r.GetString(0)})",
+                "khoá ngoại → cột " + string.Join(", ", columns), columns, $"ALTER TABLE {r.GetString(1)} ADD CONSTRAINT {PgSql.QuoteIdentIfNeeded(r.GetString(0))} {r.GetString(2)};"));
+        });
+
+        await Read("""
+            SELECT t.tgname, t.tgfoid::regproc::text, pg_get_triggerdef(t.oid, true), t.tgenabled::text
+              FROM pg_trigger t WHERE t.tgrelid = $1::oid AND NOT t.tgisinternal ORDER BY 1
+            """, r => result.Add(new DependentItem(DependentKind.Trigger, r.GetString(0),
+                $"trigger trên bảng này → {r.GetString(1)}{(r.GetString(3) == "D" ? " · ĐANG TẮT" : string.Empty)}", [], r.GetString(2) + ";")));
+
+        await Read("""
+            SELECT s.oid::regclass::text, a.attname::text
+              FROM pg_depend d JOIN pg_class s ON s.oid = d.objid AND s.relkind = 'S'
+              JOIN pg_attribute a ON a.attrelid = d.refobjid AND a.attnum = d.refobjsubid
+             WHERE d.classid = 'pg_class'::regclass AND d.refclassid = 'pg_class'::regclass AND d.refobjid = $1::oid AND d.deptype IN ('a', 'i')
+             ORDER BY 1
+            """, r => result.Add(new DependentItem(DependentKind.Sequence, r.GetString(0), $"sequence của cột {r.GetString(1)}", [r.GetString(1)], string.Empty)));
+
+        // Hàm có thân SQL chuẩn (BEGIN ATOMIC): PostgreSQL ghi phụ thuộc như view
+        var tracked = new HashSet<uint>();
+        await Read("""
+            SELECT DISTINCT p.oid, n.nspname || '.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')'
+              FROM pg_depend d JOIN pg_proc p ON p.oid = d.objid JOIN pg_namespace n ON n.oid = p.pronamespace
+             WHERE d.classid = 'pg_proc'::regclass AND d.refclassid = 'pg_class'::regclass AND d.refobjid = $1::oid AND d.deptype = 'n'
+             ORDER BY 2
+            """, r =>
+        {
+            tracked.Add(r.GetFieldValue<uint>(0));
+            result.Add(new DependentItem(DependentKind.TrackedFunction, r.GetString(1), "hàm SQL chuẩn (BEGIN ATOMIC) - PostgreSQL ghi nhận", [],
+                definitions.GetValueOrDefault(("f", r.GetFieldValue<uint>(0))) ?? string.Empty));
+        });
+
+        // Hàm / procedure nhắc tên bảng trong mã nguồn (dò chữ)
+        var functionNames = new Dictionary<uint, string>();
+        foreach (var f in sources.Where(s => s.Kind is "function" or "procedure" && !tracked.Contains(s.Oid)))
+        {
+            var matches = SourceSearch.FindTable(f.Definition, schema, table);
+            if (matches.Count == 0)
+            {
+                continue;
+            }
+            var name = $"{f.Schema}.{f.Name}{f.Info}";
+            functionNames[f.Oid] = name;
+            var how = matches.All(m => m.Qualified) ? "ghi rõ schema" : matches.Any(m => m.Qualified) ? "có chỗ ghi rõ schema" : "theo tên (không ghi schema)";
+            result.Add(new DependentItem(DependentKind.Function, name, $"{f.Kind} · {how} · {SourceSearch.Summary(matches)}", [],
+                SourceSearch.Lines(matches) + "\n\n" + f.Definition));
+        }
+        if (functionNames.Count > 0)
+        {
+            await Read("""
+                SELECT t.tgname, t.tgrelid::regclass::text, t.tgfoid, pg_get_triggerdef(t.oid, true)
+                  FROM pg_trigger t WHERE NOT t.tgisinternal AND t.tgrelid <> $1::oid ORDER BY 2, 1
+                """, r =>
+            {
+                if (functionNames.TryGetValue(r.GetFieldValue<uint>(2), out var fn))
+                {
+                    result.Add(new DependentItem(DependentKind.IndirectTrigger, $"{r.GetString(0)} trên {r.GetString(1)}", $"gọi hàm {fn}", [], r.GetString(3) + ";"));
+                }
+            });
+        }
+        return result;
+    }
+
+    /// <summary>Thân từ pg_get_viewdef / pg_get_functiondef / pg_get_triggerdef → câu CREATE đầy đủ (giống ô Định nghĩa).</summary>
+    private static string FormatDefinition(DbObjectItem item, string rawBody)
+    {
+        var name = $"{PgSql.QuoteIdentIfNeeded(item.Schema)}.{PgSql.QuoteIdentIfNeeded(item.Name)}";
+        var body = rawBody.TrimEnd();
         var comment = item.Comment.Length == 0 ? string.Empty : item.Kind switch
         {
             "view" => $"\n\nCOMMENT ON VIEW {name} IS {PgSql.Literal(item.Comment)};",

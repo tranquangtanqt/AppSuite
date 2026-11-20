@@ -295,6 +295,7 @@
                     <SelectorBarItem Text="{x:Bind ViewModel.ConstraintsTab, Mode=OneWay}" />
                     <SelectorBarItem Text="{x:Bind ViewModel.TriggersTab, Mode=OneWay}" />
                     <SelectorBarItem Text="DDL" />
+                    <SelectorBarItem Text="{x:Bind ViewModel.DependentsTab, Mode=OneWay}" />
                 </SelectorBar>
                 <Grid Grid.Row="3">
                     <!-- Cột -->
@@ -407,6 +408,60 @@
                     <!-- DDL -->
                     <TextBox Style="{StaticResource Code}" Text="{x:Bind ViewModel.Ddl, Mode=OneWay}" AutomationProperties.AutomationId="DdlBox"
                              AutomationProperties.Name="DDL" Visibility="{x:Bind views:Ui.TabVisible(ViewModel.DetailTab, 4), Mode=OneWay}" />
+                    <!-- Phụ thuộc: ảnh hưởng khi xoá / sửa bảng + đối tượng dùng bảng; chọn dòng → định nghĩa / dòng nhắc tới bảng -->
+                    <Grid RowSpacing="6" Visibility="{x:Bind views:Ui.TabVisible(ViewModel.DetailTab, 5), Mode=OneWay}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" MinHeight="100" />
+                            <RowDefinition Height="*" MinHeight="100" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{x:Bind ViewModel.DependentsImpact, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                                   AutomationProperties.AutomationId="DependentsImpact" />
+                        <Border Grid.Row="1" Style="{StaticResource ListBorder}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid Style="{StaticResource HeaderRow}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="3*" />
+                                        <ColumnDefinition Width="96" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Loại" Style="{StaticResource HeaderText}" />
+                                    <TextBlock Grid.Column="1" Text="Đối tượng" Style="{StaticResource HeaderText}" />
+                                    <TextBlock Grid.Column="2" Text="Liên quan" Style="{StaticResource HeaderText}" />
+                                    <TextBlock Grid.Column="3" Text="Nguồn" Style="{StaticResource HeaderText}" />
+                                </Grid>
+                                <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.DetailDependents}" SelectedItem="{x:Bind ViewModel.SelectedDependent, Mode=TwoWay}"
+                                          ItemContainerStyle="{StaticResource RowItem}" AutomationProperties.AutomationId="DependentList" AutomationProperties.Name="Đối tượng phụ thuộc">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:DependentRow">
+                                            <Grid ColumnSpacing="10" AutomationProperties.Name="{x:Bind Name}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="110" />
+                                                    <ColumnDefinition Width="2*" />
+                                                    <ColumnDefinition Width="3*" />
+                                                    <ColumnDefinition Width="96" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{x:Bind Kind}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1" Text="{x:Bind Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                                           ToolTipService.ToolTip="{x:Bind Name}" />
+                                                <TextBlock Grid.Column="2" Text="{x:Bind Relation}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Opacity="0.85"
+                                                           ToolTipService.ToolTip="{x:Bind Relation}" />
+                                                <TextBlock Grid.Column="3" Text="{x:Bind Certainty}" FontSize="12" Opacity="0.65" VerticalAlignment="Center"
+                                                           ToolTipService.ToolTip="catalog = PostgreSQL ghi nhận phụ thuộc (chắc chắn); dò mã nguồn = tên bảng xuất hiện trong thân hàm" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
+                            </Grid>
+                        </Border>
+                        <TextBox Grid.Row="2" Style="{StaticResource Code}" Text="{x:Bind ViewModel.DependentDetail, Mode=OneWay}"
+                                 AutomationProperties.AutomationId="DependentDetail" AutomationProperties.Name="Chi tiết phụ thuộc" />
+                    </Grid>
                 </Grid>
             </Grid>
 
@@ -418,21 +473,41 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" MinHeight="100" />
                 </Grid.RowDefinitions>
-                <Grid ColumnSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <SelectorBar SelectionChanged="ObjectKinds_SelectionChanged" AutomationProperties.AutomationId="ObjectKinds">
-                        <SelectorBarItem Text="View" IsSelected="True" />
-                        <SelectorBarItem Text="Hàm / procedure" />
-                        <SelectorBarItem Text="Trigger" />
-                        <SelectorBarItem Text="Sequence" />
-                        <SelectorBarItem Text="Extension" />
-                    </SelectorBar>
-                    <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ObjectsSummary, Mode=OneWay}" Opacity="0.7" VerticalAlignment="Center" HorizontalAlignment="Right"
-                               AutomationProperties.AutomationId="ObjectsSummary" />
-                </Grid>
+                <StackPanel Spacing="6">
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <SelectorBar SelectionChanged="ObjectKinds_SelectionChanged" AutomationProperties.AutomationId="ObjectKinds">
+                            <SelectorBarItem Text="View" IsSelected="True" />
+                            <SelectorBarItem Text="Hàm / procedure" />
+                            <SelectorBarItem Text="Trigger" />
+                            <SelectorBarItem Text="Sequence" />
+                            <SelectorBarItem Text="Extension" />
+                            <SelectorBarItem Text="Tìm trong mã nguồn" />
+                        </SelectorBar>
+                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ObjectsSummary, Mode=OneWay}" Opacity="0.7" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                   TextTrimming="CharacterEllipsis" AutomationProperties.AutomationId="ObjectsSummary" />
+                    </Grid>
+                    <!-- Tìm chữ trong định nghĩa mọi view / hàm / procedure (lọc schema / tên ở trên vẫn áp) -->
+                    <Grid ColumnSpacing="8" Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.IsSearchKind), Mode=OneWay}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MaxWidth="420" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="chữ cần tìm, vd: app_order_all, raise exception"
+                                 KeyDown="SearchBox_KeyDown" AutomationProperties.AutomationId="SourceSearchBox" AutomationProperties.Name="Tìm trong mã nguồn" />
+                        <CheckBox Grid.Column="1" Content="Cả từ" MinWidth="0" IsChecked="{x:Bind ViewModel.SearchWholeWord, Mode=TwoWay}"
+                                  AutomationProperties.AutomationId="SearchWholeWord" ToolTipService.ToolTip="Không khớp khi chữ là 1 phần của tên dài hơn (order ≠ order_detail)" />
+                        <CheckBox Grid.Column="2" Content="Phân biệt hoa thường" MinWidth="0" IsChecked="{x:Bind ViewModel.SearchCaseSensitive, Mode=TwoWay}"
+                                  AutomationProperties.AutomationId="SearchCaseSensitive" />
+                        <Button Grid.Column="3" Content="Tìm" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.SearchCommand}"
+                                AutomationProperties.AutomationId="SourceSearchButton" ToolTipService.ToolTip="Tìm trong định nghĩa mọi view / materialized view / hàm / procedure (Enter)" />
+                    </Grid>
+                </StackPanel>
                 <Border Grid.Row="1" Style="{StaticResource ListBorder}">
                     <ListView ItemsSource="{x:Bind ViewModel.Objects}" SelectedItem="{x:Bind ViewModel.SelectedObject, Mode=TwoWay}"
                               ItemContainerStyle="{StaticResource RowItem}" AutomationProperties.AutomationId="ObjectList" AutomationProperties.Name="Đối tượng">
@@ -458,7 +533,8 @@
                     <TextBlock Text="Định nghĩa" FontWeight="SemiBold" VerticalAlignment="Center" />
                     <Button HorizontalAlignment="Right" Content="Copy" Command="{x:Bind ViewModel.CopyDefinitionCommand}" AutomationProperties.AutomationId="CopyDefinitionButton" />
                 </Grid>
-                <TextBox Grid.Row="3" Style="{StaticResource Code}" Text="{x:Bind ViewModel.ObjectDefinition, Mode=OneWay}"
+                <TextBox x:Name="DefinitionBox" Grid.Row="3" Style="{StaticResource Code}" Text="{x:Bind ViewModel.ObjectDefinition, Mode=OneWay}"
+                         SelectionHighlightColorWhenNotFocused="{ThemeResource TextControlSelectionHighlightColor}"
                          AutomationProperties.AutomationId="DefinitionBox" AutomationProperties.Name="Định nghĩa" />
             </Grid>
         </Grid>

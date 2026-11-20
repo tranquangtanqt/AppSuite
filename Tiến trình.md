@@ -199,12 +199,19 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   đỏ, phải gõ lại đúng tên DB (Copy phải ngắt phiên nguồn → tên DB nguồn; Ngắt phiên nhiều DB → tên hồ sơ) mới bật nút; Chạy thử /
   Dump / Thông tin DB không hỏi thêm; Nhân bản giữ dấu. Trang Chạy dùng chung hộp hỏi lại với Sao lưu / Phiên. Unit test 123/123
   (+ 20 test PostgreSQL thật bỏ qua - chưa có server); GUI Sandbox (UIA, PostgreSQL 17 trong Sandbox) 34/34 (2026-11-20)
+- [x] **Thông tin DB - Phụ thuộc + Tìm trong mã nguồn** (người dùng 2026-11-20 chọn 1 phần mục 4): chi tiết bảng có tab Phụ thuộc -
+  dòng Ảnh hưởng (DROP bị chặn / CASCADE xoá gì / xoá theo bảng / hàm lỗi lúc chạy / cột view đang dùng) + danh sách view (cả
+  gián tiếp, kèm cột), khoá ngoại từ bảng khác, trigger, sequence, hàm SQL chuẩn (catalog) và hàm / procedure nhắc tên bảng trong
+  mã nguồn + trigger bảng khác gọi các hàm đó (dò mã nguồn, bỏ chú thích, đọc SQL động); Đối tượng khác có tab Tìm trong mã nguồn
+  (mọi view / hàm, Cả từ, Phân biệt hoa thường, bôi đen chỗ khớp). Unit test 149/149 (chạy với PostgreSQL 17 thật trên máy);
+  GUI Sandbox (UIA) 18/18 (2026-11-20)
+- [ ] DbTools: `SqlSplitter` (trang Chạy) cắt nhầm hàm `BEGIN ATOMIC ... END` (PostgreSQL 14+) ở dấu `;` bên trong - phát hiện
+  2026-11-20 khi viết test, chưa sửa
 - [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools còn lại (gợi ý 2026-11-19, khuyên làm 3 → 2):
   1. ~~Hồ sơ "Quan trọng / Production"~~ - xong 2026-11-20 (mục trên)
   2. So thư mục script svn ↔ DB: đối tượng chưa áp, hàm / view định nghĩa khác, bảng thiếu / thừa cột (vừa)
   3. Ô chạy SQL nhanh: mặc định READ ONLY, kết quả dạng bảng, giới hạn dòng, Copy / CSV / mở CsvEditor, lịch sử câu (vừa)
-  4. Thông tin DB: tìm cột trong toàn DB; phụ thuộc (hàm / view / trigger dùng bảng X) + tìm chữ trong mã nguồn hàm / view;
-     xem 100 dòng đầu của bảng
+  4. Thông tin DB: tìm cột trong toàn DB; ~~phụ thuộc + tìm chữ trong mã nguồn~~ (xong 2026-11-20, mục trên); xem 100 dòng đầu của bảng
   5. Lịch sử: Khôi phục từ "Sao lưu trước khi chạy" ngay trong app; dọn bản sao lưu cũ (giữ N ngày); bảng "DB nào đã áp bản svn nào"
   6. Restore chọn lọc vài bảng (`pg_restore -t` / `-L`)
   7. Chạy cùng lô lên nhiều DB / schema; chế độ dòng lệnh `DbTools.exe run --folder … --profile … --dry-run`

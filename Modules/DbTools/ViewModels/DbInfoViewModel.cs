@@ -83,12 +83,36 @@ public sealed class TriggerRow(TriggerInfo t)
     public string Definition => t.Definition;
 }
 
-public sealed class ObjectRow(DbObjectItem o)
+/// <summary>1 dòng tab Đối tượng khác. Kết quả Tìm trong mã nguồn: <paramref name="matches"/> = các chỗ khớp (Info = tóm tắt).</summary>
+public sealed class ObjectRow(DbObjectItem o, IReadOnlyList<SourceMatch>? matches = null)
 {
     public DbObjectItem Item { get; } = o;
-    public string FullName => $"{o.Schema}.{o.Name}";
-    public string Info => o.Info;
+    public IReadOnlyList<SourceMatch> Matches { get; } = matches ?? [];
+    public string FullName => matches is null || o.Kind is "view" or "matview" ? $"{o.Schema}.{o.Name}" : $"{o.Schema}.{o.Name}{o.Info}";
+    public string Info => matches is null ? o.Info : $"{KindText(o.Kind)} · {SourceSearch.Summary(Matches)}";
     public string Comment => o.Comment;
+
+    private static string KindText(string kind) => kind switch { "matview" => "mat. view", "procedure" => "procedure", "function" => "hàm", _ => kind };
+}
+
+/// <summary>1 dòng tab Phụ thuộc (chi tiết bảng).</summary>
+public sealed class DependentRow(DependentItem d)
+{
+    public DependentItem Item { get; } = d;
+    public string Kind => d.Kind switch
+    {
+        DependentKind.View => "View",
+        DependentKind.ForeignKey => "Khoá ngoại",
+        DependentKind.Trigger => "Trigger",
+        DependentKind.Sequence => "Sequence",
+        DependentKind.TrackedFunction => "Hàm",
+        DependentKind.Function => "Hàm (mã nguồn)",
+        _ => "Trigger khác",
+    };
+    public string Name => d.Name;
+    public string Relation => d.Relation;
+    /// <summary>Chắc chắn (catalog ghi nhận) hay dò chữ trong mã nguồn.</summary>
+    public string Certainty => d.Kind is DependentKind.Function or DependentKind.IndirectTrigger ? "dò mã nguồn" : "catalog";
 }
 
 /// <summary>
@@ -99,7 +123,7 @@ public sealed class ObjectRow(DbObjectItem o)
 public sealed partial class DbInfoViewModel : ObservableObject
 {
     public const string AllSchemas = "(Tất cả schema)";
-    private static readonly string[] ObjectKinds = ["view", "function", "trigger", "sequence", "extension"];
+    private static readonly string[] ObjectKinds = ["view", "function", "trigger", "sequence", "extension", "search"];
     private readonly ILogger _log = AppLog.For("DbInfo");
     private List<TableRow> _allTables = [];
     private List<DbObjectItem> _allObjects = [];
@@ -123,7 +147,7 @@ public sealed partial class DbInfoViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIdle))]
-    [NotifyCanExecuteChangedFor(nameof(LoadCommand), nameof(OpenDetailCommand), nameof(CountRowsCommand), nameof(CountAllCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadCommand), nameof(OpenDetailCommand), nameof(CountRowsCommand), nameof(CountAllCommand), nameof(SearchCommand))]
     private bool _isBusy;
 
     public bool IsIdle => !IsBusy;
@@ -185,7 +209,7 @@ public sealed partial class DbInfoViewModel : ObservableObject
     [ObservableProperty]
     private string _detailInfo = string.Empty;
 
-    /// <summary>0 Cột, 1 Index, 2 Ràng buộc, 3 Trigger, 4 DDL.</summary>
+    /// <summary>0 Cột, 1 Index, 2 Ràng buộc, 3 Trigger, 4 DDL, 5 Phụ thuộc.</summary>
     [ObservableProperty]
     private int _detailTab;
 
@@ -210,15 +234,103 @@ public sealed partial class DbInfoViewModel : ObservableObject
     [ObservableProperty]
     private string _triggersTab = "Trigger";
 
+    // Phụ thuộc: đối tượng dùng bảng + tóm tắt ảnh hưởng khi xoá / sửa bảng
+    public ObservableCollection<DependentRow> DetailDependents { get; } = [];
+
+    [ObservableProperty]
+    private string _dependentsTab = "Phụ thuộc";
+
+    [ObservableProperty]
+    private string _dependentsImpact = string.Empty;
+
+    [ObservableProperty]
+    private DependentRow? _selectedDependent;
+
+    [ObservableProperty]
+    private string _dependentDetail = "Chọn 1 dòng để xem định nghĩa / các dòng nhắc tới bảng.";
+
+    partial void OnSelectedDependentChanged(DependentRow? value) =>
+        DependentDetail = value is null ? "Chọn 1 dòng để xem định nghĩa / các dòng nhắc tới bảng."
+        : value.Item.Detail.Length > 0 ? value.Item.Detail : value.Relation;
+
+    /// <summary>Định nghĩa mọi view / hàm của lần Đọc gần nhất (đọc khi cần lần đầu, Đọc lại thì bỏ).</summary>
+    private List<DbObjectItem>? _sources;
+
+    private async Task<List<DbObjectItem>> SourcesAsync(Npgsql.NpgsqlConnection c, CancellationToken ct) =>
+        _sources ??= await PgInfo.SourcesAsync(c, ct);
+
     private TableRow? _detailRow;
 
     // ----- Đối tượng khác -----
 
-    /// <summary>0 View, 1 Hàm / procedure, 2 Trigger, 3 Sequence, 4 Extension.</summary>
+    /// <summary>0 View, 1 Hàm / procedure, 2 Trigger, 3 Sequence, 4 Extension, 5 Tìm trong mã nguồn.</summary>
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSearchKind))]
     private int _objectKind;
 
     partial void OnObjectKindChanged(int value) => ApplyFilters();
+
+    // ----- Tìm trong mã nguồn (view / hàm / procedure) -----
+
+    public bool IsSearchKind => ObjectKind == 5;
+
+    [ObservableProperty]
+    private string _searchText = string.Empty;
+
+    [ObservableProperty]
+    private bool _searchWholeWord;
+
+    [ObservableProperty]
+    private bool _searchCaseSensitive;
+
+    [ObservableProperty]
+    private string _searchSummary = string.Empty;
+
+    private List<ObjectRow> _searchResults = [];
+
+    /// <summary>Chỗ khớp đầu tiên của dòng kết quả đang chọn - trang bôi đen + cuộn tới trong ô Định nghĩa.</summary>
+    [ObservableProperty]
+    private SourceMatch? _definitionHighlight;
+
+    private bool CanSearch => IsIdle && _loadedProfile is not null;
+
+    [RelayCommand(CanExecute = nameof(CanSearch))]
+    private async Task SearchAsync()
+    {
+        var term = SearchText.Trim();
+        if (term.Length == 0 || _loadedProfile is null)
+        {
+            Status = _loadedProfile is null ? "Bấm Đọc trước." : "Gõ chữ cần tìm.";
+            return;
+        }
+        IsBusy = true;
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            if (_sources is null)
+            {
+                Status = "Đang đọc mã nguồn mọi view / hàm...";
+                await using var c = await PgInfo.OpenAsync(_loadedProfile, _loadedDatabase, cts.Token);
+                await SourcesAsync(c, cts.Token);
+            }
+            _searchResults = _sources!
+                .Select(s => new ObjectRow(s, SourceSearch.Find(s.Definition, term, SearchWholeWord, SearchCaseSensitive)))
+                .Where(r => r.Matches.Count > 0)
+                .ToList();
+            var places = _searchResults.Sum(r => r.Matches.Count);
+            SearchSummary = $"\"{term}\": {places:N0} chỗ trong {_searchResults.Count:N0} / {_sources!.Count:N0} view + hàm";
+            ApplyFilters();
+            Status = SearchSummary + (Objects.Count < _searchResults.Count ? $" ({Objects.Count:N0} khớp bộ lọc schema / tên)." : ".");
+        }
+        catch (Exception ex)
+        {
+            Status = "Không tìm được: " + Pg.Describe(ex);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 
     public ObservableCollection<ObjectRow> Objects { get; } = [];
 
@@ -328,6 +440,9 @@ public sealed partial class DbInfoViewModel : ObservableObject
 
             _allTables = tables.Select(t => new TableRow(t)).ToList();
             _allObjects = objects;
+            _sources = null;
+            _searchResults = [];
+            SearchSummary = string.Empty;
             IsDetailOpen = false;
             ApplyFilters();
             Status = $"Đã đọc {overview.Database} ({BackupViewModel.FormatSize(overview.SizeBytes)}, {tables.Count:N0} bảng) lúc {DateTime.Now:HH:mm:ss}.";
@@ -370,11 +485,22 @@ public sealed partial class DbInfoViewModel : ObservableObject
 
         var kind = ObjectKinds[Math.Clamp(ObjectKind, 0, ObjectKinds.Length - 1)];
         Objects.Clear();
-        foreach (var o in _allObjects.Where(o => KindOf(o) == kind && (kind == "extension" ? NameMatches(o.Name) : Matches(o.Schema, o.Name))))
+        if (kind == "search")
         {
-            Objects.Add(new ObjectRow(o));
+            foreach (var r in _searchResults.Where(r => Matches(r.Item.Schema, r.Item.Name)))
+            {
+                Objects.Add(r);
+            }
+            ObjectsSummary = SearchSummary;
         }
-        ObjectsSummary = _allObjects.Count == 0 ? string.Empty : $"{Objects.Count:N0} / {_allObjects.Count(o => KindOf(o) == kind):N0}";
+        else
+        {
+            foreach (var o in _allObjects.Where(o => KindOf(o) == kind && (kind == "extension" ? NameMatches(o.Name) : Matches(o.Schema, o.Name))))
+            {
+                Objects.Add(new ObjectRow(o));
+            }
+            ObjectsSummary = _allObjects.Count == 0 ? string.Empty : $"{Objects.Count:N0} / {_allObjects.Count(o => KindOf(o) == kind):N0}";
+        }
         CountAllCommand.NotifyCanExecuteChanged();
     }
 
@@ -423,8 +549,15 @@ public sealed partial class DbInfoViewModel : ObservableObject
             ConstraintsTab = $"Ràng buộc ({DetailConstraints.Count})";
             TriggersTab = $"Trigger ({d.Triggers.Count})";
             Ddl = TableDdl.Build(d);
+            Status = $"Đang tìm đối tượng dùng {DetailTitle}...";
+            var dependents = await PgInfo.DependentsAsync(c, row.Item.Oid, d.Schema, d.Name, await SourcesAsync(c, cts.Token), cts.Token);
+            Fill(DetailDependents, dependents.Select(x => new DependentRow(x)));
+            DependentsTab = $"Phụ thuộc ({dependents.Count})";
+            DependentsImpact = string.Join(Environment.NewLine, DependencyImpact.Describe(DetailTitle, dependents));
+            SelectedDependent = null;
             IsDetailOpen = true;
-            Status = $"Chi tiết {DetailTitle}: {d.Columns.Count} cột, {d.Indexes.Count} index, {DetailConstraints.Count} ràng buộc, {d.Triggers.Count} trigger.";
+            Status = $"Chi tiết {DetailTitle}: {d.Columns.Count} cột, {d.Indexes.Count} index, {DetailConstraints.Count} ràng buộc, {d.Triggers.Count} trigger, "
+                + $"{dependents.Count} đối tượng phụ thuộc.";
         }
         catch (Exception ex)
         {
@@ -511,8 +644,15 @@ public sealed partial class DbInfoViewModel : ObservableObject
         if (row.Item.Definition.Length > 0 || _loadedProfile is null)
         {
             ObjectDefinition = row.Item.Definition;
+            DefinitionHighlight = row.Matches.Count > 0 ? row.Matches[0] : null;
+            if (row.Matches.Count > 0)
+            {
+                Status = $"{row.FullName}: {row.Matches.Count} chỗ khớp, dòng " + string.Join(", ", row.Matches.Select(m => m.Line).Distinct().Take(20))
+                    + (row.Matches.Select(m => m.Line).Distinct().Count() > 20 ? "..." : ".");
+            }
             return;
         }
+        DefinitionHighlight = null;
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));

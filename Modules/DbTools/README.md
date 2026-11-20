@@ -116,6 +116,18 @@ trang - lọc / sắp làm phía app:
 - **Đối tượng khác**: view / materialized view (`pg_get_viewdef` → CREATE OR REPLACE VIEW), hàm / procedure
   (`pg_get_functiondef`), trigger, sequence (`pg_sequences`, giá trị hiện tại → CREATE SEQUENCE), extension. Chọn dòng → định
   nghĩa + Copy.
+- **Phụ thuộc** (tab cuối chi tiết bảng, 2026-11-20) - `PgInfo.DependentsAsync`: view (`pg_depend` của rule `pg_rewrite`, đệ quy
+  tối đa 10 lớp → view dựng trên view; cột view dùng = `refobjsubid`), khoá ngoại `confrelid` từ bảng khác, trigger của bảng,
+  sequence thuộc cột (`deptype a / i`), hàm thân SQL chuẩn (`pg_depend` classid pg_proc); hàm / procedure nhắc tên bảng trong
+  mã nguồn = `Core\DbDependencies` `SourceSearch.FindTable` (token qua `SqlLexer`: bỏ chú thích, đọc 1 lớp chuỗi '...' cho SQL
+  động; bỏ `x.tên` khác schema, `tên(` gọi hàm, tên sau FUNCTION / PROCEDURE; ghi rõ schema / theo tên) + trigger bảng khác gọi
+  các hàm đó. `DependencyImpact.Describe` viết dòng Ảnh hưởng (DROP bị chặn / CASCADE xoá gì / xoá theo bảng / hàm lỗi lúc chạy /
+  cột đang dùng trong view).
+- **Tìm trong mã nguồn** (tab cuối Đối tượng khác, 2026-11-20): `PgInfo.SourcesAsync` đọc 1 lần định nghĩa mọi view + hàm /
+  procedure (bỏ hàm của extension; chữ giống hệt ô Định nghĩa nên số dòng / vị trí khớp), `SourceSearch.Find` (cả từ, phân biệt
+  hoa thường) tìm phía app; chọn kết quả → `DbInfoPage.Highlight` bôi đen + cuộn tới chỗ khớp đầu. Đọc lại thì bỏ bộ nhớ đệm.
+
+Giới hạn đã biết: `Core\SqlSplitter` (trang Chạy) chưa hiểu hàm `BEGIN ATOMIC ... END` (PostgreSQL 14+) - cắt ở dấu `;` bên trong.
 
 ## Sinh dữ liệu mẫu
 
