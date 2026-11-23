@@ -109,7 +109,7 @@ public static class HelpContent
         new("Kết nối", "", "Hồ sơ kết nối PostgreSQL (dev, test...). Sửa là tự lưu.", "ConnectionsPage",
         [
             new("Thêm / Nhân bản / Xoá", "Nhân bản = chép hồ sơ đang chọn rồi sửa (vd cùng server, khác database)."),
-            new("Thử kết nối", "Mở kết nối, báo phiên bản PostgreSQL + user@database + schema sẽ tạo đối tượng (theo ô Schema ở trang Chạy) và search_path. Lỗi thì báo lý do (sai mật khẩu, không tới được host...)."),
+            new("Thử kết nối", "Mở kết nối, báo phiên bản PostgreSQL + user@database + schema sẽ tạo đối tượng (theo ô Schema ở trang Chạy) và search_path. Lỗi thì báo lý do (sai mật khẩu, không tới được host...). Sai host / port hoặc tường lửa chặn thì có thể chờ tới 15 giây: bấm Huỷ (cạnh vòng xoay) để thôi chờ; đổi sang hồ sơ khác cũng tự huỷ."),
             new("Mật khẩu", "Lưu đã mã hoá theo tài khoản Windows (DPAPI) trong Data\\Config\\connections.json cạnh DbTools.exe. Chép file sang máy / tài khoản khác thì mật khẩu trống, nhập lại."),
             new("Quan trọng (Production)", "Tích cho hồ sơ server thật / khách hàng: danh sách hồ sơ có vạch đỏ + nhãn PRODUCTION, ô chọn server ở mọi trang hiện \"🔴 PRODUCTION · tên\". Chạy (thật), Restore, Copy DB, Ngắt phiên lên hồ sơ này: hộp hỏi lại có khung đỏ, phải gõ lại đúng tên (phân biệt hoa thường) thì nút mới bật - Chạy / Restore gõ tên database đích; Copy gõ tên DB nguồn nếu phải ngắt phiên của nó, còn lại gõ tên DB đích (đích là Production); Ngắt phiên gõ tên database của các phiên (phiên của nhiều DB thì gõ tên hồ sơ). Chạy thử, Kiểm tra, Dump, Thông tin DB, Sinh dữ liệu mẫu không hỏi thêm. Nhân bản hồ sơ giữ dấu Production."),
         ]),

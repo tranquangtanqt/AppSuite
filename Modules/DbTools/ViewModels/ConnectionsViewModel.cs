@@ -54,6 +54,7 @@ public sealed partial class ConnectionsViewModel : ObservableObject
 
     partial void OnSelectedChanged(ConnectionProfile? value)
     {
+        _testCts?.Cancel();
         TestResult = string.Empty;
         TestFailed = false;
     }
@@ -89,16 +90,29 @@ public sealed partial class ConnectionsViewModel : ObservableObject
 
     private bool CanTest => Selected is not null && !IsTesting;
 
+    private CancellationTokenSource? _testCts;
+
     [RelayCommand(CanExecute = nameof(CanTest))]
     private async Task TestAsync()
     {
         var profile = Selected!;
+        using var cts = new CancellationTokenSource();
+        _testCts = cts;
         IsTesting = true;
         TestFailed = false;
-        TestResult = "Đang kết nối...";
+        TestResult = "Đang kết nối... (sai host / port hoặc tường lửa chặn thì chờ tới 15 giây - bấm Huỷ để thôi)";
         try
         {
-            TestResult = "Kết nối được: " + await Pg.TestAsync(profile, CancellationToken.None);
+            // WaitAsync: Huỷ là thôi chờ ngay, kể cả khi Npgsql còn kẹt ở bước mở socket (nó tự bỏ khi hết 15 giây).
+            var info = await Pg.TestAsync(profile, cts.Token).WaitAsync(cts.Token);
+            TestResult = "Kết nối được: " + info;
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            if (Selected == profile)
+            {
+                TestResult = "Đã huỷ thử kết nối.";
+            }
         }
         catch (Exception ex)
         {
@@ -107,9 +121,14 @@ public sealed partial class ConnectionsViewModel : ObservableObject
         }
         finally
         {
+            _testCts = null;
             IsTesting = false;
         }
     }
+
+    /// <summary>Thôi chờ Thử kết nối (nút Huỷ; đổi sang hồ sơ khác cũng huỷ).</summary>
+    [RelayCommand]
+    private void CancelTest() => _testCts?.Cancel();
 
     private string UniqueName(string baseName)
     {

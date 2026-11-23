@@ -240,6 +240,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   user · DB / máy · ứng dụng / ms / SQL (ghép câu nhiều dòng, duration, DETAIL tham số, STATEMENT của lỗi); lọc chữ / user / DB /
   máy-ứng dụng / loại, ẩn câu của DbTools; chi tiết dòng; xuất CSV (CsvEditor) / TXT; che mật khẩu. Cập nhật F1, README. Unit test
   175/175 (PostgreSQL 17 thật + đọc log server Fujitsu thật); GUI Sandbox 17/17 (2026-11-23)
+- [x] Kết nối - **nút Huỷ khi Thử kết nối** (người dùng 2026-11-23: sai port / tường lửa thì "Đang kết nối..." chờ lâu): nút Huỷ
+  cạnh vòng xoay (chỉ hiện khi đang thử) thôi chờ ngay; đổi sang hồ sơ khác cũng tự huỷ, không ghi kết quả sang hồ sơ mới; không
+  Huỷ thì vẫn báo hết giờ sau 15 giây như cũ. Cập nhật F1, README. Unit test 175/175; GUI Sandbox 7/7 (cổng nhận kết nối không trả
+  lời: Huỷ 43 ms) (2026-11-23)
 - [ ] Nhật ký server - đợt 2: theo dõi realtime (đọc tiếp từ offset mỗi ~2 giây, Tạm dừng), cảnh báo dung lượng log, đổi cấu hình
   log (ALTER SYSTEM + pg_reload_conf, hồ sơ Production gõ lại tên DB) - chờ người dùng chốt có cho sửa cấu hình không; đọc file
   csvlog / jsonlog

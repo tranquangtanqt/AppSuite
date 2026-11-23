@@ -92,6 +92,8 @@
                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
                     <Button Content="Thử kết nối" Command="{x:Bind ViewModel.TestCommand}" />
                     <ProgressRing IsActive="{x:Bind ViewModel.IsTesting, Mode=OneWay}" Width="20" Height="20" />
+                    <Button Content="Huỷ" Command="{x:Bind ViewModel.CancelTestCommand}" AutomationProperties.AutomationId="CancelTest"
+                            Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.IsTesting), Mode=OneWay}" ToolTipService.ToolTip="Thôi chờ kết nối" />
                 </StackPanel>
                 <TextBlock x:Name="TestResultText" Text="{x:Bind ViewModel.TestResult, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
                            Foreground="{x:Bind views:Ui.FailBrush(ViewModel.TestFailed), Mode=OneWay}" />
