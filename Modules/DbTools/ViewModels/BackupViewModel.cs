@@ -236,9 +236,24 @@ public sealed partial class BackupViewModel : ObservableObject
         }
     }
 
-    /// <summary>Quay lại trang: hồ sơ đang chọn đã bị xoá thì chọn lại.</summary>
+    /// <summary>Quay lại trang: hồ sơ đang chọn đã bị xoá thì chọn lại; thư mục dump / client có thể vừa đổi ở trang Cài đặt.</summary>
     public void EnsureProfiles()
     {
+        if (DumpFolder.Trim() != AppState.Settings.DumpFolder)
+        {
+            DumpFolder = AppState.Settings.DumpFolder;
+        }
+        var bin = AppState.Settings.PgBinFolder;
+        if (!string.Equals(SelectedClient?.Folder ?? string.Empty, bin, StringComparison.OrdinalIgnoreCase))
+        {
+            var option = ClientOptions.FirstOrDefault(o => string.Equals(o.Folder, bin, StringComparison.OrdinalIgnoreCase));
+            if (option is null)
+            {
+                option = new ClientOption(bin, bin);
+                ClientOptions.Add(option);
+            }
+            SelectedClient = option;
+        }
         var first = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
         ConnectionProfile? Fix(ConnectionProfile? p) => p is not null && Profiles.Contains(p) ? p : first;
         DumpProfile = Fix(DumpProfile);
@@ -322,7 +337,7 @@ public sealed partial class BackupViewModel : ObservableObject
         }
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var cts = new CancellationTokenSource(Pg.Within(10));
             foreach (var db in (await PgAdmin.ListDatabasesAsync(profile, cts.Token)).Where(db => !target.Contains(db)))
             {
                 target.Add(db);
@@ -395,7 +410,7 @@ public sealed partial class BackupViewModel : ObservableObject
         }
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+            using var cts = new CancellationTokenSource(Pg.Within(1 * 60));
             _restoreArchive = await PgTools.InspectAsync(_client, file, cts.Token);
             RestoreIsArchive = !_restoreArchive.IsPlainSql;
             RestoreInfo = _restoreArchive.Summary() + $"{Environment.NewLine}Dung lượng {FormatSize(new FileInfo(file).Length)}";

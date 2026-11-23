@@ -95,7 +95,7 @@ public sealed partial class SessionsViewModel : ObservableObject
         }
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var cts = new CancellationTokenSource(Pg.Within(10));
             foreach (var db in (await PgAdmin.ListDatabasesAsync(profile, cts.Token)).Where(db => !Databases.Contains(db)))
             {
                 Databases.Add(db);
@@ -134,7 +134,7 @@ public sealed partial class SessionsViewModel : ObservableObject
 
     private async Task LoadAsync(ConnectionProfile profile)
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+        using var cts = new CancellationTokenSource(Pg.Within(20));
         var filter = Database.Trim().Length > 0 ? Database.Trim() : null;
         var sessions = await PgAdmin.ListSessionsAsync(profile, filter, cts.Token);
         Rows.Clear();
@@ -187,7 +187,7 @@ public sealed partial class SessionsViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var cts = new CancellationTokenSource(Pg.Within(30));
             var killed = await PgAdmin.TerminateAsync(profile, rows.Select(r => r.Pid).ToList(), cts.Token);
             _log.LogInformation("Ngắt {Killed}/{Count} phiên trên {Host}:{Port}", killed, rows.Count, profile.Host, profile.Port);
             await Task.Delay(300);

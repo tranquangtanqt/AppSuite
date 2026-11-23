@@ -306,7 +306,7 @@ public sealed partial class DbInfoViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            using var cts = new CancellationTokenSource(Pg.Within(2 * 60));
             if (_sources is null)
             {
                 Status = "Đang đọc mã nguồn mọi view / hàm...";
@@ -372,7 +372,7 @@ public sealed partial class DbInfoViewModel : ObservableObject
         }
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var cts = new CancellationTokenSource(Pg.Within(10));
             foreach (var db in (await PgAdmin.ListDatabasesAsync(profile, cts.Token)).Where(db => !Databases.Contains(db)))
             {
                 Databases.Add(db);
@@ -399,7 +399,7 @@ public sealed partial class DbInfoViewModel : ObservableObject
         Status = $"Đang đọc {profile.Host}:{profile.Port}/{database}...";
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            using var cts = new CancellationTokenSource(Pg.Within(2 * 60));
             await using var c = await PgInfo.OpenAsync(profile, database, cts.Token);
             var overview = await PgInfo.OverviewAsync(c, cts.Token);
             var schemas = await PgInfo.SchemasAsync(c, cts.Token);
@@ -527,7 +527,7 @@ public sealed partial class DbInfoViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+            using var cts = new CancellationTokenSource(Pg.Within(1 * 60));
             await using var c = await PgInfo.OpenAsync(_loadedProfile, _loadedDatabase, cts.Token);
             var d = await PgInfo.TableDetailAsync(c, row.Item.Oid, cts.Token);
             _detailRow = row;
@@ -655,7 +655,7 @@ public sealed partial class DbInfoViewModel : ObservableObject
         DefinitionHighlight = null;
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var cts = new CancellationTokenSource(Pg.Within(30));
             await using var c = await PgInfo.OpenAsync(_loadedProfile, _loadedDatabase, cts.Token);
             var text = await PgInfo.DefinitionAsync(c, row.Item, cts.Token);
             if (SelectedObject == row)

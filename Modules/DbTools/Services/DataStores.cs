@@ -131,6 +131,19 @@ public sealed class AppSettings
     /// <summary>Chạy (thật) thư mục script: dump trước các bảng / hàm / trigger đang có sẽ bị đổi. Bật sẵn.</summary>
     public bool BackupBeforeRun { get; set; } = true;
 
+    /// <summary>Chờ mở kết nối tối đa bao nhiêu giây (mọi trang, mọi hồ sơ) - server qua VPN chậm thì tăng. Trang Cài đặt.</summary>
+    public int ConnectTimeoutSeconds
+    {
+        get => _connectTimeoutSeconds;
+        set => _connectTimeoutSeconds = Math.Clamp(value, MinConnectTimeout, MaxConnectTimeout);
+    }
+
+    private int _connectTimeoutSeconds = DefaultConnectTimeout;
+
+    public const int DefaultConnectTimeout = 15;
+    public const int MinConnectTimeout = 5;
+    public const int MaxConnectTimeout = 120;
+
     // ----- Sinh dữ liệu mẫu (nhớ lựa chọn lần trước) -----
 
     /// <summary>Số dòng sinh ra (1 - <see cref="MockMaxRows"/>).</summary>

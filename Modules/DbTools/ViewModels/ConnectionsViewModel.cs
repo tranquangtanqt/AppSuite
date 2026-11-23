@@ -100,7 +100,7 @@ public sealed partial class ConnectionsViewModel : ObservableObject
         _testCts = cts;
         IsTesting = true;
         TestFailed = false;
-        TestResult = "Đang kết nối... (sai host / port hoặc tường lửa chặn thì chờ tới 15 giây - bấm Huỷ để thôi)";
+        TestResult = $"Đang kết nối... (sai host / port hoặc tường lửa chặn thì chờ tới {Pg.ConnectTimeoutSeconds} giây - bấm Huỷ để thôi)";
         try
         {
             // WaitAsync: Huỷ là thôi chờ ngay, kể cả khi Npgsql còn kẹt ở bước mở socket (nó tự bỏ khi hết 15 giây).

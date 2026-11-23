@@ -114,6 +114,48 @@ public class StoreTests
     }
 
     [Fact]
+    public void Connect_timeout_defaults_to_15_is_clamped_and_round_trips()
+    {
+        using var folder = new TempFolder();
+        var path = folder.Write("settings.json", "{\"DumpFolder\":\"D:\\\\DMP\"}"); // file cũ chưa có mục này
+        var store = new SettingsStore(path);
+        var settings = store.Load();
+        Assert.Equal(15, settings.ConnectTimeoutSeconds);
+
+        settings.ConnectTimeoutSeconds = 60;
+        store.Save(settings);
+        Assert.Equal(60, store.Load().ConnectTimeoutSeconds);
+        Assert.Equal(5, new AppSettings { ConnectTimeoutSeconds = 1 }.ConnectTimeoutSeconds);
+        Assert.Equal(120, new AppSettings { ConnectTimeoutSeconds = 999 }.ConnectTimeoutSeconds);
+        File.WriteAllText(path, "{\"ConnectTimeoutSeconds\":0}");
+        Assert.Equal(5, store.Load().ConnectTimeoutSeconds);
+    }
+
+    [Fact]
+    public void Connection_string_and_operation_limits_follow_the_connect_timeout()
+    {
+        var old = Pg.ConnectTimeoutSeconds;
+        try
+        {
+            var profile = new ConnectionProfile { Host = "h", Port = 5432, Username = "u", Database = "d" };
+            Pg.ConnectTimeoutSeconds = 15;
+            Assert.Equal(15, new Npgsql.NpgsqlConnectionStringBuilder(Pg.ConnectionString(profile)).Timeout);
+            Assert.Equal(TimeSpan.FromSeconds(25), Pg.Within(10)); // 10 giây đọc nhanh < 15 + 10
+            Assert.Equal(TimeSpan.FromSeconds(120), Pg.Within(120));
+
+            Pg.ConnectTimeoutSeconds = 60;
+            Assert.Equal(60, new Npgsql.NpgsqlConnectionStringBuilder(Pg.ConnectionString(profile)).Timeout);
+            Assert.Equal(7, new Npgsql.NpgsqlConnectionStringBuilder(Pg.ConnectionString(profile, 7)).Timeout);
+            Assert.Equal(TimeSpan.FromSeconds(70), Pg.Within(10));
+            Assert.Equal(TimeSpan.FromSeconds(120), Pg.Within(120));
+        }
+        finally
+        {
+            Pg.ConnectTimeoutSeconds = old;
+        }
+    }
+
+    [Fact]
     public void Settings_keep_saved_orders()
     {
         using var folder = new TempFolder();
@@ -180,7 +222,7 @@ public class HelpContentTests
         Assert.SkipWhen(folder.Length == 0, "Không tìm thấy mã nguồn Views (chạy từ bản publish).");
         var pages = Directory.GetFiles(folder, "*Page.xaml").Select(Path.GetFileNameWithoutExtension).ToList();
 
-        Assert.Equal(8, pages.Count);
+        Assert.Equal(9, pages.Count);
         foreach (var page in pages)
         {
             Assert.Single(HelpContent.Sections, s => s.PageTag == page);

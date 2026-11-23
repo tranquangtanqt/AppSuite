@@ -97,6 +97,14 @@ public static class HelpContent
             new("Xuất CSV / TXT", "Các dòng đang hiện → <thư mục dump>\\NhatKyServer\\<hồ sơ>_<file>_<lúc>.csv (mở bằng CsvEditor nếu có trong bộ AppSuite) hoặc .txt (đúng nguyên văn log). Dùng để giữ log lâu hơn số ngày server giữ. Mật khẩu (PASSWORD '...') luôn được che, nhưng file vẫn có nguyên câu SQL - cẩn thận khi gửi ra ngoài."),
             new("Không đọc được", "\"must be superuser\" / permission denied: user thiếu quyền - dùng hồ sơ superuser hoặc nhờ DBA cấp pg_monitor + pg_read_server_files. Nhiều \"dòng không nhận ra định dạng\": lc_messages không phải tiếng Anh. File .csv / .json (csvlog / jsonlog) chưa hỗ trợ. logging_collector = off: log không ghi ra file, không đọc được qua SQL."),
         ]),
+        new("Cài đặt", "", "Thiết lập dùng cho mọi trang: thời gian chờ kết nối, thư mục dump, PostgreSQL client, Sao lưu trước khi chạy, thư mục dữ liệu của DbTools. Sửa là lưu ngay.", "SettingsPage",
+        [
+            new("Thời gian chờ kết nối", "5 - 120 giây (mặc định 15), áp cho mọi hồ sơ và mọi trang. Server qua VPN / mạng chậm hay báo \"Hết thời gian chờ kết nối\" thì tăng lên. Các thao tác đọc nhanh (danh sách database, phiên...) tự chờ ít nhất bằng thời gian này + 10 giây. Sai host / port thì phải chờ hết thời gian này mới báo lỗi - Thử kết nối có nút Huỷ."),
+            new("Thư mục dump", "Nơi ghi file Dump, file tạm khi Copy DB khác server, bản Sao lưu trước khi chạy (TruocKhiChay), Dữ liệu mẫu (DuLieuMau), file xuất Nhật ký server (NhatKyServer). Cùng giá trị với ô ở trang Sao lưu / Khôi phục - sửa ở đâu cũng được."),
+            new("PostgreSQL client", "Thư mục bin có pg_dump / pg_restore / psql. Trống (nút Tự động) = bản mới nhất tìm được trên máy; dòng bên dưới cho biết bản sẽ dùng. Dump server mới hơn client thì pg_dump lỗi - chọn client cùng hoặc mới hơn server."),
+            new("Sao lưu trước khi chạy", "Bật / tắt mặc định cho trang Chạy thư mục SQL (cùng ô ở trang đó)."),
+            new("Dữ liệu của DbTools", "Thư mục Data cạnh DbTools.exe: Config\\connections.json (hồ sơ kết nối, mật khẩu mã hoá theo tài khoản Windows - chép sang máy / tài khoản khác phải nhập lại), Config\\settings.json, History (lịch sử chạy + log). Nút Mở thư mục."),
+        ]),
 
         new("Lịch sử chạy", "", "Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào, bản svn / git mấy, kết quả.", "HistoryPage",
         [
@@ -109,7 +117,7 @@ public static class HelpContent
         new("Kết nối", "", "Hồ sơ kết nối PostgreSQL (dev, test...). Sửa là tự lưu.", "ConnectionsPage",
         [
             new("Thêm / Nhân bản / Xoá", "Nhân bản = chép hồ sơ đang chọn rồi sửa (vd cùng server, khác database)."),
-            new("Thử kết nối", "Mở kết nối, báo phiên bản PostgreSQL + user@database + schema sẽ tạo đối tượng (theo ô Schema ở trang Chạy) và search_path. Lỗi thì báo lý do (sai mật khẩu, không tới được host...). Sai host / port hoặc tường lửa chặn thì có thể chờ tới 15 giây: bấm Huỷ (cạnh vòng xoay) để thôi chờ; đổi sang hồ sơ khác cũng tự huỷ."),
+            new("Thử kết nối", "Mở kết nối, báo phiên bản PostgreSQL + user@database + schema sẽ tạo đối tượng (theo ô Schema ở trang Chạy) và search_path. Lỗi thì báo lý do (sai mật khẩu, không tới được host...). Sai host / port hoặc tường lửa chặn thì phải chờ hết thời gian chờ kết nối (mặc định 15 giây, đổi ở trang Cài đặt): bấm Huỷ (cạnh vòng xoay) để thôi chờ; đổi sang hồ sơ khác cũng tự huỷ."),
             new("Mật khẩu", "Lưu đã mã hoá theo tài khoản Windows (DPAPI) trong Data\\Config\\connections.json cạnh DbTools.exe. Chép file sang máy / tài khoản khác thì mật khẩu trống, nhập lại."),
             new("Quan trọng (Production)", "Tích cho hồ sơ server thật / khách hàng: danh sách hồ sơ có vạch đỏ + nhãn PRODUCTION, ô chọn server ở mọi trang hiện \"🔴 PRODUCTION · tên\". Chạy (thật), Restore, Copy DB, Ngắt phiên lên hồ sơ này: hộp hỏi lại có khung đỏ, phải gõ lại đúng tên (phân biệt hoa thường) thì nút mới bật - Chạy / Restore gõ tên database đích; Copy gõ tên DB nguồn nếu phải ngắt phiên của nó, còn lại gõ tên DB đích (đích là Production); Ngắt phiên gõ tên database của các phiên (phiên của nhiều DB thì gõ tên hồ sơ). Chạy thử, Kiểm tra, Dump, Thông tin DB, Sinh dữ liệu mẫu không hỏi thêm. Nhân bản hồ sơ giữ dấu Production."),
         ]),

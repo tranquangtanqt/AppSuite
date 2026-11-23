@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DbTools.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="24,12,24,24" Spacing="12" MaxWidth="820" HorizontalAlignment="Left">
+            <StackPanel Spacing="2" Margin="0,0,48,0">
+                <TextBlock Text="Cài đặt" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock Opacity="0.7" TextWrapping="Wrap" Text="Áp dụng cho mọi trang. Sửa là lưu ngay." />
+            </StackPanel>
+
+            <!-- Kết nối -->
+            <Border Padding="16,12" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Kết nối" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <NumberBox Header="Thời gian chờ kết nối (giây)" Value="{x:Bind ViewModel.ConnectTimeout, Mode=TwoWay}"
+                                   Minimum="{x:Bind ViewModel.MinTimeout}" Maximum="{x:Bind ViewModel.MaxTimeout}" SmallChange="5" LargeChange="15"
+                                   SpinButtonPlacementMode="Inline" Width="220" AutomationProperties.AutomationId="ConnectTimeoutBox" />
+                        <Button Content="Mặc định (15)" VerticalAlignment="Bottom" Command="{x:Bind ViewModel.ResetTimeoutCommand}" />
+                    </StackPanel>
+                    <TextBlock Opacity="0.7" FontSize="12" TextWrapping="Wrap"
+                               Text="5 - 120 giây, mọi hồ sơ, mọi trang. Server qua VPN / mạng chậm hay báo &quot;Hết thời gian chờ kết nối&quot; thì tăng lên. Sai host / port thì phải chờ hết thời gian này mới báo lỗi - lúc Thử kết nối có nút Huỷ." />
+                </StackPanel>
+            </Border>
+
+            <!-- Thư mục -->
+            <Border Padding="16,12" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Thư mục" FontWeight="SemiBold" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Header="Thư mục dump" Text="{x:Bind ViewModel.DumpFolder, Mode=TwoWay}" AutomationProperties.AutomationId="SettingsDumpFolder" />
+                        <Button Grid.Column="1" Content="Chọn..." VerticalAlignment="Bottom" Command="{x:Bind ViewModel.BrowseDumpFolderCommand}" />
+                        <Button Grid.Column="2" Content="Mở" VerticalAlignment="Bottom" Command="{x:Bind ViewModel.OpenDumpFolderCommand}" />
+                    </Grid>
+                    <TextBlock Opacity="0.7" FontSize="12" TextWrapping="Wrap"
+                               Text="File Dump, file tạm khi Copy DB khác server, bản Sao lưu trước khi chạy (TruocKhiChay), Dữ liệu mẫu (DuLieuMau), file xuất Nhật ký server (NhatKyServer). Cùng ô với trang Sao lưu / Khôi phục." />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Header="Thư mục PostgreSQL client (pg_dump / pg_restore / psql)" PlaceholderText="(trống = tự động: bản mới nhất trên máy)"
+                                 Text="{x:Bind ViewModel.PgBinFolder, Mode=TwoWay}" AutomationProperties.AutomationId="SettingsClientFolder" />
+                        <Button Grid.Column="1" Content="Chọn..." VerticalAlignment="Bottom" Command="{x:Bind ViewModel.BrowseClientFolderCommand}" />
+                        <Button Grid.Column="2" Content="Tự động" VerticalAlignment="Bottom" Command="{x:Bind ViewModel.AutoClientCommand}"
+                                ToolTipService.ToolTip="Bỏ thư mục đã chọn - dùng bản mới nhất tìm được" />
+                    </Grid>
+                    <TextBlock Text="{x:Bind ViewModel.ClientInfo, Mode=OneWay}" Opacity="0.85" TextWrapping="Wrap" AutomationProperties.AutomationId="SettingsClientInfo" />
+                </StackPanel>
+            </Border>
+
+            <!-- Chạy -->
+            <Border Padding="16,12" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Chạy thư mục SQL" FontWeight="SemiBold" />
+                    <CheckBox Content="Sao lưu trước khi chạy" IsChecked="{x:Bind ViewModel.BackupBeforeRun, Mode=TwoWay}" AutomationProperties.AutomationId="SettingsBackupBeforeRun" />
+                    <TextBlock Opacity="0.7" FontSize="12" TextWrapping="Wrap"
+                               Text="Chạy (thật): dump trước các bảng / view / hàm / trigger đang có mà script sẽ đổi vào &lt;thư mục dump&gt;\TruocKhiChay. Cùng ô với trang Chạy thư mục SQL." />
+                </StackPanel>
+            </Border>
+
+            <!-- Dữ liệu app -->
+            <Border Padding="16,12" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Dữ liệu của DbTools" FontWeight="SemiBold" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Bind ViewModel.DataFolder}" VerticalAlignment="Center" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                                   AutomationProperties.AutomationId="SettingsDataFolder" />
+                        <Button Grid.Column="1" Content="Mở thư mục" Command="{x:Bind ViewModel.OpenDataFolderCommand}" />
+                    </Grid>
+                    <TextBlock Opacity="0.7" FontSize="12" TextWrapping="Wrap"
+                               Text="Config\connections.json (hồ sơ kết nối - mật khẩu mã hoá theo tài khoản Windows, chép sang máy / tài khoản khác phải nhập lại mật khẩu), Config\settings.json (cài đặt này), History (lịch sử chạy + log từng lần)." />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

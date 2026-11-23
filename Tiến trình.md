@@ -244,6 +244,11 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   cạnh vòng xoay (chỉ hiện khi đang thử) thôi chờ ngay; đổi sang hồ sơ khác cũng tự huỷ, không ghi kết quả sang hồ sơ mới; không
   Huỷ thì vẫn báo hết giờ sau 15 giây như cũ. Cập nhật F1, README. Unit test 175/175; GUI Sandbox 7/7 (cổng nhận kết nối không trả
   lời: Huỷ 43 ms) (2026-11-23)
+- [x] **Trang Cài đặt** (người dùng 2026-11-23: muốn đổi thời gian chờ kết nối 15 giây): mục cuối menu; thời gian chờ kết nối 5 -
+  120 giây (mặc định 15, mọi hồ sơ / mọi trang, đổi là áp ngay; các thao tác đọc nhanh tự chờ ít nhất bằng thời gian này + 10
+  giây); thư mục dump + PostgreSQL client (dòng "Dùng: PostgreSQL 17.x"), Sao lưu trước khi chạy - dùng chung với ô ở trang Sao
+  lưu / Chạy (sửa ở đâu cũng được); thư mục dữ liệu của app + Mở thư mục. Cập nhật F1, README. Unit test 177/177 (PostgreSQL 17
+  thật); GUI Sandbox 15/15 (cổng treo: 5 giây → báo lỗi sau 4,5 s, 20 giây → 20,1 s không cần mở lại app) (2026-11-23)
 - [ ] Nhật ký server - đợt 2: theo dõi realtime (đọc tiếp từ offset mỗi ~2 giây, Tạm dừng), cảnh báo dung lượng log, đổi cấu hình
   log (ALTER SYSTEM + pg_reload_conf, hồ sơ Production gõ lại tên DB) - chờ người dùng chốt có cho sửa cấu hình không; đọc file
   csvlog / jsonlog

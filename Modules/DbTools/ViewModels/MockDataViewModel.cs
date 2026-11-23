@@ -235,7 +235,7 @@ public sealed partial class MockDataViewModel : ObservableObject
         }
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var cts = new CancellationTokenSource(Pg.Within(10));
             foreach (var db in (await PgAdmin.ListDatabasesAsync(profile, cts.Token)).Where(db => !Databases.Contains(db)))
             {
                 Databases.Add(db);
@@ -255,7 +255,7 @@ public sealed partial class MockDataViewModel : ObservableObject
         }
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
+            using var cts = new CancellationTokenSource(Pg.Within(20));
             await using var c = await PgInfo.OpenAsync(profile, Database.Trim(), cts.Token);
             foreach (var t in await PgInfo.TablesAsync(c, cts.Token))
             {
@@ -317,7 +317,7 @@ public sealed partial class MockDataViewModel : ObservableObject
                     Status = "Chọn server, database và bảng (schema.bảng).";
                     return;
                 }
-                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(1));
+                using var cts = new CancellationTokenSource(Pg.Within(1 * 60));
                 _source = await MockSource.FromTableAsync(profile, Database.Trim(), Table.Trim(), AppState.Settings.MockSampleRows, cts.Token);
             }
             else

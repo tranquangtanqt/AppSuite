@@ -22,6 +22,7 @@ public static class AppState
 
     static AppState()
     {
+        Pg.ConnectTimeoutSeconds = Settings.ConnectTimeoutSeconds;
         foreach (var p in ConnectionStore.Load())
         {
             Watch(p);

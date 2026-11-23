@@ -14,7 +14,14 @@ public static class Pg
         AppContext.SetSwitch("Npgsql.EnableSqlRewriting", false);
     }
 
-    public static string ConnectionString(ConnectionProfile p, int timeoutSeconds = 15) => new NpgsqlConnectionStringBuilder
+    /// <summary>Chờ mở kết nối (giây) - lấy từ Cài đặt lúc mở app / khi đổi (AppState).</summary>
+    public static int ConnectTimeoutSeconds { get; set; } = AppSettings.DefaultConnectTimeout;
+
+    /// <summary>Giới hạn thời gian cho 1 thao tác (mở kết nối + đọc): ít nhất <paramref name="seconds"/>, và không ngắn hơn
+    /// thời gian chờ kết nối + 10 giây (tăng chờ kết nối ở Cài đặt thì các thao tác ngắn không bị cắt trước khi kịp kết nối).</summary>
+    public static TimeSpan Within(int seconds) => TimeSpan.FromSeconds(Math.Max(seconds, ConnectTimeoutSeconds + 10));
+
+    public static string ConnectionString(ConnectionProfile p, int? timeoutSeconds = null) => new NpgsqlConnectionStringBuilder
     {
         Host = p.Host.Trim(),
         Port = p.Port,
@@ -22,7 +29,7 @@ public static class Pg
         Username = p.Username.Trim(),
         Password = p.Password,
         ApplicationName = "AppSuite DbTools",
-        Timeout = timeoutSeconds,
+        Timeout = timeoutSeconds ?? ConnectTimeoutSeconds,
         CommandTimeout = 0,
         IncludeErrorDetail = true,
         Pooling = false,

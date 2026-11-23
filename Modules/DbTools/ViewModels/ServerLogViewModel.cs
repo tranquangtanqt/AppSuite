@@ -203,7 +203,7 @@ public sealed partial class ServerLogViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            using var cts = new CancellationTokenSource(Pg.Within(30));
             var info = await PgServerLog.InfoAsync(profile, cts.Token);
             _prefix = new LogLinePrefix(info.Get("log_line_prefix"));
             List<ServerLogFile> files = [];
@@ -279,7 +279,7 @@ public sealed partial class ServerLogViewModel : ObservableObject
         try
         {
             Status = $"Đang đọc {file.Name}...";
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            using var cts = new CancellationTokenSource(Pg.Within(5 * 60));
             var chunk = await PgServerLog.ReadAsync(profile, file.Name, ReadSizes[Math.Clamp(ReadSizeIndex, 0, ReadSizes.Length - 1)], cts.Token);
             var result = await Task.Run(() => ServerLogParser.Parse(chunk.Text, _prefix!, chunk.Offset > 0));
             _entries = result.Entries;

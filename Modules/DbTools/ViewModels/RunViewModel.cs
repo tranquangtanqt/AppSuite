@@ -93,7 +93,7 @@ public sealed partial class RunViewModel : ObservableObject
         AppState.SaveSettings();
     }
 
-    public string BackupTip => $"Trước khi Chạy (không áp dụng cho Chạy thử): dump các bảng / view / hàm / trigger đang có trong DB mà script sẽ đổi vào {Path.Combine(AppState.Settings.DumpFolder, PreRunBackup.SubFolder)} (đổi thư mục ở trang Sao lưu / Khôi phục). Sao lưu lỗi thì không chạy.";
+    public string BackupTip => $"Trước khi Chạy (không áp dụng cho Chạy thử): dump các bảng / view / hàm / trigger đang có trong DB mà script sẽ đổi vào {Path.Combine(AppState.Settings.DumpFolder, PreRunBackup.SubFolder)} (đổi thư mục ở trang Sao lưu / Khôi phục hoặc Cài đặt). Sao lưu lỗi thì không chạy.";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsIdle))]
@@ -144,6 +144,7 @@ public sealed partial class RunViewModel : ObservableObject
     /// mới thì không hiện được lựa chọn).</summary>
     public void EnsureProfile()
     {
+        BackupBeforeRun = AppState.Settings.BackupBeforeRun; // có thể vừa đổi ở trang Cài đặt
         if (SelectedProfile is null || !Profiles.Contains(SelectedProfile))
         {
             SelectedProfile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
@@ -184,7 +185,7 @@ public sealed partial class RunViewModel : ObservableObject
         }
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            using var cts = new CancellationTokenSource(Pg.Within(10));
             var schemas = await PgCatalog.ListSchemasAsync(profile, cts.Token);
             if (SelectedProfile != profile)
             {
@@ -483,7 +484,7 @@ public sealed partial class RunViewModel : ObservableObject
             var profile = SelectedProfile!;
             AppendLog($"Kiểm tra {Files.Count} file với {profile.Username}@{profile.Target}, {profile.SchemaText} (chỉ đọc catalog, không thay đổi DB)...");
             Status = "Đang kiểm tra...";
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            using var cts = new CancellationTokenSource(Pg.Within(2 * 60));
             if (!await EnsureSchemaExistsAsync(profile, cts.Token))
             {
                 return;
@@ -657,7 +658,7 @@ public sealed partial class RunViewModel : ObservableObject
             var drop = DropFirst ? DropScript.Build(files, profile.SchemaOrNull) : null;
             Status = "Đang kiểm tra trước khi chạy...";
             List<string> dataLoss, dependents;
-            using (var check = new CancellationTokenSource(TimeSpan.FromMinutes(2)))
+            using (var check = new CancellationTokenSource(Pg.Within(2 * 60)))
             {
                 if (!await EnsureSchemaExistsAsync(profile, check.Token))
                 {
