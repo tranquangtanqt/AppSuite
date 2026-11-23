@@ -180,6 +180,28 @@ public sealed partial class ServerLogViewModel : ObservableObject
     [ObservableProperty]
     private bool _hideOwn = true;
 
+    /// <summary>Mới nhất trước (đảo thứ tự file). Nhớ trong settings.json.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TimeHeader), nameof(TimeHeaderTip))]
+    private bool _newestFirst = AppState.Settings.LogNewestFirst;
+
+    public string TimeHeader => NewestFirst ? "Giờ ↓" : "Giờ ↑";
+
+    public string TimeHeaderTip => NewestFirst
+        ? "Đang xếp mới nhất trước - bấm để xếp cũ nhất trước"
+        : "Đang xếp cũ nhất trước (thứ tự trong file) - bấm để xếp mới nhất trước";
+
+    partial void OnNewestFirstChanged(bool value)
+    {
+        AppState.Settings.LogNewestFirst = value;
+        AppState.SaveSettings();
+        ApplyFilter();
+        ScrollToEndRequested?.Invoke(this, EventArgs.Empty); // về phía dòng mới nhất
+    }
+
+    [RelayCommand]
+    private void ToggleSort() => NewestFirst = !NewestFirst;
+
     /// <summary>File xuất gần nhất (nút Mở thư mục).</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(OpenExportFolderCommand))]
@@ -557,15 +579,33 @@ public sealed partial class ServerLogViewModel : ObservableObject
     {
         var filter = CurrentFilter();
         RowsAppending?.Invoke(this, EventArgs.Empty);
-        while (Rows.Count > 0 && Rows[^1].Index >= from)
+        if (NewestFirst)
         {
-            Rows.RemoveAt(Rows.Count - 1);
-        }
-        for (var i = from; i < Entries.Count; i++)
-        {
-            if (filter.Matches(Entries[i]))
+            // Mới nhất ở đầu bảng: bỏ dòng của các mục từ "from" ở đầu, chèn lại từ cũ tới mới vào vị trí 0.
+            while (Rows.Count > 0 && Rows[0].Index >= from)
             {
-                Rows.Add(new LogRow(Entries[i], i));
+                Rows.RemoveAt(0);
+            }
+            for (var i = from; i < Entries.Count; i++)
+            {
+                if (filter.Matches(Entries[i]))
+                {
+                    Rows.Insert(0, new LogRow(Entries[i], i));
+                }
+            }
+        }
+        else
+        {
+            while (Rows.Count > 0 && Rows[^1].Index >= from)
+            {
+                Rows.RemoveAt(Rows.Count - 1);
+            }
+            for (var i = from; i < Entries.Count; i++)
+            {
+                if (filter.Matches(Entries[i]))
+                {
+                    Rows.Add(new LogRow(Entries[i], i));
+                }
             }
         }
         UpdateCounts(filter);
@@ -579,7 +619,8 @@ public sealed partial class ServerLogViewModel : ObservableObject
     {
         var filter = CurrentFilter();
         var entries = Entries;
-        Rows.ReplaceAll(entries.Select((e, i) => (e, i)).Where(x => filter.Matches(x.e)).Select(x => new LogRow(x.e, x.i)));
+        var rows = entries.Select((e, i) => (e, i)).Where(x => filter.Matches(x.e)).Select(x => new LogRow(x.e, x.i));
+        Rows.ReplaceAll(NewestFirst ? rows.Reverse() : rows);
         UpdateCounts(filter);
         if (IsFollowing)
         {
@@ -656,7 +697,7 @@ public sealed partial class ServerLogViewModel : ObservableObject
             var baseName = string.Concat($"{Profile?.Name}_{Path.GetFileNameWithoutExtension(_readFile)}_{DateTime.Now:yyyyMMdd_HHmmss}"
                 .Select(ch => Path.GetInvalidFileNameChars().Contains(ch) || ch == ' ' ? '_' : ch));
             var path = Path.Combine(folder, baseName + extension);
-            System.IO.File.WriteAllText(path, format(Rows.Select(r => r.Entry).ToList()), encoding);
+            System.IO.File.WriteAllText(path, format((extension == ".txt" ? Rows.OrderBy(r => r.Index) : Rows.AsEnumerable()).Select(r => r.Entry).ToList()), encoding);
             LastExport = path;
             Status = $"Đã xuất {Rows.Count:N0} mục → {path}. Lưu ý: file có nguyên câu SQL (mật khẩu đã che) - đừng gửi ra ngoài nếu có dữ liệu khách.";
             Shell.OpenData(path);

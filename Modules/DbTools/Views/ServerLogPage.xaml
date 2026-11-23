@@ -150,7 +150,10 @@
                         <ColumnDefinition Width="56" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="Giờ" FontWeight="SemiBold" />
+                    <!-- Bấm tiêu đề Giờ: đổi cũ trước ↔ mới trước (nhớ cho lần sau) -->
+                    <Button Content="{x:Bind ViewModel.TimeHeader, Mode=OneWay}" Command="{x:Bind ViewModel.ToggleSortCommand}" FontWeight="SemiBold"
+                            Padding="0" Margin="0,-2" MinHeight="0" Background="Transparent" BorderThickness="0"
+                            AutomationProperties.AutomationId="LogSortTime" ToolTipService.ToolTip="{x:Bind ViewModel.TimeHeaderTip, Mode=OneWay}" />
                     <TextBlock Grid.Column="1" Text="Loại" FontWeight="SemiBold" />
                     <TextBlock Grid.Column="2" Text="User · DB" FontWeight="SemiBold" />
                     <TextBlock Grid.Column="3" Text="Máy · ứng dụng" FontWeight="SemiBold" />

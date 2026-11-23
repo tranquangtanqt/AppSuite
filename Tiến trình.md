@@ -256,6 +256,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   hình log, ⚠ khi vượt ngưỡng (Cài đặt, mặc định 1024 MB) hoặc không tự xoá mà dưới 30 ngày nữa sẽ vượt. Sửa kèm: nút Dừng theo dõi
   bị tắt lúc đang theo dõi (lệnh async tự khoá) - phát hiện khi test. Cập nhật F1, README. Unit test 181/181 (cắt log ở mọi vị trí
   ra cùng kết quả; PostgreSQL 17 thật: theo dõi đọc đúng phần mới); GUI Sandbox theo dõi 16/16 + đợt 1 chạy lại 17/17 (2026-11-23)
+- [x] Nhật ký server - **đổi thứ tự cột Giờ** (người dùng 2026-11-23): bấm tiêu đề Giờ đổi cũ trước ↑ ↔ mới trước ↓, nhớ cho lần
+  sau; lọc giữ thứ tự; Theo dõi khi mới trước thì dòng mới chèn lên đầu, tự giữ ở đầu; Xuất CSV theo thứ tự đang hiện, TXT theo
+  thứ tự file. Phân trang: không làm (bảng ListView chỉ dựng dòng đang hiện; chia trang làm dòng mới khi Theo dõi rơi sang trang
+  khác) - thử thật thấy chậm thì làm sau. Cập nhật F1, README. Unit test 182/182; GUI Sandbox 11/11 + Theo dõi chạy lại 16/16 (2026-11-23)
 - [ ] Nhật ký server - đổi cấu hình log (ALTER SYSTEM + pg_reload_conf: log_statement, log_min_duration_statement,
   log_connections / disconnections; hỏi lại, hồ sơ Production gõ lại tên DB; Về mặc định = RESET) - chờ người dùng cho phép
   (thao tác ghi lên server); đọc file csvlog / jsonlog (để sau)

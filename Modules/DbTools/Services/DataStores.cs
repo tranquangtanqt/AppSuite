@@ -149,6 +149,9 @@ public sealed class AppSettings
 
     private int _logWarnMb = 1024;
 
+    /// <summary>Nhật ký server: bảng xếp mới nhất trước (bấm tiêu đề cột Giờ để đổi, nhớ cho lần sau). Mặc định cũ trước (thứ tự file).</summary>
+    public bool LogNewestFirst { get; set; }
+
     public const int DefaultConnectTimeout = 15;
     public const int MinConnectTimeout = 5;
     public const int MaxConnectTimeout = 120;

@@ -212,6 +212,10 @@ Enterprise Postgres `C:/Users/admin/AppData/Local/Fujitsu/.../log`).
   hoặc đổi lọc lúc đang theo dõi thì nhảy xuống cuối (`ScrollToEndRequested`). `LogConfig.Volume`: tổng, file lớn nhất, tốc độ
   tăng (file sửa trong 7 ngày / số ngày phủ = khoảng cách + 1), ⚠ khi vượt `AppSettings.LogWarnMb` (mặc định 1024, Cài đặt) hoặc
   server không tự xoá file cũ mà dưới 30 ngày nữa sẽ vượt.
+- **Thứ tự (2026-11-23):** bấm tiêu đề cột Giờ đổi cũ trước ↔ mới trước (`AppSettings.LogNewestFirst`, nhớ cho lần sau): lọc lại
+  thì đảo danh sách; Theo dõi khi mới trước thì bỏ dòng mục cuối ở đầu bảng rồi chèn mục mới vào vị trí 0, "ở cuối" để tự cuộn
+  hiểu là đầu bảng. Xuất CSV theo thứ tự đang hiện, TXT luôn theo thứ tự file. Không chia trang: ListView ảo hoá (chỉ dựng dòng
+  đang hiện), chia trang còn làm dòng mới khi Theo dõi rơi sang trang khác.
 - Chưa làm: đổi cấu hình log (ALTER SYSTEM + reload, hồ sơ Production gõ lại tên - chờ người dùng cho phép), đọc csvlog /
   jsonlog. Sau này Oracle: giữ `LogEntry` / `LogFilter` / bảng / xuất dùng chung, viết phần đọc riêng (Unified
   Audit `UNIFIED_AUDIT_TRAIL`, alert log `V$DIAG_ALERT_EXT`, `V$SQL`; tránh ASH / AWR vì cần Diagnostics Pack) - lúc đó mới tách

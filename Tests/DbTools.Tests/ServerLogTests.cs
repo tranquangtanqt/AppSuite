@@ -287,6 +287,18 @@ public class ServerLogTests
         Assert.Equal(1_000_000, new AppSettings { LogWarnMb = int.MaxValue }.LogWarnMb);
     }
 
+    [Fact]
+    public void Newest_first_defaults_to_file_order_and_is_remembered()
+    {
+        using var folder = new TempFolder();
+        var store = new SettingsStore(Path.Combine(folder.Path, "settings.json"));
+        Assert.False(store.Load().LogNewestFirst);
+        var settings = store.Load();
+        settings.LogNewestFirst = true;
+        store.Save(settings);
+        Assert.True(store.Load().LogNewestFirst);
+    }
+
     /// <summary>PostgreSQL thật (DBTOOLS_TEST_PG, superuser, logging_collector = on): chạy 1 câu có dấu riêng với
     /// log_statement = all trong phiên, đọc file log hiện tại qua SQL, tìm thấy đúng câu đó.</summary>
     [Fact]

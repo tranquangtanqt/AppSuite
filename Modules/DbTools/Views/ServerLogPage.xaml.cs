@@ -20,21 +20,20 @@ public sealed partial class ServerLogPage : Page
             SizeBox.Items.Add(label);
         }
         SizeBox.SelectedIndex = ViewModel.ReadSizeIndex;
-        ViewModel.RowsAppending += (_, _) => _atBottom = ListScroll() is not { } sv || sv.VerticalOffset >= sv.ScrollableHeight - 40;
+        // "Cuối" = phía dòng mới nhất: cuối bảng khi xếp cũ trước, đầu bảng khi xếp mới trước.
+        ViewModel.RowsAppending += (_, _) => _atBottom = ListScroll() is not { } sv
+            || (ViewModel.NewestFirst ? sv.VerticalOffset <= 40 : sv.VerticalOffset >= sv.ScrollableHeight - 40);
         ViewModel.RowsAppended += (_, _) =>
         {
-            if (_atBottom && ViewModel.Rows.Count > 0)
+            if (_atBottom)
             {
-                LogList.ScrollIntoView(ViewModel.Rows[^1]);
+                ScrollToNewest();
             }
         };
         ViewModel.ScrollToEndRequested += (_, _) =>
         {
             _atBottom = true;
-            if (ViewModel.Rows.Count > 0)
-            {
-                LogList.ScrollIntoView(ViewModel.Rows[^1]);
-            }
+            ScrollToNewest();
         };
     }
 
@@ -49,6 +48,14 @@ public sealed partial class ServerLogPage : Page
     {
         base.OnNavigatedFrom(e);
         ViewModel.StopFollow();
+    }
+
+    private void ScrollToNewest()
+    {
+        if (ViewModel.Rows.Count > 0)
+        {
+            LogList.ScrollIntoView(ViewModel.NewestFirst ? ViewModel.Rows[0] : ViewModel.Rows[^1]);
+        }
     }
 
     private ScrollViewer? ListScroll() => FindChild<ScrollViewer>(LogList);
