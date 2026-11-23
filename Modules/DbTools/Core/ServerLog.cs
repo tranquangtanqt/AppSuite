@@ -206,107 +206,36 @@ public static class ServerLogParser
 
     private static readonly Regex DataVerb = new(@"\b(INSERT|UPDATE|DELETE|MERGE)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
-    private enum Part { Message, Sql, Detail }
-
     /// <param name="text">Nội dung (hoặc đoạn cuối) file log.</param>
     /// <param name="partialStart">Đoạn đọc bắt đầu giữa file: bỏ dòng đầu (có thể bị cắt) và các dòng nối tiếp mồ côi.</param>
     public static LogParseResult Parse(string text, LogLinePrefix prefix, bool partialStart = false)
     {
-        var entries = new List<LogEntry>();
-        var unknown = 0;
-        LogEntry? current = null;
-        var part = Part.Message;
-        var lines = text.Split('\n');
-        var first = partialStart ? 1 : 0;
-        var last = lines.Length > 0 && lines[^1].Length == 0 ? lines.Length - 1 : lines.Length; // dòng rỗng sau \n cuối file
-        for (var i = first; i < last; i++)
-        {
-            var line = lines[i].TrimEnd('\r');
-            var e = prefix.Match(line);
-            if (e is null)
-            {
-                if (current is null)
-                {
-                    if (!partialStart && line.Length > 0)
-                    {
-                        unknown++;
-                        entries.Add(current = new LogEntry { Message = line, Kind = LogKind.Server });
-                        current.RawLines.Add(line);
-                        part = Part.Message;
-                    }
-                    continue;
-                }
-                if (!line.StartsWith('\t') && line.Length > 0)
-                {
-                    unknown++;
-                }
-                current.RawLines.Add(line);
-                var more = "\n" + (line.StartsWith('\t') ? line[1..] : line);
-                switch (part)
-                {
-                    case Part.Sql:
-                        current.Sql += more;
-                        break;
-                    case Part.Detail:
-                        current.Detail += more;
-                        break;
-                    default:
-                        current.Message += more;
-                        break;
-                }
-                continue;
-            }
-
-            if (current is not null && e.Pid == current.Pid && e.Level is "DETAIL" or "HINT" or "CONTEXT" or "STATEMENT" or "QUERY" or "LOCATION")
-            {
-                current.RawLines.Add(line);
-                if (e.Level == "STATEMENT" && current.Sql.Length == 0)
-                {
-                    current.Sql = e.Message;
-                    part = Part.Sql;
-                }
-                else
-                {
-                    current.Detail += (current.Detail.Length > 0 ? "\n" : string.Empty) + e.Level + ": " + e.Message;
-                    part = Part.Detail;
-                }
-                continue;
-            }
-
-            if (DurationOnly.Match(e.Message) is { Success: true } d && FindStatement(entries, e.Pid) is { } owner)
-            {
-                owner.DurationMs = ParseMs(d.Groups["dur"].Value);
-                owner.RawLines.Add(line);
-                current = owner;
-                part = Part.Detail;
-                continue;
-            }
-
-            current = e;
-            current.RawLines.Add(line);
-            part = Part.Message;
-            if (e.Level == "LOG" && StatementRegex.Match(e.Message) is { Success: true } s)
-            {
-                current.Sql = s.Groups["sql"].Value;
-                current.Message = s.Groups["what"].Value;
-                if (s.Groups["dur"].Success)
-                {
-                    current.DurationMs = ParseMs(s.Groups["dur"].Value);
-                }
-                part = Part.Sql;
-            }
-            entries.Add(current);
-        }
-
-        foreach (var entry in entries)
-        {
-            Finish(entry);
-        }
-        return new LogParseResult(entries, unknown);
+        var reader = new ServerLogReader(prefix);
+        reader.Append(text, partialStart);
+        reader.Flush();
+        return new LogParseResult(reader.Entries, reader.UnknownLines);
     }
 
+    internal static bool IsStatementLog(LogEntry e) => e.Level == "LOG" && StatementRegex.Match(e.Message) is { Success: true };
+
+    internal static void ApplyStatement(LogEntry e)
+    {
+        if (e.Level == "LOG" && StatementRegex.Match(e.Message) is { Success: true } s)
+        {
+            e.Sql = s.Groups["sql"].Value;
+            e.Message = s.Groups["what"].Value;
+            if (s.Groups["dur"].Success)
+            {
+                e.DurationMs = ParseMs(s.Groups["dur"].Value);
+            }
+        }
+    }
+
+    internal static double? DurationOnlyMs(string message) =>
+        DurationOnly.Match(message) is { Success: true } d ? ParseMs(d.Groups["dur"].Value) : null;
+
     /// <summary>Câu gần nhất cùng pid chưa có thời gian chạy (dòng duration đứng ngay sau câu, có thể xen dòng của pid khác).</summary>
-    private static LogEntry? FindStatement(List<LogEntry> entries, int? pid)
+    internal static LogEntry? FindStatement(List<LogEntry> entries, int? pid)
     {
         for (var i = entries.Count - 1; i >= Math.Max(0, entries.Count - 200); i--)
         {
@@ -322,7 +251,7 @@ public static class ServerLogParser
     private static double? ParseMs(string text) =>
         double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var ms) ? ms : null;
 
-    private static void Finish(LogEntry e)
+    internal static void Finish(LogEntry e)
     {
         e.Sql = MaskPasswords(e.Sql);
         e.Message = MaskPasswords(e.Message);
@@ -388,6 +317,151 @@ public static class ServerLogParser
     };
 }
 
+
+/// <summary>
+/// Đọc log nối tiếp (trang Nhật ký server - Theo dõi): <see cref="Append"/> nhận từng đoạn mới của file, đoạn có thể bị cắt
+/// giữa dòng (giữ phần dở tới lần sau) hoặc giữa 1 câu nhiều dòng (dòng nối tiếp tới sau vẫn ghép vào mục cuối). Đọc 1 lần
+/// = Append + <see cref="Flush"/> (<see cref="ServerLogParser.Parse"/>), cho ra cùng kết quả như đọc nối tiếp nhiều đoạn.
+/// </summary>
+public sealed class ServerLogReader(LogLinePrefix prefix)
+{
+    private enum Part { Message, Sql, Detail }
+
+    private LogEntry? _current;
+    private Part _part = Part.Message;
+    private string _carry = string.Empty;
+    private bool _skipOrphans;
+
+    public List<LogEntry> Entries { get; } = [];
+
+    public int UnknownLines { get; private set; }
+
+    /// <summary>Thêm 1 đoạn. Trả vị trí mục đầu tiên có thể đã đổi (mục cuối trước đó nhận thêm dòng nối tiếp) - các mục từ
+    /// đó trở đi cần hiện lại.</summary>
+    /// <param name="partialStart">Đoạn bắt đầu giữa file (đọc N MB cuối): bỏ dòng đầu bị cắt và dòng nối tiếp mồ côi.</param>
+    public int Append(string text, bool partialStart = false)
+    {
+        var firstTouched = _current is null ? Entries.Count : Math.Max(0, Entries.LastIndexOf(_current));
+        var data = _carry + text;
+        var end = data.LastIndexOf('\n');
+        if (end < 0)
+        {
+            _carry = data;
+            return firstTouched;
+        }
+        _carry = data[(end + 1)..];
+        var lines = data[..end].Split('\n');
+        var first = 0;
+        if (partialStart && Entries.Count == 0 && _current is null)
+        {
+            first = 1;
+            _skipOrphans = true;
+        }
+        for (var i = first; i < lines.Length; i++)
+        {
+            Line(lines[i].TrimEnd('\r'));
+        }
+        Finish(firstTouched);
+        return firstTouched;
+    }
+
+    /// <summary>Hết dữ liệu (đọc 1 lần): xử lý nốt dòng cuối không có \n.</summary>
+    public void Flush()
+    {
+        if (_carry.Length == 0)
+        {
+            return;
+        }
+        var firstTouched = _current is null ? Entries.Count : Math.Max(0, Entries.LastIndexOf(_current));
+        var line = _carry.TrimEnd('\r');
+        _carry = string.Empty;
+        Line(line);
+        Finish(firstTouched);
+    }
+
+    private void Line(string line)
+    {
+        var e = prefix.Match(line);
+        if (e is null)
+        {
+            if (_current is null)
+            {
+                if (!_skipOrphans && line.Length > 0)
+                {
+                    UnknownLines++;
+                    Entries.Add(_current = new LogEntry { Message = line, Kind = LogKind.Server });
+                    _current.RawLines.Add(line);
+                    _part = Part.Message;
+                }
+                return;
+            }
+            if (!line.StartsWith('\t') && line.Length > 0)
+            {
+                UnknownLines++;
+            }
+            _current.RawLines.Add(line);
+            var more = "\n" + (line.StartsWith('\t') ? line[1..] : line);
+            switch (_part)
+            {
+                case Part.Sql:
+                    _current.Sql += more;
+                    break;
+                case Part.Detail:
+                    _current.Detail += more;
+                    break;
+                default:
+                    _current.Message += more;
+                    break;
+            }
+            return;
+        }
+        _skipOrphans = false;
+
+        if (_current is not null && e.Pid == _current.Pid && e.Level is "DETAIL" or "HINT" or "CONTEXT" or "STATEMENT" or "QUERY" or "LOCATION")
+        {
+            _current.RawLines.Add(line);
+            if (e.Level == "STATEMENT" && _current.Sql.Length == 0)
+            {
+                _current.Sql = e.Message;
+                _part = Part.Sql;
+            }
+            else
+            {
+                _current.Detail += (_current.Detail.Length > 0 ? "\n" : string.Empty) + e.Level + ": " + e.Message;
+                _part = Part.Detail;
+            }
+            return;
+        }
+
+        if (ServerLogParser.DurationOnlyMs(e.Message) is { } ms && ServerLogParser.FindStatement(Entries, e.Pid) is { } owner)
+        {
+            owner.DurationMs = ms;
+            owner.RawLines.Add(line);
+            _current = owner;
+            _part = Part.Detail;
+            return;
+        }
+
+        _current = e;
+        _current.RawLines.Add(line);
+        _part = Part.Message;
+        if (ServerLogParser.IsStatementLog(e))
+        {
+            ServerLogParser.ApplyStatement(e);
+            _part = Part.Sql;
+        }
+        Entries.Add(_current);
+    }
+
+    /// <summary>Che mật khẩu + phân loại lại các mục từ <paramref name="from"/> (mục cuối có thể vừa nhận thêm dòng).</summary>
+    private void Finish(int from)
+    {
+        for (var i = from; i < Entries.Count; i++)
+        {
+            ServerLogParser.Finish(Entries[i]);
+        }
+    }
+}
 /// <summary>Bộ lọc trang Nhật ký server: loại, chữ trong SQL / thông báo, user, database, máy / IP / ứng dụng (đều chứa,
 /// không phân biệt hoa thường), ẩn câu của chính DbTools.</summary>
 public sealed record LogFilter(IReadOnlySet<LogKind> Kinds, string Text = "", string User = "", string Database = "", string Client = "",
@@ -433,6 +507,9 @@ public sealed record LogServerInfo(IReadOnlyDictionary<string, string> Settings,
     public string Get(string name) => Settings.TryGetValue(name, out var v) ? v : string.Empty;
 }
 
+/// <summary>1 file log: tên, dung lượng, giờ sửa (để tính tổng dung lượng / tốc độ tăng).</summary>
+public sealed record LogFileStat(string Name, long Size, DateTime Modified);
+
 /// <summary>1 dòng ở thẻ Cấu hình log (cảnh báo tô màu).</summary>
 public sealed record LogConfigLine(string Text, bool Warning);
 
@@ -447,8 +524,12 @@ public static class LogConfig
         "log_truncate_on_rotation", "lc_messages", "data_directory",
     ];
 
-    public static List<LogConfigLine> Describe(LogServerInfo s, int fileCount, long totalBytes)
+    /// <param name="files">File trong thư mục log (pg_ls_logdir).</param>
+    /// <param name="warnBytes">Ngưỡng cảnh báo dung lượng thư mục log (Cài đặt, mặc định 1 GB).</param>
+    public static List<LogConfigLine> Describe(LogServerInfo s, IReadOnlyList<LogFileStat> files, long warnBytes, DateTime now)
     {
+        var fileCount = files.Count;
+        var totalBytes = files.Sum(f => f.Size);
         var lines = new List<LogConfigLine>();
         if (s.Get("logging_collector") != "on")
         {
@@ -510,7 +591,12 @@ public static class LogConfig
             ? new($"Đầu dòng log (log_line_prefix = '{s.Get("log_line_prefix")}') có đủ giờ, user, database, máy, ứng dụng.", false)
             : new($"log_line_prefix = '{s.Get("log_line_prefix")}' thiếu {string.Join(", ", missing)} - cột đó sẽ trống.", true));
 
-        lines.Add(Retention(s, fileCount, totalBytes));
+        var retention = Retention(s, fileCount, totalBytes, out var unlimited);
+        lines.Add(retention);
+        if (fileCount > 0)
+        {
+            lines.Add(Volume(files, warnBytes, unlimited, now));
+        }
 
         if (s.Get("lc_messages") is { Length: > 0 } lc && !lc.StartsWith('C') && !lc.StartsWith("en", StringComparison.OrdinalIgnoreCase)
             && !lc.Equals("POSIX", StringComparison.OrdinalIgnoreCase))
@@ -533,8 +619,9 @@ public static class LogConfig
     }
 
     /// <summary>Giữ log bao lâu: tên file theo thứ (%a) / ngày (%d) / giờ (%H) + ghi đè khi xoay vòng → tự giới hạn; còn lại lớn dần.</summary>
-    private static LogConfigLine Retention(LogServerInfo s, int fileCount, long totalBytes)
+    private static LogConfigLine Retention(LogServerInfo s, int fileCount, long totalBytes, out bool unlimited)
     {
+        unlimited = false;
         var name = s.Get("log_filename");
         var size = $"hiện {fileCount} file, {Size(totalBytes)}";
         if (s.Get("log_truncate_on_rotation") == "on")
@@ -552,7 +639,34 @@ public static class LogConfig
                 return new($"Chỉ giữ 24 giờ: file theo giờ, hôm sau ghi đè ({size}).", true);
             }
         }
-        return new($"Không tự xoá file cũ ({size}) - thư mục log lớn dần, cần dọn định kỳ.", totalBytes > 1L << 30);
+        unlimited = true;
+        return new($"Không tự xoá file cũ ({size}) - thư mục log lớn dần, cần dọn định kỳ.", false);
+    }
+
+    /// <summary>
+    /// Dung lượng: tổng, file lớn nhất, tốc độ tăng ước tính (file sửa trong 7 ngày qua / số ngày). Cảnh báo khi tổng vượt
+    /// <paramref name="warnBytes"/>, hoặc khi server không tự xoá file cũ mà theo tốc độ này dưới 30 ngày nữa sẽ vượt.
+    /// DbTools không biết ổ đĩa của máy server còn trống bao nhiêu (PostgreSQL không có câu SQL cho việc này).
+    /// </summary>
+    public static LogConfigLine Volume(IReadOnlyList<LogFileStat> files, long warnBytes, bool unlimited, DateTime now)
+    {
+        var total = files.Sum(f => f.Size);
+        var largest = files.MaxBy(f => f.Size)!;
+        var recent = files.Where(f => f.Modified > now.AddDays(-7)).ToList();
+        // File sửa lần cuối cách đây N ngày đã chứa log của ngày đó → phủ N + 1 ngày (7 file theo thứ = 7 ngày).
+        var days = recent.Count == 0 ? 7 : Math.Clamp((now - recent.Min(f => f.Modified)).TotalDays + 1, 1, 7);
+        var perDay = recent.Sum(f => f.Size) / days;
+        var text = $"Dung lượng thư mục log: {Size(total)} ({files.Count} file, lớn nhất {largest.Name} {Size(largest.Size)}); "
+            + $"tăng khoảng {Size((long)perDay)} / ngày (theo 7 ngày qua). Ngưỡng cảnh báo {Size(warnBytes)} (đổi ở Cài đặt).";
+        if (total > warnBytes)
+        {
+            return new($"Vượt ngưỡng cảnh báo! {text} Nhờ DBA dọn file cũ / giảm log_statement, hoặc Xuất phần cần giữ về máy.", true);
+        }
+        if (unlimited && perDay > 0 && (warnBytes - total) / perDay < 30)
+        {
+            return new($"{text} Theo tốc độ này khoảng {Math.Max(1, (int)((warnBytes - total) / perDay))} ngày nữa sẽ vượt ngưỡng.", true);
+        }
+        return new(text, false);
     }
 
     public static string Size(long bytes) => bytes switch

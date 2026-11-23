@@ -73,6 +73,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}" SelectedItem="{x:Bind ViewModel.Profile, Mode=TwoWay}"
                       PlaceholderText="(chưa có kết nối)" AutomationProperties.Name="Server" AutomationProperties.AutomationId="LogProfileBox"
@@ -98,6 +99,9 @@
                     ToolTipService.ToolTip="Đọc lại cấu hình log + danh sách file, rồi đọc file server đang ghi" />
             <Button Grid.Column="4" Content="Đọc file" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.ReadCommand}"
                     AutomationProperties.AutomationId="LogRead" ToolTipService.ToolTip="Đọc file đang chọn (đọc lại để thấy dòng mới)" />
+            <Button Grid.Column="5" Content="{x:Bind ViewModel.FollowText, Mode=OneWay}" Command="{x:Bind ViewModel.FollowCommand}" MinWidth="96"
+                    AutomationProperties.AutomationId="LogFollow"
+                    ToolTipService.ToolTip="Mỗi 2 giây đọc phần mới của file server đang ghi, dòng mới hiện cuối bảng (tự cuộn nếu đang ở cuối); server sang file mới thì tự đọc sang. Bấm lại để dừng." />
         </Grid>
 
         <!-- Lọc: chữ trong SQL / thông báo, user, database, máy / ứng dụng; nút Loại (ô tích từng loại + ẩn câu của DbTools) -->
@@ -153,7 +157,7 @@
                     <TextBlock Grid.Column="4" Text="ms" FontWeight="SemiBold" HorizontalAlignment="Right" />
                     <TextBlock Grid.Column="5" Text="Câu SQL / thông báo" FontWeight="SemiBold" />
                 </Grid>
-                <ListView Grid.Row="1" ItemsSource="{x:Bind ViewModel.Rows, Mode=OneWay}" SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
+                <ListView x:Name="LogList" Grid.Row="1" ItemsSource="{x:Bind ViewModel.Rows}" SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
                           AutomationProperties.AutomationId="LogList" AutomationProperties.Name="Nhật ký server">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">

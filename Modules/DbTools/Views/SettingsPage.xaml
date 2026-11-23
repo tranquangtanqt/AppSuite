@@ -71,6 +71,19 @@
                 </StackPanel>
             </Border>
 
+            <!-- Nhật ký server -->
+            <Border Padding="16,12" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Nhật ký server" FontWeight="SemiBold" />
+                    <NumberBox Header="Cảnh báo khi thư mục log của server vượt (MB)" Value="{x:Bind ViewModel.LogWarnMb, Mode=TwoWay}"
+                               Minimum="10" Maximum="1000000" SmallChange="256" LargeChange="1024" SpinButtonPlacementMode="Inline" Width="320"
+                               AutomationProperties.AutomationId="LogWarnBox" />
+                    <TextBlock Opacity="0.7" FontSize="12" TextWrapping="Wrap"
+                               Text="Mặc định 1024 MB (1 GB). Nút Cấu hình log trên trang Nhật ký server báo ⚠ khi tổng dung lượng file log vượt ngưỡng, hoặc khi server không tự xoá file cũ mà theo tốc độ hiện tại dưới 30 ngày nữa sẽ vượt. DbTools không biết ổ đĩa máy server còn trống bao nhiêu." />
+                </StackPanel>
+            </Border>
+
             <!-- Dữ liệu app -->
             <Border Padding="16,12" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">

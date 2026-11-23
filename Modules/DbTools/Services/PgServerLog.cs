@@ -12,6 +12,47 @@ public sealed record ServerLogFile(string Name, long Size, DateTime Modified, bo
 public sealed record ServerLogChunk(string Text, long Offset, long FileSize);
 
 /// <summary>
+/// Theo dõi (trang Nhật ký server): giữ 1 kết nối mở, mỗi ~2 giây hỏi file server đang ghi + dung lượng file đang đọc,
+/// đọc phần mới ghi thêm. Không mở kết nối mới mỗi lần (log_connections bật thì mỗi lần mở cũng thành 1 dòng log).
+/// </summary>
+public sealed class ServerLogFollower : IAsyncDisposable
+{
+    private readonly NpgsqlConnection _connection;
+
+    private ServerLogFollower(NpgsqlConnection connection) => _connection = connection;
+
+    public static async Task<ServerLogFollower> OpenAsync(ConnectionProfile p, CancellationToken ct) =>
+        new(await PgAdmin.OpenMaintenanceAsync(p, ct));
+
+    /// <summary>Tên file server đang ghi (log dạng stderr) + dung lượng file <paramref name="fileName"/> (null = không còn).</summary>
+    public async Task<(string Current, long? Size)> StatAsync(string fileName, CancellationToken ct)
+    {
+        const string sql = """
+            SELECT regexp_replace(coalesce(pg_current_logfile('stderr'), ''), '^.*[/\\]', ''),
+                   (pg_stat_file(current_setting('log_directory') || '/' || $1, true)).size
+            """;
+        await using var cmd = new NpgsqlCommand(sql, _connection);
+        cmd.Parameters.Add(new NpgsqlParameter { Value = fileName });
+        await using var r = await cmd.ExecuteReaderAsync(ct);
+        await r.ReadAsync(ct);
+        return (r.GetString(0), r.IsDBNull(1) ? null : r.GetInt64(1));
+    }
+
+    /// <summary>Đọc <paramref name="length"/> byte từ <paramref name="offset"/> (giải mã UTF-8 ở máy này).</summary>
+    public async Task<string> ReadAsync(string fileName, long offset, long length, CancellationToken ct)
+    {
+        await using var cmd = new NpgsqlCommand(
+            "SELECT pg_read_binary_file(current_setting('log_directory') || '/' || $1, $2, $3)", _connection) { CommandTimeout = 120 };
+        cmd.Parameters.Add(new NpgsqlParameter { Value = fileName });
+        cmd.Parameters.Add(new NpgsqlParameter { Value = offset });
+        cmd.Parameters.Add(new NpgsqlParameter { Value = length });
+        return Encoding.UTF8.GetString((byte[])(await cmd.ExecuteScalarAsync(ct))!);
+    }
+
+    public ValueTask DisposeAsync() => _connection.DisposeAsync();
+}
+
+/// <summary>
 /// Đọc nhật ký server PostgreSQL qua SQL (không cần quyền vào máy server): cấu hình log (pg_settings), danh sách file
 /// (pg_ls_logdir - superuser / pg_monitor), nội dung (pg_read_binary_file - superuser / pg_read_server_files; đọc dạng byte
 /// rồi giải mã UTF-8 ở máy này nên file có byte lạ vẫn đọc được). Chỉ đọc, không đổi gì trên server.

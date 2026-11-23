@@ -172,15 +172,89 @@ public class ServerLogTests
     {
         var lines = LogConfig.Describe(Info(("logging_collector", "on"), ("log_directory", "C:/log"), ("log_filename", "logfile-%a.log"),
             ("log_statement", "all"), ("log_min_duration_statement", "1000"), ("log_line_prefix", FepPrefix),
-            ("log_truncate_on_rotation", "on"), ("lc_messages", "C"), ("log_destination", "stderr,eventlog")), 7, 9826);
+            ("log_truncate_on_rotation", "on"), ("lc_messages", "C"), ("log_destination", "stderr,eventlog")), Week(9826), 1L << 30, Now);
         Assert.Equal(
         [
             "Ghi file vào C:/log (trên máy server), tên logfile-%a.log.",
             "Ghi mọi câu lệnh (cả SELECT); thêm câu chạy lâu hơn 1,000 ms.",
             $"Đầu dòng log (log_line_prefix = '{FepPrefix}') có đủ giờ, user, database, máy, ứng dụng.",
             "Chỉ giữ 7 ngày: mỗi thứ trong tuần 1 file, tuần sau ghi đè (hiện 7 file, 10 KB). Cần xem lâu hơn thì lưu file về máy (Xuất).",
+            "Dung lượng thư mục log: 10 KB (7 file, lớn nhất logfile-Sun.log 1 KB); tăng khoảng 1 KB / ngày (theo 7 ngày qua). Ngưỡng cảnh báo 1.0 GB (đổi ở Cài đặt).",
         ], lines.Select(l => l.Text.Replace("1.000", "1,000")));
-        Assert.Equal([false, false, false, true], lines.Select(l => l.Warning));
+        Assert.Equal([false, false, false, true, false], lines.Select(l => l.Warning));
+    }
+
+    private static readonly DateTime Now = new(2026, 11, 23, 12, 0, 0);
+
+    /// <summary>7 file logfile-%a.log, mỗi ngày 1 file (mới nhất hôm nay), tổng <paramref name="total"/> byte.</summary>
+    private static List<LogFileStat> Week(long total)
+    {
+        string[] days = ["Mon", "Sun", "Sat", "Fri", "Thu", "Wed", "Tue"];
+        return days.Select((d, i) => new LogFileStat($"logfile-{d}.log", total / 7 + (i == 1 ? total % 7 : 0), Now.AddDays(-i))).ToList();
+    }
+
+    [Fact]
+    public void Volume_warns_over_threshold_or_when_unlimited_logs_will_reach_it_soon()
+    {
+        // 3 GB, ngưỡng 1 GB → vượt.
+        var over = LogConfig.Volume([new("a.log", 3L << 30, Now)], 1L << 30, unlimited: false, Now);
+        Assert.True(over.Warning);
+        Assert.StartsWith("Vượt ngưỡng cảnh báo! Dung lượng thư mục log: 3.0 GB", over.Text);
+
+        // Không tự xoá, 700 MB, tăng 100 MB / ngày (7 file trong 7 ngày) → ~3 ngày nữa vượt 1 GB.
+        var files = Enumerable.Range(0, 7).Select(i => new LogFileStat($"p{i}.log", 100L << 20, Now.AddDays(-i - 0.5))).ToList();
+        var soon = LogConfig.Volume(files, 1L << 30, unlimited: true, Now);
+        Assert.True(soon.Warning);
+        Assert.Contains("tăng khoảng 100.0 MB / ngày", soon.Text);
+        Assert.EndsWith("Theo tốc độ này khoảng 3 ngày nữa sẽ vượt ngưỡng.", soon.Text);
+
+        // Cùng tốc độ nhưng server tự xoay vòng ghi đè → không cảnh báo; ngưỡng 100 GB cũng không.
+        Assert.False(LogConfig.Volume(files, 1L << 30, unlimited: false, Now).Warning);
+        Assert.False(LogConfig.Volume(files, 100L << 30, unlimited: true, Now).Warning);
+
+        // File cũ hơn 7 ngày không tính vào tốc độ.
+        Assert.Contains("tăng khoảng 0 byte / ngày", LogConfig.Volume([new("old.log", 5L << 20, Now.AddDays(-30))], 1L << 30, true, Now).Text);
+    }
+
+    [Fact]
+    public void Reader_gives_the_same_entries_however_the_log_is_cut_into_chunks()
+    {
+        // Theo dõi đọc từng đoạn mới: đoạn có thể cắt giữa dòng, giữa câu nhiều dòng, giữa câu và dòng duration / DETAIL.
+        var expected = Describe(ParseFep().Entries);
+        var prefix = new LogLinePrefix(FepPrefix);
+        for (var cut = 1; cut < FepLog.Length; cut++)
+        {
+            var reader = new ServerLogReader(prefix);
+            reader.Append(FepLog[..cut]);
+            reader.Append(FepLog[cut..]);
+            Assert.Equal(expected, Describe(reader.Entries));
+            Assert.Equal(0, reader.UnknownLines);
+        }
+
+        // 3 đoạn, cắt ngay trong dòng tiếp nối của câu UPDATE: Append trả vị trí mục cần hiện lại (mục UPDATE).
+        var r3 = new ServerLogReader(prefix);
+        var a = FepLog.IndexOf("\t   SET", StringComparison.Ordinal);
+        r3.Append(FepLog[..a]);
+        var update = r3.Entries.Count - 1;
+        Assert.Equal("UPDATE item_master", r3.Entries[update].Sql);
+        Assert.Equal(update, r3.Append(FepLog[a..(a + 5)])); // dòng dở: chưa thêm gì, mục cuối vẫn có thể đổi
+        Assert.Equal(update, r3.Append(FepLog[(a + 5)..]));
+        Assert.Equal(expected, Describe(r3.Entries));
+
+        static List<string> Describe(IEnumerable<LogEntry> entries) => entries
+            .Select(e => $"{e.Pid}|{e.Kind}|{e.Sql}|{e.Message}|{e.DurationMs}|{e.Detail}|{e.RawLines.Count}").ToList();
+    }
+
+    [Fact]
+    public void Reader_without_trailing_newline_keeps_the_last_line_until_flush()
+    {
+        var reader = new ServerLogReader(new LogLinePrefix(FepPrefix));
+        var lastLine = FepLog.TrimEnd('\n');
+        reader.Append(lastLine);
+        var countBefore = reader.Entries.Count;
+        reader.Flush();
+        Assert.Equal(countBefore + 1, reader.Entries.Count);
+        Assert.Equal(LogKind.Connection, reader.Entries[^1].Kind);
     }
 
     [Fact]
@@ -191,7 +265,7 @@ public class ServerLogTests
             ["logging_collector"] = "off", ["log_statement"] = "none", ["log_min_duration_statement"] = "-1",
             ["log_line_prefix"] = "%m [%p] ", ["log_filename"] = "postgresql-%Y-%m-%d.log", ["lc_messages"] = "ja_JP.UTF-8",
             ["log_destination"] = "csvlog",
-        }, Superuser: false, Monitor: false, ReadFiles: false), 3, 2L << 30);
+        }, Superuser: false, Monitor: false, ReadFiles: false), [new("a.log", 1L << 30, Now.AddDays(-2)), new("b.log", 1L << 29, Now.AddDays(-1)), new("c.log", 1L << 29, Now)], 1L << 30, Now);
         var text = string.Join("\n", lines.Select(l => l.Text));
         Assert.Contains("logging_collector = off", text);
         Assert.Contains("Không ghi câu lệnh", text);
@@ -201,7 +275,16 @@ public class ServerLogTests
         Assert.Contains("chỉ đọc file .log", text);
         Assert.Contains("pg_ls_logdir", text);
         Assert.Contains("pg_read_server_files", text);
-        Assert.All(lines.Where(l => !l.Text.Contains(".csv")), l => Assert.True(l.Warning, l.Text));
+        Assert.All(lines.Where(l => !l.Text.Contains(".csv") && !l.Text.StartsWith("Không tự xoá")), l => Assert.True(l.Warning, l.Text));
+        Assert.Contains(lines, l => l.Warning && l.Text.StartsWith("Vượt ngưỡng cảnh báo! Dung lượng thư mục log: 2.0 GB"));
+    }
+
+    [Fact]
+    public void Log_warn_threshold_defaults_to_1024_mb_and_is_clamped()
+    {
+        Assert.Equal(1024, new AppSettings().LogWarnMb);
+        Assert.Equal(10, new AppSettings { LogWarnMb = 0 }.LogWarnMb);
+        Assert.Equal(1_000_000, new AppSettings { LogWarnMb = int.MaxValue }.LogWarnMb);
     }
 
     /// <summary>PostgreSQL thật (DBTOOLS_TEST_PG, superuser, logging_collector = on): chạy 1 câu có dấu riêng với
@@ -235,5 +318,27 @@ public class ServerLogTests
         var hit = Assert.Single(entries, e => e.Sql.Contains(marker));
         Assert.Equal(LogKind.Select, hit.Kind);
         Assert.Equal(ServerLogParser.OwnApp, hit.App is { Length: > 0 } app ? app : ServerLogParser.OwnApp); // prefix không có %a thì trống
+
+        // Theo dõi: 1 kết nối giữ mở, đọc đúng phần mới ghi thêm sau câu thứ 2.
+        await using var follower = await ServerLogFollower.OpenAsync(profile, CancellationToken.None);
+        var (currentName, size0) = await follower.StatAsync(current.Name, CancellationToken.None);
+        Assert.Equal(current.Name, currentName);
+        var reader = new ServerLogReader(new LogLinePrefix(info.Get("log_line_prefix")));
+        var marker2 = marker + "_theo_doi";
+        await using (var c = await Pg.OpenAsync(profile, CancellationToken.None))
+        {
+            foreach (var sql in new[] { "SET log_statement = 'all'", $"SELECT '{marker2}'" })
+            {
+                await using var cmd = new NpgsqlCommand(sql, c);
+                await cmd.ExecuteNonQueryAsync();
+            }
+        }
+        await Task.Delay(500);
+        var (_, size1) = await follower.StatAsync(current.Name, CancellationToken.None);
+        Assert.True(size1 > size0);
+        reader.Append(await follower.ReadAsync(current.Name, size0!.Value, size1!.Value - size0.Value, CancellationToken.None));
+        Assert.Single(reader.Entries, e => e.Sql.Contains(marker2));
+        Assert.DoesNotContain(reader.Entries, e => e.Sql.Contains($"'{marker}'")); // câu cũ nằm trước phần mới
+        Assert.Null((await follower.StatAsync("khong_co_file_nay.log", CancellationToken.None)).Size);
     }
 }

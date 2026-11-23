@@ -20,7 +20,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
 | **Cài đặt** (cuối menu) | Thời gian chờ kết nối (5 - 120 giây, mặc định 15, mọi hồ sơ / mọi trang), thư mục dump, thư mục PostgreSQL client, Sao lưu trước khi chạy, thư mục dữ liệu của app |
-| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT |
+| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
 | **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu), Thử kết nối (nút Huỷ khi đang chờ - `WaitAsync(token)` thôi chờ ngay, đổi hồ sơ cũng huỷ); ô **Quan trọng (Production)** (xem mục Hồ sơ Production) |
 
@@ -200,8 +200,20 @@ Enterprise Postgres `C:/Users/admin/AppData/Local/Fujitsu/.../log`).
   CsvEditor nếu có - `Shell.OpenData`) hoặc `.txt` (dòng log gốc).
 - Giao diện gọn cho cửa sổ ~600 px: nút Cấu hình log cạnh tiêu đề (flyout), nút Loại (flyout ô tích + Ẩn câu của DbTools), trạng
   thái ở chân trang, ô chi tiết chỉ hiện khi chọn dòng.
-- Đợt 2 (chưa làm): theo dõi realtime (đọc tiếp từ offset), cảnh báo dung lượng, đổi cấu hình log (ALTER SYSTEM + reload, hồ sơ
-  Production gõ lại tên). Sau này Oracle: giữ `LogEntry` / `LogFilter` / bảng / xuất dùng chung, viết phần đọc riêng (Unified
+- **Đợt 2 (2026-11-23) - Theo dõi + dung lượng.** `ServerLogReader` (Core): đọc nối tiếp - `Append(đoạn)` giữ dòng dở cuối đoạn
+  tới lần sau, dòng nối tiếp / duration / DETAIL tới sau vẫn ghép đúng mục, trả vị trí mục đầu có thể đã đổi (mục cuối);
+  `ServerLogParser.Parse` = Append + Flush (unit test: cắt log ở mọi vị trí ra cùng kết quả). `ServerLogFollower` (Services) giữ
+  1 kết nối, mỗi 2 giây `StatAsync` (file đang ghi `pg_current_logfile('stderr')` + dung lượng file đang đọc, `pg_stat_file(...,
+  true)`) rồi `ReadAsync` phần mới (tối đa 5 MB / lượt, ghi nhanh hơn thì bỏ phần giữa). File ngắn lại (xoay vòng ghi đè cùng tên)
+  → đọc lại từ đầu; server sang file khác → đọc nốt file cũ rồi sang file mới (chọn luôn trong ô File). Vòng theo dõi chạy nền
+  (lệnh Theo dõi xong ngay - AsyncRelayCommand đang chạy thì tự tắt nút, nên không await vòng lặp); dừng khi bấm Dừng, chọn
+  file khác, đổi server, rời trang (`OnNavigatedFrom`). Bảng là `LogRowCollection` (lọc lại = 1 sự kiện Reset; theo dõi = bỏ dòng
+  của mục cuối rồi thêm mục mới); trang tự cuộn xuống cuối nếu đang ở cuối (`RowsAppending` / `RowsAppended`), bắt đầu theo dõi
+  hoặc đổi lọc lúc đang theo dõi thì nhảy xuống cuối (`ScrollToEndRequested`). `LogConfig.Volume`: tổng, file lớn nhất, tốc độ
+  tăng (file sửa trong 7 ngày / số ngày phủ = khoảng cách + 1), ⚠ khi vượt `AppSettings.LogWarnMb` (mặc định 1024, Cài đặt) hoặc
+  server không tự xoá file cũ mà dưới 30 ngày nữa sẽ vượt.
+- Chưa làm: đổi cấu hình log (ALTER SYSTEM + reload, hồ sơ Production gõ lại tên - chờ người dùng cho phép), đọc csvlog /
+  jsonlog. Sau này Oracle: giữ `LogEntry` / `LogFilter` / bảng / xuất dùng chung, viết phần đọc riêng (Unified
   Audit `UNIFIED_AUDIT_TRAIL`, alert log `V$DIAG_ALERT_EXT`, `V$SQL`; tránh ASH / AWR vì cần Diagnostics Pack) - lúc đó mới tách
   lớp chung.
 

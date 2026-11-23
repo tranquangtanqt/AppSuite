@@ -140,6 +140,15 @@ public sealed class AppSettings
 
     private int _connectTimeoutSeconds = DefaultConnectTimeout;
 
+    /// <summary>Nhật ký server: thư mục log của server vượt bao nhiêu MB thì cảnh báo (10 - 1.000.000, mặc định 1024).</summary>
+    public int LogWarnMb
+    {
+        get => _logWarnMb;
+        set => _logWarnMb = Math.Clamp(value, 10, 1_000_000);
+    }
+
+    private int _logWarnMb = 1024;
+
     public const int DefaultConnectTimeout = 15;
     public const int MinConnectTimeout = 5;
     public const int MaxConnectTimeout = 120;

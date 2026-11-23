@@ -30,6 +30,24 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private bool _backupBeforeRun;
 
+    /// <summary>Nhật ký server: thư mục log của server vượt bao nhiêu MB thì cảnh báo.</summary>
+    [ObservableProperty]
+    private double _logWarnMb;
+
+    partial void OnLogWarnMbChanged(double value)
+    {
+        if (_loading || double.IsNaN(value))
+        {
+            return;
+        }
+        AppState.Settings.LogWarnMb = (int)Math.Round(value);
+        AppState.SaveSettings();
+        if (LogWarnMb != AppState.Settings.LogWarnMb)
+        {
+            LogWarnMb = AppState.Settings.LogWarnMb;
+        }
+    }
+
     public string DataFolder => DataPaths.Root;
 
     private bool _loading;
@@ -42,6 +60,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         DumpFolder = AppState.Settings.DumpFolder;
         PgBinFolder = AppState.Settings.PgBinFolder;
         BackupBeforeRun = AppState.Settings.BackupBeforeRun;
+        LogWarnMb = AppState.Settings.LogWarnMb;
         _loading = false;
         _ = RefreshClientAsync();
     }

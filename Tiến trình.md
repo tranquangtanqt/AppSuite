@@ -249,9 +249,16 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   giây); thư mục dump + PostgreSQL client (dòng "Dùng: PostgreSQL 17.x"), Sao lưu trước khi chạy - dùng chung với ô ở trang Sao
   lưu / Chạy (sửa ở đâu cũng được); thư mục dữ liệu của app + Mở thư mục. Cập nhật F1, README. Unit test 177/177 (PostgreSQL 17
   thật); GUI Sandbox 15/15 (cổng treo: 5 giây → báo lỗi sau 4,5 s, 20 giây → 20,1 s không cần mở lại app) (2026-11-23)
-- [ ] Nhật ký server - đợt 2: theo dõi realtime (đọc tiếp từ offset mỗi ~2 giây, Tạm dừng), cảnh báo dung lượng log, đổi cấu hình
-  log (ALTER SYSTEM + pg_reload_conf, hồ sơ Production gõ lại tên DB) - chờ người dùng chốt có cho sửa cấu hình không; đọc file
-  csvlog / jsonlog
+- [x] **Nhật ký server - đợt 2** (người dùng 2026-11-23): nút **Theo dõi** - đọc file server đang ghi rồi mỗi 2 giây đọc tiếp
+  phần mới (giữ 1 kết nối), dòng mới hiện cuối bảng, bộ lọc vẫn áp, câu nhiều dòng / duration / DETAIL tới sau vẫn ghép đúng, tự
+  cuộn nếu đang ở cuối, server sang file mới thì tự đọc sang, Dừng / chọn file khác / đổi server / rời trang thì dừng + đóng kết
+  nối, mất kết nối tự thử lại; **cảnh báo dung lượng**: dòng Dung lượng thư mục log (tổng, file lớn nhất, tăng ~/ngày) trong Cấu
+  hình log, ⚠ khi vượt ngưỡng (Cài đặt, mặc định 1024 MB) hoặc không tự xoá mà dưới 30 ngày nữa sẽ vượt. Sửa kèm: nút Dừng theo dõi
+  bị tắt lúc đang theo dõi (lệnh async tự khoá) - phát hiện khi test. Cập nhật F1, README. Unit test 181/181 (cắt log ở mọi vị trí
+  ra cùng kết quả; PostgreSQL 17 thật: theo dõi đọc đúng phần mới); GUI Sandbox theo dõi 16/16 + đợt 1 chạy lại 17/17 (2026-11-23)
+- [ ] Nhật ký server - đổi cấu hình log (ALTER SYSTEM + pg_reload_conf: log_statement, log_min_duration_statement,
+  log_connections / disconnections; hỏi lại, hồ sơ Production gõ lại tên DB; Về mặc định = RESET) - chờ người dùng cho phép
+  (thao tác ghi lên server); đọc file csvlog / jsonlog (để sau)
 - [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV)
 - [ ] Nhật ký server cho Oracle (khi làm Đợt 4): giữ LogEntry / LogFilter / bảng / xuất, viết phần đọc riêng - Unified Audit
   (UNIFIED_AUDIT_TRAIL, cần audit policy + AUDIT_VIEWER), alert log (V$DIAG_ALERT_EXT), V$SQL; không dùng ASH / AWR (Diagnostics Pack)
