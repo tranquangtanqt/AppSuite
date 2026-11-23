@@ -109,6 +109,17 @@ public sealed partial class HistoryPage : Page
         Frame.Navigate(typeof(OrderFormPage), new OrderFormArgs(row.Entry.OrderId));
     }
 
+    private void PreviousPage_Click(object sender, RoutedEventArgs e) => MovePage(-1);
+
+    private void NextPage_Click(object sender, RoutedEventArgs e) => MovePage(1);
+
+    /// <summary>Sang trang khác thì về đầu danh sách.</summary>
+    private void MovePage(int delta)
+    {
+        ViewModel.MovePage(delta);
+        RowsScroll.ChangeView(null, 0, null, true);
+    }
+
     private void OpenLogs_Click(object sender, RoutedEventArgs e)
     {
         var folder = Path.Combine(AppContext.BaseDirectory, "Logs");

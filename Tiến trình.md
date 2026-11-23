@@ -536,6 +536,13 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   giữ lịch sử N ngày (mặc định 90, 0 = giữ hết, Dọn ngay). Câu hỏi xoá đơn bỏ "Không hoàn tác được". Chỉ đơn hàng (khách / món
   / phiếu nhập chưa ghi). Cập nhật F1, README. Unit test 276/276; GUI Sandbox (UIA) 25/25 (2026-11-16)
 - [ ] Người dùng thử tay Lịch sử chỉnh sửa trên dữ liệu thật (xoá / sửa nhầm 1 đơn rồi Khôi phục; Thanh toán toàn bộ rồi Khôi phục cả lô)
+- [x] Lịch sử chỉnh sửa - **phân trang** (người dùng 2026-11-23: danh sách dài cuộn lag, không có phân trang): 100 dòng / trang,
+  nút Trang trước / Trang sau + "Trang 2/50 · dòng 101–200" cố định dưới danh sách (ẩn khi ≤ 100 dòng); đọc file lịch sử 1 lần,
+  lọc loại / ô tìm / chuyển trang dùng lại dữ liệu đã đọc (gõ tìm 177–447 ms → 24–34 ms với 5.000 dòng); đổi lọc về trang 1, vào
+  lại trang giữ trang; "các thay đổi" tính 1 lần mỗi dòng. Cập nhật F1, README. Unit test 317/317; GUI Sandbox 10/10 (2026-11-23)
+- [ ] Lịch sử chỉnh sửa - **app tự đóng đột ngột** (người dùng báo 2026-11-23): chưa tái hiện được trong Sandbox với 5.000 dòng
+  giả (cuộn 3.000 nấc, gõ tìm, vào lại trang - app vẫn sống, ~300 MB). Cần log máy bị lỗi: `Logs\meron-<ngày>.log` cạnh
+  MeRon.exe + Event Viewer → Windows Logs → Application (Error, nguồn .NET Runtime / Application Error, MeRon.exe)
 - [x] Thông báo gọn (người dùng 2026-11-16, chọn cách b): khung vàng "Chưa xuất sang điện thoại" ở trang Đặt hàng (~200 px,
   4 dòng) thu thành **1 dòng** dưới bộ lọc (~37 px): "N dòng thay đổi chưa xuất (từ dd/MM HH:mm) · nhập backup sẽ đè mất"
   (`UnsyncedEdits.ShortText`), câu đầy đủ ở tooltip; nút Xuất lên Google Drive + Xuất… (mở trang Xuất) + ✕; xuất xong dòng

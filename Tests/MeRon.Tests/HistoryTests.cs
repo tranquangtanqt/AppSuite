@@ -201,4 +201,27 @@ public class HistoryTests
         Assert.Equal(0, MenuSettings.Load(path).HistoryKeepDays);
         Assert.Equal(3650, new MenuSettings { HistoryKeepDays = 99999 }.HistoryKeepDays);
     }
+
+    [Fact]
+    public void Paging_splits_long_history_and_clamps_page_after_list_shrinks()
+    {
+        var p = Paging.Of(5000, 1, 100);
+        Assert.Equal((50, 100, 100), (p.Pages, p.Skip, p.Take));
+        Assert.True(p.HasPrevious && p.HasNext);
+        Assert.Equal("Trang 2/50 · dòng 101–200", p.Text);
+
+        var last = Paging.Of(250, 2, 100);
+        Assert.Equal((200, 50), (last.Skip, last.Take));
+        Assert.False(last.HasNext);
+
+        // Lọc / khôi phục làm danh sách ngắn lại: trang đang xem kẹp về trang cuối còn có.
+        Assert.Equal(1, Paging.Of(150, 49, 100).Page);
+        Assert.Equal(0, Paging.Of(5000, -3, 100).Page);
+
+        // 1 trang (hoặc rỗng): không có chữ → ẩn thanh chuyển trang.
+        Assert.Equal(string.Empty, Paging.Of(100, 0, 100).Text);
+        var empty = Paging.Of(0, 5, 100);
+        Assert.Equal((0, 1, 0), (empty.Page, empty.Pages, empty.Take));
+        Assert.Equal(string.Empty, empty.Text);
+    }
 }

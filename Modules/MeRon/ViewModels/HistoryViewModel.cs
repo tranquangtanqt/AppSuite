@@ -23,7 +23,8 @@ public sealed class HistoryRow(HistoryEntry entry, int batchCount)
 
     public string OrderText => $"Đơn {Entry.OrderId}" + (Entry.Delivery is { } d ? $" · giao {DbDate.Show(d)}" : string.Empty);
 
-    public string ChangesText => string.Join("\n", HistoryText.Changes(Entry.Before, Entry.After));
+    /// <summary>Tính 1 lần (thẻ bị dựng lại nhiều lần khi cuộn).</summary>
+    public string ChangesText { get; } = string.Join("\n", HistoryText.Changes(entry.Before, entry.After));
 
     /// <summary>Thêm đơn mới thì không có "trước" để khôi phục.</summary>
     public bool CanRestore => Entry.Before is not null;
@@ -40,15 +41,28 @@ public sealed class HistoryRow(HistoryEntry entry, int batchCount)
 /// <summary>
 /// Trang Lịch sử chỉnh sửa: các lần thay đổi đơn trên máy tính (<see cref="OrderHistory"/>), lọc theo ngày sửa, loại
 /// (xoá / sửa / thêm), tên khách / mã đơn; khôi phục từng đơn hoặc cả lô (trang làm hộp thoại, gọi <see cref="Restore"/>).
+/// Hiện <see cref="PageSize"/> dòng mỗi trang (lịch sử vài nghìn dòng dựng hết thẻ thì cuộn lag); lọc / tìm / chuyển trang
+/// dùng lại dữ liệu đã đọc, chỉ <see cref="Load"/> (vào trang, đổi khoảng ngày, sau khôi phục) mới đọc file lịch sử.
 /// </summary>
 public sealed partial class HistoryViewModel : ObservableObject
 {
     public static readonly string[] KindLabels = ["Tất cả", "Đơn bị xoá", "Đơn bị sửa", "Đơn thêm mới"];
 
+    public const int PageSize = 100;
+
+    private IReadOnlyList<HistoryEntry> _all = [];
+    private Dictionary<string, int> _batches = [];
+    private List<HistoryEntry> _shown = [];
+    private int _page;
+
     public HistoryViewModel()
     {
         Filter.Apply(DateRangePreset.All);
-        Filter.Changed += (_, _) => Load();
+        Filter.Changed += (_, _) =>
+        {
+            _page = 0;
+            Load();
+        };
     }
 
     public DateRangeFilter Filter { get; } = new();
@@ -73,32 +87,76 @@ public sealed partial class HistoryViewModel : ObservableObject
     [ObservableProperty]
     private bool _isEmpty;
 
-    partial void OnKindIndexChanged(int value) => Load();
+    /// <summary>"Trang 2/50 · dòng 101–200"; rỗng khi chỉ 1 trang (ẩn thanh chuyển trang).</summary>
+    [ObservableProperty]
+    private string _pageText = string.Empty;
 
-    partial void OnSearchTextChanged(string value) => Load();
+    [ObservableProperty]
+    private bool _canPrevious;
 
+    [ObservableProperty]
+    private bool _canNext;
+
+    partial void OnKindIndexChanged(int value)
+    {
+        _page = 0;
+        Apply();
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        _page = 0;
+        Apply();
+    }
+
+    /// <summary>Đọc lại file lịch sử; giữ trang đang xem (vd quay lại sau khi Mở đơn).</summary>
     public void Load()
     {
-        Rows.Clear();
         try
         {
-            var entries = AppServices.History.Query(Filter.From, Filter.To);
-            var batches = entries.Where(e => e.Batch is not null).GroupBy(e => e.Batch!).ToDictionary(g => g.Key, g => g.Count());
-            var shown = entries.Where(Matches).ToList();
-            foreach (var entry in shown)
-            {
-                Rows.Add(new HistoryRow(entry, entry.Batch is { } b ? batches[b] : 1));
-            }
-            var keep = App.MainWindow?.MenuSettings.HistoryKeepDays ?? MenuSettings.DefaultHistoryKeepDays;
-            Summary = $"{VnFormat.Number(shown.Count)} lần thay đổi" + (keep > 0 ? $" · giữ {keep} ngày" : " · giữ hết");
-            IsEmpty = shown.Count == 0;
+            _all = AppServices.History.Query(Filter.From, Filter.To);
+            _batches = _all.Where(e => e.Batch is not null).GroupBy(e => e.Batch!).ToDictionary(g => g.Key, g => g.Count());
             Error = string.Empty;
         }
         catch (Exception ex)
         {
             AppLog.For("History").LogError(ex, "Đọc lịch sử chỉnh sửa lỗi");
             Error = "Không đọc được lịch sử chỉnh sửa: " + ex.Message;
+            _all = [];
+            _batches = [];
         }
+        Apply();
+    }
+
+    /// <summary>Lọc theo loại / ô tìm trên dữ liệu đã đọc rồi hiện trang hiện tại.</summary>
+    private void Apply()
+    {
+        _shown = _all.Where(Matches).ToList();
+        var keep = App.MainWindow?.MenuSettings.HistoryKeepDays ?? MenuSettings.DefaultHistoryKeepDays;
+        Summary = $"{VnFormat.Number(_shown.Count)} lần thay đổi" + (keep > 0 ? $" · giữ {keep} ngày" : " · giữ hết");
+        IsEmpty = _shown.Count == 0;
+        ShowPage();
+    }
+
+    private void ShowPage()
+    {
+        var paging = Paging.Of(_shown.Count, _page, PageSize);
+        _page = paging.Page;
+        Rows.Clear();
+        foreach (var entry in _shown.Skip(paging.Skip).Take(paging.Take))
+        {
+            Rows.Add(new HistoryRow(entry, entry.Batch is { } b ? _batches[b] : 1));
+        }
+        PageText = paging.Text;
+        CanPrevious = paging.HasPrevious;
+        CanNext = paging.HasNext;
+    }
+
+    /// <summary>Sang trang trước (-1) / sau (+1).</summary>
+    public void MovePage(int delta)
+    {
+        _page += delta;
+        ShowPage();
     }
 
     private bool Matches(HistoryEntry entry)

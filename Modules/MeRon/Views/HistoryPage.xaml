@@ -14,6 +14,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid ColumnSpacing="12">
@@ -55,7 +56,7 @@
         <TextBlock Grid.Row="3" Opacity="0.75" TextWrapping="Wrap"
                    Text="Mỗi lần thêm / sửa / huỷ / xoá / thanh toán / đổi ngày giao đơn trên máy tính, mới nhất trước. Khôi phục = đưa đơn về đúng như trước lần đó (đơn đã xoá được thêm lại). Thay đổi trên điện thoại không có ở đây. Khoảng ngày là ngày sửa, không phải ngày giao." />
 
-        <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
+        <ScrollViewer x:Name="RowsScroll" Grid.Row="4" VerticalScrollBarVisibility="Auto">
             <StackPanel Margin="0,0,12,24" MaxWidth="980" HorizontalAlignment="Left">
                 <TextBlock Text="Chưa có thay đổi nào trong khoảng ngày / bộ lọc này." Opacity="0.7" Margin="0,8,0,0"
                            Visibility="{x:Bind local:Ui.VisibleIf(ViewModel.IsEmpty), Mode=OneWay}" />
@@ -114,5 +115,26 @@
                 </ItemsRepeater>
             </StackPanel>
         </ScrollViewer>
+
+        <!-- Chuyển trang (100 dòng / trang); chỉ hiện khi nhiều hơn 1 trang -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" Spacing="10" Margin="0,0,0,12"
+                    Visibility="{x:Bind local:Ui.VisibleIfText(ViewModel.PageText), Mode=OneWay}">
+            <Button Click="PreviousPage_Click" IsEnabled="{x:Bind ViewModel.CanPrevious, Mode=OneWay}"
+                    AutomationProperties.Name="Trang trước" ToolTipService.ToolTip="Trang trước (mới hơn)">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE76B;" FontSize="{StaticResource FontSizeBody}" />
+                    <TextBlock Text="Trang trước" />
+                </StackPanel>
+            </Button>
+            <TextBlock Text="{x:Bind ViewModel.PageText, Mode=OneWay}" VerticalAlignment="Center" FontWeight="SemiBold"
+                       AutomationProperties.AutomationId="HistoryPageText" />
+            <Button Click="NextPage_Click" IsEnabled="{x:Bind ViewModel.CanNext, Mode=OneWay}"
+                    AutomationProperties.Name="Trang sau" ToolTipService.ToolTip="Trang sau (cũ hơn)">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="Trang sau" />
+                    <FontIcon Glyph="&#xE76C;" FontSize="{StaticResource FontSizeBody}" />
+                </StackPanel>
+            </Button>
+        </StackPanel>
     </Grid>
 </Page>
