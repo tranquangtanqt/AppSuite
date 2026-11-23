@@ -180,7 +180,7 @@ public class HelpContentTests
         Assert.SkipWhen(folder.Length == 0, "Không tìm thấy mã nguồn Views (chạy từ bản publish).");
         var pages = Directory.GetFiles(folder, "*Page.xaml").Select(Path.GetFileNameWithoutExtension).ToList();
 
-        Assert.Equal(7, pages.Count);
+        Assert.Equal(8, pages.Count);
         foreach (var page in pages)
         {
             Assert.Single(HelpContent.Sections, s => s.PageTag == page);

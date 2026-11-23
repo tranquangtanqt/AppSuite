@@ -232,6 +232,20 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   9. Sinh dữ liệu mẫu: bảng cha - con cùng lúc; ghi thẳng vào DB + Xoá dữ liệu mẫu vừa sinh
   10. Kết nối: nhập hồ sơ từ DBeaver / pgpass, nhóm hồ sơ theo dự án
 - [ ] Đợt 4: Oracle (tạo user / tablespace + quyền, impdp / expdp có REMAP_SCHEMA)
+- [x] **Nhật ký server - đợt 1** (người dùng 2026-11-23, đề xuất "PostgreSQL Log Explorer"; kiểm tra server Fujitsu Enterprise
+  Postgres 15.5 192.168.145.107:27500: log_statement = all, logfile-%a.log chỉ giữ 7 ngày, thư mục log trên máy server): trang mới
+  đọc log qua SQL, chỉ đọc (pg_ls_logdir / pg_read_binary_file, cần superuser hoặc pg_monitor + pg_read_server_files); cấu hình log
+  bằng lời (ghi gì, giữ bao lâu, prefix thiếu gì, đủ quyền không); chọn file + đọc 2 / 10 / 50 MB cuối / cả file; tách theo
+  log_line_prefix của server thành bảng giờ / loại (SELECT / INSERT / UPDATE / DELETE / DDL / SQL khác / Lỗi / Kết nối / Server) /
+  user · DB / máy · ứng dụng / ms / SQL (ghép câu nhiều dòng, duration, DETAIL tham số, STATEMENT của lỗi); lọc chữ / user / DB /
+  máy-ứng dụng / loại, ẩn câu của DbTools; chi tiết dòng; xuất CSV (CsvEditor) / TXT; che mật khẩu. Cập nhật F1, README. Unit test
+  175/175 (PostgreSQL 17 thật + đọc log server Fujitsu thật); GUI Sandbox 17/17 (2026-11-23)
+- [ ] Nhật ký server - đợt 2: theo dõi realtime (đọc tiếp từ offset mỗi ~2 giây, Tạm dừng), cảnh báo dung lượng log, đổi cấu hình
+  log (ALTER SYSTEM + pg_reload_conf, hồ sơ Production gõ lại tên DB) - chờ người dùng chốt có cho sửa cấu hình không; đọc file
+  csvlog / jsonlog
+- [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV)
+- [ ] Nhật ký server cho Oracle (khi làm Đợt 4): giữ LogEntry / LogFilter / bảng / xuất, viết phần đọc riêng - Unified Audit
+  (UNIFIED_AUDIT_TRAIL, cần audit policy + AUDIT_VIEWER), alert log (V$DIAG_ALERT_EXT), V$SQL; không dùng ASH / AWR (Diagnostics Pack)
 
 ## FileTools (module mới — xử lý file text/CSV/log lớn, `Modules/FileTools/PLAN.md`)
 

@@ -20,6 +20,19 @@ public static class Shell
         }
     }
 
+    /// <summary>Mở file kết quả: CSV bằng CsvEditor nếu nó nằm cùng bộ deploy (..\CsvEditor\CsvEditor.exe, như FileTools),
+    /// còn lại bằng ứng dụng mặc định của Windows.</summary>
+    public static void OpenData(string path)
+    {
+        var csvEditor = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "CsvEditor", "CsvEditor.exe"));
+        if (path.EndsWith(".csv", StringComparison.OrdinalIgnoreCase) && File.Exists(csvEditor))
+        {
+            Process.Start(new ProcessStartInfo(csvEditor, $"\"{path}\"") { UseShellExecute = false });
+            return;
+        }
+        Open(path);
+    }
+
     /// <summary>Mở thư mục chứa và chọn sẵn file.</summary>
     public static void Reveal(string path)
     {

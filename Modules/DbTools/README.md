@@ -19,6 +19,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Thông tin DB** | Tra cứu cấu trúc (thay DBeaver, chỉ đọc): tổng quan, bảng (cột, index, ràng buộc, trigger, DDL), view / hàm / trigger / sequence / extension + định nghĩa |
 | **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
+| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
 | **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu), Thử kết nối; ô **Quan trọng (Production)** (xem mục Hồ sơ Production) |
 
@@ -161,6 +162,38 @@ chính DbTools đánh dấu, không ngắt. Ngắt phiên đã chọn (ListView 
 
 Npgsql chạy ở chế độ raw (`Npgsql.EnableSqlRewriting = false`, đặt trong `App()`): DbTools tự tách câu nên gửi nguyên
 văn từng câu, biết chính xác câu nào lỗi.
+
+## Nhật ký server (2026-11-23, đợt 1)
+
+Chỉ đọc, không đổi cấu hình server; không cần quyền vào máy server (thư mục log thường nằm trên máy server, vd Fujitsu
+Enterprise Postgres `C:/Users/admin/AppData/Local/Fujitsu/.../log`).
+- **Đọc** (`Services\PgServerLog`, qua database bảo trì): `pg_settings` (các tên ở `LogConfig.Names`) + quyền (superuser,
+  `pg_monitor`, `pg_read_server_files`); `pg_ls_logdir()` (file, dung lượng, giờ sửa, file đang ghi = `pg_current_logfile()`);
+  `pg_read_binary_file(log_directory/tên, offset, độ dài)` đọc N MB cuối (2 / 10 / 50 MB / cả file) rồi giải mã UTF-8 ở máy này
+  (file có byte lạ vẫn đọc được).
+- **Tách dòng** (`Core\ServerLog.cs`, có unit test): `LogLinePrefix` biến `log_line_prefix` của server thành regex (%t %m %p %l
+  %u %d %r %h %a %e %c %x %Q..., canh lề %-10u, phần sau %q là tuỳ chọn) + `LEVEL:  thông báo` (cần `lc_messages` tiếng Anh /
+  C). `ServerLogParser.Parse`: dòng bắt đầu bằng Tab = nối tiếp (câu nhiều dòng); DETAIL / HINT / CONTEXT / STATEMENT / QUERY
+  cùng pid gắn vào mục trước; `duration: N ms` (log_duration) gắn vào câu gần nhất cùng pid; `statement:` / `execute <tên>:` /
+  `duration: N ms  statement:` → câu SQL; đọc giữa file bỏ dòng đầu + dòng nối tiếp mồ côi; dòng không khớp vẫn giữ, đếm
+  `UnknownLines`. `KindOf`: từ khoá đầu (bỏ chú thích / ngoặc) → SELECT / INSERT / UPDATE (cả MERGE) / DELETE (cả TRUNCATE) / DDL
+  (CREATE / ALTER / DROP / COMMENT / GRANT / REVOKE) / SQL khác; WITH theo INSERT / UPDATE / DELETE bên trong. ERROR / FATAL /
+  PANIC / WARNING = Lỗi; `connection ...` / `disconnection:` = Kết nối; còn lại Server. Mật khẩu `PASSWORD '...'` luôn che
+  (`MaskPasswords`, cả dòng gốc).
+- **Lọc** (`LogFilter`): loại, chữ trong SQL / thông báo / chi tiết, user, database, máy hoặc ứng dụng (chứa, không phân biệt
+  hoa thường); mặc định ẩn câu của chính DbTools (`application_name` = `AppSuite DbTools`, `ServerLogParser.OwnApp`) và loại
+  Kết nối / Server.
+- **Cấu hình bằng lời** (`LogConfig.Describe`): logging_collector, log_statement + log_min_duration_statement, log_line_prefix thiếu
+  gì, giữ bao lâu (`log_truncate_on_rotation` + tên file %a = 7 ngày, %d ~ 1 tháng, %H = 24 giờ, còn lại lớn dần - cảnh báo khi > 1
+  GB), lc_messages không phải tiếng Anh, csvlog / jsonlog (chưa đọc), thiếu quyền.
+- **Xuất** (`ServerLogExport`): các dòng đang hiện → `<thư mục dump>\NhatKyServer\<hồ sơ>_<file>_<lúc>.csv` (UTF-8 BOM, mở bằng
+  CsvEditor nếu có - `Shell.OpenData`) hoặc `.txt` (dòng log gốc).
+- Giao diện gọn cho cửa sổ ~600 px: nút Cấu hình log cạnh tiêu đề (flyout), nút Loại (flyout ô tích + Ẩn câu của DbTools), trạng
+  thái ở chân trang, ô chi tiết chỉ hiện khi chọn dòng.
+- Đợt 2 (chưa làm): theo dõi realtime (đọc tiếp từ offset), cảnh báo dung lượng, đổi cấu hình log (ALTER SYSTEM + reload, hồ sơ
+  Production gõ lại tên). Sau này Oracle: giữ `LogEntry` / `LogFilter` / bảng / xuất dùng chung, viết phần đọc riêng (Unified
+  Audit `UNIFIED_AUDIT_TRAIL`, alert log `V$DIAG_ALERT_EXT`, `V$SQL`; tránh ASH / AWR vì cần Diagnostics Pack) - lúc đó mới tách
+  lớp chung.
 
 ## Hồ sơ Production (2026-11-20)
 

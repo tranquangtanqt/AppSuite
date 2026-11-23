@@ -18,6 +18,11 @@
             <NavigationViewItem Content="Thông tin DB" Tag="DbInfoPage" Icon="Library" />
             <NavigationViewItem Content="Sinh dữ liệu mẫu" Tag="MockDataPage" Icon="Shuffle" />
             <NavigationViewItem Content="Phiên kết nối" Tag="SessionsPage" Icon="People" />
+            <NavigationViewItem Content="Nhật ký server" Tag="ServerLogPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE9F9;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItem Content="Lịch sử chạy" Tag="HistoryPage" Icon="Clock" />
             <NavigationViewItem Content="Kết nối" Tag="ConnectionsPage" Icon="World" />
         </NavigationView.MenuItems>

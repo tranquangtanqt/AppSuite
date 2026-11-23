@@ -56,6 +56,22 @@ internal static class Ui
         }
     }
 
+    public static Visibility VisibleIfText(string? value) => VisibleIf(!string.IsNullOrEmpty(value));
+
+    /// <summary>Màu chữ cột Loại ở Nhật ký server: lỗi đỏ, DDL / xoá cam, sửa / thêm xanh dương, còn lại xám.</summary>
+    public static Brush LogKindBrush(Core.LogKind kind) => kind switch
+    {
+        Core.LogKind.Error => Red,
+        Core.LogKind.Ddl or Core.LogKind.Delete => Orange,
+        Core.LogKind.Insert or Core.LogKind.Update => Blue,
+        Core.LogKind.Select => Green,
+        _ => Gray,
+    };
+
+    public static Brush WarnBrush(bool warning) => warning ? Orange : Gray;
+
+    public static string ConfigBullet(bool warning) => warning ? "⚠" : "•";
+
     public static bool And2(bool a, bool b) => a && b;
 
     public static bool And3(bool a, bool b, bool c) => a && b && c;
