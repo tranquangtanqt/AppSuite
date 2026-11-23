@@ -78,8 +78,9 @@ public sealed class SqlScriptFile
         _ => "Khác",
     };
 
-    /// <summary>Đọc file. Encoding: có BOM → theo BOM; đọc được UTF-8 → UTF-8; còn lại theo \encoding (SJIS...) hoặc
-    /// Shift-JIS (kèm cảnh báo, vì PostgreSQL nhận theo client_encoding UTF-8).</summary>
+    /// <summary>Đọc file. Encoding: có BOM → theo BOM; đọc được UTF-8 → UTF-8; gần như toàn UTF-8 chỉ vài byte hỏng → UTF-8
+    /// kèm cảnh báo; còn lại Shift-JIS (cảnh báo chỉ khi có byte không hợp lệ theo Shift-JIS). Chữ đã giải mã gửi lên server
+    /// bằng UTF-8 (Npgsql) - file Shift-JIS chạy được không cần chuyển.</summary>
     public static SqlScriptFile Load(string fullPath, string rootFolder)
     {
         var bytes = File.ReadAllBytes(fullPath);
@@ -161,13 +162,33 @@ public sealed class SqlScriptFile
         {
             // Không phải UTF-8.
         }
+        // Gần như toàn UTF-8 hợp lệ, chỉ vài byte hỏng: đọc theo UTF-8 (đọc Shift-JIS thì chữ Nhật UTF-8 thành ký tự rác).
+        var lenient = Encoding.UTF8.GetString(bytes);
+        var bad = lenient.Count(c => c == '�');
+        var good = lenient.Count(c => c > 0x7F && c != '�');
+        if (good >= bad * 4)
+        {
+            return (lenient, "UTF-8 (có byte lỗi)",
+                $"File UTF-8 nhưng có {bad} chỗ byte không hợp lệ (hiện thành �) - mở file kiểm tra, sửa rồi lưu lại bằng UTF-8.");
+        }
+
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-        var sjis = Encoding.GetEncoding(932);
-        var text = sjis.GetString(bytes);
+        string text;
+        var clean = true;
+        try
+        {
+            text = Encoding.GetEncoding(932, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback).GetString(bytes);
+        }
+        catch (DecoderFallbackException)
+        {
+            clean = false;
+            text = Encoding.GetEncoding(932).GetString(bytes);
+        }
         var declared = SqlSplitter.Split(text).MetaCommands.FirstOrDefault(m => m.Name == "encoding")?.Argument.ToUpperInvariant();
         var isSjis = declared is "SJIS" or "SHIFT_JIS" or "SHIFT-JIS" or "SJIS-WIN" or "WIN932" or "CP932";
-        return (text, "Shift-JIS", isSjis
+        // Shift-JIS đọc sạch (mọi byte hợp lệ): không cảnh báo - DbTools tự chuyển sang UTF-8 khi gửi lên server.
+        return (text, "Shift-JIS", isSjis || clean
             ? null
-            : "File không phải UTF-8 - đọc theo Shift-JIS. Mở file kiểm tra chữ Nhật / Việt (nên lưu lại bằng UTF-8).");
+            : "File không phải UTF-8, đọc theo Shift-JIS nhưng có byte không hợp lệ - có thể là mã khác (EUC-JP, mã tiếng Việt cũ...). Mở file kiểm tra chữ Nhật / Việt (nên lưu lại bằng UTF-8).");
     }
 }

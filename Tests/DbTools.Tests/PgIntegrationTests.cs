@@ -108,6 +108,27 @@ public sealed class PgIntegrationTests : IAsyncLifetime
         Assert.Equal(0L, await ScalarAsync("SELECT count(*) FROM app_history_table"));
     }
 
+    /// <summary>File Shift-JIS (không khai \encoding, không cảnh báo nữa) chạy thẳng: chữ Nhật vào DB đúng như file.</summary>
+    [Fact]
+    public async Task Shift_jis_file_runs_and_japanese_text_arrives_intact()
+    {
+        Assert.SkipWhen(string.IsNullOrEmpty(Server), "Chưa đặt DBTOOLS_TEST_PG.");
+        using var folder = new TempFolder();
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+        var path = folder.Write("TABLE_受入明細.sql",
+            "CREATE TABLE 受入明細 (コード text, 名前 text);\nCOMMENT ON TABLE 受入明細 IS '受入明細 木型マスタ ｶﾅ';\nINSERT INTO 受入明細 VALUES ('A01', '受注');\n",
+            System.Text.Encoding.GetEncoding(932));
+        var file = SqlScriptFile.Load(path, folder.Path);
+        Assert.Equal("Shift-JIS", file.EncodingName);
+        Assert.Empty(file.Issues);
+
+        var (outcome, _) = await RunAsync([file], dryRun: false);
+
+        Assert.True(outcome.Success, outcome.Error);
+        Assert.Equal("受注", await ScalarAsync("SELECT 名前 FROM 受入明細 WHERE コード = 'A01'"));
+        Assert.Equal("受入明細 木型マスタ ｶﾅ", await ScalarAsync("SELECT obj_description('受入明細'::regclass)"));
+    }
+
     [Fact]
     public async Task Alphabetical_order_fails_and_rolls_back()
     {

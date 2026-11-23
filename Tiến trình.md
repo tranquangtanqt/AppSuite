@@ -260,6 +260,12 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   sau; lọc giữ thứ tự; Theo dõi khi mới trước thì dòng mới chèn lên đầu, tự giữ ở đầu; Xuất CSV theo thứ tự đang hiện, TXT theo
   thứ tự file. Phân trang: không làm (bảng ListView chỉ dựng dòng đang hiện; chia trang làm dòng mới khi Theo dõi rơi sang trang
   khác) - thử thật thấy chậm thì làm sau. Cập nhật F1, README. Unit test 182/182; GUI Sandbox 11/11 + Theo dõi chạy lại 16/16 (2026-11-23)
+- [x] Chạy thư mục SQL - **file Shift-JIS** (người dùng 2026-11-23: svn TABLE 5 file đều "⚠ 1 cảnh báo"): Shift-JIS đọc sạch thì
+  không cảnh báo (DbTools vốn tự chuyển sang UTF-8 khi gửi lên server - nay có test chạy thật lên PostgreSQL 17: chữ Nhật vào bảng /
+  COMMENT đúng), nhật ký 1 dòng tóm tắt; vẫn cảnh báo khi có byte không hợp lệ theo Shift-JIS, file gần như UTF-8 có byte hỏng thì
+  đọc UTF-8 + cảnh báo. Nút **Chuyển UTF-8**: bản UTF-8 không BOM (\encoding SJIS → UTF8) lưu thư mục tạm / <thư mục dump>\UTF8
+  (chép đủ bộ, giữ thư mục con) hoặc ghi đè file gốc (chỉ file không phải UTF-8, cảnh báo svn), nhớ lựa chọn, hộp kết quả có Mở thư
+  mục. Cập nhật F1, README. Unit test 186/186 (PostgreSQL 17 thật); GUI Sandbox 14/14 (2026-11-23)
 - [ ] Nhật ký server - đổi cấu hình log (ALTER SYSTEM + pg_reload_conf: log_statement, log_min_duration_statement,
   log_connections / disconnections; hỏi lại, hồ sơ Production gõ lại tên DB; Về mặc định = RESET) - chờ người dùng cho phép
   (thao tác ghi lên server); đọc file csvlog / jsonlog (để sau)

@@ -43,8 +43,15 @@ F1 / nút ? / mục Hướng dẫn: cửa sổ hướng dẫn dùng chung `Share
      (`Data\Config\settings.json`); Sắp lại tự động = quên thứ tự đã nhớ.
 3. **Kiểm tra** (chỉ đọc catalog): CREATE không có OR REPLACE / IF NOT EXISTS mà đối tượng đã có → cảnh báo "sẽ lỗi";
    lệnh psql khác `\encoding`, BEGIN / COMMIT trong file, lệnh không chạy được trong transaction (CREATE DATABASE, VACUUM,
-   CREATE INDEX CONCURRENTLY...) → lỗi; DELETE / UPDATE / TRUNCATE / DROP → cảnh báo; file không phải UTF-8 → đọc theo
-   Shift-JIS + cảnh báo.
+   CREATE INDEX CONCURRENTLY...) → lỗi; DELETE / UPDATE / TRUNCATE / DROP → cảnh báo. Encoding (`SqlScriptFile.Decode`,
+   2026-11-23): file không phải UTF-8 đọc theo Shift-JIS, cảnh báo chỉ khi có byte không hợp lệ theo Shift-JIS (giải mã
+   `DecoderFallback.ExceptionFallback`); gần như toàn UTF-8 (ký tự UTF-8 hợp lệ ≥ 4 × byte hỏng) → đọc UTF-8 + cảnh báo (đọc
+   Shift-JIS thì chữ UTF-8 thành rác). Chữ đã giải mã gửi lên bằng UTF-8 (Npgsql) - test chạy file Shift-JIS lên PostgreSQL thật:
+   chữ Nhật vào bảng / COMMENT đúng. Nhật ký ghi 1 dòng "N file không phải UTF-8".
+   **Chuyển UTF-8** (`Core\Utf8Convert`): bản UTF-8 không BOM (psql coi BOM là ký tự lạ) của file không phải UTF-8, `\encoding
+   SJIS` → `\encoding UTF8`; đích: `%TEMP%\AppSuite\DbTools\UTF8\<thư mục>_<giờ>` / `<thư mục dump>\UTF8\<thư mục>_<giờ>` (chép
+   kèm file UTF-8, giữ thư mục con) hoặc ghi đè file gốc (chỉ file không phải UTF-8, ghi file `.utf8tmp` rồi thay; xong đọc lại
+   danh sách giữ thứ tự). Lựa chọn nhớ ở `AppSettings.Utf8Target`; hộp kết quả có nút Mở thư mục.
    **Cảnh báo phụ thuộc** (2026-11-20, cả lúc Chạy thử / Chạy): `Core\TableChanges.Find` nhận DROP TABLE (nhiều bảng,
    CASCADE), ALTER TABLE ... DROP COLUMN / ALTER COLUMN TYPE / SET DATA TYPE / RENAME COLUMN / RENAME TO / SET SCHEMA (tách
    các thao tác theo dấu phẩy ngoài ngoặc) + bảng của "Xoá đối tượng cũ rồi tạo lại"; bảng đang có (`PgInfo.FindTableAsync`,

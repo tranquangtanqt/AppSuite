@@ -152,6 +152,9 @@ public sealed class AppSettings
     /// <summary>Nhật ký server: bảng xếp mới nhất trước (bấm tiêu đề cột Giờ để đổi, nhớ cho lần sau). Mặc định cũ trước (thứ tự file).</summary>
     public bool LogNewestFirst { get; set; }
 
+    /// <summary>Trang Chạy → Chuyển UTF-8: chỗ ghi lần trước (Temp / DumpFolder / Overwrite - tên của DbTools.Core.Utf8Target).</summary>
+    public string Utf8Target { get; set; } = "Temp";
+
     public const int DefaultConnectTimeout = 15;
     public const int MinConnectTimeout = 5;
     public const int MaxConnectTimeout = 120;

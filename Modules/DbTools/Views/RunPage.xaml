@@ -99,6 +99,8 @@
                 <Button Content="Bỏ khỏi danh sách" Command="{x:Bind ViewModel.RemoveCommand}"
                         ToolTipService.ToolTip="Không chạy file này. Đọc lại thư mục vẫn bỏ qua tới khi Sắp lại tự động." />
                 <Button Content="Mở file" Command="{x:Bind ViewModel.OpenFileCommand}" ToolTipService.ToolTip="Mở file đang chọn bằng ứng dụng mặc định" />
+                <Button Content="Chuyển UTF-8" Command="{x:Bind ViewModel.ConvertUtf8Command}" AutomationProperties.AutomationId="ConvertUtf8"
+                        ToolTipService.ToolTip="Tạo bản UTF-8 của các file Shift-JIS (lưu thư mục tạm / thư mục dump, hoặc ghi đè file gốc) để mở / chạy bằng psql, DBeaver. DbTools tự chạy file Shift-JIS được, không cần bước này." />
                 <Button Content="Sắp lại tự động" Command="{x:Bind ViewModel.AutoSortCommand}"
                         ToolTipService.ToolTip="Bỏ thứ tự chỉnh tay và các file đã bỏ, đọc lại thư mục rồi tự sắp" />
             </StackPanel>

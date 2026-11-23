@@ -99,7 +99,7 @@ public sealed partial class RunViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsIdle))]
     [NotifyCanExecuteChangedFor(nameof(LoadFolderCommand), nameof(BrowseFolderCommand), nameof(AutoSortCommand), nameof(CheckCommand),
         nameof(DryRunCommand), nameof(RunCommand), nameof(CancelCommand), nameof(MoveUpCommand), nameof(MoveDownCommand),
-        nameof(RemoveCommand), nameof(SaveDropScriptCommand))]
+        nameof(RemoveCommand), nameof(SaveDropScriptCommand), nameof(ConvertUtf8Command))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -119,6 +119,12 @@ public sealed partial class RunViewModel : ObservableObject
 
     /// <summary>Trang gắn vào: hộp thoại hỏi lại trước khi Chạy thật.</summary>
     public Func<RunConfirmation, Task<bool>>? Confirm { get; set; }
+
+    /// <summary>Trang gắn vào: chọn chỗ ghi bản UTF-8 (số file cần chuyển, tổng số file, lựa chọn lần trước); null = huỷ.</summary>
+    public Func<int, int, Utf8Target, Task<Utf8Target?>>? ChooseUtf8Target { get; set; }
+
+    /// <summary>Trang gắn vào: báo kết quả Chuyển UTF-8 (tiêu đề, nội dung, thư mục cho nút Mở thư mục).</summary>
+    public Func<string, string, string, Task>? ShowUtf8Result { get; set; }
 
     public bool IsIdle => !IsBusy;
 
@@ -309,6 +315,12 @@ public sealed partial class RunViewModel : ObservableObject
             {
                 AppendLog(note);
             }
+            var sjis = files.Count(f => Utf8Convert.NeedsConversion(f.EncodingName));
+            if (sjis > 0)
+            {
+                AppendLog($"{sjis} file không phải UTF-8 (đọc theo {string.Join(" / ", files.Where(f => Utf8Convert.NeedsConversion(f.EncodingName)).Select(f => f.EncodingName).Distinct())}): "
+                    + "DbTools tự chuyển sang UTF-8 khi chạy. Cần bản UTF-8 để mở / chạy bằng psql, DBeaver: nút Chuyển UTF-8.");
+            }
             LogStaticIssues();
             Status = files.Count == 0 ? "Thư mục không có file .sql." : "Kiểm tra thứ tự rồi bấm Kiểm tra / Chạy thử.";
         }
@@ -426,6 +438,82 @@ public sealed partial class RunViewModel : ObservableObject
         var statements = Files.Sum(f => f.StatementCount);
         var danger = Files.Count(f => f.HasDanger);
         Summary = $"{Files.Count} file · {statements} câu" + (danger > 0 ? $" · {danger} file xoá / sửa dữ liệu" : string.Empty);
+    }
+
+    /// <summary>
+    /// Chuyển UTF-8: bản UTF-8 của các file không phải UTF-8 trong danh sách (Shift-JIS...) để mở / chạy bằng psql, DBeaver -
+    /// DbTools tự chạy được không cần. Lưu vào %TEMP%\AppSuite\DbTools\UTF8 hoặc &lt;thư mục dump&gt;\UTF8 (thư mục mới
+    /// &lt;tên thư mục&gt;_&lt;giờ&gt;, chép kèm file đã là UTF-8 cho đủ bộ), hoặc ghi đè file gốc (đọc lại danh sách, giữ thứ tự).
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(IsIdle))]
+    private async Task ConvertUtf8Async()
+    {
+        var folder = Folder.Trim();
+        if (Files.Count == 0 || !Directory.Exists(folder))
+        {
+            Status = "Chưa có file - bấm Đọc thư mục trước.";
+            return;
+        }
+        var need = Files.Count(f => Utf8Convert.NeedsConversion(f.File.EncodingName));
+        if (need == 0)
+        {
+            Status = "Mọi file trong danh sách đã là UTF-8 - không cần chuyển.";
+            return;
+        }
+        var saved = Enum.TryParse<Utf8Target>(AppState.Settings.Utf8Target, out var t) ? t : Utf8Target.Temp;
+        if (ChooseUtf8Target is null || await ChooseUtf8Target(need, Files.Count, saved) is not { } choice)
+        {
+            return;
+        }
+        AppState.Settings.Utf8Target = choice.ToString();
+        AppState.SaveSettings();
+        var target = choice switch
+        {
+            Utf8Target.Temp => Utf8Convert.TargetFolder(Path.Combine(Path.GetTempPath(), "AppSuite", "DbTools", "UTF8"), folder, DateTime.Now),
+            Utf8Target.DumpFolder => Utf8Convert.TargetFolder(Path.Combine(AppState.Settings.DumpFolder, "UTF8"), folder, DateTime.Now),
+            _ => null,
+        };
+        IsBusy = true;
+        List<Utf8Result> results;
+        try
+        {
+            var list = Files.Select(f => (f.FullPath, f.RelativePath)).ToList();
+            results = await Task.Run(() => Utf8Convert.Run(list, target));
+            var converted = results.Count(r => r.Converted);
+            var errors = results.Where(r => r.Error is not null).ToList();
+            AppendLog(target is null
+                ? $"Chuyển UTF-8 (ghi đè file gốc): {converted} file."
+                : $"Chuyển UTF-8 → {target}: {converted} file chuyển, {results.Count(r => !r.Converted && r.Error is null)} file đã là UTF-8 chép nguyên.");
+            foreach (var r in results.Where(r => r.Converted))
+            {
+                AppendLog($"  {r.RelativePath}: {r.From} → UTF-8");
+            }
+            foreach (var r in errors)
+            {
+                AppendLog($"  [Lỗi] {r.RelativePath}: {r.Error}");
+            }
+            _log.LogInformation("Chuyển UTF-8 {Folder} → {Target}: {Count} file, {Errors} lỗi", folder, target ?? "(ghi đè)", converted, errors.Count);
+            if (target is null)
+            {
+                await ReloadFilesAsync(); // file gốc đã đổi: đọc lại, giữ thứ tự
+            }
+            Status = errors.Count > 0
+                ? $"Chuyển UTF-8: {converted} file, {errors.Count} lỗi - xem nhật ký."
+                : $"Đã chuyển {converted} file sang UTF-8" + (target is null ? " (ghi đè file gốc)." : $" → {target}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+        if (ShowUtf8Result is not null)
+        {
+            var errorLines = results.Where(r => r.Error is not null).Select(r => $"• Lỗi {r.RelativePath}: {r.Error}").ToList();
+            var message = (target is null
+                    ? $"Đã ghi đè {results.Count(r => r.Converted)} file trong {folder} bằng UTF-8 (không BOM). Nếu thư mục nằm trong svn: svn sẽ thấy các file này đã sửa - xem lại rồi commit (hoặc svn revert nếu không muốn)."
+                    : $"Đã tạo bản UTF-8 (không BOM) trong:\n{target}\n\n{results.Count(r => r.Converted)} file chuyển từ Shift-JIS, {results.Count(r => !r.Converted && r.Error is null)} file đã là UTF-8 chép nguyên (giữ thư mục con). File gốc không đổi. Dòng \\encoding SJIS (nếu có) đã đổi thành \\encoding UTF8.")
+                + (errorLines.Count > 0 ? "\n\n" + string.Join("\n", errorLines) : string.Empty);
+            await ShowUtf8Result(errorLines.Count > 0 ? "Chuyển UTF-8 - có lỗi" : "Đã chuyển sang UTF-8", message, target ?? folder);
+        }
     }
 
     private void LogStaticIssues()

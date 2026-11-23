@@ -197,18 +197,31 @@ public class SqlScriptFileTests
     }
 
     [Fact]
-    public void Shift_jis_file_is_read_with_a_warning_unless_declared()
+    public void Clean_shift_jis_is_read_without_warning_only_broken_bytes_warn()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var sjis = Encoding.GetEncoding(932);
 
-        var plain = SqlScriptFile.Parse(sjis.GetBytes("COMMENT ON TABLE t IS '受注';"), "a.sql", "a.sql");
+        // Shift-JIS sạch (2026-11-23: không cảnh báo nữa - DbTools tự chuyển khi chạy).
+        var plain = SqlScriptFile.Parse(sjis.GetBytes("COMMENT ON TABLE t IS '受注明細 ｶﾅ 木型マスタ';"), "a.sql", "a.sql");
         var declared = SqlScriptFile.Parse(sjis.GetBytes("\\encoding SJIS\nCOMMENT ON TABLE t IS '受注';"), "b.sql", "b.sql");
-
         Assert.Equal("Shift-JIS", plain.EncodingName);
-        Assert.Contains("受注", plain.Statements[0].Statement.Text);
-        Assert.Equal(IssueLevel.Warning, Assert.Single(plain.Issues).Level);
+        Assert.Contains("受注明細 ｶﾅ 木型マスタ", plain.Statements[0].Statement.Text);
+        Assert.Empty(plain.Issues);
         Assert.Empty(declared.Issues);
+
+        // Byte không hợp lệ theo Shift-JIS (0x81 0x20: lead byte thiếu trail) → vẫn cảnh báo.
+        var broken = sjis.GetBytes("COMMENT ON TABLE t IS '受注").Concat(new byte[] { 0x81, 0x20 }).Concat(sjis.GetBytes("';")).ToArray();
+        var b = SqlScriptFile.Parse(broken, "c.sql", "c.sql");
+        Assert.Equal("Shift-JIS", b.EncodingName);
+        Assert.Contains("byte không hợp lệ", Assert.Single(b.Issues).Message);
+
+        // Gần như toàn UTF-8, chỉ 1 byte hỏng → đọc UTF-8 (chữ Nhật không thành ký tự rác) + cảnh báo.
+        var utf8 = Encoding.UTF8.GetBytes("COMMENT ON TABLE t IS '受注明細 木型マスタ';").Concat(new byte[] { 0xFF }).ToArray();
+        var u = SqlScriptFile.Parse(utf8, "d.sql", "d.sql");
+        Assert.Equal("UTF-8 (có byte lỗi)", u.EncodingName);
+        Assert.Contains("受注明細 木型マスタ", u.Statements[0].Statement.Text);
+        Assert.Contains("1 chỗ byte không hợp lệ", Assert.Single(u.Issues).Message);
     }
 
     [Fact]

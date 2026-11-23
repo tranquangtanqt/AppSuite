@@ -19,6 +19,8 @@ public sealed partial class RunPage : Page
         InitializeComponent();
         ScrollFit.Attach(Scroller, Root, 560);
         ViewModel.Confirm = ConfirmAsync;
+        ViewModel.ChooseUtf8Target = ChooseUtf8TargetAsync;
+        ViewModel.ShowUtf8Result = ShowUtf8ResultAsync;
         Loaded += async (_, _) =>
         {
             // Mở app lại: tự đọc thư mục lần trước (chỉ đọc file, không đụng DB).
@@ -37,6 +39,72 @@ public sealed partial class RunPage : Page
 
     // Hộp hỏi lại dùng chung với Sao lưu / Phiên kết nối (có khung Production gõ lại tên DB).
     private Task<bool> ConfirmAsync(RunConfirmation confirmation) => Dialogs.ConfirmAsync(XamlRoot, confirmation);
+
+    /// <summary>Hộp chọn chỗ ghi bản UTF-8: thư mục tạm / thư mục dump / ghi đè file gốc (cảnh báo svn).</summary>
+    private async Task<Core.Utf8Target?> ChooseUtf8TargetAsync(int need, int total, Core.Utf8Target current)
+    {
+        var dump = Path.Combine(AppState.Settings.DumpFolder, "UTF8");
+        var options = new RadioButtons();
+        string[] labels =
+        [
+            $"Lưu bản UTF-8 vào thư mục tạm: {Path.Combine(Path.GetTempPath(), "AppSuite", "DbTools", "UTF8")}\\<thư mục>_<giờ>",
+            $"Lưu bản UTF-8 vào thư mục dump: {dump}\\<thư mục>_<giờ>",
+            "Ghi đè file gốc (chỉ các file không phải UTF-8)",
+        ];
+        foreach (var label in labels)
+        {
+            options.Items.Add(new RadioButton { Content = new TextBlock { Text = label, TextWrapping = TextWrapping.Wrap } });
+        }
+        options.SelectedIndex = (int)current;
+        var overwriteNote = new TextBlock
+        {
+            Text = "⚠ Ghi đè: file trong svn sẽ thành \"đã sửa\" (svn diff thấy cả file đổi). Không hoàn tác trong app được - muốn lấy lại bản cũ thì svn revert.",
+            TextWrapping = TextWrapping.Wrap,
+            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.ColorHelper.FromArgb(0xFF, 0xD9, 0x77, 0x06)),
+            Visibility = current == Core.Utf8Target.Overwrite ? Visibility.Visible : Visibility.Collapsed,
+        };
+        options.SelectionChanged += (_, _) => overwriteNote.Visibility = options.SelectedIndex == 2 ? Visibility.Visible : Visibility.Collapsed;
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetAutomationId(options, "Utf8TargetOptions");
+        var panel = new StackPanel { Spacing = 10, MaxWidth = 560 };
+        panel.Children.Add(new TextBlock
+        {
+            Text = $"{need} / {total} file trong danh sách không phải UTF-8 (Shift-JIS...). Tạo bản UTF-8 (không BOM) để mở / chạy bằng psql, DBeaver... "
+                   + "DbTools tự chạy các file này được, không cần bước này. Dòng \\encoding SJIS (nếu có) đổi thành \\encoding UTF8.",
+            TextWrapping = TextWrapping.Wrap,
+        });
+        panel.Children.Add(options);
+        panel.Children.Add(overwriteNote);
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = "Chuyển sang UTF-8",
+            Content = SharedUI.Helpers.DialogContent.Scrollable(panel),
+            PrimaryButtonText = "Chuyển",
+            CloseButtonText = "Huỷ",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        return await dialog.ShowAsync() == ContentDialogResult.Primary && options.SelectedIndex >= 0
+            ? (Core.Utf8Target)options.SelectedIndex
+            : null;
+    }
+
+    /// <summary>Kết quả Chuyển UTF-8, nút Mở thư mục (thư mục bản UTF-8, hoặc thư mục script khi ghi đè).</summary>
+    private async Task ShowUtf8ResultAsync(string title, string message, string folder)
+    {
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = title,
+            Content = SharedUI.Helpers.DialogContent.Scrollable(message),
+            PrimaryButtonText = "Mở thư mục",
+            CloseButtonText = "Đóng",
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            Services.Shell.Open(folder);
+        }
+    }
 
     private void ManageConnections_Click(object sender, RoutedEventArgs e) => App.MainWindow?.ShowPage("ConnectionsPage");
 
