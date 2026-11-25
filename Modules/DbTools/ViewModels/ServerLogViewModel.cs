@@ -211,7 +211,7 @@ public sealed partial class ServerLogViewModel : ObservableObject
 
     public ServerLogViewModel()
     {
-        Profile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+        Profile = AppState.LastProfile;
         Rows.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
         foreach (var k in Kinds)
         {
@@ -230,7 +230,7 @@ public sealed partial class ServerLogViewModel : ObservableObject
     {
         if (Profile is null || !Profiles.Contains(Profile))
         {
-            Profile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+            Profile = AppState.LastProfile;
         }
     }
 

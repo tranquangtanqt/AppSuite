@@ -191,7 +191,7 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   thật, có sinh 2000 dòng rồi INSERT vào DB không lỗi khoá); GUI Sandbox 15/15 (file INSERT chạy bằng psql đủ 1500 dòng)
 - [ ] Thông tin DB đợt sau: Xuất CSV danh sách bảng / cột (mở bằng CsvEditor), So sánh 2 DB (bảng / cột / hàm thiếu, khác)
 - [x] Publish DbTools (người dùng tự publish 2026-11-19 15:29, có đủ Sao lưu / Thông tin DB / Sinh dữ liệu mẫu)
-- [ ] Publish MainLauncher (mô tả DbTools mới trong modules.json) - làm cùng lần publish MeRon
+- [x] Publish MainLauncher (mô tả DbTools mới trong modules.json) - đã publish 2026-11-20
 - [ ] Người dùng thử tay trên DB dev: Dump / Restore / Copy (thư mục D:\DMP, client PostgreSQL 12 / 17), Xem lệnh, Thông tin DB
   (chi tiết bảng, DDL), Sinh dữ liệu mẫu
 - [x] **Hồ sơ Production** (người dùng 2026-11-20 chọn mục 1): ô tích Quan trọng (Production) ở trang Kết nối; danh sách hồ sơ vạch
@@ -230,7 +230,7 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   7. Chạy cùng lô lên nhiều DB / schema; chế độ dòng lệnh `DbTools.exe run --folder … --profile … --dry-run`
   8. Phiên kết nối: hiện khoá (ai chặn ai), Huỷ câu đang chạy (`pg_cancel_backend`), tự làm mới
   9. Sinh dữ liệu mẫu: bảng cha - con cùng lúc; ghi thẳng vào DB + Xoá dữ liệu mẫu vừa sinh
-  10. Kết nối: nhập hồ sơ từ DBeaver / pgpass, nhóm hồ sơ theo dự án
+  10. Kết nối: nhập hồ sơ từ DBeaver / pgpass, ~~nhóm hồ sơ theo dự án~~ (xong 2026-11-25, Cây hồ sơ)
 - [ ] Đợt 4: Oracle (tạo user / tablespace + quyền, impdp / expdp có REMAP_SCHEMA)
 - [x] **Nhật ký server - đợt 1** (người dùng 2026-11-23, đề xuất "PostgreSQL Log Explorer"; kiểm tra server Fujitsu Enterprise
   Postgres 15.5 192.168.145.107:27500: log_statement = all, logfile-%a.log chỉ giữ 7 ngày, thư mục log trên máy server): trang mới
@@ -266,6 +266,15 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   đọc UTF-8 + cảnh báo. Nút **Chuyển UTF-8**: bản UTF-8 không BOM (\encoding SJIS → UTF8) lưu thư mục tạm / <thư mục dump>\UTF8
   (chép đủ bộ, giữ thư mục con) hoặc ghi đè file gốc (chỉ file không phải UTF-8, cảnh báo svn), nhớ lựa chọn, hộp kết quả có Mở thư
   mục. Cập nhật F1, README. Unit test 186/186 (PostgreSQL 17 thật); GUI Sandbox 14/14 (2026-11-23)
+- [x] Kết nối - **cây hồ sơ theo thư mục + ô tìm** (người dùng 2026-11-25: nhiều kết nối thì danh sách dài, khó tìm): thư mục lồng
+  nhiều cấp (ô Thư mục có gợi ý, kéo-thả hồ sơ / thư mục, chuột phải Thêm vào đây / Đổi tên), tự có / tự mất theo hồ sơ, nhớ mở /
+  thu gọn; lọc theo tên / host / database / user / thư mục; cây và ô sửa cuộn riêng. Ô chọn server ở 6 trang xếp theo cây, ghi
+  `tên ‹thư mục› (host...)` (tên trước vì ô hẹp cắt đuôi). Hồ sơ lần trước nhớ theo mã (không nhầm 2 hồ sơ cùng tên); file cũ tự
+  cấp mã, giữ mật khẩu. Cập nhật F1, README. Unit test 208/208 (PostgreSQL 17 thật); GUI Sandbox 45/45 (có chuột thật kéo-thả,
+  44 hồ sơ) (2026-11-25)
+- [ ] Người dùng thử tay cây hồ sơ trên hồ sơ thật (kéo-thả, ô Thư mục, tìm, mở lại app vẫn đúng hồ sơ)
+- [ ] Sao lưu / Khôi phục: đổi server ở ô Dump thì ô Database hiện trống dù giá trị đúng (dòng "Ghi ra" vẫn đúng tên DB) - lỗi có sẵn
+  ở bản trước, phát hiện 2026-11-25 khi test; chưa sửa
 - [ ] Nhật ký server - đổi cấu hình log (ALTER SYSTEM + pg_reload_conf: log_statement, log_min_duration_statement,
   log_connections / disconnections; hỏi lại, hồ sơ Production gõ lại tên DB; Về mặc định = RESET) - chờ người dùng cho phép
   (thao tác ghi lên server); đọc file csvlog / jsonlog (để sau)
@@ -633,7 +642,7 @@ Quyết định 2026-10-12: module AppSuite (không build Flutter cho Windows), 
   lượng từng món + danh sách giao theo toà / khu, chụp ảnh gửi Zalo); Nhập đơn hàng loạt nhiều ngày 1 lần dán; sao chép nhiều
   đơn sang ngày khác. Nhỏ: Hoàn tác "Đã thanh toán" 1 đơn; tự sao lưu khi qua ngày mới lúc app vẫn mở; Khách lâu không đặt
   "đã liên hệ"; áp giá mới cho đơn chưa thanh toán; doanh thu theo khu; so cùng kỳ năm trước
-- [ ] Publish MeRon vào `Application\` (bản đang dùng 2026-11-18, chưa có Giảm giá ở Nhập đơn hàng loạt) - các việc 11-16 → 11-19 đã commit
+- [x] (đã publish 2026-11-23) Publish MeRon vào `Application\` (bản đang dùng 2026-11-18, chưa có Giảm giá ở Nhập đơn hàng loạt) - các việc 11-16 → 11-19 đã commit
 - [x] **Chuông Thông báo** ở chân menu trái (người dùng 2026-11-16 chọn cách B; bỏ khung nhắc xuất ở Đặt hàng; có dòng sao lưu):
   số cam = việc đang chờ; khung liệt kê n đơn cần xác nhận (chưa rõ khách / chưa có giá / tự đánh dấu) → Xem các đơn (mở Đặt
   hàng, lọc Cần xác nhận bật sẵn); Chưa xuất sang điện thoại → Xuất lên Google Drive ngay trong khung; Sao lưu gần nhất (thành

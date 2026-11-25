@@ -77,8 +77,7 @@
                             <ColumnDefinition Width="*" MaxWidth="260" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ComboBox Header="Server (hồ sơ kết nối)" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
-                                  SelectedItem="{x:Bind ViewModel.DumpProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
+                        <ComboBox Header="Server (hồ sơ kết nối)" HorizontalAlignment="Stretch" views:ProfilePicker.Selected="{x:Bind ViewModel.DumpProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
                                   IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="(chưa có kết nối)" />
                         <ComboBox x:Name="DumpDbBox" Grid.Column="1" Header="Database" IsEditable="True" HorizontalAlignment="Stretch"
                                   ItemsSource="{x:Bind ViewModel.DumpDatabases}" Text="{x:Bind ViewModel.DumpDatabase, Mode=TwoWay}"
@@ -133,8 +132,7 @@
                             <ColumnDefinition Width="*" MaxWidth="260" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <ComboBox Header="Restore lên server" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
-                                  SelectedItem="{x:Bind ViewModel.RestoreProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
+                        <ComboBox Header="Restore lên server" HorizontalAlignment="Stretch" views:ProfilePicker.Selected="{x:Bind ViewModel.RestoreProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
                                   IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="(chưa có kết nối)" />
                         <ComboBox x:Name="RestoreDbBox" Grid.Column="1" Header="Database đích" IsEditable="True" HorizontalAlignment="Stretch"
                                   ItemsSource="{x:Bind ViewModel.RestoreDatabases}" Text="{x:Bind ViewModel.RestoreDatabase, Mode=TwoWay}"
@@ -183,15 +181,13 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <ComboBox Header="Nguồn: server" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
-                                  SelectedItem="{x:Bind ViewModel.CopySourceProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
+                        <ComboBox Header="Nguồn: server" HorizontalAlignment="Stretch" views:ProfilePicker.Selected="{x:Bind ViewModel.CopySourceProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
                                   IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="(chưa có kết nối)" />
                         <ComboBox x:Name="CopySourceDbBox" Grid.Column="1" Header="Database nguồn" IsEditable="True" HorizontalAlignment="Stretch"
                                   ItemsSource="{x:Bind ViewModel.CopySourceDatabases}" Text="{x:Bind ViewModel.CopySourceDatabase, Mode=TwoWay}"
                                   IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" DropDownOpened="CopySourceDbBox_DropDownOpened" Loaded="DbBox_Loaded"
                                   AutomationProperties.AutomationId="CopySourceDbBox" />
-                        <ComboBox Grid.Row="1" Header="Đích: server" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
-                                  SelectedItem="{x:Bind ViewModel.CopyTargetProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
+                        <ComboBox Grid.Row="1" Header="Đích: server" HorizontalAlignment="Stretch" views:ProfilePicker.Selected="{x:Bind ViewModel.CopyTargetProfile, Mode=TwoWay}" ItemTemplate="{StaticResource ProfileTemplate}"
                                   IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" PlaceholderText="(chưa có kết nối)" />
                         <TextBox x:Name="CopyTargetDbBox" Grid.Row="1" Grid.Column="1" Header="Tên database mới" Text="{x:Bind ViewModel.CopyTargetDatabase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                  IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" AutomationProperties.AutomationId="CopyTargetDbBox" />

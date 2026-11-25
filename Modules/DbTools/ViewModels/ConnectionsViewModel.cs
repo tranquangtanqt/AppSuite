@@ -1,12 +1,13 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DbTools.Core;
 using DbTools.Models;
 using DbTools.Services;
 
 namespace DbTools.ViewModels;
 
-/// <summary>Trang "Kết nối": danh sách hồ sơ + ô sửa hồ sơ đang chọn (sửa là tự lưu) + Thử kết nối.</summary>
+/// <summary>Trang "Kết nối": cây hồ sơ theo thư mục + ô sửa hồ sơ đang chọn (sửa là tự lưu) + Thử kết nối.</summary>
 public sealed partial class ConnectionsViewModel : ObservableObject
 {
     public ObservableCollection<ConnectionProfile> Profiles => AppState.Profiles;
@@ -43,13 +44,62 @@ public sealed partial class ConnectionsViewModel : ObservableObject
 
     public bool IsEmpty => Profiles.Count == 0;
 
+    /// <summary>Ô tìm: chỉ hiện hồ sơ khớp.</summary>
+    [ObservableProperty]
+    private string _filter = string.Empty;
+
+    /// <summary>Ô tìm có chữ nhưng không hồ sơ nào khớp.</summary>
+    public bool NoMatch => !IsEmpty && !Profiles.Any(p => ProfileTree.Matches(p, Filter));
+
+    /// <summary>Thư mục đang bấm chọn trong cây (khi không chọn hồ sơ nào) - Thêm vào đây.</summary>
+    public string SelectedFolder { get; private set; } = string.Empty;
+
+    /// <summary>Cây phải dựng lại (thêm / xoá / chuyển thư mục / đổi ô tìm). Trang gắn vào.</summary>
+    public event Action? TreeChanged;
+
+    partial void OnFilterChanged(string value) => RaiseTreeChanged();
+
+    public void RaiseTreeChanged()
+    {
+        OnPropertyChanged(nameof(NoMatch));
+        TreeChanged?.Invoke();
+    }
+
+    public void SelectFolder(string path)
+    {
+        Selected = null;
+        SelectedFolder = path;
+    }
+
+    /// <summary>Chuyển hồ sơ sang thư mục khác (kéo-thả, ô Thư mục).</summary>
+    public void MoveProfile(ConnectionProfile profile, string folder)
+    {
+        profile.Folder = ProfileTree.MatchExisting(Profiles.Where(p => p != profile), folder);
+        RaiseTreeChanged();
+    }
+
+    /// <summary>Đổi tên / chuyển chỗ thư mục (kéo-thả, menu Đổi tên thư mục).</summary>
+    public void MoveFolder(string oldPath, string newPath)
+    {
+        ProfileTree.MoveFolder(Profiles, oldPath, newPath);
+        if (Selected is null)
+        {
+            SelectedFolder = ProfileTree.Normalize(newPath);
+        }
+        RaiseTreeChanged();
+    }
+
     /// <summary>Trang gắn vào: hỏi lại trước khi xoá hồ sơ.</summary>
     public Func<string, Task<bool>>? ConfirmDelete { get; set; }
 
     public ConnectionsViewModel()
     {
-        Selected = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
-        Profiles.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsEmpty));
+        Selected = AppState.LastProfile;
+        Profiles.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(IsEmpty));
+            RaiseTreeChanged();
+        };
     }
 
     partial void OnSelectedChanged(ConnectionProfile? value)
@@ -62,7 +112,8 @@ public sealed partial class ConnectionsViewModel : ObservableObject
     [RelayCommand]
     private void Add()
     {
-        var profile = new ConnectionProfile { Name = UniqueName("Kết nối mới") };
+        Filter = string.Empty; // đang tìm thì hồ sơ mới không khớp, không thấy đâu
+        var profile = new ConnectionProfile { Name = UniqueName("Kết nối mới"), Folder = Selected?.Folder ?? SelectedFolder };
         Profiles.Add(profile);
         Selected = profile;
     }
@@ -70,6 +121,7 @@ public sealed partial class ConnectionsViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void Duplicate()
     {
+        Filter = string.Empty;
         var copy = Selected!.Clone(UniqueName(Selected.Name + " (bản sao)"));
         Profiles.Insert(Profiles.IndexOf(Selected) + 1, copy);
         Selected = copy;
@@ -79,13 +131,15 @@ public sealed partial class ConnectionsViewModel : ObservableObject
     private async Task DeleteAsync()
     {
         var profile = Selected!;
-        if (ConfirmDelete is not null && !await ConfirmDelete($"Xoá hồ sơ kết nối \"{profile.Display}\"?"))
+        if (ConfirmDelete is not null && !await ConfirmDelete($"Xoá hồ sơ kết nối \"{profile.PickerText}\"?"))
         {
             return;
         }
-        var index = Profiles.IndexOf(profile);
+        var index = ProfileTree.Flatten(Profiles).IndexOf(profile);
         Profiles.Remove(profile);
-        Selected = Profiles.Count == 0 ? null : Profiles[Math.Min(index, Profiles.Count - 1)];
+        var rest = ProfileTree.Flatten(Profiles);
+        SelectedFolder = string.Empty;
+        Selected = rest.Count == 0 ? null : rest[Math.Min(index, rest.Count - 1)];
     }
 
     private bool CanTest => Selected is not null && !IsTesting;

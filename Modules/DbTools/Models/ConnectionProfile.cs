@@ -7,8 +7,16 @@ namespace DbTools.Models;
 /// lưu bản đã mã hoá (<see cref="ProtectedPassword"/>, DPAPI theo tài khoản Windows).</summary>
 public sealed partial class ConnectionProfile : ObservableObject
 {
+    /// <summary>Mã riêng của hồ sơ (ConnectionStore cấp) - nhớ "hồ sơ lần trước" theo mã, vì 2 thư mục có thể có hồ sơ cùng tên.</summary>
+    public string Id { get; set; } = string.Empty;
+
     [ObservableProperty]
     private string _name = string.Empty;
+
+    /// <summary>Thư mục trong cây hồ sơ, vd "202604_MCF7/eci"; rỗng = ở gốc (<see cref="Core.ProfileTree"/>).</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PickerText))]
+    private string _folder = string.Empty;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Target))]
@@ -56,9 +64,23 @@ public sealed partial class ConnectionProfile : ObservableObject
     [NotifyPropertyChangedFor(nameof(PickerText))]
     private bool _isProduction;
 
-    /// <summary>Chữ trong ô chọn server (ComboBox) ở các trang: hồ sơ Production có dấu đỏ ở đầu.</summary>
+    /// <summary>Chữ trong ô chọn server (ComboBox) ở các trang: kèm thư mục; hồ sơ Production có dấu đỏ ở đầu. Tên đứng trước
+    /// thư mục: ô hẹp cắt đuôi, cắt mất tên thì không phân biệt được 2 DB cùng thư mục.</summary>
     [JsonIgnore]
-    public string PickerText => IsProduction ? "🔴 PRODUCTION · " + Display : Display;
+    public string PickerText => (IsProduction ? "🔴 PRODUCTION · " : string.Empty)
+        + (Folder.Length == 0 ? Display
+            : string.IsNullOrWhiteSpace(Name) ? $"{Target}  ‹{FolderText}›"
+            : $"{Name}  ‹{FolderText}›  ({Target})");
+
+    /// <summary>Tên kèm thư mục, vd "202604_MCF7 / eci / dev" (hộp hỏi lại, lịch sử).</summary>
+    [JsonIgnore]
+    public string FullName => Name.Length == 0 || Folder.Length == 0 ? Name : $"{FolderText} / {Name}";
+
+    /// <summary>Chữ 1 dòng trong cây hồ sơ.</summary>
+    [JsonIgnore]
+    public string TreeLabel => string.IsNullOrWhiteSpace(Name) ? Target : Name;
+
+    private string FolderText => Folder.Replace("/", " / ");
 
     /// <summary>Mật khẩu đã mã hoá (Base64) - chỉ dùng khi đọc / ghi file.</summary>
     public string ProtectedPassword { get; set; } = string.Empty;
@@ -82,11 +104,13 @@ public sealed partial class ConnectionProfile : ObservableObject
     {
         OnPropertyChanged(nameof(Display));
         OnPropertyChanged(nameof(PickerText));
+        OnPropertyChanged(nameof(TreeLabel));
     }
 
     public ConnectionProfile Clone(string name) => new()
     {
         Name = name,
+        Folder = Folder,
         Host = Host,
         Port = Port,
         Database = Database,

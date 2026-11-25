@@ -75,7 +75,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}" SelectedItem="{x:Bind ViewModel.Profile, Mode=TwoWay}"
+            <ComboBox HorizontalAlignment="Stretch" views:ProfilePicker.Selected="{x:Bind ViewModel.Profile, Mode=TwoWay}"
                       PlaceholderText="(chưa có kết nối)" AutomationProperties.Name="Server" AutomationProperties.AutomationId="LogProfileBox"
                       ToolTipService.ToolTip="Server (hồ sơ kết nối) - đọc qua database bảo trì postgres">
                 <ComboBox.ItemTemplate>

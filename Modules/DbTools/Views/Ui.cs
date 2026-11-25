@@ -30,6 +30,8 @@ internal static class Ui
     /// <summary>Vạch / nhãn hồ sơ Production (đỏ); hồ sơ thường trong suốt.</summary>
     public static Brush ProductionBrush(bool production) => production ? Red : Transparent;
 
+    public static Brush FolderBrush => Orange;
+
     private static readonly Brush Transparent = new SolidColorBrush(Colors.Transparent);
 
     public static string ResultGlyph(bool success) => success ? "" : "";

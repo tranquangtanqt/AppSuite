@@ -50,8 +50,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <ComboBox x:Name="ProfileBox" Header="Chạy lên database" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
-                      SelectedItem="{x:Bind ViewModel.SelectedProfile, Mode=TwoWay}" PlaceholderText="(chưa có kết nối)"
+            <ComboBox x:Name="ProfileBox" Header="Chạy lên database" HorizontalAlignment="Stretch" views:ProfilePicker.Selected="{x:Bind ViewModel.SelectedProfile, Mode=TwoWay}" PlaceholderText="(chưa có kết nối)"
                       IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}" ToolTipService.ToolTip="{x:Bind ViewModel.ProfileInfo, Mode=OneWay}">
                 <ComboBox.ItemTemplate>
                     <DataTemplate x:DataType="models:ConnectionProfile">

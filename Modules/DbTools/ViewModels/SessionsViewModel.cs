@@ -68,7 +68,7 @@ public sealed partial class SessionsViewModel : ObservableObject
 
     public SessionsViewModel()
     {
-        Profile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+        Profile = AppState.LastProfile;
     }
 
     partial void OnProfileChanged(ConnectionProfile? value)
@@ -83,7 +83,7 @@ public sealed partial class SessionsViewModel : ObservableObject
     {
         if (Profile is null || !Profiles.Contains(Profile))
         {
-            Profile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+            Profile = AppState.LastProfile;
         }
     }
 

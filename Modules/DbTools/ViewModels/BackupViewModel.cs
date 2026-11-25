@@ -223,7 +223,7 @@ public sealed partial class BackupViewModel : ObservableObject
 
     public BackupViewModel()
     {
-        var first = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+        var first = AppState.LastProfile;
         DumpProfile = RestoreProfile = CopySourceProfile = CopyTargetProfile = first;
         if (AppState.Settings.PgBinFolder.Length > 0)
         {
@@ -254,7 +254,7 @@ public sealed partial class BackupViewModel : ObservableObject
             }
             SelectedClient = option;
         }
-        var first = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+        var first = AppState.LastProfile;
         ConnectionProfile? Fix(ConnectionProfile? p) => p is not null && Profiles.Contains(p) ? p : first;
         DumpProfile = Fix(DumpProfile);
         RestoreProfile = Fix(RestoreProfile);

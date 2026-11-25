@@ -49,11 +49,19 @@ public static class AppState
 
     private static void Profile_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName is not (nameof(ConnectionProfile.Target) or nameof(ConnectionProfile.Display) or nameof(ConnectionProfile.PickerText)))
+        if (e.PropertyName is not (nameof(ConnectionProfile.Target) or nameof(ConnectionProfile.Display)
+            or nameof(ConnectionProfile.PickerText) or nameof(ConnectionProfile.TreeLabel)))
         {
             SaveProfiles();
         }
     }
+
+    /// <summary>Hồ sơ dùng lần trước (theo mã; cài đặt cũ chỉ có tên), không còn thì hồ sơ đầu.</summary>
+    public static ConnectionProfile? LastProfile =>
+        (Settings.LastProfileId.Length > 0
+            ? Profiles.FirstOrDefault(p => p.Id == Settings.LastProfileId)
+            : Profiles.FirstOrDefault(p => p.Name == Settings.LastProfile))
+        ?? Profiles.FirstOrDefault();
 
     public static void SaveProfiles()
     {

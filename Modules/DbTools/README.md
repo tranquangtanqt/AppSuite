@@ -22,7 +22,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Cài đặt** (cuối menu) | Thời gian chờ kết nối (5 - 120 giây, mặc định 15, mọi hồ sơ / mọi trang), thư mục dump, thư mục PostgreSQL client, Sao lưu trước khi chạy, thư mục dữ liệu của app |
 | **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
-| **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu), Thử kết nối (nút Huỷ khi đang chờ - `WaitAsync(token)` thôi chờ ngay, đổi hồ sơ cũng huỷ); ô **Quan trọng (Production)** (xem mục Hồ sơ Production) |
+| **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu) xếp theo **cây thư mục** + ô tìm (xem mục Cây hồ sơ), Thử kết nối (nút Huỷ khi đang chờ - `WaitAsync(token)` thôi chờ ngay, đổi hồ sơ cũng huỷ); ô **Quan trọng (Production)** (xem mục Hồ sơ Production) |
 
 F1 / nút ? / mục Hướng dẫn: cửa sổ hướng dẫn dùng chung `SharedUI.Help.HelpWindow`, nội dung ở `Core\HelpContent.cs`.
 
@@ -228,10 +228,26 @@ Enterprise Postgres `C:/Users/admin/AppData/Local/Fujitsu/.../log`).
   Audit `UNIFIED_AUDIT_TRAIL`, alert log `V$DIAG_ALERT_EXT`, `V$SQL`; tránh ASH / AWR vì cần Diagnostics Pack) - lúc đó mới tách
   lớp chung.
 
+## Cây hồ sơ (2026-11-25)
+
+Thư mục là chữ `ConnectionProfile.Folder` của từng hồ sơ ("a/b", rỗng = gốc) - không lưu danh sách thư mục riêng, nên có hồ sơ thì
+có thư mục, hết hồ sơ thì mất. `Core\ProfileTree` (thuần, có unit test): chuẩn hoá đường dẫn, dựng cây + lọc, thứ tự phẳng
+(`Flatten`), gợi ý thư mục, đổi tên / chuyển / gộp thư mục (`MoveFolder`), theo kiểu chữ hoa thường của thư mục đã có.
+
+- `ConnectionsPage`: TreeView chế độ `TreeViewNode` (Content = `ProfileFolder` / `ConnectionProfile`), mỗi thay đổi dựng lại từ dữ
+  liệu (`QueueRebuild`, sau khi xong sự kiện). Kéo-thả để TreeView tự làm rồi đọc `NewParentItem`; cây cao vừa nội dung, phần trống
+  bên dưới nhận thả riêng = ra gốc (TreeView không cho nghe `DragOver`, tự nó cho vào thư mục của dòng cuối). Ô Thư mục chỉ áp khi
+  rời ô / Enter / chọn gợi ý. Thư mục thu gọn nhớ ở `AppSettings.CollapsedFolders`.
+- **Mã hồ sơ** `ConnectionProfile.Id` (GUID, `ConnectionStore` cấp; file cũ chưa có thì cấp và ghi lại ngay, giữ nguyên mật khẩu đã
+  mã hoá): "hồ sơ lần trước" nhớ theo `AppSettings.LastProfileId` vì 2 thư mục có thể có hồ sơ cùng tên - nhớ theo tên thì mở lại
+  có thể chọn nhầm DB. `LastProfile` (tên) chỉ còn để đọc cài đặt cũ.
+- **Ô chọn server** ở các trang: `views:ProfilePicker.Selected` (attached property) thay ItemsSource + SelectedItem, xếp lại theo cây
+  mỗi lần ô hiện ra mà không làm trang mất hồ sơ đang chọn. Chữ: `tên ‹thư mục› (host:port/database)` - tên đứng trước vì ô hẹp cắt đuôi.
+
 ## Hồ sơ Production (2026-11-20)
 
 `ConnectionProfile.IsProduction` (lưu trong connections.json, file cũ thiếu trường = hồ sơ thường; Nhân bản giữ). Tô đỏ: vạch +
-nhãn PRODUCTION ở danh sách Kết nối (`Ui.ProductionBrush`), ô chọn server ở các trang bind `PickerText` ("🔴 PRODUCTION · …").
+nhãn PRODUCTION ở cây hồ sơ trang Kết nối (`Ui.ProductionBrush`), ô chọn server ở các trang bind `PickerText` ("🔴 PRODUCTION · …").
 Mọi hộp hỏi lại (Chạy, Restore, Copy, Ngắt phiên) dùng chung `Views\Dialogs.ConfirmAsync` (cuối `BackupPage.xaml.cs`);
 `RunConfirmation.TypeToConfirm` khác null → khung đỏ + ô gõ lại (`ProductionConfirmBox`), nút chính tắt tới khi gõ đúng
 (`ProductionGuard.Matches`: bỏ khoảng trắng 2 đầu, phân biệt hoa thường), nút mặc định vẫn là Huỷ. Chữ phải gõ do
@@ -251,8 +267,8 @@ Tên trống (hồ sơ chưa điền Database) → gõ tên hồ sơ; cả 2 tr�
 
 | File | Nội dung |
 |---|---|
-| `Data\Config\connections.json` | Hồ sơ kết nối; mật khẩu mã hoá DPAPI (CurrentUser) - sang máy / tài khoản khác thì trống |
-| `Data\Config\settings.json` | Thư mục / hồ sơ lần trước, thứ tự chạy + file đã bỏ theo thư mục, thư mục lưu dump (`DumpFolder`), thư mục bin PostgreSQL (`PgBinFolder`, trống = tự động), `BackupBeforeRun` |
+| `Data\Config\connections.json` | Hồ sơ kết nối (kèm thư mục, mã); mật khẩu mã hoá DPAPI (CurrentUser) - sang máy / tài khoản khác thì trống |
+| `Data\Config\settings.json` | Thư mục / hồ sơ lần trước, thứ tự chạy + file đã bỏ theo thư mục, thư mục lưu dump (`DumpFolder`), thư mục bin PostgreSQL (`PgBinFolder`, trống = tự động), `BackupBeforeRun`, thư mục thu gọn trong cây hồ sơ (`CollapsedFolders`) |
 | `<thư mục dump>\*.dump`, `*.log` | File Dump + log (mặc định `D:\DMP`, không nằm trong Data) |
 | `<thư mục dump>\TruocKhiChay\...` | Sao lưu trước khi chạy, mỗi lần 1 thư mục (không tự xoá) |
 | `Data\History\history.json` | Lịch sử chạy (500 lần gần nhất) |

@@ -74,8 +74,22 @@ public sealed class ConnectionStore(string? path = null)
     public List<ConnectionProfile> Load()
     {
         var list = JsonFile.Read<List<ConnectionProfile>>(FilePath);
+        if (EnsureIds(list))
+        {
+            // File cũ chưa có mã: ghi lại ngay để lần sau mã không đổi. Ghi thẳng (không qua Save) để giữ nguyên mật khẩu đã mã
+            // hoá, kể cả khi không giải được (file của tài khoản / máy khác).
+            try
+            {
+                JsonFile.Write(FilePath, list);
+            }
+            catch (Exception)
+            {
+                // Không ghi được (thư mục chỉ đọc...): lần sau cấp lại, chỉ mất "hồ sơ lần trước".
+            }
+        }
         foreach (var p in list)
         {
+            p.Folder = Core.ProfileTree.Normalize(p.Folder);
             p.Password = Unprotect(p.ProtectedPassword);
         }
         return list;
@@ -84,11 +98,25 @@ public sealed class ConnectionStore(string? path = null)
     public void Save(IEnumerable<ConnectionProfile> profiles)
     {
         var list = profiles.ToList();
+        EnsureIds(list);
         foreach (var p in list)
         {
             p.ProtectedPassword = Protect(p.Password);
         }
         JsonFile.Write(FilePath, list);
+    }
+
+    /// <summary>Cấp mã cho hồ sơ chưa có / trùng mã (file sửa tay). True = có cấp.</summary>
+    private static bool EnsureIds(List<ConnectionProfile> list)
+    {
+        var used = new HashSet<string>();
+        var changed = false;
+        foreach (var p in list.Where(p => string.IsNullOrEmpty(p.Id) || !used.Add(p.Id)))
+        {
+            p.Id = Guid.NewGuid().ToString("N");
+            changed = true;
+        }
+        return changed;
     }
 
     internal static string Protect(string password) => password.Length == 0
@@ -117,7 +145,15 @@ public sealed class AppSettings
 {
     public string LastFolder { get; set; } = string.Empty;
     public bool IncludeSubfolders { get; set; } = true;
+
+    /// <summary>Tên hồ sơ lần trước - chỉ còn để đọc cài đặt cũ, nay nhớ theo <see cref="LastProfileId"/>.</summary>
     public string LastProfile { get; set; } = string.Empty;
+
+    /// <summary>Mã hồ sơ dùng lần trước (<see cref="ConnectionProfile.Id"/>).</summary>
+    public string LastProfileId { get; set; } = string.Empty;
+
+    /// <summary>Thư mục đang thu gọn trong cây hồ sơ (trang Kết nối).</summary>
+    public List<string> CollapsedFolders { get; set; } = [];
 
     /// <summary>Thư mục lưu file dump (Dump, Copy DB khác server dùng file tạm ở đây) + bản sao lưu trước khi chạy
     /// (&lt;thư mục&gt;\TruocKhiChay). Đổi ở trang Sao lưu / Khôi phục.</summary>

@@ -45,8 +45,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <ComboBox Header="Server (hồ sơ kết nối)" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Profiles}"
-                          SelectedItem="{x:Bind ViewModel.Profile, Mode=TwoWay}" PlaceholderText="(chưa có kết nối)" IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}">
+                <ComboBox Header="Server (hồ sơ kết nối)" HorizontalAlignment="Stretch" views:ProfilePicker.Selected="{x:Bind ViewModel.Profile, Mode=TwoWay}" PlaceholderText="(chưa có kết nối)" IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="models:ConnectionProfile">
                             <TextBlock Text="{x:Bind PickerText, Mode=OneWay}" TextTrimming="CharacterEllipsis" />

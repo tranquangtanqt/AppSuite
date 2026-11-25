@@ -191,7 +191,7 @@ public sealed partial class MockDataViewModel : ObservableObject
 
     public MockDataViewModel()
     {
-        Profile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+        Profile = AppState.LastProfile;
         Columns.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasColumns));
     }
 
@@ -208,7 +208,7 @@ public sealed partial class MockDataViewModel : ObservableObject
     {
         if (Profile is null || !Profiles.Contains(Profile))
         {
-            Profile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+            Profile = AppState.LastProfile;
         }
     }
 

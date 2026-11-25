@@ -5,9 +5,42 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:views="using:DbTools.Views"
     xmlns:models="using:DbTools.Models"
+    xmlns:core="using:DbTools.Core"
     NavigationCacheMode="Required">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+    <Page.Resources>
+        <!-- Cây ở chế độ TreeViewNode: Content là ProfileFolder (thư mục) hoặc ConnectionProfile (hồ sơ) -->
+        <DataTemplate x:Key="FolderTemplate" x:DataType="TreeViewNode">
+            <Grid ColumnSpacing="6" Background="Transparent" RightTapped="Folder_RightTapped" DoubleTapped="Folder_DoubleTapped">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <FontIcon Glyph="&#xE8B7;" FontSize="14" Foreground="{x:Bind views:Ui.FolderBrush}" />
+                <TextBlock Grid.Column="1" Text="{x:Bind ((core:ProfileFolder)Content).Name}" FontSize="13" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{x:Bind ((core:ProfileFolder)Content).Count}" Opacity="0.6" FontSize="12" VerticalAlignment="Center" />
+            </Grid>
+        </DataTemplate>
+        <!-- Hồ sơ Production: vạch đỏ bên trái + nhãn PRODUCTION -->
+        <DataTemplate x:Key="ProfileTemplate" x:DataType="TreeViewNode">
+            <Grid ColumnSpacing="6" Background="Transparent" ToolTipService.ToolTip="{x:Bind ((models:ConnectionProfile)Content).PickerText, Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Width="4" Margin="0,3" CornerRadius="2" Background="{x:Bind views:Ui.ProductionBrush(((models:ConnectionProfile)Content).IsProduction), Mode=OneWay}" />
+                <TextBlock Grid.Column="1" Text="{x:Bind ((models:ConnectionProfile)Content).TreeLabel, Mode=OneWay}" FontSize="13" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="PRODUCTION" FontSize="10" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"
+                           Foreground="{x:Bind views:Ui.ProductionBrush(((models:ConnectionProfile)Content).IsProduction), Mode=OneWay}"
+                           Visibility="{x:Bind views:Ui.VisibleIf(((models:ConnectionProfile)Content).IsProduction), Mode=OneWay}" />
+            </Grid>
+        </DataTemplate>
+        <views:ProfileTreeTemplates x:Key="TreeTemplates" Folder="{StaticResource FolderTemplate}" Profile="{StaticResource ProfileTemplate}" />
+    </Page.Resources>
+
+    <!-- Cây và ô sửa cuộn riêng: nhiều hồ sơ thì ô sửa vẫn đứng yên -->
     <Grid Padding="24,16" RowSpacing="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -17,7 +50,7 @@
         <StackPanel Spacing="2" Margin="0,0,48,0">
             <TextBlock Text="Kết nối" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock Opacity="0.7" TextWrapping="Wrap"
-                       Text="Hồ sơ kết nối PostgreSQL (dev, test...). Sửa là tự lưu; mật khẩu lưu đã mã hoá theo tài khoản Windows." />
+                       Text="Hồ sơ kết nối PostgreSQL (dev, test...), xếp theo thư mục. Sửa là tự lưu; mật khẩu lưu đã mã hoá theo tài khoản Windows." />
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnSpacing="16">
@@ -30,6 +63,7 @@
             <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -37,39 +71,45 @@
                     <Button Content="Nhân bản" Command="{x:Bind ViewModel.DuplicateCommand}" />
                     <Button Content="Xoá" Command="{x:Bind ViewModel.DeleteCommand}" />
                 </StackPanel>
-                <Border Grid.Row="1" MinHeight="240" BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-                    <Grid>
-                        <ListView ItemsSource="{x:Bind ViewModel.Profiles}" SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}"
+                <TextBox Grid.Row="1" PlaceholderText="Tìm tên, host, database, thư mục" AutomationProperties.Name="Tìm hồ sơ" AutomationProperties.AutomationId="ProfileFilter"
+                         Text="{x:Bind ViewModel.Filter, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                <Border Grid.Row="2" BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                    <!-- Cây cao vừa nội dung: phần trống bên dưới nhận kéo-thả = đưa ra gốc -->
+                    <Grid Background="Transparent" AllowDrop="True" DragOver="Blank_DragOver" Drop="Blank_Drop">
+                        <TreeView x:Name="Tree" VerticalAlignment="Top" SelectionMode="Single" CanDragItems="True" AllowDrop="True" CanReorderItems="True" Padding="0,4"
+                                  ItemTemplateSelector="{StaticResource TreeTemplates}" SelectionChanged="Tree_SelectionChanged"
+                                  Expanding="Tree_Expanding" Collapsed="Tree_Collapsed"
+                                  DragItemsStarting="Tree_DragItemsStarting" DragItemsCompleted="Tree_DragItemsCompleted"
                                   AutomationProperties.AutomationId="ProfileList" AutomationProperties.Name="Hồ sơ kết nối">
-                            <ListView.ItemTemplate>
-                                <DataTemplate x:DataType="models:ConnectionProfile">
-                                    <!-- Hồ sơ Production: vạch đỏ bên trái + nhãn PRODUCTION -->
-                                    <Grid ColumnSpacing="8" Padding="0,6" AutomationProperties.Name="{x:Bind Name, Mode=OneWay}">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border Width="4" CornerRadius="2" Background="{x:Bind views:Ui.ProductionBrush(IsProduction), Mode=OneWay}" />
-                                        <StackPanel Grid.Column="1">
-                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="{x:Bind Target, Mode=OneWay}" Opacity="0.7" FontSize="12" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Text="PRODUCTION" FontSize="11" FontWeight="Bold" Foreground="{x:Bind views:Ui.ProductionBrush(IsProduction), Mode=OneWay}"
-                                                       Visibility="{x:Bind views:Ui.VisibleIf(IsProduction), Mode=OneWay}" />
-                                        </StackPanel>
-                                    </Grid>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                        </ListView>
+                            <!-- Dòng thấp hơn mặc định (32 → 26) -->
+                            <TreeView.Resources>
+                                <x:Double x:Key="TreeViewItemMinHeight">24</x:Double>
+                                <x:Double x:Key="TreeViewItemMultiSelectCheckBoxMinHeight">24</x:Double>
+                                <Thickness x:Key="TreeViewItemPresenterMargin">4,1</Thickness>
+                                <Thickness x:Key="TreeViewItemPresenterPadding">0,2,0,2</Thickness>
+                            </TreeView.Resources>
+                        </TreeView>
                         <TextBlock Text="Chưa có hồ sơ nào - bấm Thêm." Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center"
                                    Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.IsEmpty), Mode=OneWay}" />
+                        <TextBlock Text="Không có hồ sơ nào khớp." Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.NoMatch), Mode=OneWay}" />
                     </Grid>
                 </Border>
             </Grid>
 
             <!-- Hồ sơ đang chọn -->
-            <StackPanel Grid.Column="1" Spacing="10" Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.HasSelection), Mode=OneWay}">
+            <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+            <StackPanel Spacing="10" Margin="0,0,12,0" Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.HasSelection), Mode=OneWay}">
                 <TextBox Header="Tên hồ sơ" Text="{x:Bind ViewModel.Selected.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, FallbackValue=''}"
-                         PlaceholderText="vd: dev local, test 136.72" />
+                         PlaceholderText="vd: dev local, test 136.72" LostFocus="NameBox_LostFocus" />
+                <AutoSuggestBox x:Name="FolderBox" FontSize="12" PlaceholderText="(gốc) - vd: 202604_MCF7/eci" AutomationProperties.AutomationId="FolderBox" AutomationProperties.Name="Thư mục"
+                                UpdateTextOnSelect="True" GotFocus="FolderBox_GotFocus" TextChanged="FolderBox_TextChanged"
+                                QuerySubmitted="FolderBox_QuerySubmitted" LostFocus="FolderBox_LostFocus"
+                                ToolTipService.ToolTip="Dấu / để lồng thư mục; gõ tên chưa có là tạo mới, để trống là ở gốc">
+                    <AutoSuggestBox.Header>
+                        <TextBlock Text="Thư mục" FontSize="12" />
+                    </AutoSuggestBox.Header>
+                </AutoSuggestBox>
                 <Grid ColumnSpacing="8">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -98,7 +138,7 @@
                 <TextBlock x:Name="TestResultText" Text="{x:Bind ViewModel.TestResult, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
                            Foreground="{x:Bind views:Ui.FailBrush(ViewModel.TestFailed), Mode=OneWay}" />
             </StackPanel>
+            </ScrollViewer>
         </Grid>
     </Grid>
-    </ScrollViewer>
 </Page>

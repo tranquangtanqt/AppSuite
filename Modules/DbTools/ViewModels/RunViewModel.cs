@@ -141,7 +141,7 @@ public sealed partial class RunViewModel : ObservableObject
 
     public RunViewModel()
     {
-        SelectedProfile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+        SelectedProfile = AppState.LastProfile;
         Files.CollectionChanged += Files_CollectionChanged;
     }
 
@@ -153,7 +153,7 @@ public sealed partial class RunViewModel : ObservableObject
         BackupBeforeRun = AppState.Settings.BackupBeforeRun; // có thể vừa đổi ở trang Cài đặt
         if (SelectedProfile is null || !Profiles.Contains(SelectedProfile))
         {
-            SelectedProfile = Profiles.FirstOrDefault(p => p.Name == AppState.Settings.LastProfile) ?? Profiles.FirstOrDefault();
+            SelectedProfile = AppState.LastProfile;
         }
     }
 
@@ -229,7 +229,7 @@ public sealed partial class RunViewModel : ObservableObject
     {
         if (value is not null)
         {
-            AppState.Settings.LastProfile = value.Name;
+            AppState.Settings.LastProfileId = value.Id;
             AppState.SaveSettings();
         }
     }
@@ -715,7 +715,7 @@ public sealed partial class RunViewModel : ObservableObject
             Mode = mode,
             DropFirst = DropFirst,
             Folder = Folder.Trim(),
-            Profile = profile.Name,
+            Profile = profile.FullName,
             Target = profile.Target,
             User = profile.Username,
             Schema = profile.SchemaText,
@@ -760,7 +760,7 @@ public sealed partial class RunViewModel : ObservableObject
             {
                 var lines = new List<string>
                 {
-                    $"Database: {profile.Username}@{profile.Target}" + (profile.Name.Length > 0 ? $"  (hồ sơ \"{profile.Name}\")" : string.Empty),
+                    $"Database: {profile.Username}@{profile.Target}" + (profile.Name.Length > 0 ? $"  (hồ sơ \"{profile.FullName}\")" : string.Empty),
                     $"Schema: {(profile.SchemaOrNull is { } s ? s + (profile.IncludePublic && s != "public" ? " (tìm cả trong public)" : string.Empty) : "mặc định - theo search_path của server / user (thường là public)")}"
                         + " - tên có ghi schema trong file vẫn theo file.",
                     $"Thư mục: {Folder.Trim()}",
