@@ -273,8 +273,11 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   cấp mã, giữ mật khẩu. Cập nhật F1, README. Unit test 208/208 (PostgreSQL 17 thật); GUI Sandbox 45/45 (có chuột thật kéo-thả,
   44 hồ sơ) (2026-11-25)
 - [ ] Người dùng thử tay cây hồ sơ trên hồ sơ thật (kéo-thả, ô Thư mục, tìm, mở lại app vẫn đúng hồ sơ)
-- [ ] Sao lưu / Khôi phục: đổi server ở ô Dump thì ô Database hiện trống dù giá trị đúng (dòng "Ghi ra" vẫn đúng tên DB) - lỗi có sẵn
-  ở bản trước, phát hiện 2026-11-25 khi test; chưa sửa
+- [x] Ô Database hiện trống khi đổi server dù giá trị đúng (lỗi có sẵn, phát hiện 2026-11-25 ở Dump; kiểm ra cả Copy, Thông tin DB,
+  Sinh dữ liệu mẫu, Phiên; cùng nguyên nhân: Database đích của Restore, Bảng của Sinh dữ liệu mẫu, Schema của Chạy - 2 hồ sơ cùng
+  schema thì hiện "(mặc định: public)" dù chạy vào schema đó): xoá danh sách làm ComboBox gõ được mất chữ → `EditableBox.Reset`.
+  Kèm: đổi server rồi mở danh sách, Esc / bấm ra ngoài thì chữ mất hoặc về DB của server cũ → `Ui.KeepTextIfNothingPicked`. Unit
+  test 208/208 (PostgreSQL 17 thật); GUI Sandbox 153/153 đo điểm ảnh + chuột, phím thật, PostgreSQL 17; cây hồ sơ chạy lại 45/45 (2026-11-25)
 - [ ] Nhật ký server - đổi cấu hình log (ALTER SYSTEM + pg_reload_conf: log_statement, log_min_duration_statement,
   log_connections / disconnections; hỏi lại, hồ sơ Production gõ lại tên DB; Về mặc định = RESET) - chờ người dùng cho phép
   (thao tác ghi lên server); đọc file csvlog / jsonlog (để sau)

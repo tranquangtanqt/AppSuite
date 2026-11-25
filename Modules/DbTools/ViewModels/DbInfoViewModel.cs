@@ -352,8 +352,7 @@ public sealed partial class DbInfoViewModel : ObservableObject
 
     partial void OnProfileChanged(ConnectionProfile? value)
     {
-        Database = value?.Database ?? string.Empty;
-        Databases.Clear();
+        EditableBox.Reset(Databases, t => Database = t, value?.Database ?? string.Empty);
     }
 
     public void EnsureProfile()

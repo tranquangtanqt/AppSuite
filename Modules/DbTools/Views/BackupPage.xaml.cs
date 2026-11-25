@@ -15,6 +15,7 @@ public sealed partial class BackupPage : Page
     public BackupPage()
     {
         InitializeComponent();
+        Ui.KeepTextIfNothingPicked(DumpDbBox, RestoreDbBox, CopySourceDbBox);
         ScrollFit.Attach(Scroller, Root, 560);
         ViewModel.Confirm = ConfirmAsync;
         ViewModel.PickFile = () => Shell.PickFileAsync(".dump", ".backup", ".sql", ".tar", "*");

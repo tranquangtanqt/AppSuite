@@ -1,7 +1,9 @@
 using DbTools.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
+using Windows.System;
 
 namespace DbTools.Views;
 
@@ -54,6 +56,45 @@ internal static class Ui
             {
                 box.Text = string.Empty;
                 box.Text = text;
+            });
+        }
+    }
+
+    /// <summary>ComboBox gõ được nhớ riêng mục đã chốt (gõ / chọn): mở danh sách rồi đóng mà không chọn gì (Esc, bấm ra ngoài) thì
+    /// nó trả về mục đó, nên chữ đặt từ code (vd vừa đổi server) bị mất hoặc thành DB của server cũ → trả lại chữ lúc mở.</summary>
+    public static void KeepTextIfNothingPicked(params Microsoft.UI.Xaml.Controls.ComboBox[] boxes)
+    {
+        foreach (var box in boxes)
+        {
+            var text = string.Empty;
+            object? item = null;
+            var picked = false;
+            var escape = false;
+            box.DropDownOpened += (_, _) =>
+            {
+                (text, item, picked, escape) = (box.Text, box.SelectedItem, false, false);
+                if (item is not null && !Equals(item, text))
+                {
+                    // Mục đang nhớ lệch với chữ: bỏ, không thì chọn đúng mục đó không được tính là đổi lựa chọn.
+                    item = box.SelectedItem = null;
+                    box.Text = text;
+                }
+            };
+            // Chọn thật: lựa chọn đổi khi danh sách còn mở (chuột) hoặc chốt bằng Enter / Tab; trả về mục cũ: lúc Esc hoặc sau khi
+            // danh sách đã đóng.
+            box.AddHandler(UIElement.PreviewKeyDownEvent, new KeyEventHandler((_, e) =>
+            {
+                escape |= e.Key == VirtualKey.Escape;
+                picked |= e.Key is VirtualKey.Enter or VirtualKey.Tab;
+            }), handledEventsToo: true);
+            box.SelectionChanged += (_, e) => picked |= box.IsDropDownOpen && !escape && e.AddedItems.Count > 0;
+            box.DropDownClosed += (_, _) => box.DispatcherQueue.TryEnqueue(() =>
+            {
+                if (!picked && box.Text != text)
+                {
+                    box.SelectedItem = item;
+                    box.Text = text;
+                }
             });
         }
     }

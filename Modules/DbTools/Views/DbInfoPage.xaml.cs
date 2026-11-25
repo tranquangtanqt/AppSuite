@@ -13,6 +13,7 @@ public sealed partial class DbInfoPage : Page
     public DbInfoPage()
     {
         InitializeComponent();
+        Ui.KeepTextIfNothingPicked(DbBox);
         ScrollFit.Attach(Scroller, Root, 560);
         ViewModel.PropertyChanged += (_, e) =>
         {

@@ -123,8 +123,7 @@ public sealed partial class BackupViewModel : ObservableObject
 
     partial void OnDumpProfileChanged(ConnectionProfile? value)
     {
-        DumpDatabase = value?.Database ?? string.Empty;
-        DumpDatabases.Clear();
+        EditableBox.Reset(DumpDatabases, t => DumpDatabase = t, value?.Database ?? string.Empty);
     }
 
     // ----- Restore -----
@@ -170,7 +169,7 @@ public sealed partial class BackupViewModel : ObservableObject
     [ObservableProperty]
     private bool _restoreIsArchive = true;
 
-    partial void OnRestoreProfileChanged(ConnectionProfile? value) => RestoreDatabases.Clear();
+    partial void OnRestoreProfileChanged(ConnectionProfile? value) => EditableBox.Reset(RestoreDatabases, t => RestoreDatabase = t, RestoreDatabase);
 
     partial void OnRestoreFileChanged(string value)
     {
@@ -209,8 +208,7 @@ public sealed partial class BackupViewModel : ObservableObject
 
     partial void OnCopySourceProfileChanged(ConnectionProfile? value)
     {
-        CopySourceDatabase = value?.Database ?? string.Empty;
-        CopySourceDatabases.Clear();
+        EditableBox.Reset(CopySourceDatabases, t => CopySourceDatabase = t, value?.Database ?? string.Empty);
     }
 
     partial void OnCopySourceDatabaseChanged(string value)

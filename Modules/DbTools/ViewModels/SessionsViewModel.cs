@@ -73,8 +73,7 @@ public sealed partial class SessionsViewModel : ObservableObject
 
     partial void OnProfileChanged(ConnectionProfile? value)
     {
-        Database = value?.Database ?? string.Empty;
-        Databases.Clear();
+        EditableBox.Reset(Databases, t => Database = t, value?.Database ?? string.Empty);
         Rows.Clear();
         OnPropertyChanged(nameof(IsEmpty));
     }

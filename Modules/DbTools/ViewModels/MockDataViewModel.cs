@@ -197,12 +197,13 @@ public sealed partial class MockDataViewModel : ObservableObject
 
     partial void OnProfileChanged(ConnectionProfile? value)
     {
-        Database = value?.Database ?? string.Empty;
-        Databases.Clear();
-        TableNames.Clear();
+        EditableBox.Reset(Databases, t => Database = t, value?.Database ?? string.Empty);
+        ClearTableNames();
     }
 
-    partial void OnDatabaseChanged(string value) => TableNames.Clear();
+    partial void OnDatabaseChanged(string value) => ClearTableNames();
+
+    private void ClearTableNames() => EditableBox.Reset(TableNames, t => Table = t, Table);
 
     public void EnsureProfile()
     {

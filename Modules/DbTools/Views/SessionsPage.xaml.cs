@@ -11,6 +11,7 @@ public sealed partial class SessionsPage : Page
     public SessionsPage()
     {
         InitializeComponent();
+        Ui.KeepTextIfNothingPicked(DbBox);
         ViewModel.Confirm = c => Dialogs.ConfirmAsync(XamlRoot, c);
     }
 

@@ -45,14 +45,17 @@ public sealed partial class RunViewModel : ObservableObject
     /// <summary>Schema có trong DB đang chọn (ô Schema, gõ tay cũng được).</summary>
     public ObservableCollection<string> Schemas { get; } = [];
 
+    /// <summary>Đang xoá danh sách schema: ô Schema tạm trống (<see cref="EditableBox"/>), không ghi chữ trống vào hồ sơ.</summary>
+    private bool _clearingSchemas;
+
     /// <summary>Schema chạy script, nhớ theo hồ sơ. Để trống = mặc định (search_path của server / user, thường là public).</summary>
     public string SchemaInput
     {
-        get => SelectedProfile?.Schema ?? string.Empty;
+        get => _clearingSchemas ? string.Empty : SelectedProfile?.Schema ?? string.Empty;
         set
         {
             var schema = value?.Trim() ?? string.Empty;
-            if (SelectedProfile is not null && SelectedProfile.Schema != schema)
+            if (!_clearingSchemas && SelectedProfile is not null && SelectedProfile.Schema != schema)
             {
                 SelectedProfile.Schema = schema;
             }
@@ -167,7 +170,9 @@ public sealed partial class RunViewModel : ObservableObject
         {
             newValue.PropertyChanged += SelectedProfile_PropertyChanged;
         }
-        Schemas.Clear();
+        _clearingSchemas = true;
+        EditableBox.Reset(Schemas, _ => OnPropertyChanged(nameof(SchemaInput)), string.Empty);
+        _clearingSchemas = false; // đổi hồ sơ xong tự báo SchemaInput → ô hiện schema của hồ sơ mới
         _ = LoadSchemasAsync();
     }
 

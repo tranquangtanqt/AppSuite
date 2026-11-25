@@ -11,6 +11,7 @@ public sealed partial class MockDataPage : Page
     public MockDataPage()
     {
         InitializeComponent();
+        Ui.KeepTextIfNothingPicked(DbBox, TableBox);
         ScrollFit.Attach(Scroller, Root, 640);
     }
 

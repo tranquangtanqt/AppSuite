@@ -244,6 +244,15 @@ có thư mục, hết hồ sơ thì mất. `Core\ProfileTree` (thuần, có unit
 - **Ô chọn server** ở các trang: `views:ProfilePicker.Selected` (attached property) thay ItemsSource + SelectedItem, xếp lại theo cây
   mỗi lần ô hiện ra mà không làm trang mất hồ sơ đang chọn. Chữ: `tên ‹thư mục› (host:port/database)` - tên đứng trước vì ô hẹp cắt đuôi.
 
+## Ô gõ được kèm danh sách (Database, Bảng, Schema)
+
+`ComboBox IsEditable` của WinUI có 2 bẫy (2026-11-25), ô mới cùng kiểu phải làm theo:
+
+- Xoá danh sách (`Clear`, kể cả đang rỗng) làm ô hiện trống dù `Text` còn nguyên, đặt lại đúng chữ cũ thì không vẽ lại → đổi danh
+  sách bằng `ViewModels\EditableBox.Reset` (bỏ chữ → xoá → đặt chữ). UIA vẫn đọc ra giá trị: test phải đo điểm ảnh.
+- Mở danh sách rồi đóng mà không chọn thì ô trả về mục đã chốt lần trước, bỏ qua chữ đặt từ code (có thể là DB của server cũ) →
+  gọi `Ui.KeepTextIfNothingPicked` trong constructor của trang.
+
 ## Hồ sơ Production (2026-11-20)
 
 `ConnectionProfile.IsProduction` (lưu trong connections.json, file cũ thiếu trường = hồ sơ thường; Nhân bản giữ). Tô đỏ: vạch +

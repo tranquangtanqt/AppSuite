@@ -17,6 +17,7 @@ public sealed partial class RunPage : Page
     public RunPage()
     {
         InitializeComponent();
+        Ui.KeepTextIfNothingPicked(SchemaBox);
         ScrollFit.Attach(Scroller, Root, 560);
         ViewModel.Confirm = ConfirmAsync;
         ViewModel.ChooseUtf8Target = ChooseUtf8TargetAsync;
