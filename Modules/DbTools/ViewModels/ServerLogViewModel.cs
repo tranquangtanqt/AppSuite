@@ -12,6 +12,9 @@ using Microsoft.Extensions.Logging;
 
 namespace DbTools.ViewModels;
 
+/// <summary>Kết quả hộp Đổi cấu hình log: giá trị mới, hoặc Về mặc định; null = Huỷ.</summary>
+public sealed record LogConfigChoice(LogConfigValues? Values, bool Reset);
+
 /// <summary>1 dòng ở danh sách Nhật ký server (hiển thị). <see cref="Index"/> = vị trí mục trong phần đã đọc.</summary>
 public sealed class LogRow(LogEntry entry, int index)
 {
@@ -133,11 +136,11 @@ public sealed partial class ServerLogViewModel : ObservableObject
     private int _readSizeIndex;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RefreshCommand), nameof(ReadCommand), nameof(FollowCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RefreshCommand), nameof(ReadCommand), nameof(FollowCommand), nameof(EditConfigCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RefreshCommand), nameof(ReadCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RefreshCommand), nameof(ReadCommand), nameof(EditConfigCommand))]
     [NotifyPropertyChangedFor(nameof(FollowText))]
     private bool _isFollowing;
 
@@ -705,6 +708,109 @@ public sealed partial class ServerLogViewModel : ObservableObject
         catch (Exception ex)
         {
             Status = "Không xuất được: " + ex.Message;
+        }
+    }
+
+    // ----- Đổi cấu hình log (GHI lên server) -----
+
+    /// <summary>Trang gắn vào: hộp chọn giá trị mới (null = Huỷ).</summary>
+    public Func<ConnectionProfile, IReadOnlyDictionary<string, LogSetting>, Task<LogConfigChoice?>>? ChooseConfig { get; set; }
+
+    /// <summary>Trang gắn vào: hộp hỏi lại (Production phải gõ tên).</summary>
+    public Func<RunConfirmation, Task<bool>>? Confirm { get; set; }
+
+    /// <summary>Đọc 4 thông số đổi được → hộp chọn → hỏi lại → ALTER SYSTEM + pg_reload_conf → đọc lại cấu hình.</summary>
+    [RelayCommand(CanExecute = nameof(CanWork))]
+    private async Task EditConfigAsync()
+    {
+        if (Profile is not { } profile || ChooseConfig is null)
+        {
+            Status = "Chưa có kết nối - thêm ở trang Kết nối.";
+            return;
+        }
+        Dictionary<string, LogSetting> settings;
+        IsBusy = true;
+        try
+        {
+            using var cts = new CancellationTokenSource(Pg.Within(20));
+            settings = await PgServerLog.EditableSettingsAsync(profile, cts.Token);
+        }
+        catch (Exception ex)
+        {
+            Status = "Không đọc được cấu hình log: " + Pg.Describe(ex);
+            return;
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        if (await ChooseConfig(profile, settings) is not { } choice)
+        {
+            return;
+        }
+        var current = LogConfigValues.From(settings);
+        List<string> statements;
+        var lines = new List<string>
+        {
+            $"Server: {profile.Host}:{profile.Port} (user {profile.Username}) - áp cho CẢ SERVER (mọi database), ghi vào postgresql.auto.conf trên máy server, không cần khởi động lại.",
+        };
+        if (choice.Reset)
+        {
+            statements = LogConfigEdit.ResetStatements(settings.Values);
+            if (statements.Count == 0)
+            {
+                Status = "Không có thông số log nào đặt bằng ALTER SYSTEM - cấu hình đang theo postgresql.conf (hoặc user không xem được nguồn).";
+                return;
+            }
+            lines.Add("Về mặc định (xoá khỏi postgresql.auto.conf, quay về giá trị trong postgresql.conf):");
+            lines.AddRange(statements.Select(s => "  " + s.Replace("ALTER SYSTEM RESET ", string.Empty)));
+        }
+        else
+        {
+            var wanted = choice.Values!;
+            if (LogConfigEdit.Validate(wanted) is { } error)
+            {
+                Status = error;
+                return;
+            }
+            statements = LogConfigEdit.AlterStatements(current, wanted);
+            if (statements.Count == 0)
+            {
+                Status = "Không có gì thay đổi.";
+                return;
+            }
+            lines.AddRange(LogConfigEdit.DescribeChanges(current, wanted).Select(l => "  " + l));
+            lines.AddRange(LogConfigEdit.Warnings(wanted, settings.Values));
+            lines.Add("Muốn trả lại như cũ: Đổi cấu hình log → Về mặc định.");
+        }
+        lines.Add("Câu sẽ chạy: " + string.Join("; ", statements) + "; SELECT pg_reload_conf()");
+        if (Confirm is not null && !await Confirm(new RunConfirmation(choice.Reset ? "Đưa cấu hình log về mặc định?" : "Đổi cấu hình log của server?",
+                lines, "Đổi cấu hình", ProductionGuard.ForLogConfig(profile.IsProduction, profile.Database, profile.Name))))
+        {
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            using var cts = new CancellationTokenSource(Pg.Within(30));
+            var after = await PgServerLog.ApplyAsync(profile, statements, cts.Token);
+            var now = LogConfigValues.From(after);
+            _log.LogInformation("Đổi cấu hình log {Host}:{Port}: {Statements}", profile.Host, profile.Port, string.Join("; ", statements));
+            var applied = choice.Reset || now == choice.Values;
+            await LoadInfoAsync(profile);
+            Status = (applied ? "Đã đổi cấu hình log" : "Đã ghi cấu hình nhưng server chưa áp đủ (xem lại sau vài giây / đặt riêng cho database, user?)")
+                + $": log_statement = {now.Statement}, log_min_duration_statement = {now.MinDurationMs}, log_connections = {(now.Connections ? "on" : "off")}, log_disconnections = {(now.Disconnections ? "on" : "off")}.";
+        }
+        catch (Exception ex)
+        {
+            Status = "Không đổi được cấu hình log: " + Pg.Describe(ex)
+                + (ex is Npgsql.PostgresException { SqlState: "42501" } ? " - cần superuser (PostgreSQL 15+: hoặc GRANT ALTER SYSTEM ON PARAMETER ...)." : string.Empty);
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 

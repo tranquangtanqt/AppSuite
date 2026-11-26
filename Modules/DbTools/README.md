@@ -21,7 +21,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
 | **Cài đặt** (cuối menu) | Thời gian chờ kết nối (5 - 120 giây, mặc định 15, mọi hồ sơ / mọi trang), thư mục dump, thư mục PostgreSQL client, Sao lưu trước khi chạy, thư mục dữ liệu của app |
-| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log |
+| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log; Đổi cấu hình log (ALTER SYSTEM + reload, Về mặc định) |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
 | **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu) xếp theo **cây thư mục** + ô tìm (xem mục Cây hồ sơ), Thử kết nối (nút Huỷ khi đang chờ - `WaitAsync(token)` thôi chờ ngay, đổi hồ sơ cũng huỷ); ô **Quan trọng (Production)** (xem mục Hồ sơ Production) |
 
@@ -248,7 +248,14 @@ Enterprise Postgres `C:/Users/admin/AppData/Local/Fujitsu/.../log`).
   thì đảo danh sách; Theo dõi khi mới trước thì bỏ dòng mục cuối ở đầu bảng rồi chèn mục mới vào vị trí 0, "ở cuối" để tự cuộn
   hiểu là đầu bảng. Xuất CSV theo thứ tự đang hiện, TXT luôn theo thứ tự file. Không chia trang: ListView ảo hoá (chỉ dựng dòng
   đang hiện), chia trang còn làm dòng mới khi Theo dõi rơi sang trang khác.
-- Chưa làm: đổi cấu hình log (ALTER SYSTEM + reload, hồ sơ Production gõ lại tên - chờ người dùng cho phép), đọc csvlog /
+- **Đổi cấu hình log (2026-11-26, người dùng cho phép ghi lên server):** nút trong flyout Cấu hình log → hộp chọn (`ServerLogPage.ChooseConfigAsync`,
+  4 thông số đổi được không cần khởi động lại: log_statement, log_min_duration_statement, log_connections, log_disconnections) →
+  `Core\LogConfigEdit` tính câu `ALTER SYSTEM SET` chỉ cho thông số khác giá trị đang áp (giá trị đã kiểm: enum / số / on-off, không
+  ghép chữ người dùng gõ) + dòng cũ → mới + lưu ý (ghi mọi câu, đặt riêng theo database / user) → hộp hỏi lại (Production: gõ tên
+  database, `ProductionGuard.ForLogConfig`) → `PgServerLog.ApplyAsync`: từng câu (tự commit) + `pg_reload_conf()`, đọc lại bằng kết
+  nối mới tới khi thấy giá trị mới (tối đa ~3 giây) rồi Làm mới cấu hình. Về mặc định = `ALTER SYSTEM RESET` các thông số có
+  `sourcefile` là postgresql.auto.conf (thông số đặt ở postgresql.conf để nguyên). Lỗi 42501 → báo cần superuser.
+- Chưa làm: đọc csvlog /
   jsonlog. Sau này Oracle: giữ `LogEntry` / `LogFilter` / bảng / xuất dùng chung, viết phần đọc riêng (Unified
   Audit `UNIFIED_AUDIT_TRAIL`, alert log `V$DIAG_ALERT_EXT`, `V$SQL`; tránh ASH / AWR vì cần Diagnostics Pack) - lúc đó mới tách
   lớp chung.
@@ -326,6 +333,9 @@ pg_restore / psql (không có mật khẩu, tên trong "..."), đọc `pg_restor
 cấu trúc → psql, restore 1 transaction vào DB có sẵn bị trùng → rollback, `--clean` → được, copy TEMPLATE bị chặn khi còn
 phiên → ngắt phiên → copy được, sao lưu trước khi chạy (đủ file, khôi phục lại bảng + hàm từ bản sao lưu), bỏ qua khi chỉ
 tạo đối tượng mới.
+
+`LogConfigEditTests` / `LogConfigIntegrationTests` (Đổi cấu hình log): chỉ ALTER các thông số đổi, mô tả cũ → mới, lưu ý, RESET chỉ
+dòng của postgresql.auto.conf; trên PostgreSQL thật (superuser): đổi 4 thông số → reload → đọc lại đúng → RESET về như cũ.
 
 `QuickQueryTests` / `PgQueryIntegrationTests` (trang Chạy SQL): chọn đoạn + đếm dòng, chặn lệnh giao dịch, câu nào đọc qua cursor,
 dạng giá trị, TSV, lịch sử; trên PostgreSQL thật: giới hạn dòng qua cursor, chỉ đọc từ chối DELETE (25006) DB không đổi, ghi lỗi

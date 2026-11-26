@@ -288,10 +288,15 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   và chú thích -- nuốt câu sau (đổi về \n trước khi tách). Cập nhật F1, README. Unit test 241/241 (PostgreSQL 17 thật); GUI
   Sandbox 36/36 (PostgreSQL 17, phím Ctrl+Enter thật, Production, Xuất CSV + CsvEditor, Huỷ, đóng / mở lại app) (2026-11-26)
 - [ ] Người dùng thử tay trang Chạy SQL trên DB dev / server thật (chỉ đọc trên Production, Xuất CSV bảng lớn, lịch sử)
-- [ ] Nhật ký server - đổi cấu hình log (ALTER SYSTEM + pg_reload_conf: log_statement, log_min_duration_statement,
-  log_connections / disconnections; hỏi lại, hồ sơ Production gõ lại tên DB; Về mặc định = RESET) - chờ người dùng cho phép
-  (thao tác ghi lên server); đọc file csvlog / jsonlog (để sau)
-- [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV)
+- [x] Nhật ký server - **Đổi cấu hình log** (người dùng cho phép ghi lên server, 2026-11-26): nút trong flyout Cấu hình log → chọn
+  log_statement / log_min_duration_statement / log_connections / log_disconnections → hộp hỏi lại ghi rõ cũ → mới, câu sẽ chạy, lưu ý
+  ghi mọi câu / đặt riêng theo database, user (Production gõ tên database) → ALTER SYSTEM SET chỉ thông số đổi + pg_reload_conf, cả
+  server, không khởi động lại; đọc lại xác nhận đã áp. Về mặc định = ALTER SYSTEM RESET thông số đặt bằng ALTER SYSTEM. User thường
+  → báo cần superuser. Cập nhật F1, README. Unit test 248/248 (PostgreSQL 17 thật: đổi rồi RESET trả về như cũ); GUI Sandbox 20/20
+  (PostgreSQL 17 có logging_collector: Huỷ không đổi, đổi thật + postgresql.auto.conf, không đổi gì, Về mặc định, Production, user
+  thường) (2026-11-26)
+- [ ] Nhật ký server: đọc file csvlog / jsonlog (để sau)
+- [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV; Đổi cấu hình log → Về mặc định)
 - [ ] Nhật ký server cho Oracle (khi làm Đợt 4): giữ LogEntry / LogFilter / bảng / xuất, viết phần đọc riêng - Unified Audit
   (UNIFIED_AUDIT_TRAIL, cần audit policy + AUDIT_VIEWER), alert log (V$DIAG_ALERT_EXT), V$SQL; không dùng ASH / AWR (Diagnostics Pack)
 
