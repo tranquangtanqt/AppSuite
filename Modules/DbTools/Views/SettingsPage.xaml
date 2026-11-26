@@ -71,6 +71,19 @@
                 </StackPanel>
             </Border>
 
+            <!-- Chạy SQL -->
+            <Border Padding="16,12" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Chạy SQL" FontWeight="SemiBold" />
+                    <NumberBox Header="Mỗi câu chạy tối đa (giây, 0 = không giới hạn)" Value="{x:Bind ViewModel.QueryTimeout, Mode=TwoWay}"
+                               Minimum="0" Maximum="3600" SmallChange="30" LargeChange="300" SpinButtonPlacementMode="Inline" Width="320"
+                               AutomationProperties.AutomationId="QueryTimeoutBox" />
+                    <TextBlock Opacity="0.7" FontSize="12" TextWrapping="Wrap"
+                               Text="Mặc định 60 giây (statement_timeout, chỉ trong giao dịch của trang Chạy SQL). Câu chạy quá giới hạn bị dừng, giao dịch rollback. Muốn dừng sớm hơn: nút Huỷ trên trang." />
+                </StackPanel>
+            </Border>
+
             <!-- Nhật ký server -->
             <Border Padding="16,12" CornerRadius="6" BorderThickness="1" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">

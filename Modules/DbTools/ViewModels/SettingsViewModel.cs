@@ -48,6 +48,24 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>Chạy SQL: mỗi câu tối đa bao nhiêu giây (0 = không giới hạn).</summary>
+    [ObservableProperty]
+    private double _queryTimeout;
+
+    partial void OnQueryTimeoutChanged(double value)
+    {
+        if (_loading || double.IsNaN(value))
+        {
+            return;
+        }
+        AppState.Settings.QueryTimeoutSeconds = (int)Math.Round(value);
+        AppState.SaveSettings();
+        if (QueryTimeout != AppState.Settings.QueryTimeoutSeconds)
+        {
+            QueryTimeout = AppState.Settings.QueryTimeoutSeconds;
+        }
+    }
+
     public string DataFolder => DataPaths.Root;
 
     private bool _loading;
@@ -61,6 +79,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         PgBinFolder = AppState.Settings.PgBinFolder;
         BackupBeforeRun = AppState.Settings.BackupBeforeRun;
         LogWarnMb = AppState.Settings.LogWarnMb;
+        QueryTimeout = AppState.Settings.QueryTimeoutSeconds;
         _loading = false;
         _ = RefreshClientAsync();
     }

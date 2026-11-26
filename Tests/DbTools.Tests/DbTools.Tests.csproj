@@ -30,6 +30,9 @@
     <Compile Include="..\..\Modules\DbTools\Services\PgInfo.cs" Link="DbTools\Services\PgInfo.cs" />
     <Compile Include="..\..\Modules\DbTools\Services\MockSource.cs" Link="DbTools\Services\MockSource.cs" />
     <Compile Include="..\..\Modules\DbTools\Services\PgServerLog.cs" Link="DbTools\Services\PgServerLog.cs" />
+    <!-- Trang Chạy SQL: chạy câu (chỉ đọc / ghi), xuất CSV, lịch sử câu. -->
+    <Compile Include="..\..\Modules\DbTools\Services\PgQuery.cs" Link="DbTools\Services\PgQuery.cs" />
+    <Compile Include="..\..\Modules\DbTools\Services\QueryHistory.cs" Link="DbTools\Services\QueryHistory.cs" />
   </ItemGroup>
 
   <ItemGroup>

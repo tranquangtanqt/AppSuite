@@ -191,6 +191,25 @@ public sealed class AppSettings
     /// <summary>Trang Chạy → Chuyển UTF-8: chỗ ghi lần trước (Temp / DumpFolder / Overwrite - tên của DbTools.Core.Utf8Target).</summary>
     public string Utf8Target { get; set; } = "Temp";
 
+    // ----- Chạy SQL -----
+
+    /// <summary>Số dòng tối đa đọc về bảng kết quả (0 = tất cả).</summary>
+    public int QueryMaxRows { get; set; } = 1000;
+
+    /// <summary>Mỗi câu chạy tối đa bao nhiêu giây (statement_timeout; 0 = không giới hạn, tối đa 3600).</summary>
+    public int QueryTimeoutSeconds
+    {
+        get => _queryTimeoutSeconds;
+        set => _queryTimeoutSeconds = Math.Clamp(value, 0, 3600);
+    }
+
+    private int _queryTimeoutSeconds = DefaultQueryTimeout;
+
+    public const int DefaultQueryTimeout = 60;
+
+    /// <summary>Nội dung ô soạn câu lúc rời trang / đóng app.</summary>
+    public string QueryDraft { get; set; } = string.Empty;
+
     public const int DefaultConnectTimeout = 15;
     public const int MinConnectTimeout = 5;
     public const int MaxConnectTimeout = 120;

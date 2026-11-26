@@ -215,7 +215,7 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   báo "sẽ LỖI (rollback cả lô)", "CASCADE sẽ xoá kèm" hoặc "hàm sẽ lỗi lúc chạy" trên dòng file, nhật ký và hộp hỏi lại; bỏ đối
   tượng thư mục tự tạo lại. Unit test 154/154 (PostgreSQL 17 thật: câu báo "sẽ LỖI" lỗi thật, câu chỉ cảnh báo hàm chạy được);
   GUI Sandbox (UIA) 7/7 (2026-11-20)
-- [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools mới (gợi ý 2026-11-20, khuyên làm 1 → 3): (1) ô chạy SQL nhanh (READ ONLY mặc
+- [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools mới (gợi ý 2026-11-20, khuyên làm 1 → 3): ~~(1) ô chạy SQL nhanh~~ (xong 2026-11-26, trang Chạy SQL) (READ ONLY mặc
   định, kết quả bảng, CSV / CsvEditor, lịch sử câu); (3) Thông tin DB: tìm 1 cột trong toàn DB, xem 100 dòng đầu, phụ thuộc theo
   cột; (4) so thư mục svn ↔ DB; (5) khôi phục từ "Sao lưu trước khi chạy" + dọn bản cũ; (6) Restore chọn lọc bảng; (7) Phiên: ai
   chặn ai, huỷ câu đang chạy; (8) so sánh 2 DB, xuất CSV bảng / cột; (9) chạy lên nhiều DB, dòng lệnh; (10) nhập hồ sơ DBeaver /
@@ -223,7 +223,7 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
 - [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools còn lại (gợi ý 2026-11-19, khuyên làm 3 → 2):
   1. ~~Hồ sơ "Quan trọng / Production"~~ - xong 2026-11-20 (mục trên)
   2. So thư mục script svn ↔ DB: đối tượng chưa áp, hàm / view định nghĩa khác, bảng thiếu / thừa cột (vừa)
-  3. Ô chạy SQL nhanh: mặc định READ ONLY, kết quả dạng bảng, giới hạn dòng, Copy / CSV / mở CsvEditor, lịch sử câu (vừa)
+  3. ~~Ô chạy SQL nhanh~~ - xong 2026-11-26 (trang Chạy SQL): mặc định READ ONLY, kết quả dạng bảng, giới hạn dòng, Copy / CSV / mở CsvEditor, lịch sử câu (vừa)
   4. Thông tin DB: tìm cột trong toàn DB; ~~phụ thuộc + tìm chữ trong mã nguồn~~ (xong 2026-11-20, mục trên); xem 100 dòng đầu của bảng
   5. Lịch sử: Khôi phục từ "Sao lưu trước khi chạy" ngay trong app; dọn bản sao lưu cũ (giữ N ngày); bảng "DB nào đã áp bản svn nào"
   6. Restore chọn lọc vài bảng (`pg_restore -t` / `-L`)
@@ -278,6 +278,16 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   schema thì hiện "(mặc định: public)" dù chạy vào schema đó): xoá danh sách làm ComboBox gõ được mất chữ → `EditableBox.Reset`.
   Kèm: đổi server rồi mở danh sách, Esc / bấm ra ngoài thì chữ mất hoặc về DB của server cũ → `Ui.KeepTextIfNothingPicked`. Unit
   test 208/208 (PostgreSQL 17 thật); GUI Sandbox 153/153 đo điểm ảnh + chuột, phím thật, PostgreSQL 17; cây hồ sơ chạy lại 45/45 (2026-11-25)
+- [x] **Chạy SQL** (trang mới, dưới Thông tin DB - đề xuất (1) ngày 2026-11-20): ô soạn câu, chạy đoạn đang chọn / cả ô (nút Chạy,
+  Ctrl+Enter, F5), nhiều câu trong 1 giao dịch; mặc định chỉ đọc (BEGIN READ ONLY ... ROLLBACK, câu ghi bị từ chối 25006), chặn
+  BEGIN / COMMIT / ROLLBACK / SET TRANSACTION gõ trong ô; công tắc Cho phép ghi (hỏi lại, Production gõ tên DB, đổi server tự tắt,
+  lỗi / Huỷ là rollback hết); bảng kết quả câu trả dòng cuối (tên + kiểu cột, NULL, ô nhiều dòng, cuộn ngang / dọc), SELECT đọc qua
+  cursor theo giới hạn 100 / 1.000 / 10.000 / Tất cả; thẻ Thông báo (từng câu, NOTICE); Huỷ + giới hạn 60 giây / câu (Cài đặt);
+  Chép dòng đã chọn / cả bảng / 1 ô (TSV dán Excel); Xuất CSV đủ dòng → <thư mục dump>\ChaySql (chạy lại câu trong giao dịch chỉ
+  đọc, mở CsvEditor); lịch sử 200 câu (tìm, bấm nạp lại); nhớ ô soạn. Sửa kèm: TextBox WinUI xuống dòng bằng \r làm báo sai dòng
+  và chú thích -- nuốt câu sau (đổi về \n trước khi tách). Cập nhật F1, README. Unit test 241/241 (PostgreSQL 17 thật); GUI
+  Sandbox 36/36 (PostgreSQL 17, phím Ctrl+Enter thật, Production, Xuất CSV + CsvEditor, Huỷ, đóng / mở lại app) (2026-11-26)
+- [ ] Người dùng thử tay trang Chạy SQL trên DB dev / server thật (chỉ đọc trên Production, Xuất CSV bảng lớn, lịch sử)
 - [ ] Nhật ký server - đổi cấu hình log (ALTER SYSTEM + pg_reload_conf: log_statement, log_min_duration_statement,
   log_connections / disconnections; hỏi lại, hồ sơ Production gõ lại tên DB; Về mặc định = RESET) - chờ người dùng cho phép
   (thao tác ghi lên server); đọc file csvlog / jsonlog (để sau)

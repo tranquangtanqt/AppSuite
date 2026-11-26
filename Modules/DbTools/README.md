@@ -17,6 +17,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Chạy thư mục SQL** | Đọc thư mục (gồm thư mục con) → danh sách file theo thứ tự chạy → Kiểm tra / Chạy thử / Chạy |
 | **Sao lưu / Khôi phục** | Dump (pg_dump), Restore (pg_restore / psql), Copy DB (TEMPLATE cùng server / dump-restore khác server) |
 | **Thông tin DB** | Tra cứu cấu trúc (thay DBeaver, chỉ đọc): tổng quan, bảng (cột, index, ràng buộc, trigger, DDL), view / hàm / trigger / sequence / extension + định nghĩa |
+| **Chạy SQL** | Ô soạn câu SQL → bảng kết quả; mặc định chỉ đọc (BEGIN READ ONLY ... ROLLBACK), công tắc Cho phép ghi (hỏi lại, Production gõ tên DB); giới hạn dòng, Huỷ, chép TSV, Xuất CSV đủ dòng (CsvEditor), lịch sử 200 câu |
 | **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
 | **Cài đặt** (cuối menu) | Thời gian chờ kết nối (5 - 120 giây, mặc định 15, mọi hồ sơ / mọi trang), thư mục dump, thư mục PostgreSQL client, Sao lưu trước khi chạy, thư mục dữ liệu của app |
@@ -171,6 +172,30 @@ chính DbTools đánh dấu, không ngắt. Ngắt phiên đã chọn (ListView 
 Npgsql chạy ở chế độ raw (`Npgsql.EnableSqlRewriting = false`, đặt trong `App()`): DbTools tự tách câu nên gửi nguyên
 văn từng câu, biết chính xác câu nào lỗi.
 
+## Chạy SQL (2026-11-26)
+
+- **Tách câu** (`Core\QuickQuery.Plan`): có chọn đoạn thì chỉ đoạn đó (`Pick`, đếm dòng phía trước để báo lỗi đúng dòng trong ô),
+  tách bằng `SqlSplitter` như trang Chạy, lệnh psql `\xxx` bỏ qua (ghi ở Thông báo). Chặn lệnh tự mở / đóng giao dịch
+  (`TransactionControl`: BEGIN, START TRANSACTION, COMMIT, END, ROLLBACK, ABORT, SET TRANSACTION, SET SESSION CHARACTERISTICS,
+  PREPARE TRANSACTION) - gõ COMMIT giữa chừng sẽ thoát khỏi giao dịch READ ONLY; SAVEPOINT / ROLLBACK TO vẫn cho.
+- **Chạy** (`Services\PgQuery.RunAsync`): 1 kết nối (`Pg.OpenAsync`, search_path theo schema hồ sơ), `BEGIN READ ONLY` (mặc định)
+  hoặc `BEGIN`, `SET LOCAL statement_timeout` (`AppSettings.QueryTimeoutSeconds`, mặc định 60, 0 = không giới hạn, trang Cài đặt),
+  từng câu lần lượt; lỗi / Huỷ (CancellationToken → Npgsql gửi cancel) → ROLLBACK, báo dòng. Chỉ đọc luôn ROLLBACK cuối; cho phép
+  ghi thì COMMIT. SELECT / VALUES / TABLE (không có INTO) đọc qua `DECLARE ... NO SCROLL CURSOR` + `FETCH n+1` - chỉ kéo về đủ giới
+  hạn; câu khác (WITH, RETURNING, SHOW, EXPLAIN) chạy bằng `NpgsqlBatch` (lấy `StatementType` / `RecordsAffected`), giữ tối đa
+  giới hạn dòng nhưng vẫn đếm hết. Không CLOSE cursor khi lỗi (CLOSE trong giao dịch hỏng ra 25P02, che lỗi thật).
+- **Giá trị** (`QuickQuery.Format`): theo dạng chữ của PostgreSQL, không theo vùng Windows: date đọc `DateOnly`, timestamptz → giờ
+  máy + độ lệch (`+07`), bytea `\x..`, mảng `{a,"b c",NULL}`. Kiểu Npgsql không đọc được → chữ gợi ý thêm `::text`.
+- **Bảng** (`Views\QueryPage`): cột động nên không dùng DataGrid - ListView + `ContainerContentChanging` tự dựng TextBlock theo độ
+  rộng `QuickQuery.ColumnWidths` (chữ dài nhất trong 200 dòng đầu, 60 - 420 DIP), ScrollViewer ngoài cuộn ngang cả tiêu đề, ListView
+  cuộn dọc (ảo hoá). UIA Name của dòng = các ô nối bằng ` | ` (test).
+- **Chép** `QuickQuery.ToTsv` (Tab, ô có Tab / xuống dòng / `"` bọc `"..."` như Excel). **Xuất CSV** `PgQuery.ExportCsvAsync`:
+  `<thư mục dump>\ChaySql\<hồ sơ>_<lúc>.csv` UTF-8 BOM; bảng còn dòng chưa đọc thì chạy lại câu đó trong `BEGIN READ ONLY`
+  (cursor, FETCH 5000 / lần) ghi dần ra file `.tmp` rồi đổi tên; lỗi / huỷ thì xoá file dở. Mở bằng `Shell.OpenData` (CsvEditor).
+- **Lịch sử** `Services\QueryHistory` → `Data\History\queries.json`, 200 câu, cùng câu + cùng server thì đưa lên đầu; ô soạn nhớ ở
+  `settings.json` (`QueryDraft`, lưu khi rời trang / đóng cửa sổ / chạy), giới hạn dòng `QueryMaxRows`.
+- Production: chỉ đọc không hỏi; cho phép ghi → `ProductionGuard.ForQuery` = gõ tên database. Đổi server → công tắc tự tắt.
+
 ## Cài đặt (2026-11-23)
 
 `AppSettings.ConnectTimeoutSeconds` (kẹp 5 - 120, file cũ thiếu = 15) → `Pg.ConnectTimeoutSeconds` (đặt trong `AppState` lúc
@@ -277,10 +302,12 @@ Tên trống (hồ sơ chưa điền Database) → gõ tên hồ sơ; cả 2 tr�
 | File | Nội dung |
 |---|---|
 | `Data\Config\connections.json` | Hồ sơ kết nối (kèm thư mục, mã); mật khẩu mã hoá DPAPI (CurrentUser) - sang máy / tài khoản khác thì trống |
-| `Data\Config\settings.json` | Thư mục / hồ sơ lần trước, thứ tự chạy + file đã bỏ theo thư mục, thư mục lưu dump (`DumpFolder`), thư mục bin PostgreSQL (`PgBinFolder`, trống = tự động), `BackupBeforeRun`, thư mục thu gọn trong cây hồ sơ (`CollapsedFolders`) |
+| `Data\Config\settings.json` | Thư mục / hồ sơ lần trước, thứ tự chạy + file đã bỏ theo thư mục, thư mục lưu dump (`DumpFolder`), thư mục bin PostgreSQL (`PgBinFolder`, trống = tự động), `BackupBeforeRun`, Chạy SQL (`QueryMaxRows`, `QueryTimeoutSeconds`, `QueryDraft`), thư mục thu gọn trong cây hồ sơ (`CollapsedFolders`) |
 | `<thư mục dump>\*.dump`, `*.log` | File Dump + log (mặc định `D:\DMP`, không nằm trong Data) |
 | `<thư mục dump>\TruocKhiChay\...` | Sao lưu trước khi chạy, mỗi lần 1 thư mục (không tự xoá) |
 | `Data\History\history.json` | Lịch sử chạy (500 lần gần nhất) |
+| `Data\History\queries.json` | Lịch sử câu của trang Chạy SQL (200 câu gần nhất) |
+| `<thư mục dump>\ChaySql\*.csv` | File Xuất CSV của trang Chạy SQL |
 | `Data\History\Logs\run-*.log` | Log từng lần chạy: thứ tự file + kết quả + toàn bộ nhật ký |
 | `Logs\dbtools-*.log` | Log của app (14 ngày) |
 
@@ -300,6 +327,10 @@ cấu trúc → psql, restore 1 transaction vào DB có sẵn bị trùng → ro
 phiên → ngắt phiên → copy được, sao lưu trước khi chạy (đủ file, khôi phục lại bảng + hàm từ bản sao lưu), bỏ qua khi chỉ
 tạo đối tượng mới.
 
+`QuickQueryTests` / `PgQueryIntegrationTests` (trang Chạy SQL): chọn đoạn + đếm dòng, chặn lệnh giao dịch, câu nào đọc qua cursor,
+dạng giá trị, TSV, lịch sử; trên PostgreSQL thật: giới hạn dòng qua cursor, chỉ đọc từ chối DELETE (25006) DB không đổi, ghi lỗi
+giữa chừng rollback hết, RETURNING, NOTICE, hết giờ, Huỷ, Xuất CSV đọc lại đủ dòng / câu ghi không chạy lại được.
+
 `PgIntegrationTests` chạy thật trên PostgreSQL khi có biến môi trường `DBTOOLS_TEST_PG` (vd
 `Host=localhost;Port=55432;Username=postgres;Password=...`); mỗi test tạo database tạm `dbtools_test_*` rồi xoá. Server thử
 nhanh: `initdb -D <thư mục tạm> -U postgres --pwfile=<file> -A scram-sha-256 -E UTF8` rồi
@@ -307,5 +338,5 @@ nhanh: `initdb -D <thư mục tạm> -U postgres --pwfile=<file> -A scram-sha-25
 
 ## Chưa làm (đợt sau)
 
-Chạy cùng lô lên nhiều DB, ô chạy SQL nhanh,
+Chạy cùng lô lên nhiều DB,
 tìm trong mã nguồn hàm / view, so DDL với svn, Oracle (xem `PLAN.md`).

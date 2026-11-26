@@ -11,6 +11,10 @@ public static class ProductionGuard
     public static string? ForRun(bool production, string database, string profileName) =>
         production ? Name(database, profileName) : null;
 
+    /// <summary>Chạy SQL ở chế độ cho phép ghi (chế độ chỉ đọc không hỏi).</summary>
+    public static string? ForQuery(bool production, bool allowWrite, string database, string profileName) =>
+        production && allowWrite ? Name(database, profileName) : null;
+
     /// <summary>Restore vào DB có sẵn hoặc tạo DB mới trên server production.</summary>
     public static string? ForRestore(bool production, string database, string profileName) =>
         production ? Name(database, profileName) : null;
