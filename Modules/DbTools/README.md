@@ -249,7 +249,9 @@ Enterprise Postgres `C:/Users/admin/AppData/Local/Fujitsu/.../log`).
   cùng pid gắn vào mục trước; `duration: N ms` (log_duration) gắn vào câu gần nhất cùng pid; `statement:` / `execute <tên>:` /
   `duration: N ms  statement:` → câu SQL; đọc giữa file bỏ dòng đầu + dòng nối tiếp mồ côi; dòng không khớp vẫn giữ, đếm
   `UnknownLines`. `KindOf`: từ khoá đầu (bỏ chú thích / ngoặc) → SELECT / INSERT / UPDATE (cả MERGE) / DELETE (cả TRUNCATE) / DDL
-  (CREATE / ALTER / DROP / COMMENT / GRANT / REVOKE) / SQL khác; WITH theo INSERT / UPDATE / DELETE bên trong. ERROR / FATAL /
+  (CREATE / ALTER / DROP / COMMENT / GRANT / REVOKE) / SQL khác; WITH theo lệnh ghi chính ở mức ngoặc ngoài cùng
+  (`LogTables.MainVerb`, cùng cách Chép tên bảng - 2026-11-26), lệnh chính là SELECT mà CTE có ghi thì theo lệnh ghi đầu tiên
+  (tìm trên bản đã làm trống chuỗi / chú thích). ERROR / FATAL /
   PANIC / WARNING = Lỗi; `connection ...` / `disconnection:` = Kết nối; còn lại Server. Mật khẩu `PASSWORD '...'` luôn che
   (`MaskPasswords`, cả dòng gốc).
 - **Lọc** (`LogFilter`): loại, chữ trong SQL / thông báo / chi tiết, user, database, máy hoặc ứng dụng (chứa, không phân biệt

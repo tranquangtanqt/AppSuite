@@ -377,8 +377,9 @@ public static class ServerLogParser
     public static string MaskPasswords(string text) =>
         text.Contains("password", StringComparison.OrdinalIgnoreCase) ? PasswordRegex.Replace(text, "$1'***'") : text;
 
-    /// <summary>Loại câu theo từ khoá đầu (bỏ chú thích, dấu mở ngoặc). WITH ... → theo INSERT / UPDATE / DELETE bên trong,
-    /// không có thì SELECT. TRUNCATE tính là DELETE (xoá dữ liệu), MERGE là UPDATE.</summary>
+    /// <summary>Loại câu theo từ khoá đầu (bỏ chú thích, dấu mở ngoặc). WITH ... → theo lệnh chính sau các CTE nếu là lệnh ghi
+    /// (WITH x AS (DELETE ...) INSERT ... là INSERT, như Chép tên bảng); lệnh chính là SELECT mà CTE có ghi thì theo lệnh ghi
+    /// đầu tiên (câu vẫn xoá / sửa dữ liệu, lọc DELETE không được bỏ sót); không ghi gì thì SELECT. TRUNCATE tính là DELETE (xoá dữ liệu), MERGE là UPDATE.</summary>
     public static LogKind KindOf(string sql)
     {
         var rest = sql[Comments.Match(sql).Length..];
@@ -394,14 +395,14 @@ public static class ServerLogParser
             "UPDATE" or "MERGE" => LogKind.Update,
             "DELETE" or "TRUNCATE" => LogKind.Delete,
             "CREATE" or "ALTER" or "DROP" or "COMMENT" or "GRANT" or "REVOKE" => LogKind.Ddl,
-            "WITH" => DataVerb.Match(rest) is { Success: true } m
-                ? m.Value.ToUpperInvariant() switch
-                {
-                    "INSERT" => LogKind.Insert,
-                    "DELETE" => LogKind.Delete,
-                    _ => LogKind.Update,
-                }
-                : LogKind.Select,
+            "WITH" => (LogTables.MainVerb(rest) is { Length: > 0 } main ? main
+                    : DataVerb.Match(LogTables.Blank(rest)) is { Success: true } m ? m.Value.ToUpperInvariant() : string.Empty) switch
+            {
+                "INSERT" => LogKind.Insert,
+                "UPDATE" or "MERGE" => LogKind.Update,
+                "DELETE" or "TRUNCATE" => LogKind.Delete,
+                _ => LogKind.Select,
+            },
             _ => LogKind.OtherSql,
         };
     }

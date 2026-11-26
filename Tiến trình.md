@@ -321,6 +321,9 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   phần đã đọc); nút Chép tên bảng của các câu INSERT / UPDATE / DELETE đang hiện: theo thứ tự (giờ ⇥ lệnh ⇥ bảng) / không trùng
   (bảng ⇥ các lệnh ⇥ số câu), cả MERGE, TRUNCATE nhiều bảng, WITH ... INSERT, tên "..." / schema. Cập nhật F1, README. Unit test
   296/296; GUI Sandbox 9/9 (log thật 2 đợt câu ghi cách nhau, lọc giờ, chép bảng) (2026-11-26)
+- [x] **Nhật ký server - cột Loại theo lệnh chính** (người dùng chọn): WITH x AS (DELETE ...) INSERT ... là INSERT (trước: DELETE),
+  khớp Chép tên bảng; lệnh chính là SELECT mà CTE xoá / sửa vẫn theo lệnh ghi đó; chữ INSERT trong chuỗi / chú thích không tính.
+  Cập nhật F1, README. Unit test 300/300; GUI Sandbox 10/10 (2026-11-26)
 - [ ] Cấu hình server đợt sau: sửa đặt riêng theo database / user (ALTER DATABASE / ROLE ... SET); người dùng thử tay trên server thật
 - [ ] Nhật ký server: đọc file csvlog / jsonlog (để sau)
 - [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV; Đổi cấu hình log → Về mặc định)

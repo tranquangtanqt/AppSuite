@@ -98,6 +98,10 @@ public class ServerLogTests
     [InlineData("truncate t", LogKind.Delete)]
     [InlineData("WITH a AS (SELECT 1) INSERT INTO t SELECT * FROM a", LogKind.Insert)]
     [InlineData("with a as (select 1) select * from a", LogKind.Select)]
+    [InlineData("WITH x AS (DELETE FROM cu RETURNING *) INSERT INTO lich_su SELECT * FROM x", LogKind.Insert)] // theo lệnh chính
+    [InlineData("WITH x AS (UPDATE t SET n = 1 RETURNING *) DELETE FROM u WHERE id IN (SELECT id FROM x)", LogKind.Delete)]
+    [InlineData("WITH x AS (DELETE FROM t RETURNING *) SELECT count(*) FROM x", LogKind.Delete)] // chính là SELECT nhưng CTE xoá
+    [InlineData("WITH a AS (SELECT 'INSERT INTO t' AS s) SELECT * FROM a", LogKind.Select)] // chữ trong chuỗi không tính
     [InlineData("CREATE OR REPLACE FUNCTION f() RETURNS int LANGUAGE sql RETURN 1", LogKind.Ddl)]
     [InlineData("comment on table t is 'x'", LogKind.Ddl)]
     [InlineData("BEGIN", LogKind.OtherSql)]

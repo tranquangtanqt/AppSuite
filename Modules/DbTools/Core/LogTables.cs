@@ -18,6 +18,21 @@ public static class LogTables
     public static (string Verb, IReadOnlyList<string> Tables) Of(string sql)
     {
         var plain = Blank(sql);
+        var (verb, end) = FindMainVerb(plain);
+        if (verb.Length == 0)
+        {
+            return (string.Empty, []);
+        }
+        var tables = TablesAfter(verb, sql, plain, end);
+        return tables.Count > 0 ? (verb, tables) : (string.Empty, []);
+    }
+
+    /// <summary>Lệnh ghi chính của câu (INSERT / UPDATE / DELETE / MERGE / TRUNCATE ở mức ngoặc ngoài cùng, WITH x AS (DELETE ...)
+    /// INSERT ... → INSERT); câu đọc / khác → rỗng. Dùng cho cột Loại (<see cref="ServerLogParser.KindOf"/>).</summary>
+    public static string MainVerb(string sql) => FindMainVerb(Blank(sql)).Verb;
+
+    private static (string Verb, int End) FindMainVerb(string plain)
+    {
         var depth = 0;
         for (var i = 0; i < plain.Length; i++)
         {
@@ -36,18 +51,17 @@ public static class LogTables
                 var word = plain[i..end].ToUpperInvariant();
                 if (Verbs.Contains(word))
                 {
-                    var tables = TablesAfter(word, sql, plain, end);
-                    return tables.Count > 0 ? (word, tables) : (string.Empty, []);
+                    return (word, end);
                 }
                 if (word is "SELECT" or "VALUES" or "TABLE" or "CREATE" or "ALTER" or "DROP" or "COPY" or "CALL" or "DO" or "SET"
                     or "BEGIN" or "COMMIT" or "ROLLBACK" or "SAVEPOINT" or "RELEASE" or "SHOW" or "EXPLAIN")
                 {
-                    return (string.Empty, []); // câu đọc / khác: không tìm lệnh ghi phía sau (vd SELECT ... FOR UPDATE)
+                    return (string.Empty, 0); // câu đọc / khác: không tìm lệnh ghi phía sau (vd SELECT ... FOR UPDATE)
                 }
                 i = end - 1;
             }
         }
-        return (string.Empty, []);
+        return (string.Empty, 0);
     }
 
     /// <summary>Theo thứ tự chạy: mỗi bảng của mỗi câu 1 dòng.</summary>
@@ -196,7 +210,7 @@ public static class LogTables
     }
 
     /// <summary>Cùng độ dài với câu gốc; chuỗi '...', chú thích, thân $$...$$ thành dấu cách, ruột tên "..." thành _ (giữ vị trí).</summary>
-    private static string Blank(string sql)
+    internal static string Blank(string sql)
     {
         var chars = sql.ToCharArray();
         var i = 0;
