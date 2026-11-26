@@ -207,10 +207,23 @@
         </Border>
 
         <!-- Chi tiết dòng đang chọn: đủ câu SQL, tham số, chi tiết lỗi (chọn / chép được) -->
-        <TextBox Grid.Row="4" Text="{x:Bind ViewModel.Detail, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
-                 FontFamily="Consolas" FontSize="12" Height="120" ScrollViewer.VerticalScrollBarVisibility="Auto"
-                 Visibility="{x:Bind views:Ui.VisibleIfText(ViewModel.Detail), Mode=OneWay}"
-                 AutomationProperties.Name="Chi tiết dòng log" AutomationProperties.AutomationId="LogDetail" />
+        <Grid Grid.Row="4" ColumnSpacing="8" Visibility="{x:Bind views:Ui.VisibleIfText(ViewModel.Detail), Mode=OneWay}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Text="{x:Bind ViewModel.Detail, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" AcceptsReturn="True"
+                     FontFamily="Consolas" FontSize="12" Height="120" ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     AutomationProperties.Name="Chi tiết dòng log" AutomationProperties.AutomationId="LogDetail" />
+            <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Top">
+                <Button Content="Chép SQL" HorizontalAlignment="Stretch" Command="{x:Bind ViewModel.CopySqlCommand}"
+                        AutomationProperties.AutomationId="LogCopySql"
+                        ToolTipService.ToolTip="Chép đúng câu SQL của dòng đang xem (không kèm giờ, DETAIL)" />
+                <Button Content="Chép SQL đã thay tham số" Command="{x:Bind ViewModel.CopySqlInlinedCommand}"
+                        AutomationProperties.AutomationId="LogCopySqlInlined"
+                        ToolTipService.ToolTip="Câu do ứng dụng gửi kiểu $1, $2...: thay bằng giá trị ở dòng parameters của log để dán vào trang Chạy SQL / psql chạy thử được. Dòng có thay kèm chú thích cuối dòng -- $1 = '...'" />
+            </StackPanel>
+        </Grid>
 
         <Grid Grid.Row="5" ColumnSpacing="8">
             <Grid.ColumnDefinitions>

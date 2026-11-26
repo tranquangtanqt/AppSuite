@@ -163,7 +163,11 @@ public sealed partial class ServerLogViewModel : ObservableObject
     private LogRow? _selected;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CopySqlCommand), nameof(CopySqlInlinedCommand))]
     private string _detail = string.Empty;
+
+    /// <summary>Mục đang hiện ở ô chi tiết (giữ cả khi lọc làm mất dòng đang chọn).</summary>
+    private LogEntry? _detailEntry;
 
     [ObservableProperty]
     private string _searchText = string.Empty;
@@ -242,6 +246,7 @@ public sealed partial class ServerLogViewModel : ObservableObject
         ConfigSummary = string.Empty;
         _reader = null;
         _readFile = string.Empty;
+        _detailEntry = null;
         Detail = string.Empty;
         ApplyFilter();
         Status = "Bấm Làm mới để đọc cấu hình log và danh sách file.";
@@ -269,8 +274,41 @@ public sealed partial class ServerLogViewModel : ObservableObject
     {
         if (value is not null)
         {
+            _detailEntry = value.Entry;
             Detail = DetailOf(value.Entry);
+            CopySqlCommand.NotifyCanExecuteChanged();
+            CopySqlInlinedCommand.NotifyCanExecuteChanged();
         }
+    }
+
+    private bool HasSql => _detailEntry is { Sql.Length: > 0 } && Detail.Length > 0;
+
+    private bool HasParameters => HasSql && SqlParameters.Parse(_detailEntry!.Detail).Count > 0;
+
+    /// <summary>Chép đúng câu SQL của dòng đang xem (không kèm giờ / DETAIL).</summary>
+    [RelayCommand(CanExecute = nameof(HasSql))]
+    private void CopySql()
+    {
+        SetClipboard(_detailEntry!.Sql);
+        Status = "Đã chép câu SQL.";
+    }
+
+    /// <summary>Chép câu SQL đã thay $1, $2... bằng giá trị ở dòng "parameters:" của log, dòng có thay kèm chú thích "-- $1 = ...".</summary>
+    [RelayCommand(CanExecute = nameof(HasParameters))]
+    private void CopySqlInlined()
+    {
+        var e = _detailEntry!;
+        var result = SqlParameters.Inline(e.Sql, SqlParameters.Parse(e.Detail));
+        SetClipboard(result.Sql);
+        Status = $"Đã chép câu SQL, thay {result.Replaced} chỗ tham số"
+            + (result.Missing.Count > 0 ? $"; log không ghi giá trị của {string.Join(", ", result.Missing.Select(n => "$" + n))} - giữ nguyên." : ".");
+    }
+
+    private static void SetClipboard(string text)
+    {
+        var package = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        package.SetText(text.ReplaceLineEndings("\r\n"));
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(package);
     }
 
     private bool CanWork => !IsBusy && !IsFollowing;

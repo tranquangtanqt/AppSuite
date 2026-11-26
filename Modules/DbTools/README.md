@@ -21,7 +21,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ai chặn ai + khoá đang chờ, chạy bao lâu, lọc phiên bận, tự làm mới 5 giây; huỷ câu đang chạy, ngắt phiên đã chọn / ngắt hết, gỡ phiên đang chặn |
 | **Cài đặt** (cuối menu) | Thời gian chờ kết nối (5 - 120 giây, mặc định 15, mọi hồ sơ / mọi trang), thư mục dump, thư mục PostgreSQL client, Sao lưu trước khi chạy, thư mục dữ liệu của app |
-| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log; nút Đổi cấu hình → trang Cấu hình server (nhóm Log) |
+| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, chép SQL (cả bản đã thay tham số $1), xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log; nút Đổi cấu hình → trang Cấu hình server (nhóm Log) |
 | **Cấu hình server** | Mọi thông số của server (pg_settings) theo nhóm, tìm / lọc (khác mặc định, ALTER SYSTEM, cần khởi động lại, đặt riêng DB / user), chi tiết; sửa nhiều dòng → Áp dụng (ALTER SYSTEM + nạp lại, hỏi lại, Production gõ tên DB), Về mặc định |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
 | **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu) xếp theo **cây thư mục** + ô tìm (xem mục Cây hồ sơ), Thử kết nối (nút Huỷ khi đang chờ - `WaitAsync(token)` thôi chờ ngay, đổi hồ sơ cũng huỷ); ô **Quan trọng (Production)** (xem mục Hồ sơ Production) |
@@ -260,6 +260,12 @@ Enterprise Postgres `C:/Users/admin/AppData/Local/Fujitsu/.../log`).
   GB), lc_messages không phải tiếng Anh, csvlog / jsonlog (chưa đọc), thiếu quyền.
 - **Xuất** (`ServerLogExport`): các dòng đang hiện → `<thư mục dump>\NhatKyServer\<hồ sơ>_<file>_<lúc>.csv` (UTF-8 BOM, mở bằng
   CsvEditor nếu có - `Shell.OpenData`) hoặc `.txt` (dòng log gốc).
+- **Chép SQL / Chép SQL đã thay tham số (2026-11-26)** cạnh ô chi tiết. `Core\SqlParameters`: `Parse` tách
+  `parameters: $1 = '...', $2 = NULL` ở DETAIL / CONTEXT (PostgreSQL 16+ viết hoa `Parameters:`, giá trị nhiều dòng, `''`, log
+  cắt giữa giá trị); `Inline` quét câu theo trạng thái (chuỗi '...' / E'...', tên "...", chú thích -- và /* */ lồng, `$$` /
+  `$tag$`) chỉ thay `$n` đứng riêng (không phải `a$1`, `$10` không nhầm `$1`), dòng có thay thêm `  -- $1 = '...'` (bỏ khi cuối
+  dòng còn nằm trong chuỗi / chú thích nhiều dòng), trả số chỗ thay + `$n` thiếu giá trị. Unit test có chạy thật trên PostgreSQL:
+  câu đã thay ra cùng kết quả với câu gửi kèm tham số.
 - Giao diện gọn cho cửa sổ ~600 px: nút Cấu hình log cạnh tiêu đề (flyout), nút Loại (flyout ô tích + Ẩn câu của DbTools), trạng
   thái ở chân trang, ô chi tiết chỉ hiện khi chọn dòng.
 - **Đợt 2 (2026-11-23) - Theo dõi + dung lượng.** `ServerLogReader` (Core): đọc nối tiếp - `Append(đoạn)` giữ dòng dở cuối đoạn

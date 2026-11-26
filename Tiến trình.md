@@ -312,6 +312,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   nhưng ô vẫn hiện DB của hồ sơ (TextBlock riêng trong khuôn ComboBox không được xoá) → `Ui.ClearEditable`, dùng cả cho ✕ Bỏ schema
   trang Chạy thư mục SQL (giữ chữ gợi ý "(mặc định: public)"). Sửa kèm: ô Schema trang Chạy lần đầu vào trang hiện trống dù có schema
   của hồ sơ. Cập nhật README. GUI Sandbox 14/14 (đo điểm ảnh, chuột thật) (2026-11-26)
+- [x] **Nhật ký server - Chép SQL / Chép SQL đã thay tham số** (người dùng đề xuất): 2 nút cạnh ô chi tiết; bản đã thay: $1, $2... →
+  giá trị ở dòng parameters của log (PostgreSQL 16+ "Parameters:"), bỏ qua $n trong chuỗi / chú thích / tên / $$...$$, dòng có thay
+  kèm chú thích cuối dòng -- $1 = '...'; nút tắt khi câu không có tham số. Cập nhật F1, README. Unit test 271/271 (PostgreSQL 17 thật:
+  câu đã thay cùng kết quả câu có tham số); GUI Sandbox 10/10 (log thật từ psql \bind, dán chạy lại bằng psql) (2026-11-26)
 - [ ] Cấu hình server đợt sau: sửa đặt riêng theo database / user (ALTER DATABASE / ROLE ... SET); người dùng thử tay trên server thật
 - [ ] Nhật ký server: đọc file csvlog / jsonlog (để sau)
 - [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV; Đổi cấu hình log → Về mặc định)
