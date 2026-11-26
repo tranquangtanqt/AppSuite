@@ -62,10 +62,10 @@
                             </ItemsControl>
                         </ScrollViewer>
                         <Button HorizontalAlignment="Left" Click="EditConfig_Click" AutomationProperties.AutomationId="LogConfigEdit"
-                                ToolTipService.ToolTip="Đổi log_statement, log_min_duration_statement, log_connections, log_disconnections (ALTER SYSTEM + pg_reload_conf, cả server, không cần khởi động lại). Cần superuser.">
+                                ToolTipService.ToolTip="Mở trang Cấu hình server ở nhóm Log: đổi log_statement, log_min_duration_statement, log_connections... (ALTER SYSTEM + nạp lại cấu hình).">
                             <StackPanel Orientation="Horizontal" Spacing="6">
                                 <FontIcon Glyph="&#xE70F;" FontSize="14" />
-                                <TextBlock Text="Đổi cấu hình log..." />
+                                <TextBlock Text="Đổi cấu hình (trang Cấu hình server)" />
                             </StackPanel>
                         </Button>
                         </StackPanel>

@@ -28,6 +28,11 @@
                     <FontIcon Glyph="&#xE9F9;" />
                 </NavigationViewItem.Icon>
             </NavigationViewItem>
+            <NavigationViewItem Content="Cấu hình server" Tag="ServerConfigPage">
+                <NavigationViewItem.Icon>
+                    <FontIcon Glyph="&#xE90F;" />
+                </NavigationViewItem.Icon>
+            </NavigationViewItem>
             <NavigationViewItem Content="Lịch sử chạy" Tag="HistoryPage" Icon="Clock" />
             <NavigationViewItem Content="Kết nối" Tag="ConnectionsPage" Icon="World" />
         </NavigationView.MenuItems>

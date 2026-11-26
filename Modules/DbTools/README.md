@@ -21,7 +21,8 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
 | **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
 | **Cài đặt** (cuối menu) | Thời gian chờ kết nối (5 - 120 giây, mặc định 15, mọi hồ sơ / mọi trang), thư mục dump, thư mục PostgreSQL client, Sao lưu trước khi chạy, thư mục dữ liệu của app |
-| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log; Đổi cấu hình log (ALTER SYSTEM + reload, Về mặc định) |
+| **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log; nút Đổi cấu hình → trang Cấu hình server (nhóm Log) |
+| **Cấu hình server** | Mọi thông số của server (pg_settings) theo nhóm, tìm / lọc (khác mặc định, ALTER SYSTEM, cần khởi động lại, đặt riêng DB / user), chi tiết; sửa nhiều dòng → Áp dụng (ALTER SYSTEM + nạp lại, hỏi lại, Production gõ tên DB), Về mặc định |
 | **Lịch sử chạy** | Mọi lần Chạy / Chạy thử / Dump / Restore / Copy DB: lúc nào, database nào, thư mục / file nào + bản svn / git, kết quả, file log |
 | **Kết nối** | Hồ sơ kết nối PostgreSQL (host, port, database, user, mật khẩu) xếp theo **cây thư mục** + ô tìm (xem mục Cây hồ sơ), Thử kết nối (nút Huỷ khi đang chờ - `WaitAsync(token)` thôi chờ ngay, đổi hồ sơ cũng huỷ); ô **Quan trọng (Production)** (xem mục Hồ sơ Production) |
 
@@ -196,6 +197,26 @@ văn từng câu, biết chính xác câu nào lỗi.
   `settings.json` (`QueryDraft`, lưu khi rời trang / đóng cửa sổ / chạy), giới hạn dòng `QueryMaxRows`.
 - Production: chỉ đọc không hỏi; cho phép ghi → `ProductionGuard.ForQuery` = gõ tên database. Đổi server → công tắc tự tắt.
 
+## Cấu hình server (2026-11-26)
+
+Người dùng cho phép ghi lên server; thay hộp "Đổi cấu hình log" làm cùng ngày (4 thông số) bằng 1 trang cho mọi thông số.
+- **Đọc** (`Services\PgSettings.LoadAsync`): `pg_settings` + `current_setting(name)` (dạng dễ đọc, vd 128MB) + `pg_db_role_setting`
+  (ALTER DATABASE / ROLE ... SET, hiện ở chi tiết + lọc ⚑) + `pg_file_settings`: dòng cuối mỗi thông số nằm ở postgresql.auto.conf →
+  `InAutoConf` (giá trị đã ghi nhưng chờ khởi động lại thì `pg_settings.sourcefile` vẫn là postgresql.conf - không có cái này thì
+  không Về mặc định được), `applied = false` → `PendingRestart` (cột `pending_restart` của pg_settings không đáng tin ở kết nối mới
+  trên server Windows: backend không fork từ postmaster; đọc được file thì chỉ tin file). sourcefile / pg_file_settings chỉ superuser
+  / pg_read_all_settings thấy.
+- **Nhóm** (`Core\ServerSettings`): phần đầu category → tên tiếng Việt, Log đứng đầu, nhóm lạ (bản PostgreSQL / Fujitsu khác) cuối.
+- **Kiểm giá trị** (`Normalize`) theo vartype: bool (on/off/true/1/bật...), enum (theo enumvals, không phân biệt hoa thường), integer /
+  real (số, có thể kèm đơn vị kB/MB/GB, ms/s/min/h/d - có đơn vị thì server tự kiểm khoảng, không đơn vị thì kiểm min / max ngay), chuỗi
+  (không xuống dòng); context internal = chỉ xem. **Câu** (`Statement`): tên kiểm bằng regex, giá trị luôn trong '...' (nhân đôi '), thông
+  số danh sách GUC_LIST_QUOTE (search_path, *_preload_libraries, temp_tablespaces) bọc từng phần tử.
+- **Áp dụng** (`PgSettings.ApplyAsync`): từng câu ALTER SYSTEM (tự commit, không chạy được trong giao dịch), lỗi ở câu nào thì dừng
+  (câu trước đã ghi, còn lại giữ ở danh sách chờ), có câu chạy được thì `pg_reload_conf()`, chờ 0,8 giây rồi đọc lại bằng kết nối mới.
+  Hộp hỏi lại: cũ → mới, `ServerSettings.Warnings` (cần khởi động lại, đặt riêng theo DB / user, ghi mọi câu), câu sẽ chạy;
+  Production → `ProductionGuard.ForServerConfig` (gõ tên database). Đổi server bị khoá khi còn thay đổi chờ.
+- Đặt riêng theo database / user: chỉ xem (đợt sau mới sửa). DbTools không sửa postgresql.conf, không khởi động lại server.
+
 ## Cài đặt (2026-11-23)
 
 `AppSettings.ConnectTimeoutSeconds` (kẹp 5 - 120, file cũ thiếu = 15) → `Pg.ConnectTimeoutSeconds` (đặt trong `AppState` lúc
@@ -248,13 +269,7 @@ Enterprise Postgres `C:/Users/admin/AppData/Local/Fujitsu/.../log`).
   thì đảo danh sách; Theo dõi khi mới trước thì bỏ dòng mục cuối ở đầu bảng rồi chèn mục mới vào vị trí 0, "ở cuối" để tự cuộn
   hiểu là đầu bảng. Xuất CSV theo thứ tự đang hiện, TXT luôn theo thứ tự file. Không chia trang: ListView ảo hoá (chỉ dựng dòng
   đang hiện), chia trang còn làm dòng mới khi Theo dõi rơi sang trang khác.
-- **Đổi cấu hình log (2026-11-26, người dùng cho phép ghi lên server):** nút trong flyout Cấu hình log → hộp chọn (`ServerLogPage.ChooseConfigAsync`,
-  4 thông số đổi được không cần khởi động lại: log_statement, log_min_duration_statement, log_connections, log_disconnections) →
-  `Core\LogConfigEdit` tính câu `ALTER SYSTEM SET` chỉ cho thông số khác giá trị đang áp (giá trị đã kiểm: enum / số / on-off, không
-  ghép chữ người dùng gõ) + dòng cũ → mới + lưu ý (ghi mọi câu, đặt riêng theo database / user) → hộp hỏi lại (Production: gõ tên
-  database, `ProductionGuard.ForLogConfig`) → `PgServerLog.ApplyAsync`: từng câu (tự commit) + `pg_reload_conf()`, đọc lại bằng kết
-  nối mới tới khi thấy giá trị mới (tối đa ~3 giây) rồi Làm mới cấu hình. Về mặc định = `ALTER SYSTEM RESET` các thông số có
-  `sourcefile` là postgresql.auto.conf (thông số đặt ở postgresql.conf để nguyên). Lỗi 42501 → báo cần superuser.
+- **Đổi cấu hình log:** nút trong flyout Cấu hình log mở trang Cấu hình server ở nhóm Log (`ServerConfigViewModel.Request`).
 - Chưa làm: đọc csvlog /
   jsonlog. Sau này Oracle: giữ `LogEntry` / `LogFilter` / bảng / xuất dùng chung, viết phần đọc riêng (Unified
   Audit `UNIFIED_AUDIT_TRAIL`, alert log `V$DIAG_ALERT_EXT`, `V$SQL`; tránh ASH / AWR vì cần Diagnostics Pack) - lúc đó mới tách
@@ -334,8 +349,9 @@ cấu trúc → psql, restore 1 transaction vào DB có sẵn bị trùng → ro
 phiên → ngắt phiên → copy được, sao lưu trước khi chạy (đủ file, khôi phục lại bảng + hàm từ bản sao lưu), bỏ qua khi chỉ
 tạo đối tượng mới.
 
-`LogConfigEditTests` / `LogConfigIntegrationTests` (Đổi cấu hình log): chỉ ALTER các thông số đổi, mô tả cũ → mới, lưu ý, RESET chỉ
-dòng của postgresql.auto.conf; trên PostgreSQL thật (superuser): đổi 4 thông số → reload → đọc lại đúng → RESET về như cũ.
+`ServerSettingsTests` / `PgSettingsIntegrationTests` (Cấu hình server): kiểm giá trị theo kiểu, câu ALTER SYSTEM (nháy, danh sách,
+tên lạ bị chặn), nhóm / nguồn / lọc, lưu ý; trên PostgreSQL thật (superuser): đọc > 200 thông số, áp 4 câu + câu lỗi dừng đúng chỗ,
+max_connections chờ khởi động lại, RESET về như cũ, đọc đặt riêng ALTER ROLE ... IN DATABASE ... SET.
 
 `QuickQueryTests` / `PgQueryIntegrationTests` (trang Chạy SQL): chọn đoạn + đếm dòng, chặn lệnh giao dịch, câu nào đọc qua cursor,
 dạng giá trị, TSV, lịch sử; trên PostgreSQL thật: giới hạn dòng qua cursor, chỉ đọc từ chối DELETE (25006) DB không đổi, ghi lỗi

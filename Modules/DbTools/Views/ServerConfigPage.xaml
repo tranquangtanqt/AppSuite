@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="DbTools.Views.ServerConfigPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:DbTools.Views"
+    xmlns:vm="using:DbTools.ViewModels"
+    xmlns:models="using:DbTools.Models"
+    NavigationCacheMode="Required">
+
+    <Grid Padding="24,12" RowSpacing="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Spacing="2" Margin="0,0,48,0">
+            <TextBlock Text="Cấu hình server" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <TextBlock Opacity="0.7" TextWrapping="Wrap"
+                       Text="Mọi thông số của server PostgreSQL (pg_settings). Sửa = ALTER SYSTEM (ghi postgresql.auto.conf trên máy server) + nạp lại cấu hình - áp cho cả server. Cần superuser." />
+        </StackPanel>
+
+        <!-- Server · Làm mới · nhóm · tìm -->
+        <Grid Grid.Row="1" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MaxWidth="340" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MaxWidth="240" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ComboBox Header="Server (hồ sơ kết nối)" HorizontalAlignment="Stretch" views:ProfilePicker.Selected="{x:Bind ViewModel.Profile, Mode=TwoWay}"
+                      PlaceholderText="(chưa có kết nối)" IsEnabled="{x:Bind views:Ui.And2(ViewModel.IsIdle, ViewModel.NoPending), Mode=OneWay}"
+                      AutomationProperties.AutomationId="ConfigProfileBox"
+                      ToolTipService.ToolTip="Đổi server thì các thay đổi chờ áp dụng bị bỏ - Áp dụng hoặc Bỏ hết trước.">
+                <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:ConnectionProfile">
+                        <TextBlock Text="{x:Bind PickerText, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Column="1" VerticalAlignment="Bottom" Content="Làm mới" Style="{StaticResource CompactAccentButtonStyle}"
+                    Command="{x:Bind ViewModel.RefreshCommand}" AutomationProperties.AutomationId="ConfigRefresh"
+                    ToolTipService.ToolTip="Đọc lại cấu hình từ server (bỏ các thay đổi chờ áp dụng)" />
+            <ComboBox Grid.Column="2" Header="Nhóm" HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.Groups}"
+                      SelectedItem="{x:Bind ViewModel.Group, Mode=TwoWay}" AutomationProperties.AutomationId="ConfigGroupBox" />
+            <TextBox Grid.Column="3" Header="Tìm" PlaceholderText="tên / mô tả, vd log_, timeout, mem"
+                     Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.AutomationId="ConfigSearch" />
+        </Grid>
+
+        <!-- Lọc -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="16">
+            <CheckBox Content="Khác mặc định" MinWidth="0" IsChecked="{x:Bind ViewModel.ChangedOnly, Mode=TwoWay}" AutomationProperties.AutomationId="ConfigChangedOnly"
+                      ToolTipService.ToolTip="Đặt trong file cấu hình, dòng lệnh khởi động hoặc ALTER SYSTEM" />
+            <CheckBox Content="● ALTER SYSTEM" MinWidth="0" IsChecked="{x:Bind ViewModel.AlterSystemOnly, Mode=TwoWay}" AutomationProperties.AutomationId="ConfigAlterOnly"
+                      ToolTipService.ToolTip="Đang đặt bằng ALTER SYSTEM (postgresql.auto.conf) - Về mặc định được" />
+            <CheckBox Content="↻ Cần khởi động lại" MinWidth="0" IsChecked="{x:Bind ViewModel.RestartOnly, Mode=TwoWay}" AutomationProperties.AutomationId="ConfigRestartOnly"
+                      ToolTipService.ToolTip="Đổi xong phải khởi động lại server (◆ = đã ghi giá trị mới, đang chờ khởi động lại)" />
+            <CheckBox Content="⚑ Đặt riêng DB / user" MinWidth="0" IsChecked="{x:Bind ViewModel.OverriddenOnly, Mode=TwoWay}" AutomationProperties.AutomationId="ConfigOverriddenOnly"
+                      ToolTipService.ToolTip="Có ALTER DATABASE / ROLE ... SET đè lên cấu hình server" />
+            <TextBlock Text="{x:Bind ViewModel.CountText, Mode=OneWay}" VerticalAlignment="Center" Opacity="0.7" AutomationProperties.AutomationId="ConfigCount" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="3" Text="{x:Bind ViewModel.Status, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True"
+                   Foreground="{x:Bind StatusBrush(ViewModel.StatusIsError), Mode=OneWay}" AutomationProperties.AutomationId="ConfigStatus" />
+
+        <!-- Danh sách · chi tiết -->
+        <Grid Grid.Row="4" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="340" />
+            </Grid.ColumnDefinitions>
+            <Border BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid>
+                    <ListView ItemsSource="{x:Bind ViewModel.Rows}" SelectedItem="{x:Bind ViewModel.Selected, Mode=TwoWay}" SelectionMode="Single"
+                              AutomationProperties.AutomationId="ConfigList" AutomationProperties.Name="Thông số">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="Padding" Value="12,4" />
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:SettingRow">
+                                <Grid ColumnSpacing="8" AutomationProperties.Name="{x:Bind Name}">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" MaxWidth="220" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="{x:Bind Name}" FontFamily="Consolas" FontWeight="SemiBold" />
+                                            <TextBlock Text="{x:Bind Marks}" Foreground="{x:Bind views:Ui.WarnBrush(HasPending)}" />
+                                        </StackPanel>
+                                        <TextBlock Text="{x:Bind Desc}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{x:Bind ValueText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               FontFamily="Consolas" Foreground="{x:Bind views:Ui.WarnBrush(HasPending)}" ToolTipService.ToolTip="{x:Bind ValueText}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                    <TextBlock Text="Bấm Làm mới để đọc cấu hình." Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
+                               Visibility="{x:Bind EmptyVisible(ViewModel.CountText), Mode=OneWay}" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="1" BorderThickness="1" CornerRadius="4" Padding="12" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <Grid>
+                    <ScrollViewer x:Name="DetailScroll" VerticalScrollBarVisibility="Auto" Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.HasSelection), Mode=OneWay}">
+                        <StackPanel Spacing="8" Padding="0,0,12,0">
+                            <TextBlock Text="{x:Bind ViewModel.Selected.Name, Mode=OneWay}" FontFamily="Consolas" FontWeight="SemiBold" FontSize="16"
+                                       TextWrapping="Wrap" IsTextSelectionEnabled="True" AutomationProperties.AutomationId="ConfigDetailName" />
+                            <TextBlock Text="Giá trị mới" FontWeight="SemiBold" />
+                            <ComboBox HorizontalAlignment="Stretch" ItemsSource="{x:Bind ViewModel.EditOptions}" SelectedItem="{x:Bind ViewModel.EditChoice, Mode=TwoWay}"
+                                      Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.IsChoice), Mode=OneWay}" IsEnabled="{x:Bind ViewModel.CanEdit, Mode=OneWay}"
+                                      AutomationProperties.AutomationId="ConfigEditChoice" AutomationProperties.Name="Giá trị mới" />
+                            <TextBox Text="{x:Bind ViewModel.EditText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontFamily="Consolas" KeyDown="EditBox_KeyDown"
+                                     Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.IsText), Mode=OneWay}" IsEnabled="{x:Bind ViewModel.CanEdit, Mode=OneWay}"
+                                     AutomationProperties.AutomationId="ConfigEditText" AutomationProperties.Name="Giá trị mới"
+                                     PlaceholderText="vd 64MB, 30s, on" />
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+                                <Button Content="Đổi" Command="{x:Bind ViewModel.StageCommand}" IsEnabled="{x:Bind ViewModel.CanEdit, Mode=OneWay}"
+                                        AutomationProperties.AutomationId="ConfigStage" ToolTipService.ToolTip="Đưa vào danh sách chờ áp dụng (Enter trong ô)" />
+                                <Button Content="Về mặc định" Command="{x:Bind ViewModel.StageResetCommand}" IsEnabled="{x:Bind ViewModel.CanReset, Mode=OneWay}"
+                                        AutomationProperties.AutomationId="ConfigStageReset"
+                                        ToolTipService.ToolTip="Bỏ dòng ALTER SYSTEM của thông số này (quay về postgresql.conf / mặc định)" />
+                                <Button Content="Bỏ" Command="{x:Bind ViewModel.UnstageCommand}" IsEnabled="{x:Bind ViewModel.CanUnstage, Mode=OneWay}"
+                                        AutomationProperties.AutomationId="ConfigUnstage" ToolTipService.ToolTip="Bỏ thay đổi chờ áp dụng của thông số này" />
+                            </StackPanel>
+                            <ItemsControl ItemsSource="{x:Bind ViewModel.Detail, Mode=OneWay}" AutomationProperties.AutomationId="ConfigDetail">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:DetailLine">
+                                        <StackPanel Margin="0,0,0,6">
+                                            <TextBlock Text="{x:Bind Label}" FontSize="12" Opacity="0.6" />
+                                            <TextBlock Text="{x:Bind Text}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                    <TextBlock Text="Chọn 1 thông số để xem chi tiết / sửa." Opacity="0.6" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="{x:Bind views:Ui.HiddenIf(ViewModel.HasSelection), Mode=OneWay}" />
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Thay đổi chờ áp dụng -->
+        <Grid Grid.Row="5" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="{x:Bind ViewModel.PendingText, Mode=OneWay}" VerticalAlignment="Center" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                       Foreground="{x:Bind views:Ui.WarnBrush(ViewModel.HasPending), Mode=OneWay}" AutomationProperties.AutomationId="ConfigPending" />
+            <Button Grid.Column="1" Content="Về mặc định tất cả" Command="{x:Bind ViewModel.StageResetAllCommand}" AutomationProperties.AutomationId="ConfigResetAll"
+                    ToolTipService.ToolTip="Mọi thông số đang đặt bằng ALTER SYSTEM → về mặc định (chờ áp dụng)" />
+            <Button Grid.Column="2" Content="Bỏ hết" Command="{x:Bind ViewModel.ClearPendingCommand}" AutomationProperties.AutomationId="ConfigClearPending" />
+            <Button Grid.Column="3" Content="Áp dụng" Style="{StaticResource CompactAccentButtonStyle}" Command="{x:Bind ViewModel.ApplyCommand}"
+                    AutomationProperties.AutomationId="ConfigApply" ToolTipService.ToolTip="Hỏi lại rồi ghi lên server (ALTER SYSTEM + nạp lại cấu hình)" />
+        </Grid>
+    </Grid>
+</Page>

@@ -33,6 +33,8 @@
     <!-- Trang Chạy SQL: chạy câu (chỉ đọc / ghi), xuất CSV, lịch sử câu. -->
     <Compile Include="..\..\Modules\DbTools\Services\PgQuery.cs" Link="DbTools\Services\PgQuery.cs" />
     <Compile Include="..\..\Modules\DbTools\Services\QueryHistory.cs" Link="DbTools\Services\QueryHistory.cs" />
+    <!-- Cấu hình server: đọc pg_settings, ALTER SYSTEM. -->
+    <Compile Include="..\..\Modules\DbTools\Services\PgSettings.cs" Link="DbTools\Services\PgSettings.cs" />
   </ItemGroup>
 
   <ItemGroup>

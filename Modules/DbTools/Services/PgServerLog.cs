@@ -55,8 +55,7 @@ public sealed class ServerLogFollower : IAsyncDisposable
 /// <summary>
 /// Đọc nhật ký server PostgreSQL qua SQL (không cần quyền vào máy server): cấu hình log (pg_settings), danh sách file
 /// (pg_ls_logdir - superuser / pg_monitor), nội dung (pg_read_binary_file - superuser / pg_read_server_files; đọc dạng byte
-/// rồi giải mã UTF-8 ở máy này nên file có byte lạ vẫn đọc được). Chỉ đọc, trừ <see cref="ApplyAsync"/> (nút Đổi cấu hình log:
-/// ALTER SYSTEM + pg_reload_conf, người dùng đã xác nhận).
+/// rồi giải mã UTF-8 ở máy này nên file có byte lạ vẫn đọc được). Chỉ đọc, không đổi gì trên server (đổi cấu hình: trang Cấu hình server).
 /// </summary>
 public static class PgServerLog
 {
@@ -81,63 +80,6 @@ public static class PgServerLog
         await using var rr = await rc.ExecuteReaderAsync(ct);
         await rr.ReadAsync(ct);
         return new LogServerInfo(settings, rr.GetBoolean(0), rr.GetBoolean(1), rr.GetBoolean(2));
-    }
-
-    /// <summary>4 thông số log đổi được (LogConfigEdit.Names) kèm nguồn / file đặt nó. sourcefile chỉ superuser /
-    /// pg_read_all_settings thấy (không thấy thì Về mặc định không biết dòng nào do ALTER SYSTEM đặt).</summary>
-    public static async Task<Dictionary<string, LogSetting>> EditableSettingsAsync(ConnectionProfile p, CancellationToken ct)
-    {
-        await using var c = await PgAdmin.OpenMaintenanceAsync(p, ct);
-        return await ReadEditableAsync(c, ct);
-    }
-
-    private static async Task<Dictionary<string, LogSetting>> ReadEditableAsync(NpgsqlConnection c, CancellationToken ct)
-    {
-        const string sql = "SELECT name, setting, source, coalesce(sourcefile, ''), coalesce(boot_val, '') FROM pg_settings WHERE name = ANY($1)";
-        await using var cmd = new NpgsqlCommand(sql, c);
-        cmd.Parameters.Add(new NpgsqlParameter { Value = LogConfigEdit.Names });
-        var result = new Dictionary<string, LogSetting>();
-        await using var r = await cmd.ExecuteReaderAsync(ct);
-        while (await r.ReadAsync(ct))
-        {
-            result[r.GetString(0)] = new LogSetting(r.GetString(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetString(4));
-        }
-        return result;
-    }
-
-    /// <summary>GHI lên server: chạy các câu ALTER SYSTEM (mỗi câu tự commit - ALTER SYSTEM không chạy trong giao dịch) rồi
-    /// pg_reload_conf(); đọc lại bằng kết nối mới (server áp cấu hình mới bất đồng bộ) để báo giá trị thật đang áp.</summary>
-    public static async Task<Dictionary<string, LogSetting>> ApplyAsync(ConnectionProfile p, IReadOnlyList<string> statements, CancellationToken ct)
-    {
-        await using (var c = await PgAdmin.OpenMaintenanceAsync(p, ct))
-        {
-            foreach (var sql in statements)
-            {
-                await using var cmd = new NpgsqlCommand(sql, c);
-                await cmd.ExecuteNonQueryAsync(ct);
-            }
-            await using var reload = new NpgsqlCommand("SELECT pg_reload_conf()", c);
-            await reload.ExecuteScalarAsync(ct);
-        }
-        Dictionary<string, LogSetting> after = [];
-        for (var attempt = 0; attempt < 10; attempt++)
-        {
-            await Task.Delay(300, ct);
-            await using var c = await PgAdmin.OpenMaintenanceAsync(p, ct);
-            after = await ReadEditableAsync(c, ct);
-            if (statements.All(s => Applied(s, after)))
-            {
-                break;
-            }
-        }
-        return after;
-    }
-
-    /// <summary>Câu SET đã thấy ở pg_settings chưa (RESET thì không biết trước giá trị - coi như đã áp).</summary>
-    private static bool Applied(string statement, Dictionary<string, LogSetting> settings)
-    {
-        var m = System.Text.RegularExpressions.Regex.Match(statement, @"^ALTER SYSTEM SET (\w+) = '?([^']*)'?$");
-        return !m.Success || (settings.TryGetValue(m.Groups[1].Value, out var s) && s.Setting == m.Groups[2].Value);
     }
 
     /// <summary>File log, mới sửa nhất trước; đánh dấu file server đang ghi (pg_current_logfile).</summary>

@@ -15,8 +15,8 @@ public static class ProductionGuard
     public static string? ForQuery(bool production, bool allowWrite, string database, string profileName) =>
         production && allowWrite ? Name(database, profileName) : null;
 
-    /// <summary>Đổi cấu hình log (ALTER SYSTEM - áp cho cả server production).</summary>
-    public static string? ForLogConfig(bool production, string database, string profileName) =>
+    /// <summary>Đổi cấu hình server (ALTER SYSTEM - áp cho cả server production).</summary>
+    public static string? ForServerConfig(bool production, string database, string profileName) =>
         production ? Name(database, profileName) : null;
 
     /// <summary>Restore vào DB có sẵn hoặc tạo DB mới trên server production.</summary>

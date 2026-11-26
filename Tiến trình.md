@@ -295,6 +295,15 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   → báo cần superuser. Cập nhật F1, README. Unit test 248/248 (PostgreSQL 17 thật: đổi rồi RESET trả về như cũ); GUI Sandbox 20/20
   (PostgreSQL 17 có logging_collector: Huỷ không đổi, đổi thật + postgresql.auto.conf, không đổi gì, Về mặc định, Production, user
   thường) (2026-11-26)
+- [x] **Cấu hình server** (trang mới, dưới Nhật ký server - người dùng muốn tách việc đổi cấu hình ra menu riêng, chọn các phương án
+  khuyên): mọi thông số của server (pg_settings, ~350) theo nhóm tiếng Việt (Log đầu), tìm, lọc Khác mặc định / ● ALTER SYSTEM /
+  ↻ Cần khởi động lại / ⚑ Đặt riêng DB, user; chi tiết (mô tả, mặc định, nguồn file + dòng, áp dụng khi nào, khoảng cho phép, đặt
+  riêng); sửa nhiều dòng (kiểm giá trị theo kiểu, đơn vị MB / s...) → chờ áp dụng → Áp dụng: hỏi lại cũ → mới + lưu ý (Production gõ
+  tên DB) → ALTER SYSTEM SET / RESET + pg_reload_conf, đọc lại; thông số cần khởi động lại chỉ ghi + báo ◆ (không tự khởi động lại);
+  Về mặc định từng dòng / tất cả; user thường xem được, áp bị từ chối. Nút trong Nhật ký server thành lối tắt mở nhóm Log (bỏ hộp 4
+  thông số làm sáng nay). Sửa kèm: trên server Windows pending_restart / sourcefile không đúng ở kết nối mới → đọc pg_file_settings.
+  Cập nhật F1, README. Unit test 253/253 (PostgreSQL 17 thật); GUI Sandbox 22/22 (2026-11-26)
+- [ ] Cấu hình server đợt sau: sửa đặt riêng theo database / user (ALTER DATABASE / ROLE ... SET); người dùng thử tay trên server thật
 - [ ] Nhật ký server: đọc file csvlog / jsonlog (để sau)
 - [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV; Đổi cấu hình log → Về mặc định)
 - [ ] Nhật ký server cho Oracle (khi làm Đợt 4): giữ LogEntry / LogFilter / bảng / xuất, viết phần đọc riêng - Unified Audit
