@@ -115,7 +115,7 @@
 
         <!-- Lọc: chữ trong SQL / thông báo, user, database, máy / ứng dụng; nút Loại (ô tích từng loại + ẩn câu của DbTools) -->
         <shared:WrapPanel Grid.Row="2" Spacing="8">
-            <TextBox Width="200" PlaceholderText="Tìm trong câu SQL / thông báo" Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+            <TextBox Width="180" PlaceholderText="Tìm trong câu SQL / thông báo" Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      AutomationProperties.Name="Tìm trong SQL" />
             <TextBox Width="100" PlaceholderText="User" Text="{x:Bind ViewModel.UserText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      AutomationProperties.Name="Lọc user" />
@@ -123,6 +123,14 @@
                      AutomationProperties.Name="Lọc database" />
             <TextBox Width="150" PlaceholderText="Máy / IP / ứng dụng" Text="{x:Bind ViewModel.ClientText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      AutomationProperties.Name="Lọc máy" />
+            <TextBox Width="104" PlaceholderText="Từ giờ" Text="{x:Bind ViewModel.FromText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     BorderBrush="{x:Bind views:Ui.InvalidBorder(ViewModel.FromInvalid), Mode=OneWay}"
+                     AutomationProperties.Name="Từ giờ" AutomationProperties.AutomationId="LogFrom"
+                     ToolTipService.ToolTip="Chỉ hiện dòng từ giờ này (gồm cả mốc). Gõ 14:02, 14:02:30, 11-26 14:02, 2026-11-26 14:02 hoặc 2026-11-26. Chỉ gõ giờ = ngày của dòng log mới nhất đã đọc. Trống = không giới hạn. Chỉ lọc trong phần đã đọc." />
+            <TextBox Width="104" PlaceholderText="Đến giờ" Text="{x:Bind ViewModel.ToText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     BorderBrush="{x:Bind views:Ui.InvalidBorder(ViewModel.ToInvalid), Mode=OneWay}"
+                     AutomationProperties.Name="Đến giờ" AutomationProperties.AutomationId="LogTo"
+                     ToolTipService.ToolTip="Chỉ hiện dòng tới giờ này, gồm cả phút / giây của mốc (Đến 14:02 gồm 14:02:59). Cách gõ như ô Từ. Trống = không giới hạn." />
             <DropDownButton Content="{x:Bind ViewModel.KindsSummary, Mode=OneWay}" AutomationProperties.AutomationId="LogKinds"
                             ToolTipService.ToolTip="Chọn loại dòng hiện (kèm số dòng mỗi loại); ẩn / hiện câu của chính DbTools">
                 <DropDownButton.Flyout>
@@ -236,6 +244,17 @@
             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.Status, Mode=OneWay}" VerticalAlignment="Center" Opacity="0.8" TextTrimming="CharacterEllipsis"
                        ToolTipService.ToolTip="{x:Bind ViewModel.Status, Mode=OneWay}" AutomationProperties.AutomationId="LogStatus" />
             <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+                <DropDownButton Content="Chép tên bảng" AutomationProperties.AutomationId="LogCopyTables"
+                                ToolTipService.ToolTip="Tên bảng của các câu INSERT / UPDATE / DELETE (cả MERGE, TRUNCATE, WITH ... INSERT) trong các dòng đang hiện - dán Excel thành cột">
+                    <DropDownButton.Flyout>
+                        <MenuFlyout Placement="TopEdgeAlignedRight">
+                            <MenuFlyoutItem Text="Theo thứ tự (giờ ⇥ lệnh ⇥ bảng)" Command="{x:Bind ViewModel.CopyTablesInOrderCommand}"
+                                            AutomationProperties.AutomationId="LogCopyTablesInOrder" />
+                            <MenuFlyoutItem Text="Không trùng (bảng ⇥ lệnh ⇥ số câu)" Command="{x:Bind ViewModel.CopyTablesDistinctCommand}"
+                                            AutomationProperties.AutomationId="LogCopyTablesDistinct" />
+                        </MenuFlyout>
+                    </DropDownButton.Flyout>
+                </DropDownButton>
                 <Button Content="Xuất CSV" Command="{x:Bind ViewModel.ExportCsvCommand}" AutomationProperties.AutomationId="LogExportCsv"
                         ToolTipService.ToolTip="Các dòng đang hiện → file CSV (mở bằng CsvEditor / Excel) trong &lt;thư mục dump&gt;\NhatKyServer" />
                 <Button Content="Xuất TXT" Command="{x:Bind ViewModel.ExportTextCommand}" AutomationProperties.AutomationId="LogExportTxt"

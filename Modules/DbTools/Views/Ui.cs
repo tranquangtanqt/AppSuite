@@ -34,6 +34,10 @@ internal static class Ui
 
     public static Brush FolderBrush => Orange;
 
+    /// <summary>Viền ô gõ: đỏ khi gõ sai cách, không thì viền mặc định của TextBox.</summary>
+    public static Brush InvalidBorder(bool invalid) =>
+        invalid ? Red : (Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextControlBorderBrush"];
+
     private static readonly Brush Transparent = new SolidColorBrush(Colors.Transparent);
 
     public static string ResultGlyph(bool success) => success ? "" : "";

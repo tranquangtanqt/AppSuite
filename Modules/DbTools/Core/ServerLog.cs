@@ -57,6 +57,109 @@ public sealed class LogEntry
 
     /// <summary>Câu SQL, không có thì thông báo.</summary>
     public string Text => Sql.Length > 0 ? Sql : Message;
+
+    private DateTime? _at;
+    private bool _atParsed;
+
+    /// <summary>Giờ của dòng (giờ ghi trong log, bỏ múi giờ) để lọc Từ / Đến; null nếu dòng không có giờ (%t / %m).</summary>
+    public DateTime? At
+    {
+        get
+        {
+            if (!_atParsed)
+            {
+                _atParsed = true;
+                _at = LogTimeBound.ParseEntryTime(Time);
+            }
+            return _at;
+        }
+    }
+}
+
+/// <summary>
+/// 1 mốc giờ ô Từ / Đến gõ: "14:02", "14:02:30", "11-26 14:02", "2026-11-26 14:02[:30]", "2026-11-26" (/ thay - cũng được).
+/// [Start, End) = cả khoảng mốc đó phủ (14:02 → 14:02:00 tới 14:03:00) để "Đến 14:02" gồm cả 14:02:59.
+/// Thiếu ngày thì lấy ngày / năm của <c>reference</c> (dòng log mới nhất đã đọc).
+/// </summary>
+public sealed record LogTimeBound(DateTime Start, DateTime End)
+{
+    private static readonly string[] DateTimeFormats = ["yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd H:mm:ss", "yyyy-MM-dd HH:mm", "yyyy-MM-dd H:mm"];
+
+    public static bool TryParse(string text, DateTime reference, out LogTimeBound? bound)
+    {
+        bound = null;
+        var t = string.Join(' ', text.Trim().Replace('/', '-').Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        if (t.Length == 0)
+        {
+            return true; // trống = không giới hạn
+        }
+        var parts = t.Split(' ');
+        string date;
+        string time;
+        if (parts.Length == 1 && t.Contains(':'))
+        {
+            (date, time) = (reference.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), t);
+        }
+        else if (parts.Length == 1)
+        {
+            (date, time) = (t, string.Empty);
+        }
+        else if (parts.Length == 2)
+        {
+            (date, time) = (parts[0], parts[1]);
+        }
+        else
+        {
+            return false;
+        }
+        if (date.Count(c => c == '-') == 1)
+        {
+            date = reference.Year.ToString(CultureInfo.InvariantCulture) + "-" + date; // 11-26 → năm của log
+        }
+        var dateParts = date.Split('-');
+        if (dateParts.Length != 3)
+        {
+            return false;
+        }
+        date = $"{dateParts[0]}-{dateParts[1].PadLeft(2, '0')}-{dateParts[2].PadLeft(2, '0')}";
+        if (time.Length == 0)
+        {
+            if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day))
+            {
+                return false;
+            }
+            bound = new LogTimeBound(day, day.AddDays(1));
+            return true;
+        }
+        if (!DateTime.TryParseExact(date + " " + time, DateTimeFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var at))
+        {
+            return false;
+        }
+        bound = new LogTimeBound(at, time.Count(c => c == ':') == 2 ? at.AddSeconds(1) : at.AddMinutes(1));
+        return true;
+    }
+
+    /// <summary>"2026-11-26 14:02:29 +07" / "2026-11-26 14:02:29.123 +07" → giờ đó (bỏ múi giờ).</summary>
+    public static DateTime? ParseEntryTime(string time)
+    {
+        if (time.Length < 19 || !DateTime.TryParseExact(time.AsSpan(0, 19), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var at))
+        {
+            return null;
+        }
+        if (time.Length > 20 && time[19] == '.')
+        {
+            var end = 20;
+            while (end < time.Length && char.IsAsciiDigit(time[end]))
+            {
+                end++;
+            }
+            if (end > 20 && double.TryParse("0." + time[20..end], NumberStyles.Float, CultureInfo.InvariantCulture, out var fraction))
+            {
+                at = at.AddTicks((long)Math.Round(fraction * TimeSpan.TicksPerSecond));
+            }
+        }
+        return at;
+    }
 }
 
 /// <summary>Kết quả đọc 1 đoạn log: các mục + số dòng không nhận ra định dạng (khác log_line_prefix / lc_messages).</summary>
@@ -463,13 +566,16 @@ public sealed class ServerLogReader(LogLinePrefix prefix)
     }
 }
 /// <summary>Bộ lọc trang Nhật ký server: loại, chữ trong SQL / thông báo, user, database, máy / IP / ứng dụng (đều chứa,
-/// không phân biệt hoa thường), ẩn câu của chính DbTools.</summary>
+/// không phân biệt hoa thường), ẩn câu của chính DbTools, giờ Từ (gồm cả mốc) / Đến (gồm cả phút / giây của mốc); có lọc giờ
+/// thì dòng không có giờ bị ẩn.</summary>
 public sealed record LogFilter(IReadOnlySet<LogKind> Kinds, string Text = "", string User = "", string Database = "", string Client = "",
-    bool HideOwn = true)
+    bool HideOwn = true, LogTimeBound? From = null, LogTimeBound? To = null)
 {
     public bool Matches(LogEntry e) =>
         Kinds.Contains(e.Kind)
         && !(HideOwn && e.App == ServerLogParser.OwnApp)
+        && (From is null || e.At >= From.Start)
+        && (To is null || e.At < To.End)
         && Has(e.User, User)
         && Has(e.Database, Database)
         && (Has(e.Client, Client) || Has(e.App, Client))

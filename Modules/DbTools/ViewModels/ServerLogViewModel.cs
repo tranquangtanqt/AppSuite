@@ -184,6 +184,23 @@ public sealed partial class ServerLogViewModel : ObservableObject
     [ObservableProperty]
     private bool _hideOwn = true;
 
+    /// <summary>Ô Từ: giờ bắt đầu (gồm cả mốc); trống = không giới hạn.</summary>
+    [ObservableProperty]
+    private string _fromText = string.Empty;
+
+    /// <summary>Ô Đến: giờ kết thúc (gồm cả phút / giây của mốc); trống = không giới hạn.</summary>
+    [ObservableProperty]
+    private string _toText = string.Empty;
+
+    [ObservableProperty]
+    private bool _fromInvalid;
+
+    [ObservableProperty]
+    private bool _toInvalid;
+
+    /// <summary>Lần đọc gần nhất chỉ lấy đoạn cuối file (mốc Từ có thể nằm trước phần đã đọc).</summary>
+    private bool _partialRead;
+
     /// <summary>Mới nhất trước (đảo thứ tự file). Nhớ trong settings.json.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TimeHeader), nameof(TimeHeaderTip))]
@@ -269,6 +286,38 @@ public sealed partial class ServerLogViewModel : ObservableObject
     partial void OnClientTextChanged(string value) => ApplyFilter();
 
     partial void OnHideOwnChanged(bool value) => ApplyFilter();
+
+    partial void OnFromTextChanged(string value) => ApplyTimeFilter();
+
+    partial void OnToTextChanged(string value) => ApplyTimeFilter();
+
+    /// <summary>Lọc lại theo ô Từ / Đến; gõ sai cách thì ô viền đỏ + chân trang gợi ý cách gõ, mốc Từ trước phần đã đọc thì nhắc
+    /// đọc nhiều hơn.</summary>
+    private void ApplyTimeFilter()
+    {
+        ApplyFilter();
+        var (from, fromOk) = Bound(FromText);
+        var (_, toOk) = Bound(ToText);
+        FromInvalid = !fromOk;
+        ToInvalid = !toOk;
+        if (!fromOk || !toOk)
+        {
+            Status = $"Không hiểu giờ \"{(!fromOk ? FromText : ToText).Trim()}\" - gõ 14:02, 14:02:30, 11-26 14:02 hoặc 2026-11-26 14:02 (để trống = không giới hạn).";
+        }
+        else if (from is not null && _partialRead && Entries.Select(e => e.At).FirstOrDefault(a => a is not null) is { } first && first > from.Start)
+        {
+            Status = $"Phần đã đọc bắt đầu từ {first:MM-dd HH:mm:ss}, sau mốc Từ - chọn đọc nhiều hơn (10 / 50 MB, cả file) rồi bấm Đọc file để xem đủ.";
+        }
+    }
+
+    /// <summary>Mốc giờ của 1 ô; thiếu ngày thì theo ngày của dòng log mới nhất đã đọc (chưa đọc: hôm nay).</summary>
+    private (LogTimeBound? Bound, bool Ok) Bound(string text)
+    {
+        var reference = Entries.Count == 0 ? DateTime.Today
+            : Enumerable.Range(0, Entries.Count).Select(i => Entries[Entries.Count - 1 - i].At).FirstOrDefault(a => a is not null) ?? DateTime.Today;
+        var ok = LogTimeBound.TryParse(text, reference, out var bound);
+        return (bound, ok);
+    }
 
     partial void OnSelectedChanged(LogRow? value)
     {
@@ -421,6 +470,7 @@ public sealed partial class ServerLogViewModel : ObservableObject
             _reader = reader;
             _readFile = file.Name;
             _offset = chunk.FileSize;
+            _partialRead = chunk.Offset > 0;
             Status = $"{file.Name}: "
                 + (chunk.Offset > 0 ? $"đọc {LogConfig.Size(chunk.FileSize - chunk.Offset)} cuối / {LogConfig.Size(chunk.FileSize)}" : $"cả file {LogConfig.Size(chunk.FileSize)}")
                 + $", {Entries.Count:N0} mục"
@@ -651,7 +701,31 @@ public sealed partial class ServerLogViewModel : ObservableObject
     }
 
     private LogFilter CurrentFilter() => new(Kinds.Where(k => k.IsChecked).Select(k => k.Kind).ToHashSet(),
-        SearchText, UserText, DatabaseText, ClientText, HideOwn);
+        SearchText, UserText, DatabaseText, ClientText, HideOwn, Bound(FromText).Bound, Bound(ToText).Bound);
+
+    /// <summary>Chép tên bảng của các câu INSERT / UPDATE / DELETE đang hiện, theo thứ tự chạy: giờ ⇥ lệnh ⇥ bảng.</summary>
+    [RelayCommand]
+    private void CopyTablesInOrder() => CopyTables(false);
+
+    /// <summary>Chép tên bảng không trùng: bảng ⇥ các lệnh ⇥ số câu, theo lần đầu xuất hiện.</summary>
+    [RelayCommand]
+    private void CopyTablesDistinct() => CopyTables(true);
+
+    private void CopyTables(bool distinct)
+    {
+        // Theo thứ tự chạy (thứ tự trong file) dù bảng đang xếp mới nhất trước.
+        var uses = LogTables.InOrder(Rows.OrderBy(r => r.Index).Select(r => r.Entry));
+        if (uses.Count == 0)
+        {
+            Status = "Các dòng đang hiện không có câu INSERT / UPDATE / DELETE (bật các loại đó ở nút Loại).";
+            return;
+        }
+        SetClipboard(distinct ? LogTables.DistinctText(uses) : LogTables.InOrderText(uses));
+        var tables = uses.Select(u => u.Table).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        Status = distinct
+            ? $"Đã chép {tables:N0} bảng không trùng (bảng ⇥ lệnh ⇥ số câu) từ {uses.Count:N0} lượt ghi."
+            : $"Đã chép {uses.Count:N0} dòng theo thứ tự (giờ ⇥ lệnh ⇥ bảng), {tables:N0} bảng.";
+    }
 
     private void ApplyFilter()
     {

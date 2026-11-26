@@ -316,6 +316,11 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   giá trị ở dòng parameters của log (PostgreSQL 16+ "Parameters:"), bỏ qua $n trong chuỗi / chú thích / tên / $$...$$, dòng có thay
   kèm chú thích cuối dòng -- $1 = '...'; nút tắt khi câu không có tham số. Cập nhật F1, README. Unit test 271/271 (PostgreSQL 17 thật:
   câu đã thay cùng kết quả câu có tham số); GUI Sandbox 10/10 (log thật từ psql \bind, dán chạy lại bằng psql) (2026-11-26)
+- [x] **Nhật ký server - lọc Từ / Đến giờ + Chép tên bảng** (người dùng đề xuất, chọn các phương án khuyên): 2 ô Từ / Đến (14:02,
+  14:02:30, 11-26 14:02, 2026-11-26 14:02, chỉ ngày; Đến gồm cả phút / giây của mốc; gõ sai viền đỏ + gợi ý; nhắc khi mốc Từ trước
+  phần đã đọc); nút Chép tên bảng của các câu INSERT / UPDATE / DELETE đang hiện: theo thứ tự (giờ ⇥ lệnh ⇥ bảng) / không trùng
+  (bảng ⇥ các lệnh ⇥ số câu), cả MERGE, TRUNCATE nhiều bảng, WITH ... INSERT, tên "..." / schema. Cập nhật F1, README. Unit test
+  296/296; GUI Sandbox 9/9 (log thật 2 đợt câu ghi cách nhau, lọc giờ, chép bảng) (2026-11-26)
 - [ ] Cấu hình server đợt sau: sửa đặt riêng theo database / user (ALTER DATABASE / ROLE ... SET); người dùng thử tay trên server thật
 - [ ] Nhật ký server: đọc file csvlog / jsonlog (để sau)
 - [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV; Đổi cấu hình log → Về mặc định)
