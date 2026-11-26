@@ -308,6 +308,9 @@ có thư mục, hết hồ sơ thì mất. `Core\ProfileTree` (thuần, có unit
   sách bằng `ViewModels\EditableBox.Reset` (bỏ chữ → xoá → đặt chữ). UIA vẫn đọc ra giá trị: test phải đo điểm ảnh.
 - Mở danh sách rồi đóng mà không chọn thì ô trả về mục đã chốt lần trước, bỏ qua chữ đặt từ code (có thể là DB của server cũ) →
   gọi `Ui.KeepTextIfNothingPicked` trong constructor của trang.
+- Chữ đặt từ code mà không có mục tương ứng (danh sách chưa nạp) được vẽ bằng 1 TextBlock riêng trong phần `ContentPresenter` của
+  khuôn; đặt `Text = ""` thì giá trị rỗng nhưng TextBlock đó vẫn hiện chữ cũ → nút ✕ gọi `Ui.ClearEditable` (2026-11-26). Ô nhận
+  chữ qua binding phải gắn `Loaded` → `Ui.RefreshEditableText`, không thì lần đầu vào trang ô hiện trống.
 
 ## Hồ sơ Production (2026-11-20)
 

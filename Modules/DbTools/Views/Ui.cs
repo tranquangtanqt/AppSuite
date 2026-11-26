@@ -60,6 +60,22 @@ internal static class Ui
         }
     }
 
+    /// <summary>Nút ✕ của ComboBox gõ được. Chữ đặt từ code mà không có mục tương ứng (vd DB của hồ sơ, danh sách chưa nạp) được
+    /// vẽ bằng 1 TextBlock riêng trong phần "ContentPresenter" của khuôn; đặt Text rỗng thì ô gõ được xoá nhưng TextBlock đó vẫn giữ
+    /// chữ cũ → ô vẫn hiện chữ dù giá trị đã rỗng. Bỏ mục đang chọn, đặt Text rỗng rồi xoá luôn TextBlock đó (không đụng
+    /// TextBlock chữ gợi ý PlaceholderTextBlock mà ComboBox tự đặt vào chỗ đó).</summary>
+    public static void ClearEditable(Microsoft.UI.Xaml.Controls.ComboBox box)
+    {
+        box.SelectedItem = null;
+        box.Text = string.Empty;
+        if (VisualTreeHelper.GetChildrenCount(box) > 0 && VisualTreeHelper.GetChild(box, 0) is Microsoft.UI.Xaml.Controls.Panel root
+            && root.Children.OfType<Microsoft.UI.Xaml.Controls.ContentPresenter>().FirstOrDefault(c => c.Name == "ContentPresenter")
+                is { Content: Microsoft.UI.Xaml.Controls.TextBlock shown } && shown.Name != "PlaceholderTextBlock") // chữ gợi ý: giữ
+        {
+            shown.Text = string.Empty;
+        }
+    }
+
     /// <summary>ComboBox gõ được nhớ riêng mục đã chốt (gõ / chọn): mở danh sách rồi đóng mà không chọn gì (Esc, bấm ra ngoài) thì
     /// nó trả về mục đó, nên chữ đặt từ code (vd vừa đổi server) bị mất hoặc thành DB của server cũ → trả lại chữ lúc mở.</summary>
     public static void KeepTextIfNothingPicked(params Microsoft.UI.Xaml.Controls.ComboBox[] boxes)

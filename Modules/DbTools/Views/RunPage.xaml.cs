@@ -116,13 +116,14 @@ public sealed partial class RunPage : Page
     /// rời ô.</summary>
     private void SchemaBox_TextSubmitted(ComboBox sender, ComboBoxTextSubmittedEventArgs args) => ViewModel.SchemaInput = args.Text;
 
+    private void SchemaBox_Loaded(object sender, RoutedEventArgs e) => Ui.RefreshEditableText(sender, e);
+
     private void SchemaBox_LostFocus(object sender, RoutedEventArgs e) => ViewModel.SchemaInput = SchemaBox.Text;
 
     /// <summary>Nút ✕: về schema mặc định. Xoá chữ trong ComboBox gõ được không đủ - nó tự trả lại chữ của mục đang chọn.</summary>
     private void ClearSchema_Click(object sender, RoutedEventArgs e)
     {
-        SchemaBox.SelectedItem = null;
-        SchemaBox.Text = string.Empty;
+        Ui.ClearEditable(SchemaBox);
         ViewModel.SchemaInput = string.Empty;
     }
 

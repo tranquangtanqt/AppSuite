@@ -82,8 +82,7 @@ public sealed partial class SessionsPage : Page
 
     private void ClearDb_Click(object sender, RoutedEventArgs e)
     {
-        DbBox.SelectedItem = null;
-        DbBox.Text = string.Empty;
+        Ui.ClearEditable(DbBox);
         ViewModel.Database = string.Empty;
     }
 }

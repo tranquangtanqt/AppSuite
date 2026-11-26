@@ -308,6 +308,10 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   chuỗi đang chặn + câu của nó, khoá đang chờ), lọc chỉ phiên đang chạy / chặn / bị chặn, tự làm mới 5 giây (tắt khi rời trang / đổi
   server); Huỷ câu đang chạy (pg_cancel_backend, cảnh báo phiên rảnh), Huỷ câu / Ngắt phiên đang chặn; Production gõ tên DB. Cập nhật
   F1, README. Unit test 265/265 (PostgreSQL 17 thật: chặn khoá dòng, huỷ, ngắt); GUI Sandbox 16/16 (PostgreSQL 17, phiên psql thật chặn khoá: cột, chi tiết, huỷ câu phiên đang chặn, huỷ câu đã chọn, tự làm mới, Production) (2026-11-26)
+- [x] **Sửa nút ✕ của ô gõ được vẫn hiện chữ cũ**: Phiên kết nối bấm ✕ Mọi database lúc mới vào trang - giá trị đã rỗng (lọc mọi DB)
+  nhưng ô vẫn hiện DB của hồ sơ (TextBlock riêng trong khuôn ComboBox không được xoá) → `Ui.ClearEditable`, dùng cả cho ✕ Bỏ schema
+  trang Chạy thư mục SQL (giữ chữ gợi ý "(mặc định: public)"). Sửa kèm: ô Schema trang Chạy lần đầu vào trang hiện trống dù có schema
+  của hồ sơ. Cập nhật README. GUI Sandbox 14/14 (đo điểm ảnh, chuột thật) (2026-11-26)
 - [ ] Cấu hình server đợt sau: sửa đặt riêng theo database / user (ALTER DATABASE / ROLE ... SET); người dùng thử tay trên server thật
 - [ ] Nhật ký server: đọc file csvlog / jsonlog (để sau)
 - [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV; Đổi cấu hình log → Về mặc định)

@@ -67,7 +67,7 @@
             <ComboBox x:Name="SchemaBox" Header="Schema" IsEditable="True" HorizontalAlignment="Stretch"
                       ItemsSource="{x:Bind ViewModel.Schemas}" Text="{x:Bind ViewModel.SchemaInput, Mode=TwoWay}"
                       PlaceholderText="(mặc định: public)" IsEnabled="{x:Bind ViewModel.IsIdle, Mode=OneWay}"
-                      DropDownOpened="SchemaBox_DropDownOpened" TextSubmitted="SchemaBox_TextSubmitted" LostFocus="SchemaBox_LostFocus"
+                      DropDownOpened="SchemaBox_DropDownOpened" Loaded="SchemaBox_Loaded" TextSubmitted="SchemaBox_TextSubmitted" LostFocus="SchemaBox_LostFocus"
                       AutomationProperties.AutomationId="SchemaBox"
                       ToolTipService.ToolTip="Schema chạy script: tên không ghi schema trong file sẽ tạo / tìm ở schema này (SET search_path). Để trống = mặc định của server / user (thường là public). Tên có ghi schema trong file vẫn theo file." />
                 <Button Grid.Column="1" VerticalAlignment="Bottom" Content="✕" Width="32" Padding="0" Click="ClearSchema_Click"
