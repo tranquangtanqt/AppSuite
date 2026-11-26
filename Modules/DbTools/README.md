@@ -19,7 +19,7 @@ Chạy riêng: `dotnet run --project Modules\DbTools\DbTools.csproj` hoặc mở
 | **Thông tin DB** | Tra cứu cấu trúc (thay DBeaver, chỉ đọc): tổng quan, bảng (cột, index, ràng buộc, trigger, DDL), view / hàm / trigger / sequence / extension + định nghĩa |
 | **Chạy SQL** | Ô soạn câu SQL → bảng kết quả; mặc định chỉ đọc (BEGIN READ ONLY ... ROLLBACK), công tắc Cho phép ghi (hỏi lại, Production gõ tên DB); giới hạn dòng, Huỷ, chép TSV, Xuất CSV đủ dòng (CsvEditor), lịch sử 200 câu |
 | **Sinh dữ liệu mẫu** | Từ vài dòng mẫu (bảng trong DB / file CSV) sinh N dòng giả → CSV và / hoặc INSERT (không ghi vào DB) |
-| **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ngắt phiên đã chọn / ngắt hết |
+| **Phiên kết nối** | Ai đang kết nối vào DB nào (pg_stat_activity), ai chặn ai + khoá đang chờ, chạy bao lâu, lọc phiên bận, tự làm mới 5 giây; huỷ câu đang chạy, ngắt phiên đã chọn / ngắt hết, gỡ phiên đang chặn |
 | **Cài đặt** (cuối menu) | Thời gian chờ kết nối (5 - 120 giây, mặc định 15, mọi hồ sơ / mọi trang), thư mục dump, thư mục PostgreSQL client, Sao lưu trước khi chạy, thư mục dữ liệu của app |
 | **Nhật ký server** | Đọc file log của server qua SQL (chỉ đọc): cấu hình log bằng lời, danh sách file, bảng giờ / user / DB / máy / ứng dụng / loại câu / ms / SQL, lọc, chi tiết, xuất CSV / TXT; Theo dõi (mỗi 2 giây đọc phần mới), cảnh báo dung lượng log; nút Đổi cấu hình → trang Cấu hình server (nhóm Log) |
 | **Cấu hình server** | Mọi thông số của server (pg_settings) theo nhóm, tìm / lọc (khác mặc định, ALTER SYSTEM, cần khởi động lại, đặt riêng DB / user), chi tiết; sửa nhiều dòng → Áp dụng (ALTER SYSTEM + nạp lại, hỏi lại, Production gõ tên DB), Về mặc định |
@@ -169,6 +169,15 @@ trang - lọc / sắp làm phía app:
 `Services\PgAdmin.ListSessionsAsync`: `pg_stat_activity` (chỉ `client backend`), lọc theo database hoặc mọi DB; phiên của
 chính DbTools đánh dấu, không ngắt. Ngắt phiên đã chọn (ListView chọn nhiều) / Ngắt hết → hỏi lại →
 `pg_terminate_backend` (cần superuser / `pg_signal_backend` / cùng user).
+
+**Ai chặn ai / huỷ câu (2026-11-26):** câu đọc thêm `pg_blocking_pids(pid)`, `wait_event_type / wait_event`, thời gian câu /
+transaction theo `clock_timestamp()` của server. `Core\SessionBlocking`: PID → các PID nó chặn, đầu chuỗi chặn (đi ngược BlockedBy, chịu
+được vòng khoá chết), chữ cột Chờ / chặn, chữ thời gian, lọc phiên bận. Chọn 1 phiên: ô chi tiết (câu đầy đủ, phiên đầu chuỗi đang
+chặn + câu của nó, `PgAdmin.LockWaitsAsync` đọc `pg_locks` không granted trong chính database của phiên - regclass chỉ đúng trong DB
+chứa bảng). `PgAdmin.CancelAsync` = `pg_cancel_backend` (phiên rảnh trong transaction không có câu để huỷ - hộp hỏi lại cảnh báo,
+nút Ngắt phiên đang chặn). Tự làm mới: vòng `Task.Delay` 5 giây trong ViewModel, bỏ lượt khi đang bận / mở hộp hỏi lại, tắt khi
+rời trang / đổi server / lỗi; dựng lại bảng thì trang chọn lại theo PID (`Reloaded`). Production: `ProductionGuard.ForSessions`
+cho cả huỷ câu.
 
 Npgsql chạy ở chế độ raw (`Npgsql.EnableSqlRewriting = false`, đặt trong `App()`): DbTools tự tách câu nên gửi nguyên
 văn từng câu, biết chính xác câu nào lỗi.
@@ -348,6 +357,10 @@ pg_restore / psql (không có mật khẩu, tên trong "..."), đọc `pg_restor
 cấu trúc → psql, restore 1 transaction vào DB có sẵn bị trùng → rollback, `--clean` → được, copy TEMPLATE bị chặn khi còn
 phiên → ngắt phiên → copy được, sao lưu trước khi chạy (đủ file, khôi phục lại bảng + hàm từ bản sao lưu), bỏ qua khi chỉ
 tạo đối tượng mới.
+
+`SessionBlockingTests` / `SessionBlockingIntegrationTests` (Phiên kết nối): ai chặn ai, đầu chuỗi (cả vòng khoá chết), chữ, thời gian,
+lọc; trên PostgreSQL thật: phiên A giữ khoá dòng, B chờ → B bị A chặn + khoá đang chờ, huỷ câu B (57014, vẫn kết nối), A rảnh trong
+transaction huỷ câu không gỡ được, ngắt phiên thì B chạy tiếp.
 
 `ServerSettingsTests` / `PgSettingsIntegrationTests` (Cấu hình server): kiểm giá trị theo kiểu, câu ALTER SYSTEM (nháy, danh sách,
 tên lạ bị chặn), nhóm / nguồn / lọc, lưu ý; trên PostgreSQL thật (superuser): đọc > 200 thông số, áp 4 câu + câu lỗi dừng đúng chỗ,

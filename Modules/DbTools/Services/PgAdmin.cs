@@ -6,7 +6,22 @@ namespace DbTools.Services;
 
 /// <summary>1 phiên đang kết nối tới server (pg_stat_activity).</summary>
 public sealed record PgSession(int Pid, string Database, string User, string Application, string Client, string State,
-    DateTime? BackendStart, DateTime? QueryStart, string Query, bool IsSelf);
+    DateTime? BackendStart, DateTime? QueryStart, string Query, bool IsSelf)
+{
+    /// <summary>Câu hiện tại / transaction đã chạy bao lâu (giây, theo đồng hồ server). null = không có.</summary>
+    public double? QuerySeconds { get; init; }
+    public double? XactSeconds { get; init; }
+
+    /// <summary>Đang chờ gì (pg_stat_activity.wait_event_type / wait_event), vd Lock / transactionid.</summary>
+    public string WaitEventType { get; init; } = string.Empty;
+    public string WaitEvent { get; init; } = string.Empty;
+
+    /// <summary>Các PID đang chặn phiên này (pg_blocking_pids).</summary>
+    public IReadOnlyList<int> BlockedBy { get; init; } = [];
+}
+
+/// <summary>1 khoá phiên đang chờ (pg_locks, granted = false).</summary>
+public sealed record PgLockWait(string LockType, string Mode, string Relation, string Detail);
 
 /// <summary>
 /// Việc quản trị qua Npgsql: danh sách database, phiên kết nối / ngắt phiên, tạo database (trống hoặc copy bằng TEMPLATE).
@@ -74,7 +89,10 @@ public static class PgAdmin
         const string sql = """
             SELECT pid, coalesce(datname, ''), coalesce(usename, ''), coalesce(application_name, ''),
                    coalesce(host(client_addr), 'local'), coalesce(state, ''), backend_start, query_start,
-                   left(coalesce(query, ''), 2000), pid = pg_backend_pid()
+                   left(coalesce(query, ''), 2000), pid = pg_backend_pid(),
+                   CASE WHEN state = 'active' THEN extract(epoch FROM clock_timestamp() - query_start)::float8 END,
+                   extract(epoch FROM clock_timestamp() - xact_start)::float8,
+                   coalesce(wait_event_type, ''), coalesce(wait_event, ''), pg_blocking_pids(pid)
               FROM pg_stat_activity
              WHERE backend_type = 'client backend' AND ($1::text IS NULL OR datname = $1)
              ORDER BY datname, backend_start
@@ -88,7 +106,14 @@ public static class PgAdmin
         {
             result.Add(new PgSession(r.GetInt32(0), r.GetString(1), r.GetString(2), r.GetString(3), r.GetString(4), r.GetString(5),
                 r.IsDBNull(6) ? null : r.GetDateTime(6).ToLocalTime(), r.IsDBNull(7) ? null : r.GetDateTime(7).ToLocalTime(),
-                r.GetString(8), r.GetBoolean(9)));
+                r.GetString(8), r.GetBoolean(9))
+            {
+                QuerySeconds = r.IsDBNull(10) ? null : r.GetDouble(10),
+                XactSeconds = r.IsDBNull(11) ? null : r.GetDouble(11),
+                WaitEventType = r.GetString(12),
+                WaitEvent = r.GetString(13),
+                BlockedBy = r.GetFieldValue<int[]>(14),
+            });
         }
         return result;
     }
@@ -106,6 +131,47 @@ public static class PgAdmin
             "SELECT count(*) FILTER (WHERE pg_terminate_backend(pid)) FROM unnest($1::int[]) AS t(pid) WHERE pid <> pg_backend_pid()", c);
         cmd.Parameters.Add(new NpgsqlParameter { Value = pids.ToArray() });
         return Convert.ToInt32(await cmd.ExecuteScalarAsync(ct));
+    }
+
+    /// <summary>Huỷ câu đang chạy của các phiên (pg_cancel_backend; trừ chính phiên này): phiên vẫn kết nối, transaction đang
+    /// mở bị rollback. Phiên không có câu đang chạy (rảnh, rảnh trong transaction) thì không có gì để huỷ. Trả số phiên đã gửi
+    /// được tín hiệu.</summary>
+    public static async Task<int> CancelAsync(ConnectionProfile p, IReadOnlyCollection<int> pids, CancellationToken ct)
+    {
+        if (pids.Count == 0)
+        {
+            return 0;
+        }
+        await using var c = await OpenMaintenanceAsync(p, ct);
+        await using var cmd = new NpgsqlCommand(
+            "SELECT count(*) FILTER (WHERE pg_cancel_backend(pid)) FROM unnest($1::int[]) AS t(pid) WHERE pid <> pg_backend_pid()", c);
+        cmd.Parameters.Add(new NpgsqlParameter { Value = pids.ToArray() });
+        return Convert.ToInt32(await cmd.ExecuteScalarAsync(ct));
+    }
+
+    /// <summary>Khoá phiên <paramref name="pid"/> đang chờ. Đọc trong chính database của phiên đó (tên bảng regclass chỉ đúng
+    /// trong database chứa bảng).</summary>
+    public static async Task<List<PgLockWait>> LockWaitsAsync(ConnectionProfile p, string database, int pid, CancellationToken ct)
+    {
+        const string sql = """
+            SELECT locktype, mode,
+                   CASE WHEN relation IS NOT NULL AND database = (SELECT oid FROM pg_database WHERE datname = current_database())
+                        THEN relation::regclass::text ELSE '' END,
+                   concat_ws(' ', CASE WHEN transactionid IS NOT NULL THEN 'transaction ' || transactionid END,
+                                  CASE WHEN virtualxid IS NOT NULL THEN 'virtualxid ' || virtualxid END,
+                                  CASE WHEN locktype = 'tuple' THEN 'dòng ' || page || '/' || tuple END)
+              FROM pg_locks WHERE pid = $1 AND NOT granted
+            """;
+        await using var c = database.Length > 0 ? await Pg.OpenAsync(On(p, database), ct) : await OpenMaintenanceAsync(p, ct);
+        await using var cmd = new NpgsqlCommand(sql, c);
+        cmd.Parameters.Add(new NpgsqlParameter { Value = pid });
+        var result = new List<PgLockWait>();
+        await using var r = await cmd.ExecuteReaderAsync(ct);
+        while (await r.ReadAsync(ct))
+        {
+            result.Add(new PgLockWait(r.GetString(0), r.GetString(1), r.GetString(2), r.GetString(3)));
+        }
+        return result;
     }
 
     /// <summary>Ngắt mọi phiên đang kết nối vào 1 database (trừ phiên này). Trả số phiên đã ngắt.</summary>

@@ -217,8 +217,8 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   GUI Sandbox (UIA) 7/7 (2026-11-20)
 - [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools mới (gợi ý 2026-11-20, khuyên làm 1 → 3): ~~(1) ô chạy SQL nhanh~~ (xong 2026-11-26, trang Chạy SQL) (READ ONLY mặc
   định, kết quả bảng, CSV / CsvEditor, lịch sử câu); (3) Thông tin DB: tìm 1 cột trong toàn DB, xem 100 dòng đầu, phụ thuộc theo
-  cột; (4) so thư mục svn ↔ DB; (5) khôi phục từ "Sao lưu trước khi chạy" + dọn bản cũ; (6) Restore chọn lọc bảng; (7) Phiên: ai
-  chặn ai, huỷ câu đang chạy; (8) so sánh 2 DB, xuất CSV bảng / cột; (9) chạy lên nhiều DB, dòng lệnh; (10) nhập hồ sơ DBeaver /
+  cột; (4) so thư mục svn ↔ DB; (5) khôi phục từ "Sao lưu trước khi chạy" + dọn bản cũ; (6) Restore chọn lọc bảng; ~~(7) Phiên: ai
+  chặn ai, huỷ câu đang chạy~~ (xong 2026-11-26); (8) so sánh 2 DB, xuất CSV bảng / cột; (9) chạy lên nhiều DB, dòng lệnh; (10) nhập hồ sơ DBeaver /
   pgpass; (11) Sinh dữ liệu mẫu cha - con, ghi thẳng DB; (12) sửa test History_is_newest_first_and_capped chập chờn khi chạy cả bộ
 - [ ] **[Đề xuất · chờ chọn]** Cải tiến DbTools còn lại (gợi ý 2026-11-19, khuyên làm 3 → 2):
   1. ~~Hồ sơ "Quan trọng / Production"~~ - xong 2026-11-20 (mục trên)
@@ -228,7 +228,7 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   5. Lịch sử: Khôi phục từ "Sao lưu trước khi chạy" ngay trong app; dọn bản sao lưu cũ (giữ N ngày); bảng "DB nào đã áp bản svn nào"
   6. Restore chọn lọc vài bảng (`pg_restore -t` / `-L`)
   7. Chạy cùng lô lên nhiều DB / schema; chế độ dòng lệnh `DbTools.exe run --folder … --profile … --dry-run`
-  8. Phiên kết nối: hiện khoá (ai chặn ai), Huỷ câu đang chạy (`pg_cancel_backend`), tự làm mới
+  8. ~~Phiên kết nối: hiện khoá (ai chặn ai), Huỷ câu đang chạy (`pg_cancel_backend`), tự làm mới~~ - xong 2026-11-26
   9. Sinh dữ liệu mẫu: bảng cha - con cùng lúc; ghi thẳng vào DB + Xoá dữ liệu mẫu vừa sinh
   10. Kết nối: nhập hồ sơ từ DBeaver / pgpass, ~~nhóm hồ sơ theo dự án~~ (xong 2026-11-25, Cây hồ sơ)
 - [ ] Đợt 4: Oracle (tạo user / tablespace + quyền, impdp / expdp có REMAP_SCHEMA)
@@ -303,6 +303,11 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   Về mặc định từng dòng / tất cả; user thường xem được, áp bị từ chối. Nút trong Nhật ký server thành lối tắt mở nhóm Log (bỏ hộp 4
   thông số làm sáng nay). Sửa kèm: trên server Windows pending_restart / sourcefile không đúng ở kết nối mới → đọc pg_file_settings.
   Cập nhật F1, README. Unit test 253/253 (PostgreSQL 17 thật); GUI Sandbox 22/22 (2026-11-26)
+- [x] **Phiên kết nối - ai chặn ai, huỷ câu đang chạy** (cải tiến (7) danh sách 2026-11-20; người dùng chọn các phương án khuyên): cột
+  Chờ / chặn (⛔ bị PID x chặn / 🔒 đang chặn N phiên / loại chờ), Chạy bao lâu (câu + transaction), ô chi tiết (câu đầy đủ, phiên đầu
+  chuỗi đang chặn + câu của nó, khoá đang chờ), lọc chỉ phiên đang chạy / chặn / bị chặn, tự làm mới 5 giây (tắt khi rời trang / đổi
+  server); Huỷ câu đang chạy (pg_cancel_backend, cảnh báo phiên rảnh), Huỷ câu / Ngắt phiên đang chặn; Production gõ tên DB. Cập nhật
+  F1, README. Unit test 265/265 (PostgreSQL 17 thật: chặn khoá dòng, huỷ, ngắt); GUI Sandbox 16/16 (PostgreSQL 17, phiên psql thật chặn khoá: cột, chi tiết, huỷ câu phiên đang chặn, huỷ câu đã chọn, tự làm mới, Production) (2026-11-26)
 - [ ] Cấu hình server đợt sau: sửa đặt riêng theo database / user (ALTER DATABASE / ROLE ... SET); người dùng thử tay trên server thật
 - [ ] Nhật ký server: đọc file csvlog / jsonlog (để sau)
 - [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV; Đổi cấu hình log → Về mặc định)

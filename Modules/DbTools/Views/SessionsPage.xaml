@@ -8,18 +8,19 @@
     xmlns:models="using:DbTools.Models"
     NavigationCacheMode="Required">
 
-    <Grid Padding="24,12" RowSpacing="10">
+    <Grid Padding="24,12" RowSpacing="8">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <StackPanel Spacing="2" Margin="0,0,48,0">
             <TextBlock Text="Phiên kết nối" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock Opacity="0.7" TextWrapping="Wrap"
-                       Text="Ai đang kết nối vào database nào. Ngắt phiên trước khi copy DB / restore, hoặc gỡ phiên treo đang giữ khoá." />
+                       Text="Ai đang kết nối vào database nào, ai chặn ai. Huỷ câu đang chạy / ngắt phiên treo đang giữ khoá, ngắt phiên trước khi copy DB / restore." />
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnSpacing="8">
@@ -46,18 +47,31 @@
                     Command="{x:Bind ViewModel.RefreshCommand}" AutomationProperties.AutomationId="RefreshButton" />
         </Grid>
 
-        <Grid Grid.Row="2" ColumnSpacing="8">
+        <Grid Grid.Row="2" ColumnSpacing="8" RowSpacing="4">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBlock Text="{x:Bind ViewModel.Status, Mode=OneWay}" TextWrapping="Wrap" VerticalAlignment="Center" AutomationProperties.AutomationId="StatusText" />
-            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <CheckBox Content="Chỉ phiên đang chạy / chặn / bị chặn" MinWidth="0" IsChecked="{x:Bind ViewModel.BusyOnly, Mode=TwoWay}"
+                      AutomationProperties.AutomationId="SessionBusyOnly"
+                      ToolTipService.ToolTip="Ẩn phiên rảnh (trừ phiên rảnh trong transaction đang chặn người khác)" />
+            <CheckBox Grid.Column="1" Content="Tự làm mới mỗi 5 giây" MinWidth="0" IsChecked="{x:Bind ViewModel.AutoRefresh, Mode=TwoWay}"
+                      AutomationProperties.AutomationId="SessionAutoRefresh" ToolTipService.ToolTip="Rời trang / đổi server thì tự tắt" />
+            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="6">
+                <Button Content="Huỷ câu đang chạy" Command="{x:Bind ViewModel.CancelSelectedCommand}" AutomationProperties.AutomationId="CancelSelected"
+                        ToolTipService.ToolTip="pg_cancel_backend các phiên đang chọn: dừng câu đang chạy (transaction đang mở bị rollback), phiên vẫn kết nối" />
                 <Button Content="Ngắt phiên đã chọn" Command="{x:Bind ViewModel.TerminateSelectedCommand}" AutomationProperties.AutomationId="TerminateSelected"
                         ToolTipService.ToolTip="pg_terminate_backend các phiên đang chọn (Ctrl / Shift + bấm để chọn nhiều)" />
                 <Button Content="Ngắt hết" Command="{x:Bind ViewModel.TerminateAllCommand}" AutomationProperties.AutomationId="TerminateAll"
-                        ToolTipService.ToolTip="Ngắt mọi phiên trong danh sách (theo ô Database), trừ phiên của DbTools" />
+                        ToolTipService.ToolTip="Ngắt mọi phiên trong danh sách (theo ô Database và ô lọc), trừ phiên của DbTools" />
             </StackPanel>
+            <TextBlock Grid.Row="1" Grid.ColumnSpan="4" Text="{x:Bind ViewModel.Status, Mode=OneWay}" TextWrapping="Wrap" AutomationProperties.AutomationId="StatusText" />
         </Grid>
 
         <Border Grid.Row="3" BorderThickness="1" CornerRadius="4" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
@@ -68,28 +82,24 @@
                 </Grid.RowDefinitions>
                 <Grid Padding="12,6" ColumnSpacing="10" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="90" />
-                        <ColumnDefinition Width="130" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="160" />
                         <ColumnDefinition Width="170" />
-                        <ColumnDefinition Width="110" />
-                        <ColumnDefinition Width="110" />
                         <ColumnDefinition Width="100" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="PID" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="1" Text="Database" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="2" Text="User · ứng dụng" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="3" Text="Máy" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="4" Text="Trạng thái" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="5" Text="Kết nối lúc" FontWeight="SemiBold" />
-                    <TextBlock Grid.Column="6" Text="Câu gần nhất" FontWeight="SemiBold" />
+                    <TextBlock Text="PID · trạng thái" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="Database · user" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="2" Text="Chờ / chặn" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="3" Text="Chạy bao lâu" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="4" Text="Câu SQL" FontWeight="SemiBold" />
                 </Grid>
                 <ListView x:Name="SessionList" Grid.Row="1" ItemsSource="{x:Bind ViewModel.Rows}" SelectionMode="Extended"
                           SelectionChanged="SessionList_SelectionChanged" AutomationProperties.AutomationId="SessionList" AutomationProperties.Name="Phiên kết nối">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
-                            <Setter Property="MinHeight" Value="32" />
-                            <Setter Property="Padding" Value="12,0" />
+                            <Setter Property="MinHeight" Value="40" />
+                            <Setter Property="Padding" Value="12,2" />
                             <Setter Property="HorizontalContentAlignment" Value="Stretch" />
                         </Style>
                     </ListView.ItemContainerStyle>
@@ -97,28 +107,55 @@
                         <DataTemplate x:DataType="vm:SessionRow">
                             <Grid ColumnSpacing="10" AutomationProperties.Name="{x:Bind PidText}">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="90" />
-                                    <ColumnDefinition Width="130" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="160" />
                                     <ColumnDefinition Width="170" />
-                                    <ColumnDefinition Width="110" />
-                                    <ColumnDefinition Width="110" />
                                     <ColumnDefinition Width="100" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="{x:Bind PidText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="1" Text="{x:Bind Database}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="2" Text="{x:Bind Who}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTipService.ToolTip="{x:Bind Who}" />
-                                <TextBlock Grid.Column="3" Text="{x:Bind Client}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="4" Text="{x:Bind State}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                <TextBlock Grid.Column="5" Text="{x:Bind Since}" VerticalAlignment="Center" Opacity="0.8" />
-                                <TextBlock Grid.Column="6" Text="{x:Bind Query}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" FontFamily="Consolas" FontSize="12"
-                                           ToolTipService.ToolTip="{x:Bind QueryTip}" />
+                                <StackPanel VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind PidText}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{x:Bind State}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center" ToolTipService.ToolTip="{x:Bind WhoTip}">
+                                    <TextBlock Text="{x:Bind Database}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{x:Bind Who}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="{x:Bind BlockText}" VerticalAlignment="Center" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                           FontSize="12" Foreground="{x:Bind views:SessionsPage.BlockBrush(Block)}" ToolTipService.ToolTip="{x:Bind BlockText}" />
+                                <StackPanel Grid.Column="3" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind QueryTime}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{x:Bind XactTime}" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="4" Text="{x:Bind Query}" VerticalAlignment="Center" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis"
+                                           FontFamily="Consolas" FontSize="12" ToolTipService.ToolTip="{x:Bind QueryTip}" />
                             </Grid>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
                 <TextBlock Grid.Row="1" Text="Chưa có danh sách - bấm Làm mới." Opacity="0.6" HorizontalAlignment="Center" VerticalAlignment="Center"
                            IsHitTestVisible="False" Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.IsEmpty), Mode=OneWay}" />
+            </Grid>
+        </Border>
+
+        <!-- Chi tiết phiên đang chọn (chọn đúng 1 dòng) -->
+        <Border Grid.Row="4" BorderThickness="1" CornerRadius="4" Padding="12,8" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.HasDetail), Mode=OneWay}">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ScrollViewer MaxHeight="150" VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{x:Bind ViewModel.Detail, Mode=OneWay}" TextWrapping="Wrap" IsTextSelectionEnabled="True" FontSize="12"
+                               AutomationProperties.AutomationId="SessionDetail" />
+                </ScrollViewer>
+                <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Top" Visibility="{x:Bind views:Ui.VisibleIf(ViewModel.DetailBlocked), Mode=OneWay}">
+                    <Button Content="Huỷ câu của phiên đang chặn" HorizontalAlignment="Stretch" Command="{x:Bind ViewModel.CancelBlockersCommand}"
+                            AutomationProperties.AutomationId="CancelBlockers" ToolTipService.ToolTip="pg_cancel_backend phiên đầu chuỗi chặn (không gỡ được phiên rảnh trong transaction)" />
+                    <Button Content="Ngắt phiên đang chặn" HorizontalAlignment="Stretch" Command="{x:Bind ViewModel.TerminateBlockersCommand}"
+                            AutomationProperties.AutomationId="TerminateBlockers" ToolTipService.ToolTip="pg_terminate_backend phiên đầu chuỗi chặn - gỡ cả phiên rảnh trong transaction" />
+                </StackPanel>
             </Grid>
         </Border>
     </Grid>
