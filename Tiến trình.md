@@ -326,6 +326,21 @@ bước này thì Start module nào cũng lỗi "Executable not found" (đã g�
   Cập nhật F1, README. Unit test 300/300; GUI Sandbox 10/10 (2026-11-26)
 - [ ] Cấu hình server đợt sau: sửa đặt riêng theo database / user (ALTER DATABASE / ROLE ... SET); người dùng thử tay trên server thật
 - [ ] Nhật ký server: đọc file csvlog / jsonlog (để sau)
+- [ ] **[Đề xuất · chờ chọn]** Cải tiến Nhật ký server (gợi ý 2026-11-26, khuyên làm 1 + 2 + 3 thành 1 đợt: cùng nhắm việc "chức
+  năng mcframe này chạy câu gì", không cần đổi cấu hình server; hỏi phạm vi trước khi làm):
+  1. Loại **Giao dịch**: tách BEGIN / COMMIT / ROLLBACK / SAVEPOINT / RELEASE (JDBC sinh rất nhiều `SAVEPOINT JDBC_SAVEPOINT_n` /
+     `RELEASE ...` đẩy câu thật ra xa) thành loại riêng, mặc định ẩn; ROLLBACK vẫn hiện (dấu hiệu lỗi)
+  2. **Lọc theo phiên**: chuột phải 1 dòng → Chỉ phiên này (cùng PID) = đúng chuỗi câu của 1 yêu cầu, không lẫn phiên chạy xen kẽ;
+     nút ✕ bỏ lọc
+  3. **Ghi một thao tác**: nút Bắt đầu ghi → sang mcframe làm 1 chức năng → Dừng: tự đọc phần log mới, đặt sẵn Từ / Đến đúng
+     khoảng đó (dùng kèm Chép tên bảng để biết chức năng đụng bảng nào)
+  4. **Mở sang trang Chạy SQL**: nút đưa câu (đã thay tham số) sang trang Chạy SQL, mặc định chỉ đọc, tuỳ chọn EXPLAIN để xem câu
+     chậm vì đâu (hiện phải tự chép / dán)
+  5. **Thống kê gom câu**: gom câu giống nhau (bỏ giá trị / `$n`): số lần chạy, tổng ms, ms lớn nhất, xếp theo chậm nhất / chạy
+     nhiều nhất; cần server ghi thời gian (`log_min_duration_statement` / `log_duration`) - FEP hiện cột ms gần như trống
+  6. **Đọc theo khoảng giờ trên cả thư mục log**: Từ / Đến hiện chỉ lọc phần đã đọc; bản nâng cấp tự chọn các file phủ khoảng giờ
+     đó (FEP: 119 file, 65 MB) và chỉ đọc đoạn cần
+  7. csvlog / jsonlog (dòng trên; FEP đang dùng dạng thường nên chưa gấp)
 - [ ] Người dùng thử tay Nhật ký server trên server Fujitsu thật (Làm mới → đọc logfile-<thứ>.log, lọc theo user / máy, xuất CSV; Đổi cấu hình log → Về mặc định)
 - [ ] Nhật ký server cho Oracle (khi làm Đợt 4): giữ LogEntry / LogFilter / bảng / xuất, viết phần đọc riêng - Unified Audit
   (UNIFIED_AUDIT_TRAIL, cần audit policy + AUDIT_VIEWER), alert log (V$DIAG_ALERT_EXT), V$SQL; không dùng ASH / AWR (Diagnostics Pack)
